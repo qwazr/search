@@ -2,61 +2,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.opensearchserver</groupId>
+
 	<artifactId>qwazr-search</artifactId>
 	<name>QWAZR Search</name>
+	<description>Search service for QWAZR</description>
 	<packaging>jar</packaging>
-	<prerequisites>
-		<maven>3.0</maven>
-	</prerequisites>
-	<url>http://www.opensearchserver.com</url>
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-	<version>1.0.0-SNAPSHOT</version>
-	<organization>
-		<name>OpenSearchServer Inc.</name>
-		<url>http://www.opensearchserver.com</url>
-	</organization>
-	<scm>
-		<connection>scm:git:git@github.com:qwazr/qwazr-search.git</connection>
-		<developerConnection>scm:git:git@github.com:qwazr/qwazr-search.git</developerConnection>
-		<url>git@github.com:qwazr/qwazr-search.git</url>
-	</scm>
-	<issueManagement>
-		<url>https://github.com/qwazr/qwazr-search/issues</url>
-	</issueManagement>
-	<ciManagement>
-		<url>http://www.open-search-server.com/jenkins</url>
-	</ciManagement>
+
 	<parent>
-		<groupId>org.sonatype.oss</groupId>
-		<artifactId>oss-parent</artifactId>
-		<version>7</version>
+		<groupId>com.opensearchserver</groupId>
+		<artifactId>qwazr-parent</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<resteasy.version>3.0.11.Final</resteasy.version>
-		<undertow.version>1.1.3.Final</undertow.version>
-		<skipTests>true</skipTests>
-		<httpclient.version>4.4.1</httpclient.version>
-		<jackson.version>2.5.2</jackson.version>
-	</properties>
-	<repositories>
-		<repository>
-			<id>oss-sonatype</id>
-			<name>oss-sonatype</name>
-			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
@@ -180,75 +137,9 @@
 			<version>1.7.12</version>
 		</dependency>
 	</dependencies>
+
 	<build>
-		<finalName>${project.artifactId}-${project.version}</finalName>
 		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>1.9.1</version>
-				<executions>
-					<execution>
-						<id>parse-version</id>
-						<goals>
-							<goal>parse-version</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>buildnumber-maven-plugin</artifactId>
-				<version>1.3</version>
-				<executions>
-					<execution>
-						<phase>validate</phase>
-						<goals>
-							<goal>create</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<doCheck>false</doCheck>
-					<doUpdate>false</doUpdate>
-					<shortRevisionLength>10</shortRevisionLength>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.2</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>2.4</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar-no-fork</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.10.1</version>
-				<executions>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -261,20 +152,7 @@
 					</dependency>
 				</dependencies>
 			</plugin>
-			<plugin>
-				<groupId>org.jasig.maven</groupId>
-				<artifactId>maven-notice-plugin</artifactId>
-				<version>1.0.6.1</version>
-				<configuration>
-					<noticeTemplate>${basedir}/src/notice/NOTICE.template</noticeTemplate>
-					<licenseMapping>
-						<param>https://source.jasig.org/licenses/license-mappings.xml</param>
-						<param>${basedir}/src/notice/license-mappings.xml</param>
-					</licenseMapping>
-					<fileName>NOTICE.txt</fileName>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
-	<description>Search service for QWAZR.</description>
+
 </project>
