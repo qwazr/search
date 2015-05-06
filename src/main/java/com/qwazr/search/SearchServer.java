@@ -72,17 +72,18 @@ public class SearchServer extends AbstractServer {
 							+ directoryFile.getName());
 	}
 
-	public static void loadIndexManager(AbstractServer server)
-			throws IOException {
-		File indexDir = new File(server.getCurrentDataDir(), "indexes");
+	public static void loadIndexManager(File dataDirectory) throws IOException {
+		File indexDir = new File(dataDirectory, "indexes");
 		checkDirectoryExists(indexDir);
 		IndexManager.load(indexDir);
 	}
 
 	@Override
 	public void load() throws IOException {
-		ClusterServer.load(this, getCurrentDataDir(), null, null);
-		loadIndexManager(this);
+		File currentDataDir = getCurrentDataDir();
+		ClusterServer.load(getWebServicePublicAddress(), currentDataDir, null,
+				null);
+		loadIndexManager(currentDataDir);
 
 	}
 
