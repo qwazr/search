@@ -34,14 +34,16 @@ import com.qwazr.utils.server.ServletApplication;
 
 public class SearchServer extends AbstractServer {
 
+	public final static String SERVICE_NAME_INDEX = "index";
+
 	private final static ServerDefinition serverDefinition = new ServerDefinition();
 	static {
 		serverDefinition.mainJarPath = "qwazr-search.jar";
-		serverDefinition.defaultDataDirPath = "qwazr";
+		serverDefinition.defaultDataDirName = "qwazr";
 		serverDefinition.defaultWebServiceTcpPort = 9091;
-	}
+		serverDefinition.subDirectoryNames = new String[] { SERVICE_NAME_INDEX };
 
-	public final static String SERVICE_NAME_INDEX = "index";
+	}
 
 	private SearchServer() {
 		super(serverDefinition);
@@ -73,7 +75,7 @@ public class SearchServer extends AbstractServer {
 	}
 
 	public static void loadIndexManager(File dataDirectory) throws IOException {
-		File indexDir = new File(dataDirectory, "indexes");
+		File indexDir = new File(dataDirectory, SERVICE_NAME_INDEX);
 		checkDirectoryExists(indexDir);
 		IndexManager.load(indexDir);
 	}
