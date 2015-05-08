@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -139,14 +138,9 @@ public class IndexManager {
 		return new IndexSingleClient(ClusterManager.INSTANCE.myAddress, timeOut);
 	}
 
-	static IndexMultiClient getClient(boolean removeMe)
-			throws URISyntaxException {
-		HashSet<String> nodes = new HashSet<String>(ClusterManager.INSTANCE
-				.getClusterClient().getActiveNodes(
-						SearchServer.SERVICE_NAME_INDEX));
-		if (removeMe)
-			nodes.remove(ClusterManager.INSTANCE.myAddress);
-		return new IndexMultiClient(nodes, 60000);
+	static IndexMultiClient getClient() throws URISyntaxException {
+		return new IndexMultiClient(ClusterManager.INSTANCE.getClusterClient()
+				.getActiveNodes(SearchServer.SERVICE_NAME_INDEX), 60000);
 	}
 
 }
