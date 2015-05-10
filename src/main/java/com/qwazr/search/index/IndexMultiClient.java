@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 
 public class IndexMultiClient extends
-		JsonMultiClientAbstract<IndexSingleClient> implements
+		JsonMultiClientAbstract<String, IndexSingleClient> implements
 		IndexServiceInterface {
 
 	public IndexMultiClient(String[] urls, int msTimeOut)

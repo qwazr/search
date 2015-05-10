@@ -95,7 +95,7 @@ public class QueryBuilder {
 	 *            the name of the field
 	 * @param value
 	 *            the term
-	 * @return
+	 * @return a new TermQuery instance
 	 */
 	public TermQuery createTermQuery(String field, String value) {
 		return new TermQuery(field, value);
