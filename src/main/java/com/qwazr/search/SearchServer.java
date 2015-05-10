@@ -82,7 +82,7 @@ public class SearchServer extends AbstractServer {
 	@Override
 	public void load() throws IOException {
 		File currentDataDir = getCurrentDataDir();
-		ClusterServer.load(getWebServicePublicAddress(), currentDataDir, null);
+		ClusterServer.load(getWebServicePublicAddress(), currentDataDir);
 		loadIndexManager(currentDataDir);
 
 	}
