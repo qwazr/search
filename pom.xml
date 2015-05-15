@@ -9,7 +9,7 @@
 	<packaging>jar</packaging>
 
 	<parent>
-		<groupId>com.opensearchserver</groupId>
+		<groupId>com.qwazr</groupId>
 		<artifactId>qwazr-parent</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
@@ -51,17 +51,17 @@
 			<version>1.2</version>
 		</dependency>
 		<dependency>
-			<groupId>com.opensearchserver</groupId>
+			<groupId>com.qwazr</groupId>
 			<artifactId>qwazr-cluster</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.opensearchserver</groupId>
+			<groupId>com.qwazr</groupId>
 			<artifactId>qwazr-native</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.opensearchserver</groupId>
+			<groupId>com.qwazr</groupId>
 			<artifactId>qwazr-utils</artifactId>
 			<version>1.0.1-SNAPSHOT</version>
 		</dependency>
