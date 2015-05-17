@@ -28,7 +28,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.client.utils.URIBuilder;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.utils.http.HttpResponseEntityException;
@@ -47,31 +46,23 @@ public class IndexSingleClient extends JsonClientAbstract implements
 
 	@Override
 	public Set<String> getIndexes(Boolean local) {
-		try {
-			URIBuilder uriBuilder = getBaseUrl("/indexes");
-			if (local != null)
-				uriBuilder.setParameter("local", local.toString());
-			Request request = Request.Get(uriBuilder.build());
-			return (Set<String>) execute(request, null, msTimeOut,
-					SetStringTypeRef, 200);
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
-			throw new WebApplicationException(e.getMessage(), e,
-					Status.INTERNAL_SERVER_ERROR);
-		}
+		UBuilder uriBuilder = new UBuilder("/indexes").setParameters(local,
+				null);
+		Request request = Request.Get(uriBuilder.build());
+		return (Set<String>) commonServiceRequest(request, null, msTimeOut,
+				SetStringTypeRef, 200);
 	}
 
 	@Override
 	public String getVersion() {
 		try {
-			URIBuilder uriBuilder = getBaseUrl("/indexes/version");
+			UBuilder uriBuilder = new UBuilder("/indexes/version");
 			Request request = Request.Get(uriBuilder.build());
 			return (String) execute(request, null, msTimeOut, (Class<?>) null,
 					200);
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
+		} catch (IOException e) {
 			throw new WebApplicationException(e.getMessage(), e,
 					Status.INTERNAL_SERVER_ERROR);
 		}
@@ -80,42 +71,28 @@ public class IndexSingleClient extends JsonClientAbstract implements
 	@Override
 	public IndexStatus createIndex(String index_name, Boolean local,
 			Map<String, FieldDefinition> fields) {
-		try {
-			URIBuilder uriBuilder = getBaseUrl("/indexes/", index_name);
-			if (local != null)
-				uriBuilder.setParameter("local", local.toString());
-			Request request = Request.Post(uriBuilder.build());
-			if (fields == null)
-				fields = Collections.emptyMap();
-			return execute(request, fields, msTimeOut, IndexStatus.class, 200);
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
-			throw new WebApplicationException(e.getMessage(), e,
-					Status.INTERNAL_SERVER_ERROR);
-		}
+		UBuilder uriBuilder = new UBuilder("/indexes/", index_name)
+				.setParameters(local, null);
+		Request request = Request.Post(uriBuilder.build());
+		if (fields == null)
+			fields = Collections.emptyMap();
+		return commonServiceRequest(request, fields, msTimeOut,
+				IndexStatus.class, 200);
 	}
 
 	@Override
 	public IndexStatus getIndex(String index_name) {
-		try {
-			URIBuilder uriBuilder = getBaseUrl("/indexes/", index_name);
-			Request request = Request.Get(uriBuilder.build());
-			return execute(request, null, msTimeOut, IndexStatus.class, 200);
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
-			throw new WebApplicationException(e.getMessage(), e,
-					Status.INTERNAL_SERVER_ERROR);
-		}
+		UBuilder uriBuilder = new UBuilder("/indexes/", index_name);
+		Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, msTimeOut,
+				IndexStatus.class, 200);
 	}
 
 	@Override
 	public Response deleteIndex(String index_name, Boolean local) {
 		try {
-			URIBuilder uriBuilder = getBaseUrl("/indexes/", index_name);
-			if (local != null)
-				uriBuilder.setParameter("local", local.toString());
+			UBuilder uriBuilder = new UBuilder("/indexes/", index_name)
+					.setParameters(local, null);
 			Request request = Request.Delete(uriBuilder.build());
 			HttpResponse response = execute(request, null, msTimeOut);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -123,7 +100,7 @@ public class IndexSingleClient extends JsonClientAbstract implements
 					.build();
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
+		} catch (IOException e) {
 			throw new WebApplicationException(e.getMessage(), e,
 					Status.INTERNAL_SERVER_ERROR);
 		}
@@ -132,18 +109,11 @@ public class IndexSingleClient extends JsonClientAbstract implements
 	@Override
 	public FieldDefinition createField(String index_name, String field_name,
 			FieldDefinition field) {
-		try {
-			URIBuilder uriBuilder = getBaseUrl("/indexes/", index_name,
-					"/fields/", field_name);
-			Request request = Request.Post(uriBuilder.build());
-			return execute(request, field, msTimeOut, FieldDefinition.class,
-					200);
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
-			throw new WebApplicationException(e.getMessage(), e,
-					Status.INTERNAL_SERVER_ERROR);
-		}
+		UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/fields/",
+				field_name);
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, field, msTimeOut,
+				FieldDefinition.class, 200);
 	}
 
 	public final static TypeReference<Map<String, FieldDefinition>> mapStringFieldDefinitionTypeRef = new TypeReference<Map<String, FieldDefinition>>() {
@@ -152,24 +122,16 @@ public class IndexSingleClient extends JsonClientAbstract implements
 	@Override
 	public Map<String, FieldDefinition> createFields(String index_name,
 			Map<String, FieldDefinition> fields) {
-		try {
-			URIBuilder uriBuilder = getBaseUrl("/indexes/", index_name,
-					"/fields");
-			Request request = Request.Post(uriBuilder.build());
-			return execute(request, fields, msTimeOut,
-					mapStringFieldDefinitionTypeRef, 200);
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
-			throw new WebApplicationException(e.getMessage(), e,
-					Status.INTERNAL_SERVER_ERROR);
-		}
+		UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/fields");
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, fields, msTimeOut,
+				mapStringFieldDefinitionTypeRef, 200);
 	}
 
 	@Override
 	public Response deleteField(String index_name, String field_name) {
 		try {
-			URIBuilder uriBuilder = getBaseUrl("/indexes/", index_name,
+			UBuilder uriBuilder = new UBuilder("/indexes/", index_name,
 					"/fields/", field_name);
 			Request request = Request.Delete(uriBuilder.build());
 			HttpResponse response = execute(request, null, msTimeOut);
@@ -178,7 +140,7 @@ public class IndexSingleClient extends JsonClientAbstract implements
 					.build();
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
+		} catch (IOException e) {
 			throw new WebApplicationException(e.getMessage(), e,
 					Status.INTERNAL_SERVER_ERROR);
 		}
@@ -188,7 +150,7 @@ public class IndexSingleClient extends JsonClientAbstract implements
 	public Response postDocuments(String index_name,
 			List<Map<String, FieldContent>> documents) {
 		try {
-			URIBuilder uriBuilder = getBaseUrl("/indexes/", index_name,
+			UBuilder uriBuilder = new UBuilder("/indexes/", index_name,
 					"/documents");
 			Request request = Request.Post(uriBuilder.build());
 			HttpResponse response = execute(request, documents, msTimeOut);
@@ -197,7 +159,7 @@ public class IndexSingleClient extends JsonClientAbstract implements
 					.build();
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
+		} catch (IOException e) {
 			throw new WebApplicationException(e.getMessage(), e,
 					Status.INTERNAL_SERVER_ERROR);
 		}
@@ -209,39 +171,21 @@ public class IndexSingleClient extends JsonClientAbstract implements
 	@Override
 	public List<ResultDefinition> findDocuments(String index_name,
 			List<QueryDefinition> queries, Boolean delete) {
-		try {
-			URIBuilder uriBuilder = getBaseUrl("/indexes/", index_name,
-					"/queries");
-			if (delete != null)
-				uriBuilder.addParameter("delete", delete.toString());
-			Request request = Request.Post(uriBuilder.build());
-			return execute(request, queries, msTimeOut,
-					listResultDefinitionTypeRef, 200);
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
-			throw new WebApplicationException(e.getMessage(), e,
-					Status.INTERNAL_SERVER_ERROR);
-		}
+		UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/queries")
+				.setParameterObject("delete", delete);
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, queries, msTimeOut,
+				listResultDefinitionTypeRef, 200);
 	}
 
 	@Override
 	public ResultDefinition findDocuments(String index_name,
 			QueryDefinition query, Boolean delete) {
-		try {
-			URIBuilder uriBuilder = getBaseUrl("/indexes/", index_name,
-					"/query");
-			if (delete != null)
-				uriBuilder.addParameter("delete", delete.toString());
-			Request request = Request.Post(uriBuilder.build());
-			return execute(request, query, msTimeOut, ResultDefinition.class,
-					200);
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
-			throw new WebApplicationException(e.getMessage(), e,
-					Status.INTERNAL_SERVER_ERROR);
-		}
+		UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/query")
+				.setParameterObject("delete", delete);
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, query, msTimeOut,
+				ResultDefinition.class, 200);
 	}
 
 }
