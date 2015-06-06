@@ -28,13 +28,13 @@ public class IndexMultiClient extends
 		JsonMultiClientAbstract<String, IndexSingleClient> implements
 		IndexServiceInterface {
 
-	public IndexMultiClient(String[] urls, int msTimeOut)
+	public IndexMultiClient(String[] urls, Integer msTimeOut)
 			throws URISyntaxException {
 		super(null, new IndexSingleClient[urls.length], urls, msTimeOut);
 	}
 
 	@Override
-	protected IndexSingleClient newClient(String url, int msTimeOut)
+	protected IndexSingleClient newClient(String url, Integer msTimeOut)
 			throws URISyntaxException {
 		return new IndexSingleClient(url, msTimeOut);
 	}
