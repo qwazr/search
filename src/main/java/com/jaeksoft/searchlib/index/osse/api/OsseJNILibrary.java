@@ -36,7 +36,11 @@ public class OsseJNILibrary {
 		try {
 			NativeUtils.loadLibrary("libOpenSearchServer_CLib");
 		} catch (Throwable t) {
-			NativeUtils.loadLibrary("OpenSearchServer_CLib");
+			try {
+				NativeUtils.loadLibrary("OpenSearchServer_CLib");
+			} catch (Throwable t2) {
+				t.printStackTrace();
+			}
 		}
 	}
 
