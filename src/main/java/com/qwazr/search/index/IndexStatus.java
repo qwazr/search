@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,23 +15,31 @@
  */
 package com.qwazr.search.index;
 
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import org.apache.lucene.index.IndexReader;
+
+import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
 public class IndexStatus {
 
-	final public Long document_count;
+	final public Long num_docs;
+	final public Long num_deleted_docs;
 	final public Map<String, FieldDefinition> fields;
 
-	public IndexStatus(Long document_count, Map<String, FieldDefinition> fields) {
-		this.document_count = document_count;
+
+	public IndexStatus() {
+		num_docs = null;
+		num_deleted_docs = null;
+		fields = null;
+	}
+
+	public IndexStatus(IndexReader indexReader, Map<String, FieldDefinition> fields) {
+		num_docs = (long) indexReader.numDocs();
+		num_deleted_docs = (long) indexReader.numDeletedDocs();
 		this.fields = fields;
 	}
 
-	public IndexStatus() {
-		this(null, null);
-	}
+
 }

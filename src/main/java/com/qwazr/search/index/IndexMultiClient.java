@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,14 +15,13 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.utils.json.client.JsonMultiClientAbstract;
+
+import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.ws.rs.core.Response;
-
-import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 
 public class IndexMultiClient extends
 		JsonMultiClientAbstract<String, IndexSingleClient> implements
@@ -46,14 +45,7 @@ public class IndexMultiClient extends
 	}
 
 	@Override
-	public String getVersion() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public IndexStatus createIndex(String index_name, Boolean local,
-			Map<String, FieldDefinition> fields) {
+	public IndexStatus createUpdateIndex(String index_name, Boolean local, Map<String, FieldDefinition> fields) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -71,42 +63,13 @@ public class IndexMultiClient extends
 	}
 
 	@Override
-	public FieldDefinition createField(String index_name, String field_name,
-			FieldDefinition field) {
+	public Response postDocument(String index_name, Map<String, Object> document) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Map<String, FieldDefinition> createFields(String index_name,
-			Map<String, FieldDefinition> fields) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Response deleteField(String index_name, String field_name) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Response postDocuments(String index_name,
-			List<Map<String, FieldContent>> documents) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<ResultDefinition> findDocuments(String index_name,
-			List<QueryDefinition> queries, Boolean delete) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ResultDefinition findDocuments(String index_name,
-			QueryDefinition query, Boolean delete) {
+	public Response postDocuments(String index_name, List<Map<String, Object>> documents) {
 		// TODO Auto-generated method stub
 		return null;
 	}

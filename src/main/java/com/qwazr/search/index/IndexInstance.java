@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,414 +15,254 @@
  */
 package com.qwazr.search.index;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import javax.ws.rs.core.Response.Status;
-
+import com.datastax.driver.core.utils.UUIDs;
+import com.qwazr.search.SearchServer;
+import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.json.JsonMapper;
+import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.util.CharArraySet;
+import org.apache.lucene.document.*;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.SearcherManager;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.BytesRefBuilder;
+import org.apache.lucene.util.NumericUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.qwazr.search.SearchServer;
-import com.qwazr.search.index.osse.OsseDocCursor;
-import com.qwazr.search.index.osse.OsseErrorHandler;
-import com.qwazr.search.index.osse.OsseException;
-import com.qwazr.search.index.osse.OsseIndex;
-import com.qwazr.search.index.osse.OsseIndex.FieldInfo;
-import com.qwazr.search.index.osse.OsseTransaction;
-import com.qwazr.search.index.osse.query.OsseAbstractQuery;
-import com.qwazr.search.memory.MemoryBuffer;
-import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.server.ServerException;
+import javax.ws.rs.core.Response;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class IndexInstance implements Closeable {
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(IndexInstance.class);
 
+	private final static String FIELD_ID_NAME = "_id";
 	private final static String INDEX_DATA = "data";
+	private final static String FIELDS_FILE = "fields.json";
 
-	private final MemoryBuffer memoryBuffer;
 	private final File indexDirectory;
 	private final File dataDirectory;
-	private final OsseIndex indexEngine;
-	private Map<String, FieldInfo> fieldMap = new TreeMap<String, FieldInfo>();
+	private final File fieldMapFile;
+	private final Directory luceneDirectory;
+	private final IndexWriterConfig indexWriterConfig;
+	private final IndexWriter indexWriter;
+	private final SearcherManager searcherManager;
+	private volatile IndexSearcher indexSearcher;
+	private volatile PerFieldAnalyzerWrapper perFieldAnalyzer;
+	private volatile Map<String, FieldDefinition> fieldMap;
 
 	/**
 	 * Create an index directory
-	 * 
-	 * @param indexDirectory
-	 *            the root location of the directory
+	 *
+	 * @param indexDirectory the root location of the directory
 	 * @throws IOException
-	 * @throws OsseException
+	 * @throws ServerException
 	 */
-	IndexInstance(File indexDirectory, MemoryBuffer memoryBuffer)
-			throws IOException, OsseException {
-		this.memoryBuffer = memoryBuffer;
+	IndexInstance(File indexDirectory)
+			throws IOException, ServerException {
+
 		this.indexDirectory = indexDirectory;
-		this.dataDirectory = new File(indexDirectory, INDEX_DATA);
-		checkDirectories();
-		File[] fileList = dataDirectory.listFiles((FileFilter) FileFilterUtils
-				.fileFileFilter());
-		boolean bCreate = fileList == null || fileList.length == 0;
-		OsseErrorHandler errorHandler = new OsseErrorHandler();
-		try {
-			indexEngine = new OsseIndex(memoryBuffer, dataDirectory,
-					errorHandler, bCreate);
-			reloadFieldMap(errorHandler);
-		} finally {
-			errorHandler.close();
-		}
-	}
-
-	private void reloadFieldMap(OsseErrorHandler errorHandler)
-			throws OsseException {
-		OsseErrorHandler localErrorHandler = null;
-		if (errorHandler == null)
-			localErrorHandler = errorHandler = new OsseErrorHandler();
-		try {
-			fieldMap = indexEngine.getFieldMap(errorHandler);
-		} finally {
-			if (localErrorHandler != null)
-				IOUtils.closeQuietly(localErrorHandler);
-			if (fieldMap == null)
-				fieldMap = Collections.emptyMap();
-		}
-	}
-
-	private void checkDirectories() throws IOException {
+		dataDirectory = new File(indexDirectory, INDEX_DATA);
 		SearchServer.checkDirectoryExists(indexDirectory);
-		SearchServer.checkDirectoryExists(dataDirectory);
+		luceneDirectory = FSDirectory.open(dataDirectory.toPath());
+
+		fieldMapFile = new File(indexDirectory, FIELDS_FILE);
+		fieldMap = fieldMapFile.exists() ?
+				JsonMapper.MAPPER.readValue(fieldMapFile, IndexSingleClient.MapStringFieldTypeRef) : null;
+		perFieldAnalyzer = buildFieldAnalyzer(fieldMap);
+		indexWriterConfig = new IndexWriterConfig(perFieldAnalyzer);
+		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+		indexWriter = new IndexWriter(luceneDirectory, indexWriterConfig);
+		searcherManager = new SearcherManager(indexWriter, true, null);
 	}
 
 	@Override
 	public void close() {
-		OsseErrorHandler errorHandler = null;
-		try {
-			errorHandler = new OsseErrorHandler();
-			if (indexEngine != null) {
-				try {
-					indexEngine.close(errorHandler);
-				} catch (OsseException e) {
-					logger.warn(e.getMessage(), e);
-				}
-			}
-		} catch (OsseException e) {
-			logger.error(e.getMessage(), e);
-		} finally {
-			if (errorHandler != null)
-				errorHandler.close();
-		}
+		IOUtils.close(searcherManager);
+		if (indexWriter.isOpen())
+			IOUtils.close(indexWriter);
+		IOUtils.close(luceneDirectory);
 	}
 
 	/**
 	 * Delete the index. The directory is deleted from the local file system.
 	 */
 	void delete() {
+		close();
 		if (indexDirectory.exists())
 			FileUtils.deleteQuietly(indexDirectory);
 	}
 
-	void createFields(Map<String, FieldDefinition> fields) throws OsseException {
-		OsseTransaction transaction = new OsseTransaction(indexEngine,
-				memoryBuffer, null, 0);
+	IndexStatus getStatus() throws IOException {
+		indexSearcher = searcherManager.acquire();
+		return new IndexStatus(indexSearcher.getIndexReader(), fieldMap);
+	}
+
+
+	private Class<?> findAnalyzer(String analyzer) throws ClassNotFoundException {
 		try {
-			for (Map.Entry<String, FieldDefinition> entry : fields.entrySet())
-				transaction.createField(entry.getKey(), entry.getValue()
-						.getFlags());
-			transaction.commit();
-			reloadFieldMap(null);
-		} finally {
-			IOUtils.closeQuietly(transaction);
-		}
-	}
-
-	void createField(String fieldName, FieldDefinition fieldDefinition)
-			throws OsseException, ServerException {
-		if (fieldMap.containsKey(fieldName))
-			throw new ServerException(Status.CONFLICT,
-					"The field already exists : " + fieldName);
-		OsseTransaction transaction = new OsseTransaction(indexEngine,
-				memoryBuffer, null, 0);
-		transaction.createField(fieldName, fieldDefinition.getFlags());
-		transaction.commit();
-		reloadFieldMap(null);
-		try {
-		} finally {
-			IOUtils.closeQuietly(transaction);
-		}
-	}
-
-	FieldInfo getField(String fieldName) throws ServerException {
-		FieldInfo fieldInfo = fieldMap.get(fieldName);
-		if (fieldInfo == null)
-			throw new ServerException(Status.NOT_FOUND, "Field not found : "
-					+ fieldName);
-		return fieldInfo;
-	}
-
-	void deleteField(String fieldName) throws OsseException, ServerException {
-		getField(fieldName);
-		OsseTransaction transaction = new OsseTransaction(indexEngine,
-				memoryBuffer, fieldMap, 1);
-		try {
-			transaction.deleteField(fieldName);
-			transaction.commit();
-			reloadFieldMap(null);
-		} finally {
-			IOUtils.closeQuietly(transaction);
-		}
-	}
-
-	IndexStatus getStatus() throws OsseException {
-		OsseErrorHandler errorHandler = new OsseErrorHandler();
-		try {
-			long numberOfDocs = indexEngine.getNumberOfDocs(errorHandler);
-			TreeMap<String, FieldDefinition> map = new TreeMap<String, FieldDefinition>();
-			for (Map.Entry<String, FieldInfo> entry : fieldMap.entrySet())
-				map.put(entry.getKey(), entry.getValue().fieldDefinition);
-			return new IndexStatus(numberOfDocs, map);
-		} finally {
-			IOUtils.closeQuietly(errorHandler);
-		}
-	}
-
-	void postDocuments(List<Map<String, FieldContent>> documents)
-			throws OsseException, IOException {
-		OsseTransaction transaction = new OsseTransaction(indexEngine,
-				memoryBuffer, fieldMap, documents.size());
-		try {
-			for (Map<String, FieldContent> document : documents) {
-				int docId = transaction.newDocumentId();
-				for (Map.Entry<String, FieldContent> entry : document
-						.entrySet())
-					transaction.addTerms(docId, entry.getKey(),
-							entry.getValue());
-			}
-			transaction.commit();
-		} finally {
-			IOUtils.closeQuietly(transaction);
-		}
-	}
-
-	private static class FacetCount {
-		private long value = 1;
-	}
-
-	private static class QueryField {
-
-		private final int id;
-		private final String name;
-		private final boolean returned;
-		private Map<String, FacetCount> facets;
-
-		private QueryField(int id, String name, boolean returned) {
-			this.id = id;
-			this.name = name;
-			this.returned = returned;
-			this.facets = null;
-		}
-
-		private void activeFacets() {
-			facets = new HashMap<String, FacetCount>();
-		}
-
-		private void addTermFacet(List<String> terms) {
-			for (String term : terms) {
-				FacetCount facetCount = facets.get(term);
-				if (facetCount == null)
-					facets.put(term, new FacetCount());
-				else
-					facetCount.value++;
-			}
-		}
-	}
-
-	private Map<String, Map<String, Long>> getFacetsMap(QueryField[] queryFields) {
-		if (queryFields == null)
-			return null;
-		Map<String, Map<String, Long>> facetsMap = new TreeMap<String, Map<String, Long>>();
-		for (QueryField queryField : queryFields) {
-			if (queryField.facets == null)
-				continue;
-			Map<String, Long> facetMap = new TreeMap<String, Long>();
-			for (Map.Entry<String, FacetCount> entry : queryField.facets
-					.entrySet())
-				facetMap.put(entry.getKey(), entry.getValue().value);
-			facetsMap.put(queryField.name, facetMap);
-		}
-		return facetsMap;
-	}
-
-	private QueryField[] getQueryFields(QueryDefinition query)
-			throws OsseException {
-
-		if (query == null
-				|| (query.facet_fields == null || query.facet_fields.isEmpty())
-				&& (query.returned_fields == null || query.returned_fields
-						.isEmpty()))
-			return null;
-		Map<String, QueryField> map = new LinkedHashMap<String, QueryField>();
-
-		// Check returned fields
-		if (query.returned_fields != null) {
-			for (String field : query.returned_fields) {
-				FieldInfo fieldInfo = fieldMap.get(field);
-				if (fieldInfo == null)
-					throw new OsseException("Unknown returned field: " + field,
-							null);
-				map.put(field, new QueryField(fieldInfo.id, field, true));
-			}
-		}
-
-		// Check facet fields
-		if (query.facet_fields != null) {
-			for (String field : query.facet_fields) {
-				FieldInfo fieldInfo = fieldMap.get(field);
-				if (fieldInfo == null)
-					throw new OsseException("Unknown facet field: " + field,
-							null);
-				QueryField queryField = map.get(field);
-				if (queryField == null) {
-					queryField = new QueryField(fieldInfo.id, field, false);
-					map.put(field, queryField);
-				}
-				queryField.activeFacets();
-			}
-		}
-		return map.values().toArray(new QueryField[map.size()]);
-	}
-
-	long deleteQuery(OsseTransaction transaction, QueryDefinition query)
-			throws OsseException {
-		OsseErrorHandler errorHandler = new OsseErrorHandler();
-		try {
-
-			// Build the query
-			OsseAbstractQuery osseQuery = OsseAbstractQuery.create(query.query);
+			return Class.forName(analyzer);
+		} catch (ClassNotFoundException e1) {
 			try {
-				osseQuery.execute(indexEngine, fieldMap, errorHandler);
-				errorHandler.checkNoError();
-				return osseQuery.deleteDocuments(transaction);
-			} finally {
-				IOUtils.closeQuietly(osseQuery);
+				return Class.forName("org.apache.lucene.analysis." + analyzer);
+			} catch (ClassNotFoundException e2) {
+				throw e1;
 			}
-		} finally {
-			IOUtils.closeQuietly(errorHandler);
 		}
 	}
 
-	ResultDefinition findDocuments(QueryDefinition query) throws OsseException,
-			IOException {
-
-		// Get the prepared fields for returned field and facets
-		QueryField[] queryFields = getQueryFields(query);
-
-		OsseErrorHandler errorHandler = new OsseErrorHandler();
-		try {
-
-			// Build the query
-			OsseAbstractQuery osseQuery = OsseAbstractQuery.create(query.query);
-
+	private PerFieldAnalyzerWrapper buildFieldAnalyzer(Map<String, FieldDefinition> fields)
+			throws ServerException {
+		if (fields == null || fields.size() == 0)
+			return new PerFieldAnalyzerWrapper(new StandardAnalyzer(CharArraySet.EMPTY_SET));
+		Map<String, Analyzer> analyzerMap = new HashMap<String, Analyzer>();
+		for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
+			String fieldName = field.getKey();
+			FieldDefinition fieldDef = field.getValue();
 			try {
-
-				// Execute the query and collect the doc ids
-				osseQuery.execute(indexEngine, fieldMap, errorHandler);
-				errorHandler.checkNoError();
-				Collection<Long> docIds = new ArrayList<Long>();
-				osseQuery.collect(indexEngine, docIds);
-
-				List<Map<String, List<String>>> documents = null;
-				if (query.returned_fields != null
-						&& !query.returned_fields.isEmpty())
-					documents = new ArrayList<Map<String, List<String>>>();
-				for (Long docId : docIds) {
-					Map<String, List<String>> returnedFieldMap = null;
-					if (queryFields != null) {
-						if (documents != null)
-							returnedFieldMap = new LinkedHashMap<String, List<String>>();
-						for (QueryField queryField : queryFields) {
-							OsseDocCursor docCursor = new OsseDocCursor(
-									indexEngine, errorHandler);
-							try {
-								List<String> terms = new ArrayList<String>();
-								docCursor
-										.fillTerms(queryField.id, docId, terms);
-								if (queryField.returned)
-									returnedFieldMap
-											.put(queryField.name, terms);
-								if (queryField.facets != null)
-									queryField.addTermFacet(terms);
-							} finally {
-								IOUtils.closeQuietly(docCursor);
-							}
-						}
-					}
-					if (documents != null && returnedFieldMap != null)
-						documents.add(returnedFieldMap);
-				}
-				return new ResultDefinition(docIds.size(), documents,
-						getFacetsMap(queryFields));
-			} finally {
-				IOUtils.closeQuietly(osseQuery);
+				if (!StringUtils.isEmpty(fieldDef.analyzer))
+					analyzerMap.put(field.getKey(), (Analyzer) findAnalyzer(fieldDef.analyzer).newInstance());
+			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+						"Class " + fieldDef.analyzer + " not known for the field " + fieldName);
 			}
-		} finally {
-			IOUtils.closeQuietly(errorHandler);
+		}
+		return new PerFieldAnalyzerWrapper(new StandardAnalyzer(CharArraySet.EMPTY_SET), analyzerMap);
+	}
+
+	public synchronized void setFields(Map<String, FieldDefinition> fields) throws ServerException, IOException {
+		perFieldAnalyzer = buildFieldAnalyzer(fields);
+		JsonMapper.MAPPER.writeValue(fieldMapFile, fields);
+		fieldMap = fields;
+	}
+
+	private BytesRef objectToBytesRef(Object object) throws IOException {
+		if (object instanceof String)
+			return new BytesRef((String) object);
+		BytesRefBuilder bytesBuilder = new BytesRefBuilder();
+		if (object instanceof Integer)
+			NumericUtils.longToPrefixCodedBytes(((Integer) object).longValue(), 0, bytesBuilder);
+		else if (object instanceof Double)
+			NumericUtils.longToPrefixCodedBytes(NumericUtils.doubleToSortableLong((Double) object), 0, bytesBuilder);
+		else throw new IOException("Type not supported: " + object.getClass());
+		return bytesBuilder.get();
+	}
+
+	private void addValues(Document doc, String fieldName, Object object, Field.Store store) {
+		if (object instanceof String) {
+			doc.add(new StringField(fieldName, (String) object, store));
+		} else if (object instanceof Integer) {
+			doc.add(new LongField(fieldName, ((Integer) object).intValue(), store));
+		} else if (object instanceof Double) {
+			doc.add(new DoubleField(fieldName, ((Double) object).doubleValue(), store));
+		} else if (object instanceof List) {
+			List<Object> list = (List<Object>) object;
+			for (Object o : list)
+				addValues(doc, fieldName, o, store);
 		}
 	}
 
-	List<ResultDefinition> findDocuments(List<QueryDefinition> queries)
-			throws OsseException, IOException {
-		List<ResultDefinition> list = new ArrayList<ResultDefinition>(
-				queries.size());
-		for (QueryDefinition query : queries)
-			list.add(findDocuments(query));
-		return list;
-	}
-
-	ResultDefinition deleteDocuments(QueryDefinition query)
-			throws OsseException {
-		OsseTransaction transaction = new OsseTransaction(indexEngine,
-				memoryBuffer, null, 0);
-		try {
-			long numDeleted = deleteQuery(transaction, query);
-			if (numDeleted > 0)
-				transaction.commit();
-			return new ResultDefinition(numDeleted, null, null);
-		} finally {
-			IOUtils.closeQuietly(transaction);
-		}
-	}
-
-	List<ResultDefinition> deleteDocuments(List<QueryDefinition> queries)
-			throws OsseException {
-		OsseTransaction transaction = new OsseTransaction(indexEngine,
-				memoryBuffer, null, 0);
-		try {
-			List<ResultDefinition> list = new ArrayList<ResultDefinition>(
-					queries.size());
-			long totalDeleted = 0;
-			for (QueryDefinition query : queries) {
-				long numDeleted = deleteQuery(transaction, query);
-				list.add(new ResultDefinition(numDeleted, null, null));
+	private void addDocValues(Document doc, String fieldName, Object object, Field.Store store) {
+		if (object instanceof String) {
+			doc.add(new SortedDocValuesField(fieldName, new BytesRef((String) object)));
+		} else if (object instanceof Integer) {
+			doc.add(new NumericDocValuesField(fieldName, ((Integer) object).longValue()));
+		} else if (object instanceof Double) {
+			doc.add(new DoubleDocValuesField(fieldName, ((Double) object).doubleValue()));
+		} else if (object instanceof List) {
+			List<Object> list = (List<Object>) object;
+			for (Object o : list) {
+				doc.add(new SortedSetDocValuesField(fieldName, new BytesRef(o.toString())));
+				if (store == Field.Store.YES)
+					doc.add(new StoredField(fieldName, (String) object));
 			}
-			if (totalDeleted > 0)
-				transaction.commit();
-			return list;
-		} finally {
-			IOUtils.closeQuietly(transaction);
 		}
+	}
+
+	private void addAnalyzedValue(Document doc, String fieldName, Object object, Field.Store store) {
+		if (object instanceof List) {
+			List<Object> list = (List<Object>) object;
+			for (Object o : list)
+				doc.add(new TextField(fieldName, (String) o, store));
+		} else {
+			doc.add(new TextField(fieldName, object.toString(), store));
+		}
+	}
+
+	private void addField(Document doc, String fieldName, FieldDefinition fieldDef, Object object) {
+		if (object == null)
+			return;
+		boolean analyzer = fieldDef != null && fieldDef.analyzer != null;
+		boolean stored = fieldDef != null && fieldDef.stored != null && fieldDef.stored;
+		Field.Store store = stored ? Field.Store.YES : Field.Store.NO;
+		boolean docValues = fieldDef != null && fieldDef.doc_values != null && fieldDef.doc_values;
+		if (analyzer)
+			addAnalyzedValue(doc, fieldName, object, store);
+		else if (docValues)
+			addDocValues(doc, fieldName, object, store);
+		else
+			addValues(doc, fieldName, object, store);
+	}
+
+	private Object addNewLuceneDocument(Map<String, Object> document) throws IOException {
+		Document doc = new Document();
+
+		Object id = document.get(FIELD_ID_NAME);
+		Term termId;
+		if (id == null) { // New UUID means document creation
+			FieldDefinition fieldDef = fieldMap == null ? null : fieldMap.get(FIELD_ID_NAME);
+			addField(doc, FIELD_ID_NAME, fieldDef, UUIDs.timeBased());
+			termId = null;
+		} else {
+			BytesRef ref = objectToBytesRef(id);
+			termId = new Term(FIELD_ID_NAME, ref);
+		}
+
+		for (Map.Entry<String, Object> field : document.entrySet()) {
+			String fieldName = field.getKey();
+			FieldDefinition fieldDef = fieldMap == null ? null : fieldMap.get(fieldName);
+			addField(doc, fieldName, fieldDef, field.getValue());
+		}
+
+		if (termId == null)
+			indexWriter.addDocument(doc);
+		else
+			indexWriter.updateDocument(termId, doc);
+		return id;
+	}
+
+	public Object postDocument(Map<String, Object> document) throws IOException {
+		Object id = addNewLuceneDocument(document);
+		indexWriter.commit();
+		searcherManager.maybeRefresh();
+		return id;
+	}
+
+	public List<Object> postDocuments(List<Map<String, Object>> documents) throws IOException {
+		if (documents == null) return null;
+		List<Object> ids = new ArrayList<Object>(documents.size());
+		for (Map<String, Object> document : documents)
+			ids.add(addNewLuceneDocument(document));
+		indexWriter.commit();
+		searcherManager.maybeRefresh();
+		return ids;
 	}
 }
