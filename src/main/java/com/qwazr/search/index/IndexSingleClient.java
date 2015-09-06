@@ -22,6 +22,7 @@ import com.qwazr.utils.json.client.JsonClientAbstract;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 
+import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -123,5 +124,12 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public final static TypeReference<Map<String, FieldDefinition>> MapStringFieldTypeRef =
 			new TypeReference<Map<String, FieldDefinition>>() {
 			};
+
+	@Override
+	public ResultDefinition searchQuery(@PathParam("index_name") String index_name, QueryDefinition query) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/search");
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);
+	}
 
 }

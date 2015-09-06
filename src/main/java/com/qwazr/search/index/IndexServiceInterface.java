@@ -29,20 +29,20 @@ public interface IndexServiceInterface {
 
 	@GET
 	@Path("/")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
 	public Set<String> getIndexes(@QueryParam("local") Boolean local);
 
 	@POST
 	@Path("/{index_name}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
 	public IndexStatus createUpdateIndex(@PathParam("index_name") String index_name,
 										 @QueryParam("local") Boolean local,
 										 Map<String, FieldDefinition> fields);
 
 	@GET
 	@Path("/{index_name}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
 	public IndexStatus getIndex(@PathParam("index_name") String index_name);
 
 	@DELETE
@@ -54,16 +54,22 @@ public interface IndexServiceInterface {
 	@POST
 	@Path("/{index_name}/docs")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
 	public Response postDocuments(@PathParam("index_name") String index_name,
 								  List<Map<String, Object>> documents);
 
 	@POST
 	@Path("/{index_name}/doc")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
 	public Response postDocument(@PathParam("index_name") String index_name,
 								 Map<String, Object> document);
 
+	@POST
+	@Path("/{index_name}/search")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public ResultDefinition searchQuery(@PathParam("index_name") String index_name,
+										QueryDefinition query);
 
 }

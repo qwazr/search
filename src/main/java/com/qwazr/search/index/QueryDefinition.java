@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package com.qwazr.search.index;
-
-import java.util.List;
-import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -27,15 +24,25 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import java.util.List;
+import java.util.Set;
+
 @JsonInclude(Include.NON_EMPTY)
 public class QueryDefinition {
+
+	final public String default_field;
+	final public String query_string;
+
+	final public Integer start;
+	final public Integer rows;
 
 	final public Set<String> returned_fields;
 	final public Set<String> facet_fields;
 
+
 	@JsonTypeInfo(use = Id.NAME, include = As.WRAPPER_OBJECT)
-	@JsonSubTypes({ @JsonSubTypes.Type(value = TermQuery.class, name = "term"),
-			@Type(value = GroupQuery.class, name = "group") })
+	@JsonSubTypes({@JsonSubTypes.Type(value = TermQuery.class, name = "term"),
+			@Type(value = GroupQuery.class, name = "group")})
 	public static class AbstractQuery {
 	}
 
@@ -82,15 +89,30 @@ public class QueryDefinition {
 		}
 	}
 
-	QueryDefinition(Set<String> returned_fields, Set<String> facet_fields,
-			AbstractQuery query) {
+	public QueryDefinition() {
+		this.default_field = null;
+		this.start = null;
+		this.rows = null;
+		this.query_string = null;
+		this.returned_fields = null;
+		this.facet_fields = null;
+		this.query = null;
+	}
+
+	public QueryDefinition(Set<String> returned_fields, Set<String> facet_fields, AbstractQuery query) {
+		this.default_field = null;
+		this.start = null;
+		this.rows = null;
+		this.query_string = null;
 		this.returned_fields = returned_fields;
 		this.facet_fields = facet_fields;
 		this.query = query;
 	}
 
-	public QueryDefinition() {
-		this(null, null, null);
+
+	public int getEnd() {
+		return (start == null ? 0 : start) + (rows == null ? 10 : rows);
 	}
+
 
 }

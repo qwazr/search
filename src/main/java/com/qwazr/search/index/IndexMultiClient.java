@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -73,5 +74,12 @@ public class IndexMultiClient extends
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public ResultDefinition searchQuery(@PathParam("index_name") String index_name, QueryDefinition query) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 }

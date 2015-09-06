@@ -96,5 +96,13 @@ public class IndexServiceImpl implements IndexServiceInterface {
 		}
 	}
 
-
+	@Override
+	public ResultDefinition searchQuery(String index_name, QueryDefinition query) {
+		try {
+			return IndexManager.INSTANCE.get(index_name).search(query);
+		} catch (ServerException | IOException e) {
+			logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
 }

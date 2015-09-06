@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.datastax.driver.core.utils.UUIDs;
 import com.qwazr.search.SearchServer;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
@@ -26,12 +25,17 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.util.CharArraySet;
-import org.apache.lucene.document.*;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SearcherManager;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
@@ -54,7 +58,6 @@ public class IndexInstance implements Closeable {
 	private static final Logger logger = LoggerFactory
 			.getLogger(IndexInstance.class);
 
-	private final static String FIELD_ID_NAME = "_id";
 	private final static String INDEX_DATA = "data";
 	private final static String FIELDS_FILE = "fields.json";
 
@@ -92,6 +95,7 @@ public class IndexInstance implements Closeable {
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 		indexWriter = new IndexWriter(luceneDirectory, indexWriterConfig);
 		searcherManager = new SearcherManager(indexWriter, true, null);
+		indexSearcher = searcherManager.acquire();
 	}
 
 	@Override
@@ -112,7 +116,6 @@ public class IndexInstance implements Closeable {
 	}
 
 	IndexStatus getStatus() throws IOException {
-		indexSearcher = searcherManager.acquire();
 		return new IndexStatus(indexSearcher.getIndexReader(), fieldMap);
 	}
 
@@ -166,93 +169,34 @@ public class IndexInstance implements Closeable {
 		return bytesBuilder.get();
 	}
 
-	private void addValues(Document doc, String fieldName, Object object, Field.Store store) {
-		if (object instanceof String) {
-			doc.add(new StringField(fieldName, (String) object, store));
-		} else if (object instanceof Integer) {
-			doc.add(new LongField(fieldName, ((Integer) object).intValue(), store));
-		} else if (object instanceof Double) {
-			doc.add(new DoubleField(fieldName, ((Double) object).doubleValue(), store));
-		} else if (object instanceof List) {
-			List<Object> list = (List<Object>) object;
-			for (Object o : list)
-				addValues(doc, fieldName, o, store);
-		}
-	}
-
-	private void addDocValues(Document doc, String fieldName, Object object, Field.Store store) {
-		if (object instanceof String) {
-			doc.add(new SortedDocValuesField(fieldName, new BytesRef((String) object)));
-		} else if (object instanceof Integer) {
-			doc.add(new NumericDocValuesField(fieldName, ((Integer) object).longValue()));
-		} else if (object instanceof Double) {
-			doc.add(new DoubleDocValuesField(fieldName, ((Double) object).doubleValue()));
-		} else if (object instanceof List) {
-			List<Object> list = (List<Object>) object;
-			for (Object o : list) {
-				doc.add(new SortedSetDocValuesField(fieldName, new BytesRef(o.toString())));
-				if (store == Field.Store.YES)
-					doc.add(new StoredField(fieldName, (String) object));
-			}
-		}
-	}
-
-	private void addAnalyzedValue(Document doc, String fieldName, Object object, Field.Store store) {
-		if (object instanceof List) {
-			List<Object> list = (List<Object>) object;
-			for (Object o : list)
-				doc.add(new TextField(fieldName, (String) o, store));
-		} else {
-			doc.add(new TextField(fieldName, object.toString(), store));
-		}
-	}
-
-	private void addField(Document doc, String fieldName, FieldDefinition fieldDef, Object object) {
-		if (object == null)
-			return;
-		boolean analyzer = fieldDef != null && fieldDef.analyzer != null;
-		boolean stored = fieldDef != null && fieldDef.stored != null && fieldDef.stored;
-		Field.Store store = stored ? Field.Store.YES : Field.Store.NO;
-		boolean docValues = fieldDef != null && fieldDef.doc_values != null && fieldDef.doc_values;
-		if (analyzer)
-			addAnalyzedValue(doc, fieldName, object, store);
-		else if (docValues)
-			addDocValues(doc, fieldName, object, store);
-		else
-			addValues(doc, fieldName, object, store);
-	}
-
 	private Object addNewLuceneDocument(Map<String, Object> document) throws IOException {
 		Document doc = new Document();
 
-		Object id = document.get(FIELD_ID_NAME);
-		Term termId;
-		if (id == null) { // New UUID means document creation
-			FieldDefinition fieldDef = fieldMap == null ? null : fieldMap.get(FIELD_ID_NAME);
-			addField(doc, FIELD_ID_NAME, fieldDef, UUIDs.timeBased());
-			termId = null;
-		} else {
-			BytesRef ref = objectToBytesRef(id);
-			termId = new Term(FIELD_ID_NAME, ref);
-		}
+		Term termId = null;
 
 		for (Map.Entry<String, Object> field : document.entrySet()) {
 			String fieldName = field.getKey();
 			FieldDefinition fieldDef = fieldMap == null ? null : fieldMap.get(fieldName);
-			addField(doc, fieldName, fieldDef, field.getValue());
+			if (fieldDef == null) throw new IOException("No field definition for the field: " + fieldName);
+			doc.add(fieldDef.getNewField(fieldName, field.getValue()));
 		}
 
 		if (termId == null)
 			indexWriter.addDocument(doc);
 		else
 			indexWriter.updateDocument(termId, doc);
-		return id;
+		return doc.hashCode();
+	}
+
+	private void nrtCommit() throws IOException {
+		indexWriter.commit();
+		searcherManager.maybeRefresh();
+		indexSearcher = searcherManager.acquire();
 	}
 
 	public Object postDocument(Map<String, Object> document) throws IOException {
 		Object id = addNewLuceneDocument(document);
-		indexWriter.commit();
-		searcherManager.maybeRefresh();
+		nrtCommit();
 		return id;
 	}
 
@@ -261,8 +205,24 @@ public class IndexInstance implements Closeable {
 		List<Object> ids = new ArrayList<Object>(documents.size());
 		for (Map<String, Object> document : documents)
 			ids.add(addNewLuceneDocument(document));
-		indexWriter.commit();
-		searcherManager.maybeRefresh();
+		nrtCommit();
 		return ids;
+	}
+
+	public ResultDefinition search(QueryDefinition queryDef) throws ServerException, IOException {
+		QueryParser parser = new QueryParser(queryDef.default_field, perFieldAnalyzer);
+		try {
+			TopDocs topDocs;
+			FacetsCollector facetsCollector = null;
+			Query query = parser.parse(queryDef.query_string);
+			if (queryDef.facet_fields != null) {
+				facetsCollector = new FacetsCollector();
+				topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), facetsCollector);
+			} else
+				topDocs = indexSearcher.search(query, queryDef.getEnd());
+			return new ResultDefinition(indexSearcher, topDocs, queryDef, facetsCollector);
+		} catch (ParseException e) {
+			throw new ServerException(e);
+		}
 	}
 }
