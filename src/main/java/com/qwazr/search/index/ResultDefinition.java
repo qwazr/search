@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetsCollector;
-import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.*;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
@@ -56,6 +56,7 @@ public class ResultDefinition {
 		int end = queryDef.getEnd();
 		documents = new ArrayList<Map<String, Object>>();
 		ScoreDoc[] docs = topDocs.scoreDocs;
+		IndexReader reader = searcher.getIndexReader();
 		while (pos < total_hits && pos < end) {
 			ScoreDoc scoreDoc = docs[pos];
 			Document document = searcher.doc(scoreDoc.doc, queryDef.returned_fields);
