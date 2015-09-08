@@ -23,14 +23,15 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 public class IndexMultiClient extends
 		JsonMultiClientAbstract<String, IndexSingleClient> implements
 		IndexServiceInterface {
 
-	public IndexMultiClient(String[] urls, Integer msTimeOut)
+	public IndexMultiClient(ExecutorService executor,  String[] urls, Integer msTimeOut)
 			throws URISyntaxException {
-		super(null, new IndexSingleClient[urls.length], urls, msTimeOut);
+		super(executor, new IndexSingleClient[urls.length], urls, msTimeOut);
 	}
 
 	@Override

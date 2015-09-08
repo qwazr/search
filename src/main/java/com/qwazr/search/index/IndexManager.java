@@ -118,14 +118,4 @@ public class IndexManager {
 		return indexMap.keySet();
 	}
 
-	public static IndexServiceInterface getClient(int timeOut)
-			throws URISyntaxException {
-		return new IndexSingleClient(ClusterManager.INSTANCE.myAddress, timeOut);
-	}
-
-	static IndexMultiClient getClient() throws URISyntaxException {
-		return new IndexMultiClient(ClusterManager.INSTANCE.getClusterClient()
-				.getActiveNodes(SearchServer.SERVICE_NAME_INDEX), 60000);
-	}
-
 }

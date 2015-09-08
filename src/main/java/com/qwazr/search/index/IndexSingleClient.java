@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 
@@ -34,7 +35,7 @@ import java.util.Set;
 
 public class IndexSingleClient extends JsonClientAbstract implements IndexServiceInterface {
 
-	IndexSingleClient(String url, int msTimeOut) throws URISyntaxException {
+	public IndexSingleClient(String url, int msTimeOut) throws URISyntaxException {
 		super(url, msTimeOut);
 	}
 
@@ -119,11 +120,6 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 					Status.INTERNAL_SERVER_ERROR);
 		}
 	}
-
-
-	public final static TypeReference<Map<String, FieldDefinition>> MapStringFieldTypeRef =
-			new TypeReference<Map<String, FieldDefinition>>() {
-			};
 
 	@Override
 	public ResultDefinition searchQuery(@PathParam("index_name") String index_name, QueryDefinition query) {
