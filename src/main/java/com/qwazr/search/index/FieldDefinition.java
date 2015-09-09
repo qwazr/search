@@ -26,6 +26,7 @@ import org.apache.lucene.document.*;
 import org.apache.lucene.facet.FacetField;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
@@ -81,6 +82,8 @@ public class FieldDefinition {
 	}
 
 	Field getNewField(String fieldName, Object value) {
+		if (value == null)
+			return null;
 		Field field = null;
 		Field.Store store = (stored != null && stored) ? Field.Store.YES : Field.Store.NO;
 		if (template != null) {
@@ -170,6 +173,18 @@ public class FieldDefinition {
 			field = new Field(fieldName, value.toString(), type);
 		}
 		return field;
+	}
+
+	public final static Object getValue(IndexableField field) {
+		if (field == null)
+			return null;
+		String s = field.stringValue();
+		if (s != null)
+			return s;
+		Number n = field.numericValue();
+		if (n != null)
+			return n;
+		return null;
 	}
 
 	public final static TypeReference<Map<String, FieldDefinition>> MapStringFieldTypeRef =
