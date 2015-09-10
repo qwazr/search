@@ -122,7 +122,25 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public ResultDefinition searchQuery(@PathParam("index_name") String index_name, QueryDefinition query) {
+	public Response deleteAll(String index_name, Boolean local) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/docs")
+					.setParameters(local, null);
+			Request request = Request.Delete(uriBuilder.build());
+			HttpResponse response = execute(request, null, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 200);
+			return Response.status(response.getStatusLine().getStatusCode())
+					.build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e,
+					Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public ResultDefinition searchQuery(String index_name, QueryDefinition query) {
 		UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/search");
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);

@@ -37,16 +37,20 @@ public class QueryDefinition {
 
 	final public String default_field = null;
 	final public String query_string = null;
+	final public Map<String, Float> multi_field = null;
 
 	final public Integer start = null;
 	final public Integer rows = null;
 
 	final public Set<String> returned_fields = null;
-	final public Set<String> facet_fields = null;
+	final public Map<String, Facet> facets = null;
 
 	final public Boolean allow_leading_wildcard = null;
 	final public QueryParser.Operator default_operator = null;
 
+	public static class Facet {
+		final public Integer top = null;
+	}
 
 	@JsonTypeInfo(use = Id.NAME, include = As.WRAPPER_OBJECT)
 	@JsonSubTypes({@JsonSubTypes.Type(value = TermQuery.class, name = "term"),

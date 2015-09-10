@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import com.qwazr.search.SearchServer;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
@@ -27,10 +28,17 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.util.CharArraySet;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
@@ -49,10 +57,7 @@ import javax.ws.rs.core.Response;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class IndexInstance implements Closeable {
 
@@ -66,6 +71,7 @@ public class IndexInstance implements Closeable {
 	private final File dataDirectory;
 	private final File fieldMapFile;
 	private final Directory luceneDirectory;
+	private final FacetsConfig facetsConfig;
 	private final IndexWriterConfig indexWriterConfig;
 	private final IndexWriter indexWriter;
 	private final SearcherManager searcherManager;
@@ -86,7 +92,7 @@ public class IndexInstance implements Closeable {
 		dataDirectory = new File(indexDirectory, INDEX_DATA);
 		SearchServer.checkDirectoryExists(indexDirectory);
 		luceneDirectory = FSDirectory.open(dataDirectory.toPath());
-
+		facetsConfig = new FacetsConfig();
 		fieldMapFile = new File(indexDirectory, FIELDS_FILE);
 		fieldMap = fieldMapFile.exists() ?
 				JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) : null;
@@ -187,16 +193,22 @@ public class IndexInstance implements Closeable {
 				doc.add(luceneField);
 		}
 
+		Document facetedDoc = facetsConfig.build(doc);
 		if (termId == null)
-			indexWriter.addDocument(doc);
+			indexWriter.addDocument(facetedDoc);
 		else
-			indexWriter.updateDocument(termId, doc);
-		return doc.hashCode();
+			indexWriter.updateDocument(termId, facetedDoc);
+		return facetedDoc.hashCode();
 	}
 
 	private void nrtCommit() throws IOException {
 		indexWriter.commit();
 		searcherManager.maybeRefresh();
+	}
+
+	public void deleteAll() throws IOException {
+		indexWriter.deleteAll();
+		nrtCommit();
 	}
 
 	public Object postDocument(Map<String, Object> document) throws IOException {
@@ -215,28 +227,42 @@ public class IndexInstance implements Closeable {
 	}
 
 	public ResultDefinition search(QueryDefinition queryDef) throws ServerException, IOException {
-		QueryParser parser = new QueryParser(queryDef.default_field, perFieldAnalyzer);
+		final QueryParser parser;
+		if (queryDef.multi_field != null && !queryDef.multi_field.isEmpty()) {
+			Set<String> fieldSet = queryDef.multi_field.keySet();
+			String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
+			parser = new MultiFieldQueryParser(fieldArray, perFieldAnalyzer, queryDef.multi_field);
+		} else
+			parser = new QueryParser(queryDef.default_field, perFieldAnalyzer);
 		if (queryDef.allow_leading_wildcard != null)
 			parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
 		if (queryDef.default_operator != null)
 			parser.setDefaultOperator(queryDef.default_operator);
-		IndexSearcher indexSearcher = searcherManager.acquire();
+		final IndexSearcher indexSearcher = searcherManager.acquire();
+		final IndexReader indexReader = indexSearcher.getIndexReader();
+		final TimeTracker timeTracker = new TimeTracker();
 		try {
-			long start_time = System.currentTimeMillis();
-			TopDocs topDocs;
-			FacetsCollector facetsCollector = null;
+			final TopDocs topDocs;
+			final Facets facets;
 			Query query = parser.parse(queryDef.query_string);
-			if (queryDef.facet_fields != null) {
-				facetsCollector = new FacetsCollector();
+			if (queryDef.facets != null && queryDef.facets.size() > 0) {
+				FacetsCollector facetsCollector = new FacetsCollector();
+				SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
 				topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), facetsCollector);
-			} else
+				timeTracker.next("search_query");
+				facets = new SortedSetDocValuesFacetCounts(state, facetsCollector);
+				timeTracker.next("facet_count");
+			} else {
 				topDocs = indexSearcher.search(query, queryDef.getEnd());
-			return new ResultDefinition(System.currentTimeMillis() - start_time, indexSearcher, topDocs, queryDef,
-					facetsCollector);
+				timeTracker.next("search_query");
+				facets = null;
+			}
+			return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets);
 		} catch (ParseException e) {
 			throw new ServerException(e);
 		} finally {
 			searcherManager.release(indexSearcher);
 		}
 	}
+
 }

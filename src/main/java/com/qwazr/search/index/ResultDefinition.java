@@ -17,8 +17,12 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.facet.FacetResult;
+import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.facet.LabelAndValue;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
@@ -33,28 +37,10 @@ import java.util.Map;
 @JsonInclude(Include.NON_EMPTY)
 public class ResultDefinition {
 
-	public class Timer {
-		final public long search_time;
-		final public long fields_time;
-
-		private Timer(long search_time, long fields_time) {
-			this.search_time = search_time;
-			this.fields_time = fields_time;
-		}
-
-		public long getSearch_time() {
-			return search_time;
-		}
-
-		public long getFields_time() {
-			return fields_time;
-		}
-	}
-
-	final public Timer timer;
+	final public Map<String, Long> timer;
 	final public long total_hits;
 	final public List<Map<String, Object>> documents;
-	final public Map<String, Map<String, Object>> facets;
+	final public Map<String, Map<String, Number>> facets;
 
 	public ResultDefinition() {
 		this.timer = null;
@@ -63,12 +49,11 @@ public class ResultDefinition {
 		this.facets = null;
 	}
 
-	public final static String FIELD_SCORE = "_score";
-	public final static String FIELD_ID = "_id";
+	public final static String FIELD_SCORE = "$score";
+	public final static String FIELD_ID = "$id";
 
-	public ResultDefinition(long search_time, IndexSearcher searcher, TopDocs topDocs, QueryDefinition queryDef,
-							FacetsCollector facetsCollector) throws IOException {
-		long start_time = System.currentTimeMillis();
+	public ResultDefinition(TimeTracker timeTracker, IndexSearcher searcher, TopDocs topDocs, QueryDefinition queryDef,
+							Facets facets) throws IOException {
 		total_hits = topDocs.totalHits;
 		int pos = queryDef.start == null ? 0 : queryDef.start;
 		int end = queryDef.getEnd();
@@ -88,9 +73,36 @@ public class ResultDefinition {
 			documents.add(doc);
 			pos++;
 		}
-		long fields_time = System.currentTimeMillis() - start_time;
-		facets = null;
-		timer = new Timer(search_time, fields_time);
+		long facet_start_time = System.currentTimeMillis();
+		timeTracker.next("returned_field");
+		this.facets = facets != null && queryDef != null ? buildFacets(timeTracker, queryDef.facets, facets) : null;
+		this.timer = timeTracker == null ? null : timeTracker.getMap();
+	}
+
+	private Map<String, Map<String, Number>> buildFacets(TimeTracker timeTracker,
+														 Map<String, QueryDefinition.Facet> facetsDef,
+														 Facets facets) throws IOException {
+		Map<String, Map<String, Number>> facetResults = new LinkedHashMap<String, Map<String, Number>>();
+		for (Map.Entry<String, QueryDefinition.Facet> entry : facetsDef.entrySet()) {
+			String dim = entry.getKey();
+			Map<String, Number> facetMap = buildFacet(dim, entry.getValue(), facets);
+			if (facetMap != null)
+				facetResults.put(dim, facetMap);
+		}
+		timeTracker.next("facet_fields");
+		return facetResults;
+	}
+
+	private static Map<String, Number> buildFacet(String dim, QueryDefinition.Facet facet, Facets facets)
+			throws IOException {
+		int top = facet.top == null ? 10 : facet.top;
+		LinkedHashMap<String, Number> facetMap = new LinkedHashMap<String, Number>();
+		FacetResult facetResult = facets.getTopChildren(top, dim);
+		if (facetResult == null || facetResult.labelValues == null)
+			return null;
+		for (LabelAndValue lv : facetResult.labelValues)
+			facetMap.put(lv.label, lv.value);
+		return facetMap;
 	}
 
 	public long getTotal_hits() {
@@ -101,11 +113,11 @@ public class ResultDefinition {
 		return documents;
 	}
 
-	public Map<String, Map<String, Object>> getFacets() {
+	public Map<String, Map<String, Number>> getFacets() {
 		return facets;
 	}
 
-	public Timer getTimer() {
+	public Map<String, Long> getTimer() {
 		return timer;
 	}
 }

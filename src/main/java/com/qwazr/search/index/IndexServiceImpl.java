@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ import com.qwazr.utils.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.List;
@@ -91,6 +92,17 @@ public class IndexServiceImpl implements IndexServiceInterface {
 			IndexManager.INSTANCE.get(index_name).postDocuments(documents);
 			return Response.ok().build();
 		} catch (ServerException | IOException | IllegalArgumentException e) {
+			logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	public Response deleteAll(String index_name, Boolean local) {
+		try {
+			IndexManager.INSTANCE.get(index_name).deleteAll();
+			return Response.ok().build();
+		} catch (ServerException | IOException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}

@@ -24,6 +24,7 @@ import com.qwazr.utils.json.JsonMapper;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.apache.lucene.document.*;
 import org.apache.lucene.facet.FacetField;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexableField;
@@ -51,7 +52,7 @@ public class FieldDefinition {
 	public enum Template {
 		DoubleField, FloatField, IntField, LongField, NumericDocValuesField, FloatDocValuesField, DoubleDocValuesField,
 		SortedDocValuesField, SortedNumericDocValuesField, SortedDoubleDocValuesField, SortedFloatDocValuesField,
-		SortedSetDocValuesField, StoredField, StringField, TextField, FacetField;
+		SortedSetDocValuesField, StoredField, StringField, TextField, FacetField, SortedSetDocValuesFacetField;
 	}
 
 	public final Template template;
@@ -146,6 +147,9 @@ public class FieldDefinition {
 					break;
 				case FacetField:
 					field = new FacetField(fieldName, value.toString());
+					break;
+				case SortedSetDocValuesFacetField:
+					field = new SortedSetDocValuesFacetField(fieldName, value.toString());
 					break;
 			}
 		}

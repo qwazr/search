@@ -59,6 +59,11 @@ public interface IndexServiceInterface {
 	public Response postDocuments(@PathParam("index_name") String index_name,
 								  List<Map<String, Object>> documents);
 
+	@DELETE
+	@Path("/{index_name}/docs")
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Response deleteAll(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local);
+
 	@POST
 	@Path("/{index_name}/doc")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
