@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.datastax.driver.core.utils.UUIDs;
 import com.qwazr.search.SearchServer;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
@@ -28,6 +29,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.util.CharArraySet;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.FacetsConfig;
@@ -179,13 +181,24 @@ public class IndexInstance implements Closeable {
 		return bytesBuilder.get();
 	}
 
+	private final static String FIELD_ID = "$id$";
+
 	private Object addNewLuceneDocument(Map<String, Object> document) throws IOException {
 		Document doc = new Document();
 
 		Term termId = null;
 
+		Object id = document.get(FIELD_ID);
+		if (id == null)
+			id = UUIDs.timeBased();
+		String id_string = id.toString();
+		doc.add(new StringField(FIELD_ID, id_string, Field.Store.NO));
+		termId = new Term(FIELD_ID, id_string);
+
 		for (Map.Entry<String, Object> field : document.entrySet()) {
 			String fieldName = field.getKey();
+			if (FIELD_ID.equals(fieldName))
+				continue;
 			FieldDefinition fieldDef = fieldMap == null ? null : fieldMap.get(fieldName);
 			if (fieldDef == null) throw new IOException("No field definition for the field: " + fieldName);
 			Field luceneField = fieldDef.getNewField(fieldName, field.getValue());
