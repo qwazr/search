@@ -17,11 +17,9 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.apache.lucene.document.*;
 import org.apache.lucene.facet.FacetField;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
@@ -32,13 +30,13 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class FieldDefinition {
 
 	public final String analyzer;
+	public final Boolean tokenized;
 	public final Boolean stored;
 	public final Boolean store_termvectors;
 	public final Boolean store_termvector_offsets;
@@ -59,6 +57,7 @@ public class FieldDefinition {
 
 	public FieldDefinition() {
 		analyzer = null;
+		tokenized = null;
 		stored = null;
 		store_termvectors = null;
 		store_termvector_offsets = null;
@@ -157,6 +156,8 @@ public class FieldDefinition {
 			FieldType type = new FieldType();
 			if (stored != null)
 				type.setStored(stored);
+			if (tokenized != null)
+				type.setTokenized(tokenized);
 			if (store_termvectors != null)
 				type.setStoreTermVectors(store_termvectors);
 			if (store_termvector_offsets != null)

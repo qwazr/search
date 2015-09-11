@@ -47,6 +47,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
@@ -270,7 +271,22 @@ public class IndexInstance implements Closeable {
 				timeTracker.next("search_query");
 				facets = null;
 			}
-			return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets);
+			Map<String, String[]> postingsHighlightersMap = null;
+			if (queryDef.postings_highlighter != null) {
+				postingsHighlightersMap = new LinkedHashMap<String, String[]>();
+				for (Map.Entry<String, Integer> entry : queryDef.postings_highlighter.entrySet()) {
+					String field = entry.getKey();
+					PostingsHighlighter highlighter = new PostingsHighlighter(entry.getValue());
+					String highlights[] = highlighter.highlight(field, query, indexSearcher, topDocs);
+					if (highlights != null) {
+						postingsHighlightersMap.put(field, highlights);
+					}
+				}
+				timeTracker.next("postings_highlighters");
+			}
+
+			return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets, facetsConfig,
+					postingsHighlightersMap);
 		} catch (ParseException e) {
 			throw new ServerException(e);
 		} finally {
