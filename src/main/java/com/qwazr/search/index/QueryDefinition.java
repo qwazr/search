@@ -44,9 +44,9 @@ public class QueryDefinition {
 
 	final public Set<String> returned_fields = null;
 	final public Map<String, Facet> facets = null;
+	final public Map<String, Set<String>> filters = null;
 
 	final public Map<String, Integer> postings_highlighter = null;
-	final public Map<String, Integer> highlighter = null;
 
 	final public Boolean allow_leading_wildcard = null;
 	final public QueryParser.Operator default_operator = null;

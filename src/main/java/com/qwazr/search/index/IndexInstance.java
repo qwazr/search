@@ -153,6 +153,10 @@ public class IndexInstance implements Closeable {
 		for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
 			String fieldName = field.getKey();
 			FieldDefinition fieldDef = field.getValue();
+			if (fieldDef.template == FieldDefinition.Template.SortedSetMultiDocValuesFacetField)
+				facetsConfig.setMultiValued(fieldName, true);
+			else if (fieldDef.template == FieldDefinition.Template.SortedSetDocValuesFacetField)
+				facetsConfig.setMultiValued(fieldName, false);
 			try {
 				if (!StringUtils.isEmpty(fieldDef.analyzer))
 					analyzerMap.put(field.getKey(), (Analyzer) findAnalyzer(fieldDef.analyzer).newInstance());
@@ -184,6 +188,14 @@ public class IndexInstance implements Closeable {
 
 	private final static String FIELD_ID = "$id$";
 
+	private void addNewLuceneField(String fieldName, Object value, Document doc) throws IOException {
+		FieldDefinition fieldDef = fieldMap == null ? null : fieldMap.get(fieldName);
+		if (fieldDef == null) throw new IOException("No field definition for the field: " + fieldName);
+		Field luceneField = fieldDef.getNewField(fieldName, value);
+		if (luceneField != null)
+			doc.add(luceneField);
+	}
+
 	private Object addNewLuceneDocument(Map<String, Object> document) throws IOException {
 		Document doc = new Document();
 
@@ -200,11 +212,14 @@ public class IndexInstance implements Closeable {
 			String fieldName = field.getKey();
 			if (FIELD_ID.equals(fieldName))
 				continue;
-			FieldDefinition fieldDef = fieldMap == null ? null : fieldMap.get(fieldName);
-			if (fieldDef == null) throw new IOException("No field definition for the field: " + fieldName);
-			Field luceneField = fieldDef.getNewField(fieldName, field.getValue());
-			if (luceneField != null)
-				doc.add(luceneField);
+			Object fieldValue = field.getValue();
+			if (fieldValue instanceof Map<?, ?>)
+				fieldValue = ((Map<?, Object>) fieldValue).values();
+			if (fieldValue instanceof Collection<?>) {
+				for (Object val : ((Collection<Object>) fieldValue))
+					addNewLuceneField(fieldName, val, doc);
+			} else
+				addNewLuceneField(fieldName, fieldValue, doc);
 		}
 
 		Document facetedDoc = facetsConfig.build(doc);
@@ -285,8 +300,7 @@ public class IndexInstance implements Closeable {
 				timeTracker.next("postings_highlighters");
 			}
 
-			return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets, facetsConfig,
-					postingsHighlightersMap);
+			return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets, postingsHighlightersMap);
 		} catch (ParseException e) {
 			throw new ServerException(e);
 		} finally {

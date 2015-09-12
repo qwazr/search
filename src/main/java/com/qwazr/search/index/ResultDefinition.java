@@ -21,7 +21,6 @@ import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.LabelAndValue;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
@@ -30,7 +29,10 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
 public class ResultDefinition {
@@ -53,7 +55,7 @@ public class ResultDefinition {
 	public final static String FIELD_ID = "$id";
 
 	public ResultDefinition(TimeTracker timeTracker, IndexSearcher searcher, TopDocs topDocs, QueryDefinition queryDef,
-							Facets facets, FacetsConfig facetsConfig, Map<String, String[]> postings_highlights)
+							Facets facets, Map<String, String[]> postings_highlights)
 			throws IOException {
 		total_hits = topDocs.totalHits;
 		int pos = queryDef.start == null ? 0 : queryDef.start;
@@ -90,7 +92,7 @@ public class ResultDefinition {
 		long facet_start_time = System.currentTimeMillis();
 		timeTracker.next("returned_field");
 		this.facets =
-				facets != null && queryDef != null ? buildFacets(timeTracker, queryDef.facets, facets, facetsConfig) :
+				facets != null && queryDef != null ? buildFacets(timeTracker, queryDef.facets, facets) :
 						null;
 		this.postings_highlights = postings_highlights;
 		this.timer = timeTracker == null ? null : timeTracker.getMap();
@@ -98,13 +100,10 @@ public class ResultDefinition {
 
 	private Map<String, Map<String, Number>> buildFacets(TimeTracker timeTracker,
 														 Map<String, QueryDefinition.Facet> facetsDef,
-														 Facets facets, FacetsConfig facetsConfig) throws IOException {
+														 Facets facets) throws IOException {
 		Map<String, Map<String, Number>> facetResults = new LinkedHashMap<String, Map<String, Number>>();
-		Set<String> facetConfigField = facetsConfig.getDimConfigs().keySet();
 		for (Map.Entry<String, QueryDefinition.Facet> entry : facetsDef.entrySet()) {
 			String dim = entry.getKey();
-			if (!facetConfigField.contains(dim))
-				continue;
 			Map<String, Number> facetMap = buildFacet(dim, entry.getValue(), facets);
 			if (facetMap != null)
 				facetResults.put(dim, facetMap);

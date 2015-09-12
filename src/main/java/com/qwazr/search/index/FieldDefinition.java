@@ -50,7 +50,8 @@ public class FieldDefinition {
 	public enum Template {
 		DoubleField, FloatField, IntField, LongField, NumericDocValuesField, FloatDocValuesField, DoubleDocValuesField,
 		SortedDocValuesField, SortedNumericDocValuesField, SortedDoubleDocValuesField, SortedFloatDocValuesField,
-		SortedSetDocValuesField, StoredField, StringField, TextField, FacetField, SortedSetDocValuesFacetField;
+		SortedSetDocValuesField, StoredField, StringField, TextField, FacetField, SortedSetDocValuesFacetField,
+		SortedSetMultiDocValuesFacetField;
 	}
 
 	public final Template template;
@@ -148,6 +149,7 @@ public class FieldDefinition {
 					field = new FacetField(fieldName, value.toString());
 					break;
 				case SortedSetDocValuesFacetField:
+				case SortedSetMultiDocValuesFacetField:
 					field = new SortedSetDocValuesFacetField(fieldName, value.toString());
 					break;
 			}
