@@ -39,41 +39,44 @@ public class ResultDefinition {
 
 	final public Map<String, Long> timer;
 	final public long total_hits;
-	final public List<Map<String, Object>> documents;
+	final public List<ResultDocument> documents;
 	final public Map<String, Map<String, Number>> facets;
-	final public Map<String, String[]> postings_highlights;
 
 	public ResultDefinition() {
 		this.timer = null;
 		this.total_hits = 0;
 		this.documents = null;
 		this.facets = null;
-		this.postings_highlights = null;
 	}
 
-	public final static String FIELD_SCORE = "$score";
-	public final static String FIELD_ID = "$id";
+	public class ResultDocument {
 
-	public ResultDefinition(TimeTracker timeTracker, IndexSearcher searcher, TopDocs topDocs, QueryDefinition queryDef,
-							Facets facets, Map<String, String[]> postings_highlights)
-			throws IOException {
-		total_hits = topDocs.totalHits;
-		int pos = queryDef.start == null ? 0 : queryDef.start;
-		int end = queryDef.getEnd();
-		documents = new ArrayList<Map<String, Object>>();
-		ScoreDoc[] docs = topDocs.scoreDocs;
-		IndexReader reader = searcher.getIndexReader();
-		while (pos < total_hits && pos < end) {
-			ScoreDoc scoreDoc = docs[pos];
+		final private ScoreDoc scoreDoc;
+		final public Map<String, Object> fields;
+		final public Map<String, String> postings_highlights;
+
+		public ResultDocument() {
+			scoreDoc = null;
+			fields = null;
+			postings_highlights = null;
+		}
+
+		private ResultDocument(int pos, ScoreDoc[] scoreDocs, IndexSearcher searcher, QueryDefinition queryDef,
+							   Map<String, String[]> postingsHighlightsMap)
+				throws IOException {
+
+			scoreDoc = scoreDocs[pos];
 			Document document = searcher.doc(scoreDoc.doc, queryDef.returned_fields);
-			Map<String, Object> doc = new LinkedHashMap<String, Object>();
+
+			// Build field map
+			fields = new LinkedHashMap<String, Object>();
 			for (IndexableField field : document) {
 				Object newValue = FieldDefinition.getValue(field);
 				if (newValue == null)
 					continue;
-				Object oldValue = doc.get(field.name());
+				Object oldValue = fields.get(field.name());
 				if (oldValue == null) {
-					doc.put(field.name(), newValue);
+					fields.put(field.name(), newValue);
 					continue;
 				}
 				if (oldValue instanceof List<?>) {
@@ -83,23 +86,66 @@ public class ResultDefinition {
 				List<Object> list = new ArrayList<Object>(2);
 				list.add(oldValue);
 				list.add(newValue);
-				doc.put(field.name(), list);
+				fields.put(field.name(), list);
 			}
-			doc.put(FIELD_SCORE, scoreDoc.score);
-			documents.add(doc);
-			pos++;
+
+			// Build postings hightlights
+			if (queryDef.postings_highlighter != null && postingsHighlightsMap != null) {
+				postings_highlights = new LinkedHashMap<String, String>();
+				for (String field : queryDef.postings_highlighter.keySet()) {
+					String[] highlights = postingsHighlightsMap.get(field);
+					if (highlights == null)
+						continue;
+					String highlight = highlights[pos];
+					if (highlight == null)
+						continue;
+					postings_highlights.put(field, highlight);
+				}
+			} else
+				postings_highlights = null;
 		}
-		long facet_start_time = System.currentTimeMillis();
-		timeTracker.next("returned_field");
-		this.facets =
-				facets != null && queryDef != null ? buildFacets(timeTracker, queryDef.facets, facets) :
-						null;
-		this.postings_highlights = postings_highlights;
+
+		public Float getScore() {
+			return scoreDoc != null ? scoreDoc.score : null;
+		}
+
+		public Integer getDoc() {
+			return scoreDoc != null ? scoreDoc.doc : null;
+		}
+
+		public Integer getShard_index() {
+			return scoreDoc != null ? scoreDoc.shardIndex : null;
+		}
+
+		public Map<String, Object> getFields() {
+			return fields;
+		}
+
+		public Map<String, String> getPostings_highlights() {
+			return postings_highlights;
+		}
+	}
+
+	public final static String FIELD_ID = "$id";
+
+	public ResultDefinition(TimeTracker timeTracker, IndexSearcher searcher, TopDocs topDocs, QueryDefinition queryDef,
+							Facets facets, Map<String, String[]> postingsHighlightsMap)
+			throws IOException {
+		total_hits = topDocs.totalHits;
+		int pos = queryDef.start == null ? 0 : queryDef.start;
+		int end = queryDef.getEnd();
+		documents = new ArrayList<ResultDocument>();
+		ScoreDoc[] docs = topDocs.scoreDocs;
+		IndexReader reader = searcher.getIndexReader();
+		while (pos < total_hits && pos < end)
+			documents.add(new ResultDocument(pos++, docs, searcher, queryDef, postingsHighlightsMap));
+		timeTracker.next("returned_fields");
+		this.facets = facets != null && queryDef != null ? buildFacets(queryDef.facets, facets) : null;
+		timeTracker.next("facet_fields");
 		this.timer = timeTracker == null ? null : timeTracker.getMap();
 	}
 
-	private Map<String, Map<String, Number>> buildFacets(TimeTracker timeTracker,
-														 Map<String, QueryDefinition.Facet> facetsDef,
+	private Map<String, Map<String, Number>> buildFacets(Map<String, QueryDefinition.Facet> facetsDef,
 														 Facets facets) throws IOException {
 		Map<String, Map<String, Number>> facetResults = new LinkedHashMap<String, Map<String, Number>>();
 		for (Map.Entry<String, QueryDefinition.Facet> entry : facetsDef.entrySet()) {
@@ -108,7 +154,6 @@ public class ResultDefinition {
 			if (facetMap != null)
 				facetResults.put(dim, facetMap);
 		}
-		timeTracker.next("facet_fields");
 		return facetResults;
 	}
 
@@ -128,7 +173,7 @@ public class ResultDefinition {
 		return total_hits;
 	}
 
-	public List<Map<String, Object>> getDocuments() {
+	public List<ResultDocument> getDocuments() {
 		return documents;
 	}
 
