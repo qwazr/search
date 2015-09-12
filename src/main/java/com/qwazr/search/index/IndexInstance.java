@@ -30,6 +30,7 @@ import org.apache.lucene.analysis.util.CharArraySet;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
+import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.FacetsConfig;
@@ -274,6 +275,19 @@ public class IndexInstance implements Closeable {
 			final TopDocs topDocs;
 			final Facets facets;
 			Query query = parser.parse(queryDef.query_string);
+			// Overload query with filters
+			if (queryDef.filters != null && !queryDef.filters.isEmpty()) {
+				DrillDownQuery drillDownQuery = new DrillDownQuery(facetsConfig, query);
+				for (Map.Entry<String, Set<String>> entry : queryDef.filters.entrySet()) {
+					Set<String> filter_terms = entry.getValue();
+					if (filter_terms == null)
+						continue;
+					String filter_field = entry.getKey();
+					for (String filter_term : filter_terms)
+						drillDownQuery.add(filter_field, filter_term);
+				}
+				query = drillDownQuery;
+			}
 			if (queryDef.facets != null && queryDef.facets.size() > 0) {
 				FacetsCollector facetsCollector = new FacetsCollector();
 				SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
