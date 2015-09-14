@@ -138,19 +138,16 @@ public class ResultDefinition {
 		while (pos < total_hits && pos < end)
 			documents.add(new ResultDocument(pos++, docs, searcher, queryDef, postingsHighlightsMap));
 		timeTracker.next("returned_fields");
-		this.facets = facets != null && queryDef != null ? buildFacets(reader, queryDef.facets, facets) : null;
+		this.facets = facets != null && queryDef != null ? buildFacets(queryDef.facets, facets) : null;
 		timeTracker.next("facet_fields");
 		this.timer = timeTracker == null ? null : timeTracker.getMap();
 	}
 
-	private Map<String, Map<String, Number>> buildFacets(IndexReader reader,
-														 Map<String, QueryDefinition.Facet> facetsDef,
+	private Map<String, Map<String, Number>> buildFacets(Map<String, QueryDefinition.Facet> facetsDef,
 														 Facets facets) throws IOException {
 		Map<String, Map<String, Number>> facetResults = new LinkedHashMap<String, Map<String, Number>>();
 		for (Map.Entry<String, QueryDefinition.Facet> entry : facetsDef.entrySet()) {
 			String dim = entry.getKey();
-			if (reader.getDocCount(dim) == -1)
-				continue;
 			Map<String, Number> facetMap = buildFacet(dim, entry.getValue(), facets);
 			if (facetMap != null)
 				facetResults.put(dim, facetMap);
