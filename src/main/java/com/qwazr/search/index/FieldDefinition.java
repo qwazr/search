@@ -82,9 +82,9 @@ public class FieldDefinition {
 		return new BytesRef(value.toString());
 	}
 
-	Field getNewField(String fieldName, Object value) {
+	void putNewField(String fieldName, Object value, Document doc) {
 		if (value == null)
-			return null;
+			return;
 		Field field = null;
 		Field.Store store = (stored != null && stored) ? Field.Store.YES : Field.Store.NO;
 		if (template != null) {
@@ -179,7 +179,11 @@ public class FieldDefinition {
 
 			field = new Field(fieldName, value.toString(), type);
 		}
-		return field;
+
+		doc.add(field);
+
+		if (field.fieldType().docValuesType() != null && store == Field.Store.YES)
+			doc.add(new StoredField(fieldName, value.toString()));
 	}
 
 	public final static Object getValue(IndexableField field) {

@@ -37,6 +37,7 @@ public class QueryDefinition {
 
 	final public String default_field = null;
 	final public String query_string = null;
+	final public Boolean escape_query = null;
 	final public Map<String, Float> multi_field = null;
 
 	final public Integer start = null;

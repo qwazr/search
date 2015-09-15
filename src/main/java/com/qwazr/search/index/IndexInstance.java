@@ -24,9 +24,8 @@ import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.analysis.util.CharArraySet;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -149,7 +148,7 @@ public class IndexInstance implements Closeable {
 	private PerFieldAnalyzerWrapper buildFieldAnalyzer(Map<String, FieldDefinition> fields)
 			throws ServerException {
 		if (fields == null || fields.size() == 0)
-			return new PerFieldAnalyzerWrapper(new StandardAnalyzer(CharArraySet.EMPTY_SET));
+			return new PerFieldAnalyzerWrapper(new KeywordAnalyzer());
 		Map<String, Analyzer> analyzerMap = new HashMap<String, Analyzer>();
 		for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
 			String fieldName = field.getKey();
@@ -166,7 +165,7 @@ public class IndexInstance implements Closeable {
 						"Class " + fieldDef.analyzer + " not known for the field " + fieldName);
 			}
 		}
-		return new PerFieldAnalyzerWrapper(new StandardAnalyzer(CharArraySet.EMPTY_SET), analyzerMap);
+		return new PerFieldAnalyzerWrapper(new KeywordAnalyzer(), analyzerMap);
 	}
 
 	public synchronized void setFields(Map<String, FieldDefinition> fields) throws ServerException, IOException {
@@ -192,9 +191,7 @@ public class IndexInstance implements Closeable {
 	private void addNewLuceneField(String fieldName, Object value, Document doc) throws IOException {
 		FieldDefinition fieldDef = fieldMap == null ? null : fieldMap.get(fieldName);
 		if (fieldDef == null) throw new IOException("No field definition for the field: " + fieldName);
-		Field luceneField = fieldDef.getNewField(fieldName, value);
-		if (luceneField != null)
-			doc.add(luceneField);
+		fieldDef.putNewField(fieldName, value, doc);
 	}
 
 	private Object addNewLuceneDocument(Map<String, Object> document) throws IOException {
@@ -274,7 +271,10 @@ public class IndexInstance implements Closeable {
 		try {
 			final TopDocs topDocs;
 			final Facets facets;
-			Query query = parser.parse(queryDef.query_string);
+			String qs =
+					queryDef.escape_query != null && queryDef.escape_query ? QueryParser.escape(queryDef.query_string) :
+							queryDef.query_string;
+			Query query = parser.parse(qs);
 			// Overload query with filters
 			if (queryDef.filters != null && !queryDef.filters.isEmpty()) {
 				DrillDownQuery drillDownQuery = new DrillDownQuery(facetsConfig, query);
