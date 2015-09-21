@@ -35,6 +35,7 @@ import com.qwazr.utils.server.ServletApplication;
 public class SearchServer extends AbstractServer {
 
     public final static String SERVICE_NAME_SEARCH = "search";
+    public final static String INDEXES_DIRECTORY = "index";
 
     private final static ServerDefinition serverDefinition = new ServerDefinition();
 
@@ -71,7 +72,7 @@ public class SearchServer extends AbstractServer {
     }
 
     public static void loadIndexManager(File dataDirectory) throws IOException {
-	File indexDir = new File(dataDirectory, SERVICE_NAME_SEARCH);
+	File indexDir = new File(dataDirectory, INDEXES_DIRECTORY);
 	checkDirectoryExists(indexDir);
 	IndexManager.load(indexDir);
     }
