@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,72 +34,65 @@ import com.qwazr.utils.server.ServletApplication;
 
 public class SearchServer extends AbstractServer {
 
-	public final static String SERVICE_NAME_INDEX = "index";
+    public final static String SERVICE_NAME_SEARCH = "search";
 
-	private final static ServerDefinition serverDefinition = new ServerDefinition();
-	static {
-		serverDefinition.mainJarPath = "qwazr-search.jar";
-		serverDefinition.defaultDataDirName = "qwazr";
-		serverDefinition.defaultWebServiceTcpPort = 9091;
+    private final static ServerDefinition serverDefinition = new ServerDefinition();
 
+    static {
+	serverDefinition.mainJarPath = "qwazr-search.jar";
+	serverDefinition.defaultDataDirName = "qwazr";
+	serverDefinition.defaultWebServiceTcpPort = 9091;
+
+    }
+
+    private SearchServer() {
+	super(serverDefinition);
+    }
+
+    public static class SearchApplication extends RestApplication {
+
+	@Override public Set<Class<?>> getClasses() {
+	    Set<Class<?>> classes = super.getClasses();
+	    classes.add(ClusterServiceImpl.class);
+	    classes.add(IndexServiceImpl.class);
+	    return classes;
 	}
+    }
 
-	private SearchServer() {
-		super(serverDefinition);
-	}
+    @Override public void commandLine(CommandLine cmd) throws IOException, ParseException {
+    }
 
-	public static class SearchApplication extends RestApplication {
+    public static void checkDirectoryExists(File directoryFile) throws IOException {
+	if (!directoryFile.exists())
+	    directoryFile.mkdir();
+	if (!directoryFile.isDirectory())
+	    throw new IOException("This name is not valid. No directory exists for this location: " + directoryFile
+			    .getName());
+    }
 
-		@Override
-		public Set<Class<?>> getClasses() {
-			Set<Class<?>> classes = super.getClasses();
-			classes.add(ClusterServiceImpl.class);
-			classes.add(IndexServiceImpl.class);
-			return classes;
-		}
-	}
+    public static void loadIndexManager(File dataDirectory) throws IOException {
+	File indexDir = new File(dataDirectory, SERVICE_NAME_SEARCH);
+	checkDirectoryExists(indexDir);
+	IndexManager.load(indexDir);
+    }
 
-	@Override
-	public void commandLine(CommandLine cmd) throws IOException, ParseException {
-	}
+    @Override public void load() throws IOException {
+	File currentDataDir = getCurrentDataDir();
+	ClusterServer.load(getWebServicePublicAddress(), currentDataDir);
+	loadIndexManager(currentDataDir);
 
-	public static void checkDirectoryExists(File directoryFile)
-			throws IOException {
-		if (!directoryFile.exists())
-			directoryFile.mkdir();
-		if (!directoryFile.isDirectory())
-			throw new IOException(
-					"This name is not valid. No directory exists for this location: "
-							+ directoryFile.getName());
-	}
+    }
 
-	public static void loadIndexManager(File dataDirectory) throws IOException {
-		File indexDir = new File(dataDirectory, SERVICE_NAME_INDEX);
-		checkDirectoryExists(indexDir);
-		IndexManager.load(indexDir);
-	}
+    @Override protected RestApplication getRestApplication() {
+	return new SearchApplication();
+    }
 
-	@Override
-	public void load() throws IOException {
-		File currentDataDir = getCurrentDataDir();
-		ClusterServer.load(getWebServicePublicAddress(), currentDataDir);
-		loadIndexManager(currentDataDir);
+    @Override protected ServletApplication getServletApplication() {
+	return null;
+    }
 
-	}
-
-	@Override
-	protected RestApplication getRestApplication() {
-		return new SearchApplication();
-	}
-
-	@Override
-	protected ServletApplication getServletApplication() {
-		return null;
-	}
-
-	public static void main(String[] args) throws IOException, ParseException,
-			ServletException {
-		new SearchServer().start(args);
-	}
+    public static void main(String[] args) throws IOException, ParseException, ServletException {
+	new SearchServer().start(args);
+    }
 
 }
