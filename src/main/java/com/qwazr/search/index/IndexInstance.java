@@ -105,7 +105,8 @@ public class IndexInstance implements Closeable {
 	searcherManager = new SearcherManager(indexWriter, true, null);
     }
 
-    @Override public void close() {
+    @Override
+    public void close() {
 	IOUtils.close(searcherManager);
 	if (indexWriter.isOpen())
 	    IOUtils.close(indexWriter);
@@ -252,7 +253,7 @@ public class IndexInstance implements Closeable {
 	return ids;
     }
 
-    public ResultDefinition search(QueryDefinition queryDef) throws ServerException, IOException {
+    private Query getLuceneQuery(QueryDefinition queryDef) throws ParseException {
 	final QueryParser parser;
 	if (queryDef.multi_field != null && !queryDef.multi_field.isEmpty()) {
 	    Set<String> fieldSet = queryDef.multi_field.keySet();
@@ -264,22 +265,35 @@ public class IndexInstance implements Closeable {
 	    parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
 	if (queryDef.default_operator != null)
 	    parser.setDefaultOperator(queryDef.default_operator);
+	final String qs;
+	// Check if we have to escape some characters
+	if (queryDef.escape_query != null && queryDef.escape_query) {
+	    if (queryDef.escaped_chars != null && queryDef.escaped_chars.length > 0)
+		qs = StringUtils.escape_chars(queryDef.query_string, queryDef.escaped_chars);
+	    else
+		qs = QueryParser.escape(queryDef.query_string);
+	} else
+	    qs = queryDef.query_string;
+	return parser.parse(qs);
+    }
+
+    public void deleteByQuery(QueryDefinition queryDef) throws ParseException, IOException {
+	Query query = getLuceneQuery(queryDef);
+	indexWriter.deleteDocuments(query);
+	nrtCommit();
+    }
+
+    public ResultDefinition search(QueryDefinition queryDef) throws ServerException, IOException, ParseException {
+
+	Query query = getLuceneQuery(queryDef);
+
 	final IndexSearcher indexSearcher = searcherManager.acquire();
 	final IndexReader indexReader = indexSearcher.getIndexReader();
 	final TimeTracker timeTracker = new TimeTracker();
 	try {
 	    final TopDocs topDocs;
 	    final Facets facets;
-	    final String qs;
-	    // Check if we have to escape some characters
-	    if (queryDef.escape_query != null && queryDef.escape_query) {
-		if (queryDef.escaped_chars != null && queryDef.escaped_chars.length > 0)
-		    qs = StringUtils.escape_chars(queryDef.query_string, queryDef.escaped_chars);
-		else
-		    qs = QueryParser.escape(queryDef.query_string);
-	    } else
-		qs = queryDef.query_string;
-	    Query query = parser.parse(qs);
+
 	    // Overload query with filters
 	    if (queryDef.filters != null && !queryDef.filters.isEmpty()) {
 		DrillDownQuery drillDownQuery = new DrillDownQuery(facetsConfig, query);
@@ -320,8 +334,6 @@ public class IndexInstance implements Closeable {
 	    }
 
 	    return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets, postingsHighlightersMap);
-	} catch (ParseException e) {
-	    throw new ServerException(e);
 	} finally {
 	    searcherManager.release(indexSearcher);
 	}

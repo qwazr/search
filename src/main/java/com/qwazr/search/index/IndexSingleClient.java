@@ -42,26 +42,29 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
     public final static TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
     };
 
-    @Override public Set<String> getIndexes(Boolean local) {
+    @Override
+    public Set<String> getIndexes(Boolean local) {
 	UBuilder uriBuilder = new UBuilder("/indexes").setParameters(local, null);
 	Request request = Request.Get(uriBuilder.build());
 	return (Set<String>) commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
     }
 
-    @Override public IndexStatus createUpdateIndex(String index_name, Boolean local,
-		    Map<String, FieldDefinition> fields) {
+    @Override
+    public IndexStatus createUpdateIndex(String index_name, Boolean local, Map<String, FieldDefinition> fields) {
 	UBuilder uriBuilder = new UBuilder("/indexes/", index_name).setParameters(local, null);
 	Request request = Request.Post(uriBuilder.build());
 	return commonServiceRequest(request, fields, msTimeOut, IndexStatus.class, 200);
     }
 
-    @Override public IndexStatus getIndex(String index_name) {
+    @Override
+    public IndexStatus getIndex(String index_name) {
 	UBuilder uriBuilder = new UBuilder("/indexes/", index_name);
 	Request request = Request.Get(uriBuilder.build());
 	return commonServiceRequest(request, null, msTimeOut, IndexStatus.class, 200);
     }
 
-    @Override public Response deleteIndex(String index_name, Boolean local) {
+    @Override
+    public Response deleteIndex(String index_name, Boolean local) {
 	try {
 	    UBuilder uriBuilder = new UBuilder("/indexes/", index_name).setParameters(local, null);
 	    Request request = Request.Delete(uriBuilder.build());
@@ -75,7 +78,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
     }
 
-    @Override public Response postDocument(String index_name, Map<String, Object> document) {
+    @Override
+    public Response postDocument(String index_name, Map<String, Object> document) {
 	try {
 	    UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/doc");
 	    Request request = Request.Post(uriBuilder.build());
@@ -89,7 +93,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
     }
 
-    @Override public Response postDocuments(String index_name, List<Map<String, Object>> documents) {
+    @Override
+    public Response postDocuments(String index_name, List<Map<String, Object>> documents) {
 	try {
 	    UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/docs");
 	    Request request = Request.Post(uriBuilder.build());
@@ -103,7 +108,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
     }
 
-    @Override public Response deleteAll(String index_name, Boolean local) {
+    @Override
+    public Response deleteAll(String index_name, Boolean local) {
 	try {
 	    UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/docs").setParameters(local, null);
 	    Request request = Request.Delete(uriBuilder.build());
@@ -117,10 +123,26 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
     }
 
-    @Override public ResultDefinition searchQuery(String index_name, QueryDefinition query) {
+    @Override
+    public ResultDefinition searchQuery(String index_name, QueryDefinition query) {
 	UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/search");
 	Request request = Request.Post(uriBuilder.build());
 	return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);
+    }
+
+    @Override
+    public Response deleteByQuery(String index_name, QueryDefinition query) {
+	try {
+	    UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/search");
+	    Request request = Request.Delete(uriBuilder.build());
+	    HttpResponse response = execute(request, query, msTimeOut);
+	    HttpUtils.checkStatusCodes(response, 200);
+	    return Response.status(response.getStatusLine().getStatusCode()).build();
+	} catch (HttpResponseEntityException e) {
+	    throw e.getWebApplicationException();
+	} catch (IOException e) {
+	    throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+	}
     }
 
 }

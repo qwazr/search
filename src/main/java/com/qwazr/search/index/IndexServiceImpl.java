@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.utils.server.ServerException;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,13 +31,14 @@ public class IndexServiceImpl implements IndexServiceInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexServiceImpl.class);
 
-    @Override public Set<String> getIndexes(Boolean local) {
+    @Override
+    public Set<String> getIndexes(Boolean local) {
 	return IndexManager.INSTANCE.nameSet();
 	// TODO Local
     }
 
-    @Override public IndexStatus createUpdateIndex(String index_name, Boolean local,
-		    Map<String, FieldDefinition> fields) {
+    @Override
+    public IndexStatus createUpdateIndex(String index_name, Boolean local, Map<String, FieldDefinition> fields) {
 	try {
 	    return IndexManager.INSTANCE.createUpdate(index_name, fields);
 	} catch (ServerException | IOException e) {
@@ -46,7 +48,8 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	// TODO Local
     }
 
-    @Override public IndexStatus getIndex(String index_name) {
+    @Override
+    public IndexStatus getIndex(String index_name) {
 	try {
 	    return IndexManager.INSTANCE.get(index_name).getStatus();
 	} catch (ServerException | IOException e) {
@@ -55,7 +58,8 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
     }
 
-    @Override public Response deleteIndex(String index_name, Boolean local) {
+    @Override
+    public Response deleteIndex(String index_name, Boolean local) {
 	try {
 	    IndexManager.INSTANCE.delete(index_name);
 	    return Response.ok().build();
@@ -66,7 +70,8 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	// TODO Local
     }
 
-    @Override public Response postDocument(String index_name, Map<String, Object> document) {
+    @Override
+    public Response postDocument(String index_name, Map<String, Object> document) {
 	try {
 	    if (document == null || document.isEmpty())
 		return Response.notModified().build();
@@ -78,7 +83,8 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
     }
 
-    @Override public Response postDocuments(String index_name, List<Map<String, Object>> documents) {
+    @Override
+    public Response postDocuments(String index_name, List<Map<String, Object>> documents) {
 	try {
 	    if (documents == null || documents.isEmpty())
 		return Response.notModified().build();
@@ -90,7 +96,8 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
     }
 
-    @Override public Response deleteAll(String index_name, Boolean local) {
+    @Override
+    public Response deleteAll(String index_name, Boolean local) {
 	try {
 	    IndexManager.INSTANCE.get(index_name).deleteAll();
 	    return Response.ok().build();
@@ -100,10 +107,22 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
     }
 
-    @Override public ResultDefinition searchQuery(String index_name, QueryDefinition query) {
+    @Override
+    public Response deleteByQuery(String index_name, QueryDefinition query) {
+	try {
+	    IndexManager.INSTANCE.get(index_name).deleteByQuery(query);
+	    return Response.ok().build();
+	} catch (ServerException | IOException | ParseException e) {
+	    logger.warn(e.getMessage(), e);
+	    throw ServerException.getJsonException(e);
+	}
+    }
+
+    @Override
+    public ResultDefinition searchQuery(String index_name, QueryDefinition query) {
 	try {
 	    return IndexManager.INSTANCE.get(index_name).search(query);
-	} catch (ServerException | IOException e) {
+	} catch (ServerException | IOException | ParseException e) {
 	    logger.warn(e.getMessage(), e);
 	    throw ServerException.getJsonException(e);
 	}
