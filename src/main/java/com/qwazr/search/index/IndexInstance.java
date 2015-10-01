@@ -96,8 +96,8 @@ public class IndexInstance implements Closeable {
 	luceneDirectory = FSDirectory.open(dataDirectory.toPath());
 	facetsConfig = new FacetsConfig();
 	fieldMapFile = new File(indexDirectory, FIELDS_FILE);
-	fieldMap = fieldMapFile.exists()
-		? JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) : null;
+	fieldMap = fieldMapFile.exists() ? JsonMapper.MAPPER.readValue(fieldMapFile,
+		FieldDefinition.MapStringFieldTypeRef) : null;
 	perFieldAnalyzer = buildFieldAnalyzer(fieldMap);
 	indexWriterConfig = new IndexWriterConfig(perFieldAnalyzer);
 	indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
@@ -162,8 +162,8 @@ public class IndexInstance implements Closeable {
 		if (!StringUtils.isEmpty(fieldDef.analyzer))
 		    analyzerMap.put(field.getKey(), (Analyzer) findAnalyzer(fieldDef.analyzer).newInstance());
 	    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-			"Class " + fieldDef.analyzer + " not known for the field " + fieldName);
+		throw new ServerException(Response.Status.NOT_ACCEPTABLE, "Class " + fieldDef.analyzer
+			+ " not known for the field " + fieldName);
 	    }
 	}
 	return new PerFieldAnalyzerWrapper(new KeywordAnalyzer(), analyzerMap);
