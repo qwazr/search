@@ -15,29 +15,34 @@
  */
 package com.qwazr.search.analysis;
 
-import java.io.IOException;
-import java.io.Reader;
+import java.util.Arrays;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
+import org.apache.lucene.analysis.snowball.SnowballFilter;
 import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.apache.lucene.analysis.util.CharArraySet;
+import org.apache.lucene.analysis.util.ElisionFilter;
+import org.tartarus.snowball.ext.CatalanStemmer;
 
-final public class StandardAnalyzer extends Analyzer {
+final public class CatalanAnalyzer extends Analyzer {
 
-    private final static int MAX_TOKEN_LENGTH = 1024;
+    private static final CharArraySet DEFAULT_ARTICLES = CharArraySet
+	    .unmodifiableSet(new CharArraySet(Arrays.asList("d", "l", "m", "n", "s", "t"), true));
 
-    protected Analyzer.TokenStreamComponents createComponents(String fieldName) {
-	final StandardTokenizer tok = new StandardTokenizer();
-	tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
-	TokenStream result = new StandardFilter((TokenStream) tok);
+    public CatalanAnalyzer() {
+    }
+
+    @Override
+    protected TokenStreamComponents createComponents(String fieldName) {
+	final Tokenizer source = new StandardTokenizer();
+	TokenStream result = new StandardFilter(source);
+	result = new ElisionFilter(result, DEFAULT_ARTICLES);
 	result = new LowerCaseFilter(result);
-	return new TokenStreamComponents(tok, result) {
-	    protected void setReader(Reader reader) throws IOException {
-		tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
-		super.setReader(reader);
-	    }
-	};
+	result = new SnowballFilter(result, new CatalanStemmer());
+	return new TokenStreamComponents(source, result);
     }
 }

@@ -79,6 +79,21 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
     }
 
     @Override
+    public SettingsDefinition getSettings(@PathParam("index_name") String index_name) {
+	return null;
+    }
+
+    @Override
+    public SettingsDefinition setSettings(@PathParam("index_name") String index_name, SettingsDefinition settings) {
+	return null;
+    }
+
+    @Override
+    public Response deleteSettings(@PathParam("index_name") String index_name) {
+	return null;
+    }
+
+    @Override
     public Response postDocument(String index_name, Map<String, Object> document) {
 	try {
 	    UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/doc");

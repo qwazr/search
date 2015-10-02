@@ -43,7 +43,6 @@ public class SearchServer extends AbstractServer {
 	serverDefinition.mainJarPath = "qwazr-search.jar";
 	serverDefinition.defaultDataDirName = "qwazr";
 	serverDefinition.defaultWebServiceTcpPort = 9091;
-
     }
 
     private SearchServer() {

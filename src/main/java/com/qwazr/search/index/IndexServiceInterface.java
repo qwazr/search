@@ -38,7 +38,7 @@ public interface IndexServiceInterface {
     @Consumes(RestApplication.APPLICATION_JSON_UTF8)
     @Produces(RestApplication.APPLICATION_JSON_UTF8)
     public IndexStatus createUpdateIndex(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local,
-		    Map<String, FieldDefinition> fields);
+	    Map<String, FieldDefinition> fields);
 
     @GET
     @Path("/{index_name}")
@@ -49,6 +49,22 @@ public interface IndexServiceInterface {
     @Path("/{index_name}")
     @Produces(MediaType.TEXT_PLAIN)
     public Response deleteIndex(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local);
+
+    @GET
+    @Path("/{index_name/settings}")
+    @Produces(RestApplication.APPLICATION_JSON_UTF8)
+    public SettingsDefinition getSettings(@PathParam("index_name") String index_name);
+
+    @POST
+    @Path("/{index_name/settings}")
+    @Consumes(RestApplication.APPLICATION_JSON_UTF8)
+    @Produces(RestApplication.APPLICATION_JSON_UTF8)
+    public SettingsDefinition setSettings(@PathParam("index_name") String index_name, SettingsDefinition settings);
+
+    @DELETE
+    @Path("/{index_name}/settings")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response deleteSettings(@PathParam("index_name") String index_name);
 
     @POST
     @Path("/{index_name}/docs")

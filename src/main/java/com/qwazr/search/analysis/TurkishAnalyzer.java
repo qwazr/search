@@ -15,29 +15,28 @@
  */
 package com.qwazr.search.analysis;
 
-import java.io.IOException;
-import java.io.Reader;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.core.LowerCaseFilter;
+import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.snowball.SnowballFilter;
 import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.apache.lucene.analysis.tr.ApostropheFilter;
+import org.apache.lucene.analysis.tr.TurkishLowerCaseFilter;
+import org.tartarus.snowball.ext.TurkishStemmer;
 
-final public class StandardAnalyzer extends Analyzer {
+final public class TurkishAnalyzer extends Analyzer {
 
-    private final static int MAX_TOKEN_LENGTH = 1024;
+    public TurkishAnalyzer() {
+    }
 
-    protected Analyzer.TokenStreamComponents createComponents(String fieldName) {
-	final StandardTokenizer tok = new StandardTokenizer();
-	tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
-	TokenStream result = new StandardFilter((TokenStream) tok);
-	result = new LowerCaseFilter(result);
-	return new TokenStreamComponents(tok, result) {
-	    protected void setReader(Reader reader) throws IOException {
-		tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
-		super.setReader(reader);
-	    }
-	};
+    @Override
+    protected TokenStreamComponents createComponents(String fieldName) {
+	final Tokenizer source = new StandardTokenizer();
+	TokenStream result = new StandardFilter(source);
+	result = new ApostropheFilter(result);
+	result = new TurkishLowerCaseFilter(result);
+	result = new SnowballFilter(result, new TurkishStemmer());
+	return new TokenStreamComponents(source, result);
     }
 }

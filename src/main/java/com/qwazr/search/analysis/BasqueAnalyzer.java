@@ -15,29 +15,26 @@
  */
 package com.qwazr.search.analysis;
 
-import java.io.IOException;
-import java.io.Reader;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
+import org.apache.lucene.analysis.snowball.SnowballFilter;
 import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.tartarus.snowball.ext.BasqueStemmer;
 
-final public class StandardAnalyzer extends Analyzer {
+final public class BasqueAnalyzer extends Analyzer {
 
-    private final static int MAX_TOKEN_LENGTH = 1024;
+    public BasqueAnalyzer() {
+    }
 
-    protected Analyzer.TokenStreamComponents createComponents(String fieldName) {
-	final StandardTokenizer tok = new StandardTokenizer();
-	tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
-	TokenStream result = new StandardFilter((TokenStream) tok);
+    @Override
+    protected TokenStreamComponents createComponents(String fieldName) {
+	final Tokenizer source = new StandardTokenizer();
+	TokenStream result = new StandardFilter(source);
 	result = new LowerCaseFilter(result);
-	return new TokenStreamComponents(tok, result) {
-	    protected void setReader(Reader reader) throws IOException {
-		tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
-		super.setReader(reader);
-	    }
-	};
+	result = new SnowballFilter(result, new BasqueStemmer());
+	return new TokenStreamComponents(source, result);
     }
 }

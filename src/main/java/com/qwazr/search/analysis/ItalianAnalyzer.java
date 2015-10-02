@@ -15,29 +15,34 @@
  */
 package com.qwazr.search.analysis;
 
-import java.io.IOException;
-import java.io.Reader;
+import java.util.Arrays;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
+import org.apache.lucene.analysis.it.ItalianLightStemFilter;
 import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.apache.lucene.analysis.util.CharArraySet;
+import org.apache.lucene.analysis.util.ElisionFilter;
 
-final public class StandardAnalyzer extends Analyzer {
+final public class ItalianAnalyzer extends Analyzer {
 
-    private final static int MAX_TOKEN_LENGTH = 1024;
+    private static final CharArraySet DEFAULT_ARTICLES = CharArraySet
+	    .unmodifiableSet(new CharArraySet(Arrays.asList("c", "l", "all", "dall", "dell", "nell", "sull", "coll",
+		    "pell", "gl", "agl", "dagl", "degl", "negl", "sugl", "un", "m", "t", "s", "v", "d"), true));
 
-    protected Analyzer.TokenStreamComponents createComponents(String fieldName) {
-	final StandardTokenizer tok = new StandardTokenizer();
-	tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
-	TokenStream result = new StandardFilter((TokenStream) tok);
+    public ItalianAnalyzer() {
+    }
+
+    @Override
+    protected TokenStreamComponents createComponents(String fieldName) {
+	final Tokenizer source = new StandardTokenizer();
+	TokenStream result = new StandardFilter(source);
+	result = new ElisionFilter(result, DEFAULT_ARTICLES);
 	result = new LowerCaseFilter(result);
-	return new TokenStreamComponents(tok, result) {
-	    protected void setReader(Reader reader) throws IOException {
-		tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
-		super.setReader(reader);
-	    }
-	};
+	result = new ItalianLightStemFilter(result);
+	return new TokenStreamComponents(source, result);
     }
 }

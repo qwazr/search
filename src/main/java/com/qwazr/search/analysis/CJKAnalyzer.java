@@ -15,29 +15,25 @@
  */
 package com.qwazr.search.analysis;
 
-import java.io.IOException;
-import java.io.Reader;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.cjk.CJKBigramFilter;
+import org.apache.lucene.analysis.cjk.CJKWidthFilter;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
-import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 
-final public class StandardAnalyzer extends Analyzer {
+final public class CJKAnalyzer extends Analyzer {
 
-    private final static int MAX_TOKEN_LENGTH = 1024;
+    public CJKAnalyzer() {
+    }
 
-    protected Analyzer.TokenStreamComponents createComponents(String fieldName) {
-	final StandardTokenizer tok = new StandardTokenizer();
-	tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
-	TokenStream result = new StandardFilter((TokenStream) tok);
+    @Override
+    protected TokenStreamComponents createComponents(String fieldName) {
+	final Tokenizer source = new StandardTokenizer();
+	TokenStream result = new CJKWidthFilter(source);
 	result = new LowerCaseFilter(result);
-	return new TokenStreamComponents(tok, result) {
-	    protected void setReader(Reader reader) throws IOException {
-		tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
-		super.setReader(reader);
-	    }
-	};
+	result = new CJKBigramFilter(result);
+	return new TokenStreamComponents(source, result);
     }
 }

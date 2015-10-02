@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingleClient>
-		implements IndexServiceInterface {
+	implements IndexServiceInterface {
 
     public IndexMultiClient(ExecutorService executor, String[] urls, Integer msTimeOut) throws URISyntaxException {
 	super(executor, new IndexSingleClient[urls.length], urls, msTimeOut);
@@ -59,6 +59,21 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
     @Override
     public Response deleteIndex(String index_name, Boolean local) {
 	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public SettingsDefinition getSettings(@PathParam("index_name") String index_name) {
+	return null;
+    }
+
+    @Override
+    public SettingsDefinition setSettings(@PathParam("index_name") String index_name, SettingsDefinition settings) {
+	return null;
+    }
+
+    @Override
+    public Response deleteSettings(@PathParam("index_name") String index_name) {
 	return null;
     }
 

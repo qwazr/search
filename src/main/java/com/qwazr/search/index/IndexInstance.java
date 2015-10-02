@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.datastax.driver.core.utils.UUIDs;
+import com.fasterxml.jackson.core.JsonGenerationException;
 import com.qwazr.search.SearchServer;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
@@ -61,6 +62,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 
 public class IndexInstance implements Closeable {
 
@@ -68,10 +70,12 @@ public class IndexInstance implements Closeable {
 
     private final static String INDEX_DATA = "data";
     private final static String FIELDS_FILE = "fields.json";
+    private final static String SETTINGS_FILE = "settings.json";
 
     private final File indexDirectory;
     private final File dataDirectory;
     private final File fieldMapFile;
+    private final File settingsFile;
     private final Directory luceneDirectory;
     private final FacetsConfig facetsConfig;
     private final IndexWriterConfig indexWriterConfig;
@@ -79,12 +83,14 @@ public class IndexInstance implements Closeable {
     private final SearcherManager searcherManager;
     private volatile PerFieldAnalyzerWrapper perFieldAnalyzer;
     private volatile Map<String, FieldDefinition> fieldMap;
+    private volatile SettingsDefinition settingsDefinition;
+    private volatile Semaphore readSemaphore;
+    private volatile Semaphore writeSemaphore;
 
     /**
      * Create an index directory
      *
-     * @param indexDirectory
-     *            the root location of the directory
+     * @param indexDirectory the root location of the directory
      * @throws IOException
      * @throws ServerException
      */
@@ -96,8 +102,14 @@ public class IndexInstance implements Closeable {
 	luceneDirectory = FSDirectory.open(dataDirectory.toPath());
 	facetsConfig = new FacetsConfig();
 	fieldMapFile = new File(indexDirectory, FIELDS_FILE);
-	fieldMap = fieldMapFile.exists() ? JsonMapper.MAPPER.readValue(fieldMapFile,
-		FieldDefinition.MapStringFieldTypeRef) : null;
+	fieldMap = fieldMapFile.exists() ?
+			JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
+			null;
+	settingsFile = new File(indexDirectory, SETTINGS_FILE);
+	settingsDefinition = settingsFile.exists() ?
+			JsonMapper.MAPPER.readValue(settingsFile, SettingsDefinition.class) :
+			null;
+	checkSettings();
 	perFieldAnalyzer = buildFieldAnalyzer(fieldMap);
 	indexWriterConfig = new IndexWriterConfig(perFieldAnalyzer);
 	indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
@@ -105,8 +117,7 @@ public class IndexInstance implements Closeable {
 	searcherManager = new SearcherManager(indexWriter, true, null);
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
 	IOUtils.close(searcherManager);
 	if (indexWriter.isOpen())
 	    IOUtils.close(indexWriter);
@@ -122,12 +133,22 @@ public class IndexInstance implements Closeable {
 	    FileUtils.deleteQuietly(indexDirectory);
     }
 
-    IndexStatus getStatus() throws IOException {
-	IndexSearcher indexSearchser = searcherManager.acquire();
+    private IndexStatus getIndexStatus() throws IOException {
+	IndexSearcher indexSearcher = searcherManager.acquire();
 	try {
-	    return new IndexStatus(indexSearchser.getIndexReader(), fieldMap);
+	    return new IndexStatus(indexSearcher.getIndexReader(), fieldMap);
 	} finally {
-	    searcherManager.release(indexSearchser);
+	    searcherManager.release(indexSearcher);
+	}
+    }
+
+    IndexStatus getStatus() throws IOException, InterruptedException {
+	Semaphore sem = checkReadLimit();
+	try {
+	    return getIndexStatus();
+	} finally {
+	    if (sem != null)
+		sem.release();
 	}
     }
 
@@ -162,8 +183,8 @@ public class IndexInstance implements Closeable {
 		if (!StringUtils.isEmpty(fieldDef.analyzer))
 		    analyzerMap.put(field.getKey(), (Analyzer) findAnalyzer(fieldDef.analyzer).newInstance());
 	    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-		throw new ServerException(Response.Status.NOT_ACCEPTABLE, "Class " + fieldDef.analyzer
-			+ " not known for the field " + fieldName);
+		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+				"Class " + fieldDef.analyzer + " not known for the field " + fieldName);
 	    }
 	}
 	return new PerFieldAnalyzerWrapper(new KeywordAnalyzer(), analyzerMap);
@@ -173,6 +194,19 @@ public class IndexInstance implements Closeable {
 	perFieldAnalyzer = buildFieldAnalyzer(fields);
 	JsonMapper.MAPPER.writeValue(fieldMapFile, fields);
 	fieldMap = fields;
+    }
+
+    public synchronized void setSettings(SettingsDefinition settings) throws IOException {
+	if (settings == null)
+	    settingsFile.delete();
+	else
+	    JsonMapper.MAPPER.writeValue(settingsFile, settings);
+	this.settingsDefinition = settings;
+	checkSettings();
+    }
+
+    public SettingsDefinition getSettings() {
+	return settingsDefinition;
     }
 
     private BytesRef objectToBytesRef(Object object) throws IOException {
@@ -236,25 +270,88 @@ public class IndexInstance implements Closeable {
 	searcherManager.maybeRefresh();
     }
 
-    public void deleteAll() throws IOException {
-	indexWriter.deleteAll();
-	nrtCommit();
+    public void deleteAll() throws IOException, InterruptedException {
+	Semaphore sem = checkWriteLimit();
+	try {
+	    indexWriter.deleteAll();
+	    nrtCommit();
+	} finally {
+	    if (sem != null)
+		sem.release();
+	}
     }
 
-    public Object postDocument(Map<String, Object> document) throws IOException {
-	Object id = addNewLuceneDocument(document);
-	nrtCommit();
-	return id;
+    private Semaphore checkReadLimit() throws InterruptedException {
+	if (readSemaphore == null)
+	    return null;
+	readSemaphore.acquire();
+	return readSemaphore;
     }
 
-    public List<Object> postDocuments(List<Map<String, Object>> documents) throws IOException {
+    private Semaphore checkWriteLimit() throws InterruptedException {
+	if (writeSemaphore == null)
+	    return null;
+	writeSemaphore.acquire();
+	return writeSemaphore;
+    }
+
+    private synchronized void checkSettings() {
+	if (settingsDefinition == null) {
+	    readSemaphore = null;
+	    writeSemaphore = null;
+	    return;
+	}
+	if (settingsDefinition.max_simultaneous_read != null)
+	    readSemaphore = new Semaphore(settingsDefinition.max_simultaneous_read);
+	else
+	    readSemaphore = null;
+	if (settingsDefinition.max_simultaneous_write != null)
+	    writeSemaphore = new Semaphore(settingsDefinition.max_simultaneous_write);
+	else
+	    writeSemaphore = null;
+    }
+
+    private void checkSize(int size) throws IOException, ServerException {
+	if (settingsDefinition == null)
+	    return;
+	if (settingsDefinition.max_size == null)
+	    return;
+	if (getIndexStatus().num_docs + size > settingsDefinition.max_size)
+	    throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+			    "This index is limited to " + settingsDefinition.max_size + " documents");
+    }
+
+    public Object postDocument(Map<String, Object> document) throws IOException, ServerException, InterruptedException {
+	if (document == null)
+	    return null;
+	Semaphore sem = checkWriteLimit();
+	try {
+	    checkSize(1);
+	    Object id = addNewLuceneDocument(document);
+	    nrtCommit();
+	    return id;
+	} finally {
+	    if (sem != null)
+		sem.release();
+	}
+    }
+
+    public List<Object> postDocuments(List<Map<String, Object>> documents)
+		    throws IOException, ServerException, InterruptedException {
 	if (documents == null)
 	    return null;
-	List<Object> ids = new ArrayList<Object>(documents.size());
-	for (Map<String, Object> document : documents)
-	    ids.add(addNewLuceneDocument(document));
-	nrtCommit();
-	return ids;
+	Semaphore sem = checkWriteLimit();
+	try {
+	    checkSize(documents.size());
+	    List<Object> ids = new ArrayList<Object>(documents.size());
+	    for (Map<String, Object> document : documents)
+		ids.add(addNewLuceneDocument(document));
+	    nrtCommit();
+	    return ids;
+	} finally {
+	    if (sem != null)
+		sem.release();
+	}
     }
 
     private Query getLuceneQuery(QueryDefinition queryDef) throws ParseException {
@@ -281,65 +378,79 @@ public class IndexInstance implements Closeable {
 	return parser.parse(qs);
     }
 
-    public void deleteByQuery(QueryDefinition queryDef) throws ParseException, IOException {
-	Query query = getLuceneQuery(queryDef);
-	indexWriter.deleteDocuments(query);
-	nrtCommit();
+    public void deleteByQuery(QueryDefinition queryDef) throws ParseException, IOException, InterruptedException {
+	Semaphore sem = checkWriteLimit();
+	try {
+	    Query query = getLuceneQuery(queryDef);
+	    indexWriter.deleteDocuments(query);
+	    nrtCommit();
+	} finally {
+	    if (sem != null)
+		sem.release();
+	}
     }
 
-    public ResultDefinition search(QueryDefinition queryDef) throws ServerException, IOException, ParseException {
-
-	Query query = getLuceneQuery(queryDef);
-
-	final IndexSearcher indexSearcher = searcherManager.acquire();
-	final IndexReader indexReader = indexSearcher.getIndexReader();
-	final TimeTracker timeTracker = new TimeTracker();
+    public ResultDefinition search(QueryDefinition queryDef)
+		    throws ServerException, IOException, ParseException, InterruptedException {
+	Semaphore sem = checkReadLimit();
 	try {
-	    final TopDocs topDocs;
-	    final Facets facets;
 
-	    // Overload query with filters
-	    if (queryDef.filters != null && !queryDef.filters.isEmpty()) {
-		DrillDownQuery drillDownQuery = new DrillDownQuery(facetsConfig, query);
-		for (Map.Entry<String, Set<String>> entry : queryDef.filters.entrySet()) {
-		    Set<String> filter_terms = entry.getValue();
-		    if (filter_terms == null)
-			continue;
-		    String filter_field = entry.getKey();
-		    for (String filter_term : filter_terms)
-			drillDownQuery.add(filter_field, filter_term);
-		}
-		query = drillDownQuery;
-	    }
-	    if (queryDef.facets != null && queryDef.facets.size() > 0) {
-		FacetsCollector facetsCollector = new FacetsCollector();
-		SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
-		topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), facetsCollector);
-		timeTracker.next("search_query");
-		facets = new SortedSetDocValuesFacetCounts(state, facetsCollector);
-		timeTracker.next("facet_count");
-	    } else {
-		topDocs = indexSearcher.search(query, queryDef.getEnd());
-		timeTracker.next("search_query");
-		facets = null;
-	    }
-	    Map<String, String[]> postingsHighlightersMap = null;
-	    if (queryDef.postings_highlighter != null) {
-		postingsHighlightersMap = new LinkedHashMap<String, String[]>();
-		for (Map.Entry<String, Integer> entry : queryDef.postings_highlighter.entrySet()) {
-		    String field = entry.getKey();
-		    PostingsHighlighter highlighter = new PostingsHighlighter(entry.getValue());
-		    String highlights[] = highlighter.highlight(field, query, indexSearcher, topDocs);
-		    if (highlights != null) {
-			postingsHighlightersMap.put(field, highlights);
+	    Query query = getLuceneQuery(queryDef);
+
+	    final IndexSearcher indexSearcher = searcherManager.acquire();
+	    final IndexReader indexReader = indexSearcher.getIndexReader();
+	    final TimeTracker timeTracker = new TimeTracker();
+	    try {
+		final TopDocs topDocs;
+		final Facets facets;
+
+		// Overload query with filters
+		if (queryDef.filters != null && !queryDef.filters.isEmpty()) {
+		    DrillDownQuery drillDownQuery = new DrillDownQuery(facetsConfig, query);
+		    for (Map.Entry<String, Set<String>> entry : queryDef.filters.entrySet()) {
+			Set<String> filter_terms = entry.getValue();
+			if (filter_terms == null)
+			    continue;
+			String filter_field = entry.getKey();
+			for (String filter_term : filter_terms)
+			    drillDownQuery.add(filter_field, filter_term);
 		    }
+		    query = drillDownQuery;
 		}
-		timeTracker.next("postings_highlighters");
-	    }
+		if (queryDef.facets != null && queryDef.facets.size() > 0) {
+		    FacetsCollector facetsCollector = new FacetsCollector();
+		    SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
+		    topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), facetsCollector);
+		    timeTracker.next("search_query");
+		    facets = new SortedSetDocValuesFacetCounts(state, facetsCollector);
+		    timeTracker.next("facet_count");
+		} else {
+		    topDocs = indexSearcher.search(query, queryDef.getEnd());
+		    timeTracker.next("search_query");
+		    facets = null;
+		}
+		Map<String, String[]> postingsHighlightersMap = null;
+		if (queryDef.postings_highlighter != null) {
+		    postingsHighlightersMap = new LinkedHashMap<String, String[]>();
+		    for (Map.Entry<String, Integer> entry : queryDef.postings_highlighter.entrySet()) {
+			String field = entry.getKey();
+			PostingsHighlighter highlighter = new PostingsHighlighter(entry.getValue());
+			String highlights[] = highlighter.highlight(field, query, indexSearcher, topDocs);
+			if (highlights != null) {
+			    postingsHighlightersMap.put(field, highlights);
+			}
+		    }
+		    timeTracker.next("postings_highlighters");
+		}
 
-	    return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets, postingsHighlightersMap);
+		return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets,
+				postingsHighlightersMap);
+	    } finally {
+		searcherManager.release(indexSearcher);
+	    }
 	} finally {
-	    searcherManager.release(indexSearcher);
+	    if (sem != null)
+		sem.release();
 	}
     }
 

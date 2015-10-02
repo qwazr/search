@@ -41,7 +41,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
     public IndexStatus createUpdateIndex(String index_name, Boolean local, Map<String, FieldDefinition> fields) {
 	try {
 	    return IndexManager.INSTANCE.createUpdate(index_name, fields);
-	} catch (ServerException | IOException e) {
+	} catch (ServerException | IOException | InterruptedException e) {
 	    logger.warn(e.getMessage(), e);
 	    throw ServerException.getJsonException(e);
 	}
@@ -52,7 +52,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
     public IndexStatus getIndex(String index_name) {
 	try {
 	    return IndexManager.INSTANCE.get(index_name).getStatus();
-	} catch (ServerException | IOException e) {
+	} catch (ServerException | IOException | InterruptedException e) {
 	    logger.warn(e.getMessage(), e);
 	    throw ServerException.getJsonException(e);
 	}
@@ -71,13 +71,45 @@ public class IndexServiceImpl implements IndexServiceInterface {
     }
 
     @Override
+    public SettingsDefinition getSettings(@PathParam("index_name") String index_name) {
+	try {
+	    return IndexManager.INSTANCE.get(index_name).getSettings();
+	} catch (ServerException e) {
+	    logger.warn(e.getMessage(), e);
+	    throw ServerException.getJsonException(e);
+	}
+    }
+
+    @Override
+    public SettingsDefinition setSettings(@PathParam("index_name") String index_name, SettingsDefinition settings) {
+	try {
+	    IndexManager.INSTANCE.get(index_name).setSettings(settings);
+	    return settings;
+	} catch (ServerException | IOException e) {
+	    logger.warn(e.getMessage(), e);
+	    throw ServerException.getJsonException(e);
+	}
+    }
+
+    @Override
+    public Response deleteSettings(@PathParam("index_name") String index_name) {
+	try {
+	    IndexManager.INSTANCE.get(index_name).setSettings(null);
+	    return Response.ok().build();
+	} catch (ServerException | IOException e) {
+	    logger.warn(e.getMessage(), e);
+	    throw ServerException.getJsonException(e);
+	}
+    }
+
+    @Override
     public Response postDocument(String index_name, Map<String, Object> document) {
 	try {
 	    if (document == null || document.isEmpty())
 		return Response.notModified().build();
 	    IndexManager.INSTANCE.get(index_name).postDocument(document);
 	    return Response.ok().build();
-	} catch (ServerException | IOException | IllegalArgumentException e) {
+	} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
 	    logger.warn(e.getMessage(), e);
 	    throw ServerException.getJsonException(e);
 	}
@@ -90,7 +122,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 		return Response.notModified().build();
 	    IndexManager.INSTANCE.get(index_name).postDocuments(documents);
 	    return Response.ok().build();
-	} catch (ServerException | IOException | IllegalArgumentException e) {
+	} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
 	    logger.warn(e.getMessage(), e);
 	    throw ServerException.getJsonException(e);
 	}
@@ -101,7 +133,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	try {
 	    IndexManager.INSTANCE.get(index_name).deleteAll();
 	    return Response.ok().build();
-	} catch (ServerException | IOException e) {
+	} catch (ServerException | IOException | InterruptedException e) {
 	    logger.warn(e.getMessage(), e);
 	    throw ServerException.getJsonException(e);
 	}
@@ -112,7 +144,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	try {
 	    IndexManager.INSTANCE.get(index_name).deleteByQuery(query);
 	    return Response.ok().build();
-	} catch (ServerException | IOException | ParseException e) {
+	} catch (ServerException | IOException | ParseException | InterruptedException e) {
 	    logger.warn(e.getMessage(), e);
 	    throw ServerException.getJsonException(e);
 	}
@@ -122,7 +154,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
     public ResultDefinition searchQuery(String index_name, QueryDefinition query) {
 	try {
 	    return IndexManager.INSTANCE.get(index_name).search(query);
-	} catch (ServerException | IOException | ParseException e) {
+	} catch (ServerException | IOException | ParseException | InterruptedException e) {
 	    logger.warn(e.getMessage(), e);
 	    throw ServerException.getJsonException(e);
 	}
