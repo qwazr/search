@@ -19,7 +19,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 
@@ -158,6 +157,13 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	} catch (IOException e) {
 	    throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
 	}
+    }
+
+    @Override
+    public ResultDefinition mltQuery(String index_name, MltQueryDefinition mltQuery) {
+	UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/mlt");
+	Request request = Request.Post(uriBuilder.build());
+	return commonServiceRequest(request, mltQuery, msTimeOut, ResultDefinition.class, 200);
     }
 
 }

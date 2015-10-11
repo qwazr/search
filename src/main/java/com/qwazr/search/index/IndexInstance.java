@@ -16,7 +16,6 @@
 package com.qwazr.search.index;
 
 import com.datastax.driver.core.utils.UUIDs;
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.qwazr.search.SearchServer;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
@@ -41,13 +40,11 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
-import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.SearcherManager;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -90,7 +87,8 @@ public class IndexInstance implements Closeable {
     /**
      * Create an index directory
      *
-     * @param indexDirectory the root location of the directory
+     * @param indexDirectory
+     *            the root location of the directory
      * @throws IOException
      * @throws ServerException
      */
@@ -102,13 +100,11 @@ public class IndexInstance implements Closeable {
 	luceneDirectory = FSDirectory.open(dataDirectory.toPath());
 	facetsConfig = new FacetsConfig();
 	fieldMapFile = new File(indexDirectory, FIELDS_FILE);
-	fieldMap = fieldMapFile.exists() ?
-			JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
-			null;
+	fieldMap = fieldMapFile.exists() ? JsonMapper.MAPPER.readValue(fieldMapFile,
+		FieldDefinition.MapStringFieldTypeRef) : null;
 	settingsFile = new File(indexDirectory, SETTINGS_FILE);
-	settingsDefinition = settingsFile.exists() ?
-			JsonMapper.MAPPER.readValue(settingsFile, SettingsDefinition.class) :
-			null;
+	settingsDefinition = settingsFile.exists() ? JsonMapper.MAPPER
+		.readValue(settingsFile, SettingsDefinition.class) : null;
 	checkSettings();
 	perFieldAnalyzer = buildFieldAnalyzer(fieldMap);
 	indexWriterConfig = new IndexWriterConfig(perFieldAnalyzer);
@@ -117,7 +113,8 @@ public class IndexInstance implements Closeable {
 	searcherManager = new SearcherManager(indexWriter, true, null);
     }
 
-    @Override public void close() {
+    @Override
+    public void close() {
 	IOUtils.close(searcherManager);
 	if (indexWriter.isOpen())
 	    IOUtils.close(indexWriter);
@@ -183,8 +180,8 @@ public class IndexInstance implements Closeable {
 		if (!StringUtils.isEmpty(fieldDef.analyzer))
 		    analyzerMap.put(field.getKey(), (Analyzer) findAnalyzer(fieldDef.analyzer).newInstance());
 	    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-				"Class " + fieldDef.analyzer + " not known for the field " + fieldName);
+		throw new ServerException(Response.Status.NOT_ACCEPTABLE, "Class " + fieldDef.analyzer
+			+ " not known for the field " + fieldName);
 	    }
 	}
 	return new PerFieldAnalyzerWrapper(new KeywordAnalyzer(), analyzerMap);
@@ -317,8 +314,8 @@ public class IndexInstance implements Closeable {
 	if (settingsDefinition.max_size == null)
 	    return;
 	if (getIndexStatus().num_docs + size > settingsDefinition.max_size)
-	    throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-			    "This index is limited to " + settingsDefinition.max_size + " documents");
+	    throw new ServerException(Response.Status.NOT_ACCEPTABLE, "This index is limited to "
+		    + settingsDefinition.max_size + " documents");
     }
 
     public Object postDocument(Map<String, Object> document) throws IOException, ServerException, InterruptedException {
@@ -336,8 +333,8 @@ public class IndexInstance implements Closeable {
 	}
     }
 
-    public List<Object> postDocuments(List<Map<String, Object>> documents)
-		    throws IOException, ServerException, InterruptedException {
+    public List<Object> postDocuments(List<Map<String, Object>> documents) throws IOException, ServerException,
+	    InterruptedException {
 	if (documents == null)
 	    return null;
 	Semaphore sem = checkWriteLimit();
@@ -354,14 +351,13 @@ public class IndexInstance implements Closeable {
 	}
     }
 
-    private Query getLuceneQuery(QueryDefinition queryDef) throws ParseException {
-	final QueryParser parser;
+    private Query getLuceneQuery(QueryDefinition queryDef) throws QueryNodeException {
+	final StandardQueryParser parser = new StandardQueryParser(perFieldAnalyzer);
 	if (queryDef.multi_field != null && !queryDef.multi_field.isEmpty()) {
 	    Set<String> fieldSet = queryDef.multi_field.keySet();
 	    String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
-	    parser = new MultiFieldQueryParser(fieldArray, perFieldAnalyzer, queryDef.multi_field);
-	} else
-	    parser = new QueryParser(queryDef.default_field, perFieldAnalyzer);
+	    parser.setMultiFields(fieldArray);
+	}
 	if (queryDef.allow_leading_wildcard != null)
 	    parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
 	if (queryDef.default_operator != null)
@@ -375,10 +371,10 @@ public class IndexInstance implements Closeable {
 		qs = QueryParser.escape(queryDef.query_string);
 	} else
 	    qs = queryDef.query_string;
-	return parser.parse(qs);
+	return parser.parse(qs, queryDef.default_field);
     }
 
-    public void deleteByQuery(QueryDefinition queryDef) throws ParseException, IOException, InterruptedException {
+    public void deleteByQuery(QueryDefinition queryDef) throws IOException, InterruptedException, QueryNodeException {
 	Semaphore sem = checkWriteLimit();
 	try {
 	    Query query = getLuceneQuery(queryDef);
@@ -390,17 +386,17 @@ public class IndexInstance implements Closeable {
 	}
     }
 
-    public ResultDefinition search(QueryDefinition queryDef)
-		    throws ServerException, IOException, ParseException, InterruptedException {
+    public ResultDefinition search(QueryDefinition queryDef) throws ServerException, IOException, QueryNodeException,
+	    InterruptedException {
 	Semaphore sem = checkReadLimit();
 	try {
 
 	    Query query = getLuceneQuery(queryDef);
 
 	    final IndexSearcher indexSearcher = searcherManager.acquire();
-	    final IndexReader indexReader = indexSearcher.getIndexReader();
-	    final TimeTracker timeTracker = new TimeTracker();
 	    try {
+		final IndexReader indexReader = indexSearcher.getIndexReader();
+		final TimeTracker timeTracker = new TimeTracker();
 		final TopDocs topDocs;
 		final Facets facets;
 
@@ -444,7 +440,64 @@ public class IndexInstance implements Closeable {
 		}
 
 		return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets,
-				postingsHighlightersMap);
+			postingsHighlightersMap);
+	    } finally {
+		searcherManager.release(indexSearcher);
+	    }
+	} finally {
+	    if (sem != null)
+		sem.release();
+	}
+    }
+
+    private MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader) throws IOException {
+
+	MoreLikeThis mlt = new MoreLikeThis(reader);
+	if (mltQueryDef.boost != null)
+	    mlt.setBoost(mltQueryDef.boost);
+	if (mltQueryDef.boost_factor != null)
+	    mlt.setBoostFactor(mltQueryDef.boost_factor);
+	if (mltQueryDef.fieldnames != null)
+	    mlt.setFieldNames(mltQueryDef.fieldnames);
+	if (mltQueryDef.max_doc_freq != null)
+	    mlt.setMaxDocFreq(mltQueryDef.max_doc_freq);
+	if (mltQueryDef.max_doc_freq_pct != null)
+	    mlt.setMaxDocFreqPct(mltQueryDef.max_doc_freq_pct);
+	if (mltQueryDef.max_num_tokens_parsed != null)
+	    mlt.setMaxNumTokensParsed(mltQueryDef.max_num_tokens_parsed);
+	if (mltQueryDef.max_query_terms != null)
+	    mlt.setMaxQueryTerms(mltQueryDef.max_query_terms);
+	if (mltQueryDef.max_word_len != null)
+	    mlt.setMaxWordLen(mltQueryDef.max_word_len);
+	if (mltQueryDef.min_doc_freq != null)
+	    mlt.setMinDocFreq(mltQueryDef.min_doc_freq);
+	if (mltQueryDef.min_term_freq != null)
+	    mlt.setMinTermFreq(mltQueryDef.min_term_freq);
+	if (mltQueryDef.min_word_len != null)
+	    mlt.setMinWordLen(mltQueryDef.min_word_len);
+	if (mltQueryDef.stop_words != null)
+	    mlt.setStopWords(mltQueryDef.stop_words);
+	mlt.setAnalyzer(perFieldAnalyzer);
+	return mlt;
+    }
+
+    public ResultDefinition mlt(MltQueryDefinition mltQueryDef) throws ServerException, IOException,
+	    QueryNodeException, InterruptedException {
+	Semaphore sem = checkReadLimit();
+	try {
+	    final IndexSearcher indexSearcher = searcherManager.acquire();
+	    try {
+		final IndexReader indexReader = indexSearcher.getIndexReader();
+		final TimeTracker timeTracker = new TimeTracker();
+		final Query filterQuery = new StandardQueryParser(perFieldAnalyzer).parse(mltQueryDef.document_query,
+			mltQueryDef.query_default_field);
+		final TopDocs filterTopDocs = indexSearcher.search(filterQuery, 1, Sort.INDEXORDER);
+		if (filterTopDocs.totalHits == 0)
+		    return new ResultDefinition(timeTracker);
+		final TopDocs topDocs;
+		final Query query = getMoreLikeThis(mltQueryDef, indexReader).like(filterTopDocs.scoreDocs[0].doc);
+		topDocs = indexSearcher.search(query, mltQueryDef.getEnd());
+		return new ResultDefinition(timeTracker, indexSearcher, topDocs, mltQueryDef);
 	    } finally {
 		searcherManager.release(indexSearcher);
 	    }

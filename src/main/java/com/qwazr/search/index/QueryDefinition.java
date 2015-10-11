@@ -25,45 +25,45 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
-import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@JsonInclude(Include.NON_EMPTY) public class QueryDefinition {
+@JsonInclude(Include.NON_EMPTY)
+public class QueryDefinition extends BaseQueryDefinition {
 
-    final public String default_field = null;
-    final public String query_string = null;
-    final public Boolean escape_query = null;
-    final public char[] escaped_chars = null;
-    final public Map<String, Float> multi_field = null;
+    final public String default_field;
+    final public String query_string;
+    final public Boolean escape_query;
+    final public char[] escaped_chars;
+    final public Map<String, Float> multi_field;
 
-    final public Integer start = null;
-    final public Integer rows = null;
+    final public Set<String> returned_fields;
+    final public Map<String, Facet> facets;
+    final public Map<String, Set<String>> filters;
 
-    final public Set<String> returned_fields = null;
-    final public Map<String, Facet> facets = null;
-    final public Map<String, Set<String>> filters = null;
+    final public Map<String, Integer> postings_highlighter;
 
-    final public Map<String, Integer> postings_highlighter = null;
-
-    final public Boolean allow_leading_wildcard = null;
-    final public QueryParser.Operator default_operator = null;
+    final public Boolean allow_leading_wildcard;
+    final public StandardQueryConfigHandler.Operator default_operator;
 
     public static class Facet {
 	final public Integer top = null;
     }
 
-    @JsonTypeInfo(use = Id.NAME, include = As.WRAPPER_OBJECT) @JsonSubTypes({
-		    @JsonSubTypes.Type(value = TermQuery.class, name = "term"),
-		    @Type(value = GroupQuery.class, name = "group") }) public static class AbstractQuery {
+    @JsonTypeInfo(use = Id.NAME, include = As.WRAPPER_OBJECT)
+    @JsonSubTypes({ @JsonSubTypes.Type(value = TermQuery.class, name = "term"),
+	    @Type(value = GroupQuery.class, name = "group") })
+    public static class AbstractQuery {
     }
 
     final public AbstractQuery query = null;
 
-    @JsonTypeName("term") public static class TermQuery extends AbstractQuery {
+    @JsonTypeName("term")
+    public static class TermQuery extends AbstractQuery {
 
 	final public String field;
 	final public String value;
@@ -78,7 +78,8 @@ import java.util.Set;
 	}
     }
 
-    @JsonTypeName("group") public static class GroupQuery extends AbstractQuery {
+    @JsonTypeName("group")
+    public static class GroupQuery extends AbstractQuery {
 
 	public static enum OperatorEnum {
 	    and, or
@@ -103,10 +104,17 @@ import java.util.Set;
     }
 
     public QueryDefinition() {
-    }
-
-    public int getEnd() {
-	return (start == null ? 0 : start) + (rows == null ? 10 : rows);
+	default_field = null;
+	query_string = null;
+	escape_query = null;
+	escaped_chars = null;
+	multi_field = null;
+	returned_fields = null;
+	facets = null;
+	filters = null;
+	postings_highlighter = null;
+	allow_leading_wildcard = null;
+	default_operator = null;
     }
 
     public static QueryDefinition newQuery(String jsonString) throws IOException {

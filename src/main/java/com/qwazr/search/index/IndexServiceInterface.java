@@ -37,8 +37,8 @@ public interface IndexServiceInterface {
     @Path("/{index_name}")
     @Consumes(RestApplication.APPLICATION_JSON_UTF8)
     @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public IndexStatus createUpdateIndex(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local,
-	    Map<String, FieldDefinition> fields);
+    public IndexStatus createUpdateIndex(@PathParam("index_name") String index_name,
+	    @QueryParam("local") Boolean local, Map<String, FieldDefinition> fields);
 
     @GET
     @Path("/{index_name}")
@@ -88,6 +88,12 @@ public interface IndexServiceInterface {
     @Consumes(RestApplication.APPLICATION_JSON_UTF8)
     @Produces(RestApplication.APPLICATION_JSON_UTF8)
     public ResultDefinition searchQuery(@PathParam("index_name") String index_name, QueryDefinition query);
+
+    @POST
+    @Path("/{index_name}/mlt")
+    @Consumes(RestApplication.APPLICATION_JSON_UTF8)
+    @Produces(RestApplication.APPLICATION_JSON_UTF8)
+    public ResultDefinition mltQuery(@PathParam("index_name") String index_name, MltQueryDefinition query);
 
     @DELETE
     @Path("/{index_name}/search")

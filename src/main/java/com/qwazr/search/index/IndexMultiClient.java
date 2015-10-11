@@ -18,7 +18,6 @@ package com.qwazr.search.index;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 
 import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -26,8 +25,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingleClient>
-	implements IndexServiceInterface {
+public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingleClient> implements
+	IndexServiceInterface {
 
     public IndexMultiClient(ExecutorService executor, String[] urls, Integer msTimeOut) throws URISyntaxException {
 	super(executor, new IndexSingleClient[urls.length], urls, msTimeOut);
@@ -103,6 +102,12 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 
     @Override
     public Response deleteByQuery(String index_name, QueryDefinition query) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public ResultDefinition mltQuery(String index_name, MltQueryDefinition mltQuery) {
 	// TODO Auto-generated method stub
 	return null;
     }
