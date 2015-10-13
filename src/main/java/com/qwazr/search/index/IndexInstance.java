@@ -364,7 +364,7 @@ public class IndexInstance implements Closeable {
 	}
 	if (queryDef.allow_leading_wildcard != null)
 	    parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
-	if (queryDef.auto_generate_phrase_queries)
+	if (queryDef.auto_generate_phrase_queries != null)
 	    parser.setAutoGeneratePhraseQueries(queryDef.auto_generate_phrase_queries);
 	if (queryDef.default_operator != null)
 	    parser.setDefaultOperator(queryDef.default_operator);
