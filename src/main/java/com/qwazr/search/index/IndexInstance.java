@@ -41,7 +41,6 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
-import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -354,20 +353,21 @@ public class IndexInstance implements Closeable {
     }
 
     private Query getLuceneQuery(QueryDefinition queryDef) throws QueryNodeException, ParseException {
-	QueryParser parser;
+	final StandardQueryParser parser = new StandardQueryParser(perFieldAnalyzer);
 	if (queryDef.multi_field != null && !queryDef.multi_field.isEmpty()) {
 	    Set<String> fieldSet = queryDef.multi_field.keySet();
 	    String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
-	    parser = new MultiFieldQueryParser(fieldArray, perFieldAnalyzer);
-	} else {
-	    parser = new QueryParser(queryDef.default_field, perFieldAnalyzer);
+	    parser.setMultiFields(fieldArray);
+	    parser.setFieldsBoost(queryDef.multi_field);
 	}
-	if (queryDef.allow_leading_wildcard != null)
-	    parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
-	if (queryDef.auto_generate_phrase_queries != null)
-	    parser.setAutoGeneratePhraseQueries(queryDef.auto_generate_phrase_queries);
 	if (queryDef.default_operator != null)
 	    parser.setDefaultOperator(queryDef.default_operator);
+	if (queryDef.allow_leading_wildcard != null)
+	    parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
+	if (queryDef.phrase_slop != null)
+	    parser.setPhraseSlop(queryDef.phrase_slop);
+	if (queryDef.enable_position_increments)
+	    parser.setEnablePositionIncrements(queryDef.enable_position_increments);
 	final String qs;
 	// Check if we have to escape some characters
 	if (queryDef.escape_query != null && queryDef.escape_query) {
@@ -377,7 +377,8 @@ public class IndexInstance implements Closeable {
 		qs = QueryParser.escape(queryDef.query_string);
 	} else
 	    qs = queryDef.query_string;
-	return parser.parse(qs);
+
+	return parser.parse(qs, queryDef.default_field);
     }
 
     public void deleteByQuery(QueryDefinition queryDef) throws IOException, InterruptedException, QueryNodeException,
