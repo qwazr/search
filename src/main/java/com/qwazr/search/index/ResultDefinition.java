@@ -227,4 +227,8 @@ public class ResultDefinition {
     public Map<String, Long> getTimer() {
 	return timer;
     }
+
+    public String getQuery() {
+	return query;
+    }
 }
