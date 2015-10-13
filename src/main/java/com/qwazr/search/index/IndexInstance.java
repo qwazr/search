@@ -398,7 +398,8 @@ public class IndexInstance implements Closeable {
 	Semaphore sem = checkReadLimit();
 	try {
 
-	    Query query = getLuceneQuery(queryDef);
+	    Query initialQuery = getLuceneQuery(queryDef);
+	    Query query = initialQuery;
 
 	    final IndexSearcher indexSearcher = searcherManager.acquire();
 	    try {
@@ -447,7 +448,7 @@ public class IndexInstance implements Closeable {
 		}
 
 		return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets,
-			postingsHighlightersMap, query);
+			postingsHighlightersMap, initialQuery);
 	    } finally {
 		searcherManager.release(indexSearcher);
 	    }
