@@ -366,7 +366,7 @@ public class IndexInstance implements Closeable {
 	    parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
 	if (queryDef.phrase_slop != null)
 	    parser.setPhraseSlop(queryDef.phrase_slop);
-	if (queryDef.enable_position_increments)
+	if (queryDef.enable_position_increments != null)
 	    parser.setEnablePositionIncrements(queryDef.enable_position_increments);
 	final String qs;
 	// Check if we have to escape some characters
@@ -399,8 +399,7 @@ public class IndexInstance implements Closeable {
 	Semaphore sem = checkReadLimit();
 	try {
 
-	    Query initialQuery = getLuceneQuery(queryDef);
-	    Query query = initialQuery;
+	    Query query = getLuceneQuery(queryDef);
 
 	    final IndexSearcher indexSearcher = searcherManager.acquire();
 	    try {
@@ -449,7 +448,7 @@ public class IndexInstance implements Closeable {
 		}
 
 		return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets,
-			postingsHighlightersMap, initialQuery);
+			postingsHighlightersMap, query);
 	    } finally {
 		searcherManager.release(indexSearcher);
 	    }
