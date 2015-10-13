@@ -447,7 +447,7 @@ public class IndexInstance implements Closeable {
 		}
 
 		return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets,
-			postingsHighlightersMap);
+			postingsHighlightersMap, query);
 	    } finally {
 		searcherManager.release(indexSearcher);
 	    }
@@ -504,7 +504,7 @@ public class IndexInstance implements Closeable {
 		final TopDocs topDocs;
 		final Query query = getMoreLikeThis(mltQueryDef, indexReader).like(filterTopDocs.scoreDocs[0].doc);
 		topDocs = indexSearcher.search(query, mltQueryDef.getEnd());
-		return new ResultDefinition(timeTracker, indexSearcher, topDocs, mltQueryDef);
+		return new ResultDefinition(timeTracker, indexSearcher, topDocs, mltQueryDef, query);
 	    } finally {
 		searcherManager.release(indexSearcher);
 	    }

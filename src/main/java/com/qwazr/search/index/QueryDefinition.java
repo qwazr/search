@@ -57,7 +57,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 
     @JsonTypeInfo(use = Id.NAME, include = As.WRAPPER_OBJECT)
     @JsonSubTypes({ @JsonSubTypes.Type(value = TermQuery.class, name = "term"),
-		    @Type(value = GroupQuery.class, name = "group") })
+	    @Type(value = GroupQuery.class, name = "group") })
     public static class AbstractQuery {
     }
 

@@ -25,6 +25,7 @@ import org.apache.lucene.facet.LabelAndValue;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
@@ -39,6 +40,7 @@ public class ResultDefinition {
     final public Float max_score;
     final public List<ResultDocument> documents;
     final public Map<String, Map<String, Number>> facets;
+    final public String query;
 
     public ResultDefinition() {
 	this.timer = null;
@@ -46,6 +48,7 @@ public class ResultDefinition {
 	this.documents = null;
 	this.facets = null;
 	this.max_score = null;
+	this.query = null;
     }
 
     public class ResultDocument {
@@ -105,7 +108,8 @@ public class ResultDefinition {
     }
 
     ResultDefinition(TimeTracker timeTracker, IndexSearcher searcher, TopDocs topDocs, QueryDefinition queryDef,
-	    Facets facets, Map<String, String[]> postingsHighlightsMap) throws IOException {
+	    Facets facets, Map<String, String[]> postingsHighlightsMap, Query query) throws IOException {
+	this.query = (queryDef.query_debug != null && queryDef.query_debug && query != null) ? query.toString() : null;
 	total_hits = topDocs.totalHits;
 	max_score = topDocs.getMaxScore();
 	int pos = queryDef.start == null ? 0 : queryDef.start;
@@ -126,8 +130,10 @@ public class ResultDefinition {
 	this.timer = timeTracker == null ? null : timeTracker.getMap();
     }
 
-    ResultDefinition(TimeTracker timeTracker, IndexSearcher searcher, TopDocs topDocs, MltQueryDefinition mltQueryDef)
-	    throws IOException {
+    ResultDefinition(TimeTracker timeTracker, IndexSearcher searcher, TopDocs topDocs, MltQueryDefinition mltQueryDef,
+	    Query query) throws IOException {
+	this.query = (mltQueryDef.query_debug != null && mltQueryDef.query_debug && query != null) ? query.toString()
+		: null;
 	total_hits = topDocs.totalHits;
 	max_score = topDocs.getMaxScore();
 	int pos = mltQueryDef.start == null ? 0 : mltQueryDef.start;
@@ -147,6 +153,7 @@ public class ResultDefinition {
     }
 
     ResultDefinition(TimeTracker timeTracker) {
+	query = null;
 	total_hits = 0;
 	documents = Collections.emptyList();
 	facets = null;
