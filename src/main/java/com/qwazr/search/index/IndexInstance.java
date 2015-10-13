@@ -41,6 +41,8 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -351,15 +353,19 @@ public class IndexInstance implements Closeable {
 	}
     }
 
-    private Query getLuceneQuery(QueryDefinition queryDef) throws QueryNodeException {
-	final StandardQueryParser parser = new StandardQueryParser(perFieldAnalyzer);
+    private Query getLuceneQuery(QueryDefinition queryDef) throws QueryNodeException, ParseException {
+	QueryParser parser;
 	if (queryDef.multi_field != null && !queryDef.multi_field.isEmpty()) {
 	    Set<String> fieldSet = queryDef.multi_field.keySet();
 	    String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
-	    parser.setMultiFields(fieldArray);
+	    parser = new MultiFieldQueryParser(fieldArray, perFieldAnalyzer);
+	} else {
+	    parser = new QueryParser(queryDef.default_field, perFieldAnalyzer);
 	}
 	if (queryDef.allow_leading_wildcard != null)
 	    parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
+	if (queryDef.auto_generate_phrase_queries)
+	    parser.setAutoGeneratePhraseQueries(queryDef.auto_generate_phrase_queries);
 	if (queryDef.default_operator != null)
 	    parser.setDefaultOperator(queryDef.default_operator);
 	final String qs;
@@ -371,10 +377,11 @@ public class IndexInstance implements Closeable {
 		qs = QueryParser.escape(queryDef.query_string);
 	} else
 	    qs = queryDef.query_string;
-	return parser.parse(qs, queryDef.default_field);
+	return parser.parse(qs);
     }
 
-    public void deleteByQuery(QueryDefinition queryDef) throws IOException, InterruptedException, QueryNodeException {
+    public void deleteByQuery(QueryDefinition queryDef) throws IOException, InterruptedException, QueryNodeException,
+	    ParseException {
 	Semaphore sem = checkWriteLimit();
 	try {
 	    Query query = getLuceneQuery(queryDef);
@@ -387,7 +394,7 @@ public class IndexInstance implements Closeable {
     }
 
     public ResultDefinition search(QueryDefinition queryDef) throws ServerException, IOException, QueryNodeException,
-	    InterruptedException {
+	    InterruptedException, ParseException {
 	Semaphore sem = checkReadLimit();
 	try {
 

@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
-import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
+import org.apache.lucene.queryparser.classic.QueryParser;
 
 import java.io.IOException;
 import java.util.List;
@@ -48,7 +48,8 @@ public class QueryDefinition extends BaseQueryDefinition {
     final public Map<String, Integer> postings_highlighter;
 
     final public Boolean allow_leading_wildcard;
-    final public StandardQueryConfigHandler.Operator default_operator;
+    final public Boolean auto_generate_phrase_queries;
+    final public QueryParser.Operator default_operator;
 
     public static class Facet {
 	final public Integer top = null;
@@ -56,7 +57,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 
     @JsonTypeInfo(use = Id.NAME, include = As.WRAPPER_OBJECT)
     @JsonSubTypes({ @JsonSubTypes.Type(value = TermQuery.class, name = "term"),
-	    @Type(value = GroupQuery.class, name = "group") })
+		    @Type(value = GroupQuery.class, name = "group") })
     public static class AbstractQuery {
     }
 
@@ -114,6 +115,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 	filters = null;
 	postings_highlighter = null;
 	allow_leading_wildcard = null;
+	auto_generate_phrase_queries = null;
 	default_operator = null;
     }
 
