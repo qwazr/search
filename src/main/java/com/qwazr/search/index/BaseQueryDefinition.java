@@ -26,7 +26,7 @@ public class BaseQueryDefinition {
     final public Integer start;
     final public Integer rows;
     final public Set<String> returned_fields;
-    final Boolean query_debug;
+    final public Boolean query_debug;
 
     public BaseQueryDefinition() {
 	start = null;
