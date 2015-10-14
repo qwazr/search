@@ -378,7 +378,15 @@ public class IndexInstance implements Closeable {
 	} else
 	    qs = queryDef.query_string;
 
-	return parser.parse(qs, queryDef.default_field);
+	Query query = parser.parse(qs, queryDef.default_field);
+
+	if (queryDef.auto_generate_phrase_query != null && queryDef.auto_generate_phrase_query && qs != null
+		&& qs.length() > 0 && qs.indexOf('"') == -1) {
+	    Query phraseQuery = parser.parse('"' + qs + '"', queryDef.default_field);
+	    query = new BooleanQuery.Builder().add(query, BooleanClause.Occur.SHOULD)
+		    .add(phraseQuery, BooleanClause.Occur.SHOULD).build();
+	}
+	return query;
     }
 
     public void deleteByQuery(QueryDefinition queryDef) throws IOException, InterruptedException, QueryNodeException,

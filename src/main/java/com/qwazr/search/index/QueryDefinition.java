@@ -50,7 +50,8 @@ public class QueryDefinition extends BaseQueryDefinition {
     final public Boolean allow_leading_wildcard;
     final public StandardQueryConfigHandler.Operator default_operator;
     final public Integer phrase_slop;
-	final public Boolean enable_position_increments;
+    final public Boolean enable_position_increments;
+    final public Boolean auto_generate_phrase_query;
 
     public static class Facet {
 	final public Integer top = null;
@@ -119,6 +120,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 	default_operator = null;
 	phrase_slop = null;
 	enable_position_increments = null;
+	auto_generate_phrase_query = null;
     }
 
     public static QueryDefinition newQuery(String jsonString) throws IOException {
