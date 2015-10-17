@@ -15,15 +15,6 @@
  */
 package com.qwazr.search;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
-
-import javax.servlet.ServletException;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.ParseException;
-
 import com.qwazr.cluster.ClusterServer;
 import com.qwazr.cluster.service.ClusterServiceImpl;
 import com.qwazr.search.index.IndexManager;
@@ -31,68 +22,87 @@ import com.qwazr.search.index.IndexServiceImpl;
 import com.qwazr.utils.server.AbstractServer;
 import com.qwazr.utils.server.RestApplication;
 import com.qwazr.utils.server.ServletApplication;
+import io.undertow.security.idm.IdentityManager;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.ParseException;
+
+import javax.servlet.ServletException;
+import java.io.File;
+import java.io.IOException;
+import java.util.Set;
 
 public class SearchServer extends AbstractServer {
 
-    public final static String SERVICE_NAME_SEARCH = "search";
-    public final static String INDEXES_DIRECTORY = "index";
+	public final static String SERVICE_NAME_SEARCH = "search";
+	public final static String INDEXES_DIRECTORY = "index";
 
-    private final static ServerDefinition serverDefinition = new ServerDefinition();
+	private final static ServerDefinition serverDefinition = new ServerDefinition();
 
-    static {
-	serverDefinition.mainJarPath = "qwazr-search.jar";
-	serverDefinition.defaultDataDirName = "qwazr";
-	serverDefinition.defaultWebServiceTcpPort = 9091;
-    }
-
-    private SearchServer() {
-	super(serverDefinition);
-    }
-
-    public static class SearchApplication extends RestApplication {
-
-	@Override public Set<Class<?>> getClasses() {
-	    Set<Class<?>> classes = super.getClasses();
-	    classes.add(ClusterServiceImpl.class);
-	    classes.add(IndexServiceImpl.class);
-	    return classes;
+	static {
+		serverDefinition.mainJarPath = "qwazr-search.jar";
+		serverDefinition.defaultDataDirName = "qwazr";
+		serverDefinition.defaultWebServiceTcpPort = 9091;
 	}
-    }
 
-    @Override public void commandLine(CommandLine cmd) throws IOException, ParseException {
-    }
+	private SearchServer() {
+		super(serverDefinition);
+	}
 
-    public static void checkDirectoryExists(File directoryFile) throws IOException {
-	if (!directoryFile.exists())
-	    directoryFile.mkdir();
-	if (!directoryFile.isDirectory())
-	    throw new IOException("This name is not valid. No directory exists for this location: " + directoryFile
-			    .getName());
-    }
+	public static class SearchApplication extends RestApplication {
 
-    public static void loadIndexManager(File dataDirectory) throws IOException {
-	File indexDir = new File(dataDirectory, INDEXES_DIRECTORY);
-	checkDirectoryExists(indexDir);
-	IndexManager.load(indexDir);
-    }
+		@Override
+		public Set<Class<?>> getClasses() {
+			Set<Class<?>> classes = super.getClasses();
+			classes.add(ClusterServiceImpl.class);
+			classes.add(IndexServiceImpl.class);
+			return classes;
+		}
+	}
 
-    @Override public void load() throws IOException {
-	File currentDataDir = getCurrentDataDir();
-	ClusterServer.load(getWebServicePublicAddress(), currentDataDir);
-	loadIndexManager(currentDataDir);
+	@Override
+	public void commandLine(CommandLine cmd) throws IOException, ParseException {
+	}
 
-    }
+	public static void checkDirectoryExists(File directoryFile) throws IOException {
+		if (!directoryFile.exists())
+			directoryFile.mkdir();
+		if (!directoryFile.isDirectory())
+			throw new IOException("This name is not valid. No directory exists for this location: " + directoryFile
+							.getName());
+	}
 
-    @Override protected RestApplication getRestApplication() {
-	return new SearchApplication();
-    }
+	public static void loadIndexManager(File dataDirectory) throws IOException {
+		File indexDir = new File(dataDirectory, INDEXES_DIRECTORY);
+		checkDirectoryExists(indexDir);
+		IndexManager.load(indexDir);
+	}
 
-    @Override protected ServletApplication getServletApplication() {
-	return null;
-    }
+	@Override
+	public void load() throws IOException {
+		File currentDataDir = getCurrentDataDir();
+		ClusterServer.load(getWebServicePublicAddress(), currentDataDir);
+		loadIndexManager(currentDataDir);
 
-    public static void main(String[] args) throws IOException, ParseException, ServletException {
-	new SearchServer().start(args);
-    }
+	}
+
+	@Override
+	protected Class<SearchApplication> getRestApplication() {
+		return SearchApplication.class;
+	}
+
+	@Override
+	protected Class<ServletApplication> getServletApplication() {
+		return null;
+	}
+
+	@Override
+	protected IdentityManager getIdentityManager(String realm) {
+		return null;
+	}
+
+	public static void main(String[] args) throws IOException, ParseException, ServletException, InstantiationException,
+					IllegalAccessException {
+		new SearchServer().start(args);
+	}
 
 }
