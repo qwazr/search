@@ -41,6 +41,8 @@ public class IndexServiceImpl implements IndexServiceInterface {
 		String v = System.getProperty("QWAZR_INDEX_ROOT_USER");
 		if (v == null)
 			v = System.getenv("QWAZR_INDEX_ROOT_USER");
+		if (v == null)
+			v = System.getenv("QWAZR ROOT_USER");
 		QWAZR_INDEX_ROOT_USER = v;
 	}
 
