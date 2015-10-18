@@ -20,13 +20,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class SettingsDefinition {
 
-    final Integer max_simultaneous_write;
-    final Integer max_simultaneous_read;
-    final Integer max_size;
+	final Integer max_simultaneous_write;
+	final Integer max_simultaneous_read;
+	final Integer max_size;
 
-    public SettingsDefinition() {
-	max_simultaneous_write = null;
-	max_simultaneous_read = null;
-	max_size = null;
-    }
+	public SettingsDefinition() {
+		max_simultaneous_write = null;
+		max_simultaneous_read = null;
+		max_size = null;
+	}
 }
