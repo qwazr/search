@@ -15,9 +15,10 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.SearchServer;
 import com.qwazr.utils.server.RestApplication;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -25,80 +26,81 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@RolesAllowed(SearchServer.SERVICE_NAME_SEARCH)
 @Path("/indexes")
 public interface IndexServiceInterface {
 
-    @GET
-    @Path("/")
-    @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public Set<String> getIndexes(@QueryParam("local") Boolean local);
+	@GET
+	@Path("/")
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Set<String> getIndexes(@QueryParam("local") Boolean local);
 
-    @POST
-    @Path("/{index_name}")
-    @Consumes(RestApplication.APPLICATION_JSON_UTF8)
-    @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public IndexStatus createUpdateIndex(@PathParam("index_name") String index_name,
-	    @QueryParam("local") Boolean local, Map<String, FieldDefinition> fields);
+	@POST
+	@Path("/{index_name}")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public IndexStatus createUpdateIndex(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local,
+					Map<String, FieldDefinition> fields);
 
-    @GET
-    @Path("/{index_name}")
-    @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public IndexStatus getIndex(@PathParam("index_name") String index_name);
+	@GET
+	@Path("/{index_name}")
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public IndexStatus getIndex(@PathParam("index_name") String index_name);
 
-    @DELETE
-    @Path("/{index_name}")
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response deleteIndex(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local);
+	@DELETE
+	@Path("/{index_name}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response deleteIndex(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local);
 
-    @GET
-    @Path("/{index_name/settings}")
-    @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public SettingsDefinition getSettings(@PathParam("index_name") String index_name);
+	@GET
+	@Path("/{index_name/settings}")
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public SettingsDefinition getSettings(@PathParam("index_name") String index_name);
 
-    @POST
-    @Path("/{index_name/settings}")
-    @Consumes(RestApplication.APPLICATION_JSON_UTF8)
-    @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public SettingsDefinition setSettings(@PathParam("index_name") String index_name, SettingsDefinition settings);
+	@POST
+	@Path("/{index_name/settings}")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public SettingsDefinition setSettings(@PathParam("index_name") String index_name, SettingsDefinition settings);
 
-    @DELETE
-    @Path("/{index_name}/settings")
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response deleteSettings(@PathParam("index_name") String index_name);
+	@DELETE
+	@Path("/{index_name}/settings")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response deleteSettings(@PathParam("index_name") String index_name);
 
-    @POST
-    @Path("/{index_name}/docs")
-    @Consumes(RestApplication.APPLICATION_JSON_UTF8)
-    @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public Response postDocuments(@PathParam("index_name") String index_name, List<Map<String, Object>> documents);
+	@POST
+	@Path("/{index_name}/docs")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Response postDocuments(@PathParam("index_name") String index_name, List<Map<String, Object>> documents);
 
-    @DELETE
-    @Path("/{index_name}/docs")
-    @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public Response deleteAll(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local);
+	@DELETE
+	@Path("/{index_name}/docs")
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Response deleteAll(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local);
 
-    @POST
-    @Path("/{index_name}/doc")
-    @Consumes(RestApplication.APPLICATION_JSON_UTF8)
-    @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public Response postDocument(@PathParam("index_name") String index_name, Map<String, Object> document);
+	@POST
+	@Path("/{index_name}/doc")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Response postDocument(@PathParam("index_name") String index_name, Map<String, Object> document);
 
-    @POST
-    @Path("/{index_name}/search")
-    @Consumes(RestApplication.APPLICATION_JSON_UTF8)
-    @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public ResultDefinition searchQuery(@PathParam("index_name") String index_name, QueryDefinition query);
+	@POST
+	@Path("/{index_name}/search")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public ResultDefinition searchQuery(@PathParam("index_name") String index_name, QueryDefinition query);
 
-    @POST
-    @Path("/{index_name}/mlt")
-    @Consumes(RestApplication.APPLICATION_JSON_UTF8)
-    @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public ResultDefinition mltQuery(@PathParam("index_name") String index_name, MltQueryDefinition query);
+	@POST
+	@Path("/{index_name}/mlt")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public ResultDefinition mltQuery(@PathParam("index_name") String index_name, MltQueryDefinition query);
 
-    @DELETE
-    @Path("/{index_name}/search")
-    @Consumes(RestApplication.APPLICATION_JSON_UTF8)
-    @Produces(RestApplication.APPLICATION_JSON_UTF8)
-    public Response deleteByQuery(@PathParam("index_name") String index_name, QueryDefinition query);
+	@DELETE
+	@Path("/{index_name}/search")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Response deleteByQuery(@PathParam("index_name") String index_name, QueryDefinition query);
 
 }
