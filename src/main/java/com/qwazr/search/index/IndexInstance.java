@@ -118,10 +118,10 @@ public class IndexInstance implements Closeable {
 
 	@Override
 	public void close() {
-		IOUtils.close(searcherManager);
+		IOUtils.closeQuietly(searcherManager);
 		if (indexWriter.isOpen())
-			IOUtils.close(indexWriter);
-		IOUtils.close(luceneDirectory);
+			IOUtils.closeQuietly(indexWriter);
+		IOUtils.closeQuietly(luceneDirectory);
 	}
 
 	/**
