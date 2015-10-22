@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,7 +79,7 @@ public class IndexInstance implements Closeable {
 	private final IndexWriterConfig indexWriterConfig;
 	private final IndexWriter indexWriter;
 	private final SearcherManager searcherManager;
-	private volatile PerFieldAnalyzerWrapper perFieldAnalyzer;
+	private final PerFieldAnalyzer perFieldAnalyzer;
 	private volatile Map<String, FieldDefinition> fieldMap;
 	private volatile SettingsDefinition settingsDefinition;
 	private volatile Semaphore readSemaphore;
@@ -109,7 +109,7 @@ public class IndexInstance implements Closeable {
 						JsonMapper.MAPPER.readValue(settingsFile, SettingsDefinition.class) :
 						null;
 		checkSettings();
-		perFieldAnalyzer = buildFieldAnalyzer(fieldMap);
+		perFieldAnalyzer = new PerFieldAnalyzer(facetsConfig, fieldMap);
 		indexWriterConfig = new IndexWriterConfig(perFieldAnalyzer);
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 		indexWriter = new IndexWriter(luceneDirectory, indexWriterConfig);
@@ -152,46 +152,8 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	private Class<?> findAnalyzer(String analyzer) throws ClassNotFoundException {
-		try {
-			return Class.forName(analyzer);
-		} catch (ClassNotFoundException e1) {
-			try {
-				return Class.forName("com.qwazr.search.analysis." + analyzer);
-			} catch (ClassNotFoundException e2) {
-				try {
-					return Class.forName("org.apache.lucene.analysis." + analyzer);
-				} catch (ClassNotFoundException e3) {
-					throw e1;
-				}
-			}
-		}
-	}
-
-	private PerFieldAnalyzerWrapper buildFieldAnalyzer(Map<String, FieldDefinition> fields) throws ServerException {
-		if (fields == null || fields.size() == 0)
-			return new PerFieldAnalyzerWrapper(new KeywordAnalyzer());
-		Map<String, Analyzer> analyzerMap = new HashMap<String, Analyzer>();
-		for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
-			String fieldName = field.getKey();
-			FieldDefinition fieldDef = field.getValue();
-			if (fieldDef.template == FieldDefinition.Template.SortedSetMultiDocValuesFacetField)
-				facetsConfig.setMultiValued(fieldName, true);
-			else if (fieldDef.template == FieldDefinition.Template.SortedSetDocValuesFacetField)
-				facetsConfig.setMultiValued(fieldName, false);
-			try {
-				if (!StringUtils.isEmpty(fieldDef.analyzer))
-					analyzerMap.put(field.getKey(), (Analyzer) findAnalyzer(fieldDef.analyzer).newInstance());
-			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-								"Class " + fieldDef.analyzer + " not known for the field " + fieldName);
-			}
-		}
-		return new PerFieldAnalyzerWrapper(new KeywordAnalyzer(), analyzerMap);
-	}
-
 	public synchronized void setFields(Map<String, FieldDefinition> fields) throws ServerException, IOException {
-		perFieldAnalyzer = buildFieldAnalyzer(fields);
+		perFieldAnalyzer.update(facetsConfig, fields);
 		JsonMapper.MAPPER.writeValue(fieldMapFile, fields);
 		fieldMap = fields;
 	}
