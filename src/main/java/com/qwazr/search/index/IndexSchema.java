@@ -55,12 +55,13 @@ public class IndexSchema implements Closeable, AutoCloseable {
 	private volatile Semaphore readSemaphore;
 	private volatile Semaphore writeSemaphore;
 
-	private volatile SearchContext searchContext;
+	private volatile SearchContext searchContext = null;
 
 	private class SearchContext implements Closeable, AutoCloseable {
 
 		private final MultiReader multiReader;
 		private final IndexSearcher indexSearcher;
+		private final Map<String, FieldDefinition> fieldMap;
 		private final PerFieldAnalyzer perFieldAnalyzer;
 
 		private SearchContext() throws IOException {
@@ -68,14 +69,17 @@ public class IndexSchema implements Closeable, AutoCloseable {
 				indexSearcher = null;
 				multiReader = null;
 				perFieldAnalyzer = null;
+				fieldMap = null;
 				return;
 			}
 			IndexReader[] indexReaders = new IndexReader[indexMap.size()];
 			int i = 0;
 			Map<String, Analyzer> analyzerMap = new HashMap<String, Analyzer>();
+			fieldMap = new HashMap<String, FieldDefinition>();
 			for (IndexInstance indexInstance : indexMap.values()) {
 				indexReaders[i++] = DirectoryReader.open(indexInstance.getLuceneDirectory());
 				indexInstance.fillAnalyzers(analyzerMap);
+				indexInstance.fillFields(fieldMap);
 			}
 			multiReader = new MultiReader(indexReaders);
 			indexSearcher = new IndexSearcher(multiReader);
@@ -97,7 +101,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 						throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 			if (indexSearcher == null)
 				return null;
-			return QueryUtils.search(indexSearcher, queryDef, perFieldAnalyzer, null);
+			return QueryUtils.search(fieldMap, indexSearcher, queryDef, perFieldAnalyzer, null);
 		}
 	}
 
@@ -120,7 +124,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 			return;
 		for (File indexDirectory : directories)
 			indexMap.put(indexDirectory.getName(), new IndexInstance(this, indexDirectory));
-		checkSearchContext();
+		mayBeRefresh();
 	}
 
 	@Override
@@ -144,7 +148,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 				indexInstance.setFields(fields);
 				indexMap.put(indexName, indexInstance);
 			}
-			checkSearchContext();
+			mayBeRefresh();
 			return indexInstance.getStatus();
 		}
 	}
@@ -180,7 +184,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 			IndexInstance indexInstance = get(indexName);
 			indexInstance.delete();
 			indexMap.remove(indexName);
-			checkSearchContext();
+			mayBeRefresh();
 		}
 	}
 
@@ -197,7 +201,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		checkSettings();
 	}
 
-	private void checkSearchContext() throws IOException {
+	synchronized void mayBeRefresh() throws IOException {
 		searchContext = new SearchContext();
 	}
 

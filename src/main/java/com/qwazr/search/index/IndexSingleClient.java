@@ -129,6 +129,9 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		return null;
 	}
 
+	public final static TypeReference<Map<String, Object>> MapStringObjectTypeRef = new TypeReference<Map<String, Object>>() {
+	};
+
 	@Override
 	public Response postDocument(String schema_name, String index_name, Map<String, Object> document) {
 		try {
@@ -143,6 +146,9 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
 		}
 	}
+
+	public final static TypeReference<List<Map<String, Object>>> ListMapStringObjectTypeRef = new TypeReference<List<Map<String, Object>>>() {
+	};
 
 	@Override
 	public Response postDocuments(String schema_name, String index_name, List<Map<String, Object>> documents) {

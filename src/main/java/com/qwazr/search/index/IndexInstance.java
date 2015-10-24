@@ -52,6 +52,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+import java.util.function.BiConsumer;
 
 public class IndexInstance implements Closeable {
 
@@ -201,6 +202,7 @@ public class IndexInstance implements Closeable {
 	private void nrtCommit() throws IOException {
 		indexWriter.commit();
 		searcherManager.maybeRefresh();
+		schema.mayBeRefresh();
 	}
 
 	public void deleteAll() throws IOException, InterruptedException {
@@ -266,7 +268,7 @@ public class IndexInstance implements Closeable {
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
-				return QueryUtils.search(indexSearcher, queryDef, perFieldAnalyzer, facetsConfig);
+				return QueryUtils.search(fieldMap, indexSearcher, queryDef, perFieldAnalyzer, facetsConfig);
 			} finally {
 				searcherManager.release(indexSearcher);
 			}
@@ -323,7 +325,7 @@ public class IndexInstance implements Closeable {
 				final TopDocs topDocs;
 				final Query query = getMoreLikeThis(mltQueryDef, indexReader).like(filterTopDocs.scoreDocs[0].doc);
 				topDocs = indexSearcher.search(query, mltQueryDef.getEnd());
-				return new ResultDefinition(timeTracker, indexSearcher, topDocs, mltQueryDef, query);
+				return new ResultDefinition(fieldMap, timeTracker, indexSearcher, topDocs, mltQueryDef, query);
 			} finally {
 				searcherManager.release(indexSearcher);
 			}
@@ -341,6 +343,18 @@ public class IndexInstance implements Closeable {
 		if (perFieldAnalyzer == null)
 			return;
 		perFieldAnalyzer.fill(analyzerMap);
+	}
+
+	void fillFields(final Map<String, FieldDefinition> fieldMap) {
+		if (fieldMap == null)
+			return;
+		this.fieldMap.forEach(new BiConsumer<String, FieldDefinition>() {
+			@Override
+			public void accept(String name, FieldDefinition fieldDefinition) {
+				if (!fieldMap.containsKey(name))
+					fieldMap.put(name, fieldDefinition);
+			}
+		});
 	}
 
 }

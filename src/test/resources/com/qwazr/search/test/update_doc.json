@@ -1,0 +1,13 @@
+{
+  "$id$": "5",
+  "name": "Fifth name",
+  "category": [
+    "cat1",
+    "cat2",
+    "cat3",
+    "cat4",
+    "cat5"
+  ],
+  "size": 500,
+  "price": 5.50
+}

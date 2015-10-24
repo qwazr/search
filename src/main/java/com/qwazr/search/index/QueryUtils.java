@@ -79,8 +79,8 @@ public class QueryUtils {
 		return query;
 	}
 
-	final static ResultDefinition search(IndexSearcher indexSearcher, QueryDefinition queryDef, Analyzer analyzer,
-					FacetsConfig facetsConfig)
+	final static ResultDefinition search(Map<String, FieldDefinition> fieldMap, IndexSearcher indexSearcher,
+					QueryDefinition queryDef, Analyzer analyzer, FacetsConfig facetsConfig)
 					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 
 		Query query = getLuceneQuery(queryDef, analyzer);
@@ -129,8 +129,8 @@ public class QueryUtils {
 			timeTracker.next("postings_highlighters");
 		}
 
-		return new ResultDefinition(timeTracker, indexSearcher, topDocs, queryDef, facets, postingsHighlightersMap,
-						query);
+		return new ResultDefinition(fieldMap, timeTracker, indexSearcher, topDocs, queryDef, facets,
+						postingsHighlightersMap, query);
 
 	}
 }

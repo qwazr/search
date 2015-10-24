@@ -1,0 +1,13 @@
+{
+  "query_string": "name",
+  "default_field": "name",
+  "returned_fields": [
+    "name",
+    "price"
+  ],
+  "start": 2,
+  "rows": 3,
+  "facets": {
+    "category": {}
+  }
+}
