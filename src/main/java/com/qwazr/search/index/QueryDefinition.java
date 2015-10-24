@@ -35,98 +35,98 @@ import java.util.Set;
 @JsonInclude(Include.NON_EMPTY)
 public class QueryDefinition extends BaseQueryDefinition {
 
-    final public String default_field;
-    final public String query_string;
-    final public Boolean escape_query;
-    final public char[] escaped_chars;
-    final public Map<String, Float> multi_field;
+	final public String default_field;
+	final public String query_string;
+	final public Boolean escape_query;
+	final public char[] escaped_chars;
+	final public Map<String, Float> multi_field;
 
-    final public Set<String> returned_fields;
-    final public Map<String, Facet> facets;
-    final public Map<String, Set<String>> filters;
+	final public Set<String> returned_fields;
+	final public Map<String, Facet> facets;
+	final public Map<String, Set<String>> filters;
 
-    final public Map<String, Integer> postings_highlighter;
+	final public Map<String, Integer> postings_highlighter;
 
-    final public Boolean allow_leading_wildcard;
-    final public StandardQueryConfigHandler.Operator default_operator;
-    final public Integer phrase_slop;
-    final public Boolean enable_position_increments;
-    final public Boolean auto_generate_phrase_query;
+	final public Boolean allow_leading_wildcard;
+	final public StandardQueryConfigHandler.Operator default_operator;
+	final public Integer phrase_slop;
+	final public Boolean enable_position_increments;
+	final public Boolean auto_generate_phrase_query;
 
-    public static class Facet {
-	final public Integer top = null;
-    }
-
-    @JsonTypeInfo(use = Id.NAME, include = As.WRAPPER_OBJECT)
-    @JsonSubTypes({ @JsonSubTypes.Type(value = TermQuery.class, name = "term"),
-	    @Type(value = GroupQuery.class, name = "group") })
-    public static class AbstractQuery {
-    }
-
-    final public AbstractQuery query = null;
-
-    @JsonTypeName("term")
-    public static class TermQuery extends AbstractQuery {
-
-	final public String field;
-	final public String value;
-
-	public TermQuery(String field, String value) {
-	    this.field = field;
-	    this.value = value;
+	public static class Facet {
+		final public Integer top = null;
 	}
 
-	public TermQuery() {
-	    this(null, null);
-	}
-    }
-
-    @JsonTypeName("group")
-    public static class GroupQuery extends AbstractQuery {
-
-	public static enum OperatorEnum {
-	    and, or
+	@JsonTypeInfo(use = Id.NAME, include = As.WRAPPER_OBJECT)
+	@JsonSubTypes({ @JsonSubTypes.Type(value = TermQuery.class, name = "term"),
+					@Type(value = GroupQuery.class, name = "group") })
+	public static class AbstractQuery {
 	}
 
-	final public OperatorEnum operator;
+	final public AbstractQuery query = null;
 
-	final public List<AbstractQuery> queries;
+	@JsonTypeName("term")
+	public static class TermQuery extends AbstractQuery {
 
-	GroupQuery(OperatorEnum operator, List<AbstractQuery> queries) {
-	    this.operator = operator;
-	    this.queries = queries;
+		final public String field;
+		final public String value;
+
+		public TermQuery(String field, String value) {
+			this.field = field;
+			this.value = value;
+		}
+
+		public TermQuery() {
+			this(null, null);
+		}
 	}
 
-	public GroupQuery() {
-	    this(null, null);
+	@JsonTypeName("group")
+	public static class GroupQuery extends AbstractQuery {
+
+		public static enum OperatorEnum {
+			and, or
+		}
+
+		final public OperatorEnum operator;
+
+		final public List<AbstractQuery> queries;
+
+		GroupQuery(OperatorEnum operator, List<AbstractQuery> queries) {
+			this.operator = operator;
+			this.queries = queries;
+		}
+
+		public GroupQuery() {
+			this(null, null);
+		}
+
+		public void addQuery(TermQuery termQuery) {
+			queries.add(termQuery);
+		}
 	}
 
-	public void addQuery(TermQuery termQuery) {
-	    queries.add(termQuery);
+	public QueryDefinition() {
+		default_field = null;
+		query_string = null;
+		escape_query = null;
+		escaped_chars = null;
+		multi_field = null;
+		returned_fields = null;
+		facets = null;
+		filters = null;
+		postings_highlighter = null;
+		allow_leading_wildcard = null;
+		default_operator = null;
+		phrase_slop = null;
+		enable_position_increments = null;
+		auto_generate_phrase_query = null;
 	}
-    }
 
-    public QueryDefinition() {
-	default_field = null;
-	query_string = null;
-	escape_query = null;
-	escaped_chars = null;
-	multi_field = null;
-	returned_fields = null;
-	facets = null;
-	filters = null;
-	postings_highlighter = null;
-	allow_leading_wildcard = null;
-	default_operator = null;
-	phrase_slop = null;
-	enable_position_increments = null;
-	auto_generate_phrase_query = null;
-    }
-
-    public static QueryDefinition newQuery(String jsonString) throws IOException {
-	if (StringUtils.isEmpty(jsonString))
-	    return null;
-	return JsonMapper.MAPPER.readValue(jsonString, QueryDefinition.class);
-    }
+	public static QueryDefinition newQuery(String jsonString) throws IOException {
+		if (StringUtils.isEmpty(jsonString))
+			return null;
+		return JsonMapper.MAPPER.readValue(jsonString, QueryDefinition.class);
+	}
 
 }

@@ -17,7 +17,6 @@ package com.qwazr.search.index;
 
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -25,91 +24,111 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingleClient> implements
-	IndexServiceInterface {
+public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingleClient>
+				implements IndexServiceInterface {
 
-    public IndexMultiClient(ExecutorService executor, String[] urls, Integer msTimeOut) throws URISyntaxException {
-	super(executor, new IndexSingleClient[urls.length], urls, msTimeOut);
-    }
+	public IndexMultiClient(ExecutorService executor, String[] urls, Integer msTimeOut) throws URISyntaxException {
+		super(executor, new IndexSingleClient[urls.length], urls, msTimeOut);
+	}
 
-    @Override
-    protected IndexSingleClient newClient(String url, Integer msTimeOut) throws URISyntaxException {
-	return new IndexSingleClient(url, msTimeOut);
-    }
+	@Override
+	protected IndexSingleClient newClient(String url, Integer msTimeOut) throws URISyntaxException {
+		return new IndexSingleClient(url, msTimeOut);
+	}
 
-    @Override
-    public Set<String> getIndexes(Boolean local) {
-	// TODO Auto-generated method stub
-	return null;
-    }
+	@Override
+	public Response createUpdateSchema(String schema_name, Boolean local) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public IndexStatus createUpdateIndex(String index_name, Boolean local, Map<String, FieldDefinition> fields) {
-	// TODO Auto-generated method stub
-	return null;
-    }
+	@Override
+	public Response deleteSchema(String schema_name, Boolean local) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public IndexStatus getIndex(String index_name) {
-	// TODO Auto-generated method stub
-	return null;
-    }
+	@Override
+	public Set<String> getSchemas(Boolean local) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public Response deleteIndex(String index_name, Boolean local) {
-	// TODO Auto-generated method stub
-	return null;
-    }
+	@Override
+	public ResultDefinition searchQuery(String schema_name, QueryDefinition query, Boolean local) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public SettingsDefinition getSettings(@PathParam("index_name") String index_name) {
-	return null;
-    }
+	@Override
+	public Set<String> getIndexes(String schema_name, Boolean local) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public SettingsDefinition setSettings(@PathParam("index_name") String index_name, SettingsDefinition settings) {
-	return null;
-    }
+	@Override
+	public IndexStatus createUpdateIndex(String schema_name, String index_name, Boolean local,
+					Map<String, FieldDefinition> fields) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public Response deleteSettings(@PathParam("index_name") String index_name) {
-	return null;
-    }
+	@Override
+	public IndexStatus getIndex(String schema_name, String index_name) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public Response postDocument(String index_name, Map<String, Object> document) {
-	// TODO Auto-generated method stub
-	return null;
-    }
+	@Override
+	public Response deleteIndex(String schema_name, String index_name, Boolean local) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public Response postDocuments(String index_name, List<Map<String, Object>> documents) {
-	// TODO Auto-generated method stub
-	return null;
-    }
+	@Override
+	public SettingsDefinition getSettings(String index_name) {
+		return null;
+	}
 
-    @Override
-    public Response deleteAll(String index_name, Boolean local) {
-	// TODO Auto-generated method stub
-	return null;
-    }
+	@Override
+	public SettingsDefinition setSettings(String index_name, SettingsDefinition settings) {
+		return null;
+	}
 
-    @Override
-    public ResultDefinition searchQuery(String index_name, QueryDefinition query) {
-	// TODO Auto-generated method stub
-	return null;
-    }
+	@Override
+	public Response postDocument(String schema_name, String index_name, Map<String, Object> document) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public Response deleteByQuery(String index_name, QueryDefinition query) {
-	// TODO Auto-generated method stub
-	return null;
-    }
+	@Override
+	public Response postDocuments(String schema_name, String index_name, List<Map<String, Object>> documents) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public ResultDefinition mltQuery(String index_name, MltQueryDefinition mltQuery) {
-	// TODO Auto-generated method stub
-	return null;
-    }
+	@Override
+	public Response deleteAll(String schema_name, String index_name, Boolean local) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Response deleteByQuery(String schema_name, String index_name, QueryDefinition query) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ResultDefinition mltQuery(String schema_name, String index_name, MltQueryDefinition mltQuery) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

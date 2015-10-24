@@ -27,6 +27,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 
 import javax.servlet.ServletException;
+import javax.ws.rs.ApplicationPath;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
@@ -48,6 +49,7 @@ public class SearchServer extends AbstractServer {
 		super(serverDefinition);
 	}
 
+	@ApplicationPath("/")
 	public static class SearchApplication extends RestApplication {
 
 		@Override

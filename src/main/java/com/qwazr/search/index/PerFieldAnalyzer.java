@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p>
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,13 +20,13 @@ import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.DelegatingAnalyzerWrapper;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
-import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.facet.FacetsConfig;
 
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 
@@ -36,6 +36,11 @@ public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 	PerFieldAnalyzer(FacetsConfig facetsConfig, Map<String, FieldDefinition> fields) throws ServerException {
 		super(PER_FIELD_REUSE_STRATEGY);
 		update(facetsConfig, fields);
+	}
+
+	PerFieldAnalyzer(Map<String, Analyzer> analyzerMap) {
+		super(PER_FIELD_REUSE_STRATEGY);
+		this.analyzerMap = analyzerMap;
 	}
 
 	private static Class<?> findAnalyzer(String analyzer) throws ClassNotFoundException {
@@ -85,5 +90,16 @@ public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 	final protected Analyzer getWrappedAnalyzer(String fieldName) {
 		Analyzer analyzer = analyzerMap.get(fieldName);
 		return analyzer == null ? defaultAnalyzer : analyzer;
+	}
+
+	final void fill(final Map<String, Analyzer> analyzerMap) {
+		this.analyzerMap.forEach(new BiConsumer<String, Analyzer>() {
+			@Override
+			public void accept(String field, Analyzer analyzer) {
+				if (analyzerMap.containsKey(field))
+					return;
+				analyzerMap.put(field, analyzer);
+			}
+		});
 	}
 }

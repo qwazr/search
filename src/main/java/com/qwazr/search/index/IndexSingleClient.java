@@ -22,7 +22,6 @@ import com.qwazr.utils.json.client.JsonClientAbstract;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 
-import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -34,136 +33,175 @@ import java.util.Set;
 
 public class IndexSingleClient extends JsonClientAbstract implements IndexServiceInterface {
 
-    public IndexSingleClient(String url, int msTimeOut) throws URISyntaxException {
-	super(url, msTimeOut);
-    }
-
-    public final static TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
-    };
-
-    @Override
-    public Set<String> getIndexes(Boolean local) {
-	UBuilder uriBuilder = new UBuilder("/indexes").setParameters(local, null);
-	Request request = Request.Get(uriBuilder.build());
-	return (Set<String>) commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
-    }
-
-    @Override
-    public IndexStatus createUpdateIndex(String index_name, Boolean local, Map<String, FieldDefinition> fields) {
-	UBuilder uriBuilder = new UBuilder("/indexes/", index_name).setParameters(local, null);
-	Request request = Request.Post(uriBuilder.build());
-	return commonServiceRequest(request, fields, msTimeOut, IndexStatus.class, 200);
-    }
-
-    @Override
-    public IndexStatus getIndex(String index_name) {
-	UBuilder uriBuilder = new UBuilder("/indexes/", index_name);
-	Request request = Request.Get(uriBuilder.build());
-	return commonServiceRequest(request, null, msTimeOut, IndexStatus.class, 200);
-    }
-
-    @Override
-    public Response deleteIndex(String index_name, Boolean local) {
-	try {
-	    UBuilder uriBuilder = new UBuilder("/indexes/", index_name).setParameters(local, null);
-	    Request request = Request.Delete(uriBuilder.build());
-	    HttpResponse response = execute(request, null, msTimeOut);
-	    HttpUtils.checkStatusCodes(response, 200);
-	    return Response.status(response.getStatusLine().getStatusCode()).build();
-	} catch (HttpResponseEntityException e) {
-	    throw e.getWebApplicationException();
-	} catch (IOException e) {
-	    throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+	public IndexSingleClient(String url, int msTimeOut) throws URISyntaxException {
+		super(url, msTimeOut);
 	}
-    }
 
-    @Override
-    public SettingsDefinition getSettings(@PathParam("index_name") String index_name) {
-	return null;
-    }
+	public final static TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
+	};
 
-    @Override
-    public SettingsDefinition setSettings(@PathParam("index_name") String index_name, SettingsDefinition settings) {
-	return null;
-    }
-
-    @Override
-    public Response deleteSettings(@PathParam("index_name") String index_name) {
-	return null;
-    }
-
-    @Override
-    public Response postDocument(String index_name, Map<String, Object> document) {
-	try {
-	    UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/doc");
-	    Request request = Request.Post(uriBuilder.build());
-	    HttpResponse response = execute(request, document, msTimeOut);
-	    HttpUtils.checkStatusCodes(response, 200);
-	    return Response.status(response.getStatusLine().getStatusCode()).build();
-	} catch (HttpResponseEntityException e) {
-	    throw e.getWebApplicationException();
-	} catch (IOException e) {
-	    throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+	@Override
+	public Response createUpdateSchema(String schema_name, Boolean local) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name).setParameters(local, null);
+			Request request = Request.Post(uriBuilder.build());
+			HttpResponse response = execute(request, null, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 201, 202);
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
 	}
-    }
 
-    @Override
-    public Response postDocuments(String index_name, List<Map<String, Object>> documents) {
-	try {
-	    UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/docs");
-	    Request request = Request.Post(uriBuilder.build());
-	    HttpResponse response = execute(request, documents, msTimeOut);
-	    HttpUtils.checkStatusCodes(response, 200);
-	    return Response.status(response.getStatusLine().getStatusCode()).build();
-	} catch (HttpResponseEntityException e) {
-	    throw e.getWebApplicationException();
-	} catch (IOException e) {
-	    throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+	@Override
+	public Set<String> getSchemas(Boolean local) {
+		UBuilder uriBuilder = new UBuilder("/indexes").setParameters(local, null);
+		Request request = Request.Get(uriBuilder.build());
+		return (Set<String>) commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
 	}
-    }
 
-    @Override
-    public Response deleteAll(String index_name, Boolean local) {
-	try {
-	    UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/docs").setParameters(local, null);
-	    Request request = Request.Delete(uriBuilder.build());
-	    HttpResponse response = execute(request, null, msTimeOut);
-	    HttpUtils.checkStatusCodes(response, 200);
-	    return Response.status(response.getStatusLine().getStatusCode()).build();
-	} catch (HttpResponseEntityException e) {
-	    throw e.getWebApplicationException();
-	} catch (IOException e) {
-	    throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+	@Override
+	public Response deleteSchema(String schema_name, Boolean local) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name).setParameters(local, null);
+			Request request = Request.Delete(uriBuilder.build());
+			HttpResponse response = execute(request, null, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 200);
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
 	}
-    }
 
-    @Override
-    public ResultDefinition searchQuery(String index_name, QueryDefinition query) {
-	UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/search");
-	Request request = Request.Post(uriBuilder.build());
-	return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);
-    }
-
-    @Override
-    public Response deleteByQuery(String index_name, QueryDefinition query) {
-	try {
-	    UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/search");
-	    Request request = Request.Delete(uriBuilder.build());
-	    HttpResponse response = execute(request, query, msTimeOut);
-	    HttpUtils.checkStatusCodes(response, 200);
-	    return Response.status(response.getStatusLine().getStatusCode()).build();
-	} catch (HttpResponseEntityException e) {
-	    throw e.getWebApplicationException();
-	} catch (IOException e) {
-	    throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+	@Override
+	public Set<String> getIndexes(String schema_name, Boolean local) {
+		UBuilder uriBuilder = new UBuilder("/indexes/" + schema_name).setParameters(local, null);
+		Request request = Request.Get(uriBuilder.build());
+		return (Set<String>) commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
 	}
-    }
 
-    @Override
-    public ResultDefinition mltQuery(String index_name, MltQueryDefinition mltQuery) {
-	UBuilder uriBuilder = new UBuilder("/indexes/", index_name, "/mlt");
-	Request request = Request.Post(uriBuilder.build());
-	return commonServiceRequest(request, mltQuery, msTimeOut, ResultDefinition.class, 200);
-    }
+	@Override
+	public ResultDefinition searchQuery(String schema_name, QueryDefinition query, Boolean local) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name).setParameters(local, null);
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);
+	}
+
+	@Override
+	public IndexStatus createUpdateIndex(String schema_name, String index_name, Boolean local,
+					Map<String, FieldDefinition> fields) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name).setParameters(local, null);
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, fields, msTimeOut, IndexStatus.class, 200);
+	}
+
+	@Override
+	public IndexStatus getIndex(String schema_name, String index_name) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
+		Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, msTimeOut, IndexStatus.class, 200);
+	}
+
+	@Override
+	public Response deleteIndex(String schema_name, String index_name, Boolean local) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name).setParameters(local, null);
+			Request request = Request.Delete(uriBuilder.build());
+			HttpResponse response = execute(request, null, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 200);
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public SettingsDefinition getSettings(String schema_name) {
+		return null;
+	}
+
+	@Override
+	public SettingsDefinition setSettings(String schema_name, SettingsDefinition settings) {
+		return null;
+	}
+
+	@Override
+	public Response postDocument(String schema_name, String index_name, Map<String, Object> document) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc");
+			Request request = Request.Post(uriBuilder.build());
+			HttpResponse response = execute(request, document, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 200);
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public Response postDocuments(String schema_name, String index_name, List<Map<String, Object>> documents) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs");
+			Request request = Request.Post(uriBuilder.build());
+			HttpResponse response = execute(request, documents, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 200);
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public Response deleteAll(String schema_name, String index_name, Boolean local) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs")
+							.setParameters(local, null);
+			Request request = Request.Delete(uriBuilder.build());
+			HttpResponse response = execute(request, null, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 200);
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/search");
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);
+	}
+
+	@Override
+	public Response deleteByQuery(String schema_name, String index_name, QueryDefinition query) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/search");
+			Request request = Request.Delete(uriBuilder.build());
+			HttpResponse response = execute(request, query, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 200);
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public ResultDefinition mltQuery(String schema_name, String index_name, MltQueryDefinition mltQuery) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/mlt");
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, mltQuery, msTimeOut, ResultDefinition.class, 200);
+	}
 
 }

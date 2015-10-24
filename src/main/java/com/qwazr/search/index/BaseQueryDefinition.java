@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -23,20 +24,21 @@ import java.util.Set;
 @JsonInclude(Include.NON_EMPTY)
 public class BaseQueryDefinition {
 
-    final public Integer start;
-    final public Integer rows;
-    final public Set<String> returned_fields;
-    final public Boolean query_debug;
+	final public Integer start;
+	final public Integer rows;
+	final public Set<String> returned_fields;
+	final public Boolean query_debug;
 
-    public BaseQueryDefinition() {
-	start = null;
-	rows = null;
-	returned_fields = null;
-	query_debug = null;
-    }
+	public BaseQueryDefinition() {
+		start = null;
+		rows = null;
+		returned_fields = null;
+		query_debug = null;
+	}
 
-    final public int getEnd() {
-	return (start == null ? 0 : start) + (rows == null ? 10 : rows);
-    }
+	@JsonIgnore
+	final public int getEnd() {
+		return (start == null ? 0 : start) + (rows == null ? 10 : rows);
+	}
 
 }

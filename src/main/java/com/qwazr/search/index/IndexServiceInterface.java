@@ -20,7 +20,6 @@ import com.qwazr.utils.server.RestApplication;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
@@ -30,77 +29,102 @@ import java.util.Set;
 @Path("/indexes")
 public interface IndexServiceInterface {
 
+	@POST
+	@Path("/{schema_name}")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	public Response createUpdateSchema(@PathParam("schema_name") String schema_name,
+					@QueryParam("local") Boolean local);
+
 	@GET
 	@Path("/")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Set<String> getIndexes(@QueryParam("local") Boolean local);
+	public Set<String> getSchemas(@QueryParam("local") Boolean local);
 
-	@POST
-	@Path("/{index_name}")
+	@DELETE
+	@Path("/{schema_name}")
+	public Response deleteSchema(@PathParam("schema_name") String schema_name, @QueryParam("local") Boolean local);
+
+	@OPTIONS
+	@Path("/{schema_name}")
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public SettingsDefinition getSettings(@PathParam("schema_name") String schema_name);
+
+	@OPTIONS
+	@Path("/{schema_name}")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public IndexStatus createUpdateIndex(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local,
+	public SettingsDefinition setSettings(@PathParam("schema_name") String schema_name, SettingsDefinition settings);
+
+	@GET
+	@Path("/{schema_name}")
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Set<String> getIndexes(@PathParam("schema_name") String schema_name, @QueryParam("local") Boolean local);
+
+	@POST
+	@Path("/{schema_name}")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public ResultDefinition searchQuery(@PathParam("schema_name") String schema_name, QueryDefinition query,
+					@QueryParam("local") Boolean local);
+
+	@POST
+	@Path("/{schema_name}/{index_name}")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public IndexStatus createUpdateIndex(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name, @QueryParam("local") Boolean local,
 					Map<String, FieldDefinition> fields);
 
 	@GET
-	@Path("/{index_name}")
+	@Path("/{schema_name}/{index_name}")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public IndexStatus getIndex(@PathParam("index_name") String index_name);
+	public IndexStatus getIndex(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name);
 
 	@DELETE
-	@Path("/{index_name}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response deleteIndex(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local);
-
-	@GET
-	@Path("/{index_name/settings}")
-	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public SettingsDefinition getSettings(@PathParam("index_name") String index_name);
+	@Path("/{schema_name}/{index_name}")
+	public Response deleteIndex(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name, @QueryParam("local") Boolean local);
 
 	@POST
-	@Path("/{index_name/settings}")
+	@Path("/{schema_name}/{index_name}/docs")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public SettingsDefinition setSettings(@PathParam("index_name") String index_name, SettingsDefinition settings);
+	public Response postDocuments(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name, List<Map<String, Object>> documents);
 
 	@DELETE
-	@Path("/{index_name}/settings")
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response deleteSettings(@PathParam("index_name") String index_name);
+	@Path("/{schema_name}/{index_name}/docs")
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Response deleteAll(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+					@QueryParam("local") Boolean local);
 
 	@POST
-	@Path("/{index_name}/docs")
+	@Path("/{schema_name}/{index_name}/doc")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response postDocuments(@PathParam("index_name") String index_name, List<Map<String, Object>> documents);
+	public Response postDocument(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name, Map<String, Object> document);
+
+	@POST
+	@Path("/{schema_name}/{index_name}/search")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public ResultDefinition searchQuery(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name, QueryDefinition query);
+
+	@POST
+	@Path("/{schema_name}/{index_name}/mlt")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public ResultDefinition mltQuery(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name, MltQueryDefinition query);
 
 	@DELETE
-	@Path("/{index_name}/docs")
-	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response deleteAll(@PathParam("index_name") String index_name, @QueryParam("local") Boolean local);
-
-	@POST
-	@Path("/{index_name}/doc")
+	@Path("/{schema_name}/{index_name}/search")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response postDocument(@PathParam("index_name") String index_name, Map<String, Object> document);
-
-	@POST
-	@Path("/{index_name}/search")
-	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
-	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public ResultDefinition searchQuery(@PathParam("index_name") String index_name, QueryDefinition query);
-
-	@POST
-	@Path("/{index_name}/mlt")
-	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
-	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public ResultDefinition mltQuery(@PathParam("index_name") String index_name, MltQueryDefinition query);
-
-	@DELETE
-	@Path("/{index_name}/search")
-	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
-	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response deleteByQuery(@PathParam("index_name") String index_name, QueryDefinition query);
+	public Response deleteByQuery(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name, QueryDefinition query);
 
 }

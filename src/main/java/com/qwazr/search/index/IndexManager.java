@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p>
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.search.SearchServer;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
@@ -27,8 +25,6 @@ import javax.ws.rs.core.Response.Status;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -50,70 +46,68 @@ public class IndexManager {
 		});
 	}
 
-	private final ConcurrentHashMap<String, IndexInstance> indexMap;
+	private final ConcurrentHashMap<String, IndexSchema> schemaMap;
 
 	private final File rootDirectory;
 
 	private IndexManager(File rootDirectory) {
 		this.rootDirectory = rootDirectory;
-		indexMap = new ConcurrentHashMap<String, IndexInstance>();
+		schemaMap = new ConcurrentHashMap<String, IndexSchema>();
 		File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
 		if (directories == null)
 			return;
-		for (File indexDirectory : directories)
+		for (File schemaDirectory : directories) {
 			try {
-				indexMap.put(indexDirectory.getName(), new IndexInstance(indexDirectory));
+				schemaMap.put(schemaDirectory.getName(), new IndexSchema(schemaDirectory));
 			} catch (ServerException | IOException e) {
 				logger.error(e.getMessage(), e);
 			}
+		}
 	}
 
 	private void shutdown() {
-		synchronized (indexMap) {
-			for (IndexInstance instance : indexMap.values())
+		synchronized (schemaMap) {
+			for (IndexSchema instance : schemaMap.values())
 				IOUtils.closeQuietly(instance);
 		}
 	}
 
-	public IndexStatus createUpdate(String indexName, Map<String, FieldDefinition> fields)
-					throws ServerException, IOException, InterruptedException {
-		synchronized (indexMap) {
-			IndexInstance indexInstance = indexMap.get(indexName);
-			if (indexInstance == null)
-				indexInstance = new IndexInstance(new File(rootDirectory, indexName));
-			indexInstance.setFields(fields);
-			indexMap.put(indexName, indexInstance);
-			return indexInstance.getStatus();
+	boolean createUpdate(String schemaName) throws ServerException, IOException, InterruptedException {
+		synchronized (schemaMap) {
+			IndexSchema indexSchema = schemaMap.get(schemaName);
+			if (indexSchema != null)
+				return false;
+			indexSchema = new IndexSchema(new File(rootDirectory, schemaName));
+			schemaMap.put(schemaName, indexSchema);
+			return true;
 		}
 	}
 
 	/**
-	 * Returns the indexInstance. If the index does not exists, an exception it
+	 * Returns the indexSchema. If the schema does not exist, an exception it
 	 * thrown. This method never returns a null value.
 	 *
-	 * @param indexName
-	 *            The name of the index
-	 * @return the indexInstance
-	 * @throws ServerException
-	 *             if any error occurs
+	 * @param schemaName The name of the index
+	 * @return the indexSchema
+	 * @throws ServerException if any error occurs
 	 */
-	public IndexInstance get(String indexName) throws ServerException {
-		IndexInstance indexInstance = indexMap.get(indexName);
-		if (indexInstance == null)
-			throw new ServerException(Status.NOT_FOUND, "Index not found: " + indexName);
-		return indexInstance;
+	IndexSchema get(String schemaName) throws ServerException {
+		IndexSchema indexSchema = schemaMap.get(schemaName);
+		if (indexSchema == null)
+			throw new ServerException(Status.NOT_FOUND, "Schema not found: " + schemaName);
+		return indexSchema;
 	}
 
-	public void delete(String indexName) throws ServerException {
-		synchronized (indexMap) {
-			IndexInstance indexInstance = get(indexName);
-			indexInstance.delete();
-			indexMap.remove(indexName);
+	void delete(String schemaName) throws ServerException {
+		synchronized (schemaMap) {
+			IndexSchema indexSchema = get(schemaName);
+			indexSchema.delete();
+			schemaMap.remove(schemaName);
 		}
 	}
 
-	public Set<String> nameSet() {
-		return indexMap.keySet();
+	Set<String> nameSet() {
+		return schemaMap.keySet();
 	}
 
 }
