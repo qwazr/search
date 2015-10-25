@@ -207,7 +207,7 @@ public class IndexInstance implements Closeable {
 		schema.mayBeRefresh();
 	}
 
-	public synchronized BackupStatus backup() throws IOException, InterruptedException {
+	synchronized BackupStatus backup(Integer keepLastCount) throws IOException, InterruptedException {
 		Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			final IndexCommit commit = snapshotDeletionPolicy.snapshot();
@@ -232,6 +232,7 @@ public class IndexInstance implements Closeable {
 						continue;
 					FileUtils.copyFile(sourceFile, targetFile, true);
 				}
+				purgeBackups(keepLastCount);
 				return new BackupStatus(commit.getGeneration(), backupdir.lastModified(), bytes_size, files_count);
 			} catch (IOException e) {
 				if (backupdir != null)
@@ -243,6 +244,20 @@ public class IndexInstance implements Closeable {
 		} finally {
 			if (sem != null)
 				sem.release();
+		}
+	}
+
+	private void purgeBackups(Integer keepLastCount) {
+		if (keepLastCount == null)
+			return;
+		if (keepLastCount == 0)
+			return;
+		List<BackupStatus> backups = backups();
+		if (backups.size() <= keepLastCount)
+			return;
+		for (int i = keepLastCount; i < backups.size(); i++) {
+			File backupDir = new File(backupDirectory, Long.toString(backups.get(i).generation));
+			FileUtils.deleteQuietly(backupDir);
 		}
 	}
 
@@ -267,7 +282,7 @@ public class IndexInstance implements Closeable {
 		return list;
 	}
 
-	public List<BackupStatus> getBackups() throws InterruptedException {
+	List<BackupStatus> getBackups() throws InterruptedException {
 		Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			return backups();
@@ -277,23 +292,7 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	public void purgeOldBackups(Integer keepLastCount) throws InterruptedException {
-		Semaphore sem = schema.acquireReadSemaphore();
-		try {
-			List<BackupStatus> backups = backups();
-			if (backups.size() <= keepLastCount)
-				return;
-			for (int i = keepLastCount; i < backups.size(); i++) {
-				File backupDir = new File(backupDirectory, Long.toString(backups.get(i).generation));
-				FileUtils.deleteQuietly(backupDir);
-			}
-		} finally {
-			if (sem != null)
-				sem.release();
-		}
-	}
-
-	public void deleteAll() throws IOException, InterruptedException {
+	void deleteAll() throws IOException, InterruptedException {
 		Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			indexWriter.deleteAll();
@@ -304,7 +303,7 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	public Object postDocument(Map<String, Object> document) throws IOException, ServerException, InterruptedException {
+	Object postDocument(Map<String, Object> document) throws IOException, ServerException, InterruptedException {
 		if (document == null)
 			return null;
 		Semaphore sem = schema.acquireWriteSemaphore();
@@ -319,7 +318,7 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	public List<Object> postDocuments(List<Map<String, Object>> documents)
+	List<Object> postDocuments(List<Map<String, Object>> documents)
 					throws IOException, ServerException, InterruptedException {
 		if (documents == null)
 			return null;
@@ -337,7 +336,7 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	public ResultDefinition deleteByQuery(QueryDefinition queryDef)
+	ResultDefinition deleteByQuery(QueryDefinition queryDef)
 					throws IOException, InterruptedException, QueryNodeException, ParseException {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
@@ -353,7 +352,7 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	public ResultDefinition search(QueryDefinition queryDef)
+	ResultDefinition search(QueryDefinition queryDef)
 					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
@@ -400,7 +399,7 @@ public class IndexInstance implements Closeable {
 		return mlt;
 	}
 
-	public ResultDefinition mlt(MltQueryDefinition mltQueryDef)
+	ResultDefinition mlt(MltQueryDefinition mltQueryDef)
 					throws ServerException, IOException, QueryNodeException, InterruptedException {
 		Semaphore sem = schema.acquireReadSemaphore();
 		try {

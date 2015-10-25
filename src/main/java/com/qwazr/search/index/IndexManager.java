@@ -110,4 +110,10 @@ public class IndexManager {
 		return schemaMap.keySet();
 	}
 
+	void backups(Integer keepLastCount) throws IOException, InterruptedException {
+		synchronized (schemaMap) {
+			for (IndexSchema instance : schemaMap.values())
+				instance.backups(keepLastCount);
+		}
+	}
 }

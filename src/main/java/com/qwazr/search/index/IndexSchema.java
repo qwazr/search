@@ -192,6 +192,13 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		return indexMap.keySet();
 	}
 
+	void backups(Integer keepLastCount) throws IOException, InterruptedException {
+		synchronized (indexMap) {
+			for (IndexInstance instance : indexMap.values())
+				instance.backup(keepLastCount);
+		}
+	}
+
 	synchronized void setSettings(SettingsDefinition settings) throws IOException {
 		if (settings == null)
 			settingsFile.delete();

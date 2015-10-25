@@ -29,7 +29,7 @@ public class BackupStatus {
 	final public Date date;
 	final public Long bytes_size;
 	final public Integer files_count;
-
+	
 	public BackupStatus() {
 		generation = null;
 		date = null;

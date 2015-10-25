@@ -102,17 +102,12 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
-	public BackupStatus doBackup(String schema_name, String index_name) {
+	public BackupStatus doBackup(String schema_name, String index_name, Integer keep_last_count) {
 		return null;
 	}
 
 	@Override
 	public List<BackupStatus> getBackups(String schema_name, String index_name) {
-		return null;
-	}
-
-	@Override
-	public Response purgeBackups(String schema_name, String index_name, Integer keep_last_count) {
 		return null;
 	}
 

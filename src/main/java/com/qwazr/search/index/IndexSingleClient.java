@@ -148,8 +148,9 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public BackupStatus doBackup(String schema_name, String index_name) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup");
+	public BackupStatus doBackup(String schema_name, String index_name, Integer keep_last_count) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup")
+						.setParameterObject("keep_last", keep_last_count);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, null, msTimeOut, BackupStatus.class, 200);
 	}
@@ -162,22 +163,6 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup");
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, msTimeOut, ListBackupStatusTypeRef, 200);
-	}
-
-	@Override
-	public Response purgeBackups(String schema_name, String index_name, Integer keep_last_count) {
-		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup")
-							.setParameterObject("keep_last", keep_last_count);
-			Request request = Request.Delete(uriBuilder.build());
-			HttpResponse response = execute(request, null, msTimeOut);
-			HttpUtils.checkStatusCodes(response, 200);
-			return Response.status(response.getStatusLine().getStatusCode()).build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
 	}
 
 	public final static TypeReference<List<Map<String, Object>>> ListMapStringObjectTypeRef = new TypeReference<List<Map<String, Object>>>() {

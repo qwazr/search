@@ -195,7 +195,7 @@ public class FullTest {
 	}
 
 	private BackupStatus doBackup(IndexServiceInterface client) {
-		BackupStatus status = client.doBackup(SCHEMA_NAME, INDEX_NAME);
+		BackupStatus status = client.doBackup(SCHEMA_NAME, INDEX_NAME, null);
 		Assert.assertNotNull(status);
 		Assert.assertNotNull(status.date);
 		Assert.assertNotNull(status.bytes_size);
@@ -287,7 +287,7 @@ public class FullTest {
 		IndexServiceInterface client = getClient();
 		BackupStatus status = doBackup(client);
 		Assert.assertEquals(status, getBackups(client, 3).get(0));
-		client.purgeBackups(SCHEMA_NAME, INDEX_NAME, 2);
+		client.doBackup("*", "*", 2);
 		Assert.assertEquals(status, getBackups(client, 2).get(0));
 	}
 

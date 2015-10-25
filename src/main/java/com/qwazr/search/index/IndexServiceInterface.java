@@ -108,24 +108,15 @@ public interface IndexServiceInterface {
 
 	@POST
 	@Path("/{schema_name}/{index_name}/backup")
-	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
 	public BackupStatus doBackup(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name);
+					@PathParam("index_name") String index_name, @QueryParam("keep_last") Integer keep_last_count);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/backup")
-	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
 	public List<BackupStatus> getBackups(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name);
-
-	@DELETE
-	@Path("/{schema_name}/{index_name}/backup")
-	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
-	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response purgeBackups(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, @QueryParam("keep_last") Integer keep_last_count);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/search")

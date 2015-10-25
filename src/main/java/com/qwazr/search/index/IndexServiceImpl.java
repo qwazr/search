@@ -212,10 +212,14 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	@Override
-	public BackupStatus doBackup(String schema_name, String index_name) {
+	public BackupStatus doBackup(String schema_name, String index_name, Integer keep_last_count) {
 		try {
 			checkRight(null);
-			return IndexManager.INSTANCE.get(schema_name).get(index_name).backup();
+			if ("*".equals(schema_name) && "*".equals(index_name)) {
+				IndexManager.INSTANCE.backups(keep_last_count);
+				return new BackupStatus();
+			} else
+				return IndexManager.INSTANCE.get(schema_name).get(index_name).backup(keep_last_count);
 		} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -227,18 +231,6 @@ public class IndexServiceImpl implements IndexServiceInterface {
 		try {
 			checkRight(null);
 			return IndexManager.INSTANCE.get(schema_name).get(index_name).getBackups();
-		} catch (ServerException | IllegalArgumentException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
-		}
-	}
-
-	@Override
-	public Response purgeBackups(String schema_name, String index_name, Integer keep_last_count) {
-		try {
-			checkRight(null);
-			IndexManager.INSTANCE.get(schema_name).get(index_name).purgeOldBackups(keep_last_count);
-			return Response.ok().build();
 		} catch (ServerException | IllegalArgumentException | InterruptedException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
