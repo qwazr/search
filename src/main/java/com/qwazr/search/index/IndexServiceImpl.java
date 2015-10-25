@@ -126,17 +126,6 @@ public class IndexServiceImpl implements IndexServiceInterface {
 		// TODO Local
 	}
 
-	public ResultDefinition searchQuery(String schema_name, QueryDefinition query, Boolean local) {
-		try {
-			checkRight(schema_name);
-			return IndexManager.INSTANCE.get(schema_name).search(query);
-		} catch (ServerException | IOException | ParseException | QueryNodeException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
-		}
-		// TODO Local
-	}
-
 	@Override
 	public IndexStatus createUpdateIndex(String schema_name, String index_name, Boolean local,
 					Map<String, FieldDefinition> fields) {
@@ -267,6 +256,8 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query, Boolean delete) {
 		try {
 			checkRight(schema_name);
+			if ("*".equals(index_name))
+				return IndexManager.INSTANCE.get(schema_name).search(query);
 			IndexInstance index = IndexManager.INSTANCE.get(schema_name).get(index_name);
 			if (delete != null && delete)
 				return index.deleteByQuery(query);

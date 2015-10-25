@@ -61,13 +61,6 @@ public interface IndexServiceInterface {
 	public Set<String> getIndexes(@PathParam("schema_name") String schema_name, @QueryParam("local") Boolean local);
 
 	@POST
-	@Path("/{schema_name}")
-	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
-	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public ResultDefinition searchQuery(@PathParam("schema_name") String schema_name, QueryDefinition query,
-					@QueryParam("local") Boolean local);
-
-	@POST
 	@Path("/{schema_name}/{index_name}")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)

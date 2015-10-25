@@ -83,13 +83,6 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public ResultDefinition searchQuery(String schema_name, QueryDefinition query, Boolean local) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name).setParameters(local, null);
-		Request request = Request.Post(uriBuilder.build());
-		return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);
-	}
-
-	@Override
 	public IndexStatus createUpdateIndex(String schema_name, String index_name, Boolean local,
 					Map<String, FieldDefinition> fields) {
 		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name).setParameters(local, null);
@@ -201,7 +194,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query, Boolean delete) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/search")
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/search")
 						.setParameterObject("delete", delete);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);

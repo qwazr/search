@@ -55,12 +55,6 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
-	public ResultDefinition searchQuery(String schema_name, QueryDefinition query, Boolean local) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public Set<String> getIndexes(String schema_name, Boolean local) {
 		// TODO Auto-generated method stub
 		return null;

@@ -123,7 +123,7 @@ public class FullTest {
 
 	private ResultDefinition checkQuerySchema(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
 					throws IOException {
-		ResultDefinition result = client.searchQuery(SCHEMA_NAME, queryDef, null);
+		ResultDefinition result = client.searchQuery(SCHEMA_NAME, "*", queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(expectedCount, result.total_hits.intValue());

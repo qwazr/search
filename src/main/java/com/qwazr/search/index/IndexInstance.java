@@ -436,7 +436,7 @@ public class IndexInstance implements Closeable {
 	}
 
 	void fillFields(final Map<String, FieldDefinition> fieldMap) {
-		if (fieldMap == null)
+		if (fieldMap == null || this.fieldMap == null)
 			return;
 		this.fieldMap.forEach(new BiConsumer<String, FieldDefinition>() {
 			@Override
