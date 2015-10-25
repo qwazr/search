@@ -1,0 +1,9 @@
+{
+  "query_string": "*:*",
+  "default_field": "$id$",
+  "facet_drilldown": {
+    "category": [
+      "cat4"
+    ]
+  }
+}

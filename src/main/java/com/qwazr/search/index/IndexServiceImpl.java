@@ -212,6 +212,40 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	@Override
+	public BackupStatus doBackup(String schema_name, String index_name) {
+		try {
+			checkRight(null);
+			return IndexManager.INSTANCE.get(schema_name).get(index_name).backup();
+		} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
+			logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	public List<BackupStatus> getBackups(String schema_name, String index_name) {
+		try {
+			checkRight(null);
+			return IndexManager.INSTANCE.get(schema_name).get(index_name).getBackups();
+		} catch (ServerException | IllegalArgumentException | InterruptedException e) {
+			logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	public Response purgeBackups(String schema_name, String index_name, Integer keep_last_count) {
+		try {
+			checkRight(null);
+			IndexManager.INSTANCE.get(schema_name).get(index_name).purgeOldBackups(keep_last_count);
+			return Response.ok().build();
+		} catch (ServerException | IllegalArgumentException | InterruptedException e) {
+			logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
 	public Response postDocuments(String schema_name, String index_name, List<Map<String, Object>> documents) {
 		try {
 			checkRight(schema_name);
@@ -238,22 +272,14 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	@Override
-	public Response deleteByQuery(String schema_name, String index_name, QueryDefinition query) {
+	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query, Boolean delete) {
 		try {
 			checkRight(schema_name);
-			IndexManager.INSTANCE.get(schema_name).get(index_name).deleteByQuery(query);
-			return Response.ok().build();
-		} catch (ServerException | IOException | ParseException | QueryNodeException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
-		}
-	}
-
-	@Override
-	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query) {
-		try {
-			checkRight(schema_name);
-			return IndexManager.INSTANCE.get(schema_name).get(index_name).search(query);
+			IndexInstance index = IndexManager.INSTANCE.get(schema_name).get(index_name);
+			if (delete != null && delete)
+				return index.deleteByQuery(query);
+			else
+				return index.search(query);
 		} catch (ServerException | IOException | ParseException | QueryNodeException | InterruptedException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);

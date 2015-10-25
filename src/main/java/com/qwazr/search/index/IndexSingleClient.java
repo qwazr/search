@@ -147,6 +147,39 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		}
 	}
 
+	@Override
+	public BackupStatus doBackup(String schema_name, String index_name) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup");
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, null, msTimeOut, BackupStatus.class, 200);
+	}
+
+	public final static TypeReference<List<BackupStatus>> ListBackupStatusTypeRef = new TypeReference<List<BackupStatus>>() {
+	};
+
+	@Override
+	public List<BackupStatus> getBackups(String schema_name, String index_name) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup");
+		Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, msTimeOut, ListBackupStatusTypeRef, 200);
+	}
+
+	@Override
+	public Response purgeBackups(String schema_name, String index_name, Integer keep_last_count) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup")
+							.setParameterObject("keep_last", keep_last_count);
+			Request request = Request.Delete(uriBuilder.build());
+			HttpResponse response = execute(request, null, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 200);
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
 	public final static TypeReference<List<Map<String, Object>>> ListMapStringObjectTypeRef = new TypeReference<List<Map<String, Object>>>() {
 	};
 
@@ -182,25 +215,11 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/search");
+	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query, Boolean delete) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/search")
+						.setParameterObject("delete", delete);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);
-	}
-
-	@Override
-	public Response deleteByQuery(String schema_name, String index_name, QueryDefinition query) {
-		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/search");
-			Request request = Request.Delete(uriBuilder.build());
-			HttpResponse response = execute(request, query, msTimeOut);
-			HttpUtils.checkStatusCodes(response, 200);
-			return Response.status(response.getStatusLine().getStatusCode()).build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
 	}
 
 	@Override

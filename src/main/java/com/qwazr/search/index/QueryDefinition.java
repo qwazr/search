@@ -43,7 +43,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	final public Set<String> returned_fields;
 	final public Map<String, Facet> facets;
-	final public Map<String, Set<String>> filters;
+	final public Map<String, Set<String>> facet_drilldown;
 
 	final public Map<String, Integer> postings_highlighter;
 
@@ -114,7 +114,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		multi_field = null;
 		returned_fields = null;
 		facets = null;
-		filters = null;
+		facet_drilldown = null;
 		postings_highlighter = null;
 		allow_leading_wildcard = null;
 		default_operator = null;

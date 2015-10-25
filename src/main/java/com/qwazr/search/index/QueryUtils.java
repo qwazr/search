@@ -41,7 +41,7 @@ import java.util.Set;
 
 public class QueryUtils {
 
-	final static Query getLuceneQuery(QueryDefinition queryDef, Analyzer analyzer)
+	final static Query getLuceneQuery(QueryDefinition queryDef, Analyzer analyzer, FacetsConfig facetsConfig)
 					throws QueryNodeException, ParseException {
 		final StandardQueryParser parser = new StandardQueryParser(analyzer);
 		if (queryDef.multi_field != null && !queryDef.multi_field.isEmpty()) {
@@ -76,24 +76,11 @@ public class QueryUtils {
 			query = new BooleanQuery.Builder().add(query, BooleanClause.Occur.SHOULD)
 							.add(phraseQuery, BooleanClause.Occur.SHOULD).build();
 		}
-		return query;
-	}
 
-	final static ResultDefinition search(Map<String, FieldDefinition> fieldMap, IndexSearcher indexSearcher,
-					QueryDefinition queryDef, Analyzer analyzer, FacetsConfig facetsConfig)
-					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
-
-		Query query = getLuceneQuery(queryDef, analyzer);
-
-		final IndexReader indexReader = indexSearcher.getIndexReader();
-		final TimeTracker timeTracker = new TimeTracker();
-		final TopDocs topDocs;
-		final Facets facets;
-
-		// Overload query with filters
-		if (queryDef.filters != null && !queryDef.filters.isEmpty()) {
+		// Overload query with facet filters
+		if (queryDef.facet_drilldown != null && !queryDef.facet_drilldown.isEmpty()) {
 			DrillDownQuery drillDownQuery = new DrillDownQuery(facetsConfig, query);
-			for (Map.Entry<String, Set<String>> entry : queryDef.filters.entrySet()) {
+			for (Map.Entry<String, Set<String>> entry : queryDef.facet_drilldown.entrySet()) {
 				Set<String> filter_terms = entry.getValue();
 				if (filter_terms == null)
 					continue;
@@ -103,6 +90,20 @@ public class QueryUtils {
 			}
 			query = drillDownQuery;
 		}
+		return query;
+	}
+
+	final static ResultDefinition search(Map<String, FieldDefinition> fieldMap, IndexSearcher indexSearcher,
+					QueryDefinition queryDef, Analyzer analyzer, FacetsConfig facetsConfig)
+					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+
+		Query query = getLuceneQuery(queryDef, analyzer, facetsConfig);
+
+		final IndexReader indexReader = indexSearcher.getIndexReader();
+		final TimeTracker timeTracker = new TimeTracker();
+		final TopDocs topDocs;
+		final Facets facets;
+
 		if (queryDef.facets != null && queryDef.facets.size() > 0) {
 			FacetsCollector facetsCollector = new FacetsCollector();
 			SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
@@ -115,6 +116,7 @@ public class QueryUtils {
 			timeTracker.next("search_query");
 			facets = null;
 		}
+
 		Map<String, String[]> postingsHighlightersMap = null;
 		if (queryDef.postings_highlighter != null) {
 			postingsHighlightersMap = new LinkedHashMap<String, String[]>();

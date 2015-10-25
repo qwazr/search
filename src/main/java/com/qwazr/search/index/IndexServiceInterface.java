@@ -107,11 +107,33 @@ public interface IndexServiceInterface {
 					@PathParam("index_name") String index_name, Map<String, Object> document);
 
 	@POST
+	@Path("/{schema_name}/{index_name}/backup")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public BackupStatus doBackup(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name);
+
+	@GET
+	@Path("/{schema_name}/{index_name}/backup")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public List<BackupStatus> getBackups(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name);
+
+	@DELETE
+	@Path("/{schema_name}/{index_name}/backup")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Response purgeBackups(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name, @QueryParam("keep_last") Integer keep_last_count);
+
+	@POST
 	@Path("/{schema_name}/{index_name}/search")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
 	public ResultDefinition searchQuery(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, QueryDefinition query);
+					@PathParam("index_name") String index_name, QueryDefinition query,
+					@QueryParam("delete") Boolean delete);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/mlt")
@@ -119,12 +141,5 @@ public interface IndexServiceInterface {
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
 	public ResultDefinition mltQuery(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, MltQueryDefinition query);
-
-	@DELETE
-	@Path("/{schema_name}/{index_name}/search")
-	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
-	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response deleteByQuery(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, QueryDefinition query);
 
 }

@@ -22,15 +22,13 @@ import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.*;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -46,11 +44,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 
@@ -59,15 +55,18 @@ public class IndexInstance implements Closeable {
 	private static final Logger logger = LoggerFactory.getLogger(IndexInstance.class);
 
 	private final static String INDEX_DATA = "data";
+	private final static String INDEX_BACKUP = "backup";
 	private final static String FIELDS_FILE = "fields.json";
 
 	private final IndexSchema schema;
 	private final File indexDirectory;
 	private final File dataDirectory;
+	private final File backupDirectory;
 	private final File fieldMapFile;
 	private final Directory luceneDirectory;
 	private final FacetsConfig facetsConfig;
 	private final IndexWriterConfig indexWriterConfig;
+	private final SnapshotDeletionPolicy snapshotDeletionPolicy;
 	private final IndexWriter indexWriter;
 	private final SearcherManager searcherManager;
 	private final PerFieldAnalyzer perFieldAnalyzer;
@@ -84,8 +83,9 @@ public class IndexInstance implements Closeable {
 
 		this.schema = schema;
 		this.indexDirectory = indexDirectory;
-		dataDirectory = new File(indexDirectory, INDEX_DATA);
 		SearchServer.checkDirectoryExists(indexDirectory);
+		this.dataDirectory = new File(indexDirectory, INDEX_DATA);
+		this.backupDirectory = new File(indexDirectory, INDEX_BACKUP);
 		luceneDirectory = FSDirectory.open(dataDirectory.toPath());
 		facetsConfig = new FacetsConfig();
 		fieldMapFile = new File(indexDirectory, FIELDS_FILE);
@@ -95,6 +95,8 @@ public class IndexInstance implements Closeable {
 		perFieldAnalyzer = new PerFieldAnalyzer(facetsConfig, fieldMap);
 		indexWriterConfig = new IndexWriterConfig(perFieldAnalyzer);
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+		snapshotDeletionPolicy = new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
+		indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
 		indexWriter = new IndexWriter(luceneDirectory, indexWriterConfig);
 		if (indexWriter.hasUncommittedChanges())
 			indexWriter.commit();
@@ -205,6 +207,92 @@ public class IndexInstance implements Closeable {
 		schema.mayBeRefresh();
 	}
 
+	public synchronized BackupStatus backup() throws IOException, InterruptedException {
+		Semaphore sem = schema.acquireReadSemaphore();
+		try {
+			final IndexCommit commit = snapshotDeletionPolicy.snapshot();
+			File backupdir = null;
+			try {
+				int files_count = 0;
+				long bytes_size = 0;
+				if (!backupDirectory.exists())
+					backupDirectory.mkdir();
+				backupdir = new File(backupDirectory, Long.toString(commit.getGeneration()));
+				if (!backupdir.exists())
+					backupdir.mkdir();
+				if (!backupdir.exists())
+					throw new IOException("Cannot create the backup directory: " + backupdir);
+				for (String fileName : commit.getFileNames()) {
+					File sourceFile = new File(dataDirectory, fileName);
+					File targetFile = new File(backupdir, fileName);
+					files_count++;
+					bytes_size += sourceFile.length();
+					if (targetFile.exists() && targetFile.length() == sourceFile.length()
+									&& targetFile.lastModified() == sourceFile.lastModified())
+						continue;
+					FileUtils.copyFile(sourceFile, targetFile, true);
+				}
+				return new BackupStatus(commit.getGeneration(), backupdir.lastModified(), bytes_size, files_count);
+			} catch (IOException e) {
+				if (backupdir != null)
+					FileUtils.deleteQuietly(backupdir);
+				throw e;
+			} finally {
+				snapshotDeletionPolicy.release(commit);
+			}
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
+	private List<BackupStatus> backups() {
+		List<BackupStatus> list = new ArrayList<BackupStatus>();
+		if (!backupDirectory.exists())
+			return list;
+		File[] dirs = backupDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
+		if (dirs == null)
+			return list;
+		for (File dir : dirs) {
+			BackupStatus status = BackupStatus.newBackupStatus(dir);
+			if (status != null)
+				list.add(status);
+		}
+		list.sort(new Comparator<BackupStatus>() {
+			@Override
+			public int compare(BackupStatus o1, BackupStatus o2) {
+				return o2.generation.compareTo(o1.generation);
+			}
+		});
+		return list;
+	}
+
+	public List<BackupStatus> getBackups() throws InterruptedException {
+		Semaphore sem = schema.acquireReadSemaphore();
+		try {
+			return backups();
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
+	public void purgeOldBackups(Integer keepLastCount) throws InterruptedException {
+		Semaphore sem = schema.acquireReadSemaphore();
+		try {
+			List<BackupStatus> backups = backups();
+			if (backups.size() <= keepLastCount)
+				return;
+			for (int i = keepLastCount; i < backups.size(); i++) {
+				File backupDir = new File(backupDirectory, Long.toString(backups.get(i).generation));
+				FileUtils.deleteQuietly(backupDir);
+			}
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
 	public void deleteAll() throws IOException, InterruptedException {
 		Semaphore sem = schema.acquireWriteSemaphore();
 		try {
@@ -249,13 +337,16 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	public void deleteByQuery(QueryDefinition queryDef)
+	public ResultDefinition deleteByQuery(QueryDefinition queryDef)
 					throws IOException, InterruptedException, QueryNodeException, ParseException {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			final Query query = QueryUtils.getLuceneQuery(queryDef, perFieldAnalyzer);
+			final Query query = QueryUtils.getLuceneQuery(queryDef, perFieldAnalyzer, facetsConfig);
+			int docs = indexWriter.numDocs();
 			indexWriter.deleteDocuments(query);
 			nrtCommit();
+			docs -= indexWriter.numDocs();
+			return new ResultDefinition(docs);
 		} finally {
 			if (sem != null)
 				sem.release();

@@ -102,6 +102,21 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
+	public BackupStatus doBackup(String schema_name, String index_name) {
+		return null;
+	}
+
+	@Override
+	public List<BackupStatus> getBackups(String schema_name, String index_name) {
+		return null;
+	}
+
+	@Override
+	public Response purgeBackups(String schema_name, String index_name, Integer keep_last_count) {
+		return null;
+	}
+
+	@Override
 	public Response postDocuments(String schema_name, String index_name, List<Map<String, Object>> documents) {
 		// TODO Auto-generated method stub
 		return null;
@@ -114,13 +129,7 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
-	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Response deleteByQuery(String schema_name, String index_name, QueryDefinition query) {
+	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query, Boolean delete) {
 		// TODO Auto-generated method stub
 		return null;
 	}

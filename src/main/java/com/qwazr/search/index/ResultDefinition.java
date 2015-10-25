@@ -182,6 +182,15 @@ public class ResultDefinition {
 		this.timer = timeTracker == null ? null : timeTracker.getMap();
 	}
 
+	ResultDefinition(long total_hits) {
+		query = null;
+		this.total_hits = total_hits;
+		documents = Collections.emptyList();
+		facets = null;
+		max_score = null;
+		this.timer = null;
+	}
+
 	private Map<String, Map<String, Number>> buildFacets(Map<String, QueryDefinition.Facet> facetsDef, Facets facets)
 					throws IOException {
 		Map<String, Map<String, Number>> facetResults = new LinkedHashMap<String, Map<String, Number>>();

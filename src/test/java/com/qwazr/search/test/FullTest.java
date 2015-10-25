@@ -42,9 +42,10 @@ public class FullTest {
 	public static final String BASE_URL = "http://localhost:9091";
 	public static final String SCHEMA_NAME = "schema-test";
 	public static final String INDEX_NAME = "index-test";
-	public static final String FIELDS_JSON = "fields.json";
+	public static final Map<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
 	public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
 	public static final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
+	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
 	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
 	public static final List<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
 
@@ -88,10 +89,12 @@ public class FullTest {
 		Assert.assertTrue(schemas.contains(SCHEMA_NAME));
 	}
 
-	private Map<String, FieldDefinition> getFieldMap() throws IOException {
-		InputStream is = this.getClass().getResourceAsStream(FIELDS_JSON);
+	private static Map<String, FieldDefinition> getFieldMap(String res) {
+		InputStream is = FullTest.class.getResourceAsStream(res);
 		try {
 			return FieldDefinition.newFieldMap(IOUtils.toString(is));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		} finally {
 			IOUtils.close(is);
 		}
@@ -100,7 +103,7 @@ public class FullTest {
 	@Test
 	public void test100CreateIndex() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		Map<String, FieldDefinition> fieldMap = getFieldMap();
+		Map<String, FieldDefinition> fieldMap = FIELDS_JSON;
 		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_NAME, null, fieldMap);
 		Assert.assertNotNull(indexStatus);
 		Assert.assertNotNull(indexStatus.fields);
@@ -129,7 +132,7 @@ public class FullTest {
 
 	private ResultDefinition checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
 					throws IOException {
-		ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_NAME, queryDef);
+		ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_NAME, queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(expectedCount, result.total_hits.intValue());
@@ -146,9 +149,18 @@ public class FullTest {
 	@Test
 	public void test110SearchEmptySchema() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		checkQuerySchema(client, MATCH_ALL_QUERY, 0);
-		checkQueryIndex(client, MATCH_ALL_QUERY, 0);
-		checkIndexSize(client, 0);
+		checkAllSizes(client, 0);
+	}
+
+	private void checkAllSizes(IndexServiceInterface client, int expectedSize) throws IOException {
+		Runnable task = () -> {
+			String threadName = Thread.currentThread().getName();
+			System.out.println("Hello " + threadName);
+		};
+
+		checkQuerySchema(client, MATCH_ALL_QUERY, expectedSize);
+		checkQueryIndex(client, MATCH_ALL_QUERY, expectedSize);
+		checkIndexSize(client, expectedSize);
 	}
 
 	private static List<Map<String, Object>> getDocs(String res) {
@@ -179,18 +191,44 @@ public class FullTest {
 		Response response = client.postDocuments(SCHEMA_NAME, INDEX_NAME, UPDATE_DOCS);
 		Assert.assertNotNull(response);
 		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
-		checkIndexSize(client, 4);
-		checkQueryIndex(client, MATCH_ALL_QUERY, 4);
+		checkAllSizes(client, 4);
+	}
+
+	private BackupStatus doBackup(IndexServiceInterface client) {
+		BackupStatus status = client.doBackup(SCHEMA_NAME, INDEX_NAME);
+		Assert.assertNotNull(status);
+		Assert.assertNotNull(status.date);
+		Assert.assertNotNull(status.bytes_size);
+		Assert.assertTrue(status.bytes_size > 0);
+		Assert.assertNotNull(status.files_count);
+		Assert.assertTrue(status.files_count > 0);
+		return status;
+	}
+
+	private List<BackupStatus> getBackups(IndexServiceInterface client, int expectedSize) {
+		List<BackupStatus> backups = client.getBackups(SCHEMA_NAME, INDEX_NAME);
+		Assert.assertNotNull(backups);
+		Assert.assertEquals(expectedSize, backups.size());
+		return backups;
 	}
 
 	@Test
-	public void test201UpdateDoc() throws URISyntaxException, IOException {
+	public void test250FirstBackup() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		List<BackupStatus> backups = client.getBackups(SCHEMA_NAME, INDEX_NAME);
+		Assert.assertNotNull(backups);
+		Assert.assertTrue(backups.isEmpty());
+		BackupStatus status = doBackup(client);
+		Assert.assertEquals(status, getBackups(client, 1).get(0));
+	}
+
+	@Test
+	public void test300UpdateDoc() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		Response response = client.postDocument(SCHEMA_NAME, INDEX_NAME, UPDATE_DOC);
 		Assert.assertNotNull(response);
 		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
-		checkIndexSize(client, 5);
-		checkQueryIndex(client, MATCH_ALL_QUERY, 5);
+		checkAllSizes(client, 5);
 	}
 
 	private void checkFacetRowsQuery(ResultDefinition result) {
@@ -209,13 +247,51 @@ public class FullTest {
 	}
 
 	@Test
-	public void test300QueryDoc() throws URISyntaxException, IOException {
+	public void test400QueryDoc() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		checkFacetRowsQuery(checkQueryIndex(client, FACETS_ROWS_QUERY, 5));
 		checkFacetRowsQuery(checkQuerySchema(client, FACETS_ROWS_QUERY, 5));
 	}
 
-	@Ignore
+	@Test
+	public void test500SecondBackup() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		BackupStatus status = doBackup(client);
+		Assert.assertEquals(status, getBackups(client, 2).get(0));
+		// Same backup again
+		status = doBackup(client);
+		Assert.assertEquals(status, getBackups(client, 2).get(0));
+	}
+
+	@Test
+	public void test600UpdateSchemaIndex() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_NAME, null, FIELDS_JSON);
+		Assert.assertNotNull(indexStatus);
+		Assert.assertNotNull(indexStatus.fields);
+		Assert.assertEquals(FIELDS_JSON.size(), indexStatus.fields.size());
+	}
+
+	@Test
+	public void test700DeleteDoc() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_NAME, DELETE_QUERY, true);
+		Assert.assertNotNull(result);
+		Assert.assertNotNull(result.total_hits);
+		Assert.assertEquals(2L, (long) result.total_hits);
+		checkAllSizes(client, 3);
+	}
+
+	@Test
+	public void test800ThirdBackup() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		BackupStatus status = doBackup(client);
+		Assert.assertEquals(status, getBackups(client, 3).get(0));
+		client.purgeBackups(SCHEMA_NAME, INDEX_NAME, 2);
+		Assert.assertEquals(status, getBackups(client, 2).get(0));
+	}
+
+	@Test
 	public void test980DeleteIndex() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
 		Response response = client.deleteIndex(SCHEMA_NAME, INDEX_NAME, null);
@@ -223,20 +299,29 @@ public class FullTest {
 		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
 	}
 
-	@Ignore
+	@Test
+	public void test981EmptyIndex() throws URISyntaxException {
+		IndexServiceInterface client = getClient();
+		Set<String> indexes = client.getIndexes(SCHEMA_NAME, null);
+		Assert.assertNotNull(indexes);
+		Assert.assertTrue(indexes.isEmpty());
+	}
+
+	@Test
 	public void test990DeleteSchema() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
 		Response response = client.deleteSchema(SCHEMA_NAME, null);
 		Assert.assertNotNull(response);
 		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
+
 	}
 
-	@Ignore
+	@Test
 	public void test991EmptySchema() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
 		Set<String> schemas = client.getSchemas(null);
 		Assert.assertNotNull(schemas);
-		Assert.assertEquals(schemas.size(), 0);
-		Assert.assertFalse(schemas.contains(SCHEMA_NAME));
+		Assert.assertTrue(schemas.isEmpty());
 	}
+
 }
