@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,7 +54,16 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public Boolean auto_generate_phrase_query;
 
 	public static class Facet {
-		final public Integer top = null;
+
+		final public Integer top;
+
+		public Facet(Integer top) {
+			this.top = top;
+		}
+
+		public Facet() {
+			this(null);
+		}
 	}
 
 	@JsonTypeInfo(use = Id.NAME, include = As.WRAPPER_OBJECT)
@@ -121,6 +130,23 @@ public class QueryDefinition extends BaseQueryDefinition {
 		phrase_slop = null;
 		enable_position_increments = null;
 		auto_generate_phrase_query = null;
+	}
+
+	QueryDefinition(QueryBuilder builder) {
+		default_field = builder.default_field;
+		query_string = builder.query_string;
+		escape_query = builder.escape_query;
+		escaped_chars = builder.escaped_chars;
+		multi_field = builder.multi_field;
+		returned_fields = builder.returned_fields;
+		facets = builder.facets;
+		facet_drilldown = builder.facet_drilldown;
+		postings_highlighter = builder.postings_highlighter;
+		allow_leading_wildcard = builder.allow_leading_wildcard;
+		default_operator = builder.default_operator;
+		phrase_slop = builder.phrase_slop;
+		enable_position_increments = builder.enable_position_increments;
+		auto_generate_phrase_query = builder.auto_generate_phrase_query;
 	}
 
 	public static QueryDefinition newQuery(String jsonString) throws IOException {
