@@ -133,6 +133,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 	}
 
 	QueryDefinition(QueryBuilder builder) {
+		super(builder);
 		default_field = builder.default_field;
 		query_string = builder.query_string;
 		escape_query = builder.escape_query;

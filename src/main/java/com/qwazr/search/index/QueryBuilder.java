@@ -24,13 +24,17 @@ import java.util.Set;
 
 public class QueryBuilder {
 
+	Integer start = null;
+	Integer rows = null;
+	Boolean query_debug = null;
+	Set<String> returned_fields = null;
+
 	String default_field = null;
 	String query_string = null;
 	Boolean escape_query = null;
 	char[] escaped_chars = null;
 	Map<String, Float> multi_field = null;
 
-	Set<String> returned_fields = null;
 	Map<String, QueryDefinition.Facet> facets = null;
 	Map<String, Set<String>> facet_drilldown = null;
 
@@ -41,6 +45,33 @@ public class QueryBuilder {
 	Integer phrase_slop = null;
 	Boolean enable_position_increments = null;
 	Boolean auto_generate_phrase_query = null;
+
+	public Boolean getQuery_debug() {
+		return query_debug;
+	}
+
+	public QueryBuilder setQuery_debug(Boolean query_debug) {
+		this.query_debug = query_debug;
+		return this;
+	}
+
+	public Integer getStart() {
+		return start;
+	}
+
+	public QueryBuilder setStart(Integer start) {
+		this.start = start;
+		return this;
+	}
+
+	public Integer getRows() {
+		return rows;
+	}
+
+	public QueryBuilder setRows(Integer rows) {
+		this.rows = rows;
+		return this;
+	}
 
 	public Boolean getAuto_generate_phrase_query() {
 		return auto_generate_phrase_query;
@@ -112,10 +143,11 @@ public class QueryBuilder {
 		return this;
 	}
 
-	public QueryBuilder addReturned_field(String returned_field) {
-		if (returned_fields == null)
-			returned_fields = new LinkedHashSet<String>();
-		returned_fields.add(returned_field);
+	public QueryBuilder addReturned_field(String... returned_fields) {
+		if (this.returned_fields == null)
+			this.returned_fields = new LinkedHashSet<String>();
+		for (String returned_field : returned_fields)
+			this.returned_fields.add(returned_field);
 		return this;
 	}
 
