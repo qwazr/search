@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p>
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,10 +15,12 @@
  */
 package com.qwazr.search.analysis;
 
+import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
 import org.apache.lucene.analysis.miscellaneous.ASCIIFoldingFilter;
+import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 
@@ -34,7 +36,10 @@ final public class LikeAnalyzer extends Analyzer {
 		tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
 		TokenStream result = new StandardFilter((TokenStream) tok);
 		result = new LowerCaseFilter(result);
-		result = new ASCIIFoldingFilter(result, true);
+		result = new ASCIIFoldingFilter(result, false);
+		ShingleFilter sf = new ShingleFilter(result);
+		sf.setTokenSeparator(StringUtils.EMPTY);
+		result = sf;
 		return new TokenStreamComponents(tok, result) {
 			protected void setReader(Reader reader) throws IOException {
 				tok.setMaxTokenLength(MAX_TOKEN_LENGTH);
