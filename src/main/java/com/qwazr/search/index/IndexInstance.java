@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,8 @@
 package com.qwazr.search.index;
 
 import com.datastax.driver.core.utils.UUIDs;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.qwazr.search.SearchServer;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.TimeTracker;
@@ -58,49 +60,99 @@ public class IndexInstance implements Closeable {
 	private final static String INDEX_BACKUP = "backup";
 	private final static String FIELDS_FILE = "fields.json";
 
+	private final FileSet fileSet;
+
 	private final IndexSchema schema;
-	private final File indexDirectory;
-	private final File dataDirectory;
-	private final File backupDirectory;
-	private final File fieldMapFile;
 	private final Directory luceneDirectory;
 	private final FacetsConfig facetsConfig;
-	private final IndexWriterConfig indexWriterConfig;
+	private final LiveIndexWriterConfig indexWriterConfig;
 	private final SnapshotDeletionPolicy snapshotDeletionPolicy;
 	private final IndexWriter indexWriter;
 	private final SearcherManager searcherManager;
 	private final PerFieldAnalyzer perFieldAnalyzer;
 	private volatile Map<String, FieldDefinition> fieldMap;
 
-	/**
-	 * Create an index directory
-	 *
-	 * @param indexDirectory the root location of the directory
-	 * @throws IOException
-	 * @throws ServerException
-	 */
-	IndexInstance(IndexSchema schema, File indexDirectory) throws IOException, ServerException {
-
+	private IndexInstance(IndexSchema schema, Directory luceneDirectory, Map<String, FieldDefinition> fieldMap,
+					FileSet fileSet, IndexWriter indexWriter, FacetsConfig facetConfig,
+					SearcherManager searcherManager) {
 		this.schema = schema;
-		this.indexDirectory = indexDirectory;
-		SearchServer.checkDirectoryExists(indexDirectory);
-		this.dataDirectory = new File(indexDirectory, INDEX_DATA);
-		this.backupDirectory = new File(indexDirectory, INDEX_BACKUP);
-		luceneDirectory = FSDirectory.open(dataDirectory.toPath());
-		facetsConfig = new FacetsConfig();
-		fieldMapFile = new File(indexDirectory, FIELDS_FILE);
-		fieldMap = fieldMapFile.exists() ?
-						JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
-						null;
-		perFieldAnalyzer = new PerFieldAnalyzer(facetsConfig, fieldMap);
-		indexWriterConfig = new IndexWriterConfig(perFieldAnalyzer);
-		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
-		snapshotDeletionPolicy = new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
-		indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
-		indexWriter = new IndexWriter(luceneDirectory, indexWriterConfig);
-		if (indexWriter.hasUncommittedChanges())
-			indexWriter.commit();
-		searcherManager = new SearcherManager(indexWriter, true, null);
+		this.fileSet = fileSet;
+		this.luceneDirectory = luceneDirectory;
+		this.fieldMap = fieldMap;
+		this.indexWriter = indexWriter;
+		this.indexWriterConfig = indexWriter.getConfig();
+		this.facetsConfig = facetConfig;
+		this.perFieldAnalyzer = (PerFieldAnalyzer) indexWriterConfig.getAnalyzer();
+		this.snapshotDeletionPolicy = (SnapshotDeletionPolicy) indexWriterConfig.getIndexDeletionPolicy();
+		this.searcherManager = searcherManager;
+	}
+
+	private static class FileSet {
+
+		private final File indexDirectory;
+		private final File backupDirectory;
+		private final File dataDirectory;
+		private final File fieldMapFile;
+
+		private FileSet(File indexDirectory) {
+			this.indexDirectory = indexDirectory;
+			this.backupDirectory = new File(indexDirectory, INDEX_BACKUP);
+			this.dataDirectory = new File(indexDirectory, INDEX_DATA);
+			this.fieldMapFile = new File(indexDirectory, FIELDS_FILE);
+		}
+	}
+
+	/**
+	 * @param schema
+	 * @param indexDirectory
+	 * @return
+	 */
+	final static IndexInstance newInstance(IndexSchema schema, File indexDirectory)
+					throws ServerException, IOException {
+		PerFieldAnalyzer perFieldAnalyzer = null;
+		IndexWriter indexWriter = null;
+		Directory luceneDirectory = null;
+		try {
+
+			SearchServer.checkDirectoryExists(indexDirectory);
+			FileSet fileSet = new FileSet(indexDirectory);
+
+			//Loading the fields
+			File fieldMapFile = new File(indexDirectory, FIELDS_FILE);
+			Map<String, FieldDefinition> fieldMap = fieldMapFile.exists() ?
+							JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
+							null;
+			FacetsConfig facetsConfig = new FacetsConfig();
+			perFieldAnalyzer = new PerFieldAnalyzer(schema.getFileClassCompilerLoader(), facetsConfig, fieldMap);
+
+			// Open and lock the data directory
+			luceneDirectory = FSDirectory.open(fileSet.dataDirectory.toPath());
+
+			// Set
+			IndexWriterConfig indexWriterConfig = new IndexWriterConfig(perFieldAnalyzer);
+			indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+			SnapshotDeletionPolicy snapshotDeletionPolicy = new SnapshotDeletionPolicy(
+							indexWriterConfig.getIndexDeletionPolicy());
+			indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
+			indexWriter = new IndexWriter(luceneDirectory, indexWriterConfig);
+			if (indexWriter.hasUncommittedChanges())
+				indexWriter.commit();
+
+			// Finally we build the SearchSercherManger
+			SearcherManager searcherManager = new SearcherManager(indexWriter, true, null);
+
+			return new IndexInstance(schema, luceneDirectory, fieldMap, fileSet, indexWriter, facetsConfig,
+							searcherManager);
+		} catch (IOException | ServerException e) {
+			// We failed in opening the index. We close everything we can
+			if (perFieldAnalyzer != null)
+				IOUtils.closeQuietly(perFieldAnalyzer);
+			if (indexWriter != null)
+				IOUtils.closeQuietly(indexWriter);
+			if (luceneDirectory != null)
+				IOUtils.closeQuietly(luceneDirectory);
+			throw e;
+		}
 	}
 
 	@Override
@@ -116,8 +168,8 @@ public class IndexInstance implements Closeable {
 	 */
 	void delete() {
 		close();
-		if (indexDirectory.exists())
-			FileUtils.deleteQuietly(indexDirectory);
+		if (fileSet.indexDirectory.exists())
+			FileUtils.deleteQuietly(fileSet.indexDirectory);
 	}
 
 	private IndexStatus getIndexStatus() throws IOException {
@@ -139,9 +191,10 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	public synchronized void setFields(Map<String, FieldDefinition> fields) throws ServerException, IOException {
-		perFieldAnalyzer.update(facetsConfig, fields);
-		JsonMapper.MAPPER.writeValue(fieldMapFile, fields);
+	public synchronized void setFields(IndexSchema schema, Map<String, FieldDefinition> fields)
+					throws ServerException, IOException {
+		perFieldAnalyzer.update(schema.getFileClassCompilerLoader(), facetsConfig, fields);
+		JsonMapper.MAPPER.writeValue(fileSet.fieldMapFile, fields);
 		fieldMap = fields;
 	}
 
@@ -215,15 +268,15 @@ public class IndexInstance implements Closeable {
 			try {
 				int files_count = 0;
 				long bytes_size = 0;
-				if (!backupDirectory.exists())
-					backupDirectory.mkdir();
-				backupdir = new File(backupDirectory, Long.toString(commit.getGeneration()));
+				if (!fileSet.backupDirectory.exists())
+					fileSet.backupDirectory.mkdir();
+				backupdir = new File(fileSet.backupDirectory, Long.toString(commit.getGeneration()));
 				if (!backupdir.exists())
 					backupdir.mkdir();
 				if (!backupdir.exists())
 					throw new IOException("Cannot create the backup directory: " + backupdir);
 				for (String fileName : commit.getFileNames()) {
-					File sourceFile = new File(dataDirectory, fileName);
+					File sourceFile = new File(fileSet.dataDirectory, fileName);
 					File targetFile = new File(backupdir, fileName);
 					files_count++;
 					bytes_size += sourceFile.length();
@@ -256,16 +309,16 @@ public class IndexInstance implements Closeable {
 		if (backups.size() <= keepLastCount)
 			return;
 		for (int i = keepLastCount; i < backups.size(); i++) {
-			File backupDir = new File(backupDirectory, Long.toString(backups.get(i).generation));
+			File backupDir = new File(fileSet.backupDirectory, Long.toString(backups.get(i).generation));
 			FileUtils.deleteQuietly(backupDir);
 		}
 	}
 
 	private List<BackupStatus> backups() {
 		List<BackupStatus> list = new ArrayList<BackupStatus>();
-		if (!backupDirectory.exists())
+		if (!fileSet.backupDirectory.exists())
 			return list;
-		File[] dirs = backupDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
+		File[] dirs = fileSet.backupDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
 		if (dirs == null)
 			return list;
 		for (File dir : dirs) {

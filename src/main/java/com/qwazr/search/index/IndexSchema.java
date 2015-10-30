@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.utils.FileClassCompilerLoader;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
@@ -52,8 +53,10 @@ public class IndexSchema implements Closeable, AutoCloseable {
 	private final File schemaDirectory;
 	private final File settingsFile;
 	private volatile SettingsDefinition settingsDefinition;
+
 	private volatile Semaphore readSemaphore;
 	private volatile Semaphore writeSemaphore;
+	private volatile FileClassCompilerLoader fileClassCompilerLoader;
 
 	private volatile SearchContext searchContext = null;
 
@@ -123,7 +126,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		if (directories == null)
 			return;
 		for (File indexDirectory : directories)
-			indexMap.put(indexDirectory.getName(), new IndexInstance(this, indexDirectory));
+			indexMap.put(indexDirectory.getName(), IndexInstance.newInstance(this, indexDirectory));
 		mayBeRefresh();
 	}
 
@@ -144,10 +147,11 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		synchronized (indexMap) {
 			IndexInstance indexInstance = indexMap.get(indexName);
 			if (indexInstance == null) {
-				indexInstance = new IndexInstance(this, new File(schemaDirectory, indexName));
-				indexInstance.setFields(fields);
+				indexInstance = IndexInstance.newInstance(this, new File(schemaDirectory, indexName));
 				indexMap.put(indexName, indexInstance);
 			}
+			if (fields != null)
+				indexInstance.setFields(this, fields);
 			mayBeRefresh();
 			return indexInstance.getStatus();
 		}
@@ -216,10 +220,14 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		return settingsDefinition;
 	}
 
-	private synchronized void checkSettings() {
+	private synchronized void checkSettings() throws IOException {
 		if (settingsDefinition == null) {
 			readSemaphore = null;
 			writeSemaphore = null;
+			if (fileClassCompilerLoader != null) {
+				fileClassCompilerLoader.close();
+				fileClassCompilerLoader = null;
+			}
 			return;
 		}
 		if (settingsDefinition.max_simultaneous_read != null)
@@ -230,6 +238,13 @@ public class IndexSchema implements Closeable, AutoCloseable {
 			writeSemaphore = new Semaphore(settingsDefinition.max_simultaneous_write);
 		else
 			writeSemaphore = null;
+
+		FileClassCompilerLoader oldFccl = fileClassCompilerLoader;
+		fileClassCompilerLoader = (settingsDefinition.javac != null && settingsDefinition.javac.source_root != null) ?
+						new FileClassCompilerLoader(settingsDefinition.javac) :
+						null;
+		if (oldFccl != null)
+			oldFccl.close();
 	}
 
 	private static ResultDefinition atomicSearch(SearchContext searchContext, QueryDefinition queryDef)
@@ -280,5 +295,9 @@ public class IndexSchema implements Closeable, AutoCloseable {
 
 	void checkSize(int addSize) throws IOException, ServerException {
 		atomicCheckSize(settingsDefinition, searchContext, addSize);
+	}
+
+	FileClassCompilerLoader getFileClassCompilerLoader() {
+		return fileClassCompilerLoader;
 	}
 }
