@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p>
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,28 +17,27 @@ package com.qwazr.search.index;
 
 import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class QueryBuilder {
 
 	Integer start = null;
 	Integer rows = null;
 	Boolean query_debug = null;
-	Set<String> returned_fields = null;
+	LinkedHashSet<String> returned_fields = null;
 
 	String default_field = null;
 	String query_string = null;
 	Boolean escape_query = null;
 	char[] escaped_chars = null;
-	Map<String, Float> multi_field = null;
+	LinkedHashMap<String, Float> multi_field = null;
 
-	Map<String, QueryDefinition.Facet> facets = null;
-	Map<String, Set<String>> facet_drilldown = null;
+	LinkedHashMap<String, QueryDefinition.Facet> facets = null;
+	List<Map<String, Set<String>>> facet_filters = null;
 
-	Map<String, Integer> postings_highlighter = null;
+	LinkedHashMap<String, QueryDefinition.SortEnum> sorts = null;
+
+	LinkedHashMap<String, Integer> postings_highlighter = null;
 
 	Boolean allow_leading_wildcard = null;
 	StandardQueryConfigHandler.Operator default_operator = null;
@@ -122,7 +121,7 @@ public class QueryBuilder {
 		return multi_field;
 	}
 
-	public QueryBuilder setMulti_field(Map<String, Float> multi_field) {
+	public QueryBuilder setMulti_field(LinkedHashMap<String, Float> multi_field) {
 		this.multi_field = multi_field;
 		return this;
 	}
@@ -138,7 +137,7 @@ public class QueryBuilder {
 		return returned_fields;
 	}
 
-	public QueryBuilder setReturned_fields(Set<String> returned_fields) {
+	public QueryBuilder setReturned_fields(LinkedHashSet<String> returned_fields) {
 		this.returned_fields = returned_fields;
 		return this;
 	}
@@ -155,7 +154,7 @@ public class QueryBuilder {
 		return facets;
 	}
 
-	public QueryBuilder setFacets(Map<String, QueryDefinition.Facet> facets) {
+	public QueryBuilder setFacets(LinkedHashMap<String, QueryDefinition.Facet> facets) {
 		this.facets = facets;
 		return this;
 	}
@@ -167,19 +166,45 @@ public class QueryBuilder {
 		return this;
 	}
 
-	public Map<String, Set<String>> getFacet_drilldown() {
-		return facet_drilldown;
+	public LinkedHashMap<String, QueryDefinition.SortEnum> getSorts() {
+		return sorts;
 	}
 
-	public QueryBuilder setFacet_drilldown(Map<String, Set<String>> facet_drilldown) {
-		this.facet_drilldown = facet_drilldown;
+	public QueryBuilder setSorts(LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
+		this.sorts = sorts;
 		return this;
 	}
 
-	public QueryBuilder addFacet_drilldown(String field, Set<String> values) {
-		if (facet_drilldown == null)
-			facet_drilldown = new LinkedHashMap<String, Set<String>>();
-		facet_drilldown.put(field, values);
+	public QueryBuilder addSort(String fieldName, QueryDefinition.SortEnum sortEnum) {
+		if (sorts == null)
+			sorts = new LinkedHashMap<String, QueryDefinition.SortEnum>();
+		sorts.put(fieldName, sortEnum);
+		return this;
+	}
+
+	public List<Map<String, Set<String>>> getFacet_filters() {
+		return facet_filters;
+	}
+
+	public QueryBuilder setFacet_drilldown(List<Map<String, Set<String>>> facet_drilldown) {
+		this.facet_filters = facet_drilldown;
+		return this;
+	}
+
+	public QueryBuilder addFacet_filters(String field, Set<Object> values) {
+		if (facet_filters == null)
+			facet_filters = new ArrayList<Map<String, Set<String>>>();
+		HashMap map = new HashMap<String, Set<Object>>();
+		map.put(field, values);
+		facet_filters.add(map);
+		return this;
+	}
+
+	public QueryBuilder addFacet_filters(String field, Object... values) {
+		Set<Object> set = new LinkedHashSet<Object>();
+		for (Object value : values)
+			set.add(value);
+		addFacet_filters(field, set);
 		return this;
 	}
 
@@ -187,7 +212,7 @@ public class QueryBuilder {
 		return postings_highlighter;
 	}
 
-	public QueryBuilder setPostings_highlighter(Map<String, Integer> postings_highlighter) {
+	public QueryBuilder setPostings_highlighter(LinkedHashMap<String, Integer> postings_highlighter) {
 		this.postings_highlighter = postings_highlighter;
 		return this;
 	}

@@ -15,12 +15,10 @@
  */
 package com.qwazr.search.analysis;
 
-import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
 import org.apache.lucene.analysis.miscellaneous.ASCIIFoldingFilter;
-import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 
@@ -37,9 +35,6 @@ final public class LikeAnalyzer extends Analyzer {
 		TokenStream result = new StandardFilter((TokenStream) tok);
 		result = new LowerCaseFilter(result);
 		result = new ASCIIFoldingFilter(result, false);
-		ShingleFilter sf = new ShingleFilter(result);
-		sf.setTokenSeparator(StringUtils.EMPTY);
-		result = sf;
 		return new TokenStreamComponents(tok, result) {
 			protected void setReader(Reader reader) throws IOException {
 				tok.setMaxTokenLength(MAX_TOKEN_LENGTH);

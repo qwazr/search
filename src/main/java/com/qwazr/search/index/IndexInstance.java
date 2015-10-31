@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p>
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,7 +64,6 @@ public class IndexInstance implements Closeable {
 
 	private final IndexSchema schema;
 	private final Directory luceneDirectory;
-	private final FacetsConfig facetsConfig;
 	private final LiveIndexWriterConfig indexWriterConfig;
 	private final SnapshotDeletionPolicy snapshotDeletionPolicy;
 	private final IndexWriter indexWriter;
@@ -73,15 +72,13 @@ public class IndexInstance implements Closeable {
 	private volatile Map<String, FieldDefinition> fieldMap;
 
 	private IndexInstance(IndexSchema schema, Directory luceneDirectory, Map<String, FieldDefinition> fieldMap,
-					FileSet fileSet, IndexWriter indexWriter, FacetsConfig facetConfig,
-					SearcherManager searcherManager) {
+					FileSet fileSet, IndexWriter indexWriter, SearcherManager searcherManager) {
 		this.schema = schema;
 		this.fileSet = fileSet;
 		this.luceneDirectory = luceneDirectory;
 		this.fieldMap = fieldMap;
 		this.indexWriter = indexWriter;
 		this.indexWriterConfig = indexWriter.getConfig();
-		this.facetsConfig = facetConfig;
 		this.perFieldAnalyzer = (PerFieldAnalyzer) indexWriterConfig.getAnalyzer();
 		this.snapshotDeletionPolicy = (SnapshotDeletionPolicy) indexWriterConfig.getIndexDeletionPolicy();
 		this.searcherManager = searcherManager;
@@ -122,8 +119,7 @@ public class IndexInstance implements Closeable {
 			Map<String, FieldDefinition> fieldMap = fieldMapFile.exists() ?
 							JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
 							null;
-			FacetsConfig facetsConfig = new FacetsConfig();
-			perFieldAnalyzer = new PerFieldAnalyzer(schema.getFileClassCompilerLoader(), facetsConfig, fieldMap);
+			perFieldAnalyzer = new PerFieldAnalyzer(schema.getFileClassCompilerLoader(), fieldMap);
 
 			// Open and lock the data directory
 			luceneDirectory = FSDirectory.open(fileSet.dataDirectory.toPath());
@@ -141,8 +137,7 @@ public class IndexInstance implements Closeable {
 			// Finally we build the SearchSercherManger
 			SearcherManager searcherManager = new SearcherManager(indexWriter, true, null);
 
-			return new IndexInstance(schema, luceneDirectory, fieldMap, fileSet, indexWriter, facetsConfig,
-							searcherManager);
+			return new IndexInstance(schema, luceneDirectory, fieldMap, fileSet, indexWriter, searcherManager);
 		} catch (IOException | ServerException e) {
 			// We failed in opening the index. We close everything we can
 			if (perFieldAnalyzer != null)
@@ -193,7 +188,7 @@ public class IndexInstance implements Closeable {
 
 	public synchronized void setFields(IndexSchema schema, Map<String, FieldDefinition> fields)
 					throws ServerException, IOException {
-		perFieldAnalyzer.update(schema.getFileClassCompilerLoader(), facetsConfig, fields);
+		perFieldAnalyzer.update(schema.getFileClassCompilerLoader(), fields);
 		JsonMapper.MAPPER.writeValue(fileSet.fieldMapFile, fields);
 		fieldMap = fields;
 	}
@@ -246,7 +241,7 @@ public class IndexInstance implements Closeable {
 				addNewLuceneField(fieldName, fieldValue, doc);
 		}
 
-		Document facetedDoc = facetsConfig.build(doc);
+		Document facetedDoc = perFieldAnalyzer.getFacetsConfig().build(doc);
 		if (termId == null)
 			indexWriter.addDocument(facetedDoc);
 		else
@@ -254,7 +249,7 @@ public class IndexInstance implements Closeable {
 		return facetedDoc.hashCode();
 	}
 
-	private void nrtCommit() throws IOException {
+	private void nrtCommit() throws IOException, ServerException {
 		indexWriter.commit();
 		searcherManager.maybeRefresh();
 		schema.mayBeRefresh();
@@ -345,7 +340,7 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	void deleteAll() throws IOException, InterruptedException {
+	void deleteAll() throws IOException, InterruptedException, ServerException {
 		Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			indexWriter.deleteAll();
@@ -390,10 +385,10 @@ public class IndexInstance implements Closeable {
 	}
 
 	ResultDefinition deleteByQuery(QueryDefinition queryDef)
-					throws IOException, InterruptedException, QueryNodeException, ParseException {
+					throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			final Query query = QueryUtils.getLuceneQuery(queryDef, perFieldAnalyzer, facetsConfig);
+			final Query query = QueryUtils.getLuceneQuery(queryDef, perFieldAnalyzer);
 			int docs = indexWriter.numDocs();
 			indexWriter.deleteDocuments(query);
 			nrtCommit();
@@ -411,7 +406,7 @@ public class IndexInstance implements Closeable {
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
-				return QueryUtils.search(fieldMap, indexSearcher, queryDef, perFieldAnalyzer, facetsConfig);
+				return QueryUtils.search(fieldMap, indexSearcher, queryDef, perFieldAnalyzer);
 			} finally {
 				searcherManager.release(indexSearcher);
 			}
@@ -480,12 +475,6 @@ public class IndexInstance implements Closeable {
 
 	Directory getLuceneDirectory() {
 		return luceneDirectory;
-	}
-
-	void fillAnalyzers(Map<String, Analyzer> analyzerMap) {
-		if (perFieldAnalyzer == null)
-			return;
-		perFieldAnalyzer.fill(analyzerMap);
 	}
 
 	void fillFields(final Map<String, FieldDefinition> fieldMap) {

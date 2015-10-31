@@ -1,0 +1,26 @@
+{
+  "query_string": "name",
+  "default_field": "name",
+  "returned_fields": [
+    "name",
+    "price"
+  ],
+  "start": 0,
+  "rows": 10,
+  "facets": {
+    "category": {}
+  },
+  "facet_filters": [
+    {
+      "category": [
+        "cat3",
+        "cat5"
+      ]
+    },
+    {
+      "category": [
+        "cat4"
+      ]
+    }
+  ]
+}

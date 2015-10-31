@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p>
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,20 +32,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
+final public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 
 	private final Analyzer defaultAnalyzer = new KeywordAnalyzer();
+	private volatile FacetsConfig facetsConfig;
 	private volatile Map<String, Analyzer> analyzerMap;
 
-	PerFieldAnalyzer(FileClassCompilerLoader compilerLoader, FacetsConfig facetsConfig,
-					Map<String, FieldDefinition> fields) throws ServerException {
+	PerFieldAnalyzer(FileClassCompilerLoader compilerLoader, Map<String, FieldDefinition> fields)
+					throws ServerException {
 		super(PER_FIELD_REUSE_STRATEGY);
-		update(compilerLoader, facetsConfig, fields);
-	}
-
-	PerFieldAnalyzer(Map<String, Analyzer> analyzerMap) {
-		super(PER_FIELD_REUSE_STRATEGY);
-		this.analyzerMap = analyzerMap;
+		update(compilerLoader, fields);
 	}
 
 	private final static String[] classPrefixes = { "", "com.qwazr.search.analysis.", "org.apache.lucene.analysis." };
@@ -70,9 +66,11 @@ public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 		return findAnalyzerClass(analyzer);
 	}
 
-	synchronized void update(FileClassCompilerLoader compilerLoader, FacetsConfig facetsConfig,
-					Map<String, FieldDefinition> fields) throws ServerException {
-		this.analyzerMap = newMap(compilerLoader, facetsConfig, fields);
+	synchronized void update(FileClassCompilerLoader compilerLoader, Map<String, FieldDefinition> fields)
+					throws ServerException {
+		FacetsConfig fc = new FacetsConfig();
+		this.analyzerMap = newMap(compilerLoader, fc, fields);
+		this.facetsConfig = fc;
 	}
 
 	private static Map<String, Analyzer> newMap(FileClassCompilerLoader compilerLoader, FacetsConfig facetsConfig,
@@ -113,5 +111,9 @@ public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 				analyzerMap.put(field, analyzer);
 			}
 		});
+	}
+
+	final FacetsConfig getFacetsConfig() {
+		return facetsConfig;
 	}
 }

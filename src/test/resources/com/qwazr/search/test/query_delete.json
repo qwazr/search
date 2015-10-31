@@ -1,9 +1,11 @@
 {
   "query_string": "*:*",
   "default_field": "$id$",
-  "facet_drilldown": {
-    "category": [
-      "cat4"
-    ]
-  }
+  "facet_filters": [
+    {
+      "category": [
+        "cat4"
+      ]
+    }
+  ]
 }

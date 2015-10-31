@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p>
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,20 +17,12 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @JsonInclude(Include.NON_EMPTY)
 public class QueryDefinition extends BaseQueryDefinition {
@@ -39,13 +31,30 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public String query_string;
 	final public Boolean escape_query;
 	final public char[] escaped_chars;
-	final public Map<String, Float> multi_field;
+	final public LinkedHashMap<String, Float> multi_field;
 
-	final public Set<String> returned_fields;
-	final public Map<String, Facet> facets;
-	final public Map<String, Set<String>> facet_drilldown;
+	final public LinkedHashMap<String, SortEnum> sorts;
 
-	final public Map<String, Integer> postings_highlighter;
+	public static enum SortEnum {
+
+		ascending,
+
+		descending,
+
+		ascending_missing_first,
+
+		ascending_missing_last,
+
+		descending_missing_first,
+
+		descending_missing_last
+	}
+
+	final public LinkedHashSet<String> returned_fields;
+	final public LinkedHashMap<String, Facet> facets;
+	final public List<Map<String, Set<String>>> facet_filters;
+
+	final public LinkedHashMap<String, Integer> postings_highlighter;
 
 	final public Boolean allow_leading_wildcard;
 	final public StandardQueryConfigHandler.Operator default_operator;
@@ -66,55 +75,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		}
 	}
 
-	@JsonTypeInfo(use = Id.NAME, include = As.WRAPPER_OBJECT)
-	@JsonSubTypes({ @JsonSubTypes.Type(value = TermQuery.class, name = "term"),
-					@Type(value = GroupQuery.class, name = "group") })
-	public static class AbstractQuery {
-	}
-
-	final public AbstractQuery query = null;
-
-	@JsonTypeName("term")
-	public static class TermQuery extends AbstractQuery {
-
-		final public String field;
-		final public String value;
-
-		public TermQuery(String field, String value) {
-			this.field = field;
-			this.value = value;
-		}
-
-		public TermQuery() {
-			this(null, null);
-		}
-	}
-
-	@JsonTypeName("group")
-	public static class GroupQuery extends AbstractQuery {
-
-		public static enum OperatorEnum {
-			and, or
-		}
-
-		final public OperatorEnum operator;
-
-		final public List<AbstractQuery> queries;
-
-		GroupQuery(OperatorEnum operator, List<AbstractQuery> queries) {
-			this.operator = operator;
-			this.queries = queries;
-		}
-
-		public GroupQuery() {
-			this(null, null);
-		}
-
-		public void addQuery(TermQuery termQuery) {
-			queries.add(termQuery);
-		}
-	}
-
 	public QueryDefinition() {
 		default_field = null;
 		query_string = null;
@@ -123,7 +83,8 @@ public class QueryDefinition extends BaseQueryDefinition {
 		multi_field = null;
 		returned_fields = null;
 		facets = null;
-		facet_drilldown = null;
+		facet_filters = null;
+		sorts = null;
 		postings_highlighter = null;
 		allow_leading_wildcard = null;
 		default_operator = null;
@@ -141,7 +102,8 @@ public class QueryDefinition extends BaseQueryDefinition {
 		multi_field = builder.multi_field;
 		returned_fields = builder.returned_fields;
 		facets = builder.facets;
-		facet_drilldown = builder.facet_drilldown;
+		facet_filters = builder.facet_filters;
+		sorts = builder.sorts;
 		postings_highlighter = builder.postings_highlighter;
 		allow_leading_wildcard = builder.allow_leading_wildcard;
 		default_operator = builder.default_operator;

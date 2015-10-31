@@ -18,7 +18,6 @@ package com.qwazr.search.index;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
@@ -27,6 +26,8 @@ import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queries.TermsQuery;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -35,14 +36,62 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class QueryUtils {
 
-	final static Query getLuceneQuery(QueryDefinition queryDef, Analyzer analyzer, FacetsConfig facetsConfig)
+	final static Sort buildSort(LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
+		if (sorts.isEmpty())
+			return null;
+		return null;
+	}
+
+	final static Term facetTerm(String indexedField, String dim, String... path) {
+		return new Term(indexedField, FacetsConfig.pathToString(dim, path));
+	}
+
+	final static List<Term> facetTerms(String indexedField, String dim, Collection<String> terms) {
+		List<Term> termList = new ArrayList<>(terms.size());
+		for (String term : terms)
+			termList.add(facetTerm(indexedField, dim, term));
+		return termList;
+	}
+
+	final static Query facetTermQuery(FacetsConfig facetsConfig, String dim, Set<String> filter_terms) {
+		String indexedField = facetsConfig.getDimConfig(dim).indexFieldName;
+		if (filter_terms.size() == 1)
+			return new TermQuery(facetTerm(indexedField, dim, filter_terms.iterator().next()));
+		return new TermsQuery(facetTerms(indexedField, dim, filter_terms));
+	}
+
+	final static Query buildFacetFiltersQuery(FacetsConfig facetsConfig, List<Map<String, Set<String>>> facet_filters,
+					Query query) {
+		if (facet_filters.isEmpty())
+			return query;
+
+		DrillDownQuery ddq;
+
+		BooleanQuery.Builder rootBuilder = new BooleanQuery.Builder();
+		rootBuilder.add(query, BooleanClause.Occur.MUST);
+
+		for (Map<String, Set<String>> mapEntry : facet_filters) {
+			for (Map.Entry<String, Set<String>> entry : mapEntry.entrySet()) {
+				Set<String> filter_terms = entry.getValue();
+				if (filter_terms == null || filter_terms.isEmpty())
+					continue;
+				String dim = entry.getKey();
+				Query orFilterQuery = facetTermQuery(facetsConfig, dim, filter_terms);
+				rootBuilder.add(orFilterQuery, BooleanClause.Occur.FILTER);
+			}
+		}
+
+		return rootBuilder.build();
+	}
+
+	final static Query getLuceneQuery(QueryDefinition queryDef, PerFieldAnalyzer analyzer)
 					throws QueryNodeException, ParseException {
+
+		// Configure the QueryParser
 		final StandardQueryParser parser = new StandardQueryParser(analyzer);
 		if (queryDef.multi_field != null && !queryDef.multi_field.isEmpty()) {
 			Set<String> fieldSet = queryDef.multi_field.keySet();
@@ -58,6 +107,8 @@ public class QueryUtils {
 			parser.setPhraseSlop(queryDef.phrase_slop);
 		if (queryDef.enable_position_increments != null)
 			parser.setEnablePositionIncrements(queryDef.enable_position_increments);
+
+		// Deal wih query string
 		final String qs;
 		// Check if we have to escape some characters
 		if (queryDef.escape_query != null && queryDef.escape_query) {
@@ -68,6 +119,7 @@ public class QueryUtils {
 		} else
 			qs = queryDef.query_string;
 
+		// Parse the query
 		Query query = parser.parse(qs, queryDef.default_field);
 
 		if (queryDef.auto_generate_phrase_query != null && queryDef.auto_generate_phrase_query && qs != null
@@ -78,26 +130,17 @@ public class QueryUtils {
 		}
 
 		// Overload query with facet filters
-		if (queryDef.facet_drilldown != null && !queryDef.facet_drilldown.isEmpty()) {
-			DrillDownQuery drillDownQuery = new DrillDownQuery(facetsConfig, query);
-			for (Map.Entry<String, Set<String>> entry : queryDef.facet_drilldown.entrySet()) {
-				Set<String> filter_terms = entry.getValue();
-				if (filter_terms == null)
-					continue;
-				String filter_field = entry.getKey();
-				for (String filter_term : filter_terms)
-					drillDownQuery.add(filter_field, filter_term);
-			}
-			query = drillDownQuery;
-		}
+		if (queryDef.facet_filters != null)
+			query = buildFacetFiltersQuery(analyzer.getFacetsConfig(), queryDef.facet_filters, query);
+
 		return query;
 	}
 
 	final static ResultDefinition search(Map<String, FieldDefinition> fieldMap, IndexSearcher indexSearcher,
-					QueryDefinition queryDef, Analyzer analyzer, FacetsConfig facetsConfig)
+					QueryDefinition queryDef, PerFieldAnalyzer analyzer)
 					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 
-		Query query = getLuceneQuery(queryDef, analyzer, facetsConfig);
+		Query query = getLuceneQuery(queryDef, analyzer);
 
 		final IndexReader indexReader = indexSearcher.getIndexReader();
 		final TimeTracker timeTracker = new TimeTracker();

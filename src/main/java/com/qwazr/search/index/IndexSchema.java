@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p>
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,6 @@ import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
@@ -67,7 +66,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		private final Map<String, FieldDefinition> fieldMap;
 		private final PerFieldAnalyzer perFieldAnalyzer;
 
-		private SearchContext() throws IOException {
+		private SearchContext() throws IOException, ServerException {
 			if (indexMap.isEmpty()) {
 				indexSearcher = null;
 				multiReader = null;
@@ -77,16 +76,14 @@ public class IndexSchema implements Closeable, AutoCloseable {
 			}
 			IndexReader[] indexReaders = new IndexReader[indexMap.size()];
 			int i = 0;
-			Map<String, Analyzer> analyzerMap = new HashMap<String, Analyzer>();
 			fieldMap = new HashMap<String, FieldDefinition>();
 			for (IndexInstance indexInstance : indexMap.values()) {
 				indexReaders[i++] = DirectoryReader.open(indexInstance.getLuceneDirectory());
-				indexInstance.fillAnalyzers(analyzerMap);
 				indexInstance.fillFields(fieldMap);
 			}
 			multiReader = new MultiReader(indexReaders);
 			indexSearcher = new IndexSearcher(multiReader);
-			perFieldAnalyzer = new PerFieldAnalyzer(analyzerMap);
+			perFieldAnalyzer = new PerFieldAnalyzer(fileClassCompilerLoader, fieldMap);
 		}
 
 		int numDocs() {
@@ -104,7 +101,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 						throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 			if (indexSearcher == null)
 				return null;
-			return QueryUtils.search(fieldMap, indexSearcher, queryDef, perFieldAnalyzer, null);
+			return QueryUtils.search(fieldMap, indexSearcher, queryDef, perFieldAnalyzer);
 		}
 	}
 
@@ -212,7 +209,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		checkSettings();
 	}
 
-	synchronized void mayBeRefresh() throws IOException {
+	synchronized void mayBeRefresh() throws IOException, ServerException {
 		searchContext = new SearchContext();
 	}
 

@@ -45,6 +45,7 @@ public class FullTest {
 	public static final Map<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
 	public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
 	public static final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
+	public static final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
 	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
 	public static final List<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
@@ -251,6 +252,22 @@ public class FullTest {
 		IndexServiceInterface client = getClient();
 		checkFacetRowsQuery(checkQueryIndex(client, FACETS_ROWS_QUERY, 5));
 		checkFacetRowsQuery(checkQuerySchema(client, FACETS_ROWS_QUERY, 5));
+	}
+
+	private void checkFacetFiltersResult(ResultDefinition result) {
+		Assert.assertNotNull(result.documents);
+		Assert.assertEquals(2, result.documents.size());
+		Assert.assertNotNull(result.documents.get(0).fields);
+		Assert.assertNotNull(result.documents.get(1).fields);
+		Assert.assertEquals("Fourth name", result.documents.get(0).fields.get("name"));
+		Assert.assertEquals("Fifth name", result.documents.get(1).fields.get("name"));
+	}
+
+	@Test
+	public void test410QueryFacetFilterDoc() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		checkFacetFiltersResult(checkQueryIndex(client, FACETS_FILTERS_QUERY, 2));
+		checkFacetFiltersResult(checkQuerySchema(client, FACETS_FILTERS_QUERY, 2));
 	}
 
 	@Test
