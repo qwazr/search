@@ -37,13 +37,78 @@ import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 
 public class QueryUtils {
 
-	final static Sort buildSort(LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
+	final static SortField buildSortField(Map<String, FieldDefinition> fields, String field,
+					QueryDefinition.SortEnum sortEnum) {
+
+		final boolean reverse;
+		final Object missingValue;
+		switch (sortEnum) {
+		case ascending:
+			missingValue = null;
+			reverse = false;
+			break;
+		case ascending_missing_first:
+			missingValue = SortField.STRING_LAST;
+			reverse = false;
+			break;
+		case ascending_missing_last:
+			missingValue = SortField.STRING_FIRST;
+			reverse = false;
+			break;
+		case descending:
+			missingValue = null;
+			reverse = true;
+			break;
+		case descending_missing_first:
+			missingValue = SortField.STRING_LAST;
+			reverse = true;
+			break;
+		case descending_missing_last:
+			missingValue = SortField.STRING_FIRST;
+			reverse = true;
+			break;
+		default:
+			missingValue = null;
+			reverse = false;
+			break;
+		}
+
+		final SortField.Type type;
+		if ("$score".equals(field)) {
+			type = SortField.Type.SCORE;
+		} else if ("$doc".equals(field)) {
+			type = SortField.Type.DOC;
+		} else {
+			type = SortField.Type.STRING;
+			// Type with field definition
+		}
+
+		SortField sortField = new SortField(field, type, reverse);
+		if (missingValue != null)
+			sortField.setMissingValue(missingValue);
+		return sortField;
+	}
+
+	final static Sort buildSort(Map<String, FieldDefinition> fields,
+					LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
 		if (sorts.isEmpty())
 			return null;
-		return null;
+		final SortField[] sortFields = new SortField[sorts.size()];
+		final AtomicInteger i = new AtomicInteger(0);
+		sorts.forEach(new BiConsumer<String, QueryDefinition.SortEnum>() {
+			@Override
+			public void accept(String field, QueryDefinition.SortEnum sortEnum) {
+				sortFields[i.getAndIncrement()] = buildSortField(fields, field, sortEnum);
+			}
+		});
+		if (sortFields.length == 1)
+			return new Sort(sortFields[0]);
+		return new Sort(sortFields);
 	}
 
 	final static Term facetTerm(String indexedField, String dim, String... path) {
@@ -136,8 +201,8 @@ public class QueryUtils {
 		return query;
 	}
 
-	final static ResultDefinition search(Map<String, FieldDefinition> fieldMap, IndexSearcher indexSearcher,
-					QueryDefinition queryDef, PerFieldAnalyzer analyzer)
+	final static ResultDefinition search(IndexSearcher indexSearcher, QueryDefinition queryDef,
+					PerFieldAnalyzer analyzer)
 					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 
 		Query query = getLuceneQuery(queryDef, analyzer);
@@ -146,16 +211,25 @@ public class QueryUtils {
 		final TimeTracker timeTracker = new TimeTracker();
 		final TopDocs topDocs;
 		final Facets facets;
+		final Map<String, FieldDefinition> fields = analyzer.getFields();
+
+		final Sort sort = buildSort(fields, queryDef.sorts);
 
 		if (queryDef.facets != null && queryDef.facets.size() > 0) {
 			FacetsCollector facetsCollector = new FacetsCollector();
 			SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
-			topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), facetsCollector);
+			if (sort != null)
+				topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), sort, facetsCollector);
+			else
+				topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), facetsCollector);
 			timeTracker.next("search_query");
 			facets = new SortedSetDocValuesFacetCounts(state, facetsCollector);
 			timeTracker.next("facet_count");
 		} else {
-			topDocs = indexSearcher.search(query, queryDef.getEnd());
+			if (sort != null)
+				topDocs = indexSearcher.search(query, queryDef.getEnd(), sort);
+			else
+				topDocs = indexSearcher.search(query, queryDef.getEnd());
 			timeTracker.next("search_query");
 			facets = null;
 		}
@@ -174,7 +248,7 @@ public class QueryUtils {
 			timeTracker.next("postings_highlighters");
 		}
 
-		return new ResultDefinition(fieldMap, timeTracker, indexSearcher, topDocs, queryDef, facets,
+		return new ResultDefinition(fields, timeTracker, indexSearcher, topDocs, queryDef, facets,
 						postingsHighlightersMap, query);
 
 	}

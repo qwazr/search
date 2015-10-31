@@ -16,8 +16,6 @@
 package com.qwazr.search.index;
 
 import com.datastax.driver.core.utils.UUIDs;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.qwazr.search.SearchServer;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.TimeTracker;
@@ -25,11 +23,9 @@ import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -406,7 +402,7 @@ public class IndexInstance implements Closeable {
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
-				return QueryUtils.search(fieldMap, indexSearcher, queryDef, perFieldAnalyzer);
+				return QueryUtils.search(indexSearcher, queryDef, perFieldAnalyzer);
 			} finally {
 				searcherManager.release(indexSearcher);
 			}

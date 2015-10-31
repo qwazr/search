@@ -101,7 +101,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 						throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 			if (indexSearcher == null)
 				return null;
-			return QueryUtils.search(fieldMap, indexSearcher, queryDef, perFieldAnalyzer);
+			return QueryUtils.search(indexSearcher, queryDef, perFieldAnalyzer);
 		}
 	}
 

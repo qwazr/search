@@ -34,6 +34,7 @@ import java.util.function.BiConsumer;
 
 final public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 
+	private final Map<String, FieldDefinition> fields;
 	private final Analyzer defaultAnalyzer = new KeywordAnalyzer();
 	private volatile FacetsConfig facetsConfig;
 	private volatile Map<String, Analyzer> analyzerMap;
@@ -42,6 +43,7 @@ final public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 					throws ServerException {
 		super(PER_FIELD_REUSE_STRATEGY);
 		update(compilerLoader, fields);
+		this.fields = fields;
 	}
 
 	private final static String[] classPrefixes = { "", "com.qwazr.search.analysis.", "org.apache.lucene.analysis." };
@@ -115,5 +117,9 @@ final public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 
 	final FacetsConfig getFacetsConfig() {
 		return facetsConfig;
+	}
+
+	final Map<String, FieldDefinition> getFields() {
+		return fields;
 	}
 }
