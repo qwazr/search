@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p>
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,15 +19,20 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
+import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.document.*;
 import org.apache.lucene.facet.FacetField;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortedNumericSortField;
+import org.apache.lucene.search.SortedSetSortField;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Map;
 
@@ -47,7 +52,26 @@ public class FieldDefinition {
 	public final DocValuesType docvalues_type;
 
 	public enum Template {
-		DoubleField, FloatField, IntField, LongField, NumericDocValuesField, FloatDocValuesField, DoubleDocValuesField, SortedDocValuesField, SortedNumericDocValuesField, SortedDoubleDocValuesField, SortedFloatDocValuesField, SortedSetDocValuesField, StoredField, StringField, TextField, FacetField, SortedSetDocValuesFacetField, SortedSetMultiDocValuesFacetField;
+		DoubleField,
+		FloatField,
+		IntField,
+		LongField,
+		LongDocValuesField,
+		IntDocValuesField,
+		FloatDocValuesField,
+		DoubleDocValuesField,
+		SortedDocValuesField,
+		SortedLongDocValuesField,
+		SortedIntDocValuesField,
+		SortedDoubleDocValuesField,
+		SortedFloatDocValuesField,
+		SortedSetDocValuesField,
+		StoredField,
+		StringField,
+		TextField,
+		FacetField,
+		SortedSetDocValuesFacetField,
+		SortedSetMultiDocValuesFacetField;
 	}
 
 	public final Template template;
@@ -97,8 +121,11 @@ public class FieldDefinition {
 			case LongField:
 				field = new LongField(fieldName, checkNumberType(fieldName, value).longValue(), store);
 				break;
-			case NumericDocValuesField:
+			case LongDocValuesField:
 				field = new NumericDocValuesField(fieldName, checkNumberType(fieldName, value).longValue());
+				break;
+			case IntDocValuesField:
+				field = new NumericDocValuesField(fieldName, checkNumberType(fieldName, value).intValue());
 				break;
 			case FloatDocValuesField:
 				field = new FloatDocValuesField(fieldName, checkNumberType(fieldName, value).floatValue());
@@ -109,8 +136,11 @@ public class FieldDefinition {
 			case SortedDocValuesField:
 				field = new SortedDocValuesField(fieldName, checkStringBytesRef(value));
 				break;
-			case SortedNumericDocValuesField:
+			case SortedLongDocValuesField:
 				field = new SortedNumericDocValuesField(fieldName, checkNumberType(fieldName, value).longValue());
+				break;
+			case SortedIntDocValuesField:
+				field = new SortedNumericDocValuesField(fieldName, checkNumberType(fieldName, value).intValue());
 				break;
 			case SortedDoubleDocValuesField:
 				field = new SortedNumericDocValuesField(fieldName,
@@ -186,7 +216,7 @@ public class FieldDefinition {
 
 	}
 
-	public final static Object getValue(IndexableField field) {
+	final static Object getValue(IndexableField field) {
 		if (field == null)
 			return null;
 		String s = field.stringValue();
@@ -201,9 +231,49 @@ public class FieldDefinition {
 	public final static TypeReference<Map<String, FieldDefinition>> MapStringFieldTypeRef = new TypeReference<Map<String, FieldDefinition>>() {
 	};
 
-	public static Map<String, FieldDefinition> newFieldMap(String jsonString) throws IOException {
+	public final static Map<String, FieldDefinition> newFieldMap(String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
 		return JsonMapper.MAPPER.readValue(jsonString, MapStringFieldTypeRef);
+	}
+
+	final SortField getSortField(String field, boolean reverse) throws ServerException {
+		if (template == null) {
+			if (index_options == null)
+				throw new ServerException(Response.Status.BAD_REQUEST,
+								"A not indexed field cannot be used in sorting: " + field);
+		} else {
+			switch (template) {
+			case DoubleField:
+			case DoubleDocValuesField:
+				return new SortField(field, SortField.Type.DOUBLE, reverse);
+			case FloatField:
+			case FloatDocValuesField:
+				return new SortField(field, SortField.Type.FLOAT, reverse);
+			case IntField:
+			case IntDocValuesField:
+				return new SortField(field, SortField.Type.INT, reverse);
+			case LongField:
+			case LongDocValuesField:
+				return new SortField(field, SortField.Type.LONG, reverse);
+			case SortedDocValuesField:
+				return new SortedSetSortField(field, reverse);
+			case SortedDoubleDocValuesField:
+				return new SortedNumericSortField(field, SortField.Type.DOUBLE, reverse);
+			case SortedFloatDocValuesField:
+				return new SortedNumericSortField(field, SortField.Type.FLOAT, reverse);
+			case SortedSetDocValuesField:
+				return new SortedSetSortField(field, reverse);
+			case StringField:
+				return new SortField(field, SortField.Type.STRING, reverse);
+			case StoredField:
+			case TextField:
+			case FacetField:
+			case SortedSetDocValuesFacetField:
+			case SortedSetMultiDocValuesFacetField:
+				break;
+			}
+		}
+		throw new ServerException(Response.Status.BAD_REQUEST, "The field cannot be used for sorting: " + field);
 	}
 }

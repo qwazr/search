@@ -237,7 +237,7 @@ public class IndexInstance implements Closeable {
 				addNewLuceneField(fieldName, fieldValue, doc);
 		}
 
-		Document facetedDoc = perFieldAnalyzer.getFacetsConfig().build(doc);
+		Document facetedDoc = perFieldAnalyzer.getContext().facetsConfig.build(doc);
 		if (termId == null)
 			indexWriter.addDocument(facetedDoc);
 		else

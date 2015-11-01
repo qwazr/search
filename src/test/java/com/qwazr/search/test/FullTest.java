@@ -21,7 +21,10 @@ import com.qwazr.search.index.*;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.commons.cli.ParseException;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import javax.servlet.ServletException;
@@ -30,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +50,8 @@ public class FullTest {
 	public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
 	public static final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
 	public static final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
+	public static final QueryDefinition QUERY_SORTFIELD = getQuery("query_sortfield.json");
+	public static final QueryDefinition QUERY_SORTFIELDS = getQuery("query_sortfields.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
 	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
 	public static final List<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
@@ -268,6 +274,40 @@ public class FullTest {
 		IndexServiceInterface client = getClient();
 		checkFacetFiltersResult(checkQueryIndex(client, FACETS_FILTERS_QUERY, 2));
 		checkFacetFiltersResult(checkQuerySchema(client, FACETS_FILTERS_QUERY, 2));
+	}
+
+	private <T extends Comparable> void checkDescending(T startValue, String field,
+					Collection<ResultDefinition.ResultDocument> documents) {
+		T old = startValue;
+		for (ResultDefinition.ResultDocument document : documents) {
+			Assert.assertNotNull(document.fields);
+			T val = (T) document.fields.get(field);
+			Assert.assertNotNull(val);
+			Assert.assertTrue(val.compareTo(old) <= 0);
+			old = val;
+		}
+	}
+
+	private <T extends Comparable> void checkAscending(T startValue, String field,
+					Collection<ResultDefinition.ResultDocument> documents) {
+		T old = startValue;
+		for (ResultDefinition.ResultDocument document : documents) {
+			Assert.assertNotNull(document.fields);
+			T val = (T) document.fields.get(field);
+			Assert.assertNotNull(val);
+			Assert.assertTrue(val.compareTo(old) >= 0);
+			old = val;
+		}
+	}
+
+	@Test
+	public void test420QuerySortFieldDoc() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		ResultDefinition result = checkQueryIndex(client, QUERY_SORTFIELD, 5);
+		Assert.assertNotNull(result.documents);
+		checkDescending(Double.MAX_VALUE, "price", result.documents);
+		result = checkQueryIndex(client, QUERY_SORTFIELDS, 5);
+		checkAscending(Double.MIN_VALUE, "price", result.documents);
 	}
 
 	@Test

@@ -35,15 +35,14 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 
 public class QueryUtils {
 
 	final static SortField buildSortField(Map<String, FieldDefinition> fields, String field,
-					QueryDefinition.SortEnum sortEnum) {
+					QueryDefinition.SortEnum sortEnum) throws ServerException {
 
 		final boolean reverse;
 		final Object missingValue;
@@ -78,34 +77,31 @@ public class QueryUtils {
 			break;
 		}
 
-		final SortField.Type type;
-		if ("$score".equals(field)) {
-			type = SortField.Type.SCORE;
-		} else if ("$doc".equals(field)) {
-			type = SortField.Type.DOC;
-		} else {
-			type = SortField.Type.STRING;
-			// Type with field definition
-		}
+		final SortField sortField;
 
-		SortField sortField = new SortField(field, type, reverse);
+		if ("$score".equals(field)) {
+			sortField = new SortField(field, SortField.Type.SCORE, reverse);
+		} else if ("$doc".equals(field)) {
+			sortField = new SortField(field, SortField.Type.DOC, reverse);
+		} else {
+			FieldDefinition fieldDefinition = fields.get(field);
+			if (fieldDefinition == null)
+				throw new ServerException(Response.Status.BAD_REQUEST, "Unknown sort field: " + field);
+			sortField = fieldDefinition.getSortField(field, reverse);
+		}
 		if (missingValue != null)
 			sortField.setMissingValue(missingValue);
 		return sortField;
 	}
 
 	final static Sort buildSort(Map<String, FieldDefinition> fields,
-					LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
+					LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
 		if (sorts.isEmpty())
 			return null;
 		final SortField[] sortFields = new SortField[sorts.size()];
-		final AtomicInteger i = new AtomicInteger(0);
-		sorts.forEach(new BiConsumer<String, QueryDefinition.SortEnum>() {
-			@Override
-			public void accept(String field, QueryDefinition.SortEnum sortEnum) {
-				sortFields[i.getAndIncrement()] = buildSortField(fields, field, sortEnum);
-			}
-		});
+		int i = 0;
+		for (Map.Entry<String, QueryDefinition.SortEnum> sort : sorts.entrySet())
+			sortFields[i++] = buildSortField(fields, sort.getKey(), sort.getValue());
 		if (sortFields.length == 1)
 			return new Sort(sortFields[0]);
 		return new Sort(sortFields);
@@ -196,7 +192,7 @@ public class QueryUtils {
 
 		// Overload query with facet filters
 		if (queryDef.facet_filters != null)
-			query = buildFacetFiltersQuery(analyzer.getFacetsConfig(), queryDef.facet_filters, query);
+			query = buildFacetFiltersQuery(analyzer.getContext().facetsConfig, queryDef.facet_filters, query);
 
 		return query;
 	}
@@ -211,9 +207,9 @@ public class QueryUtils {
 		final TimeTracker timeTracker = new TimeTracker();
 		final TopDocs topDocs;
 		final Facets facets;
-		final Map<String, FieldDefinition> fields = analyzer.getFields();
+		final PerFieldAnalyzer.AnalyzerContext analyzerContext = analyzer.getContext();
 
-		final Sort sort = buildSort(fields, queryDef.sorts);
+		final Sort sort = queryDef.sorts == null ? null : buildSort(analyzerContext.fields, queryDef.sorts);
 
 		if (queryDef.facets != null && queryDef.facets.size() > 0) {
 			FacetsCollector facetsCollector = new FacetsCollector();
@@ -248,7 +244,7 @@ public class QueryUtils {
 			timeTracker.next("postings_highlighters");
 		}
 
-		return new ResultDefinition(fields, timeTracker, indexSearcher, topDocs, queryDef, facets,
+		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, topDocs, queryDef, facets,
 						postingsHighlightersMap, query);
 
 	}

@@ -30,20 +30,50 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 final public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 
-	private final Map<String, FieldDefinition> fields;
 	private final Analyzer defaultAnalyzer = new KeywordAnalyzer();
-	private volatile FacetsConfig facetsConfig;
-	private volatile Map<String, Analyzer> analyzerMap;
+
+	static class AnalyzerContext {
+
+		final Map<String, FieldDefinition> fields;
+		final FacetsConfig facetsConfig;
+		final Map<String, Analyzer> analyzerMap;
+
+		private AnalyzerContext(FileClassCompilerLoader compilerLoader, Map<String, FieldDefinition> fields)
+						throws ServerException {
+			this.fields = fields;
+			this.facetsConfig = new FacetsConfig();
+			if (fields == null || fields.size() == 0) {
+				this.analyzerMap = Collections.<String, Analyzer>emptyMap();
+				return;
+			}
+			this.analyzerMap = new HashMap<String, Analyzer>();
+			for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
+				String fieldName = field.getKey();
+				FieldDefinition fieldDef = field.getValue();
+				if (fieldDef.template == FieldDefinition.Template.SortedSetMultiDocValuesFacetField)
+					facetsConfig.setMultiValued(fieldName, true);
+				else if (fieldDef.template == FieldDefinition.Template.SortedSetDocValuesFacetField)
+					facetsConfig.setMultiValued(fieldName, false);
+				try {
+					if (!StringUtils.isEmpty(fieldDef.analyzer))
+						analyzerMap.put(field.getKey(), findAnalyzer(compilerLoader, fieldDef.analyzer).newInstance());
+				} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InterruptedException | ScriptException | IOException e) {
+					throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+									"Class " + fieldDef.analyzer + " not known for the field " + fieldName, e);
+				}
+			}
+		}
+	}
+
+	private volatile AnalyzerContext context;
 
 	PerFieldAnalyzer(FileClassCompilerLoader compilerLoader, Map<String, FieldDefinition> fields)
 					throws ServerException {
 		super(PER_FIELD_REUSE_STRATEGY);
 		update(compilerLoader, fields);
-		this.fields = fields;
 	}
 
 	private final static String[] classPrefixes = { "", "com.qwazr.search.analysis.", "org.apache.lucene.analysis." };
@@ -70,56 +100,17 @@ final public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 
 	synchronized void update(FileClassCompilerLoader compilerLoader, Map<String, FieldDefinition> fields)
 					throws ServerException {
-		FacetsConfig fc = new FacetsConfig();
-		this.analyzerMap = newMap(compilerLoader, fc, fields);
-		this.facetsConfig = fc;
+		context = new AnalyzerContext(compilerLoader, fields);
 	}
 
-	private static Map<String, Analyzer> newMap(FileClassCompilerLoader compilerLoader, FacetsConfig facetsConfig,
-					Map<String, FieldDefinition> fields) throws ServerException {
-		if (fields == null || fields.size() == 0)
-			return Collections.<String, Analyzer>emptyMap();
-		Map<String, Analyzer> analyzerMap = new HashMap<String, Analyzer>();
-		for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
-			String fieldName = field.getKey();
-			FieldDefinition fieldDef = field.getValue();
-			if (fieldDef.template == FieldDefinition.Template.SortedSetMultiDocValuesFacetField)
-				facetsConfig.setMultiValued(fieldName, true);
-			else if (fieldDef.template == FieldDefinition.Template.SortedSetDocValuesFacetField)
-				facetsConfig.setMultiValued(fieldName, false);
-			try {
-				if (!StringUtils.isEmpty(fieldDef.analyzer))
-					analyzerMap.put(field.getKey(), findAnalyzer(compilerLoader, fieldDef.analyzer).newInstance());
-			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InterruptedException | ScriptException | IOException e) {
-				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-								"Class " + fieldDef.analyzer + " not known for the field " + fieldName, e);
-			}
-		}
-		return analyzerMap;
+	final AnalyzerContext getContext() {
+		return context;
 	}
 
 	@Override
 	final protected Analyzer getWrappedAnalyzer(String fieldName) {
-		Analyzer analyzer = analyzerMap.get(fieldName);
+		Analyzer analyzer = context.analyzerMap.get(fieldName);
 		return analyzer == null ? defaultAnalyzer : analyzer;
 	}
 
-	final void fill(final Map<String, Analyzer> analyzerMap) {
-		this.analyzerMap.forEach(new BiConsumer<String, Analyzer>() {
-			@Override
-			public void accept(String field, Analyzer analyzer) {
-				if (analyzerMap.containsKey(field))
-					return;
-				analyzerMap.put(field, analyzer);
-			}
-		});
-	}
-
-	final FacetsConfig getFacetsConfig() {
-		return facetsConfig;
-	}
-
-	final Map<String, FieldDefinition> getFields() {
-		return fields;
-	}
 }
