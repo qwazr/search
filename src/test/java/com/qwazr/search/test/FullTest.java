@@ -396,7 +396,6 @@ public class FullTest {
 		Assert.assertEquals(status, getBackups(client, 2).get(0));
 	}
 
-	/*
 	@Test
 	public void test980DeleteIndex() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
@@ -429,6 +428,5 @@ public class FullTest {
 		Assert.assertNotNull(schemas);
 		Assert.assertTrue(schemas.isEmpty());
 	}
-	*/
 
 }
