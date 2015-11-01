@@ -1,10 +1,11 @@
-# Setting schema settings
+## Setting schema settings
 
 This API sets the settings of the schema:
 
 * **URL pattern**: {server_name}:9091/indexes/{schema_name}
 * **HTTP method**: OPTIONS
 * **Content-Type**: application/json
+* **Body**: a JSON object describing the settings
 
 
 ```shell
@@ -17,7 +18,7 @@ curl -H 'Content-Type: application/json' \
 }'
 ```
 
-## Response
+### Response
 
 The API returns the settings.
 
@@ -29,7 +30,7 @@ The API returns the settings.
 }
 ```
 
-## Settings parameters
+### Settings parameters
 
 * **max_size**: The maximum number of documents in the schema.
 * **max_simultaneous_read**: The maximum number of simultaneous read access.

@@ -19,14 +19,15 @@ An index is a collection of documents.
 * [List all indexes](index/list.md)
 * [Create/update an index and its fields](index/create.md)
 * [Getting index fields and status](index/status.md)
-* [Delete an index](schema/index.md)
+* [Delete an index](index/delete.md)
 
 ## Document
 
 * [Insert/update a document](document/update_document.md)
 * [Insert/update several documents](document/update_documents.md)
-* [Update a DocValue field](document/update_docvalue.md)
-* [Update several docvalue fields](document/update_docvalues.md)
+* [Update the DocValue fields of a document](document/update_docvalue.md)
+* [Update the DocValue fields of several documents](document/update_docvalues.md)
+* [Delete all documents](index/truncate_index.md)
 
 ## Search
 

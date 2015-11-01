@@ -15,7 +15,7 @@ curl "localhost:9091/indexes"
 [my_schema]
 ```
 
-If no index exists, an empty array is returned:
+If no schema exists, an empty array is returned:
 
 ```json
 []
