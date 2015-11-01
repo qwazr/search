@@ -112,6 +112,16 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
+	public Response updateDocumentValues(String schema_name, String index_name, Map<String, Object> document) {
+		return null;
+	}
+
+	@Override
+	public Response updateDocumentsValues(String schema_name, String index_name, List<Map<String, Object>> documents) {
+		return null;
+	}
+
+	@Override
 	public Response deleteAll(String schema_name, String index_name, Boolean local) {
 		// TODO Auto-generated method stub
 		return null;

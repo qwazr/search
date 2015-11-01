@@ -112,11 +112,15 @@ class DocValueUtils {
 			if (fieldDef.numeric_type == null) {
 				if (fieldDef.template == null)
 					return null;
-				switch (FieldDefinition.Template.DoubleDocValuesField) {
+				switch (fieldDef.template) {
 				case DoubleDocValuesField:
 					return new DoubleDVConverter(numericDocValues);
 				case FloatDocValuesField:
 					return new FloatDVConverter(numericDocValues);
+				case IntDocValuesField:
+					return new IntegerDVConverter(numericDocValues);
+				case LongDocValuesField:
+					return new LongDVConverter(numericDocValues);
 				default:
 					return null;
 				}

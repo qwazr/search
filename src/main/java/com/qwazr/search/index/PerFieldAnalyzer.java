@@ -21,6 +21,7 @@ import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.DelegatingAnalyzerWrapper;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.facet.FacetsConfig;
 
 import javax.script.ScriptException;
@@ -65,6 +66,13 @@ final public class PerFieldAnalyzer extends DelegatingAnalyzerWrapper {
 									"Class " + fieldDef.analyzer + " not known for the field " + fieldName, e);
 				}
 			}
+		}
+
+		final Field getNewLuceneField(String fieldName, Object value) throws IOException {
+			FieldDefinition fieldDef = fields == null ? null : fields.get(fieldName);
+			if (fieldDef == null)
+				throw new IOException("No field definition for the field: " + fieldName);
+			return fieldDef.newField(fieldName, value);
 		}
 	}
 

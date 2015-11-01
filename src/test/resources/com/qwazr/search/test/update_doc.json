@@ -9,5 +9,6 @@
     "cat5"
   ],
   "size": 500,
-  "price": 10.50
+  "price": 10.50,
+  "stock": 0
 }

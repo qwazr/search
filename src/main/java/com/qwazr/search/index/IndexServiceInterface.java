@@ -79,13 +79,6 @@ public interface IndexServiceInterface {
 	public Response deleteIndex(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, @QueryParam("local") Boolean local);
 
-	@POST
-	@Path("/{schema_name}/{index_name}/docs")
-	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
-	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response postDocuments(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, List<Map<String, Object>> documents);
-
 	@DELETE
 	@Path("/{schema_name}/{index_name}/docs")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
@@ -98,6 +91,27 @@ public interface IndexServiceInterface {
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
 	public Response postDocument(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, Map<String, Object> document);
+
+	@POST
+	@Path("/{schema_name}/{index_name}/docs")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Response postDocuments(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name, List<Map<String, Object>> documents);
+
+	@POST
+	@Path("/{schema_name}/{index_name}/doc/values")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Response updateDocumentValues(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name, Map<String, Object> document);
+
+	@POST
+	@Path("/{schema_name}/{index_name}/docs/values")
+	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
+	@Produces(RestApplication.APPLICATION_JSON_UTF8)
+	public Response updateDocumentsValues(@PathParam("schema_name") String schema_name,
+					@PathParam("index_name") String index_name, List<Map<String, Object>> documents);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/backup")

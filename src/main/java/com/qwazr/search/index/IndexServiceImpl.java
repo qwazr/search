@@ -201,6 +201,48 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	@Override
+	public Response postDocuments(String schema_name, String index_name, List<Map<String, Object>> documents) {
+		try {
+			checkRight(schema_name);
+			if (documents == null || documents.isEmpty())
+				return Response.notModified().build();
+			IndexManager.INSTANCE.get(schema_name).get(index_name).postDocuments(documents);
+			return Response.ok().build();
+		} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
+			logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	public Response updateDocumentValues(String schema_name, String index_name, Map<String, Object> document) {
+		try {
+			checkRight(schema_name);
+			if (document == null || document.isEmpty())
+				return Response.notModified().build();
+			IndexManager.INSTANCE.get(schema_name).get(index_name).updateDocumentValues(document);
+			return Response.ok().build();
+		} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
+			logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	public Response updateDocumentsValues(String schema_name, String index_name, List<Map<String, Object>> documents) {
+		try {
+			checkRight(schema_name);
+			if (documents == null || documents.isEmpty())
+				return Response.notModified().build();
+			IndexManager.INSTANCE.get(schema_name).get(index_name).updateDocumentsValues(documents);
+			return Response.ok().build();
+		} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
+			logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
 	public BackupStatus doBackup(String schema_name, String index_name, Integer keep_last_count) {
 		try {
 			checkRight(null);
@@ -221,20 +263,6 @@ public class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(null);
 			return IndexManager.INSTANCE.get(schema_name).get(index_name).getBackups();
 		} catch (ServerException | IllegalArgumentException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
-		}
-	}
-
-	@Override
-	public Response postDocuments(String schema_name, String index_name, List<Map<String, Object>> documents) {
-		try {
-			checkRight(schema_name);
-			if (documents == null || documents.isEmpty())
-				return Response.notModified().build();
-			IndexManager.INSTANCE.get(schema_name).get(index_name).postDocuments(documents);
-			return Response.ok().build();
-		} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}

@@ -177,6 +177,36 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
+	public Response updateDocumentValues(String schema_name, String index_name, Map<String, Object> document) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc/values");
+			Request request = Request.Post(uriBuilder.build());
+			HttpResponse response = execute(request, document, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 200);
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public Response updateDocumentsValues(String schema_name, String index_name, List<Map<String, Object>> documents) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs/values");
+			Request request = Request.Post(uriBuilder.build());
+			HttpResponse response = execute(request, documents, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 200);
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
 	public Response deleteAll(String schema_name, String index_name, Boolean local) {
 		try {
 			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs")

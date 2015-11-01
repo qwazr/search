@@ -102,9 +102,9 @@ public class FieldDefinition {
 		return new BytesRef(value.toString());
 	}
 
-	void putNewField(String fieldName, Object value, Document doc) {
+	final Field newField(final String fieldName, final Object value) {
 		if (value == null)
-			return;
+			return null;
 		Field field = null;
 		Field.Store store = (stored != null && stored) ? Field.Store.YES : Field.Store.NO;
 		if (template != null) {
@@ -211,9 +211,7 @@ public class FieldDefinition {
 				throw new IllegalArgumentException("Error on field: " + fieldName + " - " + e.getMessage(), e);
 			}
 		}
-
-		doc.add(field);
-
+		return field;
 	}
 
 	final static Object getValue(IndexableField field) {

@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.datastax.driver.core.utils.UUIDs;
 import com.qwazr.search.SearchServer;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.TimeTracker;
@@ -23,9 +22,6 @@ import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -34,9 +30,6 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.BytesRefBuilder;
-import org.apache.lucene.util.NumericUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,11 +37,14 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 
-public class IndexInstance implements Closeable {
+final public class IndexInstance implements Closeable {
 
 	private static final Logger logger = LoggerFactory.getLogger(IndexInstance.class);
 
@@ -164,7 +160,7 @@ public class IndexInstance implements Closeable {
 	}
 
 	private IndexStatus getIndexStatus() throws IOException {
-		IndexSearcher indexSearcher = searcherManager.acquire();
+		final IndexSearcher indexSearcher = searcherManager.acquire();
 		try {
 			return new IndexStatus(indexSearcher.getIndexReader(), fieldMap);
 		} finally {
@@ -173,7 +169,7 @@ public class IndexInstance implements Closeable {
 	}
 
 	IndexStatus getStatus() throws IOException, InterruptedException {
-		Semaphore sem = schema.acquireReadSemaphore();
+		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			return getIndexStatus();
 		} finally {
@@ -189,69 +185,13 @@ public class IndexInstance implements Closeable {
 		fieldMap = fields;
 	}
 
-	private BytesRef objectToBytesRef(Object object) throws IOException {
-		if (object instanceof String)
-			return new BytesRef((String) object);
-		BytesRefBuilder bytesBuilder = new BytesRefBuilder();
-		if (object instanceof Integer)
-			NumericUtils.longToPrefixCodedBytes(((Integer) object).longValue(), 0, bytesBuilder);
-		else if (object instanceof Double)
-			NumericUtils.longToPrefixCodedBytes(NumericUtils.doubleToSortableLong((Double) object), 0, bytesBuilder);
-		else
-			throw new IOException("Type not supported: " + object.getClass());
-		return bytesBuilder.get();
-	}
-
-	private final static String FIELD_ID = "$id$";
-
-	private void addNewLuceneField(String fieldName, Object value, Document doc) throws IOException {
-		FieldDefinition fieldDef = fieldMap == null ? null : fieldMap.get(fieldName);
-		if (fieldDef == null)
-			throw new IOException("No field definition for the field: " + fieldName);
-		fieldDef.putNewField(fieldName, value, doc);
-	}
-
-	private Object addNewLuceneDocument(Map<String, Object> document) throws IOException {
-		Document doc = new Document();
-
-		Term termId = null;
-
-		Object id = document.get(FIELD_ID);
-		if (id == null)
-			id = UUIDs.timeBased();
-		String id_string = id.toString();
-		doc.add(new StringField(FIELD_ID, id_string, Field.Store.NO));
-		termId = new Term(FIELD_ID, id_string);
-
-		for (Map.Entry<String, Object> field : document.entrySet()) {
-			String fieldName = field.getKey();
-			if (FIELD_ID.equals(fieldName))
-				continue;
-			Object fieldValue = field.getValue();
-			if (fieldValue instanceof Map<?, ?>)
-				fieldValue = ((Map<?, Object>) fieldValue).values();
-			if (fieldValue instanceof Collection<?>) {
-				for (Object val : ((Collection<Object>) fieldValue))
-					addNewLuceneField(fieldName, val, doc);
-			} else
-				addNewLuceneField(fieldName, fieldValue, doc);
-		}
-
-		Document facetedDoc = perFieldAnalyzer.getContext().facetsConfig.build(doc);
-		if (termId == null)
-			indexWriter.addDocument(facetedDoc);
-		else
-			indexWriter.updateDocument(termId, facetedDoc);
-		return facetedDoc.hashCode();
-	}
-
 	private void nrtCommit() throws IOException, ServerException {
 		indexWriter.commit();
 		searcherManager.maybeRefresh();
 		schema.mayBeRefresh();
 	}
 
-	synchronized BackupStatus backup(Integer keepLastCount) throws IOException, InterruptedException {
+	final synchronized BackupStatus backup(Integer keepLastCount) throws IOException, InterruptedException {
 		Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			final IndexCommit commit = snapshotDeletionPolicy.snapshot();
@@ -326,8 +266,8 @@ public class IndexInstance implements Closeable {
 		return list;
 	}
 
-	List<BackupStatus> getBackups() throws InterruptedException {
-		Semaphore sem = schema.acquireReadSemaphore();
+	final List<BackupStatus> getBackups() throws InterruptedException {
+		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			return backups();
 		} finally {
@@ -336,8 +276,8 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	void deleteAll() throws IOException, InterruptedException, ServerException {
-		Semaphore sem = schema.acquireWriteSemaphore();
+	final void deleteAll() throws IOException, InterruptedException, ServerException {
+		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			indexWriter.deleteAll();
 			nrtCommit();
@@ -347,13 +287,13 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	Object postDocument(Map<String, Object> document) throws IOException, ServerException, InterruptedException {
-		if (document == null)
+	final Object postDocument(Map<String, Object> document) throws IOException, ServerException, InterruptedException {
+		if (document == null || document.isEmpty())
 			return null;
-		Semaphore sem = schema.acquireWriteSemaphore();
+		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(1);
-			Object id = addNewLuceneDocument(document);
+			Object id = IndexUtils.addNewLuceneDocument(perFieldAnalyzer.getContext(), document, indexWriter);
 			nrtCommit();
 			return id;
 		} finally {
@@ -362,16 +302,17 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	List<Object> postDocuments(List<Map<String, Object>> documents)
+	final List<Object> postDocuments(List<Map<String, Object>> documents)
 					throws IOException, ServerException, InterruptedException {
-		if (documents == null)
+		if (documents == null || documents.isEmpty())
 			return null;
-		Semaphore sem = schema.acquireWriteSemaphore();
+		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(documents.size());
+			final PerFieldAnalyzer.AnalyzerContext context = perFieldAnalyzer.getContext();
 			List<Object> ids = new ArrayList<Object>(documents.size());
 			for (Map<String, Object> document : documents)
-				ids.add(addNewLuceneDocument(document));
+				ids.add(IndexUtils.addNewLuceneDocument(context, document, indexWriter));
 			nrtCommit();
 			return ids;
 		} finally {
@@ -380,7 +321,37 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	ResultDefinition deleteByQuery(QueryDefinition queryDef)
+	final void updateDocumentValues(Map<String, Object> document)
+					throws IOException, ServerException, InterruptedException {
+		if (document == null || document.isEmpty())
+			return;
+		final Semaphore sem = schema.acquireWriteSemaphore();
+		try {
+			IndexUtils.updateDocValues(perFieldAnalyzer.getContext(), document, indexWriter);
+			nrtCommit();
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
+	final void updateDocumentsValues(List<Map<String, Object>> documents)
+					throws IOException, ServerException, InterruptedException {
+		if (documents == null || documents.isEmpty())
+			return;
+		final Semaphore sem = schema.acquireWriteSemaphore();
+		try {
+			final PerFieldAnalyzer.AnalyzerContext context = perFieldAnalyzer.getContext();
+			for (Map<String, Object> document : documents)
+				IndexUtils.updateDocValues(context, document, indexWriter);
+			nrtCommit();
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
+	final ResultDefinition deleteByQuery(QueryDefinition queryDef)
 					throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
@@ -396,7 +367,7 @@ public class IndexInstance implements Closeable {
 		}
 	}
 
-	ResultDefinition search(QueryDefinition queryDef)
+	final ResultDefinition search(QueryDefinition queryDef)
 					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
@@ -414,7 +385,7 @@ public class IndexInstance implements Closeable {
 
 	private MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader) throws IOException {
 
-		MoreLikeThis mlt = new MoreLikeThis(reader);
+		final MoreLikeThis mlt = new MoreLikeThis(reader);
 		if (mltQueryDef.boost != null)
 			mlt.setBoost(mltQueryDef.boost);
 		if (mltQueryDef.boost_factor != null)
@@ -445,7 +416,7 @@ public class IndexInstance implements Closeable {
 
 	ResultDefinition mlt(MltQueryDefinition mltQueryDef)
 					throws ServerException, IOException, QueryNodeException, InterruptedException {
-		Semaphore sem = schema.acquireReadSemaphore();
+		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {

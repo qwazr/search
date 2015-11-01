@@ -12,26 +12,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ **/
 package com.qwazr.search.index;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
-import org.apache.lucene.facet.LabelAndValue;
-import org.apache.lucene.index.*;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
 public class ResultDefinition {
@@ -52,72 +51,6 @@ public class ResultDefinition {
 		this.query = null;
 	}
 
-	@JsonInclude(Include.NON_EMPTY)
-	public static class ResultDocument {
-
-		final public Float score;
-		final private int doc;
-		final private int shard_index;
-		final public Map<String, Object> fields;
-		final public Map<String, String> postings_highlights;
-
-		public ResultDocument() {
-			score = null;
-			fields = null;
-			postings_highlights = null;
-			doc = -1;
-			shard_index = -1;
-		}
-
-		private ResultDocument(int pos, ScoreDoc scoreDoc, Document document, Map<String, Integer> postings_highlighter,
-						Map<String, String[]> postingsHighlightsMap,
-						Map<String, DocValueUtils.DVConverter> docValuesReturnedFields) throws IOException {
-			this.score = scoreDoc.score;
-			this.doc = scoreDoc.doc;
-			this.shard_index = scoreDoc.shardIndex;
-			// Build field map
-			fields = buildFields(document);
-			addDocValues(scoreDoc.doc, docValuesReturnedFields, fields);
-
-			// Build postings hightlights
-			if (postings_highlighter != null && postingsHighlightsMap != null) {
-				postings_highlights = new LinkedHashMap<String, String>();
-				for (String field : postings_highlighter.keySet()) {
-					String[] highlights = postingsHighlightsMap.get(field);
-					if (highlights == null)
-						continue;
-					String highlight = highlights[pos];
-					if (highlight == null)
-						continue;
-					postings_highlights.put(field, highlight);
-				}
-			} else
-				postings_highlights = null;
-		}
-
-		public Float getScore() {
-			return score;
-		}
-
-		@JsonIgnore
-		public int getDoc() {
-			return doc;
-		}
-
-		@JsonIgnore
-		public int getShard_index() {
-			return shard_index;
-		}
-
-		public Map<String, Object> getFields() {
-			return fields;
-		}
-
-		public Map<String, String> getPostings_highlights() {
-			return postings_highlights;
-		}
-	}
-
 	private static String getQuery(Boolean queryDebug, String defaultField, Query query) {
 		if (queryDebug == null || query == null)
 			return null;
@@ -136,8 +69,8 @@ public class ResultDefinition {
 		int end = queryDef.getEnd();
 		documents = new ArrayList<ResultDocument>();
 		ScoreDoc[] docs = topDocs.scoreDocs;
-		Map<String, DocValueUtils.DVConverter> docValuesSources = extractDocValuesFields(fieldMap,
-						searcher.getIndexReader(), queryDef.returned_fields);
+		Map<String, DocValueUtils.DVConverter> docValuesSources = ResultUtils
+						.extractDocValuesFields(fieldMap, searcher.getIndexReader(), queryDef.returned_fields);
 		while (pos < total_hits && pos < end) {
 			final ScoreDoc scoreDoc = docs[pos];
 			final Document document = searcher.doc(scoreDoc.doc, queryDef.returned_fields);
@@ -146,7 +79,7 @@ public class ResultDefinition {
 			pos++;
 		}
 		timeTracker.next("returned_fields");
-		this.facets = facets != null && queryDef != null ? buildFacets(queryDef.facets, facets) : null;
+		this.facets = facets != null && queryDef != null ? ResultUtils.buildFacets(queryDef.facets, facets) : null;
 		timeTracker.next("facet_fields");
 		this.timer = timeTracker == null ? null : timeTracker.getMap();
 	}
@@ -160,8 +93,8 @@ public class ResultDefinition {
 		int end = mltQueryDef.getEnd();
 		documents = new ArrayList<ResultDocument>();
 		ScoreDoc[] docs = topDocs.scoreDocs;
-		Map<String, DocValueUtils.DVConverter> docValuesSources = extractDocValuesFields(fieldMap,
-						searcher.getIndexReader(), mltQueryDef.returned_fields);
+		Map<String, DocValueUtils.DVConverter> docValuesSources = ResultUtils
+						.extractDocValuesFields(fieldMap, searcher.getIndexReader(), mltQueryDef.returned_fields);
 		while (pos < total_hits && pos < end) {
 			final ScoreDoc scoreDoc = docs[pos];
 			final Document document = searcher.doc(scoreDoc.doc, mltQueryDef.returned_fields);
@@ -189,86 +122,6 @@ public class ResultDefinition {
 		facets = null;
 		max_score = null;
 		this.timer = null;
-	}
-
-	private Map<String, Map<String, Number>> buildFacets(Map<String, QueryDefinition.Facet> facetsDef, Facets facets)
-					throws IOException {
-		Map<String, Map<String, Number>> facetResults = new LinkedHashMap<String, Map<String, Number>>();
-		for (Map.Entry<String, QueryDefinition.Facet> entry : facetsDef.entrySet()) {
-			String dim = entry.getKey();
-			Map<String, Number> facetMap = buildFacet(dim, entry.getValue(), facets);
-			if (facetMap != null)
-				facetResults.put(dim, facetMap);
-		}
-		return facetResults;
-	}
-
-	private static Map<String, Object> buildFields(Document document) {
-		Map<String, Object> fields = new LinkedHashMap<String, Object>();
-		for (IndexableField field : document) {
-			Object newValue = FieldDefinition.getValue(field);
-			if (newValue == null)
-				continue;
-			Object oldValue = fields.get(field.name());
-			if (oldValue == null) {
-				fields.put(field.name(), newValue);
-				continue;
-			}
-			if (oldValue instanceof List<?>) {
-				((List<Object>) oldValue).add(newValue);
-				continue;
-			}
-			List<Object> list = new ArrayList<Object>(2);
-			list.add(oldValue);
-			list.add(newValue);
-			fields.put(field.name(), list);
-		}
-		return fields;
-	}
-
-	private static void addDocValues(int docId, Map<String, DocValueUtils.DVConverter> sources,
-					Map<String, Object> dest) {
-		if (sources == null)
-			return;
-		for (Map.Entry<String, DocValueUtils.DVConverter> entry : sources.entrySet()) {
-			Object o = entry.getValue().convert(docId);
-			if (o != null)
-				dest.put(entry.getKey(), o);
-		}
-	}
-
-	private static Map<String, Number> buildFacet(String dim, QueryDefinition.Facet facet, Facets facets)
-					throws IOException {
-		int top = facet.top == null ? 10 : facet.top;
-		LinkedHashMap<String, Number> facetMap = new LinkedHashMap<String, Number>();
-		FacetResult facetResult = facets.getTopChildren(top, dim);
-		if (facetResult == null || facetResult.labelValues == null)
-			return null;
-		for (LabelAndValue lv : facetResult.labelValues)
-			facetMap.put(lv.label, lv.value);
-		return facetMap;
-	}
-
-	private static Map<String, DocValueUtils.DVConverter> extractDocValuesFields(Map<String, FieldDefinition> fieldMap,
-					IndexReader indexReader, Set<String> returned_fields) throws IOException {
-		if (returned_fields == null)
-			return null;
-		FieldInfos fieldInfos = MultiFields.getMergedFieldInfos(indexReader);
-		LeafReader dvReader = SlowCompositeReaderWrapper.wrap(indexReader);
-		Map<String, DocValueUtils.DVConverter> map = new LinkedHashMap<String, DocValueUtils.DVConverter>();
-		for (String field : returned_fields) {
-			FieldInfo fieldInfo = dvReader.getFieldInfos().fieldInfo(field);
-			if (fieldInfo == null)
-				continue;
-			FieldDefinition fieldDef = fieldMap.get(field);
-			if (fieldDef == null)
-				continue;
-			DocValueUtils.DVConverter converter = DocValueUtils.newConverter(fieldDef, dvReader, fieldInfo);
-			if (converter == null)
-				continue;
-			map.put(field, converter);
-		}
-		return map;
 	}
 
 	public Long getTotal_hits() {

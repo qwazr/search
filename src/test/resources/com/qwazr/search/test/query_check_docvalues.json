@@ -1,0 +1,6 @@
+{
+  "query_string": "*:*",
+  "returned_fields": [
+    "stock", "price"
+  ]
+}

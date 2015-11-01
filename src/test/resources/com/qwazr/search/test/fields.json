@@ -13,5 +13,8 @@
   },
   "size": {
     "template": "LongField"
+  },
+  "stock": {
+    "template": "IntDocValuesField"
   }
 }
