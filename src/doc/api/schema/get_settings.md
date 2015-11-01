@@ -5,6 +5,9 @@ This API displays the settings of the schema:
 * **URL pattern**: {server_name}:9091/indexes/{schema_name}
 * **HTTP method**: GET
 
+Parameters:
+
+* **schema_name**: the name of the schema
 
 ```shell
 curl localhost:9091/indexes/my_schema

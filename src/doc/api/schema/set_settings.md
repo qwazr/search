@@ -7,6 +7,9 @@ This API sets the settings of the schema:
 * **Content-Type**: application/json
 * **Body**: a JSON object describing the settings
 
+Parameters:
+
+* **schema_name**: the name of the schema
 
 ```shell
 curl -H 'Content-Type: application/json' \

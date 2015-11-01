@@ -9,8 +9,11 @@ This API delete a schema and all the indexes it contains.
 curl -XDELETE "localhost:9091/indexes/my_schema"
 ```
 
-### Response
+Parameters:
 
+* **schema_name**: the name of the schema
+
+### Response
 
 If any error occurs:
 
