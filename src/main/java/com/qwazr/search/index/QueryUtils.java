@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -80,9 +80,9 @@ public class QueryUtils {
 		final SortField sortField;
 
 		if ("$score".equals(field)) {
-			sortField = new SortField(field, SortField.Type.SCORE, reverse);
+			sortField = new SortField(null, SortField.Type.SCORE, !reverse);
 		} else if ("$doc".equals(field)) {
-			sortField = new SortField(field, SortField.Type.DOC, reverse);
+			sortField = new SortField(null, SortField.Type.DOC, reverse);
 		} else {
 			FieldDefinition fieldDefinition = fields.get(field);
 			if (fieldDefinition == null)
@@ -214,17 +214,20 @@ public class QueryUtils {
 		if (queryDef.facets != null && queryDef.facets.size() > 0) {
 			FacetsCollector facetsCollector = new FacetsCollector();
 			SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
-			if (sort != null)
-				topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), sort, facetsCollector);
-			else
+			if (sort != null) {
+				boolean bNeedScore = sort.needsScores();
+				topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), sort, bNeedScore, bNeedScore,
+								facetsCollector);
+			} else
 				topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), facetsCollector);
 			timeTracker.next("search_query");
 			facets = new SortedSetDocValuesFacetCounts(state, facetsCollector);
 			timeTracker.next("facet_count");
 		} else {
-			if (sort != null)
-				topDocs = indexSearcher.search(query, queryDef.getEnd(), sort);
-			else
+			if (sort != null) {
+				boolean bNeedScore = sort.needsScores();
+				topDocs = indexSearcher.search(query, queryDef.getEnd(), sort, bNeedScore, bNeedScore);
+			} else
 				topDocs = indexSearcher.search(query, queryDef.getEnd());
 			timeTracker.next("search_query");
 			facets = null;
