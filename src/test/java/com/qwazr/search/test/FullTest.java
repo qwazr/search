@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,10 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class FullTest {
@@ -46,7 +43,8 @@ public class FullTest {
 	public static final String BASE_URL = "http://localhost:9091";
 	public static final String SCHEMA_NAME = "schema-test";
 	public static final String INDEX_NAME = "index-test";
-	public static final Map<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
+	public static final LinkedHashMap<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
+	public static final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
 	public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
 	public static final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
 	public static final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
@@ -60,8 +58,8 @@ public class FullTest {
 	public static final List<Map<String, Object>> UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
 
 	@Before
-	public void startServer() throws IOException, ParseException, ServletException, IllegalAccessException,
-					InstantiationException {
+	public void startServer()
+			throws IOException, ParseException, ServletException, IllegalAccessException, InstantiationException {
 		if (started)
 			return;
 		// start the server
@@ -99,7 +97,7 @@ public class FullTest {
 		Assert.assertTrue(schemas.contains(SCHEMA_NAME));
 	}
 
-	private static Map<String, FieldDefinition> getFieldMap(String res) {
+	private static LinkedHashMap<String, FieldDefinition> getFieldMap(String res) {
 		InputStream is = FullTest.class.getResourceAsStream(res);
 		try {
 			return FieldDefinition.newFieldMap(IOUtils.toString(is));
@@ -110,14 +108,55 @@ public class FullTest {
 		}
 	}
 
+	private static FieldDefinition getField(String res) {
+		InputStream is = FullTest.class.getResourceAsStream(res);
+		try {
+			return FieldDefinition.newField(IOUtils.toString(is));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			IOUtils.close(is);
+		}
+	}
+
 	@Test
-	public void test100CreateIndex() throws URISyntaxException, IOException {
+	public void test100CreateIndexWithoutFields() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		Map<String, FieldDefinition> fieldMap = FIELDS_JSON;
+		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_NAME, null);
+		Assert.assertNotNull(indexStatus);
+		indexStatus = client.getIndex(SCHEMA_NAME, INDEX_NAME);
+		Assert.assertNotNull(indexStatus);
+		checkAllSizes(client, 0);
+		client.deleteIndex(SCHEMA_NAME, INDEX_NAME, null);
+	}
+
+	@Test
+	public void test110CreateIndexWithFields() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		LinkedHashMap<String, FieldDefinition> fieldMap = FIELDS_JSON;
 		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_NAME, null, fieldMap);
 		Assert.assertNotNull(indexStatus);
 		Assert.assertNotNull(indexStatus.fields);
 		Assert.assertEquals(fieldMap.size(), indexStatus.fields.size());
+		checkAllSizes(client, 0);
+	}
+
+	@Test
+	public void test120DeleteNameField() throws URISyntaxException {
+		IndexServiceInterface client = getClient();
+		client.deleteField(SCHEMA_NAME, INDEX_NAME, "name", null);
+		Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_NAME, null);
+		Assert.assertNotNull(fields);
+		Assert.assertNull(fields.get("name"));
+	}
+
+	@Test
+	public void test130SetNameField() throws URISyntaxException {
+		IndexServiceInterface client = getClient();
+		client.setField(SCHEMA_NAME, INDEX_NAME, "name", null, FIELD_NAME_JSON);
+		Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_NAME, null);
+		Assert.assertNotNull(fields);
+		Assert.assertNotNull(fields.get("name"));
 	}
 
 	private static QueryDefinition getQuery(String res) {
@@ -132,7 +171,7 @@ public class FullTest {
 	}
 
 	private ResultDefinition checkQuerySchema(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
-					throws IOException {
+			throws IOException {
 		ResultDefinition result = client.searchQuery(SCHEMA_NAME, "*", queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
@@ -141,7 +180,7 @@ public class FullTest {
 	}
 
 	private ResultDefinition checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
-					throws IOException {
+			throws IOException {
 		ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_NAME, queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
@@ -154,12 +193,6 @@ public class FullTest {
 		Assert.assertNotNull(status);
 		Assert.assertNotNull(status.num_docs);
 		Assert.assertEquals(expectedCount, status.num_docs.longValue());
-	}
-
-	@Test
-	public void test110SearchEmptySchema() throws URISyntaxException, IOException {
-		IndexServiceInterface client = getClient();
-		checkAllSizes(client, 0);
 	}
 
 	private void checkAllSizes(IndexServiceInterface client, int expectedSize) throws IOException {
@@ -325,7 +358,7 @@ public class FullTest {
 	}
 
 	private <T extends Comparable> void checkDescending(T startValue, String field,
-					Collection<ResultDocument> documents) {
+			Collection<ResultDocument> documents) {
 		T old = startValue;
 		for (ResultDocument document : documents) {
 			Assert.assertNotNull(document.fields);
@@ -337,7 +370,7 @@ public class FullTest {
 	}
 
 	private <T extends Comparable> void checkAscending(T startValue, String field,
-					Collection<ResultDocument> documents) {
+			Collection<ResultDocument> documents) {
 		T old = startValue;
 		for (ResultDocument document : documents) {
 			Assert.assertNotNull(document.fields);

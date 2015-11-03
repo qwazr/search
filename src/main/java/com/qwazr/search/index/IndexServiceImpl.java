@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,12 +22,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,7 +97,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 			else
 				rp = Response.accepted();
 			return rp.build();
-		} catch (ServerException | IOException | URISyntaxException | InterruptedException e) {
+		} catch (ServerException | IOException | ReflectiveOperationException | URISyntaxException | InterruptedException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -128,15 +131,100 @@ public class IndexServiceImpl implements IndexServiceInterface {
 
 	@Override
 	public IndexStatus createUpdateIndex(String schema_name, String index_name, Boolean local,
-					Map<String, FieldDefinition> fields) {
+			LinkedHashMap<String, FieldDefinition> fields) {
 		try {
 			checkRight(schema_name);
 			return IndexManager.INSTANCE.get(schema_name).createUpdate(index_name, fields);
-		} catch (ServerException | IOException | InterruptedException e) {
+		} catch (ServerException | IOException | ReflectiveOperationException | InterruptedException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 		// TODO Local
+	}
+
+	@Override
+	public IndexStatus createUpdateIndex(String schema_name, String index_name, Boolean local) {
+		return createUpdateIndex(schema_name, index_name, local, null);
+	}
+
+	@Override
+	public IndexSettingsDefinition getIndexSettings(String schema_name, String index_name, Boolean local) {
+		try {
+			checkRight(schema_name);
+			return IndexManager.INSTANCE.get(schema_name).get(index_name).getSettings();
+		} catch (ServerException e) {
+			logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	public IndexSettingsDefinition setIndexSettings(String schema_name, String index_name, Boolean local,
+			IndexSettingsDefinition settings) {
+		try {
+			checkRight(schema_name);
+			IndexManager.INSTANCE.get(schema_name).get(index_name).setSettings(settings);
+			return settings;
+		} catch (ServerException | IOException e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	public LinkedHashMap<String, FieldDefinition> getFields(String schema_name, String index_name, Boolean local) {
+		try {
+			checkRight(schema_name);
+			return IndexManager.INSTANCE.get(schema_name).get(index_name).getFields();
+		} catch (ServerException e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	public FieldDefinition getField(String schema_name, String index_name, String field_name, Boolean local) {
+		try {
+			checkRight(schema_name);
+			Map<String, FieldDefinition> fieldMap = IndexManager.INSTANCE.get(schema_name).get(index_name).getFields();
+			FieldDefinition fieldDef = (fieldMap != null) ? fieldMap.get(field_name) : null;
+			if (fieldDef == null)
+				throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + field_name);
+			return fieldDef;
+		} catch (ServerException e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	public FieldDefinition setField(String schema_name, String index_name, String field_name, Boolean local,
+			FieldDefinition field) {
+		try {
+			checkRight(schema_name);
+			IndexManager.INSTANCE.get(schema_name).get(index_name).setField(field_name, field);
+			return field;
+		} catch (ServerException | IOException e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	public Response deleteField(String schema_name, String index_name, String field_name, Boolean local) {
+		try {
+			checkRight(schema_name);
+			IndexManager.INSTANCE.get(schema_name).get(index_name).deleteField(field_name);
+			return Response.ok().build();
+		} catch (ServerException | IOException e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
 	}
 
 	@Override
@@ -164,7 +252,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	@Override
-	public SettingsDefinition getSettings(String schema_name) {
+	public SchemaSettingsDefinition getSchemaSettings(String schema_name, Boolean local) {
 		try {
 			checkRight(schema_name);
 			return IndexManager.INSTANCE.get(schema_name).getSettings();
@@ -175,7 +263,8 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	@Override
-	public SettingsDefinition setSettings(String schema_name, SettingsDefinition settings) {
+	public SchemaSettingsDefinition setSchemaSettings(String schema_name, Boolean local,
+			SchemaSettingsDefinition settings) {
 		try {
 			checkRight(null);
 			IndexManager.INSTANCE.get(schema_name).setSettings(settings);

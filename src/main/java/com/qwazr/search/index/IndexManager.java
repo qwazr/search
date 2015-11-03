@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,20 +46,20 @@ public class IndexManager {
 		});
 	}
 
-	private final ConcurrentHashMap<String, IndexSchema> schemaMap;
+	private final ConcurrentHashMap<String, SchemaInstance> schemaMap;
 
 	private final File rootDirectory;
 
 	private IndexManager(File rootDirectory) {
 		this.rootDirectory = rootDirectory;
-		schemaMap = new ConcurrentHashMap<String, IndexSchema>();
+		schemaMap = new ConcurrentHashMap<String, SchemaInstance>();
 		File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
 		if (directories == null)
 			return;
 		for (File schemaDirectory : directories) {
 			try {
-				schemaMap.put(schemaDirectory.getName(), new IndexSchema(schemaDirectory));
-			} catch (ServerException | IOException e) {
+				schemaMap.put(schemaDirectory.getName(), new SchemaInstance(schemaDirectory));
+			} catch (ServerException | IOException | ReflectiveOperationException | InterruptedException e) {
 				logger.error(e.getMessage(), e);
 			}
 		}
@@ -67,18 +67,19 @@ public class IndexManager {
 
 	private void shutdown() {
 		synchronized (schemaMap) {
-			for (IndexSchema instance : schemaMap.values())
+			for (SchemaInstance instance : schemaMap.values())
 				IOUtils.closeQuietly(instance);
 		}
 	}
 
-	boolean createUpdate(String schemaName) throws ServerException, IOException, InterruptedException {
+	boolean createUpdate(String schemaName)
+			throws ServerException, IOException, InterruptedException, ReflectiveOperationException {
 		synchronized (schemaMap) {
-			IndexSchema indexSchema = schemaMap.get(schemaName);
-			if (indexSchema != null)
+			SchemaInstance schemaInstance = schemaMap.get(schemaName);
+			if (schemaInstance != null)
 				return false;
-			indexSchema = new IndexSchema(new File(rootDirectory, schemaName));
-			schemaMap.put(schemaName, indexSchema);
+			schemaInstance = new SchemaInstance(new File(rootDirectory, schemaName));
+			schemaMap.put(schemaName, schemaInstance);
 			return true;
 		}
 	}
@@ -91,17 +92,17 @@ public class IndexManager {
 	 * @return the indexSchema
 	 * @throws ServerException if any error occurs
 	 */
-	IndexSchema get(String schemaName) throws ServerException {
-		IndexSchema indexSchema = schemaMap.get(schemaName);
-		if (indexSchema == null)
+	SchemaInstance get(String schemaName) throws ServerException {
+		SchemaInstance schemaInstance = schemaMap.get(schemaName);
+		if (schemaInstance == null)
 			throw new ServerException(Status.NOT_FOUND, "Schema not found: " + schemaName);
-		return indexSchema;
+		return schemaInstance;
 	}
 
 	void delete(String schemaName) throws ServerException {
 		synchronized (schemaMap) {
-			IndexSchema indexSchema = get(schemaName);
-			indexSchema.delete();
+			SchemaInstance schemaInstance = get(schemaName);
+			schemaInstance.delete();
 			schemaMap.remove(schemaName);
 		}
 	}
@@ -112,7 +113,7 @@ public class IndexManager {
 
 	void backups(Integer keepLastCount) throws IOException, InterruptedException {
 		synchronized (schemaMap) {
-			for (IndexSchema instance : schemaMap.values())
+			for (SchemaInstance instance : schemaMap.values())
 				instance.backups(keepLastCount);
 		}
 	}

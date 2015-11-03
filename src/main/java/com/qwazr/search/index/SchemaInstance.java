@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,14 +36,15 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
-public class IndexSchema implements Closeable, AutoCloseable {
+public class SchemaInstance implements Closeable, AutoCloseable {
 
-	private static final Logger logger = LoggerFactory.getLogger(IndexSchema.class);
+	private static final Logger logger = LoggerFactory.getLogger(SchemaInstance.class);
 
 	private final static String SETTINGS_FILE = "settings.json";
 
@@ -51,7 +52,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 
 	private final File schemaDirectory;
 	private final File settingsFile;
-	private volatile SettingsDefinition settingsDefinition;
+	private volatile SchemaSettingsDefinition settingsDefinition;
 
 	private volatile Semaphore readSemaphore;
 	private volatile Semaphore writeSemaphore;
@@ -64,13 +65,13 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		private final MultiReader multiReader;
 		private final IndexSearcher indexSearcher;
 		private final Map<String, FieldDefinition> fieldMap;
-		private final PerFieldAnalyzer perFieldAnalyzer;
+		private final IndexAnalyzer indexAnalyzer;
 
 		private SearchContext() throws IOException, ServerException {
 			if (indexMap.isEmpty()) {
 				indexSearcher = null;
 				multiReader = null;
-				perFieldAnalyzer = null;
+				indexAnalyzer = null;
 				fieldMap = null;
 				return;
 			}
@@ -83,7 +84,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 			}
 			multiReader = new MultiReader(indexReaders);
 			indexSearcher = new IndexSearcher(multiReader);
-			perFieldAnalyzer = new PerFieldAnalyzer(fileClassCompilerLoader, fieldMap);
+			indexAnalyzer = new IndexAnalyzer(fileClassCompilerLoader, fieldMap);
 		}
 
 		int numDocs() {
@@ -98,14 +99,15 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		}
 
 		public ResultDefinition search(QueryDefinition queryDef)
-						throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+				throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 			if (indexSearcher == null)
 				return null;
-			return QueryUtils.search(indexSearcher, queryDef, perFieldAnalyzer);
+			return QueryUtils.search(indexSearcher, queryDef, indexAnalyzer);
 		}
 	}
 
-	IndexSchema(File schemaDirectory) throws IOException, ServerException {
+	SchemaInstance(File schemaDirectory)
+			throws IOException, ServerException, InterruptedException, ReflectiveOperationException {
 		this.schemaDirectory = schemaDirectory;
 		if (!schemaDirectory.exists())
 			schemaDirectory.mkdir();
@@ -115,8 +117,8 @@ public class IndexSchema implements Closeable, AutoCloseable {
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
 		settingsDefinition = settingsFile.exists() ?
-						JsonMapper.MAPPER.readValue(settingsFile, SettingsDefinition.class) :
-						null;
+				JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
+				null;
 		checkSettings();
 
 		File[] directories = schemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -139,8 +141,8 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		}
 	}
 
-	IndexStatus createUpdate(String indexName, Map<String, FieldDefinition> fields)
-					throws ServerException, IOException, InterruptedException {
+	IndexStatus createUpdate(String indexName, LinkedHashMap<String, FieldDefinition> fields)
+			throws ServerException, IOException, InterruptedException, ReflectiveOperationException {
 		synchronized (indexMap) {
 			IndexInstance indexInstance = indexMap.get(indexName);
 			if (indexInstance == null) {
@@ -200,7 +202,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		}
 	}
 
-	synchronized void setSettings(SettingsDefinition settings) throws IOException {
+	synchronized void setSettings(SchemaSettingsDefinition settings) throws IOException {
 		if (settings == null)
 			settingsFile.delete();
 		else
@@ -213,7 +215,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		searchContext = new SearchContext();
 	}
 
-	SettingsDefinition getSettings() {
+	SchemaSettingsDefinition getSettings() {
 		return settingsDefinition;
 	}
 
@@ -238,21 +240,21 @@ public class IndexSchema implements Closeable, AutoCloseable {
 
 		FileClassCompilerLoader oldFccl = fileClassCompilerLoader;
 		fileClassCompilerLoader = (settingsDefinition.javac != null && settingsDefinition.javac.source_root != null) ?
-						new FileClassCompilerLoader(settingsDefinition.javac) :
-						null;
+				new FileClassCompilerLoader(settingsDefinition.javac) :
+				null;
 		if (oldFccl != null)
 			oldFccl.close();
 	}
 
 	private static ResultDefinition atomicSearch(SearchContext searchContext, QueryDefinition queryDef)
-					throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException {
+			throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException {
 		if (searchContext == null)
 			return null;
 		return searchContext.search(queryDef);
 	}
 
 	public ResultDefinition search(QueryDefinition queryDef)
-					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 		final Semaphore sem = acquireReadSemaphore();
 		try {
 			return atomicSearch(searchContext, queryDef);
@@ -277,8 +279,8 @@ public class IndexSchema implements Closeable, AutoCloseable {
 		return atomicAquire(writeSemaphore);
 	}
 
-	private static void atomicCheckSize(SettingsDefinition settingsDefinition, SearchContext searchContext, int addSize)
-					throws ServerException {
+	private static void atomicCheckSize(SchemaSettingsDefinition settingsDefinition, SearchContext searchContext,
+			int addSize) throws ServerException {
 		if (settingsDefinition == null)
 			return;
 		if (settingsDefinition.max_size == null)
@@ -287,7 +289,7 @@ public class IndexSchema implements Closeable, AutoCloseable {
 			return;
 		if (searchContext.numDocs() + addSize > settingsDefinition.max_size)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-							"This schema is limited to " + settingsDefinition.max_size + " documents");
+					"This schema is limited to " + settingsDefinition.max_size + " documents");
 	}
 
 	void checkSize(int addSize) throws IOException, ServerException {

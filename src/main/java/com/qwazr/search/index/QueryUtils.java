@@ -39,10 +39,10 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
 
-public class QueryUtils {
+class QueryUtils {
 
 	final static SortField buildSortField(Map<String, FieldDefinition> fields, String field,
-					QueryDefinition.SortEnum sortEnum) throws ServerException {
+			QueryDefinition.SortEnum sortEnum) throws ServerException {
 
 		final boolean reverse;
 		final Object missingValue;
@@ -95,7 +95,7 @@ public class QueryUtils {
 	}
 
 	final static Sort buildSort(Map<String, FieldDefinition> fields,
-					LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
+			LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
 		if (sorts.isEmpty())
 			return null;
 		final SortField[] sortFields = new SortField[sorts.size()];
@@ -126,7 +126,7 @@ public class QueryUtils {
 	}
 
 	final static Query buildFacetFiltersQuery(FacetsConfig facetsConfig, List<Map<String, Set<String>>> facet_filters,
-					Query query) {
+			Query query) {
 		if (facet_filters.isEmpty())
 			return query;
 
@@ -149,8 +149,8 @@ public class QueryUtils {
 		return rootBuilder.build();
 	}
 
-	final static Query getLuceneQuery(QueryDefinition queryDef, PerFieldAnalyzer analyzer)
-					throws QueryNodeException, ParseException {
+	final static Query getLuceneQuery(QueryDefinition queryDef, IndexAnalyzer analyzer)
+			throws QueryNodeException, ParseException {
 
 		// Configure the QueryParser
 		final StandardQueryParser parser = new StandardQueryParser(analyzer);
@@ -184,10 +184,10 @@ public class QueryUtils {
 		Query query = parser.parse(qs, queryDef.default_field);
 
 		if (queryDef.auto_generate_phrase_query != null && queryDef.auto_generate_phrase_query && qs != null
-						&& qs.length() > 0 && qs.indexOf('"') == -1) {
+				&& qs.length() > 0 && qs.indexOf('"') == -1) {
 			Query phraseQuery = parser.parse('"' + qs + '"', queryDef.default_field);
 			query = new BooleanQuery.Builder().add(query, BooleanClause.Occur.SHOULD)
-							.add(phraseQuery, BooleanClause.Occur.SHOULD).build();
+					.add(phraseQuery, BooleanClause.Occur.SHOULD).build();
 		}
 
 		// Overload query with facet filters
@@ -197,9 +197,8 @@ public class QueryUtils {
 		return query;
 	}
 
-	final static ResultDefinition search(IndexSearcher indexSearcher, QueryDefinition queryDef,
-					PerFieldAnalyzer analyzer)
-					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+	final static ResultDefinition search(IndexSearcher indexSearcher, QueryDefinition queryDef, IndexAnalyzer analyzer)
+			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 
 		Query query = getLuceneQuery(queryDef, analyzer);
 
@@ -207,7 +206,7 @@ public class QueryUtils {
 		final TimeTracker timeTracker = new TimeTracker();
 		final TopDocs topDocs;
 		final Facets facets;
-		final PerFieldAnalyzer.AnalyzerContext analyzerContext = analyzer.getContext();
+		final AnalyzerContext analyzerContext = analyzer.getContext();
 
 		final Sort sort = queryDef.sorts == null ? null : buildSort(analyzerContext.fields, queryDef.sorts);
 
@@ -216,8 +215,8 @@ public class QueryUtils {
 			SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
 			if (sort != null) {
 				boolean bNeedScore = sort.needsScores();
-				topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), sort, bNeedScore, bNeedScore,
-								facetsCollector);
+				topDocs = FacetsCollector
+						.search(indexSearcher, query, queryDef.getEnd(), sort, bNeedScore, bNeedScore, facetsCollector);
 			} else
 				topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), facetsCollector);
 			timeTracker.next("search_query");
@@ -248,7 +247,7 @@ public class QueryUtils {
 		}
 
 		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, topDocs, queryDef, facets,
-						postingsHighlightersMap, query);
+				postingsHighlightersMap, query);
 
 	}
 }

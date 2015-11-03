@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,6 +34,7 @@ import org.apache.lucene.util.NumericUtils;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -94,7 +95,7 @@ public class FieldDefinition {
 	private Number checkNumberType(String fieldName, Object value) {
 		if (!(value instanceof Number))
 			throw new IllegalArgumentException(
-							"Wrong value type for the field: " + fieldName + " - " + value.getClass().getSimpleName());
+					"Wrong value type for the field: " + fieldName + " - " + value.getClass().getSimpleName());
 		return (Number) value;
 	}
 
@@ -144,11 +145,11 @@ public class FieldDefinition {
 				break;
 			case SortedDoubleDocValuesField:
 				field = new SortedNumericDocValuesField(fieldName,
-								NumericUtils.doubleToSortableLong(checkNumberType(fieldName, value).doubleValue()));
+						NumericUtils.doubleToSortableLong(checkNumberType(fieldName, value).doubleValue()));
 				break;
 			case SortedFloatDocValuesField:
 				field = new SortedNumericDocValuesField(fieldName,
-								NumericUtils.floatToSortableInt(checkNumberType(fieldName, value).floatValue()));
+						NumericUtils.floatToSortableInt(checkNumberType(fieldName, value).floatValue()));
 				break;
 			case SortedSetDocValuesField:
 				field = new SortedSetDocValuesField(fieldName, checkStringBytesRef(value));
@@ -226,20 +227,24 @@ public class FieldDefinition {
 		return null;
 	}
 
-	public final static TypeReference<Map<String, FieldDefinition>> MapStringFieldTypeRef = new TypeReference<Map<String, FieldDefinition>>() {
+	public final static TypeReference<LinkedHashMap<String, FieldDefinition>> MapStringFieldTypeRef = new TypeReference<LinkedHashMap<String, FieldDefinition>>() {
 	};
 
-	public final static Map<String, FieldDefinition> newFieldMap(String jsonString) throws IOException {
+	public final static LinkedHashMap<String, FieldDefinition> newFieldMap(String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
 		return JsonMapper.MAPPER.readValue(jsonString, MapStringFieldTypeRef);
+	}
+
+	public final static FieldDefinition newField(String jsonString) throws IOException {
+		return JsonMapper.MAPPER.readValue(jsonString, FieldDefinition.class);
 	}
 
 	final SortField getSortField(String field, boolean reverse) throws ServerException {
 		if (template == null) {
 			if (index_options == null)
 				throw new ServerException(Response.Status.BAD_REQUEST,
-								"A not indexed field cannot be used in sorting: " + field);
+						"A not indexed field cannot be used in sorting: " + field);
 		} else {
 			switch (template) {
 			case DoubleField:

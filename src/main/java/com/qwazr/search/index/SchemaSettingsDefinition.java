@@ -19,14 +19,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qwazr.utils.FileClassCompilerLoader;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class SettingsDefinition {
+public class SchemaSettingsDefinition {
 
 	final public Integer max_simultaneous_write;
 	final public Integer max_simultaneous_read;
 	final public Long max_size;
 	final public FileClassCompilerLoader.JavacDefinition javac;
 
-	public SettingsDefinition() {
+	public SchemaSettingsDefinition() {
 		javac = null;
 		max_simultaneous_write = null;
 		max_simultaneous_read = null;

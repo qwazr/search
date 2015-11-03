@@ -1,9 +1,6 @@
 {
   "name": {
-    "analyzer": "LikeAnalyzer",
-    "stored": true,
-    "tokenized": true,
-    "index_options": "DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS"
+    "template": "TextField"
   },
   "category": {
     "template": "SortedSetMultiDocValuesFacetField"
