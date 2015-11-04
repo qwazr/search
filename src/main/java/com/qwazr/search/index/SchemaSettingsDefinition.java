@@ -32,4 +32,7 @@ public class SchemaSettingsDefinition {
 		max_simultaneous_read = null;
 		max_size = null;
 	}
+
+	static final SchemaSettingsDefinition EMPTY = new SchemaSettingsDefinition();
+
 }

@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p>
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,6 +46,7 @@ public class FullTest {
 	public static final LinkedHashMap<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
 	public static final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
 	public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
+	public static final IndexSettingsDefinition INDEX_SETTINGS = getIndexSettings("index_settings.json");
 	public static final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
 	public static final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
 	public static final QueryDefinition QUERY_SORTFIELD = getQuery("query_sortfield.json");
@@ -58,8 +59,8 @@ public class FullTest {
 	public static final List<Map<String, Object>> UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
 
 	@Before
-	public void startServer()
-			throws IOException, ParseException, ServletException, IllegalAccessException, InstantiationException {
+	public void startServer() throws IOException, ParseException, ServletException, IllegalAccessException,
+					InstantiationException {
 		if (started)
 			return;
 		// start the server
@@ -75,17 +76,15 @@ public class FullTest {
 	@Test
 	public void test000CreateSchema() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
-		Response response = client.createUpdateSchema(SCHEMA_NAME, null);
-		Assert.assertNotNull(response);
-		Assert.assertEquals(201, response.getStatusInfo().getStatusCode());
+		SchemaSettingsDefinition settings = client.createUpdateSchema(SCHEMA_NAME, null);
+		Assert.assertNotNull(settings);
 	}
 
 	@Test
 	public void test001UpdateSchema() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
-		Response response = client.createUpdateSchema(SCHEMA_NAME, null);
-		Assert.assertNotNull(response);
-		Assert.assertEquals(202, response.getStatusInfo().getStatusCode());
+		SchemaSettingsDefinition settings = client.createUpdateSchema(SCHEMA_NAME, null);
+		Assert.assertNotNull(settings);
 	}
 
 	@Test
@@ -119,8 +118,19 @@ public class FullTest {
 		}
 	}
 
+	private static IndexSettingsDefinition getIndexSettings(String res) {
+		InputStream is = FullTest.class.getResourceAsStream(res);
+		try {
+			return JsonMapper.MAPPER.readValue(is, IndexSettingsDefinition.class);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			IOUtils.close(is);
+		}
+	}
+
 	@Test
-	public void test100CreateIndexWithoutFields() throws URISyntaxException, IOException {
+	public void test100CreateIndexWithoutSettings() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_NAME, null);
 		Assert.assertNotNull(indexStatus);
@@ -131,13 +141,23 @@ public class FullTest {
 	}
 
 	@Test
-	public void test110CreateIndexWithFields() throws URISyntaxException, IOException {
+	public void test110CreateIndexWithSettings() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		LinkedHashMap<String, FieldDefinition> fieldMap = FIELDS_JSON;
-		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_NAME, null, fieldMap);
+		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_NAME, null, INDEX_SETTINGS);
 		Assert.assertNotNull(indexStatus);
+		Assert.assertNotNull(indexStatus.settings);
+		Assert.assertNotNull(indexStatus.settings.similarity_class);
+		checkAllSizes(client, 0);
+	}
+
+	@Test
+	public void test115SetFields() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		LinkedHashMap<String, FieldDefinition> fields = client.setFields(SCHEMA_NAME, INDEX_NAME, null, FIELDS_JSON);
+		Assert.assertEquals(fields.size(), FIELDS_JSON.size());
+		IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_NAME);
 		Assert.assertNotNull(indexStatus.fields);
-		Assert.assertEquals(fieldMap.size(), indexStatus.fields.size());
+		Assert.assertEquals(indexStatus.fields.size(), FIELDS_JSON.size());
 		checkAllSizes(client, 0);
 	}
 
@@ -171,7 +191,7 @@ public class FullTest {
 	}
 
 	private ResultDefinition checkQuerySchema(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
-			throws IOException {
+					throws IOException {
 		ResultDefinition result = client.searchQuery(SCHEMA_NAME, "*", queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
@@ -180,7 +200,7 @@ public class FullTest {
 	}
 
 	private ResultDefinition checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
-			throws IOException {
+					throws IOException {
 		ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_NAME, queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
@@ -358,7 +378,7 @@ public class FullTest {
 	}
 
 	private <T extends Comparable> void checkDescending(T startValue, String field,
-			Collection<ResultDocument> documents) {
+					Collection<ResultDocument> documents) {
 		T old = startValue;
 		for (ResultDocument document : documents) {
 			Assert.assertNotNull(document.fields);
@@ -370,7 +390,7 @@ public class FullTest {
 	}
 
 	private <T extends Comparable> void checkAscending(T startValue, String field,
-			Collection<ResultDocument> documents) {
+					Collection<ResultDocument> documents) {
 		T old = startValue;
 		for (ResultDocument document : documents) {
 			Assert.assertNotNull(document.fields);
@@ -399,15 +419,6 @@ public class FullTest {
 		// Same backup again
 		status = doBackup(client);
 		Assert.assertEquals(status, getBackups(client, 2).get(0));
-	}
-
-	@Test
-	public void test600UpdateSchemaIndex() throws URISyntaxException, IOException {
-		IndexServiceInterface client = getClient();
-		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_NAME, null, FIELDS_JSON);
-		Assert.assertNotNull(indexStatus);
-		Assert.assertNotNull(indexStatus.fields);
-		Assert.assertEquals(FIELDS_JSON.size(), indexStatus.fields.size());
 	}
 
 	@Test

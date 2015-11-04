@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p>
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,7 +98,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 		}
 
 		public ResultDefinition search(QueryDefinition queryDef)
-				throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+						throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 			if (indexSearcher == null)
 				return null;
 			return QueryUtils.search(indexSearcher, queryDef, indexAnalyzer);
@@ -107,7 +106,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	SchemaInstance(File schemaDirectory)
-			throws IOException, ServerException, InterruptedException, ReflectiveOperationException {
+					throws IOException, ServerException, InterruptedException, ReflectiveOperationException {
 		this.schemaDirectory = schemaDirectory;
 		if (!schemaDirectory.exists())
 			schemaDirectory.mkdir();
@@ -117,15 +116,15 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
 		settingsDefinition = settingsFile.exists() ?
-				JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
-				null;
+						JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
+						SchemaSettingsDefinition.EMPTY;
 		checkSettings();
 
 		File[] directories = schemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
 		if (directories == null)
 			return;
 		for (File indexDirectory : directories)
-			indexMap.put(indexDirectory.getName(), IndexInstance.newInstance(this, indexDirectory));
+			indexMap.put(indexDirectory.getName(), IndexInstance.newInstance(this, indexDirectory, null));
 		mayBeRefresh();
 	}
 
@@ -141,16 +140,19 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 		}
 	}
 
-	IndexStatus createUpdate(String indexName, LinkedHashMap<String, FieldDefinition> fields)
-			throws ServerException, IOException, InterruptedException, ReflectiveOperationException {
+	IndexStatus createUpdate(String indexName, IndexSettingsDefinition settings)
+					throws ServerException, IOException, InterruptedException, ReflectiveOperationException {
 		synchronized (indexMap) {
 			IndexInstance indexInstance = indexMap.get(indexName);
+			if (indexInstance != null && settings != null) {
+				IOUtils.closeQuietly(indexInstance);
+				indexMap.remove(indexName);
+				indexInstance = null;
+			}
 			if (indexInstance == null) {
-				indexInstance = IndexInstance.newInstance(this, new File(schemaDirectory, indexName));
+				indexInstance = IndexInstance.newInstance(this, new File(schemaDirectory, indexName), settings);
 				indexMap.put(indexName, indexInstance);
 			}
-			if (fields != null)
-				indexInstance.setFields(this, fields);
 			mayBeRefresh();
 			return indexInstance.getStatus();
 		}
@@ -203,9 +205,10 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	synchronized void setSettings(SchemaSettingsDefinition settings) throws IOException {
-		if (settings == null)
+		if (settings == null) {
+			settings = SchemaSettingsDefinition.EMPTY;
 			settingsFile.delete();
-		else
+		} else
 			JsonMapper.MAPPER.writeValue(settingsFile, settings);
 		this.settingsDefinition = settings;
 		checkSettings();
@@ -240,21 +243,21 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 
 		FileClassCompilerLoader oldFccl = fileClassCompilerLoader;
 		fileClassCompilerLoader = (settingsDefinition.javac != null && settingsDefinition.javac.source_root != null) ?
-				new FileClassCompilerLoader(settingsDefinition.javac) :
-				null;
+						new FileClassCompilerLoader(settingsDefinition.javac) :
+						null;
 		if (oldFccl != null)
 			oldFccl.close();
 	}
 
 	private static ResultDefinition atomicSearch(SearchContext searchContext, QueryDefinition queryDef)
-			throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException {
+					throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException {
 		if (searchContext == null)
 			return null;
 		return searchContext.search(queryDef);
 	}
 
 	public ResultDefinition search(QueryDefinition queryDef)
-			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 		final Semaphore sem = acquireReadSemaphore();
 		try {
 			return atomicSearch(searchContext, queryDef);
@@ -280,7 +283,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	private static void atomicCheckSize(SchemaSettingsDefinition settingsDefinition, SearchContext searchContext,
-			int addSize) throws ServerException {
+					int addSize) throws ServerException {
 		if (settingsDefinition == null)
 			return;
 		if (settingsDefinition.max_size == null)
@@ -289,7 +292,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 			return;
 		if (searchContext.numDocs() + addSize > settingsDefinition.max_size)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"This schema is limited to " + settingsDefinition.max_size + " documents");
+							"This schema is limited to " + settingsDefinition.max_size + " documents");
 	}
 
 	void checkSize(int addSize) throws IOException, ServerException {
