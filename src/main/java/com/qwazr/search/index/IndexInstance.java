@@ -421,6 +421,7 @@ final public class IndexInstance implements Closeable {
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
+				indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
 				return QueryUtils.search(indexSearcher, queryDef, queryAnalyzer);
 			} finally {
 				searcherManager.release(indexSearcher);
@@ -437,6 +438,7 @@ final public class IndexInstance implements Closeable {
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
+				indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
 				final IndexReader indexReader = indexSearcher.getIndexReader();
 				final TimeTracker timeTracker = new TimeTracker();
 				final Query filterQuery = new StandardQueryParser(queryAnalyzer)
