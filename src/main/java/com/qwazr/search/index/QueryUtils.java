@@ -28,6 +28,7 @@ import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.TermsQuery;
+import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -149,7 +150,7 @@ class QueryUtils {
 		return rootBuilder.build();
 	}
 
-	final static Query getLuceneQuery(QueryDefinition queryDef, IndexAnalyzer analyzer)
+	final static Query getLuceneQuery(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
 			throws QueryNodeException, ParseException {
 
 		// Configure the QueryParser
@@ -197,7 +198,8 @@ class QueryUtils {
 		return query;
 	}
 
-	final static ResultDefinition search(IndexSearcher indexSearcher, QueryDefinition queryDef, IndexAnalyzer analyzer)
+	final static ResultDefinition search(IndexSearcher indexSearcher, QueryDefinition queryDef,
+			UpdatableAnalyzer analyzer)
 			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 
 		Query query = getLuceneQuery(queryDef, analyzer);
@@ -249,5 +251,37 @@ class QueryUtils {
 		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, topDocs, queryDef, facets,
 				postingsHighlightersMap, query);
 
+	}
+
+	final static MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader,
+			UpdatableAnalyzer analyzer) throws IOException {
+
+		final MoreLikeThis mlt = new MoreLikeThis(reader);
+		if (mltQueryDef.boost != null)
+			mlt.setBoost(mltQueryDef.boost);
+		if (mltQueryDef.boost_factor != null)
+			mlt.setBoostFactor(mltQueryDef.boost_factor);
+		if (mltQueryDef.fieldnames != null)
+			mlt.setFieldNames(mltQueryDef.fieldnames);
+		if (mltQueryDef.max_doc_freq != null)
+			mlt.setMaxDocFreq(mltQueryDef.max_doc_freq);
+		if (mltQueryDef.max_doc_freq_pct != null)
+			mlt.setMaxDocFreqPct(mltQueryDef.max_doc_freq_pct);
+		if (mltQueryDef.max_num_tokens_parsed != null)
+			mlt.setMaxNumTokensParsed(mltQueryDef.max_num_tokens_parsed);
+		if (mltQueryDef.max_query_terms != null)
+			mlt.setMaxQueryTerms(mltQueryDef.max_query_terms);
+		if (mltQueryDef.max_word_len != null)
+			mlt.setMaxWordLen(mltQueryDef.max_word_len);
+		if (mltQueryDef.min_doc_freq != null)
+			mlt.setMinDocFreq(mltQueryDef.min_doc_freq);
+		if (mltQueryDef.min_term_freq != null)
+			mlt.setMinTermFreq(mltQueryDef.min_term_freq);
+		if (mltQueryDef.min_word_len != null)
+			mlt.setMinWordLen(mltQueryDef.min_word_len);
+		if (mltQueryDef.stop_words != null)
+			mlt.setStopWords(mltQueryDef.stop_words);
+		mlt.setAnalyzer(analyzer);
+		return mlt;
 	}
 }

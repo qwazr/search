@@ -32,20 +32,22 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-final public class IndexAnalyzer extends DelegatingAnalyzerWrapper {
+final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 
 	private final Analyzer defaultAnalyzer = new KeywordAnalyzer();
 
 	private volatile AnalyzerContext context;
 
-	IndexAnalyzer(FileClassCompilerLoader compilerLoader, Map<String, FieldDefinition> fields) throws ServerException {
+	private volatile Map<String, Analyzer> analyzerMap;
+
+	UpdatableAnalyzer(AnalyzerContext context, Map<String, Analyzer> analyzerMap) throws ServerException {
 		super(PER_FIELD_REUSE_STRATEGY);
-		update(compilerLoader, fields);
+		update(context, analyzerMap);
 	}
 
-	synchronized void update(FileClassCompilerLoader compilerLoader, Map<String, FieldDefinition> fields)
-			throws ServerException {
-		context = new AnalyzerContext(compilerLoader, fields);
+	final synchronized void update(AnalyzerContext context, Map<String, Analyzer> analyzerMap) throws ServerException {
+		this.context = context;
+		this.analyzerMap = analyzerMap;
 	}
 
 	final AnalyzerContext getContext() {
@@ -54,7 +56,7 @@ final public class IndexAnalyzer extends DelegatingAnalyzerWrapper {
 
 	@Override
 	final protected Analyzer getWrappedAnalyzer(String fieldName) {
-		Analyzer analyzer = context.analyzerMap.get(fieldName);
+		Analyzer analyzer = analyzerMap.get(fieldName);
 		return analyzer == null ? defaultAnalyzer : analyzer;
 	}
 

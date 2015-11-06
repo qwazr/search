@@ -41,6 +41,7 @@ import java.util.Map;
 public class FieldDefinition {
 
 	public final String analyzer;
+	public final String query_analyzer;
 	public final Boolean tokenized;
 	public final Boolean stored;
 	public final Boolean store_termvectors;
@@ -79,6 +80,7 @@ public class FieldDefinition {
 
 	public FieldDefinition() {
 		analyzer = null;
+		query_analyzer = null;
 		tokenized = null;
 		stored = null;
 		store_termvectors = null;

@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,19 +61,21 @@ final public class IndexInstance implements Closeable {
 	private final SearcherManager searcherManager;
 	private final IndexSettingsDefinition settings;
 
-	private final IndexAnalyzer indexAnalyzer;
+	private final UpdatableAnalyzer indexAnalyzer;
+	private final UpdatableAnalyzer queryAnalyzer;
 	private volatile LinkedHashMap<String, FieldDefinition> fieldMap;
 
 	private IndexInstance(SchemaInstance schema, Directory luceneDirectory, IndexSettingsDefinition settings,
-					LinkedHashMap<String, FieldDefinition> fieldMap, FileSet fileSet, IndexWriter indexWriter,
-					SearcherManager searcherManager) {
+			LinkedHashMap<String, FieldDefinition> fieldMap, FileSet fileSet, IndexWriter indexWriter,
+			SearcherManager searcherManager, UpdatableAnalyzer queryAnalyzer) {
 		this.schema = schema;
 		this.fileSet = fileSet;
 		this.luceneDirectory = luceneDirectory;
 		this.fieldMap = fieldMap;
 		this.indexWriter = indexWriter;
 		this.indexWriterConfig = indexWriter.getConfig();
-		this.indexAnalyzer = (IndexAnalyzer) indexWriterConfig.getAnalyzer();
+		this.indexAnalyzer = (UpdatableAnalyzer) indexWriterConfig.getAnalyzer();
+		this.queryAnalyzer = queryAnalyzer;
 		this.snapshotDeletionPolicy = (SnapshotDeletionPolicy) indexWriterConfig.getIndexDeletionPolicy();
 		this.settings = settings;
 		this.searcherManager = searcherManager;
@@ -102,8 +104,9 @@ final public class IndexInstance implements Closeable {
 	 * @return
 	 */
 	final static IndexInstance newInstance(SchemaInstance schema, File indexDirectory, IndexSettingsDefinition settings)
-					throws ServerException, IOException, ReflectiveOperationException, InterruptedException {
-		IndexAnalyzer indexAnalyzer = null;
+			throws ServerException, IOException, ReflectiveOperationException, InterruptedException {
+		UpdatableAnalyzer indexAnalyzer = null;
+		UpdatableAnalyzer queryAnalyzer = null;
 		IndexWriter indexWriter = null;
 		Directory luceneDirectory = null;
 		try {
@@ -114,8 +117,8 @@ final public class IndexInstance implements Closeable {
 			//Loading the settings
 			if (settings == null) {
 				settings = fileSet.settingsFile.exists() ?
-								JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
-								IndexSettingsDefinition.EMPTY;
+						JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
+						IndexSettingsDefinition.EMPTY;
 			} else {
 				JsonMapper.MAPPER.writeValue(fileSet.settingsFile, settings);
 			}
@@ -123,9 +126,12 @@ final public class IndexInstance implements Closeable {
 			//Loading the fields
 			File fieldMapFile = new File(indexDirectory, FIELDS_FILE);
 			LinkedHashMap<String, FieldDefinition> fieldMap = fieldMapFile.exists() ?
-							JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
-							null;
-			indexAnalyzer = new IndexAnalyzer(schema.getFileClassCompilerLoader(), fieldMap);
+					JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
+					null;
+
+			AnalyzerContext context = new AnalyzerContext(schema.getFileClassCompilerLoader(), fieldMap);
+			indexAnalyzer = new UpdatableAnalyzer(context, context.indexAnalyzerMap);
+			queryAnalyzer = new UpdatableAnalyzer(context, context.queryAnalyzerMap);
 
 			// Open and lock the data directory
 			luceneDirectory = FSDirectory.open(fileSet.dataDirectory.toPath());
@@ -133,11 +139,11 @@ final public class IndexInstance implements Closeable {
 			// Set
 			IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
 			if (settings != null && settings.similarity_class != null)
-				indexWriterConfig.setSimilarity(IndexUtils
-								.findSimilarity(schema.getFileClassCompilerLoader(), settings.similarity_class));
+				indexWriterConfig.setSimilarity(
+						IndexUtils.findSimilarity(schema.getFileClassCompilerLoader(), settings.similarity_class));
 			indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 			SnapshotDeletionPolicy snapshotDeletionPolicy = new SnapshotDeletionPolicy(
-							indexWriterConfig.getIndexDeletionPolicy());
+					indexWriterConfig.getIndexDeletionPolicy());
 			indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
 			indexWriter = new IndexWriter(luceneDirectory, indexWriterConfig);
 			if (indexWriter.hasUncommittedChanges())
@@ -146,10 +152,12 @@ final public class IndexInstance implements Closeable {
 			// Finally we build the SearchSercherManger
 			SearcherManager searcherManager = new SearcherManager(indexWriter, true, null);
 
-			return new IndexInstance(schema, luceneDirectory, settings, fieldMap, fileSet, indexWriter,
-							searcherManager);
+			return new IndexInstance(schema, luceneDirectory, settings, fieldMap, fileSet, indexWriter, searcherManager,
+					queryAnalyzer);
 		} catch (IOException | ServerException | ReflectiveOperationException | InterruptedException e) {
 			// We failed in opening the index. We close everything we can
+			if (queryAnalyzer != null)
+				IOUtils.closeQuietly(queryAnalyzer);
 			if (indexAnalyzer != null)
 				IOUtils.closeQuietly(indexAnalyzer);
 			if (indexWriter != null)
@@ -205,7 +213,9 @@ final public class IndexInstance implements Closeable {
 	}
 
 	synchronized void setFields(LinkedHashMap<String, FieldDefinition> fields) throws ServerException, IOException {
-		indexAnalyzer.update(schema.getFileClassCompilerLoader(), fields);
+		AnalyzerContext analyzerContext = new AnalyzerContext(schema.getFileClassCompilerLoader(), fields);
+		indexAnalyzer.update(analyzerContext, analyzerContext.indexAnalyzerMap);
+		queryAnalyzer.update(analyzerContext, analyzerContext.queryAnalyzerMap);
 		JsonMapper.MAPPER.writeValue(fileSet.fieldMapFile, fields);
 		fieldMap = fields;
 	}
@@ -250,7 +260,7 @@ final public class IndexInstance implements Closeable {
 					files_count++;
 					bytes_size += sourceFile.length();
 					if (targetFile.exists() && targetFile.length() == sourceFile.length()
-									&& targetFile.lastModified() == sourceFile.lastModified())
+							&& targetFile.lastModified() == sourceFile.lastModified())
 						continue;
 					FileUtils.copyFile(sourceFile, targetFile, true);
 				}
@@ -341,7 +351,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final List<Object> postDocuments(List<Map<String, Object>> documents)
-					throws IOException, ServerException, InterruptedException {
+			throws IOException, ServerException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return null;
 		final Semaphore sem = schema.acquireWriteSemaphore();
@@ -360,7 +370,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final void updateDocumentValues(Map<String, Object> document)
-					throws IOException, ServerException, InterruptedException {
+			throws IOException, ServerException, InterruptedException {
 		if (document == null || document.isEmpty())
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
@@ -374,7 +384,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final void updateDocumentsValues(List<Map<String, Object>> documents)
-					throws IOException, ServerException, InterruptedException {
+			throws IOException, ServerException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
@@ -390,10 +400,10 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final ResultDefinition deleteByQuery(QueryDefinition queryDef)
-					throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException {
+			throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			final Query query = QueryUtils.getLuceneQuery(queryDef, indexAnalyzer);
+			final Query query = QueryUtils.getLuceneQuery(queryDef, queryAnalyzer);
 			int docs = indexWriter.numDocs();
 			indexWriter.deleteDocuments(query);
 			nrtCommit();
@@ -406,12 +416,12 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final ResultDefinition search(QueryDefinition queryDef)
-					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
-				return QueryUtils.search(indexSearcher, queryDef, indexAnalyzer);
+				return QueryUtils.search(indexSearcher, queryDef, queryAnalyzer);
 			} finally {
 				searcherManager.release(indexSearcher);
 			}
@@ -421,52 +431,22 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	private MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader) throws IOException {
-
-		final MoreLikeThis mlt = new MoreLikeThis(reader);
-		if (mltQueryDef.boost != null)
-			mlt.setBoost(mltQueryDef.boost);
-		if (mltQueryDef.boost_factor != null)
-			mlt.setBoostFactor(mltQueryDef.boost_factor);
-		if (mltQueryDef.fieldnames != null)
-			mlt.setFieldNames(mltQueryDef.fieldnames);
-		if (mltQueryDef.max_doc_freq != null)
-			mlt.setMaxDocFreq(mltQueryDef.max_doc_freq);
-		if (mltQueryDef.max_doc_freq_pct != null)
-			mlt.setMaxDocFreqPct(mltQueryDef.max_doc_freq_pct);
-		if (mltQueryDef.max_num_tokens_parsed != null)
-			mlt.setMaxNumTokensParsed(mltQueryDef.max_num_tokens_parsed);
-		if (mltQueryDef.max_query_terms != null)
-			mlt.setMaxQueryTerms(mltQueryDef.max_query_terms);
-		if (mltQueryDef.max_word_len != null)
-			mlt.setMaxWordLen(mltQueryDef.max_word_len);
-		if (mltQueryDef.min_doc_freq != null)
-			mlt.setMinDocFreq(mltQueryDef.min_doc_freq);
-		if (mltQueryDef.min_term_freq != null)
-			mlt.setMinTermFreq(mltQueryDef.min_term_freq);
-		if (mltQueryDef.min_word_len != null)
-			mlt.setMinWordLen(mltQueryDef.min_word_len);
-		if (mltQueryDef.stop_words != null)
-			mlt.setStopWords(mltQueryDef.stop_words);
-		mlt.setAnalyzer(indexAnalyzer);
-		return mlt;
-	}
-
 	ResultDefinition mlt(MltQueryDefinition mltQueryDef)
-					throws ServerException, IOException, QueryNodeException, InterruptedException {
+			throws ServerException, IOException, QueryNodeException, InterruptedException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
 				final IndexReader indexReader = indexSearcher.getIndexReader();
 				final TimeTracker timeTracker = new TimeTracker();
-				final Query filterQuery = new StandardQueryParser(indexAnalyzer)
-								.parse(mltQueryDef.document_query, mltQueryDef.query_default_field);
+				final Query filterQuery = new StandardQueryParser(queryAnalyzer)
+						.parse(mltQueryDef.document_query, mltQueryDef.query_default_field);
 				final TopDocs filterTopDocs = indexSearcher.search(filterQuery, 1, Sort.INDEXORDER);
 				if (filterTopDocs.totalHits == 0)
 					return new ResultDefinition(timeTracker);
 				final TopDocs topDocs;
-				final Query query = getMoreLikeThis(mltQueryDef, indexReader).like(filterTopDocs.scoreDocs[0].doc);
+				final Query query = QueryUtils.getMoreLikeThis(mltQueryDef, indexReader, queryAnalyzer)
+						.like(filterTopDocs.scoreDocs[0].doc);
 				topDocs = indexSearcher.search(query, mltQueryDef.getEnd());
 				return new ResultDefinition(fieldMap, timeTracker, indexSearcher, topDocs, mltQueryDef, query);
 			} finally {
