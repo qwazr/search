@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -89,7 +90,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(null);
 			IndexManager.INSTANCE.createUpdate(schema_name, null);
 			return IndexManager.INSTANCE.get(schema_name).getSettings();
-		} catch (ServerException | IOException | ReflectiveOperationException | InterruptedException e) {
+		} catch (ServerException | IOException | ReflectiveOperationException | InterruptedException | URISyntaxException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -98,11 +99,11 @@ public class IndexServiceImpl implements IndexServiceInterface {
 
 	@Override
 	public SchemaSettingsDefinition createUpdateSchema(String schema_name, Boolean local,
-					SchemaSettingsDefinition settings) {
+			SchemaSettingsDefinition settings) {
 		try {
 			checkRight(null);
 			return IndexManager.INSTANCE.createUpdate(schema_name, settings);
-		} catch (ServerException | IOException | ReflectiveOperationException | InterruptedException e) {
+		} catch (ServerException | IOException | ReflectiveOperationException | InterruptedException | URISyntaxException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -135,7 +136,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 
 	@Override
 	public IndexStatus createUpdateIndex(String schema_name, String index_name, Boolean local,
-					IndexSettingsDefinition settings) {
+			IndexSettingsDefinition settings) {
 		try {
 			checkRight(schema_name);
 			return IndexManager.INSTANCE.get(schema_name).createUpdate(index_name, settings);
@@ -180,7 +181,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	public LinkedHashMap<String, FieldDefinition> setFields(String schema_name, String index_name, Boolean local,
-					LinkedHashMap<String, FieldDefinition> fields) {
+			LinkedHashMap<String, FieldDefinition> fields) {
 		try {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setFields(fields);
@@ -194,7 +195,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 
 	@Override
 	public FieldDefinition setField(String schema_name, String index_name, String field_name, Boolean local,
-					FieldDefinition field) {
+			FieldDefinition field) {
 		try {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setField(field_name, field);

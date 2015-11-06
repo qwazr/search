@@ -35,6 +35,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -107,7 +108,8 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	SchemaInstance(File schemaDirectory)
-			throws IOException, ServerException, InterruptedException, ReflectiveOperationException {
+			throws IOException, ServerException, InterruptedException, ReflectiveOperationException,
+			URISyntaxException {
 		this.schemaDirectory = schemaDirectory;
 		if (!schemaDirectory.exists())
 			schemaDirectory.mkdir();
@@ -205,7 +207,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 		}
 	}
 
-	synchronized void setSettings(SchemaSettingsDefinition settings) throws IOException {
+	synchronized void setSettings(SchemaSettingsDefinition settings) throws IOException, URISyntaxException {
 		if (settings == null) {
 			settings = SchemaSettingsDefinition.EMPTY;
 			settingsFile.delete();
@@ -223,7 +225,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 		return settingsDefinition;
 	}
 
-	private synchronized void checkSettings() throws IOException {
+	private synchronized void checkSettings() throws IOException, URISyntaxException {
 		if (settingsDefinition == null) {
 			readSemaphore = null;
 			writeSemaphore = null;
