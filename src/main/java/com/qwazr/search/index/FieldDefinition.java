@@ -108,6 +108,7 @@ public class FieldDefinition {
 	final Field newField(final String fieldName, final Object value) {
 		if (value == null)
 			return null;
+		String stringValue = null;
 		Field field = null;
 		Field.Store store = (stored != null && stored) ? Field.Store.YES : Field.Store.NO;
 		if (template != null) {
@@ -171,17 +172,25 @@ public class FieldDefinition {
 					field = new StoredField(fieldName, value.toString());
 				break;
 			case StringField:
-				field = new StringField(fieldName, value.toString(), store);
+				if (StringUtils.isEmpty(stringValue = value.toString()))
+					return null;
+				field = new StringField(fieldName, stringValue, store);
 				break;
 			case TextField:
-				field = new TextField(fieldName, value.toString(), store);
+				if (StringUtils.isEmpty(stringValue = value.toString()))
+					return null;
+				field = new TextField(fieldName, stringValue, store);
 				break;
 			case FacetField:
-				field = new FacetField(fieldName, value.toString());
+				if (StringUtils.isEmpty(stringValue = value.toString()))
+					return null;
+				field = new FacetField(fieldName, stringValue);
 				break;
 			case SortedSetDocValuesFacetField:
 			case SortedSetMultiDocValuesFacetField:
-				field = new SortedSetDocValuesFacetField(fieldName, value.toString());
+				if (StringUtils.isEmpty(stringValue = value.toString()))
+					return null;
+				field = new SortedSetDocValuesFacetField(fieldName, stringValue);
 				break;
 			}
 		}

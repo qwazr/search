@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ import java.io.IOException;
 
 class DocValueUtils {
 
-	static abstract class DVConverter<T, V> {
+	static abstract class DVConverter<T, V extends Comparable<V>> {
 
 		protected final T source;
 
@@ -31,7 +31,8 @@ class DocValueUtils {
 			this.source = source;
 		}
 
-		protected abstract V convert(int docId);
+		abstract V convert(int docId);
+		
 	}
 
 	static class BinaryDVConverter extends DVConverter<BinaryDocValues, String> {
@@ -98,7 +99,7 @@ class DocValueUtils {
 	}
 
 	static DVConverter newConverter(FieldDefinition fieldDef, LeafReader dvReader, FieldInfo fieldInfo)
-					throws IOException {
+			throws IOException {
 		DocValuesType type = fieldInfo.getDocValuesType();
 		if (type == null)
 			return null;

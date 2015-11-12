@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,6 +34,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public LinkedHashMap<String, Float> multi_field;
 
 	final public LinkedHashMap<String, SortEnum> sorts;
+	final public ArrayList<Function> functions;
 
 	public static enum SortEnum {
 
@@ -75,6 +76,26 @@ public class QueryDefinition extends BaseQueryDefinition {
 		}
 	}
 
+	public static class Function {
+
+		public static enum FunctionEnum {
+			max, min
+		}
+
+		final public FunctionEnum function;
+		final public String field;
+
+		public Function() {
+			function = null;
+			field = null;
+		}
+
+		public Function(FunctionEnum function, String field) {
+			this.function = function;
+			this.field = field;
+		}
+	}
+
 	public QueryDefinition() {
 		default_field = null;
 		query_string = null;
@@ -85,6 +106,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		facets = null;
 		facet_filters = null;
 		sorts = null;
+		functions = null;
 		postings_highlighter = null;
 		allow_leading_wildcard = null;
 		default_operator = null;
@@ -104,6 +126,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		facets = builder.facets;
 		facet_filters = builder.facet_filters;
 		sorts = builder.sorts;
+		functions = builder.functions;
 		postings_highlighter = builder.postings_highlighter;
 		allow_leading_wildcard = builder.allow_leading_wildcard;
 		default_operator = builder.default_operator;

@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,7 @@ class IndexUtils {
 	final static String FIELD_ID = "$id$";
 
 	private final static void fieldCollection(final AnalyzerContext context, final Map<String, Object> document,
-					final Consumer<Field> consumer) throws IOException {
+			final Consumer<Field> consumer) throws IOException {
 		for (Map.Entry<String, Object> field : document.entrySet()) {
 			final String fieldName = field.getKey();
 			if (FIELD_ID.equals(fieldName))
@@ -56,19 +56,20 @@ class IndexUtils {
 	}
 
 	private final static Document newLuceneDocument(final AnalyzerContext context, final Map<String, Object> document)
-					throws IOException {
+			throws IOException {
 		final Document doc = new Document();
 		fieldCollection(context, document, new Consumer<Field>() {
 			@Override
 			public void accept(Field field) {
-				doc.add(field);
+				if (field != null)
+					doc.add(field);
 			}
 		});
 		return doc;
 	}
 
 	static final Object addNewLuceneDocument(final AnalyzerContext context, final Map<String, Object> document,
-					IndexWriter indexWriter) throws IOException {
+			IndexWriter indexWriter) throws IOException {
 		final Document doc = newLuceneDocument(context, document);
 		Object id = document.get(IndexUtils.FIELD_ID);
 		if (id == null)
@@ -86,7 +87,7 @@ class IndexUtils {
 	}
 
 	private static final Field[] newFieldList(final AnalyzerContext context, final Map<String, Object> document)
-					throws IOException {
+			throws IOException {
 		final Field[] fields = new Field[document.size() - 1];
 		final AtomicInteger i = new AtomicInteger();
 		fieldCollection(context, document, new Consumer<Field>() {
@@ -99,7 +100,7 @@ class IndexUtils {
 	}
 
 	static final void updateDocValues(final AnalyzerContext context, final Map<String, Object> document,
-					IndexWriter indexWriter) throws ServerException, IOException {
+			IndexWriter indexWriter) throws ServerException, IOException {
 		Object id = document.get(IndexUtils.FIELD_ID);
 		if (id == null)
 			throw new ServerException(Response.Status.BAD_REQUEST, "The field " + IndexUtils.FIELD_ID + " is missing");
@@ -121,24 +122,24 @@ class IndexUtils {
 	}
 
 	final static <T> Class<T> findClass(FileClassCompilerLoader compilerLoader, String classDef, String[] classPrefixes)
-					throws ReflectiveOperationException, InterruptedException, IOException {
+			throws ReflectiveOperationException, InterruptedException, IOException {
 		if (compilerLoader != null && classDef.endsWith(".java"))
 			return compilerLoader.loadClass(new File(classDef));
 		return (Class<T>) findClass(classPrefixes, classDef);
 	}
 
 	final static String[] similarityClassPrefixes = { "", "com.qwazr.search.similarity.",
-					"org.apache.lucene.search.similarities." };
+			"org.apache.lucene.search.similarities." };
 
 	final static Similarity findSimilarity(FileClassCompilerLoader compilerLoader, String similarity)
-					throws InterruptedException, ReflectiveOperationException, IOException {
+			throws InterruptedException, ReflectiveOperationException, IOException {
 		return (Similarity) findClass(compilerLoader, similarity, similarityClassPrefixes).newInstance();
 	}
 
 	final static String[] analyzerClassPrefixes = { "", "com.qwazr.search.analysis.", "org.apache.lucene.analysis." };
 
 	final static Analyzer findAnalyzer(FileClassCompilerLoader compilerLoader, String analyzer)
-					throws InterruptedException, ReflectiveOperationException, IOException {
+			throws InterruptedException, ReflectiveOperationException, IOException {
 		return (Analyzer) findClass(compilerLoader, analyzer, analyzerClassPrefixes).newInstance();
 	}
 }
