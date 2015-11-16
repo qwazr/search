@@ -1,0 +1,22 @@
+{
+  "query_string": "*:*",
+  "rows": 0,
+  "functions": [
+    {
+      "function": "min",
+      "field": "price"
+    },
+    {
+      "function": "max",
+      "field": "price"
+    },
+    {
+      "function": "min",
+      "field": "stock"
+    },
+    {
+      "function": "max",
+      "field": "stock"
+    }
+  ]
+}

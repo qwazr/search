@@ -43,7 +43,7 @@ import java.util.*;
 class QueryUtils {
 
 	final static SortField buildSortField(Map<String, FieldDefinition> fields, String field,
-			QueryDefinition.SortEnum sortEnum) throws ServerException {
+					QueryDefinition.SortEnum sortEnum) throws ServerException {
 
 		final boolean reverse;
 		final Object missingValue;
@@ -96,7 +96,7 @@ class QueryUtils {
 	}
 
 	final static Sort buildSort(Map<String, FieldDefinition> fields,
-			LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
+					LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
 		if (sorts.isEmpty())
 			return null;
 		final SortField[] sortFields = new SortField[sorts.size()];
@@ -127,7 +127,7 @@ class QueryUtils {
 	}
 
 	final static Query buildFacetFiltersQuery(FacetsConfig facetsConfig, List<Map<String, Set<String>>> facet_filters,
-			Query query) {
+					Query query) {
 		if (facet_filters.isEmpty())
 			return query;
 
@@ -151,7 +151,7 @@ class QueryUtils {
 	}
 
 	final static Query getLuceneQuery(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
-			throws QueryNodeException, ParseException {
+					throws QueryNodeException, ParseException {
 
 		// Configure the QueryParser
 		final StandardQueryParser parser = new StandardQueryParser(analyzer);
@@ -185,10 +185,10 @@ class QueryUtils {
 		Query query = parser.parse(qs, queryDef.default_field);
 
 		if (queryDef.auto_generate_phrase_query != null && queryDef.auto_generate_phrase_query && qs != null
-				&& qs.length() > 0 && qs.indexOf('"') == -1) {
+						&& qs.length() > 0 && qs.indexOf('"') == -1) {
 			Query phraseQuery = parser.parse('"' + qs + '"', queryDef.default_field);
 			query = new BooleanQuery.Builder().add(query, BooleanClause.Occur.SHOULD)
-					.add(phraseQuery, BooleanClause.Occur.SHOULD).build();
+							.add(phraseQuery, BooleanClause.Occur.SHOULD).build();
 		}
 
 		// Overload query with facet filters
@@ -198,45 +198,86 @@ class QueryUtils {
 		return query;
 	}
 
+	final static Collection<FunctionCollector> buildFunctions(Map<String, FieldDefinition> fields,
+					Collection<QueryDefinition.Function> functions) throws ServerException {
+		if (functions == null || functions.isEmpty())
+			return null;
+		Collection<FunctionCollector> functionsCollectors = new ArrayList<FunctionCollector>();
+		for (QueryDefinition.Function function : functions) {
+			FieldDefinition fieldDef = fields.get(function.field);
+			if (fieldDef == null)
+				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+								"Cannot compute the function " + function.function + " because the field is unknown: "
+												+ function.field);
+			functionsCollectors.add(new FunctionCollector(function, fieldDef));
+		}
+		return functionsCollectors;
+	}
+
 	final static ResultDefinition search(IndexSearcher indexSearcher, QueryDefinition queryDef,
-			UpdatableAnalyzer analyzer)
-			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+					UpdatableAnalyzer analyzer)
+					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 
 		Query query = getLuceneQuery(queryDef, analyzer);
 
 		final IndexReader indexReader = indexSearcher.getIndexReader();
 		final TimeTracker timeTracker = new TimeTracker();
 		final TopDocs topDocs;
-		final Facets facets;
 		final AnalyzerContext analyzerContext = analyzer.getContext();
-
 		final Sort sort = queryDef.sorts == null ? null : buildSort(analyzerContext.fields, queryDef.sorts);
+		final Facets facets;
+		final FacetsCollector facetsCollector;
+		final List<Collector> collectors = new ArrayList<Collector>();
+		if (queryDef.facets != null && !queryDef.facets.isEmpty())
+			collectors.add(facetsCollector = new FacetsCollector());
+		else
+			facetsCollector = null;
+		final Collection<FunctionCollector> functionCollectors = buildFunctions(analyzerContext.fields,
+						queryDef.functions);
+		if (functionCollectors != null)
+			collectors.addAll(functionCollectors);
 
-		if (queryDef.facets != null && queryDef.facets.size() > 0) {
-			FacetsCollector facetsCollector = new FacetsCollector();
+		final int numHits = queryDef.getEnd();
+		final int totalHits;
+		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
+
+		if (collectors.isEmpty()) {
+			if (sort != null)
+				topDocs = indexSearcher.search(query, numHits, sort, bNeedScore, bNeedScore);
+			else
+				topDocs = indexSearcher.search(query, numHits);
+			totalHits = topDocs.totalHits;
+		} else {
+			final TotalHitCountCollector totalHitCollector;
+			final TopDocsCollector topDocsCollector;
+			if (numHits == 0) {
+				totalHitCollector = new TotalHitCountCollector();
+				topDocsCollector = null;
+				collectors.add(0, totalHitCollector);
+			} else {
+				if (sort != null)
+					topDocsCollector = TopFieldCollector.create(sort, numHits, true, bNeedScore, bNeedScore);
+				else
+					topDocsCollector = TopScoreDocCollector.create(numHits);
+				totalHitCollector = null;
+				collectors.add(0, topDocsCollector);
+			}
+			indexSearcher.search(query, MultiCollector.wrap(collectors));
+			topDocs = topDocsCollector != null ? topDocsCollector.topDocs() : null;
+			totalHits = totalHitCollector != null ? totalHitCollector.getTotalHits() : topDocs.totalHits;
+		}
+		timeTracker.next("search_query");
+
+		if (facetsCollector != null) {
 			SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
-			if (sort != null) {
-				boolean bNeedScore = sort.needsScores();
-				topDocs = FacetsCollector
-						.search(indexSearcher, query, queryDef.getEnd(), sort, bNeedScore, bNeedScore, facetsCollector);
-			} else
-				topDocs = FacetsCollector.search(indexSearcher, query, queryDef.getEnd(), facetsCollector);
-			timeTracker.next("search_query");
 			facets = new SortedSetDocValuesFacetCounts(state, facetsCollector);
 			timeTracker.next("facet_count");
-		} else {
-			if (sort != null) {
-				boolean bNeedScore = sort.needsScores();
-				topDocs = indexSearcher.search(query, queryDef.getEnd(), sort, bNeedScore, bNeedScore);
-			} else
-				topDocs = indexSearcher.search(query, queryDef.getEnd());
-			timeTracker.next("search_query");
+		} else
 			facets = null;
-		}
 
 		Map<String, String[]> postingsHighlightersMap = null;
-		if (queryDef.postings_highlighter != null) {
-			postingsHighlightersMap = new LinkedHashMap<String, String[]>();
+		if (queryDef.postings_highlighter != null && topDocs != null) {
+			postingsHighlightersMap = new LinkedHashMap<>();
 			for (Map.Entry<String, Integer> entry : queryDef.postings_highlighter.entrySet()) {
 				String field = entry.getKey();
 				PostingsHighlighter highlighter = new PostingsHighlighter(entry.getValue());
@@ -248,13 +289,12 @@ class QueryUtils {
 			timeTracker.next("postings_highlighters");
 		}
 
-		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, topDocs, queryDef, facets,
-				postingsHighlightersMap, query);
-
+		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, totalHits, topDocs, queryDef,
+						facets, postingsHighlightersMap, functionCollectors,  query);
 	}
 
 	final static MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader,
-			UpdatableAnalyzer analyzer) throws IOException {
+					UpdatableAnalyzer analyzer) throws IOException {
 
 		final MoreLikeThis mlt = new MoreLikeThis(reader);
 		if (mltQueryDef.boost != null)

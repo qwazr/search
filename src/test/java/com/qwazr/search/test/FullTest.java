@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,6 +52,7 @@ public class FullTest {
 	public static final QueryDefinition QUERY_SORTFIELD = getQuery("query_sortfield.json");
 	public static final QueryDefinition QUERY_SORTFIELDS = getQuery("query_sortfields.json");
 	public static final QueryDefinition QUERY_CHECK_DOCVALUES = getQuery("query_check_docvalues.json");
+	public static final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
 	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
 	public static final List<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
@@ -409,6 +410,21 @@ public class FullTest {
 		checkDescending(Double.MAX_VALUE, "price", result.documents);
 		result = checkQueryIndex(client, QUERY_SORTFIELDS, 5);
 		checkAscending(Double.MIN_VALUE, "price", result.documents);
+	}
+
+	@Test
+	public void test430QueryFunctionsDoc() throws URISyntaxException, IOException {
+		Object[] results = new Object[] { 1.1D, 10.5D, 10, 14 };
+		IndexServiceInterface client = getClient();
+		ResultDefinition result = checkQueryIndex(client, QUERY_CHECK_FUNCTIONS, 5);
+		Assert.assertNotNull(result.functions);
+		Assert.assertEquals(results.length, result.functions.size());
+		for (int i = 0; i < result.functions.size(); i++) {
+			Assert.assertEquals(QUERY_CHECK_FUNCTIONS.functions.get(i).field, result.functions.get(i).field);
+			Assert.assertEquals(QUERY_CHECK_FUNCTIONS.functions.get(i).function, result.functions.get(i).function);
+			Assert.assertNotNull(result.functions.get(i).value);
+			Assert.assertEquals(results[i], result.functions.get(i).value);
+		}
 	}
 
 	@Test

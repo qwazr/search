@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,10 +27,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @JsonInclude(Include.NON_EMPTY)
 public class ResultDefinition {
@@ -41,12 +38,28 @@ public class ResultDefinition {
 	final public List<ResultDocument> documents;
 	final public Map<String, Map<String, Number>> facets;
 	final public String query;
+	final public List<Function> functions;
+
+	public static class Function extends QueryDefinition.Function {
+
+		final public Object value;
+
+		public Function() {
+			value = null;
+		}
+
+		Function(FunctionCollector functionCollector) {
+			super(functionCollector.function);
+			this.value = functionCollector.getValue();
+		}
+	}
 
 	public ResultDefinition() {
 		this.timer = null;
 		this.total_hits = null;
 		this.documents = null;
 		this.facets = null;
+		this.functions = null;
 		this.max_score = null;
 		this.query = null;
 	}
@@ -60,26 +73,30 @@ public class ResultDefinition {
 	}
 
 	ResultDefinition(Map<String, FieldDefinition> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
-					TopDocs topDocs, QueryDefinition queryDef, Facets facets,
-					Map<String, String[]> postingsHighlightsMap, Query query) throws IOException {
+					int totalHits, TopDocs topDocs, QueryDefinition queryDef, Facets facets,
+					Map<String, String[]> postingsHighlightsMap, Collection<FunctionCollector> functionsCollector,
+					Query query) throws IOException {
 		this.query = getQuery(queryDef.query_debug, queryDef.default_field, query);
-		total_hits = (long) topDocs.totalHits;
-		max_score = topDocs.getMaxScore();
+		this.total_hits = (long) totalHits;
+		max_score = topDocs != null ? topDocs.getMaxScore() : null;
 		int pos = queryDef.start == null ? 0 : queryDef.start;
 		int end = queryDef.getEnd();
 		documents = new ArrayList<ResultDocument>();
-		ScoreDoc[] docs = topDocs.scoreDocs;
-		Map<String, DocValueUtils.DVConverter> docValuesSources = ResultUtils
-						.extractDocValuesFields(fieldMap, searcher.getIndexReader(), queryDef.returned_fields);
-		while (pos < total_hits && pos < end) {
-			final ScoreDoc scoreDoc = docs[pos];
-			final Document document = searcher.doc(scoreDoc.doc, queryDef.returned_fields);
-			documents.add(new ResultDocument(pos, scoreDoc, document, queryDef.postings_highlighter,
-							postingsHighlightsMap, docValuesSources));
-			pos++;
+		ScoreDoc[] docs = topDocs != null ? topDocs.scoreDocs : null;
+		if (docs != null) {
+			Map<String, DocValueUtils.DVConverter> docValuesSources = ResultUtils
+							.extractDocValuesFields(fieldMap, searcher.getIndexReader(), queryDef.returned_fields);
+			while (pos < total_hits && pos < end) {
+				final ScoreDoc scoreDoc = docs[pos];
+				final Document document = searcher.doc(scoreDoc.doc, queryDef.returned_fields);
+				documents.add(new ResultDocument(pos, scoreDoc, document, queryDef.postings_highlighter,
+								postingsHighlightsMap, docValuesSources));
+				pos++;
+			}
+			timeTracker.next("returned_fields");
 		}
-		timeTracker.next("returned_fields");
 		this.facets = facets != null && queryDef != null ? ResultUtils.buildFacets(queryDef.facets, facets) : null;
+		this.functions = functionsCollector != null ? ResultUtils.buildFunctions(functionsCollector) : null;
 		timeTracker.next("facet_fields");
 		this.timer = timeTracker == null ? null : timeTracker.getMap();
 	}
@@ -103,6 +120,7 @@ public class ResultDefinition {
 		}
 		timeTracker.next("returned_fields");
 		this.facets = null;
+		this.functions = null;
 		this.timer = timeTracker == null ? null : timeTracker.getMap();
 	}
 
@@ -111,6 +129,7 @@ public class ResultDefinition {
 		total_hits = 0L;
 		documents = Collections.emptyList();
 		facets = null;
+		functions = null;
 		max_score = null;
 		this.timer = timeTracker == null ? null : timeTracker.getMap();
 	}
@@ -120,6 +139,7 @@ public class ResultDefinition {
 		this.total_hits = total_hits;
 		documents = Collections.emptyList();
 		facets = null;
+		functions = null;
 		max_score = null;
 		this.timer = null;
 	}

@@ -90,7 +90,12 @@ public class QueryDefinition extends BaseQueryDefinition {
 			field = null;
 		}
 
-		public Function(FunctionEnum function, String field) {
+		Function(Function function) {
+			this.function = function.function;
+			this.field = function.field;
+		}
+
+		Function(FunctionEnum function, String field) {
 			this.function = function;
 			this.field = field;
 		}
