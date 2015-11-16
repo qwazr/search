@@ -25,14 +25,16 @@ class DocValueUtils {
 
 	static abstract class DVConverter<T, V extends Comparable<V>> {
 
+		final boolean isNumeric;
+
 		protected final T source;
 
 		private DVConverter(T source) {
 			this.source = source;
+			isNumeric = source instanceof NumericDocValues;
 		}
 
 		abstract V convert(int docId);
-		
 	}
 
 	static class BinaryDVConverter extends DVConverter<BinaryDocValues, String> {
@@ -48,6 +50,7 @@ class DocValueUtils {
 				return null;
 			return bytesRef.utf8ToString();
 		}
+
 	}
 
 	private static class DoubleDVConverter extends DVConverter<NumericDocValues, Double> {
@@ -99,7 +102,7 @@ class DocValueUtils {
 	}
 
 	static DVConverter newConverter(FieldDefinition fieldDef, LeafReader dvReader, FieldInfo fieldInfo)
-			throws IOException {
+					throws IOException {
 		DocValuesType type = fieldInfo.getDocValuesType();
 		if (type == null)
 			return null;
@@ -148,4 +151,5 @@ class DocValueUtils {
 		}
 		return null;
 	}
+
 }

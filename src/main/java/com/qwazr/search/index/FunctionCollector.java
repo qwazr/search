@@ -15,12 +15,11 @@
  */
 package com.qwazr.search.index;
 
-import org.apache.lucene.index.FieldInfo;
-import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.*;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.LeafCollector;
 import org.apache.lucene.search.Scorer;
+import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 
@@ -45,27 +44,37 @@ public class FunctionCollector implements Collector {
 	@Override
 	public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
 		final LeafCollector parentLeafCollector =
-				parentCollector != null ? parentCollector.getLeafCollector(context) : null;
+						parentCollector != null ? parentCollector.getLeafCollector(context) : null;
+
+		final LeafReader leafReader = context.reader();
+		FieldInfo fieldInfo = leafReader.getFieldInfos().fieldInfo(function.field);
+		DocValueUtils.DVConverter dvConverter = DocValueUtils.newConverter(fieldDef, leafReader, fieldInfo);
+		if (dvConverter == null)
+			throw new IOException("Function " + function.function + " not available for the field: " + function.field);
 		switch (function.function) {
 		case max:
-			return new MaxFunctionCollector(parentLeafCollector, context, fieldDef, function.field);
+			if (dvConverter.isNumeric)
+				return new MaxNumericFunctionCollector(parentLeafCollector, dvConverter);
+			else
+				return new MaxBinaryFunctionCollector(parentLeafCollector, dvConverter);
 		case min:
-			return new MinFunctionCollector(parentLeafCollector, context, fieldDef, function.field);
+			if (dvConverter.isNumeric)
+				return new MinNumericFunctionCollector(parentLeafCollector, dvConverter);
+			else
+				return new MinBinaryFunctionCollector(parentLeafCollector, dvConverter);
 		}
 		return parentLeafCollector;
 	}
 
-	public static abstract class LeafFunctionCollector implements LeafCollector {
+	static abstract class LeafFunctionCollector implements LeafCollector {
 
 		protected final LeafCollector parentLeafCollector;
-		protected final DocValueUtils.DVConverter<?, ?> dvConverter;
+		protected final DocValueUtils.DVConverter dvConverter;
 
-		protected LeafFunctionCollector(LeafCollector parentLeafCollector, LeafReaderContext context,
-				FieldDefinition fieldDef, String field) throws IOException {
+		protected LeafFunctionCollector(LeafCollector parentLeafCollector, DocValueUtils.DVConverter dvConverter)
+						throws IOException {
 			this.parentLeafCollector = parentLeafCollector;
-			final LeafReader leafReader = context.reader();
-			FieldInfo fieldInfo = leafReader.getFieldInfos().fieldInfo(field);
-			dvConverter = DocValueUtils.newConverter(fieldDef, leafReader, fieldInfo);
+			this.dvConverter = dvConverter;
 		}
 
 		@Override
@@ -75,13 +84,35 @@ public class FunctionCollector implements Collector {
 		}
 	}
 
-	private static class MaxFunctionCollector extends LeafFunctionCollector {
+	private static abstract class LeafNumericFunctionCollector extends LeafFunctionCollector {
 
-		private Comparable max;
+		protected final NumericDocValues docValues;
 
-		private MaxFunctionCollector(LeafCollector parentLeafCollector, LeafReaderContext context,
-				FieldDefinition fieldDef, String field) throws IOException {
-			super(parentLeafCollector, context, fieldDef, field);
+		protected LeafNumericFunctionCollector(LeafCollector parentLeafCollector, DocValueUtils.DVConverter dvConverter)
+						throws IOException {
+			super(parentLeafCollector, dvConverter);
+			docValues = (NumericDocValues) dvConverter.source;
+		}
+	}
+
+	private static abstract class LeafBinaryFunctionCollector extends LeafFunctionCollector {
+
+		protected final BinaryDocValues docValues;
+
+		protected LeafBinaryFunctionCollector(LeafCollector parentLeafCollector, DocValueUtils.DVConverter dvConverter)
+						throws IOException {
+			super(parentLeafCollector, dvConverter);
+			docValues = (BinaryDocValues) dvConverter.source;
+		}
+	}
+
+	private static class MaxNumericFunctionCollector extends LeafNumericFunctionCollector {
+
+		private Long max;
+
+		private MaxNumericFunctionCollector(LeafCollector parentLeafCollector, DocValueUtils.DVConverter dvConverter)
+						throws IOException {
+			super(parentLeafCollector, dvConverter);
 			max = null;
 		}
 
@@ -89,23 +120,19 @@ public class FunctionCollector implements Collector {
 		public void collect(int doc) throws IOException {
 			if (parentLeafCollector != null)
 				parentLeafCollector.collect(doc);
-			Comparable value = dvConverter.convert(doc);
-			if (value == null)
-				return;
-			if (max == null)
-				max = value;
-			else if (value.compareTo(max) > 0)
+			long value = docValues.get(doc);
+			if (max == null || value > max)
 				max = value;
 		}
 	}
 
-	private static class MinFunctionCollector extends LeafFunctionCollector {
+	private static class MinNumericFunctionCollector extends LeafNumericFunctionCollector {
 
-		private Comparable min;
+		private Long min;
 
-		private MinFunctionCollector(LeafCollector parentLeafCollector, LeafReaderContext context,
-				FieldDefinition fieldDef, String field) throws IOException {
-			super(parentLeafCollector, context, fieldDef, field);
+		private MinNumericFunctionCollector(LeafCollector parentLeafCollector, DocValueUtils.DVConverter dvConverter)
+						throws IOException {
+			super(parentLeafCollector, dvConverter);
 			min = null;
 		}
 
@@ -115,12 +142,48 @@ public class FunctionCollector implements Collector {
 				parentLeafCollector.collect(doc);
 			if (parentLeafCollector != null)
 				parentLeafCollector.collect(doc);
-			Comparable value = (Comparable) dvConverter.convert(doc);
-			if (value == null)
-				return;
-			if (min == null)
+			long value = docValues.get(doc);
+			if (min == null || value < min)
 				min = value;
-			else if (value.compareTo(min) < 0)
+		}
+	}
+
+	private static class MaxBinaryFunctionCollector extends LeafBinaryFunctionCollector {
+
+		private BytesRef max;
+
+		private MaxBinaryFunctionCollector(LeafCollector parentLeafCollector, DocValueUtils.DVConverter dvConverter)
+						throws IOException {
+			super(parentLeafCollector, dvConverter);
+			max = null;
+		}
+
+		@Override
+		public void collect(int doc) throws IOException {
+			if (parentLeafCollector != null)
+				parentLeafCollector.collect(doc);
+			BytesRef value = docValues.get(doc);
+			if (max == null || value.compareTo(max) > 0)
+				max = value;
+		}
+	}
+
+	private static class MinBinaryFunctionCollector extends LeafBinaryFunctionCollector {
+
+		private BytesRef min;
+
+		private MinBinaryFunctionCollector(LeafCollector parentLeafCollector, DocValueUtils.DVConverter dvConverter)
+						throws IOException {
+			super(parentLeafCollector, dvConverter);
+			min = null;
+		}
+
+		@Override
+		public void collect(int doc) throws IOException {
+			if (parentLeafCollector != null)
+				parentLeafCollector.collect(doc);
+			BytesRef value = docValues.get(doc);
+			if (min == null || value.compareTo(min) < 0)
 				min = value;
 		}
 	}
