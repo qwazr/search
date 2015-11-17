@@ -103,6 +103,8 @@ class DocValueUtils {
 
 	static DVConverter newConverter(FieldDefinition fieldDef, LeafReader dvReader, FieldInfo fieldInfo)
 					throws IOException {
+		if (fieldInfo == null)
+			return null;
 		DocValuesType type = fieldInfo.getDocValuesType();
 		if (type == null)
 			return null;
