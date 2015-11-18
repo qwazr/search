@@ -54,7 +54,7 @@ public class FunctionCollector implements Collector {
 		FieldInfo fieldInfo = leafReader.getFieldInfos().fieldInfo(function.field);
 		DocValueUtils.DVConverter dvConverter = DocValueUtils.newConverter(fieldDef, leafReader, fieldInfo);
 		if (dvConverter == null)
-			throw new IOException("Function " + function.function + " not available for the field: " + function.field);
+			return DoNothingCollector.INSTANCE;
 		switch (function.function) {
 		case max:
 			if (dvConverter.isNumeric)
@@ -183,6 +183,20 @@ public class FunctionCollector implements Collector {
 				finalValue = dvConverter.convert(doc);
 
 			}
+		}
+	}
+
+	private static class DoNothingCollector implements LeafCollector {
+
+		private static final DoNothingCollector INSTANCE = new DoNothingCollector();
+
+		@Override
+		final public void setScorer(Scorer scorer) throws IOException {
+
+		}
+
+		@Override
+		final public void collect(int doc) throws IOException {
 		}
 	}
 }
