@@ -44,13 +44,28 @@ class DocValueUtils {
 		}
 
 		@Override
-		protected String convert(int docId) {
+		final protected String convert(int docId) {
 			BytesRef bytesRef = source.get(docId);
 			if (bytesRef == null)
 				return null;
 			return bytesRef.utf8ToString();
 		}
 
+	}
+
+	static class SortedDVConverter extends DVConverter<SortedDocValues, String> {
+
+		private SortedDVConverter(SortedDocValues source) {
+			super(source);
+		}
+
+		@Override
+		final protected String convert(int docId) {
+			BytesRef bytesRef = source.get(docId);
+			if (bytesRef == null)
+				return null;
+			return bytesRef.utf8ToString();
+		}
 	}
 
 	private static class DoubleDVConverter extends DVConverter<NumericDocValues, Double> {
@@ -102,7 +117,7 @@ class DocValueUtils {
 	}
 
 	static DVConverter newConverter(FieldDefinition fieldDef, LeafReader dvReader, FieldInfo fieldInfo)
-					throws IOException {
+			throws IOException {
 		if (fieldInfo == null)
 			return null;
 		DocValuesType type = fieldInfo.getDocValuesType();
@@ -110,11 +125,21 @@ class DocValueUtils {
 			return null;
 		switch (type) {
 		case BINARY:
-			return new BinaryDVConverter(dvReader.getBinaryDocValues(fieldInfo.name));
+			BinaryDocValues binaryDocValue = dvReader.getBinaryDocValues(fieldInfo.name);
+			if (binaryDocValue == null)
+				return null;
+			return new BinaryDVConverter(binaryDocValue);
+		case SORTED:
+			SortedDocValues sortedDocValues = dvReader.getSortedDocValues(fieldInfo.name);
+			if (sortedDocValues == null)
+				return null;
+			return new SortedDVConverter(sortedDocValues);
 		case NONE:
 			break;
 		case NUMERIC:
 			NumericDocValues numericDocValues = dvReader.getNumericDocValues(fieldInfo.name);
+			if (numericDocValues == null)
+				return null;
 			if (fieldDef.numeric_type == null) {
 				if (fieldDef.template == null)
 					return null;
@@ -142,8 +167,6 @@ class DocValueUtils {
 				return new IntegerDVConverter(numericDocValues);
 			}
 			return null;
-		case SORTED:
-			break;
 		case SORTED_NUMERIC:
 			break;
 		case SORTED_SET:

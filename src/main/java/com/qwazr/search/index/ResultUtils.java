@@ -19,6 +19,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.LabelAndValue;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.*;
 
 import java.io.IOException;
@@ -50,7 +51,7 @@ class ResultUtils {
 	}
 
 	final static void addDocValues(final int docId, Map<String, DocValueUtils.DVConverter> sources,
-					final Map<String, Object> dest) {
+			final Map<String, Object> dest) {
 		if (sources == null)
 			return;
 		for (Map.Entry<String, DocValueUtils.DVConverter> entry : sources.entrySet()) {
@@ -60,11 +61,13 @@ class ResultUtils {
 		}
 	}
 
-	final static Map<String, Map<String, Number>> buildFacets(final Map<String, QueryDefinition.Facet> facetsDef,
-					final Facets facets) throws IOException {
+	final static Map<String, Map<String, Number>> buildFacets(final SortedSetDocValuesReaderState state,
+			final Map<String, QueryDefinition.Facet> facetsDef, final Facets facets) throws IOException {
 		Map<String, Map<String, Number>> facetResults = new LinkedHashMap<String, Map<String, Number>>();
 		for (Map.Entry<String, QueryDefinition.Facet> entry : facetsDef.entrySet()) {
 			String dim = entry.getKey();
+			if (state.getOrdRange(dim) == null)
+				continue;
 			Map<String, Number> facetMap = buildFacet(dim, entry.getValue(), facets);
 			if (facetMap != null)
 				facetResults.put(dim, facetMap);
@@ -73,7 +76,7 @@ class ResultUtils {
 	}
 
 	final static Map<String, Number> buildFacet(String dim, QueryDefinition.Facet facet, Facets facets)
-					throws IOException {
+			throws IOException {
 		int top = facet.top == null ? 10 : facet.top;
 		LinkedHashMap<String, Number> facetMap = new LinkedHashMap<String, Number>();
 		FacetResult facetResult = facets.getTopChildren(top, dim);
@@ -85,8 +88,8 @@ class ResultUtils {
 	}
 
 	final static Map<String, DocValueUtils.DVConverter> extractDocValuesFields(
-					final Map<String, FieldDefinition> fieldMap, final IndexReader indexReader,
-					final Set<String> returned_fields) throws IOException {
+			final Map<String, FieldDefinition> fieldMap, final IndexReader indexReader,
+			final Set<String> returned_fields) throws IOException {
 		if (returned_fields == null)
 			return null;
 		FieldInfos fieldInfos = MultiFields.getMergedFieldInfos(indexReader);
@@ -108,7 +111,7 @@ class ResultUtils {
 	}
 
 	final static List<ResultDefinition.Function> buildFunctions(
-					final Collection<FunctionCollector> functionsCollector) {
+			final Collection<FunctionCollector> functionsCollector) {
 		if (functionsCollector == null)
 			return null;
 		List<ResultDefinition.Function> functions = new ArrayList<ResultDefinition.Function>(functionsCollector.size());

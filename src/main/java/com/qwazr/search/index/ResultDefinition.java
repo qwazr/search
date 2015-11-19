@@ -21,6 +21,7 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.Facets;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -73,9 +74,9 @@ public class ResultDefinition {
 	}
 
 	ResultDefinition(Map<String, FieldDefinition> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
-					int totalHits, TopDocs topDocs, QueryDefinition queryDef, Facets facets,
-					Map<String, String[]> postingsHighlightsMap, Collection<FunctionCollector> functionsCollector,
-					Query query) throws IOException {
+			int totalHits, TopDocs topDocs, QueryDefinition queryDef, SortedSetDocValuesReaderState facetState,
+			Facets facets, Map<String, String[]> postingsHighlightsMap,
+			Collection<FunctionCollector> functionsCollector, Query query) throws IOException {
 		this.query = getQuery(queryDef.query_debug, queryDef.default_field, query);
 		this.total_hits = (long) totalHits;
 		max_score = topDocs != null ? topDocs.getMaxScore() : null;
@@ -85,24 +86,26 @@ public class ResultDefinition {
 		ScoreDoc[] docs = topDocs != null ? topDocs.scoreDocs : null;
 		if (docs != null) {
 			Map<String, DocValueUtils.DVConverter> docValuesSources = ResultUtils
-							.extractDocValuesFields(fieldMap, searcher.getIndexReader(), queryDef.returned_fields);
+					.extractDocValuesFields(fieldMap, searcher.getIndexReader(), queryDef.returned_fields);
 			while (pos < total_hits && pos < end) {
 				final ScoreDoc scoreDoc = docs[pos];
 				final Document document = searcher.doc(scoreDoc.doc, queryDef.returned_fields);
 				documents.add(new ResultDocument(pos, scoreDoc, document, queryDef.postings_highlighter,
-								postingsHighlightsMap, docValuesSources));
+						postingsHighlightsMap, docValuesSources));
 				pos++;
 			}
 			timeTracker.next("returned_fields");
 		}
-		this.facets = facets != null && queryDef != null ? ResultUtils.buildFacets(queryDef.facets, facets) : null;
+		this.facets = facets != null && queryDef != null ?
+				ResultUtils.buildFacets(facetState, queryDef.facets, facets) :
+				null;
 		this.functions = functionsCollector != null ? ResultUtils.buildFunctions(functionsCollector) : null;
 		timeTracker.next("facet_fields");
 		this.timer = timeTracker == null ? null : timeTracker.getMap();
 	}
 
 	ResultDefinition(Map<String, FieldDefinition> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
-					TopDocs topDocs, MltQueryDefinition mltQueryDef, Query query) throws IOException {
+			TopDocs topDocs, MltQueryDefinition mltQueryDef, Query query) throws IOException {
 		this.query = getQuery(mltQueryDef.query_debug, null, query);
 		total_hits = (long) topDocs.totalHits;
 		max_score = topDocs.getMaxScore();
@@ -111,7 +114,7 @@ public class ResultDefinition {
 		documents = new ArrayList<ResultDocument>();
 		ScoreDoc[] docs = topDocs.scoreDocs;
 		Map<String, DocValueUtils.DVConverter> docValuesSources = ResultUtils
-						.extractDocValuesFields(fieldMap, searcher.getIndexReader(), mltQueryDef.returned_fields);
+				.extractDocValuesFields(fieldMap, searcher.getIndexReader(), mltQueryDef.returned_fields);
 		while (pos < total_hits && pos < end) {
 			final ScoreDoc scoreDoc = docs[pos];
 			final Document document = searcher.doc(scoreDoc.doc, mltQueryDef.returned_fields);

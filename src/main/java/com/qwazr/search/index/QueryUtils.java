@@ -227,6 +227,7 @@ class QueryUtils {
 		final Sort sort = queryDef.sorts == null ? null : buildSort(analyzerContext.fields, queryDef.sorts);
 		final Facets facets;
 		final FacetsCollector facetsCollector;
+		final SortedSetDocValuesReaderState facetState;
 		final List<Collector> collectors = new ArrayList<Collector>();
 		if (queryDef.facets != null && !queryDef.facets.isEmpty())
 			collectors.add(facetsCollector = new FacetsCollector());
@@ -269,11 +270,13 @@ class QueryUtils {
 		timeTracker.next("search_query");
 
 		if (facetsCollector != null) {
-			SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
-			facets = new SortedSetDocValuesFacetCounts(state, facetsCollector);
+			facetState = new DefaultSortedSetDocValuesReaderState(indexReader);
+			facets = new SortedSetDocValuesFacetCounts(facetState, facetsCollector);
 			timeTracker.next("facet_count");
-		} else
+		} else {
+			facetState = null;
 			facets = null;
+		}
 
 		Map<String, String[]> postingsHighlightersMap = null;
 		if (queryDef.postings_highlighter != null && topDocs != null) {
@@ -290,7 +293,7 @@ class QueryUtils {
 		}
 
 		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, totalHits, topDocs, queryDef,
-				facets, postingsHighlightersMap, functionCollectors, query);
+				facetState, facets, postingsHighlightersMap, functionCollectors, query);
 	}
 
 	final static MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader,
