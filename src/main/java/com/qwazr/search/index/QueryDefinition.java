@@ -33,6 +33,12 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public char[] escaped_chars;
 	final public LinkedHashMap<String, Float> multi_field;
 
+	public enum QueryBuilderType {
+		standard_query_parser, multifield_query_parser, disjunction_max_query;
+	}
+
+	final public QueryBuilderType query_builder;
+
 	final public LinkedHashMap<String, SortEnum> sorts;
 	final public ArrayList<Function> functions;
 
@@ -51,6 +57,10 @@ public class QueryDefinition extends BaseQueryDefinition {
 		descending_missing_last
 	}
 
+	public static enum DefaultOperatorEnum {
+		AND, OR
+	}
+
 	final public LinkedHashSet<String> returned_fields;
 	final public LinkedHashMap<String, Facet> facets;
 	final public List<Map<String, Set<String>>> facet_filters;
@@ -58,7 +68,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public LinkedHashMap<String, Integer> postings_highlighter;
 
 	final public Boolean allow_leading_wildcard;
-	final public StandardQueryConfigHandler.Operator default_operator;
+	final public DefaultOperatorEnum default_operator;
 	final public Integer phrase_slop;
 	final public Boolean enable_position_increments;
 	final public Boolean auto_generate_phrase_query;
@@ -107,6 +117,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		escape_query = null;
 		escaped_chars = null;
 		multi_field = null;
+		query_builder = null;
 		returned_fields = null;
 		facets = null;
 		facet_filters = null;
@@ -127,6 +138,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		escape_query = builder.escape_query;
 		escaped_chars = builder.escaped_chars;
 		multi_field = builder.multi_field;
+		query_builder = builder.query_builder;
 		returned_fields = builder.returned_fields;
 		facets = builder.facets;
 		facet_filters = builder.facet_filters;

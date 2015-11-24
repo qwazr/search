@@ -29,10 +29,12 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.TermsQuery;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
+import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 
@@ -150,26 +152,7 @@ class QueryUtils {
 		return rootBuilder.build();
 	}
 
-	final static Query getLuceneQuery(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
-			throws QueryNodeException, ParseException {
-
-		// Configure the QueryParser
-		final StandardQueryParser parser = new StandardQueryParser(analyzer);
-		if (queryDef.multi_field != null && !queryDef.multi_field.isEmpty()) {
-			Set<String> fieldSet = queryDef.multi_field.keySet();
-			String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
-			parser.setMultiFields(fieldArray);
-			parser.setFieldsBoost(queryDef.multi_field);
-		}
-		if (queryDef.default_operator != null)
-			parser.setDefaultOperator(queryDef.default_operator);
-		if (queryDef.allow_leading_wildcard != null)
-			parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
-		if (queryDef.phrase_slop != null)
-			parser.setPhraseSlop(queryDef.phrase_slop);
-		if (queryDef.enable_position_increments != null)
-			parser.setEnablePositionIncrements(queryDef.enable_position_increments);
-
+	final static private String getFinalQueryString(QueryDefinition queryDef) {
 		// Deal wih query string
 		final String qs;
 		// Check if we have to escape some characters
@@ -180,15 +163,88 @@ class QueryUtils {
 				qs = QueryParser.escape(queryDef.query_string);
 		} else
 			qs = queryDef.query_string;
+		return qs;
+	}
+
+	final static private Query getBaseQueryFromMultifieldQueryParser(QueryDefinition queryDef,
+			UpdatableAnalyzer analyzer) throws ParseException {
+
+		if (queryDef.multi_field == null || queryDef.multi_field.isEmpty())
+			throw new ParseException("The multi_field parameters is required");
+		Set<String> fieldSet = queryDef.multi_field.keySet();
+		String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
+		final MultiFieldQueryParser parser = new MultiFieldQueryParser(fieldArray, analyzer, queryDef.multi_field);
+
+		if (queryDef.default_operator != null) {
+			switch (queryDef.default_operator) {
+			case AND:
+				parser.setDefaultOperator(QueryParser.Operator.AND);
+				break;
+			case OR:
+				parser.setDefaultOperator(QueryParser.Operator.OR);
+				break;
+			}
+		}
+		if (queryDef.allow_leading_wildcard != null)
+			parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
+		if (queryDef.phrase_slop != null)
+			parser.setPhraseSlop(queryDef.phrase_slop);
+		if (queryDef.enable_position_increments != null)
+			parser.setEnablePositionIncrements(queryDef.enable_position_increments);
 
 		// Parse the query
-		Query query = parser.parse(qs, queryDef.default_field);
+		return parser.parse(getFinalQueryString(queryDef));
+	}
 
-		if (queryDef.auto_generate_phrase_query != null && queryDef.auto_generate_phrase_query && qs != null
-				&& qs.length() > 0 && qs.indexOf('"') == -1) {
-			Query phraseQuery = parser.parse('"' + qs + '"', queryDef.default_field);
-			query = new BooleanQuery.Builder().add(query, BooleanClause.Occur.SHOULD)
-					.add(phraseQuery, BooleanClause.Occur.SHOULD).build();
+	final static private Query getBaseQueryFromStandardQueryParser(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
+			throws QueryNodeException {
+		final StandardQueryParser parser = new StandardQueryParser(analyzer);
+
+		Set<String> fieldSet = queryDef.multi_field.keySet();
+		String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
+		parser.setMultiFields(fieldArray);
+		parser.setFieldsBoost(queryDef.multi_field);
+		if (queryDef.default_operator != null) {
+			switch (queryDef.default_operator) {
+			case AND:
+				parser.setDefaultOperator(StandardQueryConfigHandler.Operator.AND);
+				break;
+			case OR:
+				parser.setDefaultOperator(StandardQueryConfigHandler.Operator.OR);
+				break;
+			}
+		}
+		if (queryDef.allow_leading_wildcard != null)
+			parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
+		if (queryDef.phrase_slop != null)
+			parser.setPhraseSlop(queryDef.phrase_slop);
+		if (queryDef.enable_position_increments != null)
+			parser.setEnablePositionIncrements(queryDef.enable_position_increments);
+
+		// Parse the query
+		return parser.parse(getFinalQueryString(queryDef), queryDef.default_field);
+	}
+
+	final static Query getLuceneQuery(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
+			throws QueryNodeException, ParseException {
+
+		// Configure the QueryParser
+		QueryDefinition.QueryBuilderType queryBuilderType = queryDef.query_builder;
+		if (queryBuilderType == null)
+			queryBuilderType = queryDef.multi_field == null || queryDef.multi_field.isEmpty() ?
+					QueryDefinition.QueryBuilderType.standard_query_parser :
+					QueryDefinition.QueryBuilderType.multifield_query_parser;
+
+		Query query = null;
+		switch (queryBuilderType) {
+		case disjunction_max_query:
+			break;
+		case standard_query_parser:
+			query = getBaseQueryFromStandardQueryParser(queryDef, analyzer);
+			break;
+		case multifield_query_parser:
+			query = getBaseQueryFromMultifieldQueryParser(queryDef, analyzer);
+			break;
 		}
 
 		// Overload query with facet filters

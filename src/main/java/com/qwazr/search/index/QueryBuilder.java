@@ -32,6 +32,8 @@ public class QueryBuilder {
 	char[] escaped_chars = null;
 	LinkedHashMap<String, Float> multi_field = null;
 
+	QueryDefinition.QueryBuilderType query_builder = null;
+
 	LinkedHashMap<String, QueryDefinition.Facet> facets = null;
 	List<Map<String, Set<String>>> facet_filters = null;
 
@@ -41,7 +43,7 @@ public class QueryBuilder {
 	LinkedHashMap<String, Integer> postings_highlighter = null;
 
 	Boolean allow_leading_wildcard = null;
-	StandardQueryConfigHandler.Operator default_operator = null;
+	QueryDefinition.DefaultOperatorEnum default_operator = null;
 	Integer phrase_slop = null;
 	Boolean enable_position_increments = null;
 	Boolean auto_generate_phrase_query = null;
@@ -131,6 +133,11 @@ public class QueryBuilder {
 		if (multi_field == null)
 			multi_field = new LinkedHashMap<String, Float>();
 		multi_field.put(field, boost);
+		return this;
+	}
+
+	public QueryBuilder setQueryBuilder(QueryDefinition.QueryBuilderType queryBuilder) {
+		this.query_builder = queryBuilder;
 		return this;
 	}
 
@@ -253,11 +260,11 @@ public class QueryBuilder {
 		return this;
 	}
 
-	public StandardQueryConfigHandler.Operator getDefault_operator() {
+	public QueryDefinition.DefaultOperatorEnum getDefault_operator() {
 		return default_operator;
 	}
 
-	public QueryBuilder setDefault_operator(StandardQueryConfigHandler.Operator default_operator) {
+	public QueryBuilder setDefault_operator(QueryDefinition.DefaultOperatorEnum default_operator) {
 		this.default_operator = default_operator;
 		return this;
 	}
