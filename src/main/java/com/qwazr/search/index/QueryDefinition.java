@@ -34,7 +34,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public LinkedHashMap<String, Float> multi_field;
 
 	public enum QueryBuilderType {
-		standard_query_parser, multifield_query_parser, disjunction_max_query;
+		standard_query_parser, multifield_query_parser;
 	}
 
 	final public QueryBuilderType query_builder;

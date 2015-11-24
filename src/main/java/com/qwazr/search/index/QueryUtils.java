@@ -192,6 +192,9 @@ class QueryUtils {
 		if (queryDef.enable_position_increments != null)
 			parser.setEnablePositionIncrements(queryDef.enable_position_increments);
 
+		if (queryDef.auto_generate_phrase_query)
+			parser.setAutoGeneratePhraseQueries(true);
+
 		// Parse the query
 		return parser.parse(getFinalQueryString(queryDef));
 	}
@@ -200,10 +203,8 @@ class QueryUtils {
 			throws QueryNodeException {
 		final StandardQueryParser parser = new StandardQueryParser(analyzer);
 
-		Set<String> fieldSet = queryDef.multi_field.keySet();
-		String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
-		parser.setMultiFields(fieldArray);
-		parser.setFieldsBoost(queryDef.multi_field);
+		if (queryDef.multi_field != null)
+			parser.setFieldsBoost(queryDef.multi_field);
 		if (queryDef.default_operator != null) {
 			switch (queryDef.default_operator) {
 			case AND:
@@ -237,8 +238,6 @@ class QueryUtils {
 
 		Query query = null;
 		switch (queryBuilderType) {
-		case disjunction_max_query:
-			break;
 		case standard_query_parser:
 			query = getBaseQueryFromStandardQueryParser(queryDef, analyzer);
 			break;
