@@ -35,6 +35,7 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
+import org.apache.lucene.queryparser.xml.builders.BooleanQueryBuilder;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 
@@ -166,37 +167,42 @@ class QueryUtils {
 		return qs;
 	}
 
-	final static private Query getBaseQueryFromMultifieldQueryParser(QueryDefinition queryDef,
-			UpdatableAnalyzer analyzer) throws ParseException {
+	final static Query buildFilteredQuery(Query query, Query filter) {
+		BooleanQuery.Builder builder = new BooleanQuery.Builder();
+		builder.add(query, BooleanClause.Occur.MUST);
+		builder.add(filter, BooleanClause.Occur.FILTER);
+		return builder.build();
+	}
 
-		if (queryDef.multi_field == null || queryDef.multi_field.isEmpty())
-			throw new ParseException("The multi_field parameters is required");
-		Set<String> fieldSet = queryDef.multi_field.keySet();
-		String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
+	final static private Query getMultifieldQueryParser(QueryDefinition queryDef, String[] fieldArray,
+			UpdatableAnalyzer analyzer, QueryParser.Operator operator, String queryString) throws ParseException {
 		final MultiFieldQueryParser parser = new MultiFieldQueryParser(fieldArray, analyzer, queryDef.multi_field);
-
-		if (queryDef.default_operator != null) {
-			switch (queryDef.default_operator) {
-			case AND:
-				parser.setDefaultOperator(QueryParser.Operator.AND);
-				break;
-			case OR:
-				parser.setDefaultOperator(QueryParser.Operator.OR);
-				break;
-			}
-		}
+		parser.setDefaultOperator(operator);
 		if (queryDef.allow_leading_wildcard != null)
 			parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
 		if (queryDef.phrase_slop != null)
 			parser.setPhraseSlop(queryDef.phrase_slop);
 		if (queryDef.enable_position_increments != null)
 			parser.setEnablePositionIncrements(queryDef.enable_position_increments);
-
 		if (queryDef.auto_generate_phrase_query)
-			parser.setAutoGeneratePhraseQueries(true);
+			parser.setAutoGeneratePhraseQueries(queryDef.auto_generate_phrase_query);
+		return parser.parse(queryString);
+	}
 
-		// Parse the query
-		return parser.parse(getFinalQueryString(queryDef));
+	final static private Query getBaseQueryFromMultifieldQueryParser(QueryDefinition queryDef,
+			UpdatableAnalyzer analyzer) throws ParseException {
+
+		if (queryDef.multi_field == null || queryDef.multi_field.isEmpty())
+			throw new ParseException("The multi_field parameter is required");
+
+		final String queryString = getFinalQueryString(queryDef);
+		Set<String> fieldSet = queryDef.multi_field.keySet();
+		String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
+
+		final QueryDefinition.DefaultOperatorEnum operator =
+				queryDef.default_operator == null ? QueryDefinition.DefaultOperatorEnum.AND : queryDef.default_operator;
+
+		return getMultifieldQueryParser(queryDef, fieldArray, analyzer, QueryParser.Operator.AND, queryString);
 	}
 
 	final static private Query getBaseQueryFromStandardQueryParser(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
