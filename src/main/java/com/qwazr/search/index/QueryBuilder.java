@@ -48,6 +48,8 @@ public class QueryBuilder {
 	Boolean enable_position_increments = null;
 	Boolean auto_generate_phrase_query = null;
 
+	public List<QueryDefinition.AbstractQuery> boosts = null;
+
 	public Boolean getQuery_debug() {
 		return query_debug;
 	}
@@ -284,6 +286,13 @@ public class QueryBuilder {
 
 	public QueryBuilder setEnable_position_increments(Boolean enable_position_increments) {
 		this.enable_position_increments = enable_position_increments;
+		return this;
+	}
+
+	public QueryBuilder addBoost(QueryDefinition.AbstractQuery query) {
+		if (boosts == null)
+			boosts = new ArrayList<>();
+		boosts.add(query);
 		return this;
 	}
 

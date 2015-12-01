@@ -15,8 +15,11 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
@@ -72,6 +75,57 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public Integer phrase_slop;
 	final public Boolean enable_position_increments;
 	final public Boolean auto_generate_phrase_query;
+
+	public static enum QueryTypeEnum {
+		spanNearQuery, spanFirstQuery;
+	}
+
+	@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "query")
+	@JsonSubTypes({ @JsonSubTypes.Type(value = SpanNearQuery.class, name = "spanNearQuery"),
+			@JsonSubTypes.Type(value = SpanFirstQuery.class, name = "spanFirstQuery") })
+	public abstract static class AbstractQuery {
+
+		@JsonIgnore
+		public final QueryTypeEnum type;
+
+		public final Float boost;
+
+		protected AbstractQuery(QueryTypeEnum type, Float boost) {
+			this.type = type;
+			this.boost = boost;
+		}
+	}
+
+	public static class SpanNearQuery extends AbstractQuery {
+
+		public SpanNearQuery() {
+			super(QueryTypeEnum.spanNearQuery, null);
+		}
+
+	}
+
+	public static class SpanFirstQuery extends AbstractQuery {
+
+		final public String field;
+		final public Integer end;
+		final public Boolean increment_end;
+
+		public SpanFirstQuery() {
+			super(QueryTypeEnum.spanFirstQuery, null);
+			field = null;
+			end = null;
+			increment_end = null;
+		}
+
+		SpanFirstQuery(Float boost, String field, Integer end, Boolean increment_end) {
+			super(QueryTypeEnum.spanFirstQuery, boost);
+			this.field = field;
+			this.end = end;
+			this.increment_end = increment_end;
+		}
+	}
+
+	final public List<AbstractQuery> boosts;
 
 	public static class Facet {
 
@@ -129,6 +183,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		phrase_slop = null;
 		enable_position_increments = null;
 		auto_generate_phrase_query = null;
+		boosts = null;
 	}
 
 	QueryDefinition(QueryBuilder builder) {
@@ -150,6 +205,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		phrase_slop = builder.phrase_slop;
 		enable_position_increments = builder.enable_position_increments;
 		auto_generate_phrase_query = builder.auto_generate_phrase_query;
+		boosts = builder.boosts;
 	}
 
 	public static QueryDefinition newQuery(String jsonString) throws IOException {
