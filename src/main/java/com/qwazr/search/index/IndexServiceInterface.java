@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -89,7 +89,7 @@ public interface IndexServiceInterface {
 	@Path("/{schema_name}/{index_name}/fields/{field_name}")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
 	public FieldDefinition getField(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, @PathParam("fied_name") String field_name,
+					@PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
 					@QueryParam("local") Boolean local);
 
 	@POST

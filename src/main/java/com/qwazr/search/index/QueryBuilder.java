@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.index;
 
-import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
+import com.qwazr.search.query.AbstractQuery;
 
 import java.util.*;
 
@@ -48,7 +48,8 @@ public class QueryBuilder {
 	Boolean enable_position_increments = null;
 	Boolean auto_generate_phrase_query = null;
 
-	public List<QueryDefinition.AbstractQuery> boosts = null;
+	public List<AbstractQuery> boosts = null;
+	public AbstractQuery filter = null;
 
 	public Boolean getQuery_debug() {
 		return query_debug;
@@ -289,10 +290,15 @@ public class QueryBuilder {
 		return this;
 	}
 
-	public QueryBuilder addBoost(QueryDefinition.AbstractQuery query) {
+	public QueryBuilder addBoost(AbstractQuery query) {
 		if (boosts == null)
 			boosts = new ArrayList<>();
 		boosts.add(query);
+		return this;
+	}
+
+	public QueryBuilder setFilter(AbstractQuery filter) {
+		this.filter = filter;
 		return this;
 	}
 
