@@ -73,7 +73,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public Boolean enable_position_increments;
 	final public Boolean auto_generate_phrase_query;
 
-	final public List<AbstractQuery> boosts;
+	final public AbstractQuery boost;
 	final public AbstractQuery filter;
 
 	public static class Facet {
@@ -132,7 +132,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		phrase_slop = null;
 		enable_position_increments = null;
 		auto_generate_phrase_query = null;
-		boosts = null;
+		boost = null;
 		filter = null;
 	}
 
@@ -155,7 +155,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		phrase_slop = builder.phrase_slop;
 		enable_position_increments = builder.enable_position_increments;
 		auto_generate_phrase_query = builder.auto_generate_phrase_query;
-		boosts = builder.boosts;
+		boost = builder.boost;
 		filter = builder.filter;
 	}
 

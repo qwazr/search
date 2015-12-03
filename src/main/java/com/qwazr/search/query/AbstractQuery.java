@@ -25,27 +25,21 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "query")
-@JsonSubTypes({ @JsonSubTypes.Type(value = SpanFirstQueries.class, name = "spanFirstQueries"),
-				@JsonSubTypes.Type(value = TermRangeQuery.class, name = "termRangeQuery") })
+@JsonSubTypes({ @JsonSubTypes.Type(value = BooleanQuery.class, name = "boolean_query"),
+		@JsonSubTypes.Type(value = PhraseQuery.class, name = "phrase_query"),
+		@JsonSubTypes.Type(value = SpanFirstQueries.class, name = "span_first_queries"),
+		@JsonSubTypes.Type(value = SpanFirstQuery.class, name = "span_first_query"),
+		@JsonSubTypes.Type(value = SpanNearQuery.class, name = "span_near_query"),
+		@JsonSubTypes.Type(value = SpanNotQuery.class, name = "span_not_query"),
+		@JsonSubTypes.Type(value = SpanTermQuery.class, name = "span_term_query"),
+		@JsonSubTypes.Type(value = TermQuery.class, name = "term_query"),
+		@JsonSubTypes.Type(value = TermRangeQuery.class, name = "term_range_query") })
 
 public abstract class AbstractQuery {
 
-	public static enum QueryTypeEnum {
-		spanFirstQueries, termRangeQuery;
-	}
-
-	@JsonIgnore
-	public final QueryTypeEnum type;
-
 	public final Float boost;
 
-	protected AbstractQuery(QueryTypeEnum type) {
-		this.type = type;
-		this.boost = null;
-	}
-
-	protected AbstractQuery(QueryTypeEnum type, Float boost) {
-		this.type = type;
+	protected AbstractQuery(Float boost) {
 		this.boost = boost;
 	}
 

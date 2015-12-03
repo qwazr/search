@@ -46,7 +46,7 @@ import java.util.*;
 class QueryUtils {
 
 	final static SortField buildSortField(Map<String, FieldDefinition> fields, String field,
-					QueryDefinition.SortEnum sortEnum) throws ServerException {
+			QueryDefinition.SortEnum sortEnum) throws ServerException {
 
 		final boolean reverse;
 		final Object missingValue;
@@ -99,7 +99,7 @@ class QueryUtils {
 	}
 
 	final static Sort buildSort(Map<String, FieldDefinition> fields,
-					LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
+			LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
 		if (sorts.isEmpty())
 			return null;
 		final SortField[] sortFields = new SortField[sorts.size()];
@@ -130,7 +130,7 @@ class QueryUtils {
 	}
 
 	final static Query buildFacetFiltersQuery(FacetsConfig facetsConfig, List<Map<String, Set<String>>> facet_filters,
-					Query query) {
+			Query query) {
 		if (facet_filters.isEmpty())
 			return query;
 
@@ -182,8 +182,7 @@ class QueryUtils {
 	}
 
 	final static private Query getMultifieldQueryParser(QueryDefinition queryDef, String[] fieldArray,
-					UpdatableAnalyzer analyzer, QueryParser.Operator operator, String queryString)
-					throws ParseException {
+			UpdatableAnalyzer analyzer, QueryParser.Operator operator, String queryString) throws ParseException {
 		final MultiFieldQueryParser parser = new MultiFieldQueryParser(fieldArray, analyzer, queryDef.multi_field);
 		parser.setDefaultOperator(operator);
 		if (queryDef.allow_leading_wildcard != null)
@@ -198,7 +197,7 @@ class QueryUtils {
 	}
 
 	final static private Query getBaseQueryFromMultifieldQueryParser(QueryDefinition queryDef,
-					UpdatableAnalyzer analyzer) throws ParseException {
+			UpdatableAnalyzer analyzer) throws ParseException {
 
 		if (queryDef.multi_field == null || queryDef.multi_field.isEmpty())
 			throw new ParseException("The multi_field parameter is required");
@@ -207,15 +206,14 @@ class QueryUtils {
 		Set<String> fieldSet = queryDef.multi_field.keySet();
 		String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
 
-		final QueryDefinition.DefaultOperatorEnum operator = queryDef.default_operator == null ?
-						QueryDefinition.DefaultOperatorEnum.AND :
-						queryDef.default_operator;
+		final QueryDefinition.DefaultOperatorEnum operator =
+				queryDef.default_operator == null ? QueryDefinition.DefaultOperatorEnum.AND : queryDef.default_operator;
 
 		return getMultifieldQueryParser(queryDef, fieldArray, analyzer, QueryParser.Operator.AND, queryString);
 	}
 
 	final static private Query getBaseQueryFromStandardQueryParser(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
-					throws QueryNodeException {
+			throws QueryNodeException {
 		final StandardQueryParser parser = new StandardQueryParser(analyzer);
 
 		if (queryDef.multi_field != null)
@@ -242,14 +240,14 @@ class QueryUtils {
 	}
 
 	final static Query getLuceneQuery(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
-					throws QueryNodeException, ParseException, IOException {
+			throws QueryNodeException, ParseException, IOException {
 
 		// Configure the QueryParser
 		QueryDefinition.QueryBuilderType queryBuilderType = queryDef.query_builder;
 		if (queryBuilderType == null)
 			queryBuilderType = queryDef.multi_field == null || queryDef.multi_field.isEmpty() ?
-							QueryDefinition.QueryBuilderType.standard_query_parser :
-							QueryDefinition.QueryBuilderType.multifield_query_parser;
+					QueryDefinition.QueryBuilderType.standard_query_parser :
+					QueryDefinition.QueryBuilderType.multifield_query_parser;
 
 		Query query = null;
 		switch (queryBuilderType) {
@@ -268,22 +266,14 @@ class QueryUtils {
 		if (queryDef.filter != null)
 			query = buildFilteredQuery(query, queryDef.filter.getBoostedQuery(analyzer));
 
-		if (queryDef.boosts != null && !queryDef.boosts.isEmpty())
-			query = buildBoostedQuery(query, buildBoostingQuery(queryDef, analyzer));
+		if (queryDef.boost != null)
+			query = buildBoostedQuery(query, queryDef.boost.getBoostedQuery(analyzer));
 
 		return query;
 	}
 
-	final static Query buildBoostingQuery(QueryDefinition queryDef, UpdatableAnalyzer analyzer) throws IOException {
-		String queryString = getFinalQueryString(queryDef);
-		BooleanQuery.Builder builder = new BooleanQuery.Builder();
-		for (AbstractQuery abstractQuery : queryDef.boosts)
-			builder.add(abstractQuery.getBoostedQuery(analyzer), BooleanClause.Occur.SHOULD);
-		return builder.build();
-	}
-
 	final static Collection<FunctionCollector> buildFunctions(Map<String, FieldDefinition> fields,
-					Collection<QueryDefinition.Function> functions) throws ServerException {
+			Collection<QueryDefinition.Function> functions) throws ServerException {
 		if (functions == null || functions.isEmpty())
 			return null;
 		Collection<FunctionCollector> functionsCollectors = new ArrayList<FunctionCollector>();
@@ -291,16 +281,16 @@ class QueryUtils {
 			FieldDefinition fieldDef = fields.get(function.field);
 			if (fieldDef == null)
 				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-								"Cannot compute the function " + function.function + " because the field is unknown: "
-												+ function.field);
+						"Cannot compute the function " + function.function + " because the field is unknown: "
+								+ function.field);
 			functionsCollectors.add(new FunctionCollector(function, fieldDef));
 		}
 		return functionsCollectors;
 	}
 
 	final static ResultDefinition search(IndexSearcher indexSearcher, QueryDefinition queryDef,
-					UpdatableAnalyzer analyzer)
-					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+			UpdatableAnalyzer analyzer)
+			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 
 		Query query = getLuceneQuery(queryDef, analyzer);
 
@@ -318,7 +308,7 @@ class QueryUtils {
 		else
 			facetsCollector = null;
 		final Collection<FunctionCollector> functionCollectors = buildFunctions(analyzerContext.fields,
-						queryDef.functions);
+				queryDef.functions);
 		if (functionCollectors != null)
 			collectors.addAll(functionCollectors);
 
@@ -377,11 +367,11 @@ class QueryUtils {
 		}
 
 		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, totalHits, topDocs, queryDef,
-						facetState, facets, postingsHighlightersMap, functionCollectors, query);
+				facetState, facets, postingsHighlightersMap, functionCollectors, query);
 	}
 
 	final static MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader,
-					UpdatableAnalyzer analyzer) throws IOException {
+			UpdatableAnalyzer analyzer) throws IOException {
 
 		final MoreLikeThis mlt = new MoreLikeThis(reader);
 		if (mltQueryDef.boost != null)

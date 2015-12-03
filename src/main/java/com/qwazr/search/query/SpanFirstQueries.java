@@ -35,21 +35,24 @@ public class SpanFirstQueries extends AbstractQuery {
 	final public Integer end;
 	final public Boolean increment_end;
 	final public String value;
+	final public Boolean log_boost;
 
 	public SpanFirstQueries() {
-		super(AbstractQuery.QueryTypeEnum.spanFirstQueries, null);
+		super(null);
 		field = null;
 		end = null;
 		increment_end = null;
 		value = null;
+		log_boost = null;
 	}
 
-	SpanFirstQueries(Float boost, String field, Integer end, Boolean increment_end, String value) {
-		super(AbstractQuery.QueryTypeEnum.spanFirstQueries, boost);
+	SpanFirstQueries(Float boost, String field, Integer end, Boolean increment_end, String value, Boolean log_boost) {
+		super(boost);
 		this.field = field;
 		this.end = end;
 		this.increment_end = increment_end;
 		this.value = value;
+		this.log_boost = log_boost;
 	}
 
 	@Override
@@ -63,7 +66,7 @@ public class SpanFirstQueries extends AbstractQuery {
 		final boolean inc_end = increment_end != null ? increment_end : false;
 		while (tokenStream.incrementToken()) {
 			SpanFirstQuery query = new SpanFirstQuery(new SpanTermQuery(new Term(field, charTermAttribute.toString())),
-							e);
+					e);
 			builder.add(new BooleanClause(query, BooleanClause.Occur.SHOULD));
 			if (inc_end)
 				e++;
