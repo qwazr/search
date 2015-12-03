@@ -34,7 +34,6 @@ public class SpanFirstQueries extends AbstractQuery {
 	final public String field;
 	final public Integer end;
 	final public Boolean increment_end;
-	final public String value;
 	final public Boolean log_boost;
 
 	public SpanFirstQueries() {
@@ -42,7 +41,6 @@ public class SpanFirstQueries extends AbstractQuery {
 		field = null;
 		end = null;
 		increment_end = null;
-		value = null;
 		log_boost = null;
 	}
 
@@ -51,14 +49,13 @@ public class SpanFirstQueries extends AbstractQuery {
 		this.field = field;
 		this.end = end;
 		this.increment_end = increment_end;
-		this.value = value;
 		this.log_boost = log_boost;
 	}
 
 	@Override
-	protected Query getQuery(UpdatableAnalyzer analyzer) throws IOException {
+	protected Query getQuery(UpdatableAnalyzer analyzer, String queryString) throws IOException {
 		BooleanQuery.Builder builder = new BooleanQuery.Builder();
-		TokenStream tokenStream = analyzer.tokenStream(field, value);
+		TokenStream tokenStream = analyzer.tokenStream(field, queryString);
 		CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
 		tokenStream.reset();
 		final List<String> terms = new ArrayList<String>();

@@ -15,11 +15,14 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
 
 import java.io.IOException;
 import java.util.*;
@@ -27,17 +30,9 @@ import java.util.*;
 @JsonInclude(Include.NON_EMPTY)
 public class QueryDefinition extends BaseQueryDefinition {
 
-	final public String default_field;
 	final public String query_string;
 	final public Boolean escape_query;
 	final public char[] escaped_chars;
-	final public LinkedHashMap<String, Float> multi_field;
-
-	public enum QueryBuilderType {
-		standard_query_parser, multifield_query_parser;
-	}
-
-	final public QueryBuilderType query_builder;
 
 	final public LinkedHashMap<String, SortEnum> sorts;
 	final public ArrayList<Function> functions;
@@ -57,9 +52,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		descending_missing_last
 	}
 
-	public static enum DefaultOperatorEnum {
-		AND, OR
-	}
 
 	final public LinkedHashSet<String> returned_fields;
 	final public LinkedHashMap<String, Facet> facets;
@@ -67,12 +59,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	final public LinkedHashMap<String, Integer> postings_highlighter;
 
-	final public Boolean allow_leading_wildcard;
-	final public DefaultOperatorEnum default_operator;
-	final public Integer phrase_slop;
-	final public Boolean enable_position_increments;
-	final public Boolean auto_generate_phrase_query;
-
+	final public AbstractQuery query;
 	final public AbstractQuery boost;
 	final public AbstractQuery filter;
 
@@ -115,46 +102,32 @@ public class QueryDefinition extends BaseQueryDefinition {
 	}
 
 	public QueryDefinition() {
-		default_field = null;
 		query_string = null;
 		escape_query = null;
 		escaped_chars = null;
-		multi_field = null;
-		query_builder = null;
 		returned_fields = null;
 		facets = null;
 		facet_filters = null;
 		sorts = null;
 		functions = null;
 		postings_highlighter = null;
-		allow_leading_wildcard = null;
-		default_operator = null;
-		phrase_slop = null;
-		enable_position_increments = null;
-		auto_generate_phrase_query = null;
+		query = null;
 		boost = null;
 		filter = null;
 	}
 
 	QueryDefinition(QueryBuilder builder) {
 		super(builder);
-		default_field = builder.default_field;
 		query_string = builder.query_string;
 		escape_query = builder.escape_query;
 		escaped_chars = builder.escaped_chars;
-		multi_field = builder.multi_field;
-		query_builder = builder.query_builder;
 		returned_fields = builder.returned_fields;
 		facets = builder.facets;
 		facet_filters = builder.facet_filters;
 		sorts = builder.sorts;
 		functions = builder.functions;
 		postings_highlighter = builder.postings_highlighter;
-		allow_leading_wildcard = builder.allow_leading_wildcard;
-		default_operator = builder.default_operator;
-		phrase_slop = builder.phrase_slop;
-		enable_position_increments = builder.enable_position_increments;
-		auto_generate_phrase_query = builder.auto_generate_phrase_query;
+		query = builder.query;
 		boost = builder.boost;
 		filter = builder.filter;
 	}

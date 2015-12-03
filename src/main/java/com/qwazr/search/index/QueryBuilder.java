@@ -26,13 +26,9 @@ public class QueryBuilder {
 	Boolean query_debug = null;
 	LinkedHashSet<String> returned_fields = null;
 
-	String default_field = null;
 	String query_string = null;
 	Boolean escape_query = null;
 	char[] escaped_chars = null;
-	LinkedHashMap<String, Float> multi_field = null;
-
-	QueryDefinition.QueryBuilderType query_builder = null;
 
 	LinkedHashMap<String, QueryDefinition.Facet> facets = null;
 	List<Map<String, Set<String>>> facet_filters = null;
@@ -42,12 +38,7 @@ public class QueryBuilder {
 
 	LinkedHashMap<String, Integer> postings_highlighter = null;
 
-	Boolean allow_leading_wildcard = null;
-	QueryDefinition.DefaultOperatorEnum default_operator = null;
-	Integer phrase_slop = null;
-	Boolean enable_position_increments = null;
-	Boolean auto_generate_phrase_query = null;
-
+	public AbstractQuery query = null;
 	public AbstractQuery boost = null;
 	public AbstractQuery filter = null;
 
@@ -78,24 +69,6 @@ public class QueryBuilder {
 		return this;
 	}
 
-	public Boolean getAuto_generate_phrase_query() {
-		return auto_generate_phrase_query;
-	}
-
-	public QueryBuilder setAuto_generate_phrase_query(Boolean auto_generate_phrase_query) {
-		this.auto_generate_phrase_query = auto_generate_phrase_query;
-		return this;
-	}
-
-	public String getDefault_field() {
-		return default_field;
-	}
-
-	public QueryBuilder setDefault_field(String default_field) {
-		this.default_field = default_field;
-		return this;
-	}
-
 	public String getQuery_string() {
 		return query_string;
 	}
@@ -120,27 +93,6 @@ public class QueryBuilder {
 
 	public QueryBuilder setEscaped_chars(char[] escaped_chars) {
 		this.escaped_chars = escaped_chars;
-		return this;
-	}
-
-	public Map<String, Float> getMulti_field() {
-		return multi_field;
-	}
-
-	public QueryBuilder setMulti_field(LinkedHashMap<String, Float> multi_field) {
-		this.multi_field = multi_field;
-		return this;
-	}
-
-	public QueryBuilder addMulti_field(String field, Float boost) {
-		if (multi_field == null)
-			multi_field = new LinkedHashMap<String, Float>();
-		multi_field.put(field, boost);
-		return this;
-	}
-
-	public QueryBuilder setQueryBuilder(QueryDefinition.QueryBuilderType queryBuilder) {
-		this.query_builder = queryBuilder;
 		return this;
 	}
 
@@ -254,39 +206,8 @@ public class QueryBuilder {
 		return this;
 	}
 
-	public Boolean getAllow_leading_wildcard() {
-		return allow_leading_wildcard;
-	}
-
-	public QueryBuilder setAllow_leading_wildcard(Boolean allow_leading_wildcard) {
-		this.allow_leading_wildcard = allow_leading_wildcard;
-		return this;
-	}
-
-	public QueryDefinition.DefaultOperatorEnum getDefault_operator() {
-		return default_operator;
-	}
-
-	public QueryBuilder setDefault_operator(QueryDefinition.DefaultOperatorEnum default_operator) {
-		this.default_operator = default_operator;
-		return this;
-	}
-
-	public Integer getPhrase_slop() {
-		return phrase_slop;
-	}
-
-	public QueryBuilder setPhrase_slop(Integer phrase_slop) {
-		this.phrase_slop = phrase_slop;
-		return this;
-	}
-
-	public Boolean getEnable_position_increments() {
-		return enable_position_increments;
-	}
-
-	public QueryBuilder setEnable_position_increments(Boolean enable_position_increments) {
-		this.enable_position_increments = enable_position_increments;
+	public QueryBuilder setQuery(AbstractQuery query) {
+		this.query = query;
 		return this;
 	}
 

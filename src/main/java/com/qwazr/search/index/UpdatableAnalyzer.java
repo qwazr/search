@@ -20,17 +20,23 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.DelegatingAnalyzerWrapper;
+import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.spans.SpanFirstQuery;
+import org.apache.lucene.search.spans.SpanTermQuery;
 
 import javax.script.ScriptException;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 
@@ -60,4 +66,21 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 		return analyzer == null ? defaultAnalyzer : analyzer;
 	}
 
+	final public void forEachTerm(String field, String queryString, Function<String, Boolean> function)
+			throws IOException {
+		Objects.requireNonNull(field, "The field cannot be null");
+		Objects.requireNonNull(queryString, "The query string cannot be null");
+		final Analyzer analyzer = getWrappedAnalyzer(field);
+		final TokenStream tokenStream = analyzer.tokenStream(field, queryString);
+		try {
+			final CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
+			tokenStream.reset();
+			while (tokenStream.incrementToken())
+				if (!function.apply(charTermAttribute.toString()))
+					break;
+
+		} finally {
+			tokenStream.close();
+		}
+	}
 }

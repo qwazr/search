@@ -16,6 +16,8 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.UpdatableAnalyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
@@ -38,7 +40,9 @@ public class SpanFirstQuery extends AbstractQuery {
 	}
 
 	@Override
-	final protected Query getQuery(UpdatableAnalyzer analyzer) throws IOException {
-		return new org.apache.lucene.search.spans.SpanFirstQuery(spanQuery.getQuery(analyzer), end == null ? 0 : end);
+	final protected Query getQuery(UpdatableAnalyzer analyzer, String queryString)
+			throws IOException, ParseException, QueryNodeException {
+		return new org.apache.lucene.search.spans.SpanFirstQuery(spanQuery.getQuery(analyzer, queryString),
+				end == null ? 0 : end);
 	}
 }

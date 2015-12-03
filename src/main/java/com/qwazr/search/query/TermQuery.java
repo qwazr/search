@@ -20,26 +20,59 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 public class TermQuery extends AbstractQuery {
 
 	final public String field;
 	final public String text;
+	final public Boolean apply_analyzer;
 
 	public TermQuery() {
 		super(null);
 		field = null;
 		text = null;
+		apply_analyzer = null;
 	}
 
-	TermQuery(Float boost, String field, String text) {
+	TermQuery(Float boost, String field, String text, Boolean apply_analyzer) {
 		super(boost);
 		this.field = field;
 		this.text = text;
+		this.apply_analyzer = apply_analyzer;
+	}
+
+	private class AtomicString {
+
+		private volatile String string = null;
+
+		public synchronized void set(String string) {
+			this.string = string;
+		}
+
+		public String get() {
+			return this.string;
+		}
+
 	}
 
 	@Override
-	protected Query getQuery(UpdatableAnalyzer analyzer) throws IOException {
-		return new org.apache.lucene.search.TermQuery(new Term(field, text));
+	protected Query getQuery(UpdatableAnalyzer analyzer, String queryString) throws IOException {
+		final AtomicString atomicString = new AtomicString();
+		final String sourceText = text == null ? queryString : text;
+		final String term;
+		if (apply_analyzer != null && apply_analyzer) {
+			analyzer.forEachTerm(field, queryString, new Function<String, Boolean>() {
+				@Override
+				public Boolean apply(String term) {
+					atomicString.set(term);
+					return false;
+				}
+			});
+			term = atomicString.get();
+		} else
+			term = sourceText;
+		return new org.apache.lucene.search.TermQuery(new Term(field, term));
 	}
 }

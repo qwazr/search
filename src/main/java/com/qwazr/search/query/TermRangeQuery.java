@@ -48,7 +48,7 @@ public class TermRangeQuery extends AbstractQuery {
 	}
 
 	@Override
-	protected Query getQuery(UpdatableAnalyzer analyzer) throws IOException {
+	protected Query getQuery(UpdatableAnalyzer analyzer, String queryString) throws IOException {
 		return org.apache.lucene.search.TermRangeQuery
 				.newStringRange(field, lower_term, upper_term, include_lower == null ? true : include_lower,
 						include_upper == null ? true : include_upper);

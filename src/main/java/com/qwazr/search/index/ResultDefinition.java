@@ -65,19 +65,19 @@ public class ResultDefinition {
 		this.query = null;
 	}
 
-	private static String getQuery(Boolean queryDebug, String defaultField, Query query) {
+	private static String getQuery(Boolean queryDebug, Query query) {
 		if (queryDebug == null || query == null)
 			return null;
 		if (!queryDebug && query != null)
 			return null;
-		return query.toString(defaultField == null ? StringUtils.EMPTY : defaultField);
+		return query.toString(StringUtils.EMPTY);
 	}
 
 	ResultDefinition(Map<String, FieldDefinition> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
 			int totalHits, TopDocs topDocs, QueryDefinition queryDef, SortedSetDocValuesReaderState facetState,
 			Facets facets, Map<String, String[]> postingsHighlightsMap,
 			Collection<FunctionCollector> functionsCollector, Query query) throws IOException {
-		this.query = getQuery(queryDef.query_debug, queryDef.default_field, query);
+		this.query = getQuery(queryDef.query_debug, query);
 		this.total_hits = (long) totalHits;
 		max_score = topDocs != null ? topDocs.getMaxScore() : null;
 		int pos = queryDef.start == null ? 0 : queryDef.start;
@@ -106,7 +106,7 @@ public class ResultDefinition {
 
 	ResultDefinition(Map<String, FieldDefinition> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
 			TopDocs topDocs, MltQueryDefinition mltQueryDef, Query query) throws IOException {
-		this.query = getQuery(mltQueryDef.query_debug, null, query);
+		this.query = getQuery(mltQueryDef.query_debug, query);
 		total_hits = (long) topDocs.totalHits;
 		max_score = topDocs.getMaxScore();
 		int pos = mltQueryDef.start == null ? 0 : mltQueryDef.start;

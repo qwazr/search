@@ -16,6 +16,8 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.UpdatableAnalyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
@@ -45,14 +47,15 @@ public class SpanNearQuery extends AbstractSpanQuery {
 	}
 
 	@Override
-	final protected SpanQuery getQuery(UpdatableAnalyzer analyzer) throws IOException {
+	final protected SpanQuery getQuery(UpdatableAnalyzer analyzer, String queryString)
+			throws IOException, ParseException, QueryNodeException {
 		final org.apache.lucene.search.spans.SpanNearQuery.Builder builder = new org.apache.lucene.search.spans.SpanNearQuery.Builder(
 				field, in_order == null ? false : in_order);
 		if (slop != null)
 			builder.setSlop(slop);
 		if (clauses != null)
 			for (AbstractSpanQuery clause : clauses)
-				builder.addClause(clause.getQuery(analyzer));
+				builder.addClause(clause.getQuery(analyzer, queryString));
 		return builder.build();
 	}
 }

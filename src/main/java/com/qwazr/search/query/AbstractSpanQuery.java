@@ -17,6 +17,8 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.UpdatableAnalyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
@@ -27,5 +29,6 @@ public abstract class AbstractSpanQuery extends AbstractQuery {
 		super(boost);
 	}
 
-	protected abstract SpanQuery getQuery(UpdatableAnalyzer analyzer) throws IOException;
+	protected abstract SpanQuery getQuery(UpdatableAnalyzer analyzer, String queryString)
+			throws IOException, ParseException, QueryNodeException;
 }

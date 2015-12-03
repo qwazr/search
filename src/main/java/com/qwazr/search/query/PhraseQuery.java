@@ -44,7 +44,7 @@ public class PhraseQuery extends AbstractQuery {
 	}
 
 	@Override
-	protected Query getQuery(UpdatableAnalyzer analyzer) throws IOException {
+	protected Query getQuery(UpdatableAnalyzer analyzer, String queryParser) throws IOException {
 		Objects.requireNonNull(field);
 		org.apache.lucene.search.PhraseQuery.Builder builder = new org.apache.lucene.search.PhraseQuery.Builder();
 		if (slop != null)

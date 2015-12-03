@@ -15,7 +15,6 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
@@ -181,93 +180,26 @@ class QueryUtils {
 		return builder.build();
 	}
 
-	final static private Query getMultifieldQueryParser(QueryDefinition queryDef, String[] fieldArray,
-			UpdatableAnalyzer analyzer, QueryParser.Operator operator, String queryString) throws ParseException {
-		final MultiFieldQueryParser parser = new MultiFieldQueryParser(fieldArray, analyzer, queryDef.multi_field);
-		parser.setDefaultOperator(operator);
-		if (queryDef.allow_leading_wildcard != null)
-			parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
-		if (queryDef.phrase_slop != null)
-			parser.setPhraseSlop(queryDef.phrase_slop);
-		if (queryDef.enable_position_increments != null)
-			parser.setEnablePositionIncrements(queryDef.enable_position_increments);
-		if (queryDef.auto_generate_phrase_query != null)
-			parser.setAutoGeneratePhraseQueries(queryDef.auto_generate_phrase_query);
-		return parser.parse(queryString);
-	}
-
-	final static private Query getBaseQueryFromMultifieldQueryParser(QueryDefinition queryDef,
-			UpdatableAnalyzer analyzer) throws ParseException {
-
-		if (queryDef.multi_field == null || queryDef.multi_field.isEmpty())
-			throw new ParseException("The multi_field parameter is required");
-
-		final String queryString = getFinalQueryString(queryDef);
-		Set<String> fieldSet = queryDef.multi_field.keySet();
-		String[] fieldArray = fieldSet.toArray(new String[fieldSet.size()]);
-
-		final QueryDefinition.DefaultOperatorEnum operator =
-				queryDef.default_operator == null ? QueryDefinition.DefaultOperatorEnum.AND : queryDef.default_operator;
-
-		return getMultifieldQueryParser(queryDef, fieldArray, analyzer, QueryParser.Operator.AND, queryString);
-	}
-
-	final static private Query getBaseQueryFromStandardQueryParser(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
-			throws QueryNodeException {
-		final StandardQueryParser parser = new StandardQueryParser(analyzer);
-
-		if (queryDef.multi_field != null)
-			parser.setFieldsBoost(queryDef.multi_field);
-		if (queryDef.default_operator != null) {
-			switch (queryDef.default_operator) {
-			case AND:
-				parser.setDefaultOperator(StandardQueryConfigHandler.Operator.AND);
-				break;
-			case OR:
-				parser.setDefaultOperator(StandardQueryConfigHandler.Operator.OR);
-				break;
-			}
-		}
-		if (queryDef.allow_leading_wildcard != null)
-			parser.setAllowLeadingWildcard(queryDef.allow_leading_wildcard);
-		if (queryDef.phrase_slop != null)
-			parser.setPhraseSlop(queryDef.phrase_slop);
-		if (queryDef.enable_position_increments != null)
-			parser.setEnablePositionIncrements(queryDef.enable_position_increments);
-
-		// Parse the query
-		return parser.parse(getFinalQueryString(queryDef), queryDef.default_field);
-	}
-
 	final static Query getLuceneQuery(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
 			throws QueryNodeException, ParseException, IOException {
 
-		// Configure the QueryParser
-		QueryDefinition.QueryBuilderType queryBuilderType = queryDef.query_builder;
-		if (queryBuilderType == null)
-			queryBuilderType = queryDef.multi_field == null || queryDef.multi_field.isEmpty() ?
-					QueryDefinition.QueryBuilderType.standard_query_parser :
-					QueryDefinition.QueryBuilderType.multifield_query_parser;
+		String queryString = getFinalQueryString(queryDef);
 
-		Query query = null;
-		switch (queryBuilderType) {
-		case standard_query_parser:
-			query = getBaseQueryFromStandardQueryParser(queryDef, analyzer);
-			break;
-		case multifield_query_parser:
-			query = getBaseQueryFromMultifieldQueryParser(queryDef, analyzer);
-			break;
-		}
+		Query query = queryDef.query == null ?
+				new MatchAllDocsQuery() :
+				queryDef.query.getBoostedQuery(analyzer, queryString);
 
 		// Overload query with facet filters
 		if (queryDef.facet_filters != null)
 			query = buildFacetFiltersQuery(analyzer.getContext().facetsConfig, queryDef.facet_filters, query);
 
+		// Add optional filters
 		if (queryDef.filter != null)
-			query = buildFilteredQuery(query, queryDef.filter.getBoostedQuery(analyzer));
+			query = buildFilteredQuery(query, queryDef.filter.getBoostedQuery(analyzer, queryString));
 
+		// Add optional boosts
 		if (queryDef.boost != null)
-			query = buildBoostedQuery(query, queryDef.boost.getBoostedQuery(analyzer));
+			query = buildBoostedQuery(query, queryDef.boost.getBoostedQuery(analyzer, queryString));
 
 		return query;
 	}
@@ -401,4 +333,5 @@ class QueryUtils {
 		mlt.setAnalyzer(analyzer);
 		return mlt;
 	}
+
 }

@@ -16,6 +16,8 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.UpdatableAnalyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
@@ -66,11 +68,12 @@ public class SpanNotQuery extends AbstractSpanQuery {
 	}
 
 	@Override
-	final protected SpanQuery getQuery(UpdatableAnalyzer analyzer) throws IOException {
+	final protected SpanQuery getQuery(UpdatableAnalyzer analyzer, String queryString)
+			throws IOException, ParseException, QueryNodeException {
 		Objects.requireNonNull(include);
 		Objects.requireNonNull(exclude);
-		final SpanQuery includeQuery = (SpanQuery) include.getBoostedQuery(analyzer);
-		final SpanQuery excludeQuery = (SpanQuery) exclude.getBoostedQuery(analyzer);
+		final SpanQuery includeQuery = (SpanQuery) include.getBoostedQuery(analyzer, queryString);
+		final SpanQuery excludeQuery = (SpanQuery) exclude.getBoostedQuery(analyzer, queryString);
 		if (dist != null)
 			return new org.apache.lucene.search.spans.SpanNotQuery(includeQuery, excludeQuery, dist);
 		else if (pre != null || post != null)

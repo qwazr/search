@@ -20,18 +20,23 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.qwazr.search.index.UpdatableAnalyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.queryparser.flexible.standard.*;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "query")
 @JsonSubTypes({ @JsonSubTypes.Type(value = BooleanQuery.class, name = "boolean_query"),
+		@JsonSubTypes.Type(value = MultiTermQueryParser.class, name = "multi_term_query_parser"),
 		@JsonSubTypes.Type(value = PhraseQuery.class, name = "phrase_query"),
 		@JsonSubTypes.Type(value = SpanFirstQueries.class, name = "span_first_queries"),
 		@JsonSubTypes.Type(value = SpanFirstQuery.class, name = "span_first_query"),
 		@JsonSubTypes.Type(value = SpanNearQuery.class, name = "span_near_query"),
 		@JsonSubTypes.Type(value = SpanNotQuery.class, name = "span_not_query"),
 		@JsonSubTypes.Type(value = SpanTermQuery.class, name = "span_term_query"),
+		@JsonSubTypes.Type(value = StandardQueryParser.class, name = "standard_query_parser"),
 		@JsonSubTypes.Type(value = TermQuery.class, name = "term_query"),
 		@JsonSubTypes.Type(value = TermRangeQuery.class, name = "term_range_query") })
 
@@ -44,10 +49,12 @@ public abstract class AbstractQuery {
 	}
 
 	@JsonIgnore
-	protected abstract Query getQuery(UpdatableAnalyzer analyzer) throws IOException;
+	protected abstract Query getQuery(UpdatableAnalyzer analyzer, String queryString)
+			throws IOException, ParseException, QueryNodeException;
 
-	public final Query getBoostedQuery(UpdatableAnalyzer analyzer) throws IOException {
-		Query query = getQuery(analyzer);
+	public final Query getBoostedQuery(UpdatableAnalyzer analyzer, String queryString)
+			throws IOException, ParseException, QueryNodeException {
+		Query query = getQuery(analyzer, queryString);
 		if (boost != null)
 			query.setBoost(boost);
 		return query;

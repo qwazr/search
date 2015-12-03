@@ -39,7 +39,7 @@ public class SpanTermQuery extends AbstractSpanQuery {
 	}
 
 	@Override
-	protected SpanQuery getQuery(UpdatableAnalyzer analyzer) throws IOException {
+	protected SpanQuery getQuery(UpdatableAnalyzer analyzer, String queryString) throws IOException {
 		return new org.apache.lucene.search.spans.SpanTermQuery(new Term(field, text));
 	}
 }
