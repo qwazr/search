@@ -18,11 +18,14 @@ package com.qwazr.search.query;
 import com.qwazr.search.index.UpdatableAnalyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.spans.SpanFirstQuery;
+import org.apache.lucene.search.spans.SpanPositionRangeQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 
 import java.io.IOException;
@@ -54,19 +57,24 @@ public class SpanFirstQueries extends AbstractQuery {
 
 	@Override
 	protected Query getQuery(UpdatableAnalyzer analyzer, String queryString) throws IOException {
+
 		BooleanQuery.Builder builder = new BooleanQuery.Builder();
 		TokenStream tokenStream = analyzer.tokenStream(field, queryString);
 		CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
+		PositionIncrementAttribute pocincrAttribute = tokenStream.getAttribute(PositionIncrementAttribute.class);
 		tokenStream.reset();
 		final List<String> terms = new ArrayList<String>();
 		int e = end == null ? 0 : end;
 		final boolean inc_end = increment_end != null ? increment_end : false;
+		int pos = 1;
 		while (tokenStream.incrementToken()) {
+			//System.out.println("LOG " + pos + " : " + (1 - Math.log10(pos)));
 			SpanFirstQuery query = new SpanFirstQuery(new SpanTermQuery(new Term(field, charTermAttribute.toString())),
 					e);
 			builder.add(new BooleanClause(query, BooleanClause.Occur.SHOULD));
 			if (inc_end)
 				e++;
+			pos += pocincrAttribute.getPositionIncrement();
 		}
 		tokenStream.close();
 		return builder.build();

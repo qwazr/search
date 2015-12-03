@@ -16,6 +16,9 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.UpdatableAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
@@ -63,10 +66,11 @@ public class TermQuery extends AbstractQuery {
 		final String sourceText = text == null ? queryString : text;
 		final String term;
 		if (apply_analyzer != null && apply_analyzer) {
-			analyzer.forEachTerm(field, queryString, new Function<String, Boolean>() {
+			analyzer.forEachTerm(field, queryString, new UpdatableAnalyzer.TermConsumer() {
 				@Override
-				public Boolean apply(String term) {
-					atomicString.set(term);
+				public boolean apply(CharTermAttribute charTermAttribute, PositionIncrementAttribute positionIncrement,
+						OffsetAttribute offset) {
+					atomicString.set(charTermAttribute.toString());
 					return false;
 				}
 			});
