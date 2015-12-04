@@ -1,5 +1,4 @@
 {
-  "query_string": "*:*",
   "rows": 0,
   "functions": [
     {

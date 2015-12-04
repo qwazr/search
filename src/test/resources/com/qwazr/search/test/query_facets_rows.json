@@ -1,6 +1,9 @@
 {
   "query_string": "name",
-  "default_field": "name",
+  "query": {
+    "query": "standard_query_parser",
+    "default_field": "name"
+  },
   "returned_fields": [
     "name",
     "price"

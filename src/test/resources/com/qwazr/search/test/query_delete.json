@@ -1,6 +1,4 @@
 {
-  "query_string": "*:*",
-  "default_field": "$id$",
   "facet_filters": [
     {
       "category": [
