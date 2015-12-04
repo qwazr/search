@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,8 @@ import com.qwazr.utils.json.client.JsonClientAbstract;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -42,31 +44,30 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	};
 
 	@Override
-	public SchemaSettingsDefinition createUpdateSchema(String schema_name, Boolean local) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name).setParameters(local, null);
+	public SchemaSettingsDefinition createUpdateSchema(String schema_name) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, null, msTimeOut, SchemaSettingsDefinition.class, 200);
 	}
 
 	@Override
-	public SchemaSettingsDefinition createUpdateSchema(String schema_name, Boolean local,
-					SchemaSettingsDefinition settings) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name).setParameters(local, null);
+	public SchemaSettingsDefinition createUpdateSchema(String schema_name, SchemaSettingsDefinition settings) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, settings, msTimeOut, SchemaSettingsDefinition.class, 200);
 	}
 
 	@Override
-	public Set<String> getSchemas(Boolean local) {
-		UBuilder uriBuilder = new UBuilder("/indexes").setParameters(local, null);
+	public Set<String> getSchemas() {
+		UBuilder uriBuilder = new UBuilder("/indexes");
 		Request request = Request.Get(uriBuilder.build());
 		return (Set<String>) commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
 	}
 
 	@Override
-	public Response deleteSchema(String schema_name, Boolean local) {
+	public Response deleteSchema(String schema_name) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name).setParameters(local, null);
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
 			Request request = Request.Delete(uriBuilder.build());
 			HttpResponse response = execute(request, null, msTimeOut);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -79,23 +80,22 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Set<String> getIndexes(String schema_name, Boolean local) {
-		UBuilder uriBuilder = new UBuilder("/indexes/" + schema_name).setParameters(local, null);
+	public Set<String> getIndexes(String schema_name) {
+		UBuilder uriBuilder = new UBuilder("/indexes/" + schema_name);
 		Request request = Request.Get(uriBuilder.build());
 		return (Set<String>) commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
 	}
 
 	@Override
-	public IndexStatus createUpdateIndex(String schema_name, String index_name, Boolean local) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name).setParameters(local, null);
+	public IndexStatus createUpdateIndex(String schema_name, String index_name) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, null, msTimeOut, IndexStatus.class, 200);
 	}
 
 	@Override
-	public IndexStatus createUpdateIndex(String schema_name, String index_name, Boolean local,
-					IndexSettingsDefinition settings) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name).setParameters(local, null);
+	public IndexStatus createUpdateIndex(String schema_name, String index_name, IndexSettingsDefinition settings) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, settings, msTimeOut, IndexStatus.class, 200);
 	}
@@ -104,44 +104,59 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	};
 
 	@Override
-	public LinkedHashMap<String, FieldDefinition> getFields(String schema_name, String index_name, Boolean local) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields")
-						.setParameters(local, null);
+	public LinkedHashMap<String, FieldDefinition> getFields(String schema_name, String index_name) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields");
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, msTimeOut, MapStringFieldTypeRef, 200);
 	}
 
 	@Override
-	public LinkedHashMap<String, FieldDefinition> setFields(String schema_name, String index_name, Boolean local,
-					LinkedHashMap<String, FieldDefinition> fields) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/")
-						.setParameters(local, null);
+	public LinkedHashMap<String, FieldDefinition> setFields(String schema_name, String index_name,
+			LinkedHashMap<String, FieldDefinition> fields) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/");
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, fields, msTimeOut, MapStringFieldTypeRef, 200);
 	}
 
+	public final static TypeReference<List<TermDefinition>> MapListTermDefinitionRef = new TypeReference<List<TermDefinition>>() {
+	};
+
 	@Override
-	public FieldDefinition getField(String schema_name, String index_name, String field_name, Boolean local) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name)
-						.setParameters(local, null);
+	public List<TermDefinition> doAnalyzeQuery(String schema_name, String index_name, String field_name, String text) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name,
+				"/analyzer/query");
+		uriBuilder.setParameter("text", text);
+		Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, msTimeOut, MapListTermDefinitionRef, 200);
+	}
+
+	@Override
+	public List<TermDefinition> doAnalyzeIndex(String schema_name, String index_name, String field_name, String text) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name,
+				"/analyzer/index");
+		uriBuilder.setParameter("text", text);
+		Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, msTimeOut, MapListTermDefinitionRef, 200);
+	}
+
+	@Override
+	public FieldDefinition getField(String schema_name, String index_name, String field_name) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, msTimeOut, FieldDefinition.class, 200);
 	}
 
 	@Override
-	public FieldDefinition setField(String schema_name, String index_name, String field_name, Boolean local,
-					FieldDefinition field) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name)
-						.setParameters(local, null);
+	public FieldDefinition setField(String schema_name, String index_name, String field_name, FieldDefinition field) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, field, msTimeOut, FieldDefinition.class, 200);
 	}
 
 	@Override
-	public Response deleteField(String schema_name, String index_name, String field_name, Boolean local) {
+	public Response deleteField(String schema_name, String index_name, String field_name) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name)
-							.setParameters(local, null);
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
 			Request request = Request.Delete(uriBuilder.build());
 			HttpResponse response = execute(request, null, msTimeOut);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -161,9 +176,9 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Response deleteIndex(String schema_name, String index_name, Boolean local) {
+	public Response deleteIndex(String schema_name, String index_name) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name).setParameters(local, null);
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
 			Request request = Request.Delete(uriBuilder.build());
 			HttpResponse response = execute(request, null, msTimeOut);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -196,7 +211,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public BackupStatus doBackup(String schema_name, String index_name, Integer keep_last_count) {
 		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup")
-						.setParameterObject("keep_last", keep_last_count);
+				.setParameterObject("keep_last", keep_last_count);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, null, msTimeOut, BackupStatus.class, 200);
 	}
@@ -260,10 +275,9 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Response deleteAll(String schema_name, String index_name, Boolean local) {
+	public Response deleteAll(String schema_name, String index_name) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs")
-							.setParameters(local, null);
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs");
 			Request request = Request.Delete(uriBuilder.build());
 			HttpResponse response = execute(request, null, msTimeOut);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -278,7 +292,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query, Boolean delete) {
 		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/search")
-						.setParameterObject("delete", delete);
+				.setParameterObject("delete", delete);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);
 	}

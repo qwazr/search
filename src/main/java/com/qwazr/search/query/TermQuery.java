@@ -15,16 +15,17 @@
  */
 package com.qwazr.search.query;
 
+import com.qwazr.search.index.AnalyzerUtils;
 import com.qwazr.search.index.UpdatableAnalyzer;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
-import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
+import org.apache.lucene.analysis.tokenattributes.*;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+
+import static com.qwazr.search.index.AnalyzerUtils.*;
 
 public class TermQuery extends AbstractQuery {
 
@@ -66,11 +67,12 @@ public class TermQuery extends AbstractQuery {
 		final String sourceText = text == null ? queryString : text;
 		final String term;
 		if (apply_analyzer != null && apply_analyzer) {
-			analyzer.forEachTerm(field, queryString, new UpdatableAnalyzer.TermConsumer() {
+			forEachTerm(analyzer, field, queryString, new TermConsumer() {
 				@Override
-				public boolean apply(CharTermAttribute charTermAttribute, PositionIncrementAttribute positionIncrement,
-						OffsetAttribute offset) {
-					atomicString.set(charTermAttribute.toString());
+				public boolean apply(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr,
+						OffsetAttribute offsetAttr, PositionIncrementAttribute posIncAttr,
+						PositionLengthAttribute posLengthAttr, TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
+					atomicString.set(charTermAttr.toString());
 					return false;
 				}
 			});

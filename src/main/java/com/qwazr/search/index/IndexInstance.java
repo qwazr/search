@@ -22,6 +22,7 @@ import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -231,6 +232,14 @@ final public class IndexInstance implements Closeable {
 		LinkedHashMap<String, FieldDefinition> fields = (LinkedHashMap<String, FieldDefinition>) fieldMap.clone();
 		fields.put(field_name, field);
 		setFields(fields);
+	}
+
+	public Analyzer getIndexAnalyzer(String field) {
+		return indexAnalyzer.getWrappedAnalyzer(field);
+	}
+
+	public Analyzer getQueryAnalyzer(String field) {
+		return queryAnalyzer.getWrappedAnalyzer(field);
 	}
 
 	private void nrtCommit() throws IOException, ServerException {

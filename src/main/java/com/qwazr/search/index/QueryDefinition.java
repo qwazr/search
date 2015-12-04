@@ -52,7 +52,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		descending_missing_last
 	}
 
-
 	final public LinkedHashSet<String> returned_fields;
 	final public LinkedHashMap<String, Facet> facets;
 	final public List<Map<String, Set<String>>> facet_filters;
@@ -60,8 +59,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public LinkedHashMap<String, Integer> postings_highlighter;
 
 	final public AbstractQuery query;
-	final public AbstractQuery boost;
-	final public AbstractQuery filter;
 
 	public static class Facet {
 
@@ -112,8 +109,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		functions = null;
 		postings_highlighter = null;
 		query = null;
-		boost = null;
-		filter = null;
 	}
 
 	QueryDefinition(QueryBuilder builder) {
@@ -128,8 +123,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		functions = builder.functions;
 		postings_highlighter = builder.postings_highlighter;
 		query = builder.query;
-		boost = builder.boost;
-		filter = builder.filter;
 	}
 
 	public static QueryDefinition newQuery(String jsonString) throws IOException {

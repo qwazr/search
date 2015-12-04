@@ -193,14 +193,6 @@ class QueryUtils {
 		if (queryDef.facet_filters != null)
 			query = buildFacetFiltersQuery(analyzer.getContext().facetsConfig, queryDef.facet_filters, query);
 
-		// Add optional filters
-		if (queryDef.filter != null)
-			query = buildFilteredQuery(query, queryDef.filter.getBoostedQuery(analyzer, queryString));
-
-		// Add optional boosts
-		if (queryDef.boost != null)
-			query = buildBoostedQuery(query, queryDef.boost.getBoostedQuery(analyzer, queryString));
-
 		return query;
 	}
 
