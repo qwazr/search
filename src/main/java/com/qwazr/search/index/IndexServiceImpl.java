@@ -175,7 +175,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	public LinkedHashMap<String, FieldDefinition> setFields(String schema_name, String index_name,
-					LinkedHashMap<String, FieldDefinition> fields) {
+			LinkedHashMap<String, FieldDefinition> fields) {
 		try {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setFields(fields);
@@ -188,12 +188,12 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	private List<TermDefinition> doAnalyzer(String schema_name, String index_name, String field_name, String text,
-					boolean index) throws ServerException, IOException {
+			boolean index) throws ServerException, IOException {
 		checkRight(schema_name);
 		IndexInstance indexInstance = IndexManager.INSTANCE.get(schema_name).get(index_name);
 		Analyzer analyzer = index ?
-						indexInstance.getIndexAnalyzer(field_name) :
-						indexInstance.getQueryAnalyzer(field_name);
+				indexInstance.getIndexAnalyzer(field_name) :
+				indexInstance.getQueryAnalyzer(field_name);
 		if (analyzer == null)
 			throw new ServerException("No analyzer found for " + field_name);
 		return TermDefinition.buildTermList(analyzer, field_name, text);
@@ -203,7 +203,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	public List<TermDefinition> doAnalyzeIndex(String schema_name, String index_name, String field_name, String text) {
 		try {
 			return doAnalyzer(schema_name, index_name, field_name, text, true);
-		} catch (ServerException | IOException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -214,7 +214,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	public List<TermDefinition> doAnalyzeQuery(String schema_name, String index_name, String field_name, String text) {
 		try {
 			return doAnalyzer(schema_name, index_name, field_name, text, false);
-		} catch (ServerException | IOException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
