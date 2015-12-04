@@ -15,30 +15,12 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.utils.FileClassCompilerLoader;
-import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.DelegatingAnalyzerWrapper;
-import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
-import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.spans.SpanFirstQuery;
-import org.apache.lucene.search.spans.SpanTermQuery;
 
-import javax.script.ScriptException;
-import javax.ws.rs.core.Response;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.Map;
 
 final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 
@@ -58,6 +40,13 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 		this.analyzerMap = analyzerMap;
 	}
 
+	@Override
+	final public void close() {
+		if (analyzerMap != null)
+			analyzerMap.forEach((s, analyzer) -> analyzer.close());
+		super.close();
+	}
+
 	final AnalyzerContext getContext() {
 		return context;
 	}
@@ -67,6 +56,5 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 		Analyzer analyzer = analyzerMap.get(fieldName);
 		return analyzer == null ? defaultAnalyzer : analyzer;
 	}
-
 
 }

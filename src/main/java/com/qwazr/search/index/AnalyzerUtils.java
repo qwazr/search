@@ -28,8 +28,8 @@ public class AnalyzerUtils {
 	public interface TermConsumer {
 
 		boolean apply(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr, OffsetAttribute offsetAttr,
-				PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr, TypeAttribute typeAttr,
-				KeywordAttribute keywordAttr);
+						PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr,
+						TypeAttribute typeAttr, KeywordAttribute keywordAttr);
 	}
 
 	final static <T extends Attribute> T getAttribute(TokenStream tokenStream, Class<T> attributeClass) {
@@ -37,7 +37,7 @@ public class AnalyzerUtils {
 	}
 
 	final static public void forEachTerm(Analyzer analyzer, String field, String text, TermConsumer consumer)
-			throws IOException {
+					throws IOException {
 		Objects.requireNonNull(analyzer, "The analyzer cannot be null");
 		Objects.requireNonNull(field, "The field cannot be null");
 		Objects.requireNonNull(text, "The text cannot be null");
@@ -52,8 +52,8 @@ public class AnalyzerUtils {
 			final KeywordAttribute keywordAttr = getAttribute(tokenStream, KeywordAttribute.class);
 			tokenStream.reset();
 			while (tokenStream.incrementToken())
-				if (!consumer
-						.apply(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr, typeAttr, keywordAttr))
+				if (!consumer.apply(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr, typeAttr,
+								keywordAttr))
 					break;
 
 		} finally {

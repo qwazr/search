@@ -60,8 +60,8 @@ public class FullTest {
 	public static final List<Map<String, Object>> UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
 
 	@Before
-	public void startServer()
-			throws IOException, ParseException, ServletException, IllegalAccessException, InstantiationException {
+	public void startServer() throws IOException, ParseException, ServletException, IllegalAccessException,
+					InstantiationException {
 		if (started)
 			return;
 		// start the server
@@ -192,7 +192,7 @@ public class FullTest {
 	}
 
 	private ResultDefinition checkQuerySchema(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
-			throws IOException {
+					throws IOException {
 		ResultDefinition result = client.searchQuery(SCHEMA_NAME, "*", queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
@@ -201,7 +201,7 @@ public class FullTest {
 	}
 
 	private ResultDefinition checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
-			throws IOException {
+					throws IOException {
 		ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_NAME, queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
@@ -379,7 +379,7 @@ public class FullTest {
 	}
 
 	private <T extends Comparable> void checkDescending(T startValue, String field,
-			Collection<ResultDocument> documents) {
+					Collection<ResultDocument> documents) {
 		T old = startValue;
 		for (ResultDocument document : documents) {
 			Assert.assertNotNull(document.fields);
@@ -391,7 +391,7 @@ public class FullTest {
 	}
 
 	private <T extends Comparable> void checkAscending(T startValue, String field,
-			Collection<ResultDocument> documents) {
+					Collection<ResultDocument> documents) {
 		T old = startValue;
 		for (ResultDocument document : documents) {
 			Assert.assertNotNull(document.fields);
@@ -435,6 +435,25 @@ public class FullTest {
 		// Same backup again
 		status = doBackup(client);
 		Assert.assertEquals(status, getBackups(client, 2).get(0));
+	}
+
+	private void checkAnalyzerResult(String[] term_results, List<TermDefinition> termList) {
+		Assert.assertNotNull(termList);
+		Assert.assertEquals(term_results.length, termList.size());
+		int i = 0;
+		for (String term : term_results)
+			Assert.assertEquals(term, termList.get(i++).char_term);
+	}
+
+	@Test
+	public void test600FieldAnalyzer() throws URISyntaxException {
+		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
+		IndexServiceInterface client = getClient();
+		checkAnalyzerResult(term_results,
+						client.doAnalyzeIndex(SCHEMA_NAME, INDEX_NAME, "name", "There are few parts of texts"));
+
+		checkAnalyzerResult(term_results,
+						client.doAnalyzeQuery(SCHEMA_NAME, INDEX_NAME, "name", "There are few parts of texts"));
 	}
 
 	@Test

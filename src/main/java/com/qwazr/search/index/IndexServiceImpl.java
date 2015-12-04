@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -24,8 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -178,7 +175,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	public LinkedHashMap<String, FieldDefinition> setFields(String schema_name, String index_name,
-			LinkedHashMap<String, FieldDefinition> fields) {
+					LinkedHashMap<String, FieldDefinition> fields) {
 		try {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setFields(fields);
@@ -191,19 +188,15 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	private List<TermDefinition> doAnalyzer(String schema_name, String index_name, String field_name, String text,
-			boolean index) throws ServerException, IOException {
+					boolean index) throws ServerException, IOException {
 		checkRight(schema_name);
 		IndexInstance indexInstance = IndexManager.INSTANCE.get(schema_name).get(index_name);
 		Analyzer analyzer = index ?
-				indexInstance.getIndexAnalyzer(field_name) :
-				indexInstance.getQueryAnalyzer(field_name);
+						indexInstance.getIndexAnalyzer(field_name) :
+						indexInstance.getQueryAnalyzer(field_name);
 		if (analyzer == null)
 			throw new ServerException("No analyzer found for " + field_name);
-		try {
-			return TermDefinition.buildTermList(analyzer, field_name, text);
-		} finally {
-			IOUtils.closeQuietly(analyzer);
-		}
+		return TermDefinition.buildTermList(analyzer, field_name, text);
 	}
 
 	@Override
