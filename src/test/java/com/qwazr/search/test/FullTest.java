@@ -217,11 +217,6 @@ public class FullTest {
 	}
 
 	private void checkAllSizes(IndexServiceInterface client, int expectedSize) throws IOException {
-		Runnable task = () -> {
-			String threadName = Thread.currentThread().getName();
-			System.out.println("Hello " + threadName);
-		};
-
 		checkQuerySchema(client, MATCH_ALL_QUERY, expectedSize);
 		checkQueryIndex(client, MATCH_ALL_QUERY, expectedSize);
 		checkIndexSize(client, expectedSize);
