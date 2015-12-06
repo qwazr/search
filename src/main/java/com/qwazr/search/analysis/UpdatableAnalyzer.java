@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.analysis;
 
+import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.DelegatingAnalyzerWrapper;
@@ -38,13 +39,20 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 	final public synchronized void update(AnalyzerContext context, Map<String, Analyzer> analyzerMap)
 					throws ServerException {
 		this.context = context;
+		Map<String, Analyzer> oldAnalyzerMap = this.analyzerMap;
 		this.analyzerMap = analyzerMap;
+		close(oldAnalyzerMap);
+	}
+
+	private static void close(Map<String, Analyzer> analyzerMap) {
+		if (analyzerMap == null)
+			return;
+		analyzerMap.forEach((s, analyzer) -> IOUtils.closeQuietly(analyzer));
 	}
 
 	@Override
 	final public void close() {
-		if (analyzerMap != null)
-			analyzerMap.forEach((s, analyzer) -> analyzer.close());
+		close(analyzerMap);
 		super.close();
 	}
 
