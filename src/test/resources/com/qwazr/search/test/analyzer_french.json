@@ -1,0 +1,17 @@
+{
+  "tokenizer": {
+    "class": "standard.StandardTokenizer"
+  },
+  "filters": [
+    {
+      "class": "en.FrenchMinimalStemFilter"
+    },
+    {
+      "class": "core.LowerCaseFilter"
+    },
+    {
+      "class": "miscellaneous.ASCIIFoldingFilter",
+      "preserveOriginal": true
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "LikeAnalyzer": {
+    "tokenizer": {
+      "class": "standard.StandardTokenizer"
+    },
+    "filters": [
+      {
+        "class": "core.LowerCaseFilter"
+      },
+      {
+        "class": "miscellaneous.ASCIIFoldingFilter",
+        "preserveOriginal": true
+      }
+    ]
+  },
+  "EnglishAnalyzer": {
+    "tokenizer": {
+      "class": "standard.StandardTokenizer"
+    },
+    "filters": [
+      {
+        "class": "en.EnglishPossessiveFilter"
+      },
+      {
+        "class": "en.EnglishMinimalStemFilter"
+      },
+      {
+        "class": "core.LowerCaseFilter"
+      }
+    ]
+  },
+  "FrenchAnalyzer": {
+    "tokenizer": {
+      "class": "standard.StandardTokenizer"
+    },
+    "filters": [
+      {
+        "class": "en.FrenchMinimalStemFilter"
+      },
+      {
+        "class": "core.LowerCaseFilter"
+      },
+      {
+        "class": "miscellaneous.ASCIIFoldingFilter",
+        "preserveOriginal": true
+      }
+    ]
+  }
+}

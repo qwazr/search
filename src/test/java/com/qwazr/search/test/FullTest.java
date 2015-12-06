@@ -17,6 +17,7 @@ package com.qwazr.search.test;
 
 import com.google.common.io.Files;
 import com.qwazr.search.SearchServer;
+import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
@@ -45,6 +46,8 @@ public class FullTest {
 	public static final String INDEX_NAME = "index-test";
 	public static final LinkedHashMap<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
 	public static final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
+	public static final LinkedHashMap<String, AnalyzerDefinition> ANALYZERS_JSON = getAnalyzerMap("analyzers.json");
+	public static final AnalyzerDefinition ANALYZER_FRENCH_JSON = getAnalyzer("analyzer_french.json");
 	public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
 	public static final IndexSettingsDefinition INDEX_SETTINGS = getIndexSettings("index_settings.json");
 	public static final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
@@ -119,6 +122,28 @@ public class FullTest {
 		}
 	}
 
+	private static LinkedHashMap<String, AnalyzerDefinition> getAnalyzerMap(String res) {
+		InputStream is = FullTest.class.getResourceAsStream(res);
+		try {
+			return AnalyzerDefinition.newAnalyzerMap(IOUtils.toString(is));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			IOUtils.close(is);
+		}
+	}
+
+	private static AnalyzerDefinition getAnalyzer(String res) {
+		InputStream is = FullTest.class.getResourceAsStream(res);
+		try {
+			return AnalyzerDefinition.newAnalyzer(IOUtils.toString(is));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			IOUtils.close(is);
+		}
+	}
+
 	private static IndexSettingsDefinition getIndexSettings(String res) {
 		InputStream is = FullTest.class.getResourceAsStream(res);
 		try {
@@ -152,7 +177,37 @@ public class FullTest {
 	}
 
 	@Test
-	public void test115SetFields() throws URISyntaxException, IOException {
+	public void test120SetAnalyzers() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		LinkedHashMap<String, AnalyzerDefinition> analyzers = client
+						.setAnalyzers(SCHEMA_NAME, INDEX_NAME, ANALYZERS_JSON);
+		Assert.assertEquals(analyzers.size(), ANALYZERS_JSON.size());
+		IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_NAME);
+		Assert.assertNotNull(indexStatus.analyzers);
+		Assert.assertEquals(indexStatus.analyzers.size(), ANALYZERS_JSON.size());
+		checkAllSizes(client, 0);
+	}
+
+	@Test
+	public void test122DeleteFrenchAnalyzer() throws URISyntaxException {
+		IndexServiceInterface client = getClient();
+		client.deleteAnalyzer(SCHEMA_NAME, INDEX_NAME, "FrenchAnalyzer");
+		Map<String, AnalyzerDefinition> analyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_NAME);
+		Assert.assertNotNull(analyzers);
+		Assert.assertNull(analyzers.get("FrenchAnalyzer"));
+	}
+
+	@Test
+	public void test124SetFrenchAnalyzer() throws URISyntaxException {
+		IndexServiceInterface client = getClient();
+		client.setAnalyzer(SCHEMA_NAME, INDEX_NAME, "FrenchAnalyzer", ANALYZER_FRENCH_JSON);
+		Map<String, AnalyzerDefinition> analyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_NAME);
+		Assert.assertNotNull(analyzers);
+		Assert.assertNotNull(analyzers.get("FrenchAnalyzer"));
+	}
+
+	@Test
+	public void test130SetFields() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		LinkedHashMap<String, FieldDefinition> fields = client.setFields(SCHEMA_NAME, INDEX_NAME, FIELDS_JSON);
 		Assert.assertEquals(fields.size(), FIELDS_JSON.size());
@@ -163,7 +218,7 @@ public class FullTest {
 	}
 
 	@Test
-	public void test120DeleteNameField() throws URISyntaxException {
+	public void test132DeleteNameField() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
 		client.deleteField(SCHEMA_NAME, INDEX_NAME, "name");
 		Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_NAME);
@@ -172,7 +227,7 @@ public class FullTest {
 	}
 
 	@Test
-	public void test130SetNameField() throws URISyntaxException {
+	public void test134SetNameField() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
 		client.setField(SCHEMA_NAME, INDEX_NAME, "name", FIELD_NAME_JSON);
 		Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_NAME);

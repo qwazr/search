@@ -16,14 +16,13 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -100,43 +99,37 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		return commonServiceRequest(request, settings, msTimeOut, IndexStatus.class, 200);
 	}
 
-	public final static TypeReference<LinkedHashMap<String, FieldDefinition>> MapStringFieldTypeRef = new TypeReference<LinkedHashMap<String, FieldDefinition>>() {
-	};
-
 	@Override
 	public LinkedHashMap<String, FieldDefinition> getFields(String schema_name, String index_name) {
 		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields");
 		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, msTimeOut, MapStringFieldTypeRef, 200);
+		return commonServiceRequest(request, null, msTimeOut, FieldDefinition.MapStringFieldTypeRef, 200);
 	}
 
 	@Override
 	public LinkedHashMap<String, FieldDefinition> setFields(String schema_name, String index_name,
-			LinkedHashMap<String, FieldDefinition> fields) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/");
+					LinkedHashMap<String, FieldDefinition> fields) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields");
 		Request request = Request.Post(uriBuilder.build());
-		return commonServiceRequest(request, fields, msTimeOut, MapStringFieldTypeRef, 200);
+		return commonServiceRequest(request, fields, msTimeOut, FieldDefinition.MapStringFieldTypeRef, 200);
 	}
-
-	public final static TypeReference<List<TermDefinition>> MapListTermDefinitionRef = new TypeReference<List<TermDefinition>>() {
-	};
 
 	@Override
 	public List<TermDefinition> doAnalyzeQuery(String schema_name, String index_name, String field_name, String text) {
 		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name,
-				"/analyzer/query");
+						"/analyzer/query");
 		uriBuilder.setParameter("text", text);
 		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, msTimeOut, MapListTermDefinitionRef, 200);
+		return commonServiceRequest(request, null, msTimeOut, TermDefinition.MapListTermDefinitionRef, 200);
 	}
 
 	@Override
 	public List<TermDefinition> doAnalyzeIndex(String schema_name, String index_name, String field_name, String text) {
 		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name,
-				"/analyzer/index");
+						"/analyzer/index");
 		uriBuilder.setParameter("text", text);
 		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, msTimeOut, MapListTermDefinitionRef, 200);
+		return commonServiceRequest(request, null, msTimeOut, TermDefinition.MapListTermDefinitionRef, 200);
 	}
 
 	@Override
@@ -157,6 +150,51 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public Response deleteField(String schema_name, String index_name, String field_name) {
 		try {
 			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
+			Request request = Request.Delete(uriBuilder.build());
+			HttpResponse response = execute(request, null, msTimeOut);
+			HttpUtils.checkStatusCodes(response, 200);
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(String schema_name, String index_name) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers");
+		Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, msTimeOut, AnalyzerDefinition.MapStringAnalyzerTypeRef, 200);
+	}
+
+	@Override
+	public AnalyzerDefinition getAnalyzer(String schema_name, String index_name, String analyzer_name) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
+		Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, msTimeOut, AnalyzerDefinition.class, 200);
+	}
+
+	@Override
+	public AnalyzerDefinition setAnalyzer(String schema_name, String index_name, String analyzer_name,
+					AnalyzerDefinition analyzer) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, analyzer, msTimeOut, AnalyzerDefinition.class, 200);
+	}
+
+	@Override
+	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(String schema_name, String index_name,
+					LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers");
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, analyzers, msTimeOut, AnalyzerDefinition.MapStringAnalyzerTypeRef, 200);
+	}
+
+	@Override
+	public Response deleteAnalyzer(String schema_name, String index_name, String analyzer_name) {
+		try {
+			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
 			Request request = Request.Delete(uriBuilder.build());
 			HttpResponse response = execute(request, null, msTimeOut);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -211,7 +249,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public BackupStatus doBackup(String schema_name, String index_name, Integer keep_last_count) {
 		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup")
-				.setParameterObject("keep_last", keep_last_count);
+						.setParameterObject("keep_last", keep_last_count);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, null, msTimeOut, BackupStatus.class, 200);
 	}
@@ -292,7 +330,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query, Boolean delete) {
 		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/search")
-				.setParameterObject("delete", delete);
+						.setParameterObject("delete", delete);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);
 	}

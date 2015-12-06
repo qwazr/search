@@ -15,12 +15,9 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.index.QueryDefinition;
-import com.qwazr.search.index.UpdatableAnalyzer;
-import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
+import com.qwazr.search.analysis.UpdatableAnalyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;

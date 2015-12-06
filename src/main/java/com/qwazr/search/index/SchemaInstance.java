@@ -15,6 +15,9 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.analysis.AnalyzerContext;
+import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.utils.FileClassCompilerLoader;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
@@ -64,6 +67,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 
 		private final MultiReader multiReader;
 		private final IndexSearcher indexSearcher;
+		private final Map<String, AnalyzerDefinition> analyzerMap;
 		private final Map<String, FieldDefinition> fieldMap;
 		private final UpdatableAnalyzer queryAnalyzer;
 
@@ -72,19 +76,22 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 				indexSearcher = null;
 				multiReader = null;
 				queryAnalyzer = null;
+				analyzerMap = null;
 				fieldMap = null;
 				return;
 			}
 			IndexReader[] indexReaders = new IndexReader[indexMap.size()];
 			int i = 0;
+			analyzerMap = new HashMap<String, AnalyzerDefinition>();
 			fieldMap = new HashMap<String, FieldDefinition>();
 			for (IndexInstance indexInstance : indexMap.values()) {
 				indexReaders[i++] = DirectoryReader.open(indexInstance.getLuceneDirectory());
 				indexInstance.fillFields(fieldMap);
+				indexInstance.fillAnalyzers(analyzerMap);
 			}
 			multiReader = new MultiReader(indexReaders);
 			indexSearcher = new IndexSearcher(multiReader);
-			AnalyzerContext analyzerContext = new AnalyzerContext(fileClassCompilerLoader, fieldMap);
+			AnalyzerContext analyzerContext = new AnalyzerContext(fileClassCompilerLoader, analyzerMap, fieldMap);
 			queryAnalyzer = new UpdatableAnalyzer(analyzerContext, analyzerContext.queryAnalyzerMap);
 		}
 
@@ -100,7 +107,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 		}
 
 		public ResultDefinition search(QueryDefinition queryDef)
-				throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+						throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 			if (indexSearcher == null)
 				return null;
 			return QueryUtils.search(indexSearcher, queryDef, queryAnalyzer);
@@ -108,8 +115,8 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	SchemaInstance(File schemaDirectory)
-			throws IOException, ServerException, InterruptedException, ReflectiveOperationException,
-			URISyntaxException {
+					throws IOException, ServerException, InterruptedException, ReflectiveOperationException,
+					URISyntaxException {
 		this.schemaDirectory = schemaDirectory;
 		if (!schemaDirectory.exists())
 			schemaDirectory.mkdir();
@@ -119,8 +126,8 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
 		settingsDefinition = settingsFile.exists() ?
-				JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
-				SchemaSettingsDefinition.EMPTY;
+						JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
+						SchemaSettingsDefinition.EMPTY;
 		checkSettings();
 
 		File[] directories = schemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -144,7 +151,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	IndexStatus createUpdate(String indexName, IndexSettingsDefinition settings)
-			throws ServerException, IOException, InterruptedException, ReflectiveOperationException {
+					throws ServerException, IOException, InterruptedException, ReflectiveOperationException {
 		synchronized (indexMap) {
 			IndexInstance indexInstance = indexMap.get(indexName);
 			if (indexInstance != null && settings != null) {
@@ -246,21 +253,21 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 
 		FileClassCompilerLoader oldFccl = fileClassCompilerLoader;
 		fileClassCompilerLoader = (settingsDefinition.javac != null && settingsDefinition.javac.source_root != null) ?
-				FileClassCompilerLoader.newInstance(settingsDefinition.javac) :
-				null;
+						FileClassCompilerLoader.newInstance(settingsDefinition.javac) :
+						null;
 		if (oldFccl != null)
 			oldFccl.close();
 	}
 
 	private static ResultDefinition atomicSearch(SearchContext searchContext, QueryDefinition queryDef)
-			throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException {
+					throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException {
 		if (searchContext == null)
 			return null;
 		return searchContext.search(queryDef);
 	}
 
 	public ResultDefinition search(QueryDefinition queryDef)
-			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 		final Semaphore sem = acquireReadSemaphore();
 		try {
 			return atomicSearch(searchContext, queryDef);
@@ -286,7 +293,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	private static void atomicCheckSize(SchemaSettingsDefinition settingsDefinition, SearchContext searchContext,
-			int addSize) throws ServerException {
+					int addSize) throws ServerException {
 		if (settingsDefinition == null)
 			return;
 		if (settingsDefinition.max_size == null)
@@ -295,7 +302,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 			return;
 		if (searchContext.numDocs() + addSize > settingsDefinition.max_size)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"This schema is limited to " + settingsDefinition.max_size + " documents");
+							"This schema is limited to " + settingsDefinition.max_size + " documents");
 	}
 
 	void checkSize(int addSize) throws IOException, ServerException {

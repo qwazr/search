@@ -19,29 +19,31 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import org.apache.lucene.index.IndexReader;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Set;
 
 @JsonInclude(Include.NON_EMPTY)
 public class IndexStatus {
 
 	final public Long num_docs;
 	final public Long num_deleted_docs;
-	final public Map<String, FieldDefinition> fields;
+	final public Set<String> analyzers;
+	final public Set<String> fields;
 	final public IndexSettingsDefinition settings;
 
 	public IndexStatus() {
 		num_docs = null;
 		num_deleted_docs = null;
+		analyzers = null;
 		fields = null;
 		settings = null;
 	}
 
-	public IndexStatus(IndexReader indexReader, IndexSettingsDefinition settings,
-			HashMap<String, FieldDefinition> fields) {
+	public IndexStatus(IndexReader indexReader, IndexSettingsDefinition settings,Set<String> analyzers,
+			Set<String> fields) {
 		num_docs = (long) indexReader.numDocs();
 		num_deleted_docs = (long) indexReader.numDeletedDocs();
 		this.settings = settings;
+		this.analyzers = analyzers;
 		this.fields = fields;
 	}
 

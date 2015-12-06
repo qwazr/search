@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 
 import javax.ws.rs.PathParam;
@@ -28,7 +29,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingleClient>
-		implements IndexServiceInterface {
+				implements IndexServiceInterface {
 
 	public IndexMultiClient(ExecutorService executor, String[] urls, Integer msTimeOut) throws URISyntaxException {
 		super(executor, new IndexSingleClient[urls.length], urls, msTimeOut);
@@ -87,7 +88,7 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 
 	@Override
 	public LinkedHashMap<String, FieldDefinition> setFields(String schema_name, String index_name,
-			LinkedHashMap<String, FieldDefinition> fields) {
+					LinkedHashMap<String, FieldDefinition> fields) {
 		return null;
 	}
 
@@ -98,8 +99,8 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 
 	@Override
 	public List<TermDefinition> doAnalyzeIndex(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
-			@QueryParam("text") String text) {
+					@PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
+					@QueryParam("text") String text) {
 		return null;
 	}
 
@@ -115,6 +116,33 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 
 	@Override
 	public Response deleteField(String schema_name, String index_name, String field_name) {
+		return null;
+	}
+
+	@Override
+	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(String schema_name, String index_name) {
+		return null;
+	}
+
+	@Override
+	public AnalyzerDefinition getAnalyzer(String schema_name, String index_name, String analyzer_name) {
+		return null;
+	}
+
+	@Override
+	public AnalyzerDefinition setAnalyzer(String schema_name, String index_name, String analyzer_name,
+					AnalyzerDefinition analyzer) {
+		return null;
+	}
+
+	@Override
+	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(String schema_name, String index_name,
+					LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+		return null;
+	}
+
+	@Override
+	public Response deleteAnalyzer(String schema_name, String index_name, String analyzer_name) {
 		return null;
 	}
 

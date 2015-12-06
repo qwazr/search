@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.index;
+package com.qwazr.search.analysis;
 
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
@@ -30,12 +30,13 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 
 	private volatile Map<String, Analyzer> analyzerMap;
 
-	UpdatableAnalyzer(AnalyzerContext context, Map<String, Analyzer> analyzerMap) throws ServerException {
+	public UpdatableAnalyzer(AnalyzerContext context, Map<String, Analyzer> analyzerMap) throws ServerException {
 		super(PER_FIELD_REUSE_STRATEGY);
 		update(context, analyzerMap);
 	}
 
-	final synchronized void update(AnalyzerContext context, Map<String, Analyzer> analyzerMap) throws ServerException {
+	final public synchronized void update(AnalyzerContext context, Map<String, Analyzer> analyzerMap)
+					throws ServerException {
 		this.context = context;
 		this.analyzerMap = analyzerMap;
 	}
@@ -47,12 +48,12 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 		super.close();
 	}
 
-	final AnalyzerContext getContext() {
+	final public AnalyzerContext getContext() {
 		return context;
 	}
 
 	@Override
-	final protected Analyzer getWrappedAnalyzer(String fieldName) {
+	final public Analyzer getWrappedAnalyzer(String fieldName) {
 		Analyzer analyzer = analyzerMap.get(fieldName);
 		return analyzer == null ? defaultAnalyzer : analyzer;
 	}

@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.index.UpdatableAnalyzer;
+import com.qwazr.search.analysis.UpdatableAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 

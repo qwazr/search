@@ -35,7 +35,6 @@ import org.apache.lucene.util.NumericUtils;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class FieldDefinition {
@@ -97,7 +96,7 @@ public class FieldDefinition {
 	private Number checkNumberType(String fieldName, Object value) {
 		if (!(value instanceof Number))
 			throw new IllegalArgumentException(
-					"Wrong value type for the field: " + fieldName + " - " + value.getClass().getSimpleName());
+							"Wrong value type for the field: " + fieldName + " - " + value.getClass().getSimpleName());
 		return (Number) value;
 	}
 
@@ -105,7 +104,7 @@ public class FieldDefinition {
 		return new BytesRef(value.toString());
 	}
 
-	final Field newField(final String fieldName, final Object value) {
+	public final Field newField(final String fieldName, final Object value) {
 		if (value == null)
 			return null;
 		String stringValue = null;
@@ -148,11 +147,11 @@ public class FieldDefinition {
 				break;
 			case SortedDoubleDocValuesField:
 				field = new SortedNumericDocValuesField(fieldName,
-						NumericUtils.doubleToSortableLong(checkNumberType(fieldName, value).doubleValue()));
+								NumericUtils.doubleToSortableLong(checkNumberType(fieldName, value).doubleValue()));
 				break;
 			case SortedFloatDocValuesField:
 				field = new SortedNumericDocValuesField(fieldName,
-						NumericUtils.floatToSortableInt(checkNumberType(fieldName, value).floatValue()));
+								NumericUtils.floatToSortableInt(checkNumberType(fieldName, value).floatValue()));
 				break;
 			case SortedSetDocValuesField:
 				field = new SortedSetDocValuesField(fieldName, checkStringBytesRef(value));
@@ -255,7 +254,7 @@ public class FieldDefinition {
 		if (template == null) {
 			if (index_options == null)
 				throw new ServerException(Response.Status.BAD_REQUEST,
-						"A not indexed field cannot be used in sorting: " + field);
+								"A not indexed field cannot be used in sorting: " + field);
 		} else {
 			switch (template) {
 			case DoubleField:

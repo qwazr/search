@@ -19,10 +19,9 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.qwazr.search.index.UpdatableAnalyzer;
+import com.qwazr.search.analysis.UpdatableAnalyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.queryparser.flexible.standard.*;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;

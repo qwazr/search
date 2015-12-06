@@ -15,17 +15,14 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.index.AnalyzerUtils;
-import com.qwazr.search.index.UpdatableAnalyzer;
+import com.qwazr.search.analysis.UpdatableAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.*;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 
-import static com.qwazr.search.index.AnalyzerUtils.*;
+import static com.qwazr.search.analysis.AnalyzerUtils.*;
 
 public class TermQuery extends AbstractQuery {
 

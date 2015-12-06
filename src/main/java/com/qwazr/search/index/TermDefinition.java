@@ -17,28 +17,12 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.json.JsonMapper;
-import com.qwazr.utils.server.ServerException;
-import com.sun.scenario.effect.Offset;
+import com.qwazr.search.analysis.AnalyzerUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.tokenattributes.*;
-import org.apache.lucene.document.*;
-import org.apache.lucene.facet.FacetField;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
-import org.apache.lucene.index.DocValuesType;
-import org.apache.lucene.index.IndexOptions;
-import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortedNumericSortField;
-import org.apache.lucene.search.SortedSetSortField;
-import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.NumericUtils;
 
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -65,8 +49,8 @@ public class TermDefinition {
 	}
 
 	TermDefinition(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr, OffsetAttribute offsetAttr,
-			PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr, TypeAttribute typeAttr,
-			KeywordAttribute keywordAttr) {
+					PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr,
+					TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
 		char_term = charTermAttr == null ? null : charTermAttr.toString();
 		if (offsetAttr != null) {
 			start_offset = offsetAttr.startOffset();
@@ -87,14 +71,16 @@ public class TermDefinition {
 		AnalyzerUtils.forEachTerm(analyzer, field, text, new AnalyzerUtils.TermConsumer() {
 			@Override
 			public boolean apply(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr, OffsetAttribute offsetAttr,
-					PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr,
-					TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
-				termList.add(
-						new TermDefinition(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr, typeAttr,
-								keywordAttr));
+							PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr,
+							TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
+				termList.add(new TermDefinition(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr,
+								typeAttr, keywordAttr));
 				return true;
 			}
 		});
 		return termList;
 	}
+
+	public final static TypeReference<List<TermDefinition>> MapListTermDefinitionRef = new TypeReference<List<TermDefinition>>() {
+	};
 }
