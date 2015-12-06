@@ -15,8 +15,8 @@
  */
 package com.qwazr.search.analysis;
 
-import com.qwazr.search.index.FieldDefinition;
-import com.qwazr.search.index.IndexUtils;
+import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldUtils;
 import com.qwazr.utils.FileClassCompilerLoader;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
@@ -60,13 +60,13 @@ public class AnalyzerContext {
 
 				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ?
 								null :
-								IndexUtils.findAnalyzer(compilerLoader, fieldDef.analyzer);
+								findAnalyzer(compilerLoader, analyzerMap, fieldDef.analyzer);
 				if (indexAnalyzer != null)
 					indexAnalyzerMap.put(fieldName, indexAnalyzer);
 
 				final Analyzer queryAnalyzer = StringUtils.isEmpty(fieldDef.query_analyzer) ?
 								indexAnalyzer :
-								IndexUtils.findAnalyzer(compilerLoader, fieldDef.query_analyzer);
+								findAnalyzer(compilerLoader, analyzerMap, fieldDef.query_analyzer);
 				if (queryAnalyzer != null)
 					queryAnalyzerMap.put(fieldName, queryAnalyzer);
 
@@ -81,7 +81,21 @@ public class AnalyzerContext {
 		FieldDefinition fieldDef = fields == null ? null : fields.get(fieldName);
 		if (fieldDef == null)
 			throw new IOException("No field definition for the field: " + fieldName);
-		return fieldDef.newField(fieldName, value);
+		return FieldUtils.newLuceneField(fieldDef, fieldName, value);
+	}
+
+	final static String[] analyzerClassPrefixes = { "", "org.apache.lucene.analysis." };
+
+	static private Analyzer findAnalyzer(FileClassCompilerLoader compilerLoader,
+					Map<String, AnalyzerDefinition> analyzerMap, String analyzer)
+					throws InterruptedException, ReflectiveOperationException, IOException {
+		if (analyzerMap != null) {
+			AnalyzerDefinition analyzerDef = analyzerMap.get(analyzer);
+			if (analyzerDef != null)
+				return new CustomAnalyzer(analyzerDef);
+		}
+		return (Analyzer) FileClassCompilerLoader.findClass(compilerLoader, analyzer, analyzerClassPrefixes)
+						.newInstance();
 	}
 
 }

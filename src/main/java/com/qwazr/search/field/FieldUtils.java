@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.index;
+package com.qwazr.search.field;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.document.*;
 import org.apache.lucene.facet.FacetField;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
-import org.apache.lucene.index.DocValuesType;
-import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.SortedNumericSortField;
@@ -33,85 +29,29 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.LinkedHashMap;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class FieldDefinition {
+public class FieldUtils {
 
-	public final String analyzer;
-	public final String query_analyzer;
-	public final Boolean tokenized;
-	public final Boolean stored;
-	public final Boolean store_termvectors;
-	public final Boolean store_termvector_offsets;
-	public final Boolean store_termvector_positions;
-	public final Boolean store_termvector_payloads;
-	public final Boolean omit_norms;
-	public final FieldType.NumericType numeric_type;
-	public final IndexOptions index_options;
-	public final DocValuesType docvalues_type;
-
-	public enum Template {
-		DoubleField,
-		FloatField,
-		IntField,
-		LongField,
-		LongDocValuesField,
-		IntDocValuesField,
-		FloatDocValuesField,
-		DoubleDocValuesField,
-		SortedDocValuesField,
-		SortedLongDocValuesField,
-		SortedIntDocValuesField,
-		SortedDoubleDocValuesField,
-		SortedFloatDocValuesField,
-		SortedSetDocValuesField,
-		StoredField,
-		StringField,
-		TextField,
-		FacetField,
-		SortedSetDocValuesFacetField,
-		SortedSetMultiDocValuesFacetField;
-	}
-
-	public final Template template;
-
-	public FieldDefinition() {
-		analyzer = null;
-		query_analyzer = null;
-		tokenized = null;
-		stored = null;
-		store_termvectors = null;
-		store_termvector_offsets = null;
-		store_termvector_positions = null;
-		store_termvector_payloads = null;
-		omit_norms = null;
-		numeric_type = null;
-		index_options = null;
-		docvalues_type = null;
-		template = null;
-	}
-
-	private Number checkNumberType(String fieldName, Object value) {
+	private static Number checkNumberType(String fieldName, Object value) {
 		if (!(value instanceof Number))
 			throw new IllegalArgumentException(
 							"Wrong value type for the field: " + fieldName + " - " + value.getClass().getSimpleName());
 		return (Number) value;
 	}
 
-	private BytesRef checkStringBytesRef(Object value) {
+	private static BytesRef checkStringBytesRef(Object value) {
 		return new BytesRef(value.toString());
 	}
 
-	public final Field newField(final String fieldName, final Object value) {
+	public static final Field newLuceneField(FieldDefinition fieldDef, final String fieldName, final Object value) {
 		if (value == null)
 			return null;
 		String stringValue = null;
 		Field field = null;
-		Field.Store store = (stored != null && stored) ? Field.Store.YES : Field.Store.NO;
-		if (template != null) {
-			switch (template) {
+		Field.Store store = (fieldDef.stored != null && fieldDef.stored) ? Field.Store.YES : Field.Store.NO;
+		if (fieldDef.template != null) {
+			switch (fieldDef.template) {
 			case DoubleField:
 				field = new DoubleField(fieldName, checkNumberType(fieldName, value).doubleValue(), store);
 				break;
@@ -195,26 +135,26 @@ public class FieldDefinition {
 		}
 		if (field == null) {
 			FieldType type = new FieldType();
-			if (stored != null)
-				type.setStored(stored);
-			if (tokenized != null)
-				type.setTokenized(tokenized);
-			if (store_termvectors != null)
-				type.setStoreTermVectors(store_termvectors);
-			if (store_termvector_offsets != null)
-				type.setStoreTermVectorOffsets(store_termvector_offsets);
-			if (store_termvector_positions != null)
-				type.setStoreTermVectorPositions(store_termvector_positions);
-			if (store_termvector_payloads != null)
-				type.setStoreTermVectorPayloads(store_termvector_payloads);
-			if (omit_norms != null)
-				type.setOmitNorms(omit_norms);
-			if (numeric_type != null)
-				type.setNumericType(numeric_type);
-			if (index_options != null)
-				type.setIndexOptions(index_options);
-			if (docvalues_type != null)
-				type.setDocValuesType(docvalues_type);
+			if (fieldDef.stored != null)
+				type.setStored(fieldDef.stored);
+			if (fieldDef.tokenized != null)
+				type.setTokenized(fieldDef.tokenized);
+			if (fieldDef.store_termvectors != null)
+				type.setStoreTermVectors(fieldDef.store_termvectors);
+			if (fieldDef.store_termvector_offsets != null)
+				type.setStoreTermVectorOffsets(fieldDef.store_termvector_offsets);
+			if (fieldDef.store_termvector_positions != null)
+				type.setStoreTermVectorPositions(fieldDef.store_termvector_positions);
+			if (fieldDef.store_termvector_payloads != null)
+				type.setStoreTermVectorPayloads(fieldDef.store_termvector_payloads);
+			if (fieldDef.omit_norms != null)
+				type.setOmitNorms(fieldDef.omit_norms);
+			if (fieldDef.numeric_type != null)
+				type.setNumericType(fieldDef.numeric_type);
+			if (fieldDef.index_options != null)
+				type.setIndexOptions(fieldDef.index_options);
+			if (fieldDef.docvalues_type != null)
+				type.setDocValuesType(fieldDef.docvalues_type);
 
 			try {
 				field = new Field(fieldName, value.toString(), type);
@@ -225,7 +165,7 @@ public class FieldDefinition {
 		return field;
 	}
 
-	final static Object getValue(IndexableField field) {
+	public final static Object getValue(IndexableField field) {
 		if (field == null)
 			return null;
 		String s = field.stringValue();
@@ -237,26 +177,14 @@ public class FieldDefinition {
 		return null;
 	}
 
-	public final static TypeReference<LinkedHashMap<String, FieldDefinition>> MapStringFieldTypeRef = new TypeReference<LinkedHashMap<String, FieldDefinition>>() {
-	};
-
-	public final static LinkedHashMap<String, FieldDefinition> newFieldMap(String jsonString) throws IOException {
-		if (StringUtils.isEmpty(jsonString))
-			return null;
-		return JsonMapper.MAPPER.readValue(jsonString, MapStringFieldTypeRef);
-	}
-
-	public final static FieldDefinition newField(String jsonString) throws IOException {
-		return JsonMapper.MAPPER.readValue(jsonString, FieldDefinition.class);
-	}
-
-	final SortField getSortField(String field, boolean reverse) throws ServerException {
-		if (template == null) {
-			if (index_options == null)
+	public final static SortField getSortField(FieldDefinition fieldDef, String field, boolean reverse)
+					throws ServerException {
+		if (fieldDef.template == null) {
+			if (fieldDef.index_options == null)
 				throw new ServerException(Response.Status.BAD_REQUEST,
 								"A not indexed field cannot be used in sorting: " + field);
 		} else {
-			switch (template) {
+			switch (fieldDef.template) {
 			case DoubleField:
 			case DoubleDocValuesField:
 				return new SortField(field, SortField.Type.DOUBLE, reverse);

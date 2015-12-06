@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;

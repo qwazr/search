@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.FileClassCompilerLoader;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;

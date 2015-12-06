@@ -17,6 +17,8 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
@@ -89,7 +91,7 @@ class QueryUtils {
 			FieldDefinition fieldDefinition = fields.get(field);
 			if (fieldDefinition == null)
 				throw new ServerException(Response.Status.BAD_REQUEST, "Unknown sort field: " + field);
-			sortField = fieldDefinition.getSortField(field, reverse);
+			sortField = FieldUtils.getSortField(fieldDefinition, field, reverse);
 		}
 		if (missingValue != null)
 			sortField.setMissingValue(missingValue);

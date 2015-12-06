@@ -60,4 +60,5 @@ public class AnalyzerUtils {
 			tokenStream.close();
 		}
 	}
+
 }

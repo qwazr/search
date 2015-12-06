@@ -19,7 +19,6 @@ import com.datastax.driver.core.utils.UUIDs;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.utils.FileClassCompilerLoader;
 import com.qwazr.utils.server.ServerException;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -28,7 +27,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.similarities.Similarity;
 
 import javax.ws.rs.core.Response;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -109,38 +107,13 @@ public class IndexUtils {
 		indexWriter.updateDocValues(termId, newFieldList(context, document));
 	}
 
-	final static Class<Analyzer> findClass(String[] classPrefixes, String analyzer) throws ClassNotFoundException {
-		ClassNotFoundException firstClassException = null;
-		for (String prefix : classPrefixes) {
-			try {
-				return (Class<Analyzer>) Class.forName(prefix + analyzer);
-			} catch (ClassNotFoundException e) {
-				if (firstClassException == null)
-					firstClassException = e;
-			}
-		}
-		throw firstClassException;
-	}
-
-	final static <T> Class<T> findClass(FileClassCompilerLoader compilerLoader, String classDef, String[] classPrefixes)
-					throws ReflectiveOperationException, InterruptedException, IOException {
-		if (compilerLoader != null && classDef.endsWith(".java"))
-			return compilerLoader.loadClass(new File(classDef));
-		return (Class<T>) findClass(classPrefixes, classDef);
-	}
-
 	final static String[] similarityClassPrefixes = { "", "com.qwazr.search.similarity.",
 					"org.apache.lucene.search.similarities." };
 
 	final static Similarity findSimilarity(FileClassCompilerLoader compilerLoader, String similarity)
 					throws InterruptedException, ReflectiveOperationException, IOException {
-		return (Similarity) findClass(compilerLoader, similarity, similarityClassPrefixes).newInstance();
+		return (Similarity) FileClassCompilerLoader.findClass(compilerLoader, similarity, similarityClassPrefixes)
+						.newInstance();
 	}
 
-	final static String[] analyzerClassPrefixes = { "", "com.qwazr.search.analysis.", "org.apache.lucene.analysis." };
-
-	final static public Analyzer findAnalyzer(FileClassCompilerLoader compilerLoader, String analyzer)
-					throws InterruptedException, ReflectiveOperationException, IOException {
-		return (Analyzer) findClass(compilerLoader, analyzer, analyzerClassPrefixes).newInstance();
-	}
 }

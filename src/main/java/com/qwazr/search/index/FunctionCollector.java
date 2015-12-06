@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.LeafCollector;

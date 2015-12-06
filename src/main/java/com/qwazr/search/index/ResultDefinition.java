@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.document.Document;

@@ -23,10 +23,7 @@ import org.apache.lucene.analysis.util.AbstractAnalysisFactory;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 final public class CustomAnalyzer extends Analyzer {
 
@@ -38,7 +35,7 @@ final public class CustomAnalyzer extends Analyzer {
 		tokenizerFactory = getFactory(analyzerDefinition.tokenizer, KeywordTokenizerFactory.class);
 		if (analyzerDefinition.filters != null && !analyzerDefinition.filters.isEmpty()) {
 			tokenFilterFactories = new ArrayList<TokenFilterFactory>(analyzerDefinition.filters.size());
-			for (Map<String, String> filterDef : analyzerDefinition.filters)
+			for (LinkedHashMap<String, String> filterDef : analyzerDefinition.filters)
 				tokenFilterFactories.add(getFactory(filterDef, null));
 		} else
 			tokenFilterFactories = null;
@@ -56,12 +53,17 @@ final public class CustomAnalyzer extends Analyzer {
 		return new TokenStreamComponents(source, result);
 	}
 
-	private final static <T extends AbstractAnalysisFactory> T getFactory(Map<String, String> args,
+	private final static <T extends AbstractAnalysisFactory> T getFactory(LinkedHashMap<String, String> args,
 					Class<T> defaultClass) throws ReflectiveOperationException {
-		final String clazz = args == null ? null : args.remove("class");
+		final String clazz;
+		if (args != null) {
+			args = (LinkedHashMap<String, String>) args.clone();
+			clazz = args.remove("class");
+		} else
+			clazz = null;
 		final Class<T> factoryClass = clazz == null ? defaultClass : getFactoryClass(clazz);
 		if (factoryClass == null)
-			return null;
+			throw new ClassNotFoundException("No class found for: " + clazz);
 		return factoryClass.getConstructor(Map.class).newInstance(args == null ? Collections.emptyMap() : args);
 	}
 

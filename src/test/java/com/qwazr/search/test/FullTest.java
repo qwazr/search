@@ -18,6 +18,7 @@ package com.qwazr.search.test;
 import com.google.common.io.Files;
 import com.qwazr.search.SearchServer;
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;

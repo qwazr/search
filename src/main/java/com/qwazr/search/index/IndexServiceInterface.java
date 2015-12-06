@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.SearchServer;
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.server.RestApplication;
 
 import javax.annotation.security.RolesAllowed;

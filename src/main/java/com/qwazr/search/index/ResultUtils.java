@@ -15,6 +15,8 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
@@ -30,7 +32,7 @@ class ResultUtils {
 	final static Map<String, Object> buildFields(final Document document) {
 		Map<String, Object> fields = new LinkedHashMap<String, Object>();
 		for (IndexableField field : document) {
-			Object newValue = FieldDefinition.getValue(field);
+			Object newValue = FieldUtils.getValue(field);
 			if (newValue == null)
 				continue;
 			Object oldValue = fields.get(field.name());

@@ -23,13 +23,12 @@ import com.qwazr.utils.json.JsonMapper;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AnalyzerDefinition {
 
-	public final Map<String, String> tokenizer;
-	public final List<Map<String, String>> filters;
+	public final LinkedHashMap<String, String> tokenizer;
+	public final List<LinkedHashMap<String, String>> filters;
 
 	public AnalyzerDefinition() {
 		tokenizer = null;
