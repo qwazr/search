@@ -16,14 +16,13 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.analysis.UpdatableAnalyzer;
-import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
 
-public class MultiTermQueryParser extends AbstractQuery {
+public class MultiFieldQueryParser extends AbstractQuery {
 
 	final public String[] fields;
 	final public LinkedHashMap<String, Float> boosts;
@@ -38,7 +37,7 @@ public class MultiTermQueryParser extends AbstractQuery {
 	final public Integer max_determinized_states;
 	final public Boolean lowercase_expanded_terms;
 
-	public MultiTermQueryParser() {
+	public MultiFieldQueryParser() {
 		super(null);
 		fields = null;
 		boosts = null;
@@ -56,8 +55,8 @@ public class MultiTermQueryParser extends AbstractQuery {
 
 	@Override
 	final protected Query getQuery(UpdatableAnalyzer analyzer, String queryString) throws IOException, ParseException {
-
-		final MultiFieldQueryParser parser = new MultiFieldQueryParser(fields, analyzer, boosts);
+		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser = new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(
+						fields, analyzer, boosts);
 		if (default_operator != null)
 			parser.setDefaultOperator(default_operator.queryParseroperator);
 		if (allow_leading_wildcard != null)
