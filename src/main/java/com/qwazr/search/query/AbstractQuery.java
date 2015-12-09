@@ -28,8 +28,15 @@ import java.io.IOException;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "query")
 @JsonSubTypes({ @JsonSubTypes.Type(value = BooleanQuery.class, name = "boolean_query"),
+				@JsonSubTypes.Type(value = ConstantScoreQuery.class, name = "constant_score_query"),
+				@JsonSubTypes.Type(value = DisjunctionMaxQuery.class, name = "disjunction_max_query"),
+				@JsonSubTypes.Type(value = FuzzyQuery.class, name = "fuzzy_query"),
+				@JsonSubTypes.Type(value = MatchAllDocsQuery.class, name = "match_all_docs_query"),
+				@JsonSubTypes.Type(value = MatchNoDocsQuery.class, name = "match_no_docs_query"),
 				@JsonSubTypes.Type(value = MultiFieldQueryParser.class, name = "multi_field_query_parser"),
 				@JsonSubTypes.Type(value = PhraseQuery.class, name = "phrase_query"),
+				@JsonSubTypes.Type(value = PrefixQuery.class, name = "prefix_query"),
+				@JsonSubTypes.Type(value = RegexpQuery.class, name = "regexp_query"),
 				@JsonSubTypes.Type(value = SpanFirstQueries.class, name = "span_first_queries"),
 				@JsonSubTypes.Type(value = SpanFirstQuery.class, name = "span_first_query"),
 				@JsonSubTypes.Type(value = SpanNearQuery.class, name = "span_near_query"),
