@@ -61,7 +61,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public Set<String> getSchemas() {
 		UBuilder uriBuilder = new UBuilder("/indexes");
 		Request request = Request.Get(uriBuilder.build());
-		return (Set<String>) commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
+		return commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
 	}
 
 	@Override
@@ -83,7 +83,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public Set<String> getIndexes(String schema_name) {
 		UBuilder uriBuilder = new UBuilder("/indexes/" + schema_name);
 		Request request = Request.Get(uriBuilder.build());
-		return (Set<String>) commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
+		return commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
 	}
 
 	@Override

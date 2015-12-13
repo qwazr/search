@@ -79,9 +79,7 @@ public class BackupStatus {
 			return false;
 		if (!equalsNull(bytes_size, s.bytes_size))
 			return false;
-		if (!equalsNull(bytes_size, s.bytes_size))
-			return false;
-		return true;
+		return equalsNull(bytes_size, s.bytes_size);
 	}
 
 }

@@ -37,7 +37,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public LinkedHashMap<String, SortEnum> sorts;
 	final public ArrayList<Function> functions;
 
-	public static enum SortEnum {
+	public enum SortEnum {
 
 		ascending,
 
@@ -75,7 +75,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	public static class Function {
 
-		public static enum FunctionEnum {
+		public enum FunctionEnum {
 			max, min
 		}
 

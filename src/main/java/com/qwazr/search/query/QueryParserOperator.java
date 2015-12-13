@@ -32,8 +32,8 @@ public enum QueryParserOperator {
 	@JsonIgnore
 	final StandardQueryConfigHandler.Operator queryConfigHandlerOperator;
 
-	private QueryParserOperator(QueryParser.Operator queryParseroperator,
-			StandardQueryConfigHandler.Operator queryConfigHandlerOperator) {
+	QueryParserOperator(QueryParser.Operator queryParseroperator,
+					StandardQueryConfigHandler.Operator queryConfigHandlerOperator) {
 		this.queryParseroperator = queryParseroperator;
 		this.queryConfigHandlerOperator = queryConfigHandlerOperator;
 	}

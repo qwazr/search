@@ -40,7 +40,7 @@ public class BooleanQuery extends AbstractQuery {
 
 		private final org.apache.lucene.search.BooleanClause.Occur occur;
 
-		private Occur(org.apache.lucene.search.BooleanClause.Occur occur) {
+		Occur(org.apache.lucene.search.BooleanClause.Occur occur) {
 			this.occur = occur;
 		}
 	}

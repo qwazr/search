@@ -35,106 +35,105 @@ public interface IndexServiceInterface {
 	@POST
 	@Path("/{schema_name}")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public SchemaSettingsDefinition createUpdateSchema(@PathParam("schema_name") String schema_name);
+	SchemaSettingsDefinition createUpdateSchema(@PathParam("schema_name") String schema_name);
 
 	@POST
 	@Path("/{schema_name}")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public SchemaSettingsDefinition createUpdateSchema(@PathParam("schema_name") String schema_name,
+	SchemaSettingsDefinition createUpdateSchema(@PathParam("schema_name") String schema_name,
 					SchemaSettingsDefinition settings);
 
 	@GET
 	@Path("/")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Set<String> getSchemas();
+	Set<String> getSchemas();
 
 	@DELETE
 	@Path("/{schema_name}")
-	public Response deleteSchema(@PathParam("schema_name") String schema_name);
+	Response deleteSchema(@PathParam("schema_name") String schema_name);
 
 	@GET
 	@Path("/{schema_name}")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Set<String> getIndexes(@PathParam("schema_name") String schema_name);
+	Set<String> getIndexes(@PathParam("schema_name") String schema_name);
 
 	@POST
 	@Path("/{schema_name}/{index_name}")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public IndexStatus createUpdateIndex(@PathParam("schema_name") String schema_name,
+	IndexStatus createUpdateIndex(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name);
 
 	@POST
 	@Path("/{schema_name}/{index_name}")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public IndexStatus createUpdateIndex(@PathParam("schema_name") String schema_name,
+	IndexStatus createUpdateIndex(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, IndexSettingsDefinition settings);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/fields")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public LinkedHashMap<String, FieldDefinition> getFields(@PathParam("schema_name") String schema_name,
+	LinkedHashMap<String, FieldDefinition> getFields(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/fields")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public LinkedHashMap<String, FieldDefinition> setFields(@PathParam("schema_name") String schema_name,
+	LinkedHashMap<String, FieldDefinition> setFields(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, LinkedHashMap<String, FieldDefinition> fields);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/fields/{field_name}/analyzer/query")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public List<TermDefinition> doAnalyzeQuery(@PathParam("schema_name") String schema_name,
+	List<TermDefinition> doAnalyzeQuery(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
 					@QueryParam("text") String text);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/fields/{field_name}/analyzer/index")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public List<TermDefinition> doAnalyzeIndex(@PathParam("schema_name") String schema_name,
+	List<TermDefinition> doAnalyzeIndex(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
 					@QueryParam("text") String text);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/fields/{field_name}")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public FieldDefinition getField(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, @PathParam("field_name") String field_name);
+	FieldDefinition getField(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+					@PathParam("field_name") String field_name);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/fields/{field_name}")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public FieldDefinition setField(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
-					FieldDefinition fields);
+	FieldDefinition setField(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+					@PathParam("field_name") String field_name, FieldDefinition fields);
 
 	@DELETE
 	@Path("/{schema_name}/{index_name}/fields/{field_name}")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response deleteField(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, @PathParam("field_name") String field_name);
+	Response deleteField(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+					@PathParam("field_name") String field_name);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/analyzers")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(@PathParam("schema_name") String schema_name,
+	LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public AnalyzerDefinition getAnalyzer(@PathParam("schema_name") String schema_name,
+	AnalyzerDefinition getAnalyzer(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, @PathParam("analyzer_name") String analyzer_name);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public AnalyzerDefinition setAnalyzer(@PathParam("schema_name") String schema_name,
+	AnalyzerDefinition setAnalyzer(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, @PathParam("analyzer_name") String analyzer_name,
 					AnalyzerDefinition analyzer);
 
@@ -142,76 +141,74 @@ public interface IndexServiceInterface {
 	@Path("/{schema_name}/{index_name}/analyzers")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(@PathParam("schema_name") String schema_name,
+	LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, LinkedHashMap<String, AnalyzerDefinition> analyzers);
 
 	@DELETE
 	@Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response deleteAnalyzer(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, @PathParam("analyzer_name") String analyzer_name);
+	Response deleteAnalyzer(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+					@PathParam("analyzer_name") String analyzer_name);
 
 	@GET
 	@Path("/{schema_name}/{index_name}")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public IndexStatus getIndex(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name);
+	IndexStatus getIndex(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
 	@DELETE
 	@Path("/{schema_name}/{index_name}")
-	public Response deleteIndex(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name);
+	Response deleteIndex(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
 	@DELETE
 	@Path("/{schema_name}/{index_name}/docs")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response deleteAll(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
+	Response deleteAll(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/doc")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response postDocument(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, Map<String, Object> document);
+	Response postDocument(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+					Map<String, Object> document);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/docs")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response postDocuments(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, List<Map<String, Object>> documents);
+	Response postDocuments(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+					List<Map<String, Object>> documents);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/doc/values")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response updateDocumentValues(@PathParam("schema_name") String schema_name,
+	Response updateDocumentValues(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, Map<String, Object> document);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/docs/values")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public Response updateDocumentsValues(@PathParam("schema_name") String schema_name,
+	Response updateDocumentsValues(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, List<Map<String, Object>> documents);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/backup")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public BackupStatus doBackup(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, @QueryParam("keep_last") Integer keep_last_count);
+	BackupStatus doBackup(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+					@QueryParam("keep_last") Integer keep_last_count);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/backup")
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public List<BackupStatus> getBackups(@PathParam("schema_name") String schema_name,
+	List<BackupStatus> getBackups(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/search")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public ResultDefinition searchQuery(@PathParam("schema_name") String schema_name,
+	ResultDefinition searchQuery(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, QueryDefinition query,
 					@QueryParam("delete") Boolean delete);
 
@@ -219,7 +216,7 @@ public interface IndexServiceInterface {
 	@Path("/{schema_name}/{index_name}/mlt")
 	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
 	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	public ResultDefinition mltQuery(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, MltQueryDefinition query);
+	ResultDefinition mltQuery(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+					MltQueryDefinition query);
 
 }

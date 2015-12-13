@@ -62,7 +62,7 @@ public class FieldDefinition {
 		TextField,
 		FacetField,
 		SortedSetDocValuesFacetField,
-		SortedSetMultiDocValuesFacetField;
+		SortedSetMultiDocValuesFacetField
 	}
 
 	public final Template template;
