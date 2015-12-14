@@ -22,6 +22,7 @@ import com.qwazr.search.field.FieldUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
@@ -46,7 +47,7 @@ import java.util.*;
 class QueryUtils {
 
 	final static SortField buildSortField(Map<String, FieldDefinition> fields, String field,
-					QueryDefinition.SortEnum sortEnum) throws ServerException {
+			QueryDefinition.SortEnum sortEnum) throws ServerException {
 
 		final boolean reverse;
 		final Object missingValue;
@@ -99,7 +100,7 @@ class QueryUtils {
 	}
 
 	final static Sort buildSort(Map<String, FieldDefinition> fields,
-					LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
+			LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
 		if (sorts.isEmpty())
 			return null;
 		final SortField[] sortFields = new SortField[sorts.size()];
@@ -130,7 +131,7 @@ class QueryUtils {
 	}
 
 	final static Query buildFacetFiltersQuery(FacetsConfig facetsConfig, List<Map<String, Set<String>>> facet_filters,
-					Query query) {
+			Query query) {
 		if (facet_filters.isEmpty())
 			return query;
 
@@ -182,13 +183,13 @@ class QueryUtils {
 	}
 
 	final static Query getLuceneQuery(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
-					throws QueryNodeException, ParseException, IOException {
+			throws QueryNodeException, ParseException, IOException {
 
 		String queryString = getFinalQueryString(queryDef);
 
 		Query query = queryDef.query == null ?
-						new MatchAllDocsQuery() :
-						queryDef.query.getBoostedQuery(analyzer, queryString);
+				new MatchAllDocsQuery() :
+				queryDef.query.getBoostedQuery(analyzer, queryString);
 
 		// Overload query with facet filters
 		if (queryDef.facet_filters != null)
@@ -197,80 +198,63 @@ class QueryUtils {
 		return query;
 	}
 
-	final static Collection<FunctionCollector> buildFunctions(Map<String, FieldDefinition> fields,
-					Collection<QueryDefinition.Function> functions) throws ServerException {
-		if (functions == null || functions.isEmpty())
-			return null;
-		Collection<FunctionCollector> functionsCollectors = new ArrayList<FunctionCollector>();
-		for (QueryDefinition.Function function : functions) {
-			FieldDefinition fieldDef = fields.get(function.field);
-			if (fieldDef == null)
-				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-								"Cannot compute the function " + function.function + " because the field is unknown: "
-												+ function.field);
-			functionsCollectors.add(new FunctionCollector(function, fieldDef));
+	static private Pair<TotalHitCountCollector, TopDocsCollector> getCollectorPair(List<Collector> collectors,
+			boolean bNeedScore, int numHits, Sort sort) throws IOException {
+		final TotalHitCountCollector totalHitCollector;
+		final TopDocsCollector topDocsCollector;
+		if (numHits == 0) {
+			totalHitCollector = new TotalHitCountCollector();
+			topDocsCollector = null;
+			collectors.add(0, totalHitCollector);
+		} else {
+			if (sort != null)
+				topDocsCollector = TopFieldCollector.create(sort, numHits, true, bNeedScore, bNeedScore);
+			else
+				topDocsCollector = TopScoreDocCollector.create(numHits);
+			totalHitCollector = null;
+			collectors.add(0, topDocsCollector);
 		}
-		return functionsCollectors;
+		return Pair.of(totalHitCollector, topDocsCollector);
 	}
 
 	final static ResultDefinition search(IndexSearcher indexSearcher, QueryDefinition queryDef,
-					UpdatableAnalyzer analyzer)
-					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+			UpdatableAnalyzer analyzer)
+			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 
 		Query query = getLuceneQuery(queryDef, analyzer);
 
 		final IndexReader indexReader = indexSearcher.getIndexReader();
 		final TimeTracker timeTracker = new TimeTracker();
-		final TopDocs topDocs;
+
 		final AnalyzerContext analyzerContext = analyzer.getContext();
 		final Sort sort = queryDef.sorts == null ? null : buildSort(analyzerContext.fields, queryDef.sorts);
 		final Facets facets;
-		final FacetsCollector facetsCollector;
 		final SortedSetDocValuesReaderState facetState;
-		final List<Collector> collectors = new ArrayList<Collector>();
-		if (queryDef.facets != null && !queryDef.facets.isEmpty())
-			collectors.add(facetsCollector = new FacetsCollector());
-		else
-			facetsCollector = null;
-		final Collection<FunctionCollector> functionCollectors = buildFunctions(analyzerContext.fields,
-						queryDef.functions);
-		if (functionCollectors != null)
-			collectors.addAll(functionCollectors);
 
 		final int numHits = queryDef.getEnd();
-		final int totalHits;
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
+		final boolean bPercentScore = queryDef.percent_score != null && queryDef.percent_score && bNeedScore;
 
-		if (collectors.isEmpty()) {
-			if (sort != null)
-				topDocs = indexSearcher.search(query, numHits, sort, bNeedScore, bNeedScore);
-			else
-				topDocs = indexSearcher.search(query, numHits);
-			totalHits = topDocs.totalHits;
-		} else {
-			final TotalHitCountCollector totalHitCollector;
-			final TopDocsCollector topDocsCollector;
-			if (numHits == 0) {
-				totalHitCollector = new TotalHitCountCollector();
-				topDocsCollector = null;
-				collectors.add(0, totalHitCollector);
-			} else {
-				if (sort != null)
-					topDocsCollector = TopFieldCollector.create(sort, numHits, true, bNeedScore, bNeedScore);
-				else
-					topDocsCollector = TopScoreDocCollector.create(numHits);
-				totalHitCollector = null;
-				collectors.add(0, topDocsCollector);
-			}
-			indexSearcher.search(query, MultiCollector.wrap(collectors));
-			topDocs = topDocsCollector != null ? topDocsCollector.topDocs() : null;
-			totalHits = totalHitCollector != null ? totalHitCollector.getTotalHits() : topDocs.totalHits;
+		if (bPercentScore) {
+			final QueryCollectors queryCollectors = new QueryCollectors(true, null, 1, null,
+					null, analyzerContext.fields);
+			indexSearcher.search(query, queryCollectors.finalCollector);
+			System.out.println("Max score: " + queryCollectors.getTopDocs().getMaxScore());
+			timeTracker.next("max_score_query");
 		}
+
+		final QueryCollectors queryCollectors = new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets,
+				queryDef.functions, analyzerContext.fields);
+
+		indexSearcher.search(query, queryCollectors.finalCollector);
+		final TopDocs topDocs = queryCollectors.getTopDocs();
+		final Integer totalHits = queryCollectors.getTotalHits();
+
 		timeTracker.next("search_query");
 
-		if (facetsCollector != null) {
+		if (queryCollectors.facetsCollector != null) {
 			facetState = new DefaultSortedSetDocValuesReaderState(indexReader);
-			facets = new SortedSetDocValuesFacetCounts(facetState, facetsCollector);
+			facets = new SortedSetDocValuesFacetCounts(facetState, queryCollectors.facetsCollector);
 			timeTracker.next("facet_count");
 		} else {
 			facetState = null;
@@ -292,11 +276,11 @@ class QueryUtils {
 		}
 
 		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, totalHits, topDocs, queryDef,
-						facetState, facets, postingsHighlightersMap, functionCollectors, query);
+				facetState, facets, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
 	}
 
 	final static MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader,
-					UpdatableAnalyzer analyzer) throws IOException {
+			UpdatableAnalyzer analyzer) throws IOException {
 
 		final MoreLikeThis mlt = new MoreLikeThis(reader);
 		if (mltQueryDef.boost != null)

@@ -42,12 +42,23 @@ public class QueryBuilder {
 	public AbstractQuery boost = null;
 	public AbstractQuery filter = null;
 
+	public Boolean percent_score = null;
+
 	public Boolean getQuery_debug() {
 		return query_debug;
 	}
 
 	public QueryBuilder setQuery_debug(Boolean query_debug) {
 		this.query_debug = query_debug;
+		return this;
+	}
+
+	public Boolean getPercent_score() {
+		return percent_score;
+	}
+
+	public QueryBuilder setPercent_score(Boolean percent_score) {
+		this.percent_score = percent_score;
 		return this;
 	}
 

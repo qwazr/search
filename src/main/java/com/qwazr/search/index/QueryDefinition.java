@@ -58,6 +58,8 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	final public LinkedHashMap<String, Integer> postings_highlighter;
 
+	final public Boolean percent_score;
+
 	final public AbstractQuery query;
 
 	public static class Facet {
@@ -109,6 +111,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		functions = null;
 		postings_highlighter = null;
 		query = null;
+		percent_score = null;
 	}
 
 	QueryDefinition(QueryBuilder builder) {
@@ -123,6 +126,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		functions = builder.functions;
 		postings_highlighter = builder.postings_highlighter;
 		query = builder.query;
+		percent_score = builder.percent_score;
 	}
 
 	public static QueryDefinition newQuery(String jsonString) throws IOException {

@@ -34,7 +34,8 @@ import java.util.*;
 @JsonInclude(Include.NON_EMPTY)
 public class ResultDefinition {
 
-	final public Map<String, Long> timer;
+	final public LinkedHashMap<String, Long> timer;
+	final public Long total_time;
 	final public Long total_hits;
 	final public Float max_score;
 	final public List<ResultDocument> documents;
@@ -58,6 +59,7 @@ public class ResultDefinition {
 
 	public ResultDefinition() {
 		this.timer = null;
+		this.total_time = null;
 		this.total_hits = null;
 		this.documents = null;
 		this.facets = null;
@@ -75,11 +77,11 @@ public class ResultDefinition {
 	}
 
 	ResultDefinition(Map<String, FieldDefinition> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
-			int totalHits, TopDocs topDocs, QueryDefinition queryDef, SortedSetDocValuesReaderState facetState,
+			Integer totalHits, TopDocs topDocs, QueryDefinition queryDef, SortedSetDocValuesReaderState facetState,
 			Facets facets, Map<String, String[]> postingsHighlightsMap,
 			Collection<FunctionCollector> functionsCollector, Query query) throws IOException {
 		this.query = getQuery(queryDef.query_debug, query);
-		this.total_hits = (long) totalHits;
+		this.total_hits = totalHits == null ? null : (long) totalHits;
 		max_score = topDocs != null ? topDocs.getMaxScore() : null;
 		int pos = queryDef.start == null ? 0 : queryDef.start;
 		int end = queryDef.getEnd();
@@ -91,18 +93,27 @@ public class ResultDefinition {
 			while (pos < total_hits && pos < end) {
 				final ScoreDoc scoreDoc = docs[pos];
 				final Document document = searcher.doc(scoreDoc.doc, queryDef.returned_fields);
-				documents.add(new ResultDocument(pos, scoreDoc, document, queryDef.postings_highlighter,
+				documents.add(new ResultDocument(pos, scoreDoc, max_score, document, queryDef.postings_highlighter,
 						postingsHighlightsMap, docValuesSources));
 				pos++;
 			}
-			timeTracker.next("returned_fields");
+			if (timeTracker != null)
+				timeTracker.next("returned_fields");
 		}
 		this.facets = facets != null && queryDef != null ?
 				ResultUtils.buildFacets(facetState, queryDef.facets, facets) :
 				null;
 		this.functions = functionsCollector != null ? ResultUtils.buildFunctions(functionsCollector) : null;
-		timeTracker.next("facet_fields");
-		this.timer = timeTracker == null ? null : timeTracker.getMap();
+		if (timeTracker != null)
+			timeTracker.next("facet_fields");
+
+		if (timeTracker != null) {
+			this.timer = timeTracker.getMap();
+			this.total_time = timeTracker.getTotalTime();
+		} else {
+			this.timer = null;
+			this.total_time = null;
+		}
 	}
 
 	ResultDefinition(Map<String, FieldDefinition> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
@@ -119,13 +130,21 @@ public class ResultDefinition {
 		while (pos < total_hits && pos < end) {
 			final ScoreDoc scoreDoc = docs[pos];
 			final Document document = searcher.doc(scoreDoc.doc, mltQueryDef.returned_fields);
-			documents.add(new ResultDocument(pos, scoreDoc, document, null, null, docValuesSources));
+			documents.add(new ResultDocument(pos, scoreDoc, max_score, document, null, null, docValuesSources));
 			pos++;
 		}
-		timeTracker.next("returned_fields");
+		if (timeTracker != null)
+			timeTracker.next("returned_fields");
 		this.facets = null;
 		this.functions = null;
-		this.timer = timeTracker == null ? null : timeTracker.getMap();
+
+		if (timeTracker != null) {
+			this.timer = timeTracker.getMap();
+			this.total_time = timeTracker.getTotalTime();
+		} else {
+			this.timer = null;
+			this.total_time = null;
+		}
 	}
 
 	ResultDefinition(TimeTracker timeTracker) {
@@ -135,7 +154,13 @@ public class ResultDefinition {
 		facets = null;
 		functions = null;
 		max_score = null;
-		this.timer = timeTracker == null ? null : timeTracker.getMap();
+		if (timeTracker != null) {
+			this.timer = timeTracker.getMap();
+			this.total_time = timeTracker.getTotalTime();
+		} else {
+			this.timer = null;
+			this.total_time = null;
+		}
 	}
 
 	ResultDefinition(long total_hits) {
@@ -146,10 +171,15 @@ public class ResultDefinition {
 		functions = null;
 		max_score = null;
 		this.timer = null;
+		this.total_time = null;
 	}
 
 	public Long getTotal_hits() {
 		return total_hits;
+	}
+
+	public Long getTotal_time() {
+		return total_time;
 	}
 
 	public Float getMax_score() {
