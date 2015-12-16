@@ -16,42 +16,32 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.analysis.UpdatableAnalyzer;
-import org.apache.lucene.index.Term;
+import com.qwazr.search.function.AbstractValueSource;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
-public class PhraseQuery extends AbstractQuery {
+public class FunctionQuery extends AbstractQuery {
 
-	final public String field;
-	final public List<String> terms;
-	final public Integer slop;
+	final public AbstractValueSource value_source;
 
-	public PhraseQuery() {
+	public FunctionQuery() {
 		super(null);
-		field = null;
-		terms = null;
-		slop = null;
+		value_source = null;
 	}
 
-	PhraseQuery(Float boost, String field, Integer slop, List<String> terms) {
+	FunctionQuery(Float boost, AbstractValueSource value_source) {
 		super(boost);
-		this.field = field;
-		this.slop = slop;
-		this.terms = terms;
+		this.value_source = value_source;
 	}
 
 	@Override
-	protected Query getQuery(UpdatableAnalyzer analyzer, String queryParser) throws IOException {
-		Objects.requireNonNull(field, "The field property should not be null");
-		org.apache.lucene.search.PhraseQuery.Builder builder = new org.apache.lucene.search.PhraseQuery.Builder();
-		if (slop != null)
-			builder.setSlop(slop);
-		if (terms != null)
-			for (String term : terms)
-				builder.add(new Term(field, term));
-		return builder.build();
+	final protected Query getQuery(UpdatableAnalyzer analyzer, String queryString)
+			throws IOException, ParseException, QueryNodeException {
+		Objects.requireNonNull(value_source, "The value_source property is missing");
+		return new org.apache.lucene.queries.function.FunctionQuery(value_source.getValueSource());
 	}
 }
