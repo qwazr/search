@@ -1,7 +1,7 @@
 {
   "query_string": "name",
   "query": {
-    "query": "standard_query_parser",
+    "query": "StandardQueryParser",
     "default_field": "name"
   },
   "returned_fields": [
