@@ -41,7 +41,7 @@ public class AnalyzerContext {
 
 	public AnalyzerContext(FileClassCompilerLoader compilerLoader, Map<String, AnalyzerDefinition> analyzerMap,
 					Map<String, FieldDefinition> fields) throws ServerException {
-		this.compilerLoaderVersion = compilerLoader.getCurrentVersion();
+		this.compilerLoaderVersion = compilerLoader != null ? compilerLoader.getCurrentVersion() : null;
 		this.fields = fields;
 		this.facetsConfig = new FacetsConfig();
 		if (fields == null || fields.size() == 0) {

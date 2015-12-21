@@ -38,7 +38,7 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 	}
 
 	final public synchronized void update(AnalyzerContext context, Map<String, Analyzer> analyzerMap)
-			throws ServerException {
+					throws ServerException {
 		this.context = context;
 		Map<String, Analyzer> oldAnalyzerMap = this.analyzerMap;
 		this.analyzerMap = analyzerMap;
@@ -50,6 +50,8 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 			return false;
 		if (context == null)
 			return false;
+		if (context.compilerLoaderVersion == null)
+			return true;
 		return compilerLoader.getCurrentVersion().timestamp() != context.compilerLoaderVersion.timestamp();
 	}
 
