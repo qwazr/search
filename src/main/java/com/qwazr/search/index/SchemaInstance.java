@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 
 public class SchemaInstance implements Closeable, AutoCloseable {
@@ -54,6 +55,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 
 	private final ConcurrentHashMap<String, IndexInstance> indexMap;
 
+	private final ExecutorService executorService;
 	private final File schemaDirectory;
 	private final File settingsFile;
 	private volatile SchemaSettingsDefinition settingsDefinition;
@@ -108,16 +110,17 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 		}
 
 		public ResultDefinition search(QueryDefinition queryDef)
-						throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+				throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 			if (indexSearcher == null)
 				return null;
 			return QueryUtils.search(indexSearcher, queryDef, queryAnalyzer);
 		}
 	}
 
-	SchemaInstance(File schemaDirectory)
-					throws IOException, ServerException, InterruptedException, ReflectiveOperationException,
-					URISyntaxException {
+	SchemaInstance(ExecutorService executorService, File schemaDirectory)
+			throws IOException, ServerException, InterruptedException, ReflectiveOperationException,
+			URISyntaxException {
+		this.executorService = executorService;
 		this.schemaDirectory = schemaDirectory;
 		if (!schemaDirectory.exists())
 			schemaDirectory.mkdir();
@@ -127,8 +130,8 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
 		settingsDefinition = settingsFile.exists() ?
-						JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
-						SchemaSettingsDefinition.EMPTY;
+				JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
+				SchemaSettingsDefinition.EMPTY;
 		checkSettings();
 
 		File[] directories = schemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -152,7 +155,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	IndexStatus createUpdate(String indexName, IndexSettingsDefinition settings)
-					throws ServerException, IOException, InterruptedException, ReflectiveOperationException {
+			throws ServerException, IOException, InterruptedException, ReflectiveOperationException {
 		synchronized (indexMap) {
 			IndexInstance indexInstance = indexMap.get(indexName);
 			if (indexInstance != null && settings != null) {
@@ -254,21 +257,21 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 
 		FileClassCompilerLoader oldFccl = fileClassCompilerLoader;
 		fileClassCompilerLoader = (settingsDefinition.javac != null && settingsDefinition.javac.source_root != null) ?
-						FileClassCompilerLoader.newInstance(settingsDefinition.javac) :
-						null;
+				FileClassCompilerLoader.newInstance(executorService, settingsDefinition.javac) :
+				null;
 		if (oldFccl != null)
 			oldFccl.close();
 	}
 
 	private static ResultDefinition atomicSearch(SearchContext searchContext, QueryDefinition queryDef)
-					throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException {
+			throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException {
 		if (searchContext == null)
 			return null;
 		return searchContext.search(queryDef);
 	}
 
 	public ResultDefinition search(QueryDefinition queryDef)
-					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 		final Semaphore sem = acquireReadSemaphore();
 		try {
 			return atomicSearch(searchContext, queryDef);
@@ -294,7 +297,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	private static void atomicCheckSize(SchemaSettingsDefinition settingsDefinition, SearchContext searchContext,
-					int addSize) throws ServerException {
+			int addSize) throws ServerException {
 		if (settingsDefinition == null)
 			return;
 		if (settingsDefinition.max_size == null)
@@ -303,7 +306,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 			return;
 		if (searchContext.numDocs() + addSize > settingsDefinition.max_size)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-							"This schema is limited to " + settingsDefinition.max_size + " documents");
+					"This schema is limited to " + settingsDefinition.max_size + " documents");
 	}
 
 	void checkSize(int addSize) throws IOException, ServerException {

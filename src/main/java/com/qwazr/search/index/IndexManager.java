@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 public class IndexManager {
 
@@ -35,10 +36,10 @@ public class IndexManager {
 
 	public static volatile IndexManager INSTANCE = null;
 
-	public static void load(File directory) throws IOException {
+	public static void load(ExecutorService executorService, File directory) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
-		INSTANCE = new IndexManager(directory);
+		INSTANCE = new IndexManager(executorService, directory);
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
@@ -49,9 +50,12 @@ public class IndexManager {
 
 	private final ConcurrentHashMap<String, SchemaInstance> schemaMap;
 
+	private final ExecutorService executorService;
+
 	private final File rootDirectory;
 
-	private IndexManager(File rootDirectory) {
+	private IndexManager(ExecutorService executorService, File rootDirectory) {
+		this.executorService = executorService;
 		this.rootDirectory = rootDirectory;
 		schemaMap = new ConcurrentHashMap<String, SchemaInstance>();
 		File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -59,7 +63,7 @@ public class IndexManager {
 			return;
 		for (File schemaDirectory : directories) {
 			try {
-				schemaMap.put(schemaDirectory.getName(), new SchemaInstance(schemaDirectory));
+				schemaMap.put(schemaDirectory.getName(), new SchemaInstance(executorService, schemaDirectory));
 			} catch (ServerException | IOException | ReflectiveOperationException | InterruptedException | URISyntaxException e) {
 				logger.error(e.getMessage(), e);
 			}
@@ -79,7 +83,7 @@ public class IndexManager {
 		synchronized (schemaMap) {
 			SchemaInstance schemaInstance = schemaMap.get(schemaName);
 			if (schemaInstance == null) {
-				schemaInstance = new SchemaInstance(new File(rootDirectory, schemaName));
+				schemaInstance = new SchemaInstance(executorService, new File(rootDirectory, schemaName));
 				schemaMap.put(schemaName, schemaInstance);
 			}
 			if (settings != null)

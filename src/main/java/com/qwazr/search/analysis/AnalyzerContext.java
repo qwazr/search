@@ -29,9 +29,11 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class AnalyzerContext {
 
+	public final UUID compilerLoaderVersion;
 	public final Map<String, FieldDefinition> fields;
 	public final FacetsConfig facetsConfig;
 	public final Map<String, Analyzer> indexAnalyzerMap;
@@ -39,6 +41,7 @@ public class AnalyzerContext {
 
 	public AnalyzerContext(FileClassCompilerLoader compilerLoader, Map<String, AnalyzerDefinition> analyzerMap,
 					Map<String, FieldDefinition> fields) throws ServerException {
+		this.compilerLoaderVersion = compilerLoader.getCurrentVersion();
 		this.fields = fields;
 		this.facetsConfig = new FacetsConfig();
 		if (fields == null || fields.size() == 0) {

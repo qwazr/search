@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.analysis;
 
+import com.qwazr.utils.FileClassCompilerLoader;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
@@ -37,11 +38,19 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 	}
 
 	final public synchronized void update(AnalyzerContext context, Map<String, Analyzer> analyzerMap)
-					throws ServerException {
+			throws ServerException {
 		this.context = context;
 		Map<String, Analyzer> oldAnalyzerMap = this.analyzerMap;
 		this.analyzerMap = analyzerMap;
 		close(oldAnalyzerMap);
+	}
+
+	final public boolean hasNeedRecompilation(FileClassCompilerLoader compilerLoader) {
+		if (compilerLoader == null)
+			return false;
+		if (context == null)
+			return false;
+		return compilerLoader.getCurrentVersion().timestamp() != context.compilerLoaderVersion.timestamp();
 	}
 
 	private static void close(Map<String, Analyzer> analyzerMap) {

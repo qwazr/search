@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,11 +31,15 @@ import javax.ws.rs.ApplicationPath;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class SearchServer extends AbstractServer {
 
 	public final static String SERVICE_NAME_SEARCH = "search";
 	public final static String INDEXES_DIRECTORY = "index";
+
+	private final ExecutorService executorService;
 
 	private final static ServerDefinition serverDefinition = new ServerDefinition();
 
@@ -47,6 +51,7 @@ public class SearchServer extends AbstractServer {
 
 	private SearchServer() {
 		super(serverDefinition);
+		executorService = Executors.newCachedThreadPool();
 	}
 
 	@ApplicationPath("/")
@@ -69,21 +74,21 @@ public class SearchServer extends AbstractServer {
 		if (!directoryFile.exists())
 			directoryFile.mkdir();
 		if (!directoryFile.isDirectory())
-			throw new IOException("This name is not valid. No directory exists for this location: " + directoryFile
-							.getName());
+			throw new IOException(
+					"This name is not valid. No directory exists for this location: " + directoryFile.getName());
 	}
 
-	public static void loadIndexManager(File dataDirectory) throws IOException {
+	public static void loadIndexManager(ExecutorService executorService, File dataDirectory) throws IOException {
 		File indexDir = new File(dataDirectory, INDEXES_DIRECTORY);
 		checkDirectoryExists(indexDir);
-		IndexManager.load(indexDir);
+		IndexManager.load(executorService, indexDir);
 	}
 
 	@Override
 	public void load() throws IOException {
 		File currentDataDir = getCurrentDataDir();
 		ClusterServer.load(getWebServicePublicAddress(), currentDataDir);
-		loadIndexManager(currentDataDir);
+		loadIndexManager(executorService, currentDataDir);
 
 	}
 
@@ -102,8 +107,8 @@ public class SearchServer extends AbstractServer {
 		return null;
 	}
 
-	public static void main(String[] args) throws IOException, ParseException, ServletException, InstantiationException,
-					IllegalAccessException {
+	public static void main(String[] args)
+			throws IOException, ParseException, ServletException, InstantiationException, IllegalAccessException {
 		new SearchServer().start(args);
 	}
 
