@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.function;
+package com.qwazr.search.source;
 
 import org.apache.lucene.queries.function.ValueSource;
 
-public class FloatFieldSource extends AbstractFieldSource {
+public class IntFieldSource extends AbstractFieldSource {
 
 	@Override
 	public ValueSource getValueSource() {
 		check();
-		return new org.apache.lucene.queries.function.valuesource.FloatFieldSource(field);
+		return new org.apache.lucene.queries.function.valuesource.IntFieldSource(field);
 	}
 }

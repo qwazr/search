@@ -29,14 +29,15 @@ import java.io.IOException;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "query")
 @JsonSubTypes({ @JsonSubTypes.Type(value = BooleanQuery.class), @JsonSubTypes.Type(value = BoostedQuery.class),
 		@JsonSubTypes.Type(value = ConstantScoreQuery.class), @JsonSubTypes.Type(value = DisjunctionMaxQuery.class),
-		@JsonSubTypes.Type(value = FunctionQuery.class), @JsonSubTypes.Type(value = FuzzyQuery.class),
-		@JsonSubTypes.Type(value = MatchAllDocsQuery.class), @JsonSubTypes.Type(value = MatchNoDocsQuery.class),
-		@JsonSubTypes.Type(value = MultiFieldQueryParser.class), @JsonSubTypes.Type(value = PhraseQuery.class),
-		@JsonSubTypes.Type(value = PrefixQuery.class), @JsonSubTypes.Type(value = RegexpQuery.class),
-		@JsonSubTypes.Type(value = SpanFirstQueries.class), @JsonSubTypes.Type(value = SpanFirstQuery.class),
-		@JsonSubTypes.Type(value = SpanNearQuery.class), @JsonSubTypes.Type(value = SpanNotQuery.class),
-		@JsonSubTypes.Type(value = SpanTermQuery.class), @JsonSubTypes.Type(value = StandardQueryParser.class),
-		@JsonSubTypes.Type(value = TermQuery.class), @JsonSubTypes.Type(value = TermRangeQuery.class) })
+		@JsonSubTypes.Type(value = CustomScoreQuery.class), @JsonSubTypes.Type(value = FunctionQuery.class),
+		@JsonSubTypes.Type(value = FuzzyQuery.class), @JsonSubTypes.Type(value = MatchAllDocsQuery.class),
+		@JsonSubTypes.Type(value = MatchNoDocsQuery.class), @JsonSubTypes.Type(value = MultiFieldQueryParser.class),
+		@JsonSubTypes.Type(value = PhraseQuery.class), @JsonSubTypes.Type(value = PrefixQuery.class),
+		@JsonSubTypes.Type(value = RegexpQuery.class), @JsonSubTypes.Type(value = SpanFirstQueries.class),
+		@JsonSubTypes.Type(value = SpanFirstQuery.class), @JsonSubTypes.Type(value = SpanNearQuery.class),
+		@JsonSubTypes.Type(value = SpanNotQuery.class), @JsonSubTypes.Type(value = SpanTermQuery.class),
+		@JsonSubTypes.Type(value = StandardQueryParser.class), @JsonSubTypes.Type(value = TermQuery.class),
+		@JsonSubTypes.Type(value = TermRangeQuery.class) })
 public abstract class AbstractQuery {
 
 	public final Float boost;

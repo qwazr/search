@@ -16,32 +16,42 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.analysis.UpdatableAnalyzer;
-import com.qwazr.search.function.AbstractValueSource;
+import com.qwazr.search.source.AbstractValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.Objects;
 
 public class FunctionQuery extends AbstractQuery {
 
-	final public AbstractValueSource value_source;
+	final public AbstractValueSource source;
 
 	public FunctionQuery() {
 		super(null);
-		value_source = null;
+		source = null;
 	}
 
-	FunctionQuery(Float boost, AbstractValueSource value_source) {
+	FunctionQuery(Float boost, AbstractValueSource source) {
 		super(boost);
-		this.value_source = value_source;
+		this.source = source;
 	}
 
 	@Override
-	final protected Query getQuery(UpdatableAnalyzer analyzer, String queryString)
-			throws IOException, ParseException, QueryNodeException {
-		Objects.requireNonNull(value_source, "The value_source property is missing");
-		return new org.apache.lucene.queries.function.FunctionQuery(value_source.getValueSource());
+	final protected org.apache.lucene.queries.function.FunctionQuery getQuery(UpdatableAnalyzer analyzer,
+			String queryString) throws IOException, ParseException, QueryNodeException {
+		Objects.requireNonNull(source, "The source property is missing");
+		return new org.apache.lucene.queries.function.FunctionQuery(source.getValueSource());
+	}
+
+	final public static org.apache.lucene.queries.function.FunctionQuery[] getQueries(FunctionQuery[] scoringQueries,
+			UpdatableAnalyzer analyzer, String queryString) throws ParseException, IOException, QueryNodeException {
+		if (scoringQueries == null)
+			return null;
+		final org.apache.lucene.queries.function.FunctionQuery[] functionQueries = new org.apache.lucene.queries.function.FunctionQuery[scoringQueries.length];
+		int i = 0;
+		for (FunctionQuery scoringQuery : scoringQueries)
+			functionQueries[i++] = scoringQuery.getQuery(analyzer, queryString);
+		return functionQueries;
 	}
 }

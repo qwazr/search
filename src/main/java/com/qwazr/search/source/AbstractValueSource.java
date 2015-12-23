@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.function;
+package com.qwazr.search.source;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.qwazr.search.query.BooleanQuery;
-import com.qwazr.search.query.BoostedQuery;
 import org.apache.lucene.queries.function.ValueSource;
-import org.apache.lucene.queryparser.classic.ParseException;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "source")
 @JsonSubTypes({ @JsonSubTypes.Type(value = DoubleFieldSource.class), @JsonSubTypes.Type(value = FloatFieldSource.class),
