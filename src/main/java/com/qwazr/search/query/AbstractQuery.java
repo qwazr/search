@@ -19,7 +19,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
@@ -28,16 +28,17 @@ import java.io.IOException;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "query")
 @JsonSubTypes({ @JsonSubTypes.Type(value = BooleanQuery.class), @JsonSubTypes.Type(value = BoostedQuery.class),
-		@JsonSubTypes.Type(value = ConstantScoreQuery.class), @JsonSubTypes.Type(value = DisjunctionMaxQuery.class),
-		@JsonSubTypes.Type(value = CustomScoreQuery.class), @JsonSubTypes.Type(value = FunctionQuery.class),
-		@JsonSubTypes.Type(value = FuzzyQuery.class), @JsonSubTypes.Type(value = MatchAllDocsQuery.class),
-		@JsonSubTypes.Type(value = MatchNoDocsQuery.class), @JsonSubTypes.Type(value = MultiFieldQueryParser.class),
-		@JsonSubTypes.Type(value = PhraseQuery.class), @JsonSubTypes.Type(value = PrefixQuery.class),
-		@JsonSubTypes.Type(value = RegexpQuery.class), @JsonSubTypes.Type(value = SpanFirstQueries.class),
-		@JsonSubTypes.Type(value = SpanFirstQuery.class), @JsonSubTypes.Type(value = SpanNearQuery.class),
-		@JsonSubTypes.Type(value = SpanNotQuery.class), @JsonSubTypes.Type(value = SpanTermQuery.class),
-		@JsonSubTypes.Type(value = StandardQueryParser.class), @JsonSubTypes.Type(value = TermQuery.class),
-		@JsonSubTypes.Type(value = TermRangeQuery.class) })
+				@JsonSubTypes.Type(value = ConstantScoreQuery.class),
+				@JsonSubTypes.Type(value = DisjunctionMaxQuery.class),
+				@JsonSubTypes.Type(value = CustomScoreQuery.class), @JsonSubTypes.Type(value = FunctionQuery.class),
+				@JsonSubTypes.Type(value = FuzzyQuery.class), @JsonSubTypes.Type(value = MatchAllDocsQuery.class),
+				@JsonSubTypes.Type(value = MatchNoDocsQuery.class),
+				@JsonSubTypes.Type(value = MultiFieldQueryParser.class), @JsonSubTypes.Type(value = PhraseQuery.class),
+				@JsonSubTypes.Type(value = PrefixQuery.class), @JsonSubTypes.Type(value = RegexpQuery.class),
+				@JsonSubTypes.Type(value = SpanFirstQueries.class), @JsonSubTypes.Type(value = SpanFirstQuery.class),
+				@JsonSubTypes.Type(value = SpanNearQuery.class), @JsonSubTypes.Type(value = SpanNotQuery.class),
+				@JsonSubTypes.Type(value = SpanTermQuery.class), @JsonSubTypes.Type(value = StandardQueryParser.class),
+				@JsonSubTypes.Type(value = TermQuery.class), @JsonSubTypes.Type(value = TermRangeQuery.class) })
 public abstract class AbstractQuery {
 
 	public final Float boost;
@@ -47,12 +48,11 @@ public abstract class AbstractQuery {
 	}
 
 	@JsonIgnore
-	protected abstract Query getQuery(UpdatableAnalyzer analyzer, String queryString)
-			throws IOException, ParseException, QueryNodeException;
+	protected abstract Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException;
 
-	public final Query getBoostedQuery(UpdatableAnalyzer analyzer, String queryString)
-			throws IOException, ParseException, QueryNodeException {
-		Query query = getQuery(analyzer, queryString);
+	public final Query getBoostedQuery(QueryContext queryContext)
+					throws IOException, ParseException, QueryNodeException {
+		Query query = getQuery(queryContext);
 		if (boost != null)
 			query.setBoost(boost);
 		return query;

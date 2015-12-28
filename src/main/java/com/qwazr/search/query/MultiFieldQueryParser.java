@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 
@@ -54,9 +54,9 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	}
 
 	@Override
-	final protected Query getQuery(UpdatableAnalyzer analyzer, String queryString) throws IOException, ParseException {
+	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException {
 		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser = new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(
-						fields, analyzer, boosts);
+						fields, queryContext.analyzer, boosts);
 		if (default_operator != null)
 			parser.setDefaultOperator(default_operator.queryParseroperator);
 		if (allow_leading_wildcard != null)
@@ -77,6 +77,6 @@ public class MultiFieldQueryParser extends AbstractQuery {
 			parser.setLowercaseExpandedTerms(lowercase_expanded_terms);
 		if (max_determinized_states != null)
 			parser.setMaxDeterminizedStates(max_determinized_states);
-		return parser.parse(queryString);
+		return parser.parse(queryContext.queryString);
 	}
 }

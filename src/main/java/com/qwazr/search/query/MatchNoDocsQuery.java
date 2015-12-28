@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
@@ -27,7 +27,7 @@ public class MatchNoDocsQuery extends AbstractQuery {
 	}
 
 	@Override
-	protected Query getQuery(UpdatableAnalyzer analyzer, String queryString) throws IOException {
+	protected Query getQuery(QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.MatchNoDocsQuery();
 	}
 }

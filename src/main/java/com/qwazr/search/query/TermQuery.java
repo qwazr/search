@@ -15,14 +15,15 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.analysis.tokenattributes.*;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-import static com.qwazr.search.analysis.AnalyzerUtils.*;
+import static com.qwazr.search.analysis.AnalyzerUtils.TermConsumer;
+import static com.qwazr.search.analysis.AnalyzerUtils.forEachTerm;
 
 public class TermQuery extends AbstractQuery {
 
@@ -59,16 +60,17 @@ public class TermQuery extends AbstractQuery {
 	}
 
 	@Override
-	protected Query getQuery(UpdatableAnalyzer analyzer, String queryString) throws IOException {
+	protected Query getQuery(QueryContext queryContext) throws IOException {
 		final AtomicString atomicString = new AtomicString();
-		final String sourceText = text == null ? queryString : text;
+		final String sourceText = text == null ? queryContext.queryString : text;
 		final String term;
 		if (apply_analyzer != null && apply_analyzer) {
-			forEachTerm(analyzer, field, queryString, new TermConsumer() {
+			forEachTerm(queryContext.analyzer, field, queryContext.queryString, new TermConsumer() {
 				@Override
 				public boolean apply(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr,
-						OffsetAttribute offsetAttr, PositionIncrementAttribute posIncAttr,
-						PositionLengthAttribute posLengthAttr, TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
+								OffsetAttribute offsetAttr, PositionIncrementAttribute posIncAttr,
+								PositionLengthAttribute posLengthAttr, TypeAttribute typeAttr,
+								KeywordAttribute keywordAttr) {
 					atomicString.set(charTermAttr.toString());
 					return false;
 				}

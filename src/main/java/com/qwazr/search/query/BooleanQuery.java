@@ -16,7 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
@@ -61,10 +61,10 @@ public class BooleanQuery extends AbstractQuery {
 		}
 
 		@JsonIgnore
-		final private org.apache.lucene.search.BooleanClause getNewClause(UpdatableAnalyzer analyzer,
-				String queryString) throws IOException, ParseException, QueryNodeException {
+		final private org.apache.lucene.search.BooleanClause getNewClause(QueryContext queryContext)
+						throws IOException, ParseException, QueryNodeException {
 			Objects.requireNonNull(occur, "Occur must not be null");
-			return new org.apache.lucene.search.BooleanClause(query.getQuery(analyzer, queryString), occur.occur);
+			return new org.apache.lucene.search.BooleanClause(query.getQuery(queryContext), occur.occur);
 		}
 	}
 
@@ -83,8 +83,7 @@ public class BooleanQuery extends AbstractQuery {
 	}
 
 	@Override
-	final protected Query getQuery(UpdatableAnalyzer analyzer, String queryString)
-			throws IOException, ParseException, QueryNodeException {
+	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
 		final org.apache.lucene.search.BooleanQuery.Builder builder = new org.apache.lucene.search.BooleanQuery.Builder();
 		if (disable_coord != null)
 			builder.setDisableCoord(disable_coord);
@@ -92,7 +91,7 @@ public class BooleanQuery extends AbstractQuery {
 			builder.setMinimumNumberShouldMatch(minimum_number_should_match);
 		if (clauses != null)
 			for (BooleanClause clause : clauses)
-				builder.add(clause.getNewClause(analyzer, queryString));
+				builder.add(clause.getNewClause(queryContext));
 		return builder.build();
 	}
 }

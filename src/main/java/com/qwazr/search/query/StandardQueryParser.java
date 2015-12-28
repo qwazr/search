@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
@@ -55,11 +55,10 @@ public class StandardQueryParser extends AbstractQuery {
 	}
 
 	@Override
-	final protected Query getQuery(UpdatableAnalyzer analyzer, String queryString)
-			throws IOException, ParseException, QueryNodeException {
+	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
 
 		final org.apache.lucene.queryparser.flexible.standard.StandardQueryParser parser = new org.apache.lucene.queryparser.flexible.standard.StandardQueryParser(
-				analyzer);
+						queryContext.analyzer);
 		if (fields_boost != null)
 			parser.setFieldsBoost(fields_boost);
 		if (default_operator != null)
@@ -76,6 +75,6 @@ public class StandardQueryParser extends AbstractQuery {
 			parser.setFuzzyPrefixLength(fuzzy_prefix_length);
 		if (lowercase_expanded_terms != null)
 			parser.setLowercaseExpandedTerms(lowercase_expanded_terms);
-		return parser.parse(default_field, queryString);
+		return parser.parse(default_field, queryContext.queryString);
 	}
 }

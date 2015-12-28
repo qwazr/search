@@ -25,7 +25,6 @@ import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.Facets;
-import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
@@ -47,7 +46,7 @@ import java.util.*;
 class QueryUtils {
 
 	final static SortField buildSortField(Map<String, FieldDefinition> fields, String field,
-			QueryDefinition.SortEnum sortEnum) throws ServerException {
+					QueryDefinition.SortEnum sortEnum) throws ServerException {
 
 		final boolean reverse;
 		final Object missingValue;
@@ -100,7 +99,7 @@ class QueryUtils {
 	}
 
 	final static Sort buildSort(Map<String, FieldDefinition> fields,
-			LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
+					LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
 		if (sorts.isEmpty())
 			return null;
 		final SortField[] sortFields = new SortField[sorts.size()];
@@ -131,7 +130,7 @@ class QueryUtils {
 	}
 
 	final static Query buildFacetFiltersQuery(FacetsConfig facetsConfig, List<Map<String, Set<String>>> facet_filters,
-			Query query) {
+					Query query) {
 		if (facet_filters.isEmpty())
 			return query;
 
@@ -154,7 +153,7 @@ class QueryUtils {
 		return rootBuilder.build();
 	}
 
-	final static private String getFinalQueryString(QueryDefinition queryDef) {
+	final static String getFinalQueryString(QueryDefinition queryDef) {
 		// Deal wih query string
 		final String qs;
 		// Check if we have to escape some characters
@@ -182,24 +181,23 @@ class QueryUtils {
 		return builder.build();
 	}
 
-	final static Query getLuceneQuery(QueryDefinition queryDef, UpdatableAnalyzer analyzer)
-			throws QueryNodeException, ParseException, IOException {
+	final static Query getLuceneQuery(QueryContext queryContext)
+					throws QueryNodeException, ParseException, IOException {
 
-		String queryString = getFinalQueryString(queryDef);
-
-		Query query = queryDef.query == null ?
-				new MatchAllDocsQuery() :
-				queryDef.query.getBoostedQuery(analyzer, queryString);
+		Query query = queryContext.queryDefinition.query == null ?
+						new MatchAllDocsQuery() :
+						queryContext.queryDefinition.query.getBoostedQuery(queryContext);
 
 		// Overload query with facet filters
-		if (queryDef.facet_filters != null)
-			query = buildFacetFiltersQuery(analyzer.getContext().facetsConfig, queryDef.facet_filters, query);
+		if (queryContext.queryDefinition.facet_filters != null)
+			query = buildFacetFiltersQuery(queryContext.analyzer.getContext().facetsConfig,
+							queryContext.queryDefinition.facet_filters, query);
 
 		return query;
 	}
 
 	static private Pair<TotalHitCountCollector, TopDocsCollector> getCollectorPair(List<Collector> collectors,
-			boolean bNeedScore, int numHits, Sort sort) throws IOException {
+					boolean bNeedScore, int numHits, Sort sort) throws IOException {
 		final TotalHitCountCollector totalHitCollector;
 		final TopDocsCollector topDocsCollector;
 		if (numHits == 0) {
@@ -217,16 +215,18 @@ class QueryUtils {
 		return Pair.of(totalHitCollector, topDocsCollector);
 	}
 
-	final static ResultDefinition search(IndexSearcher indexSearcher, QueryDefinition queryDef,
-			UpdatableAnalyzer analyzer)
-			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+	final static ResultDefinition search(final QueryContext queryContext)
+					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 
-		Query query = getLuceneQuery(queryDef, analyzer);
+		final QueryDefinition queryDef = queryContext.queryDefinition;
 
+		Query query = getLuceneQuery(queryContext);
+
+		final IndexSearcher indexSearcher = queryContext.indexSearcher;
 		final IndexReader indexReader = indexSearcher.getIndexReader();
 		final TimeTracker timeTracker = new TimeTracker();
 
-		final AnalyzerContext analyzerContext = analyzer.getContext();
+		final AnalyzerContext analyzerContext = queryContext.analyzer.getContext();
 		final Sort sort = queryDef.sorts == null ? null : buildSort(analyzerContext.fields, queryDef.sorts);
 		final Facets facets;
 		final SortedSetDocValuesReaderState facetState;
@@ -236,15 +236,15 @@ class QueryUtils {
 		final boolean bPercentScore = queryDef.percent_score != null && queryDef.percent_score && bNeedScore;
 
 		if (bPercentScore) {
-			final QueryCollectors queryCollectors = new QueryCollectors(true, null, 1, null,
-					null, analyzerContext.fields);
+			final QueryCollectors queryCollectors = new QueryCollectors(true, null, 1, null, null,
+							analyzerContext.fields);
 			indexSearcher.search(query, queryCollectors.finalCollector);
 			System.out.println("Max score: " + queryCollectors.getTopDocs().getMaxScore());
 			timeTracker.next("max_score_query");
 		}
 
 		final QueryCollectors queryCollectors = new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets,
-				queryDef.functions, analyzerContext.fields);
+						queryDef.functions, analyzerContext.fields);
 
 		indexSearcher.search(query, queryCollectors.finalCollector);
 		final TopDocs topDocs = queryCollectors.getTopDocs();
@@ -276,11 +276,11 @@ class QueryUtils {
 		}
 
 		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, totalHits, topDocs, queryDef,
-				facetState, facets, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
+						facetState, facets, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
 	}
 
 	final static MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader,
-			UpdatableAnalyzer analyzer) throws IOException {
+					UpdatableAnalyzer analyzer) throws IOException {
 
 		final MoreLikeThis mlt = new MoreLikeThis(reader);
 		if (mltQueryDef.boost != null)

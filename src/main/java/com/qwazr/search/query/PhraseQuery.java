@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
@@ -44,7 +44,7 @@ public class PhraseQuery extends AbstractQuery {
 	}
 
 	@Override
-	protected Query getQuery(UpdatableAnalyzer analyzer, String queryParser) throws IOException {
+	protected Query getQuery(QueryContext queryContext) throws IOException {
 		Objects.requireNonNull(field, "The field property should not be null");
 		org.apache.lucene.search.PhraseQuery.Builder builder = new org.apache.lucene.search.PhraseQuery.Builder();
 		if (slop != null)

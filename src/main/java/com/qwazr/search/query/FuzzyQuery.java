@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
@@ -52,7 +52,7 @@ public class FuzzyQuery extends AbstractQuery {
 	}
 
 	@Override
-	protected Query getQuery(UpdatableAnalyzer analyzer, String queryString) throws IOException {
+	protected Query getQuery(QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.FuzzyQuery(new Term(field, text),
 						max_edits == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxEdits : max_edits,
 						prefix_length == null ? org.apache.lucene.search.FuzzyQuery.defaultPrefixLength : prefix_length,

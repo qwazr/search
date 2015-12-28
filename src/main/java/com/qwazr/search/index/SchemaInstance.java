@@ -113,7 +113,9 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 				throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
 			if (indexSearcher == null)
 				return null;
-			return QueryUtils.search(indexSearcher, queryDef, queryAnalyzer);
+			final QueryContext queryContext = new QueryContext( indexSearcher,  fileClassCompilerLoader, queryAnalyzer,
+							queryDef);
+			return QueryUtils.search(queryContext);
 		}
 	}
 

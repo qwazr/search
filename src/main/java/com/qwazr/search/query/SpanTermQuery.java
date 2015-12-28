@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.spans.SpanQuery;
 
@@ -39,7 +39,7 @@ public class SpanTermQuery extends AbstractSpanQuery {
 	}
 
 	@Override
-	protected SpanQuery getQuery(UpdatableAnalyzer analyzer, String queryString) throws IOException {
+	protected SpanQuery getQuery(QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.spans.SpanTermQuery(new Term(field, text));
 	}
 }

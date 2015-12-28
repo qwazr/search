@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
@@ -32,10 +32,9 @@ public class ConstantScoreQuery extends AbstractQuery {
 	}
 
 	@Override
-	final protected Query getQuery(UpdatableAnalyzer analyzer, String queryString)
-					throws IOException, ParseException, QueryNodeException {
+	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
 		if (query == null)
 			throw new IOException("No embedded query");
-		return new org.apache.lucene.search.ConstantScoreQuery(query.getQuery(analyzer, queryString));
+		return new org.apache.lucene.search.ConstantScoreQuery(query.getQuery(queryContext));
 	}
 }
