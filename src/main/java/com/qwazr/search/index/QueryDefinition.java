@@ -15,14 +15,11 @@
  */
 package com.qwazr.search.index;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
 
 import java.io.IOException;
 import java.util.*;
@@ -57,8 +54,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public List<Map<String, Set<String>>> facet_filters;
 
 	final public LinkedHashMap<String, Integer> postings_highlighter;
-
-	final public Boolean percent_score;
 
 	final public AbstractQuery query;
 
@@ -111,7 +106,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		functions = null;
 		postings_highlighter = null;
 		query = null;
-		percent_score = null;
 	}
 
 	QueryDefinition(QueryBuilder builder) {
@@ -126,7 +120,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		functions = builder.functions;
 		postings_highlighter = builder.postings_highlighter;
 		query = builder.query;
-		percent_score = builder.percent_score;
 	}
 
 	public static QueryDefinition newQuery(String jsonString) throws IOException {

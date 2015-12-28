@@ -30,5 +30,5 @@ public abstract class AbstractSpanQuery extends AbstractQuery {
 	}
 
 	protected abstract SpanQuery getQuery(QueryContext queryContext)
-					throws IOException, ParseException, QueryNodeException;
+		throws IOException, ParseException, QueryNodeException, ReflectiveOperationException;
 }

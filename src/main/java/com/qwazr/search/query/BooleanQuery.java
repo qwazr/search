@@ -62,7 +62,7 @@ public class BooleanQuery extends AbstractQuery {
 
 		@JsonIgnore
 		final private org.apache.lucene.search.BooleanClause getNewClause(QueryContext queryContext)
-						throws IOException, ParseException, QueryNodeException {
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 			Objects.requireNonNull(occur, "Occur must not be null");
 			return new org.apache.lucene.search.BooleanClause(query.getQuery(queryContext), occur.occur);
 		}
@@ -83,7 +83,8 @@ public class BooleanQuery extends AbstractQuery {
 	}
 
 	@Override
-	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
+	final protected Query getQuery(QueryContext queryContext)
+		throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		final org.apache.lucene.search.BooleanQuery.Builder builder = new org.apache.lucene.search.BooleanQuery.Builder();
 		if (disable_coord != null)
 			builder.setDisableCoord(disable_coord);

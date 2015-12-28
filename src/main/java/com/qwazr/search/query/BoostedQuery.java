@@ -42,7 +42,8 @@ public class BoostedQuery extends AbstractQuery {
 	}
 
 	@Override
-	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
+	final protected Query getQuery(QueryContext queryContext)
+		throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(sub_query, "The sub_query property is missing");
 		Objects.requireNonNull(value_source, "The vaelue_source property is missing");
 		return new org.apache.lucene.queries.function.BoostedQuery(sub_query.getQuery(queryContext),

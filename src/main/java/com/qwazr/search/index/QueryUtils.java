@@ -46,7 +46,7 @@ import java.util.*;
 class QueryUtils {
 
 	final static SortField buildSortField(Map<String, FieldDefinition> fields, String field,
-					QueryDefinition.SortEnum sortEnum) throws ServerException {
+		QueryDefinition.SortEnum sortEnum) throws ServerException {
 
 		final boolean reverse;
 		final Object missingValue;
@@ -99,7 +99,7 @@ class QueryUtils {
 	}
 
 	final static Sort buildSort(Map<String, FieldDefinition> fields,
-					LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
+		LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
 		if (sorts.isEmpty())
 			return null;
 		final SortField[] sortFields = new SortField[sorts.size()];
@@ -130,7 +130,7 @@ class QueryUtils {
 	}
 
 	final static Query buildFacetFiltersQuery(FacetsConfig facetsConfig, List<Map<String, Set<String>>> facet_filters,
-					Query query) {
+		Query query) {
 		if (facet_filters.isEmpty())
 			return query;
 
@@ -182,22 +182,22 @@ class QueryUtils {
 	}
 
 	final static Query getLuceneQuery(QueryContext queryContext)
-					throws QueryNodeException, ParseException, IOException {
+		throws QueryNodeException, ParseException, IOException, ReflectiveOperationException {
 
 		Query query = queryContext.queryDefinition.query == null ?
-						new MatchAllDocsQuery() :
-						queryContext.queryDefinition.query.getBoostedQuery(queryContext);
+			new MatchAllDocsQuery() :
+			queryContext.queryDefinition.query.getBoostedQuery(queryContext);
 
 		// Overload query with facet filters
 		if (queryContext.queryDefinition.facet_filters != null)
 			query = buildFacetFiltersQuery(queryContext.analyzer.getContext().facetsConfig,
-							queryContext.queryDefinition.facet_filters, query);
+				queryContext.queryDefinition.facet_filters, query);
 
 		return query;
 	}
 
 	static private Pair<TotalHitCountCollector, TopDocsCollector> getCollectorPair(List<Collector> collectors,
-					boolean bNeedScore, int numHits, Sort sort) throws IOException {
+		boolean bNeedScore, int numHits, Sort sort) throws IOException {
 		final TotalHitCountCollector totalHitCollector;
 		final TopDocsCollector topDocsCollector;
 		if (numHits == 0) {
@@ -216,7 +216,8 @@ class QueryUtils {
 	}
 
 	final static ResultDefinition search(final QueryContext queryContext)
-					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException {
+		throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
+		ReflectiveOperationException {
 
 		final QueryDefinition queryDef = queryContext.queryDefinition;
 
@@ -233,18 +234,9 @@ class QueryUtils {
 
 		final int numHits = queryDef.getEnd();
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
-		final boolean bPercentScore = queryDef.percent_score != null && queryDef.percent_score && bNeedScore;
-
-		if (bPercentScore) {
-			final QueryCollectors queryCollectors = new QueryCollectors(true, null, 1, null, null,
-							analyzerContext.fields);
-			indexSearcher.search(query, queryCollectors.finalCollector);
-			System.out.println("Max score: " + queryCollectors.getTopDocs().getMaxScore());
-			timeTracker.next("max_score_query");
-		}
 
 		final QueryCollectors queryCollectors = new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets,
-						queryDef.functions, analyzerContext.fields);
+			queryDef.functions, analyzerContext.fields);
 
 		indexSearcher.search(query, queryCollectors.finalCollector);
 		final TopDocs topDocs = queryCollectors.getTopDocs();
@@ -276,11 +268,11 @@ class QueryUtils {
 		}
 
 		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, totalHits, topDocs, queryDef,
-						facetState, facets, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
+			facetState, facets, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
 	}
 
 	final static MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader,
-					UpdatableAnalyzer analyzer) throws IOException {
+		UpdatableAnalyzer analyzer) throws IOException {
 
 		final MoreLikeThis mlt = new MoreLikeThis(reader);
 		if (mltQueryDef.boost != null)

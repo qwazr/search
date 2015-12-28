@@ -35,7 +35,7 @@ public class DivFloatFunction extends AbstractValueSource {
 
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext)
-		throws ParseException, IOException, QueryNodeException {
+		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(aVals, "aVals value source is missing");
 		Objects.requireNonNull(aVals, "bVals value source is missing");
 		return new org.apache.lucene.queries.function.valuesource.DivFloatFunction(aVals.getValueSource(queryContext),

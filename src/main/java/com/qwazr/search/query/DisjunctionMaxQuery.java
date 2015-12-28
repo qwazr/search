@@ -41,9 +41,10 @@ public class DisjunctionMaxQuery extends AbstractQuery {
 	}
 
 	@Override
-	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
+	final protected Query getQuery(QueryContext queryContext)
+		throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		org.apache.lucene.search.DisjunctionMaxQuery disjunctionMaxQuery = new org.apache.lucene.search.DisjunctionMaxQuery(
-						tie_breaker_multiplier == null ? 0 : tie_breaker_multiplier);
+			tie_breaker_multiplier == null ? 0 : tie_breaker_multiplier);
 		if (queries != null)
 			for (AbstractQuery query : queries)
 				disjunctionMaxQuery.add(query.getQuery(queryContext));

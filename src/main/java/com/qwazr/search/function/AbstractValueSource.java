@@ -41,11 +41,11 @@ public abstract class AbstractValueSource {
 
 	@JsonIgnore
 	public abstract ValueSource getValueSource(QueryContext queryContext)
-		throws ParseException, IOException, QueryNodeException;
+		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException;
 
 	@JsonIgnore
 	public static final ValueSource[] getValueSourceArray(QueryContext queryContext, AbstractValueSource[] sources)
-		throws ParseException, IOException, QueryNodeException {
+		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		if (sources == null)
 			return null;
 		ValueSource[] valueSources = new ValueSource[sources.length];
@@ -57,7 +57,7 @@ public abstract class AbstractValueSource {
 
 	@JsonIgnore
 	public static List<ValueSource> getValueSourceList(QueryContext queryContext, List<AbstractValueSource> sources)
-		throws ParseException, IOException, QueryNodeException {
+		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		if (sources == null)
 			return null;
 		List<ValueSource> valueSources = new ArrayList<ValueSource>(sources.size());

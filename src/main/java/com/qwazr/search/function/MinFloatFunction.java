@@ -33,7 +33,7 @@ public class MinFloatFunction extends AbstractValueSource {
 
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext)
-		throws ParseException, IOException, QueryNodeException {
+		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(sources, "The array of value source is missing (sources)");
 		return new org.apache.lucene.queries.function.valuesource.MinFloatFunction(
 			AbstractValueSource.getValueSourceArray(queryContext, sources));

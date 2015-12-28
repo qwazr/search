@@ -48,9 +48,9 @@ public class SpanNearQuery extends AbstractSpanQuery {
 
 	@Override
 	final protected SpanQuery getQuery(QueryContext queryContext)
-					throws IOException, ParseException, QueryNodeException {
+		throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		final org.apache.lucene.search.spans.SpanNearQuery.Builder builder = new org.apache.lucene.search.spans.SpanNearQuery.Builder(
-						field, in_order == null ? false : in_order);
+			field, in_order == null ? false : in_order);
 		if (slop != null)
 			builder.setSlop(slop);
 		if (clauses != null)

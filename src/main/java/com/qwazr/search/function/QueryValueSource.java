@@ -36,7 +36,7 @@ public class QueryValueSource extends AbstractValueSource {
 
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext)
-		throws ParseException, IOException, QueryNodeException {
+		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(query, "The query is missing");
 		Objects.requireNonNull(defVal, "The default value is missing (defVal");
 		return new org.apache.lucene.queries.function.valuesource.QueryValueSource(query.getBoostedQuery(queryContext),

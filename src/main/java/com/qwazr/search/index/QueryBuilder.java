@@ -39,26 +39,33 @@ public class QueryBuilder {
 	LinkedHashMap<String, Integer> postings_highlighter = null;
 
 	public AbstractQuery query = null;
-	public AbstractQuery boost = null;
-	public AbstractQuery filter = null;
-
-	public Boolean percent_score = null;
 
 	public Boolean getQuery_debug() {
 		return query_debug;
 	}
 
+	public QueryBuilder(QueryDefinition queryDef) {
+		start = queryDef.start;
+		rows = queryDef.rows;
+		query_debug = queryDef.query_debug;
+		returned_fields = queryDef.returned_fields;
+
+		query_string = queryDef.query_string;
+		escape_query = queryDef.escape_query;
+		escaped_chars = queryDef.escaped_chars;
+
+		facets = queryDef.facets;
+		facet_filters = queryDef.facet_filters;
+		sorts = queryDef.sorts;
+		functions = queryDef.functions;
+
+		postings_highlighter = queryDef.postings_highlighter;
+
+		query = queryDef.query;
+	}
+
 	public QueryBuilder setQuery_debug(Boolean query_debug) {
 		this.query_debug = query_debug;
-		return this;
-	}
-
-	public Boolean getPercent_score() {
-		return percent_score;
-	}
-
-	public QueryBuilder setPercent_score(Boolean percent_score) {
-		this.percent_score = percent_score;
 		return this;
 	}
 
@@ -219,16 +226,6 @@ public class QueryBuilder {
 
 	public QueryBuilder setQuery(AbstractQuery query) {
 		this.query = query;
-		return this;
-	}
-
-	public QueryBuilder setBoost(AbstractQuery boost) {
-		this.boost = boost;
-		return this;
-	}
-
-	public QueryBuilder setFilter(AbstractQuery filter) {
-		this.filter = filter;
 		return this;
 	}
 

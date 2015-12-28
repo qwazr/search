@@ -33,7 +33,7 @@ public class SumFloatFunction extends AbstractValueSource {
 
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext)
-		throws ParseException, IOException, QueryNodeException {
+		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(sources, "The array of value source is missing (sources)");
 		return new org.apache.lucene.queries.function.valuesource.SumFloatFunction(
 			AbstractValueSource.getValueSourceArray(queryContext, sources));
