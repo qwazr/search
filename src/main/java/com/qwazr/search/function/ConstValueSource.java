@@ -13,15 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.source;
+package com.qwazr.search.function;
 
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queries.function.ValueSource;
 
-public class SortedSetFieldSource extends AbstractFieldSource {
+import java.util.Objects;
+
+public class ConstValueSource extends AbstractValueSource {
+
+	public final Float constant;
+
+	public ConstValueSource() {
+		constant = null;
+	}
 
 	@Override
-	public ValueSource getValueSource() {
-		check();
-		return new org.apache.lucene.queries.function.valuesource.SortedSetFieldSource(field);
+	public ValueSource getValueSource(QueryContext queryContext) {
+		Objects.requireNonNull(constant, "constant value is missing");
+		return new org.apache.lucene.queries.function.valuesource.ConstValueSource(constant);
 	}
 }

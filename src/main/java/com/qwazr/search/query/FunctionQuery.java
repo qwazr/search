@@ -15,8 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.qwazr.search.function.AbstractValueSource;
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.search.source.AbstractValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
@@ -39,13 +39,13 @@ public class FunctionQuery extends AbstractQuery {
 
 	@Override
 	final protected org.apache.lucene.queries.function.FunctionQuery getQuery(QueryContext queryContext)
-					throws IOException, ParseException, QueryNodeException {
+		throws IOException, ParseException, QueryNodeException {
 		Objects.requireNonNull(source, "The source property is missing");
-		return new org.apache.lucene.queries.function.FunctionQuery(source.getValueSource());
+		return new org.apache.lucene.queries.function.FunctionQuery(source.getValueSource(queryContext));
 	}
 
 	final public static org.apache.lucene.queries.function.FunctionQuery[] getQueries(FunctionQuery[] scoringQueries,
-					QueryContext queryContext) throws ParseException, IOException, QueryNodeException {
+		QueryContext queryContext) throws ParseException, IOException, QueryNodeException {
 		if (scoringQueries == null)
 			return null;
 		final org.apache.lucene.queries.function.FunctionQuery[] functionQueries = new org.apache.lucene.queries.function.FunctionQuery[scoringQueries.length];

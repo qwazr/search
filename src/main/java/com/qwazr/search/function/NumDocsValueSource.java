@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.source;
+package com.qwazr.search.function;
 
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queries.function.ValueSource;
 
-public class LongFieldSource extends AbstractFieldSource {
+public class NumDocsValueSource extends AbstractValueSource {
+
+	public NumDocsValueSource() {
+	}
 
 	@Override
-	public ValueSource getValueSource() {
-		check();
-		return new org.apache.lucene.queries.function.valuesource.LongFieldSource(field);
+	public ValueSource getValueSource(QueryContext queryContext) {
+		return new org.apache.lucene.queries.function.valuesource.NumDocsValueSource();
 	}
 }

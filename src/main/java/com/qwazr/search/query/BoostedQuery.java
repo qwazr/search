@@ -15,8 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.qwazr.search.function.AbstractValueSource;
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.search.source.AbstractValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
@@ -46,6 +46,6 @@ public class BoostedQuery extends AbstractQuery {
 		Objects.requireNonNull(sub_query, "The sub_query property is missing");
 		Objects.requireNonNull(value_source, "The vaelue_source property is missing");
 		return new org.apache.lucene.queries.function.BoostedQuery(sub_query.getQuery(queryContext),
-						value_source.getValueSource());
+			value_source.getValueSource(queryContext));
 	}
 }

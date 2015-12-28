@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.source;
+package com.qwazr.search.function;
 
-import java.util.Objects;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
 
-public abstract class AbstractFieldSource extends AbstractValueSource {
+public class SortedSetFieldSource extends AbstractFieldSource {
 
-	public final String field;
-
-	protected AbstractFieldSource() {
-		field = null;
-	}
-
-	final protected void check() {
-		Objects.requireNonNull(field, "The field property is missing");
+	@Override
+	public ValueSource getValueSource(QueryContext queryContext) {
+		check();
+		return new org.apache.lucene.queries.function.valuesource.SortedSetFieldSource(field);
 	}
 }
