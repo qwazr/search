@@ -163,6 +163,7 @@ public class FullTest {
 		Assert.assertNotNull(indexStatus);
 		indexStatus = client.getIndex(SCHEMA_NAME, INDEX_NAME);
 		Assert.assertNotNull(indexStatus);
+		Assert.assertEquals(new Long(0), indexStatus.num_docs);
 		checkAllSizes(client, 0);
 		client.deleteIndex(SCHEMA_NAME, INDEX_NAME);
 	}
