@@ -23,15 +23,11 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.Facets;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queries.TermsQuery;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -41,12 +37,14 @@ import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 class QueryUtils {
 
 	final static SortField buildSortField(Map<String, FieldDefinition> fields, String field,
-		QueryDefinition.SortEnum sortEnum) throws ServerException {
+			QueryDefinition.SortEnum sortEnum) throws ServerException {
 
 		final boolean reverse;
 		final Object missingValue;
@@ -99,7 +97,7 @@ class QueryUtils {
 	}
 
 	final static Sort buildSort(Map<String, FieldDefinition> fields,
-		LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
+			LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
 		if (sorts.isEmpty())
 			return null;
 		final SortField[] sortFields = new SortField[sorts.size()];
@@ -109,48 +107,6 @@ class QueryUtils {
 		if (sortFields.length == 1)
 			return new Sort(sortFields[0]);
 		return new Sort(sortFields);
-	}
-
-	final static Term facetTerm(String indexedField, String dim, String... path) {
-		return new Term(indexedField, FacetsConfig.pathToString(dim, path));
-	}
-
-	final static List<Term> facetTerms(String indexedField, String dim, Collection<String> terms) {
-		List<Term> termList = new ArrayList<>(terms.size());
-		for (String term : terms)
-			termList.add(facetTerm(indexedField, dim, term));
-		return termList;
-	}
-
-	final static Query facetTermQuery(FacetsConfig facetsConfig, String dim, Set<String> filter_terms) {
-		String indexedField = facetsConfig.getDimConfig(dim).indexFieldName;
-		if (filter_terms.size() == 1)
-			return new TermQuery(facetTerm(indexedField, dim, filter_terms.iterator().next()));
-		return new TermsQuery(facetTerms(indexedField, dim, filter_terms));
-	}
-
-	final static Query buildFacetFiltersQuery(FacetsConfig facetsConfig, List<Map<String, Set<String>>> facet_filters,
-		Query query) {
-		if (facet_filters.isEmpty())
-			return query;
-
-		DrillDownQuery ddq;
-
-		BooleanQuery.Builder rootBuilder = new BooleanQuery.Builder();
-		rootBuilder.add(query, BooleanClause.Occur.MUST);
-
-		for (Map<String, Set<String>> mapEntry : facet_filters) {
-			for (Map.Entry<String, Set<String>> entry : mapEntry.entrySet()) {
-				Set<String> filter_terms = entry.getValue();
-				if (filter_terms == null || filter_terms.isEmpty())
-					continue;
-				String dim = entry.getKey();
-				Query orFilterQuery = facetTermQuery(facetsConfig, dim, filter_terms);
-				rootBuilder.add(orFilterQuery, BooleanClause.Occur.FILTER);
-			}
-		}
-
-		return rootBuilder.build();
 	}
 
 	final static String getFinalQueryString(QueryDefinition queryDef) {
@@ -167,37 +123,18 @@ class QueryUtils {
 		return qs;
 	}
 
-	final static Query buildFilteredQuery(Query query, Query filter) {
-		BooleanQuery.Builder builder = new BooleanQuery.Builder();
-		builder.add(query, BooleanClause.Occur.MUST);
-		builder.add(filter, BooleanClause.Occur.FILTER);
-		return builder.build();
-	}
-
-	final static Query buildBoostedQuery(Query query, Query boost) {
-		BooleanQuery.Builder builder = new BooleanQuery.Builder();
-		builder.add(query, BooleanClause.Occur.MUST);
-		builder.add(boost, BooleanClause.Occur.SHOULD);
-		return builder.build();
-	}
-
 	final static Query getLuceneQuery(QueryContext queryContext)
-		throws QueryNodeException, ParseException, IOException, ReflectiveOperationException {
+			throws QueryNodeException, ParseException, IOException, ReflectiveOperationException {
 
 		Query query = queryContext.queryDefinition.query == null ?
-			new MatchAllDocsQuery() :
-			queryContext.queryDefinition.query.getBoostedQuery(queryContext);
-
-		// Overload query with facet filters
-		if (queryContext.queryDefinition.facet_filters != null)
-			query = buildFacetFiltersQuery(queryContext.analyzer.getContext().facetsConfig,
-				queryContext.queryDefinition.facet_filters, query);
+				new MatchAllDocsQuery() :
+				queryContext.queryDefinition.query.getBoostedQuery(queryContext);
 
 		return query;
 	}
 
 	static private Pair<TotalHitCountCollector, TopDocsCollector> getCollectorPair(List<Collector> collectors,
-		boolean bNeedScore, int numHits, Sort sort) throws IOException {
+			boolean bNeedScore, int numHits, Sort sort) throws IOException {
 		final TotalHitCountCollector totalHitCollector;
 		final TopDocsCollector topDocsCollector;
 		if (numHits == 0) {
@@ -216,8 +153,8 @@ class QueryUtils {
 	}
 
 	final static ResultDefinition search(final QueryContext queryContext)
-		throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
-		ReflectiveOperationException {
+			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
+			ReflectiveOperationException {
 
 		final QueryDefinition queryDef = queryContext.queryDefinition;
 
@@ -236,7 +173,7 @@ class QueryUtils {
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
 
 		final QueryCollectors queryCollectors = new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets,
-			queryDef.functions, analyzerContext.fields);
+				queryDef.functions, analyzerContext.fields);
 
 		indexSearcher.search(query, queryCollectors.finalCollector);
 		final TopDocs topDocs = queryCollectors.getTopDocs();
@@ -268,11 +205,11 @@ class QueryUtils {
 		}
 
 		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, totalHits, topDocs, queryDef,
-			facetState, facets, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
+				facetState, facets, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
 	}
 
 	final static MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader,
-		UpdatableAnalyzer analyzer) throws IOException {
+			UpdatableAnalyzer analyzer) throws IOException {
 
 		final MoreLikeThis mlt = new MoreLikeThis(reader);
 		if (mltQueryDef.boost != null)

@@ -51,7 +51,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	final public LinkedHashSet<String> returned_fields;
 	final public LinkedHashMap<String, Facet> facets;
-	final public List<Map<String, Set<String>>> facet_filters;
 
 	final public LinkedHashMap<String, Integer> postings_highlighter;
 
@@ -101,7 +100,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		escaped_chars = null;
 		returned_fields = null;
 		facets = null;
-		facet_filters = null;
 		sorts = null;
 		functions = null;
 		postings_highlighter = null;
@@ -115,7 +113,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		escaped_chars = builder.escaped_chars;
 		returned_fields = builder.returned_fields;
 		facets = builder.facets;
-		facet_filters = builder.facet_filters;
 		sorts = builder.sorts;
 		functions = builder.functions;
 		postings_highlighter = builder.postings_highlighter;

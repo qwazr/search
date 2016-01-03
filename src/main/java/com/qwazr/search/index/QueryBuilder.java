@@ -31,7 +31,6 @@ public class QueryBuilder {
 	char[] escaped_chars = null;
 
 	LinkedHashMap<String, QueryDefinition.Facet> facets = null;
-	List<Map<String, Set<String>>> facet_filters = null;
 
 	LinkedHashMap<String, QueryDefinition.SortEnum> sorts = null;
 	ArrayList<QueryDefinition.Function> functions = null;
@@ -55,7 +54,6 @@ public class QueryBuilder {
 		escaped_chars = queryDef.escaped_chars;
 
 		facets = queryDef.facets;
-		facet_filters = queryDef.facet_filters;
 		sorts = queryDef.sorts;
 		functions = queryDef.functions;
 
@@ -160,32 +158,6 @@ public class QueryBuilder {
 		if (sorts == null)
 			sorts = new LinkedHashMap<String, QueryDefinition.SortEnum>();
 		sorts.put(fieldName, sortEnum);
-		return this;
-	}
-
-	public List<Map<String, Set<String>>> getFacet_filters() {
-		return facet_filters;
-	}
-
-	public QueryBuilder setFacet_drilldown(List<Map<String, Set<String>>> facet_drilldown) {
-		this.facet_filters = facet_drilldown;
-		return this;
-	}
-
-	public QueryBuilder addFacet_filters(String field, Set<Object> values) {
-		if (facet_filters == null)
-			facet_filters = new ArrayList<Map<String, Set<String>>>();
-		HashMap map = new HashMap<String, Set<Object>>();
-		map.put(field, values);
-		facet_filters.add(map);
-		return this;
-	}
-
-	public QueryBuilder addFacet_filters(String field, Object... values) {
-		Set<Object> set = new LinkedHashSet<Object>();
-		for (Object value : values)
-			set.add(value);
-		addFacet_filters(field, set);
 		return this;
 	}
 

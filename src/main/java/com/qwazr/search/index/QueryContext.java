@@ -28,7 +28,7 @@ public class QueryContext {
 	final public String queryString;
 
 	QueryContext(IndexSearcher indexSearcher, FileClassCompilerLoader compilerLoader, UpdatableAnalyzer analyzer,
-					QueryDefinition queryDefinition) {
+					 QueryDefinition queryDefinition) {
 		this.indexSearcher = indexSearcher;
 		this.compilerLoader = compilerLoader;
 		this.analyzer = analyzer;
