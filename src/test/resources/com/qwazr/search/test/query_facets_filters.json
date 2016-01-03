@@ -1,8 +1,54 @@
 {
   "query_string": "name",
   "query": {
-    "query": "StandardQueryParser",
-    "default_field": "name"
+    "query": "BooleanQuery",
+    "clauses": [
+      {
+        "occur": "must",
+        "query": {
+          "query": "StandardQueryParser",
+          "default_field": "name"
+        }
+      },
+      {
+        "occur": "filter",
+        "query": {
+          "query": "BooleanQuery",
+          "clauses": [
+            {
+              "occur": "should",
+              "query": {
+                "query": "FacetPathQuery",
+                "dimension": "category",
+                "path": [
+                  "cat3"
+                ]
+              }
+            },
+            {
+              "occur": "should",
+              "query": {
+                "query": "FacetPathQuery",
+                "dimension": "category",
+                "path": [
+                  "cat5"
+                ]
+              }
+            },
+            {
+              "occur": "must",
+              "query": {
+                "query": "FacetPathQuery",
+                "dimension": "category",
+                "path": [
+                  "cat4"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
   },
   "returned_fields": [
     "name",
@@ -12,18 +58,5 @@
   "rows": 10,
   "facets": {
     "category": {}
-  },
-  "facet_filters": [
-    {
-      "category": [
-        "cat3",
-        "cat5"
-      ]
-    },
-    {
-      "category": [
-        "cat4"
-      ]
-    }
-  ]
+  }
 }

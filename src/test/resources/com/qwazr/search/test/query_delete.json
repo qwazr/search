@@ -1,9 +1,9 @@
 {
-  "facet_filters": [
-    {
-      "category": [
-        "cat4"
-      ]
-    }
-  ]
+  "query": {
+    "query": "FacetPathQuery",
+    "dimension": "category",
+    "path": [
+      "cat4"
+    ]
+  }
 }
