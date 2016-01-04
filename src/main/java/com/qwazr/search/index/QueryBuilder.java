@@ -43,6 +43,9 @@ public class QueryBuilder {
 		return query_debug;
 	}
 
+	public QueryBuilder() {
+	}
+
 	public QueryBuilder(QueryDefinition queryDef) {
 		start = queryDef.start;
 		rows = queryDef.rows;
