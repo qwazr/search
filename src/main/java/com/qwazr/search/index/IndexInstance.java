@@ -513,35 +513,6 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	ResultDefinition mlt(MltQueryDefinition mltQueryDef)
-					throws ServerException, IOException, QueryNodeException, InterruptedException {
-		final Semaphore sem = schema.acquireReadSemaphore();
-		try {
-			final IndexSearcher indexSearcher = searcherManager.acquire();
-			try {
-				checkReloadAnalyzers(false);
-				indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
-				final IndexReader indexReader = indexSearcher.getIndexReader();
-				final TimeTracker timeTracker = new TimeTracker();
-				final Query filterQuery = new StandardQueryParser(queryAnalyzer)
-								.parse(mltQueryDef.document_query, mltQueryDef.query_default_field);
-				final TopDocs filterTopDocs = indexSearcher.search(filterQuery, 1, Sort.INDEXORDER);
-				if (filterTopDocs.totalHits == 0)
-					return new ResultDefinition(timeTracker);
-				final TopDocs topDocs;
-				final Query query = QueryUtils.getMoreLikeThis(mltQueryDef, indexReader, queryAnalyzer)
-								.like(filterTopDocs.scoreDocs[0].doc);
-				topDocs = indexSearcher.search(query, mltQueryDef.getEnd());
-				return new ResultDefinition(fieldMap, timeTracker, indexSearcher, topDocs, mltQueryDef, query);
-			} finally {
-				searcherManager.release(indexSearcher);
-			}
-		} finally {
-			if (sem != null)
-				sem.release();
-		}
-	}
-
 	Directory getLuceneDirectory() {
 		return luceneDirectory;
 	}

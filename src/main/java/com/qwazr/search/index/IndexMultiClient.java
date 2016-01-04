@@ -203,10 +203,4 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 		return null;
 	}
 
-	@Override
-	public ResultDefinition mltQuery(String schema_name, String index_name, MltQueryDefinition mltQuery) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

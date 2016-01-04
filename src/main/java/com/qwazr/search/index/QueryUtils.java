@@ -208,36 +208,4 @@ class QueryUtils {
 				facetState, facets, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
 	}
 
-	final static MoreLikeThis getMoreLikeThis(MltQueryDefinition mltQueryDef, IndexReader reader,
-			UpdatableAnalyzer analyzer) throws IOException {
-
-		final MoreLikeThis mlt = new MoreLikeThis(reader);
-		if (mltQueryDef.boost != null)
-			mlt.setBoost(mltQueryDef.boost);
-		if (mltQueryDef.boost_factor != null)
-			mlt.setBoostFactor(mltQueryDef.boost_factor);
-		if (mltQueryDef.fieldnames != null)
-			mlt.setFieldNames(mltQueryDef.fieldnames);
-		if (mltQueryDef.max_doc_freq != null)
-			mlt.setMaxDocFreq(mltQueryDef.max_doc_freq);
-		if (mltQueryDef.max_doc_freq_pct != null)
-			mlt.setMaxDocFreqPct(mltQueryDef.max_doc_freq_pct);
-		if (mltQueryDef.max_num_tokens_parsed != null)
-			mlt.setMaxNumTokensParsed(mltQueryDef.max_num_tokens_parsed);
-		if (mltQueryDef.max_query_terms != null)
-			mlt.setMaxQueryTerms(mltQueryDef.max_query_terms);
-		if (mltQueryDef.max_word_len != null)
-			mlt.setMaxWordLen(mltQueryDef.max_word_len);
-		if (mltQueryDef.min_doc_freq != null)
-			mlt.setMinDocFreq(mltQueryDef.min_doc_freq);
-		if (mltQueryDef.min_term_freq != null)
-			mlt.setMinTermFreq(mltQueryDef.min_term_freq);
-		if (mltQueryDef.min_word_len != null)
-			mlt.setMinWordLen(mltQueryDef.min_word_len);
-		if (mltQueryDef.stop_words != null)
-			mlt.setStopWords(mltQueryDef.stop_words);
-		mlt.setAnalyzer(analyzer);
-		return mlt;
-	}
-
 }

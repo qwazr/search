@@ -451,15 +451,4 @@ public class IndexServiceImpl implements IndexServiceInterface {
 			throw ServerException.getJsonException(e);
 		}
 	}
-
-	@Override
-	public ResultDefinition mltQuery(String schema_name, String index_name, MltQueryDefinition query) {
-		try {
-			checkRight(schema_name);
-			return IndexManager.INSTANCE.get(schema_name).get(index_name).mlt(query);
-		} catch (ServerException | IOException | QueryNodeException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
-		}
-	}
 }

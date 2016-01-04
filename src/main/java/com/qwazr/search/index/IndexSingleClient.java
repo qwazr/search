@@ -336,11 +336,4 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		return commonServiceRequest(request, query, msTimeOut, ResultDefinition.class, 200);
 	}
 
-	@Override
-	public ResultDefinition mltQuery(String schema_name, String index_name, MltQueryDefinition mltQuery) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/mlt");
-		Request request = Request.Post(uriBuilder.build());
-		return commonServiceRequest(request, mltQuery, msTimeOut, ResultDefinition.class, 200);
-	}
-
 }

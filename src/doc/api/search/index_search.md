@@ -17,7 +17,10 @@ curl -H 'Content-Type: application/json' \
     -XPOST localhost:9091/indexes/my_schema/my_index/search -d '
 {
   "query_string": "name",
-  "default_field": "name",
+  "query": {
+    "query": "StandardQueryParser",
+    "default_field": "name"
+  },
   "returned_fields": [
     "name",
     "price"
@@ -27,22 +30,9 @@ curl -H 'Content-Type: application/json' \
   "facets": {
     "category": { "top": 10 }
   },
-  "facet_filters": [
-    {
-      "category": [
-        "cat3",
-        "cat5"
-      ]
-    },
-    {
-      "category": [
-        "cat4"
-      ]
-    }
-  ],
   "sorts": {
-    "$score": "descending",
-    "price": "ascending"
+     "$score": "descending",
+     "price": "ascending"
   }
 }'
 ```

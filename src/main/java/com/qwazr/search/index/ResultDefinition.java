@@ -116,37 +116,6 @@ public class ResultDefinition {
 		}
 	}
 
-	ResultDefinition(Map<String, FieldDefinition> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
-			TopDocs topDocs, MltQueryDefinition mltQueryDef, Query query) throws IOException {
-		this.query = getQuery(mltQueryDef.query_debug, query);
-		total_hits = (long) topDocs.totalHits;
-		max_score = topDocs.getMaxScore();
-		int pos = mltQueryDef.start == null ? 0 : mltQueryDef.start;
-		int end = mltQueryDef.getEnd();
-		documents = new ArrayList<ResultDocument>();
-		ScoreDoc[] docs = topDocs.scoreDocs;
-		Map<String, DocValueUtils.DVConverter> docValuesSources = ResultUtils
-				.extractDocValuesFields(fieldMap, searcher.getIndexReader(), mltQueryDef.returned_fields);
-		while (pos < total_hits && pos < end) {
-			final ScoreDoc scoreDoc = docs[pos];
-			final Document document = searcher.doc(scoreDoc.doc, mltQueryDef.returned_fields);
-			documents.add(new ResultDocument(pos, scoreDoc, max_score, document, null, null, docValuesSources));
-			pos++;
-		}
-		if (timeTracker != null)
-			timeTracker.next("returned_fields");
-		this.facets = null;
-		this.functions = null;
-
-		if (timeTracker != null) {
-			this.timer = timeTracker.getMap();
-			this.total_time = timeTracker.getTotalTime();
-		} else {
-			this.timer = null;
-			this.total_time = null;
-		}
-	}
-
 	ResultDefinition(TimeTracker timeTracker) {
 		query = null;
 		total_hits = 0L;

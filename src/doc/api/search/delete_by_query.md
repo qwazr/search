@@ -16,21 +16,13 @@ Parameters:
 curl -H 'Content-Type: application/json' \
     -XPOST localhost:9091/indexes/my_schema/my_index/search?delete=true -d '
 {
-  "query_string": "name",
-  "default_field": "name",
-  "facet_filters": [
-    {
-      "category": [
-        "cat1",
-        "cat2"
-      ]
-    },
-    {
-      "category": [
-        "cat3"
-      ]
-    }
-  ]
+  "query": {
+    "query": "FacetPathQuery",
+    "dimension": "category",
+    "path": [
+      "cat4"
+    ]
+  }
 }'
 ```
 

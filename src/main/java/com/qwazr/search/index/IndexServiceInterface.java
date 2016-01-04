@@ -211,12 +211,4 @@ public interface IndexServiceInterface {
 	ResultDefinition searchQuery(@PathParam("schema_name") String schema_name,
 					@PathParam("index_name") String index_name, QueryDefinition query,
 					@QueryParam("delete") Boolean delete);
-
-	@POST
-	@Path("/{schema_name}/{index_name}/mlt")
-	@Consumes(RestApplication.APPLICATION_JSON_UTF8)
-	@Produces(RestApplication.APPLICATION_JSON_UTF8)
-	ResultDefinition mltQuery(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-					MltQueryDefinition query);
-
 }
