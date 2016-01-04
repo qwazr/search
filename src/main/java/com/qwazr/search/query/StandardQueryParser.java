@@ -25,7 +25,7 @@ import java.util.LinkedHashMap;
 
 public class StandardQueryParser extends AbstractQuery {
 
-	final public String[] fields;
+	final public String[] multi_fields;
 	final public String default_field;
 	final public LinkedHashMap<String, Float> fields_boost;
 	final public Boolean allow_leading_wildcard;
@@ -40,7 +40,7 @@ public class StandardQueryParser extends AbstractQuery {
 
 	public StandardQueryParser() {
 		super(null);
-		fields = null;
+		multi_fields = null;
 		default_field = null;
 		fields_boost = null;
 		allow_leading_wildcard = null;
@@ -58,7 +58,7 @@ public class StandardQueryParser extends AbstractQuery {
 	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
 
 		final org.apache.lucene.queryparser.flexible.standard.StandardQueryParser parser = new org.apache.lucene.queryparser.flexible.standard.StandardQueryParser(
-						queryContext.analyzer);
+				queryContext.analyzer);
 		if (fields_boost != null)
 			parser.setFieldsBoost(fields_boost);
 		if (default_operator != null)
@@ -75,6 +75,8 @@ public class StandardQueryParser extends AbstractQuery {
 			parser.setFuzzyPrefixLength(fuzzy_prefix_length);
 		if (lowercase_expanded_terms != null)
 			parser.setLowercaseExpandedTerms(lowercase_expanded_terms);
-		return parser.parse(default_field, queryContext.queryString);
+		if (multi_fields != null)
+			parser.setMultiFields(multi_fields);
+		return parser.parse(queryContext.queryString, default_field);
 	}
 }
