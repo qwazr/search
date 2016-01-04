@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.IOUtils;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
@@ -23,34 +24,26 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.spans.SpanFirstQuery;
+import org.apache.lucene.search.spans.SpanPositionRangeQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-public class SpanFirstQueries extends AbstractQuery {
+public class SpanPositionsQuery extends AbstractQuery {
 
 	final public String field;
-	final public Integer end;
-	final public Boolean increment_end;
-	final public Boolean log_boost;
+	final public Integer distance;
 
-	public SpanFirstQueries() {
+	public SpanPositionsQuery() {
 		super(null);
 		field = null;
-		end = null;
-		increment_end = null;
-		log_boost = null;
+		distance = null;
 	}
 
-	SpanFirstQueries(Float boost, String field, Integer end, Boolean increment_end, String value, Boolean log_boost) {
+	SpanPositionsQuery(Float boost, String field, Integer end, Boolean increment_end, String value, Boolean log_boost) {
 		super(boost);
 		this.field = field;
-		this.end = end;
-		this.increment_end = increment_end;
-		this.log_boost = log_boost;
+		this.distance = end;
 	}
 
 	@Override
@@ -58,24 +51,31 @@ public class SpanFirstQueries extends AbstractQuery {
 
 		BooleanQuery.Builder builder = new BooleanQuery.Builder();
 		TokenStream tokenStream = queryContext.analyzer.tokenStream(field, queryContext.queryString);
-		CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
-		PositionIncrementAttribute pocincrAttribute = tokenStream.getAttribute(PositionIncrementAttribute.class);
-		tokenStream.reset();
-		final List<String> terms = new ArrayList<String>();
-		int e = end == null ? 0 : end;
-		final boolean inc_end = increment_end != null ? increment_end : false;
-		int pos = 1;
-		while (tokenStream.incrementToken()) {
-			//System.out.println("LOG " + pos + " : " + (1 - Math.log10(pos)));
-			SpanFirstQuery query = new SpanFirstQuery(new SpanTermQuery(new Term(field, charTermAttribute.toString())),
-							e);
-			builder.add(new BooleanClause(query, BooleanClause.Occur.SHOULD));
-			if (inc_end)
-				e++;
-			pos += pocincrAttribute.getPositionIncrement();
+		try {
+			CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
+			PositionIncrementAttribute pocincrAttribute = tokenStream.getAttribute(PositionIncrementAttribute.class);
+			tokenStream.reset();
+			int pos = 0;
+			while (tokenStream.incrementToken()) {
+				final String charTerm = charTermAttribute.toString();
+				int start = pos - distance;
+				if (start < 0)
+					start = 0;
+				final int end = pos + distance + 1;
+				for (int i = start; i < end; i++) {
+					final float dist = Math.abs(i - pos) + 1;
+					final float boost = 1 / dist;
+					final SpanTermQuery spanTermQuery = new SpanTermQuery(new Term(field, charTerm));
+					SpanPositionRangeQuery spanPositionRangeQuery = new SpanPositionRangeQuery(spanTermQuery, i, i + 1);
+					spanPositionRangeQuery.setBoost(boost * this.boost);
+					builder.add(new BooleanClause(spanPositionRangeQuery, BooleanClause.Occur.SHOULD));
+				}
+				pos += pocincrAttribute.getPositionIncrement();
+			}
+			return builder.build();
+		} finally {
+			IOUtils.closeQuietly(tokenStream);
 		}
-		tokenStream.close();
-		return builder.build();
 	}
 
 }

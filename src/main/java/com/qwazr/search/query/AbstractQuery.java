@@ -37,7 +37,7 @@ import java.io.IOException;
 				@JsonSubTypes.Type(value = MoreLikeThisQuery.class),
 				@JsonSubTypes.Type(value = MultiFieldQueryParser.class), @JsonSubTypes.Type(value = PhraseQuery.class),
 				@JsonSubTypes.Type(value = PrefixQuery.class), @JsonSubTypes.Type(value = RegexpQuery.class),
-				@JsonSubTypes.Type(value = SpanFirstQueries.class), @JsonSubTypes.Type(value = SpanFirstQuery.class),
+				@JsonSubTypes.Type(value = SpanFirstQuery.class), @JsonSubTypes.Type(value = SpanPositionsQuery.class),
 				@JsonSubTypes.Type(value = SpanNearQuery.class), @JsonSubTypes.Type(value = SpanNotQuery.class),
 				@JsonSubTypes.Type(value = SpanTermQuery.class), @JsonSubTypes.Type(value = StandardQueryParser.class),
 				@JsonSubTypes.Type(value = TermQuery.class), @JsonSubTypes.Type(value = TermsQuery.class),
