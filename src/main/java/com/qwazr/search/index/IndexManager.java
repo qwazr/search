@@ -32,20 +32,31 @@ import java.util.concurrent.ExecutorService;
 
 public class IndexManager {
 
+	public final static String SERVICE_NAME_SEARCH = "search";
+	public final static String INDEXES_DIRECTORY = "index";
+
 	private static final Logger logger = LoggerFactory.getLogger(IndexManager.class);
 
-	public static volatile IndexManager INSTANCE = null;
+	static IndexManager INSTANCE = null;
 
-	public static void load(ExecutorService executorService, File directory) throws IOException {
+	public synchronized static Class<? extends IndexServiceInterface> load(ExecutorService executorService,
+			File dataDirectory) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
-		INSTANCE = new IndexManager(executorService, directory);
+		File indexesDirectory = new File(dataDirectory, INDEXES_DIRECTORY);
+		if (!indexesDirectory.exists())
+			indexesDirectory.mkdir();
+		if (!indexesDirectory.isDirectory())
+			throw new IOException(
+					"This name is not valid. No directory exists for this location: " + indexesDirectory.getName());
+		INSTANCE = new IndexManager(executorService, indexesDirectory);
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
 				INSTANCE.shutdown();
 			}
 		});
+		return IndexServiceImpl.class;
 	}
 
 	private final ConcurrentHashMap<String, SchemaInstance> schemaMap;

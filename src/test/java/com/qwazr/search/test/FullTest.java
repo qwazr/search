@@ -15,23 +15,17 @@
  */
 package com.qwazr.search.test;
 
-import com.google.common.io.Files;
-import com.qwazr.search.SearchServer;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
-import org.apache.commons.cli.ParseException;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import javax.servlet.ServletException;
 import javax.ws.rs.core.Response;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -62,17 +56,6 @@ public class FullTest {
 	public static final List<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
 	public static final Map<String, Object> UPDATE_DOC_VALUE = getDoc("update_doc_value.json");
 	public static final List<Map<String, Object>> UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
-
-	@Before
-	public void startServer() throws IOException, ParseException, ServletException, IllegalAccessException,
-					InstantiationException {
-		if (started)
-			return;
-		// start the server
-		File dataDir = Files.createTempDir();
-		SearchServer.main(new String[] { "-d", dataDir.getAbsolutePath() });
-		started = true;
-	}
 
 	private IndexServiceInterface getClient() throws URISyntaxException {
 		return new IndexSingleClient(BASE_URL, 60000);
@@ -182,7 +165,7 @@ public class FullTest {
 	public void test120SetAnalyzers() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		LinkedHashMap<String, AnalyzerDefinition> analyzers = client
-						.setAnalyzers(SCHEMA_NAME, INDEX_NAME, ANALYZERS_JSON);
+				.setAnalyzers(SCHEMA_NAME, INDEX_NAME, ANALYZERS_JSON);
 		Assert.assertEquals(analyzers.size(), ANALYZERS_JSON.size());
 		IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_NAME);
 		Assert.assertNotNull(indexStatus.analyzers);
@@ -249,7 +232,7 @@ public class FullTest {
 	}
 
 	private ResultDefinition checkQuerySchema(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
-					throws IOException {
+			throws IOException {
 		ResultDefinition result = client.searchQuery(SCHEMA_NAME, "*", queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
@@ -258,7 +241,7 @@ public class FullTest {
 	}
 
 	private ResultDefinition checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
-					throws IOException {
+			throws IOException {
 		ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_NAME, queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
@@ -431,7 +414,7 @@ public class FullTest {
 	}
 
 	private <T extends Comparable> void checkDescending(T startValue, String field,
-					Collection<ResultDocument> documents) {
+			Collection<ResultDocument> documents) {
 		T old = startValue;
 		for (ResultDocument document : documents) {
 			Assert.assertNotNull(document.fields);
@@ -443,7 +426,7 @@ public class FullTest {
 	}
 
 	private <T extends Comparable> void checkAscending(T startValue, String field,
-					Collection<ResultDocument> documents) {
+			Collection<ResultDocument> documents) {
 		T old = startValue;
 		for (ResultDocument document : documents) {
 			Assert.assertNotNull(document.fields);
@@ -502,10 +485,10 @@ public class FullTest {
 		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
 		IndexServiceInterface client = getClient();
 		checkAnalyzerResult(term_results,
-						client.doAnalyzeIndex(SCHEMA_NAME, INDEX_NAME, "name", "There are few parts of texts"));
+				client.doAnalyzeIndex(SCHEMA_NAME, INDEX_NAME, "name", "There are few parts of texts"));
 
 		checkAnalyzerResult(term_results,
-						client.doAnalyzeQuery(SCHEMA_NAME, INDEX_NAME, "name", "There are few parts of texts"));
+				client.doAnalyzeQuery(SCHEMA_NAME, INDEX_NAME, "name", "There are few parts of texts"));
 	}
 
 	@Test

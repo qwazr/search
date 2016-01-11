@@ -109,4 +109,24 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <environmentVariables>
+                        <QWAZR_MASTERS>localhost:9091</QWAZR_MASTERS>
+                    </environmentVariables>
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>com.qwazr.search.test.ExecutionListener</value>
+                        </property>
+                    </properties>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

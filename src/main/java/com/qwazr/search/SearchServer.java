@@ -15,7 +15,7 @@
  */
 package com.qwazr.search;
 
-import com.qwazr.cluster.ClusterServer;
+import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.cluster.service.ClusterServiceImpl;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.search.index.IndexServiceImpl;
@@ -36,21 +36,10 @@ import java.util.concurrent.Executors;
 
 public class SearchServer extends AbstractServer {
 
-	public final static String SERVICE_NAME_SEARCH = "search";
-	public final static String INDEXES_DIRECTORY = "index";
-
 	private final ExecutorService executorService;
 
-	private final static ServerDefinition serverDefinition = new ServerDefinition();
-
-	static {
-		serverDefinition.mainJarPath = "qwazr-search.jar";
-		serverDefinition.defaultDataDirName = "qwazr";
-		serverDefinition.defaultWebServiceTcpPort = 9091;
-	}
-
 	private SearchServer() {
-		super(serverDefinition);
+		super(new ServerDefinition());
 		executorService = Executors.newCachedThreadPool();
 	}
 
@@ -70,25 +59,11 @@ public class SearchServer extends AbstractServer {
 	public void commandLine(CommandLine cmd) throws IOException, ParseException {
 	}
 
-	public static void checkDirectoryExists(File directoryFile) throws IOException {
-		if (!directoryFile.exists())
-			directoryFile.mkdir();
-		if (!directoryFile.isDirectory())
-			throw new IOException(
-					"This name is not valid. No directory exists for this location: " + directoryFile.getName());
-	}
-
-	public static void loadIndexManager(ExecutorService executorService, File dataDirectory) throws IOException {
-		File indexDir = new File(dataDirectory, INDEXES_DIRECTORY);
-		checkDirectoryExists(indexDir);
-		IndexManager.load(executorService, indexDir);
-	}
-
 	@Override
 	public void load() throws IOException {
 		File currentDataDir = getCurrentDataDir();
-		ClusterServer.load(getWebServicePublicAddress(), currentDataDir);
-		loadIndexManager(executorService, currentDataDir);
+		ClusterManager.load(getWebServicePublicAddress(), currentDataDir);
+		IndexManager.load(executorService, currentDataDir);
 
 	}
 
