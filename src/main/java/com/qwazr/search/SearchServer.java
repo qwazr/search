@@ -31,16 +31,12 @@ import javax.ws.rs.ApplicationPath;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class SearchServer extends AbstractServer {
 
-	private final ExecutorService executorService;
-
 	private SearchServer() {
-		super(new ServerDefinition());
-		executorService = Executors.newCachedThreadPool();
+		super(new ServerDefinition(), Executors.newSingleThreadExecutor());
 	}
 
 	@ApplicationPath("/")
@@ -62,7 +58,7 @@ public class SearchServer extends AbstractServer {
 	@Override
 	public void load() throws IOException {
 		File currentDataDir = getCurrentDataDir();
-		ClusterManager.load(getWebServicePublicAddress(), currentDataDir);
+		ClusterManager.load(executorService, getWebServicePublicAddress(), null);
 		IndexManager.load(executorService, currentDataDir);
 
 	}
