@@ -40,6 +40,10 @@
             <artifactId>qwazr-utils</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.qwazr</groupId>
+            <artifactId>qwazr-compiler</artifactId>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>

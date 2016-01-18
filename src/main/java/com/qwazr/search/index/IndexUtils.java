@@ -17,7 +17,7 @@ package com.qwazr.search.index;
 
 import com.datastax.driver.core.utils.UUIDs;
 import com.qwazr.search.analysis.AnalyzerContext;
-import com.qwazr.utils.FileClassCompilerLoader;
+import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -110,10 +110,9 @@ public class IndexUtils {
 	final static String[] similarityClassPrefixes = { "", "com.qwazr.search.similarity.",
 					"org.apache.lucene.search.similarities." };
 
-	final static Similarity findSimilarity(FileClassCompilerLoader compilerLoader, String similarity)
+	final static Similarity findSimilarity(ClassLoader classLoader, String similarity)
 					throws InterruptedException, ReflectiveOperationException, IOException {
-		return (Similarity) FileClassCompilerLoader.findClass(compilerLoader, similarity, similarityClassPrefixes)
-						.newInstance();
+		return (Similarity) ClassLoaderUtils.findClass(classLoader, similarity, similarityClassPrefixes).newInstance();
 	}
 
 }

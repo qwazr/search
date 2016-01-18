@@ -19,7 +19,6 @@ import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.utils.FileClassCompilerLoader;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
@@ -62,7 +61,6 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 
 	private volatile Semaphore readSemaphore;
 	private volatile Semaphore writeSemaphore;
-	private volatile FileClassCompilerLoader fileClassCompilerLoader;
 
 	private volatile SearchContext searchContext = null;
 
@@ -94,7 +92,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 			}
 			multiReader = new MultiReader(indexReaders);
 			indexSearcher = new IndexSearcher(multiReader);
-			AnalyzerContext analyzerContext = new AnalyzerContext(fileClassCompilerLoader, analyzerMap, fieldMap);
+			AnalyzerContext analyzerContext = new AnalyzerContext(analyzerMap, fieldMap);
 			queryAnalyzer = new UpdatableAnalyzer(analyzerContext, analyzerContext.queryAnalyzerMap);
 		}
 
@@ -110,19 +108,18 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 		}
 
 		public ResultDefinition search(QueryDefinition queryDef)
-				throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
-				ReflectiveOperationException {
+						throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
+						ReflectiveOperationException {
 			if (indexSearcher == null)
 				return null;
-			final QueryContext queryContext = new QueryContext(indexSearcher, fileClassCompilerLoader, queryAnalyzer,
-					queryDef);
+			final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, queryDef);
 			return QueryUtils.search(queryContext);
 		}
 	}
 
 	SchemaInstance(ExecutorService executorService, File schemaDirectory)
-			throws IOException, ServerException, InterruptedException, ReflectiveOperationException,
-			URISyntaxException {
+					throws IOException, ServerException, InterruptedException, ReflectiveOperationException,
+					URISyntaxException {
 		this.executorService = executorService;
 		this.schemaDirectory = schemaDirectory;
 		if (!schemaDirectory.exists())
@@ -133,8 +130,8 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
 		settingsDefinition = settingsFile.exists() ?
-				JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
-				SchemaSettingsDefinition.EMPTY;
+						JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
+						SchemaSettingsDefinition.EMPTY;
 		checkSettings();
 
 		File[] directories = schemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -158,7 +155,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	IndexStatus createUpdate(String indexName, IndexSettingsDefinition settings)
-			throws ServerException, IOException, InterruptedException, ReflectiveOperationException {
+					throws ServerException, IOException, InterruptedException, ReflectiveOperationException {
 		synchronized (indexMap) {
 			IndexInstance indexInstance = indexMap.get(indexName);
 			if (indexInstance != null && settings != null) {
@@ -243,10 +240,6 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 		if (settingsDefinition == null) {
 			readSemaphore = null;
 			writeSemaphore = null;
-			if (fileClassCompilerLoader != null) {
-				fileClassCompilerLoader.close();
-				fileClassCompilerLoader = null;
-			}
 			return;
 		}
 		if (settingsDefinition.max_simultaneous_read != null)
@@ -257,26 +250,19 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 			writeSemaphore = new Semaphore(settingsDefinition.max_simultaneous_write);
 		else
 			writeSemaphore = null;
-
-		FileClassCompilerLoader oldFccl = fileClassCompilerLoader;
-		fileClassCompilerLoader = (settingsDefinition.javac != null && settingsDefinition.javac.source_root != null) ?
-				FileClassCompilerLoader.newInstance(executorService, settingsDefinition.javac) :
-				null;
-		if (oldFccl != null)
-			oldFccl.close();
 	}
 
 	private static ResultDefinition atomicSearch(SearchContext searchContext, QueryDefinition queryDef)
-			throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException,
-			ReflectiveOperationException {
+					throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException,
+					ReflectiveOperationException {
 		if (searchContext == null)
 			return null;
 		return searchContext.search(queryDef);
 	}
 
 	public ResultDefinition search(QueryDefinition queryDef)
-			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
-			ReflectiveOperationException {
+					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
+					ReflectiveOperationException {
 		final Semaphore sem = acquireReadSemaphore();
 		try {
 			return atomicSearch(searchContext, queryDef);
@@ -302,7 +288,7 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	private static void atomicCheckSize(SchemaSettingsDefinition settingsDefinition, SearchContext searchContext,
-			int addSize) throws ServerException {
+					int addSize) throws ServerException {
 		if (settingsDefinition == null)
 			return;
 		if (settingsDefinition.max_size == null)
@@ -311,14 +297,10 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 			return;
 		if (searchContext.numDocs() + addSize > settingsDefinition.max_size)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"This schema is limited to " + settingsDefinition.max_size + " documents");
+							"This schema is limited to " + settingsDefinition.max_size + " documents");
 	}
 
 	void checkSize(int addSize) throws IOException, ServerException {
 		atomicCheckSize(settingsDefinition, searchContext, addSize);
-	}
-
-	FileClassCompilerLoader getFileClassCompilerLoader() {
-		return fileClassCompilerLoader;
 	}
 }
