@@ -16,21 +16,18 @@
 package com.qwazr.search;
 
 import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.cluster.service.ClusterServiceImpl;
 import com.qwazr.search.index.IndexManager;
-import com.qwazr.search.index.IndexServiceImpl;
 import com.qwazr.utils.server.AbstractServer;
-import com.qwazr.utils.server.RestApplication;
+import com.qwazr.utils.server.ServiceInterface;
 import com.qwazr.utils.server.ServletApplication;
 import io.undertow.security.idm.IdentityManager;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 
 import javax.servlet.ServletException;
-import javax.ws.rs.ApplicationPath;
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
+import java.util.Collection;
 import java.util.concurrent.Executors;
 
 public class SearchServer extends AbstractServer {
@@ -39,37 +36,15 @@ public class SearchServer extends AbstractServer {
 		super(new ServerDefinition(), Executors.newSingleThreadExecutor());
 	}
 
-	@ApplicationPath("/")
-	public static class SearchApplication extends RestApplication {
-
-		@Override
-		public Set<Class<?>> getClasses() {
-			Set<Class<?>> classes = super.getClasses();
-			classes.add(ClusterServiceImpl.class);
-			classes.add(IndexServiceImpl.class);
-			return classes;
-		}
-	}
-
 	@Override
 	public void commandLine(CommandLine cmd) throws IOException, ParseException {
 	}
 
 	@Override
-	public void load() throws IOException {
+	public ServletApplication load(Collection<Class<? extends ServiceInterface>> services) throws IOException {
 		File currentDataDir = getCurrentDataDir();
-		ClusterManager.load(executorService, getWebServicePublicAddress(), null);
-		IndexManager.load(executorService, currentDataDir);
-
-	}
-
-	@Override
-	protected Class<SearchApplication> getRestApplication() {
-		return SearchApplication.class;
-	}
-
-	@Override
-	protected Class<ServletApplication> getServletApplication() {
+		services.add(ClusterManager.load(executorService, getWebServicePublicAddress(), null));
+		services.add(IndexManager.load(executorService, currentDataDir));
 		return null;
 	}
 
@@ -78,8 +53,8 @@ public class SearchServer extends AbstractServer {
 		return null;
 	}
 
-	public static void main(String[] args)
-			throws IOException, ParseException, ServletException, InstantiationException, IllegalAccessException {
+	public static void main(String[] args) throws IOException, ParseException, ServletException, InstantiationException,
+					IllegalAccessException {
 		new SearchServer().start(args);
 	}
 

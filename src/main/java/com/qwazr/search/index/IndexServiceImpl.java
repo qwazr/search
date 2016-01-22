@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class IndexServiceImpl implements IndexServiceInterface {
+class IndexServiceImpl implements IndexServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(IndexServiceImpl.class);
 
@@ -177,7 +177,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	public LinkedHashMap<String, FieldDefinition> setFields(String schema_name, String index_name,
-		LinkedHashMap<String, FieldDefinition> fields) {
+					LinkedHashMap<String, FieldDefinition> fields) {
 		try {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setFields(fields);
@@ -190,12 +190,12 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	private List<TermDefinition> doAnalyzer(String schema_name, String index_name, String field_name, String text,
-		boolean index) throws ServerException, IOException {
+					boolean index) throws ServerException, IOException {
 		checkRight(schema_name);
 		IndexInstance indexInstance = IndexManager.INSTANCE.get(schema_name).get(index_name);
 		Analyzer analyzer = index ?
-			indexInstance.getIndexAnalyzer(field_name) :
-			indexInstance.getQueryAnalyzer(field_name);
+						indexInstance.getIndexAnalyzer(field_name) :
+						indexInstance.getQueryAnalyzer(field_name);
 		if (analyzer == null)
 			throw new ServerException("No analyzer found for " + field_name);
 		return TermDefinition.buildTermList(analyzer, field_name, text);
@@ -266,7 +266,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 		try {
 			checkRight(schema_name);
 			Map<String, AnalyzerDefinition> analyzerMap = IndexManager.INSTANCE.get(schema_name).get(index_name)
-				.getAnalyzers();
+							.getAnalyzers();
 			AnalyzerDefinition analyzerDef = (analyzerMap != null) ? analyzerMap.get(analyzer_name) : null;
 			if (analyzerDef == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzer_name);
@@ -280,7 +280,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 
 	@Override
 	public AnalyzerDefinition setAnalyzer(String schema_name, String index_name, String analyzer_name,
-		AnalyzerDefinition analyzer) {
+					AnalyzerDefinition analyzer) {
 		try {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setAnalyzer(analyzer_name, analyzer);
@@ -293,7 +293,7 @@ public class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(String schema_name, String index_name,
-		LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+					LinkedHashMap<String, AnalyzerDefinition> analyzers) {
 		try {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setAnalyzers(analyzers);
