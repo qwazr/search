@@ -55,7 +55,7 @@ public class SearchServer extends AbstractServer {
 
 	public static void main(String[] args) throws IOException, ParseException, ServletException, InstantiationException,
 					IllegalAccessException {
-		new SearchServer().start(args);
+		new SearchServer().start(args, true);
 	}
 
 }
