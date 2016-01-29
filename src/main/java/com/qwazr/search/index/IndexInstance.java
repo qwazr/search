@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.compiler.CompilerManager;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
@@ -160,8 +159,7 @@ final public class IndexInstance implements Closeable {
 			// Set
 			IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
 			if (settings != null && settings.similarity_class != null)
-				indexWriterConfig.setSimilarity(IndexUtils
-								.findSimilarity(CompilerManager.getJavaClassLoader(), settings.similarity_class));
+				indexWriterConfig.setSimilarity(IndexUtils.findSimilarity(settings.similarity_class));
 			indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 			SnapshotDeletionPolicy snapshotDeletionPolicy = new SnapshotDeletionPolicy(
 							indexWriterConfig.getIndexDeletionPolicy());
@@ -269,17 +267,6 @@ final public class IndexInstance implements Closeable {
 		analyzerMap = analyzers;
 	}
 
-	synchronized void checkReloadAnalyzers(boolean force) throws ServerException, IOException {
-		final boolean reload;
-		if (!force) {
-			final ClassLoader classLoader = CompilerManager.getJavaClassLoader();
-			reload = indexAnalyzer.hasNeedRecompilation(classLoader) || queryAnalyzer.hasNeedRecompilation(classLoader);
-		} else
-			reload = true;
-		if (reload)
-			setAnalyzers(analyzerMap);
-	}
-
 	void setAnalyzer(String analyzer_name, AnalyzerDefinition analyzer) throws IOException, ServerException {
 		LinkedHashMap<String, AnalyzerDefinition> analyzers = (LinkedHashMap<String, AnalyzerDefinition>) analyzerMap
 						.clone();
@@ -296,12 +283,10 @@ final public class IndexInstance implements Closeable {
 	}
 
 	public Analyzer getIndexAnalyzer(String field) throws ServerException, IOException {
-		checkReloadAnalyzers(false);
 		return indexAnalyzer.getWrappedAnalyzer(field);
 	}
 
 	public Analyzer getQueryAnalyzer(String field) throws ServerException, IOException {
-		checkReloadAnalyzers(false);
 		return queryAnalyzer.getWrappedAnalyzer(field);
 	}
 
@@ -413,7 +398,6 @@ final public class IndexInstance implements Closeable {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(1);
-			checkReloadAnalyzers(false);
 			Object id = IndexUtils.addNewLuceneDocument(indexAnalyzer.getContext(), document, indexWriter);
 			nrtCommit();
 			return id;
@@ -430,7 +414,6 @@ final public class IndexInstance implements Closeable {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(documents.size());
-			checkReloadAnalyzers(false);
 			final AnalyzerContext context = indexAnalyzer.getContext();
 			List<Object> ids = new ArrayList<Object>(documents.size());
 			for (Map<String, Object> document : documents)
@@ -449,7 +432,6 @@ final public class IndexInstance implements Closeable {
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			checkReloadAnalyzers(false);
 			IndexUtils.updateDocValues(indexAnalyzer.getContext(), document, indexWriter);
 			nrtCommit();
 		} finally {
@@ -464,7 +446,6 @@ final public class IndexInstance implements Closeable {
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			checkReloadAnalyzers(false);
 			final AnalyzerContext context = indexAnalyzer.getContext();
 			for (Map<String, Object> document : documents)
 				IndexUtils.updateDocValues(context, document, indexWriter);
@@ -480,7 +461,6 @@ final public class IndexInstance implements Closeable {
 					ReflectiveOperationException {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			checkReloadAnalyzers(false);
 			final QueryContext queryContext = new QueryContext(null, queryAnalyzer, queryDefinition);
 			final Query query = QueryUtils.getLuceneQuery(queryContext);
 			int docs = indexWriter.numDocs();
@@ -501,7 +481,6 @@ final public class IndexInstance implements Closeable {
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
-				checkReloadAnalyzers(false);
 				indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
 				final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, queryDefinition);
 				return QueryUtils.search(queryContext);

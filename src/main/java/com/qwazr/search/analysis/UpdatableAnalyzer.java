@@ -44,16 +44,6 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 		close(oldAnalyzerMap);
 	}
 
-	final public boolean hasNeedRecompilation(ClassLoader classLoader) {
-		if (classLoader == null)
-			return false;
-		if (context == null)
-			return false;
-		if (context.classLoader == null)
-			return true;
-		return classLoader != context.classLoader;
-	}
-
 	private static void close(Map<String, Analyzer> analyzerMap) {
 		if (analyzerMap == null)
 			return;

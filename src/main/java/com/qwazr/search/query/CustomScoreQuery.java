@@ -73,7 +73,7 @@ public class CustomScoreQuery extends AbstractQuery {
 					throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 
 		Class<? extends CustomScoreProvider> customScoreProviderClass = ClassLoaderUtils
-						.findClass(queryContext.classLoader, customScoreProvider, null);
+						.findClass(null, customScoreProvider, null);
 		Objects.requireNonNull(customScoreProviderClass, "Cannot find the class for " + customScoreProvider);
 		Constructor<? extends CustomScoreProvider> customScoreProviderConstructor = customScoreProviderClass
 						.getConstructor(LeafReaderContext.class);

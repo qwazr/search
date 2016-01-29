@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.analysis;
 
-import com.qwazr.compiler.CompilerManager;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldUtils;
 import com.qwazr.utils.ClassLoaderUtils;
@@ -33,7 +32,6 @@ import java.util.Map;
 
 public class AnalyzerContext {
 
-	public final ClassLoader classLoader;
 	public final Map<String, FieldDefinition> fields;
 	public final FacetsConfig facetsConfig;
 	public final Map<String, Analyzer> indexAnalyzerMap;
@@ -41,7 +39,6 @@ public class AnalyzerContext {
 
 	public AnalyzerContext(Map<String, AnalyzerDefinition> analyzerMap, Map<String, FieldDefinition> fields)
 					throws ServerException {
-		this.classLoader = CompilerManager.getJavaClassLoader();
 		this.fields = fields;
 		this.facetsConfig = new FacetsConfig();
 		if (fields == null || fields.size() == 0) {
@@ -63,13 +60,13 @@ public class AnalyzerContext {
 
 				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ?
 								null :
-								findAnalyzer(classLoader, analyzerMap, fieldDef.analyzer);
+								findAnalyzer(analyzerMap, fieldDef.analyzer);
 				if (indexAnalyzer != null)
 					indexAnalyzerMap.put(fieldName, indexAnalyzer);
 
 				final Analyzer queryAnalyzer = StringUtils.isEmpty(fieldDef.query_analyzer) ?
 								indexAnalyzer :
-								findAnalyzer(classLoader, analyzerMap, fieldDef.query_analyzer);
+								findAnalyzer(analyzerMap, fieldDef.query_analyzer);
 				if (queryAnalyzer != null)
 					queryAnalyzerMap.put(fieldName, queryAnalyzer);
 
@@ -89,15 +86,15 @@ public class AnalyzerContext {
 
 	final static String[] analyzerClassPrefixes = { "", "org.apache.lucene.analysis." };
 
-	static private Analyzer findAnalyzer(ClassLoader classLoader, Map<String, AnalyzerDefinition> analyzerMap,
-					String analyzer) throws InterruptedException, ReflectiveOperationException, IOException {
+	static private Analyzer findAnalyzer(Map<String, AnalyzerDefinition> analyzerMap, String analyzer)
+					throws InterruptedException, ReflectiveOperationException, IOException {
 		if (analyzerMap != null) {
 			AnalyzerDefinition analyzerDef = analyzerMap.get(analyzer);
 			if (analyzerDef != null)
 				return new CustomAnalyzer(analyzerDef);
 		}
 
-		return (Analyzer) ClassLoaderUtils.findClass(classLoader, analyzer, analyzerClassPrefixes).newInstance();
+		return (Analyzer) ClassLoaderUtils.findClass(null, analyzer, analyzerClassPrefixes).newInstance();
 	}
 
 }

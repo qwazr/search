@@ -110,9 +110,9 @@ public class IndexUtils {
 	final static String[] similarityClassPrefixes = { "", "com.qwazr.search.similarity.",
 					"org.apache.lucene.search.similarities." };
 
-	final static Similarity findSimilarity(ClassLoader classLoader, String similarity)
+	final static Similarity findSimilarity( String similarity)
 					throws InterruptedException, ReflectiveOperationException, IOException {
-		return (Similarity) ClassLoaderUtils.findClass(classLoader, similarity, similarityClassPrefixes).newInstance();
+		return (Similarity) ClassLoaderUtils.findClass(null, similarity, similarityClassPrefixes).newInstance();
 	}
 
 }

@@ -15,21 +15,18 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.compiler.CompilerManager;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import org.apache.lucene.search.IndexSearcher;
 
 public class QueryContext {
 
 	final public IndexSearcher indexSearcher;
-	final public ClassLoader classLoader;
 	final public UpdatableAnalyzer analyzer;
 	final public QueryDefinition queryDefinition;
 	final public String queryString;
 
 	QueryContext(IndexSearcher indexSearcher, UpdatableAnalyzer analyzer, QueryDefinition queryDefinition) {
 		this.indexSearcher = indexSearcher;
-		this.classLoader = CompilerManager.getJavaClassLoader();
 		this.analyzer = analyzer;
 		this.queryDefinition = queryDefinition;
 		this.queryString = QueryUtils.getFinalQueryString(queryDefinition);
