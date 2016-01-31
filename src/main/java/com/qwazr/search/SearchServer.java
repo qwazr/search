@@ -18,11 +18,10 @@ package com.qwazr.search;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.utils.server.AbstractServer;
+import com.qwazr.utils.server.ServerConfiguration;
 import com.qwazr.utils.server.ServiceInterface;
 import com.qwazr.utils.server.ServletApplication;
 import io.undertow.security.idm.IdentityManager;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.ParseException;
 
 import javax.servlet.ServletException;
 import java.io.File;
@@ -30,14 +29,10 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.Executors;
 
-public class SearchServer extends AbstractServer {
+public class SearchServer extends AbstractServer<ServerConfiguration> {
 
 	private SearchServer() {
-		super(new ServerDefinition(), Executors.newSingleThreadExecutor());
-	}
-
-	@Override
-	public void commandLine(CommandLine cmd) throws IOException, ParseException {
+		super(Executors.newSingleThreadExecutor(), new ServerConfiguration());
 	}
 
 	@Override
@@ -53,9 +48,9 @@ public class SearchServer extends AbstractServer {
 		return null;
 	}
 
-	public static void main(String[] args) throws IOException, ParseException, ServletException, InstantiationException,
-					IllegalAccessException {
-		new SearchServer().start(args, true);
+	public static void main(String[] args)
+			throws IOException, ServletException, InstantiationException, IllegalAccessException {
+		new SearchServer().start(true);
 	}
 
 }
