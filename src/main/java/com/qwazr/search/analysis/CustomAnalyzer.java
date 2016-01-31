@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.analysis;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
@@ -54,7 +55,7 @@ final public class CustomAnalyzer extends Analyzer {
 	}
 
 	private final static <T extends AbstractAnalysisFactory> T getFactory(LinkedHashMap<String, String> args,
-					Class<T> defaultClass) throws ReflectiveOperationException {
+			Class<T> defaultClass) throws ReflectiveOperationException {
 		final String clazz;
 		if (args != null) {
 			args = (LinkedHashMap<String, String>) args.clone();
@@ -68,15 +69,14 @@ final public class CustomAnalyzer extends Analyzer {
 	}
 
 	private final static <T extends AbstractAnalysisFactory> Class<T> getFactoryClass(String clazz)
-					throws ClassNotFoundException {
+			throws ClassNotFoundException {
 		if (!clazz.endsWith("Factory"))
 			clazz += "Factory";
-		final Class<T> factoryClass;
 		try {
-			return (Class<T>) Class.forName(clazz);
+			return ClassLoaderManager.findClass(clazz);
 		} catch (ClassNotFoundException e) {
 			clazz = "org.apache.lucene.analysis." + clazz;
-			return (Class<T>) Class.forName(clazz);
+			return ClassLoaderManager.findClass(clazz);
 		}
 	}
 }
