@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.analysis;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldUtils;
 import com.qwazr.utils.ClassLoaderUtils;
@@ -94,7 +95,8 @@ public class AnalyzerContext {
 				return new CustomAnalyzer(analyzerDef);
 		}
 
-		return (Analyzer) ClassLoaderUtils.findClass(null, analyzer, analyzerClassPrefixes).newInstance();
+		return (Analyzer) ClassLoaderUtils.findClass(ClassLoaderManager.classLoader, analyzer, analyzerClassPrefixes)
+						.newInstance();
 	}
 
 }

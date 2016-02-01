@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.query;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ClassLoaderUtils;
 import org.apache.lucene.index.LeafReaderContext;
@@ -73,7 +74,7 @@ public class CustomScoreQuery extends AbstractQuery {
 					throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 
 		Class<? extends CustomScoreProvider> customScoreProviderClass = ClassLoaderUtils
-						.findClass(null, customScoreProvider, null);
+						.findClass(ClassLoaderManager.classLoader, customScoreProvider, null);
 		Objects.requireNonNull(customScoreProviderClass, "Cannot find the class for " + customScoreProvider);
 		Constructor<? extends CustomScoreProvider> customScoreProviderConstructor = customScoreProviderClass
 						.getConstructor(LeafReaderContext.class);
