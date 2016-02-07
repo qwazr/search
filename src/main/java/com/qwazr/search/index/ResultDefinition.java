@@ -31,11 +31,10 @@ import org.apache.lucene.search.TopDocs;
 import java.io.IOException;
 import java.util.*;
 
-@JsonInclude(Include.NON_EMPTY)
+@JsonInclude(Include.NON_NULL)
 public class ResultDefinition {
 
-	final public LinkedHashMap<String, Long> timer;
-	final public Long total_time;
+	final public TimeTracker.Status timer;
 	final public Long total_hits;
 	final public Float max_score;
 	final public List<ResultDocument> documents;
@@ -59,7 +58,6 @@ public class ResultDefinition {
 
 	public ResultDefinition() {
 		this.timer = null;
-		this.total_time = null;
 		this.total_hits = null;
 		this.documents = null;
 		this.facets = null;
@@ -107,13 +105,7 @@ public class ResultDefinition {
 		if (timeTracker != null)
 			timeTracker.next("facet_fields");
 
-		if (timeTracker != null) {
-			this.timer = timeTracker.getMap();
-			this.total_time = timeTracker.getTotalTime();
-		} else {
-			this.timer = null;
-			this.total_time = null;
-		}
+		this.timer = timeTracker != null ? timeTracker.getStatus() : null;
 	}
 
 	ResultDefinition(TimeTracker timeTracker) {
@@ -123,13 +115,7 @@ public class ResultDefinition {
 		facets = null;
 		functions = null;
 		max_score = null;
-		if (timeTracker != null) {
-			this.timer = timeTracker.getMap();
-			this.total_time = timeTracker.getTotalTime();
-		} else {
-			this.timer = null;
-			this.total_time = null;
-		}
+		this.timer = timeTracker != null ? timeTracker.getStatus() : null;
 	}
 
 	ResultDefinition(long total_hits) {
@@ -140,15 +126,10 @@ public class ResultDefinition {
 		functions = null;
 		max_score = null;
 		this.timer = null;
-		this.total_time = null;
 	}
 
 	public Long getTotal_hits() {
 		return total_hits;
-	}
-
-	public Long getTotal_time() {
-		return total_time;
 	}
 
 	public Float getMax_score() {
@@ -163,7 +144,7 @@ public class ResultDefinition {
 		return facets;
 	}
 
-	public Map<String, Long> getTimer() {
+	public TimeTracker.Status getTimer() {
 		return timer;
 	}
 
