@@ -115,7 +115,7 @@ public class IndexDocumentBuilder {
 	 * @throws ReflectiveOperationException
 	 */
 	private static boolean setIfSameType(SourceContext<?> sourceContext, TargetContext<?> targetContext)
-					throws ReflectiveOperationException {
+			throws ReflectiveOperationException {
 		if (targetContext.fieldType != sourceContext.fieldType)
 			return false;
 		targetContext.field.set(targetContext.target, sourceContext.fieldValue);
@@ -131,7 +131,7 @@ public class IndexDocumentBuilder {
 	 * @throws ReflectiveOperationException
 	 */
 	private static boolean setIfTargetString(SourceContext<?> sourceContext, TargetContext<?> targetContext)
-					throws ReflectiveOperationException {
+			throws ReflectiveOperationException {
 		if (targetContext.fieldType != String.class)
 			return false;
 		targetContext.field.set(targetContext.target, sourceContext.fieldValue.toString());
@@ -148,7 +148,7 @@ public class IndexDocumentBuilder {
 	 * @throws ReflectiveOperationException
 	 */
 	private static boolean setIfCollection(SourceContext<?> sourceContext, TargetContext<?> targetContext)
-					throws ReflectiveOperationException {
+			throws ReflectiveOperationException {
 		// Is it a collection ?
 		if (!Collection.class.isAssignableFrom(targetContext.fieldType))
 			return false;
@@ -165,17 +165,17 @@ public class IndexDocumentBuilder {
 
 		// Retrieve the collection
 		@SuppressWarnings("unchecked") Collection<Object> collection = (Collection<Object>) targetContext.field
-						.get(targetContext.target);
+				.get(targetContext.target);
 
 		// Add for same type
 		if (targetCollectionType == sourceContext.fieldType) {
-			collection.add((Object) sourceContext.fieldValue);
+			collection.add(sourceContext.fieldValue);
 			return true;
 		}
 
 		// Add with string conversion
 		if (targetCollectionType == String.class) {
-			collection.add((Object) sourceContext.fieldValue.toString());
+			collection.add(sourceContext.fieldValue.toString());
 			return true;
 		}
 		return false;
