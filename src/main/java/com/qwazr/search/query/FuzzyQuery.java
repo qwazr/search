@@ -40,7 +40,18 @@ public class FuzzyQuery extends AbstractQuery {
 		prefix_length = null;
 	}
 
-	FuzzyQuery(Float boost, String field, String text, Integer max_edits, Integer max_expansions,
+	public FuzzyQuery(String field, String text, Integer max_edits, Integer max_expansions, Boolean transpositions,
+					Integer prefix_length) {
+		super(null);
+		this.field = field;
+		this.text = text;
+		this.max_edits = max_edits;
+		this.max_expansions = max_expansions;
+		this.transpositions = transpositions;
+		this.prefix_length = prefix_length;
+	}
+
+	public FuzzyQuery(Float boost, String field, String text, Integer max_edits, Integer max_expansions,
 					Boolean transpositions, Integer prefix_length) {
 		super(boost);
 		this.field = field;

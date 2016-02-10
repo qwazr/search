@@ -38,7 +38,21 @@ public class TermQuery extends AbstractQuery {
 		apply_analyzer = null;
 	}
 
-	TermQuery(Float boost, String field, String text, Boolean apply_analyzer) {
+	public TermQuery(String field, String text) {
+		super(null);
+		this.field = field;
+		this.text = text;
+		this.apply_analyzer = null;
+	}
+
+	public TermQuery(Float boost, String field, String text) {
+		super(boost);
+		this.field = field;
+		this.text = text;
+		this.apply_analyzer = null;
+	}
+
+	public TermQuery(Float boost, String field, String text, Boolean apply_analyzer) {
 		super(boost);
 		this.field = field;
 		this.text = text;

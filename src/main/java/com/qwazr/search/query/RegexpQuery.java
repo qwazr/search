@@ -38,7 +38,23 @@ public class RegexpQuery extends AbstractQuery {
 		max_determinized_states = null;
 	}
 
-	RegexpQuery(Float boost, String field, String text, Integer flags, Integer max_determinized_states) {
+	public RegexpQuery(String field, String text, Integer flags) {
+		super(null);
+		this.field = field;
+		this.text = text;
+		this.flags = flags;
+		this.max_determinized_states = null;
+	}
+
+	public RegexpQuery(String field, String text, Integer flags, Integer max_determinized_states) {
+		super(null);
+		this.field = field;
+		this.text = text;
+		this.flags = flags;
+		this.max_determinized_states = max_determinized_states;
+	}
+
+	public RegexpQuery(Float boost, String field, String text, Integer flags, Integer max_determinized_states) {
 		super(boost);
 		this.field = field;
 		this.text = text;

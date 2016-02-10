@@ -16,11 +16,13 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 
 public class MultiFieldQueryParser extends AbstractQuery {
 
@@ -53,6 +55,22 @@ public class MultiFieldQueryParser extends AbstractQuery {
 		lowercase_expanded_terms = null;
 	}
 
+	public MultiFieldQueryParser(Builder builder) {
+		super(null);
+		this.fields = builder.fields == null ? null : ArrayUtils.toArray(builder.fields);
+		this.boosts = builder.boosts;
+		this.allow_leading_wildcard = builder.allow_leading_wildcard;
+		this.default_operator = builder.default_operator;
+		this.phrase_slop = builder.phrase_slop;
+		this.enable_position_increments = builder.enable_position_increments;
+		this.auto_generate_phrase_query = builder.auto_generate_phrase_query;
+		this.analyzer_range_terms = builder.analyzer_range_terms;
+		this.fuzzy_min_sim = builder.fuzzy_min_sim;
+		this.fuzzy_prefix_length = builder.fuzzy_prefix_length;
+		this.max_determinized_states = builder.max_determinized_states;
+		this.lowercase_expanded_terms = builder.lowercase_expanded_terms;
+	}
+
 	@Override
 	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException {
 		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser = new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(
@@ -78,5 +96,90 @@ public class MultiFieldQueryParser extends AbstractQuery {
 		if (max_determinized_states != null)
 			parser.setMaxDeterminizedStates(max_determinized_states);
 		return parser.parse(queryContext.queryString);
+	}
+
+	public static class Builder {
+
+		private LinkedHashSet<String> fields = null;
+		private LinkedHashMap<String, Float> boosts = null;
+		private Boolean allow_leading_wildcard = null;
+		private QueryParserOperator default_operator = null;
+		private Integer phrase_slop = null;
+		private Boolean enable_position_increments = null;
+		private Boolean auto_generate_phrase_query = null;
+		private Boolean analyzer_range_terms = null;
+		private Float fuzzy_min_sim = null;
+		private Integer fuzzy_prefix_length = null;
+		private Integer max_determinized_states = null;
+		private Boolean lowercase_expanded_terms = null;
+
+		public MultiFieldQueryParser build() {
+			return new MultiFieldQueryParser(this);
+		}
+
+		public Builder addField(String... fieldSet) {
+			if (fields == null)
+				fields = new LinkedHashSet<String>();
+			for (String field : fieldSet)
+				fields.add(field);
+			return this;
+		}
+
+		public Builder addBoost(String field, Float boost) {
+			if (boosts == null)
+				boosts = new LinkedHashMap<String, Float>();
+			boosts.put(field, boost);
+			return this;
+		}
+
+		public Builder setAllowLeadingWildcard(Boolean allow_leading_wildcard) {
+			this.allow_leading_wildcard = allow_leading_wildcard;
+			return this;
+		}
+
+		public Builder setDefaultOperator(QueryParserOperator default_operator) {
+			this.default_operator = default_operator;
+			return this;
+		}
+
+		public Builder setPhraseSlop(Integer phrase_slop) {
+			this.phrase_slop = phrase_slop;
+			return this;
+		}
+
+		public Builder setEnablePositionIncrements(Boolean enable_position_increments) {
+			this.enable_position_increments = enable_position_increments;
+			return this;
+		}
+
+		public Builder setAutoGeneratePhraseQuery(Boolean auto_generate_phrase_query) {
+			this.auto_generate_phrase_query = auto_generate_phrase_query;
+			return this;
+		}
+
+		public Builder setAnalyzerRangeTerms(Boolean analyzer_range_terms) {
+			this.analyzer_range_terms = analyzer_range_terms;
+			return this;
+		}
+
+		public Builder setFuzzyMinSim(Float fuzzy_min_sim) {
+			this.fuzzy_min_sim = fuzzy_min_sim;
+			return this;
+		}
+
+		public Builder setFuzzyPrefixLength(Integer fuzzy_prefix_length) {
+			this.fuzzy_prefix_length = fuzzy_prefix_length;
+			return this;
+		}
+
+		public Builder setMaxDeterminizedStates(Integer max_determinized_states) {
+			this.max_determinized_states = max_determinized_states;
+			return this;
+		}
+
+		public Builder setLowercaseExpandedTerms(Boolean lowercase_expanded_terms) {
+			this.lowercase_expanded_terms = lowercase_expanded_terms;
+			return this;
+		}
 	}
 }

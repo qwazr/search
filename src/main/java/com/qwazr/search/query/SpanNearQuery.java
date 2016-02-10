@@ -38,7 +38,31 @@ public class SpanNearQuery extends AbstractSpanQuery {
 		slop = null;
 	}
 
-	SpanNearQuery(Float boost, List<AbstractSpanQuery> clauses, String field, Boolean in_order, Integer slop) {
+	public SpanNearQuery(List<AbstractSpanQuery> clauses, String field) {
+		super(null);
+		this.clauses = clauses;
+		this.field = field;
+		this.in_order = null;
+		this.slop = null;
+	}
+
+	public SpanNearQuery(List<AbstractSpanQuery> clauses, String field, Boolean in_order) {
+		super(null);
+		this.clauses = clauses;
+		this.field = field;
+		this.in_order = in_order;
+		this.slop = null;
+	}
+
+	public SpanNearQuery(List<AbstractSpanQuery> clauses, String field, Boolean in_order, Integer slop) {
+		super(null);
+		this.clauses = clauses;
+		this.field = field;
+		this.in_order = in_order;
+		this.slop = slop;
+	}
+
+	public SpanNearQuery(Float boost, List<AbstractSpanQuery> clauses, String field, Boolean in_order, Integer slop) {
 		super(boost);
 		this.clauses = clauses;
 		this.field = field;
@@ -48,9 +72,9 @@ public class SpanNearQuery extends AbstractSpanQuery {
 
 	@Override
 	final protected SpanQuery getQuery(QueryContext queryContext)
-		throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+					throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		final org.apache.lucene.search.spans.SpanNearQuery.Builder builder = new org.apache.lucene.search.spans.SpanNearQuery.Builder(
-			field, in_order == null ? false : in_order);
+						field, in_order == null ? false : in_order);
 		if (slop != null)
 			builder.setSlop(slop);
 		if (clauses != null)

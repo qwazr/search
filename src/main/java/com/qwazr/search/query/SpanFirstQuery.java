@@ -33,7 +33,19 @@ public class SpanFirstQuery extends AbstractQuery {
 		end = null;
 	}
 
-	SpanFirstQuery(Float boost, AbstractSpanQuery spanQuery, Integer end) {
+	public SpanFirstQuery(AbstractSpanQuery spanQuery) {
+		super(null);
+		this.spanQuery = spanQuery;
+		this.end = null;
+	}
+
+	public SpanFirstQuery(AbstractSpanQuery spanQuery, Integer end) {
+		super(null);
+		this.spanQuery = spanQuery;
+		this.end = end;
+	}
+
+	public SpanFirstQuery(Float boost, AbstractSpanQuery spanQuery, Integer end) {
 		super(boost);
 		this.spanQuery = spanQuery;
 		this.end = end;
@@ -41,8 +53,8 @@ public class SpanFirstQuery extends AbstractQuery {
 
 	@Override
 	final protected Query getQuery(QueryContext queryContext)
-		throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+					throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		return new org.apache.lucene.search.spans.SpanFirstQuery(spanQuery.getQuery(queryContext),
-			end == null ? 0 : end);
+						end == null ? 0 : end);
 	}
 }

@@ -21,6 +21,7 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class TermsQuery extends AbstractQuery {
@@ -34,10 +35,28 @@ public class TermsQuery extends AbstractQuery {
 		terms = null;
 	}
 
-	TermsQuery(Float boost, String field, List<String> terms) {
+	public TermsQuery(String field, List<String> terms) {
+		super(null);
+		this.field = field;
+		this.terms = terms;
+	}
+
+	public TermsQuery(String field, String... terms) {
+		super(null);
+		this.field = field;
+		this.terms = Arrays.asList(terms);
+	}
+
+	public TermsQuery(Float boost, String field, List<String> terms) {
 		super(boost);
 		this.field = field;
 		this.terms = terms;
+	}
+
+	public TermsQuery(Float boost, String field, String... terms) {
+		super(boost);
+		this.field = field;
+		this.terms = Arrays.asList(terms);
 	}
 
 	@Override

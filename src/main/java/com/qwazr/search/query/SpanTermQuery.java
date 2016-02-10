@@ -32,7 +32,13 @@ public class SpanTermQuery extends AbstractSpanQuery {
 		text = null;
 	}
 
-	SpanTermQuery(Float boost, String field, String text) {
+	public SpanTermQuery(String field, String text) {
+		super(null);
+		this.field = field;
+		this.text = text;
+	}
+
+	public SpanTermQuery(Float boost, String field, String text) {
 		super(boost);
 		this.field = field;
 		this.text = text;

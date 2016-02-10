@@ -43,6 +43,28 @@ public class CustomScoreQuery extends AbstractQuery {
 		customScoreProvider = null;
 	}
 
+	public CustomScoreQuery(AbstractQuery subQuery, FunctionQuery... scoringQueries) {
+		this(subQuery, null, scoringQueries);
+	}
+
+	public CustomScoreQuery(AbstractQuery subQuery, String customScoreProvider, FunctionQuery... scoringQueries) {
+		super(null);
+		this.subQuery = subQuery;
+		if (scoringQueries == null || scoringQueries.length == 0) {
+			this.scoringQuery = null;
+			this.scoringQueries = null;
+		} else {
+			if (scoringQueries.length == 1) {
+				this.scoringQuery = scoringQueries[0];
+				this.scoringQueries = null;
+			} else {
+				this.scoringQuery = null;
+				this.scoringQueries = scoringQueries;
+			}
+		}
+		this.customScoreProvider = customScoreProvider;
+	}
+
 	@Override
 	final protected Query getQuery(QueryContext queryContext)
 					throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {

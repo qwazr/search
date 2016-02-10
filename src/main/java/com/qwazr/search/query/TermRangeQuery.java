@@ -37,7 +37,17 @@ public class TermRangeQuery extends AbstractQuery {
 		include_upper = null;
 	}
 
-	TermRangeQuery(Float boost, String field, String lower_term, String upper_term, Boolean include_lower,
+	public TermRangeQuery(String field, String lower_term, String upper_term, Boolean include_lower,
+					Boolean include_upper) {
+		super(null);
+		this.field = field;
+		this.lower_term = lower_term;
+		this.upper_term = upper_term;
+		this.include_lower = include_lower;
+		this.include_upper = include_upper;
+	}
+
+	public TermRangeQuery(Float boost, String field, String lower_term, String upper_term, Boolean include_lower,
 					Boolean include_upper) {
 		super(boost);
 		this.field = field;

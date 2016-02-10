@@ -36,7 +36,14 @@ public class PhraseQuery extends AbstractQuery {
 		slop = null;
 	}
 
-	PhraseQuery(Float boost, String field, Integer slop, List<String> terms) {
+	public PhraseQuery(String field, Integer slop, List<String> terms) {
+		super(null);
+		this.field = field;
+		this.slop = slop;
+		this.terms = terms;
+	}
+
+	public PhraseQuery(Float boost, String field, Integer slop, List<String> terms) {
 		super(boost);
 		this.field = field;
 		this.slop = slop;

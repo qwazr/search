@@ -62,7 +62,7 @@ public class BooleanQuery extends AbstractQuery {
 
 		@JsonIgnore
 		final private org.apache.lucene.search.BooleanClause getNewClause(QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+						throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 			Objects.requireNonNull(occur, "Occur must not be null");
 			return new org.apache.lucene.search.BooleanClause(query.getQuery(queryContext), occur.occur);
 		}
@@ -75,7 +75,22 @@ public class BooleanQuery extends AbstractQuery {
 		minimum_number_should_match = null;
 	}
 
-	BooleanQuery(Float boost, Boolean disable_coord, Integer minimum_number_should_match, List<BooleanClause> clauses) {
+	public BooleanQuery(List<BooleanClause> clauses) {
+		super(null);
+		this.disable_coord = null;
+		this.minimum_number_should_match = null;
+		this.clauses = clauses;
+	}
+
+	public BooleanQuery(Boolean disable_coord, Integer minimum_number_should_match, List<BooleanClause> clauses) {
+		super(null);
+		this.disable_coord = disable_coord;
+		this.minimum_number_should_match = minimum_number_should_match;
+		this.clauses = clauses;
+	}
+
+	public BooleanQuery(Float boost, Boolean disable_coord, Integer minimum_number_should_match,
+					List<BooleanClause> clauses) {
 		super(boost);
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = minimum_number_should_match;
@@ -84,7 +99,7 @@ public class BooleanQuery extends AbstractQuery {
 
 	@Override
 	final protected Query getQuery(QueryContext queryContext)
-		throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+					throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		final org.apache.lucene.search.BooleanQuery.Builder builder = new org.apache.lucene.search.BooleanQuery.Builder();
 		if (disable_coord != null)
 			builder.setDisableCoord(disable_coord);

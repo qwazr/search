@@ -32,7 +32,13 @@ public class PrefixQuery extends AbstractQuery {
 		text = null;
 	}
 
-	PrefixQuery(Float boost, String field, String text) {
+	public PrefixQuery(String field, String text) {
+		super(null);
+		this.field = field;
+		this.text = text;
+	}
+
+	public PrefixQuery(Float boost, String field, String text) {
 		super(boost);
 		this.field = field;
 		this.text = text;
