@@ -31,6 +31,11 @@ public class ConstantScoreQuery extends AbstractQuery {
 		query = null;
 	}
 
+	public ConstantScoreQuery(AbstractQuery query) {
+		super(null);
+		this.query = query;
+	}
+
 	@Override
 	final protected Query getQuery(QueryContext queryContext)
 		throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
