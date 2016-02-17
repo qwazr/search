@@ -55,7 +55,7 @@ public class BooleanQuery extends AbstractQuery {
 			query = null;
 		}
 
-		BooleanClause(Occur occur, AbstractQuery query) {
+		public BooleanClause(Occur occur, AbstractQuery query) {
 			this.occur = null;
 			this.query = null;
 		}
