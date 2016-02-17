@@ -57,6 +57,7 @@ public class FieldDefinition {
 		SortedDoubleDocValuesField,
 		SortedFloatDocValuesField,
 		SortedSetDocValuesField,
+		BinaryDocValuesField,
 		StoredField,
 		StringField,
 		TextField,

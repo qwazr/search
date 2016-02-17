@@ -96,6 +96,9 @@ public class FieldUtils {
 			case SortedSetDocValuesField:
 				field = new SortedSetDocValuesField(fieldName, checkStringBytesRef(value));
 				break;
+			case BinaryDocValuesField:
+				field = new BinaryDocValuesField(fieldName, checkStringBytesRef(value));
+				break;
 			case StoredField:
 				if (value instanceof String)
 					field = new StoredField(fieldName, (String) value);
