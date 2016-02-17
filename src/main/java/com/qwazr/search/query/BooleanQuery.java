@@ -22,6 +22,7 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -56,8 +57,8 @@ public class BooleanQuery extends AbstractQuery {
 		}
 
 		public BooleanClause(Occur occur, AbstractQuery query) {
-			this.occur = null;
-			this.query = null;
+			this.occur = occur;
+			this.query = query;
 		}
 
 		@JsonIgnore
@@ -82,11 +83,39 @@ public class BooleanQuery extends AbstractQuery {
 		this.clauses = clauses;
 	}
 
+	public BooleanQuery(BooleanClause... clauses) {
+		super(null);
+		this.disable_coord = null;
+		this.minimum_number_should_match = null;
+		this.clauses = Arrays.asList(clauses);
+	}
+
+	public BooleanQuery(Boolean disable_coord, List<BooleanClause> clauses) {
+		super(null);
+		this.disable_coord = disable_coord;
+		this.minimum_number_should_match = null;
+		this.clauses = clauses;
+	}
+
+	public BooleanQuery(Boolean disable_coord, BooleanClause... clauses) {
+		super(null);
+		this.disable_coord = disable_coord;
+		this.minimum_number_should_match = null;
+		this.clauses = Arrays.asList(clauses);
+	}
+
 	public BooleanQuery(Boolean disable_coord, Integer minimum_number_should_match, List<BooleanClause> clauses) {
 		super(null);
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = minimum_number_should_match;
 		this.clauses = clauses;
+	}
+
+	public BooleanQuery(Boolean disable_coord, Integer minimum_number_should_match, BooleanClause... clauses) {
+		super(null);
+		this.disable_coord = disable_coord;
+		this.minimum_number_should_match = minimum_number_should_match;
+		this.clauses = Arrays.asList(clauses);
 	}
 
 	public BooleanQuery(Float boost, Boolean disable_coord, Integer minimum_number_should_match,
@@ -95,6 +124,14 @@ public class BooleanQuery extends AbstractQuery {
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = minimum_number_should_match;
 		this.clauses = clauses;
+	}
+
+	public BooleanQuery(Float boost, Boolean disable_coord, Integer minimum_number_should_match,
+					BooleanClause... clauses) {
+		super(boost);
+		this.disable_coord = disable_coord;
+		this.minimum_number_should_match = minimum_number_should_match;
+		this.clauses = Arrays.asList(clauses);
 	}
 
 	@Override
