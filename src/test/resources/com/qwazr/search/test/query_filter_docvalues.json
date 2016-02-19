@@ -1,0 +1,6 @@
+{
+  "returned_fields": [
+    "stock",
+    "price"
+  ]
+}

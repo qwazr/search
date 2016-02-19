@@ -132,6 +132,14 @@ public class QueryBuilder {
 		return this;
 	}
 
+	public QueryBuilder addReturned_field(Enum<?>... returned_fields) {
+		if (this.returned_fields == null)
+			this.returned_fields = new LinkedHashSet<String>();
+		for (Enum<?> returned_field : returned_fields)
+			this.returned_fields.add(returned_field.name());
+		return this;
+	}
+
 	public Map<String, QueryDefinition.Facet> getFacets() {
 		return facets;
 	}
@@ -148,6 +156,12 @@ public class QueryBuilder {
 		return this;
 	}
 
+	public QueryBuilder addFacet(Enum<?> facetName, QueryDefinition.Facet facetDefinition) {
+		if (facetName == null)
+			return this;
+		return addFacet(facetName.name(), facetDefinition);
+	}
+
 	public LinkedHashMap<String, QueryDefinition.SortEnum> getSorts() {
 		return sorts;
 	}
@@ -162,6 +176,12 @@ public class QueryBuilder {
 			sorts = new LinkedHashMap<String, QueryDefinition.SortEnum>();
 		sorts.put(fieldName, sortEnum);
 		return this;
+	}
+
+	public QueryBuilder addSort(Enum<?> fieldName, QueryDefinition.SortEnum sortEnum) {
+		if (fieldName == null)
+			return this;
+		return addSort(fieldName.name(), sortEnum);
 	}
 
 	public QueryBuilder addFunction(QueryDefinition.Function.FunctionEnum function, String field) {
@@ -197,6 +217,12 @@ public class QueryBuilder {
 			postings_highlighter = new LinkedHashMap<String, Integer>();
 		postings_highlighter.put(field, max_size);
 		return this;
+	}
+
+	public QueryBuilder addPosting_highlighter(Enum<?> field, Integer max_size) {
+		if (field == null)
+			return this;
+		return addPosting_highlighter(field.name(), max_size);
 	}
 
 	public QueryBuilder setQuery(AbstractQuery query) {
