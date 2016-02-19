@@ -180,7 +180,7 @@ public class ValueUtils {
 	}
 
 	final public static BytesRef getNewBytesRef(String text) {
-		return text == null ? new BytesRef() : new BytesRef(text);
+		return text == null ? null : new BytesRef(text);
 	}
 
 	final public static BytesRef getNewBytesRef(long value) {

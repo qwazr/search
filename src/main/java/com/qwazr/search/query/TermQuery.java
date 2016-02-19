@@ -15,63 +15,77 @@
  */
 package com.qwazr.search.query;
 
+import com.qwazr.search.analysis.AnalyzerUtils;
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.search.index.ValueUtils;
+import org.apache.lucene.analysis.tokenattributes.*;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
+
+import static com.qwazr.search.analysis.AnalyzerUtils.forEachTerm;
 
 public class TermQuery extends AbstractQuery {
 
 	final public String field;
-	final public BytesRef ref;
+	final public String text;
+	final public Boolean apply_analyzer;
 
 	public TermQuery() {
 		super(null);
 		field = null;
-		ref = null;
+		text = null;
+		apply_analyzer = null;
 	}
 
 	public TermQuery(String field, String text) {
-		super(null);
-		this.field = field;
-		this.ref = ValueUtils.getNewBytesRef(text);
+		this(null, field, text, null);
 	}
 
 	public TermQuery(Float boost, String field, String text) {
+		this(boost, field, text, null);
+	}
+
+	public TermQuery(Float boost, String field, String text, Boolean apply_analyzer) {
 		super(boost);
 		this.field = field;
-		this.ref = new BytesRef(text);
+		this.text = text;
+		this.apply_analyzer = apply_analyzer;
 	}
 
-	public TermQuery(String field, long value) {
-		super(null);
-		this.field = field;
-		this.ref = ValueUtils.getNewBytesRef(value);
-	}
+	private class AtomicString {
 
-	public TermQuery(String field, int value) {
-		super(null);
-		this.field = field;
-		this.ref = ValueUtils.getNewBytesRef(value);
-	}
+		private volatile String string = null;
 
-	public TermQuery(String field, double value) {
-		super(null);
-		this.field = field;
-		this.ref = ValueUtils.getNewBytesRef(value);
-	}
+		public synchronized void set(String string) {
+			this.string = string;
+		}
 
-	public TermQuery(String field, float value) {
-		super(null);
-		this.field = field;
-		this.ref = ValueUtils.getNewBytesRef(value);
+		public String get() {
+			return this.string;
+		}
+
 	}
 
 	@Override
 	protected Query getQuery(QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.search.TermQuery(new Term(field, ref));
+		final AtomicString atomicString = new AtomicString();
+		final String sourceText = text == null ? queryContext.queryString : text;
+		final String term;
+		if (apply_analyzer != null && apply_analyzer) {
+			forEachTerm(queryContext.analyzer, field, queryContext.queryString, new AnalyzerUtils.TermConsumer() {
+				@Override
+				public boolean apply(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr,
+								OffsetAttribute offsetAttr, PositionIncrementAttribute posIncAttr,
+								PositionLengthAttribute posLengthAttr, TypeAttribute typeAttr,
+								KeywordAttribute keywordAttr) {
+					atomicString.set(charTermAttr.toString());
+					return false;
+				}
+			});
+			term = atomicString.get();
+		} else
+			term = sourceText;
+		return new org.apache.lucene.search.TermQuery(new Term(field, term));
 	}
 }

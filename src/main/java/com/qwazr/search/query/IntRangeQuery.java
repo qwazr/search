@@ -20,15 +20,15 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-public class TermRangeQuery extends AbstractQuery {
+public class IntRangeQuery extends AbstractQuery {
 
 	final public String field;
-	final public String lower_term;
-	final public String upper_term;
+	final public Integer lower_term;
+	final public Integer upper_term;
 	final public Boolean include_lower;
 	final public Boolean include_upper;
 
-	public TermRangeQuery() {
+	public IntRangeQuery() {
 		super(null);
 		field = null;
 		lower_term = null;
@@ -37,7 +37,7 @@ public class TermRangeQuery extends AbstractQuery {
 		include_upper = null;
 	}
 
-	public TermRangeQuery(Float boost, String field, String lower_term, String upper_term, Boolean include_lower,
+	public IntRangeQuery(Float boost, String field, Integer lower_term, Integer upper_term, Boolean include_lower,
 					Boolean include_upper) {
 		super(boost);
 		this.field = field;
@@ -47,15 +47,15 @@ public class TermRangeQuery extends AbstractQuery {
 		this.include_upper = include_upper;
 	}
 
-	public TermRangeQuery(String field, String lower_term, String upper_term, Boolean include_lower,
+	public IntRangeQuery(String field, Integer lower_term, Integer upper_term, Boolean include_lower,
 					Boolean include_upper) {
 		this(null, field, lower_term, upper_term, include_lower, include_upper);
 	}
 
 	@Override
 	protected Query getQuery(QueryContext queryContext) throws IOException {
-		Query query =  org.apache.lucene.search.TermRangeQuery
-						.newStringRange(field, lower_term, upper_term, include_lower == null ? true : include_lower,
+		return org.apache.lucene.search.NumericRangeQuery
+						.newIntRange(field, lower_term, upper_term, include_lower == null ? true : include_lower,
 										include_upper == null ? true : include_upper);
 	}
 }
