@@ -16,82 +16,62 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.analysis.tokenattributes.*;
+import com.qwazr.search.index.ValueUtils;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
-
-import static com.qwazr.search.analysis.AnalyzerUtils.TermConsumer;
-import static com.qwazr.search.analysis.AnalyzerUtils.forEachTerm;
 
 public class TermQuery extends AbstractQuery {
 
 	final public String field;
-	final public String text;
-	final public Boolean apply_analyzer;
+	final public BytesRef ref;
 
 	public TermQuery() {
 		super(null);
 		field = null;
-		text = null;
-		apply_analyzer = null;
+		ref = null;
 	}
 
 	public TermQuery(String field, String text) {
 		super(null);
 		this.field = field;
-		this.text = text;
-		this.apply_analyzer = null;
+		this.ref = ValueUtils.getNewBytesRef(text);
 	}
 
 	public TermQuery(Float boost, String field, String text) {
 		super(boost);
 		this.field = field;
-		this.text = text;
-		this.apply_analyzer = null;
+		this.ref = new BytesRef(text);
 	}
 
-	public TermQuery(Float boost, String field, String text, Boolean apply_analyzer) {
-		super(boost);
+	public TermQuery(String field, long value) {
+		super(null);
 		this.field = field;
-		this.text = text;
-		this.apply_analyzer = apply_analyzer;
+		this.ref = ValueUtils.getNewBytesRef(value);
 	}
 
-	private class AtomicString {
+	public TermQuery(String field, int value) {
+		super(null);
+		this.field = field;
+		this.ref = ValueUtils.getNewBytesRef(value);
+	}
 
-		private volatile String string = null;
+	public TermQuery(String field, double value) {
+		super(null);
+		this.field = field;
+		this.ref = ValueUtils.getNewBytesRef(value);
+	}
 
-		public synchronized void set(String string) {
-			this.string = string;
-		}
-
-		public String get() {
-			return this.string;
-		}
-
+	public TermQuery(String field, float value) {
+		super(null);
+		this.field = field;
+		this.ref = ValueUtils.getNewBytesRef(value);
 	}
 
 	@Override
 	protected Query getQuery(QueryContext queryContext) throws IOException {
-		final AtomicString atomicString = new AtomicString();
-		final String sourceText = text == null ? queryContext.queryString : text;
-		final String term;
-		if (apply_analyzer != null && apply_analyzer) {
-			forEachTerm(queryContext.analyzer, field, queryContext.queryString, new TermConsumer() {
-				@Override
-				public boolean apply(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr,
-								OffsetAttribute offsetAttr, PositionIncrementAttribute posIncAttr,
-								PositionLengthAttribute posLengthAttr, TypeAttribute typeAttr,
-								KeywordAttribute keywordAttr) {
-					atomicString.set(charTermAttr.toString());
-					return false;
-				}
-			});
-			term = atomicString.get();
-		} else
-			term = sourceText;
-		return new org.apache.lucene.search.TermQuery(new Term(field, term));
+		return new org.apache.lucene.search.TermQuery(new Term(field, ref));
 	}
 }

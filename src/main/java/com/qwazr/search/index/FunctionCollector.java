@@ -53,7 +53,7 @@ public class FunctionCollector implements Collector {
 	public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
 		final LeafReader leafReader = context.reader();
 		FieldInfo fieldInfo = leafReader.getFieldInfos().fieldInfo(function.field);
-		DocValueUtils.DVConverter dvConverter = DocValueUtils.newConverter(fieldDef, leafReader, fieldInfo);
+		ValueUtils.DVConverter dvConverter = ValueUtils.newConverter(fieldDef, leafReader, fieldInfo);
 		if (dvConverter == null)
 			return DoNothingCollector.INSTANCE;
 		switch (function.function) {
@@ -74,9 +74,9 @@ public class FunctionCollector implements Collector {
 
 	static abstract class LeafFunctionCollector implements LeafCollector {
 
-		protected final DocValueUtils.DVConverter dvConverter;
+		protected final ValueUtils.DVConverter dvConverter;
 
-		protected LeafFunctionCollector(DocValueUtils.DVConverter dvConverter) throws IOException {
+		protected LeafFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
 			this.dvConverter = dvConverter;
 		}
 
@@ -90,7 +90,7 @@ public class FunctionCollector implements Collector {
 
 		protected final NumericDocValues docValues;
 
-		protected LeafNumericFunctionCollector(DocValueUtils.DVConverter dvConverter) throws IOException {
+		protected LeafNumericFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
 			super(dvConverter);
 			docValues = (NumericDocValues) dvConverter.source;
 		}
@@ -100,7 +100,7 @@ public class FunctionCollector implements Collector {
 
 		protected final BinaryDocValues docValues;
 
-		protected LeafBinaryFunctionCollector(DocValueUtils.DVConverter dvConverter) throws IOException {
+		protected LeafBinaryFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
 			super(dvConverter);
 			docValues = (BinaryDocValues) dvConverter.source;
 		}
@@ -110,7 +110,7 @@ public class FunctionCollector implements Collector {
 
 		private Long max;
 
-		private MaxNumericFunctionCollector(DocValueUtils.DVConverter dvConverter) throws IOException {
+		private MaxNumericFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
 			super(dvConverter);
 			this.max = (Long) runningValue;
 		}
@@ -130,7 +130,7 @@ public class FunctionCollector implements Collector {
 
 		private Long min;
 
-		private MinNumericFunctionCollector(DocValueUtils.DVConverter dvConverter) throws IOException {
+		private MinNumericFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
 			super(dvConverter);
 			min = (Long) runningValue;
 		}
@@ -150,7 +150,7 @@ public class FunctionCollector implements Collector {
 
 		private BytesRef max;
 
-		private MaxBinaryFunctionCollector(DocValueUtils.DVConverter dvConverter) throws IOException {
+		private MaxBinaryFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
 			super(dvConverter);
 			max = (BytesRef) runningValue;
 		}
@@ -170,7 +170,7 @@ public class FunctionCollector implements Collector {
 
 		private BytesRef min;
 
-		private MinBinaryFunctionCollector(DocValueUtils.DVConverter dvConverter) throws IOException {
+		private MinBinaryFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
 			super(dvConverter);
 			min = (BytesRef) runningValue;
 		}

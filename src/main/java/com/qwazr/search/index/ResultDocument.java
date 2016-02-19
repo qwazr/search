@@ -44,8 +44,8 @@ public class ResultDocument {
 	}
 
 	ResultDocument(int pos, ScoreDoc scoreDoc, Float max_score, Document document,
-			Map<String, Integer> postings_highlighter, Map<String, String[]> postingsHighlightsMap,
-			Map<String, DocValueUtils.DVConverter> docValuesReturnedFields) throws IOException {
+					Map<String, Integer> postings_highlighter, Map<String, String[]> postingsHighlightsMap,
+					Map<String, ValueUtils.DVConverter> docValuesReturnedFields) throws IOException {
 		this.score = scoreDoc.score;
 		if (max_score != null && max_score > 0)
 			this.percent_score = this.score == 0 ? 0 : this.score / max_score;
@@ -80,7 +80,7 @@ public class ResultDocument {
 	public Float getPercent_score() {
 		return percent_score;
 	}
-	
+
 	@JsonIgnore
 	public int getDoc() {
 		return doc;

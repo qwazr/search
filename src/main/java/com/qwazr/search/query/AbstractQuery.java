@@ -41,7 +41,7 @@ import java.io.IOException;
 				@JsonSubTypes.Type(value = SpanNearQuery.class), @JsonSubTypes.Type(value = SpanNotQuery.class),
 				@JsonSubTypes.Type(value = SpanTermQuery.class), @JsonSubTypes.Type(value = StandardQueryParser.class),
 				@JsonSubTypes.Type(value = TermQuery.class), @JsonSubTypes.Type(value = TermsQuery.class),
-				@JsonSubTypes.Type(value = TermRangeQuery.class) })
+				@JsonSubTypes.Type(value = TermRangeQuery.class), @JsonSubTypes.Type(value = TextTermQuery.class) })
 public abstract class AbstractQuery {
 
 	public final Float boost;

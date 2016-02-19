@@ -18,11 +18,12 @@ package com.qwazr.search.index;
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.index.*;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.BytesRefBuilder;
 import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
 
-class DocValueUtils {
+public class ValueUtils {
 
 	static abstract class DVConverter<T, V extends Comparable<V>> {
 
@@ -118,7 +119,7 @@ class DocValueUtils {
 	}
 
 	static DVConverter newConverter(FieldDefinition fieldDef, LeafReader dvReader, FieldInfo fieldInfo)
-			throws IOException {
+					throws IOException {
 		if (fieldInfo == null)
 			return null;
 		DocValuesType type = fieldInfo.getDocValuesType();
@@ -176,6 +177,34 @@ class DocValueUtils {
 			throw new IOException("Unsupported doc value type: " + type + " for field: " + fieldInfo.name);
 		}
 		return null;
+	}
+
+	final public static BytesRef getNewBytesRef(String text) {
+		return text == null ? new BytesRef() : new BytesRef(text);
+	}
+
+	final public static BytesRef getNewBytesRef(long value) {
+		final BytesRefBuilder bytes = new BytesRefBuilder();
+		NumericUtils.longToPrefixCoded(value, 0, bytes);
+		return bytes.get();
+	}
+
+	final public static BytesRef getNewBytesRef(int value) {
+		final BytesRefBuilder bytes = new BytesRefBuilder();
+		NumericUtils.intToPrefixCoded(value, 0, bytes);
+		return bytes.get();
+	}
+
+	final public static BytesRef getNewBytesRef(double value) {
+		final BytesRefBuilder bytes = new BytesRefBuilder();
+		NumericUtils.longToPrefixCoded(NumericUtils.doubleToSortableLong(value), 0, bytes);
+		return bytes.get();
+	}
+
+	final public static BytesRef getNewBytesRef(float value) {
+		final BytesRefBuilder bytes = new BytesRefBuilder();
+		NumericUtils.intToPrefixCoded(NumericUtils.floatToSortableInt(value), 0, bytes);
+		return bytes.get();
 	}
 
 }
