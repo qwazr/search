@@ -5,6 +5,7 @@
     "category": [
       "cat1"
     ],
+    "format": "odd",
     "size": 100,
     "price": 1.10,
     "stock": 0
@@ -16,6 +17,7 @@
       "cat1",
       "cat2"
     ],
+    "format": "even",
     "size": 200,
     "price": 2.20,
     "stock": 0
@@ -28,6 +30,7 @@
       "cat2",
       "cat3"
     ],
+    "format": "odd",
     "size": 300,
     "price": 3.30,
     "stock": 0
@@ -41,6 +44,7 @@
       "cat3",
       "cat4"
     ],
+    "format": "even",
     "size": 400,
     "price": 4.40,
     "stock": 0

@@ -57,6 +57,7 @@
   "start": 0,
   "rows": 10,
   "facets": {
-    "category": {}
+    "category": {},
+    "format": {}
   }
 }

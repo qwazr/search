@@ -63,6 +63,9 @@ public class FieldDefinition {
 		StringField,
 		TextField,
 		FacetField,
+		MultiFacetField,
+		HierarchicalFacetField,
+		HierarchicalMultiFacetField,
 		SortedSetDocValuesFacetField,
 		SortedSetMultiDocValuesFacetField
 	}

@@ -10,6 +10,7 @@
   "start": 2,
   "rows": 3,
   "facets": {
-    "category": {}
+    "category": {},
+    "format": {}
   }
 }

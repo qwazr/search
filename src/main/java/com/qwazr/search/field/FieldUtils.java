@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.document.*;
-import org.apache.lucene.facet.FacetField;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.SortField;
@@ -124,10 +123,7 @@ public class FieldUtils {
 				field = new TextField(fieldName, stringValue, store);
 				break;
 			case FacetField:
-				if (StringUtils.isEmpty(stringValue = value.toString()))
-					return null;
-				field = new FacetField(fieldName, stringValue);
-				break;
+			case MultiFacetField:
 			case SortedSetDocValuesFacetField:
 			case SortedSetMultiDocValuesFacetField:
 				if (StringUtils.isEmpty(stringValue = value.toString()))
@@ -210,11 +206,7 @@ public class FieldUtils {
 				return new SortedSetSortField(field, reverse);
 			case StringField:
 				return new SortField(field, SortField.Type.STRING, reverse);
-			case StoredField:
-			case TextField:
-			case FacetField:
-			case SortedSetDocValuesFacetField:
-			case SortedSetMultiDocValuesFacetField:
+			default:
 				break;
 			}
 		}

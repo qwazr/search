@@ -53,10 +53,28 @@ public class AnalyzerContext {
 		for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
 			String fieldName = field.getKey();
 			FieldDefinition fieldDef = field.getValue();
-			if (fieldDef.template == FieldDefinition.Template.SortedSetMultiDocValuesFacetField)
-				facetsConfig.setMultiValued(fieldName, true);
-			else if (fieldDef.template == FieldDefinition.Template.SortedSetDocValuesFacetField)
-				facetsConfig.setMultiValued(fieldName, false);
+			if (fieldDef.template != null) {
+				switch (fieldDef.template) {
+				case FacetField:
+				case SortedSetDocValuesFacetField:
+					facetsConfig.setMultiValued(fieldName, false);
+					facetsConfig.setHierarchical(fieldName, false);
+					break;
+				case MultiFacetField:
+				case SortedSetMultiDocValuesFacetField:
+					facetsConfig.setMultiValued(fieldName, true);
+					facetsConfig.setHierarchical(fieldName, false);
+					break;
+				case HierarchicalFacetField:
+					facetsConfig.setMultiValued(fieldName, false);
+					facetsConfig.setHierarchical(fieldName, true);
+					break;
+				case HierarchicalMultiFacetField:
+					facetsConfig.setMultiValued(fieldName, true);
+					facetsConfig.setHierarchical(fieldName, true);
+					break;
+				}
+			}
 			try {
 
 				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ?

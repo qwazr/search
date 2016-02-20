@@ -5,6 +5,12 @@
   "category": {
     "template": "SortedSetMultiDocValuesFacetField"
   },
+  "format": {
+    "template": "FacetField"
+  },
+  "date": {
+    "template": "HierarchicalFacetField"
+  },
   "price": {
     "template": "DoubleDocValuesField"
   },

@@ -55,7 +55,6 @@ public class FullTest {
 	public static final QueryDefinition QUERY_SORTFIELDS = getQuery("query_sortfields.json");
 	public static final QueryDefinition QUERY_CHECK_DOCVALUES = getQuery("query_check_docvalues.json");
 	public static final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
-	public static final QueryDefinition QUERY_RANGE_DOCVALUES = getQuery("query_range_docvalues.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
 	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
 	public static final List<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
@@ -296,11 +295,16 @@ public class FullTest {
 		}
 	}
 
+	private void checkFacetSize(ResultDefinition result, String dimName, int size) {
+		Assert.assertTrue(result.facets.containsKey(dimName));
+		Assert.assertNotNull(result.facets.get(dimName));
+		Assert.assertEquals(size, result.facets.get(dimName).size());
+	}
+
 	private void checkEmptyFacets(ResultDefinition result) {
 		Assert.assertNotNull(result.facets);
-		Assert.assertTrue(result.facets.containsKey("category"));
-		Assert.assertNotNull(result.facets.get("category"));
-		Assert.assertTrue(result.facets.get("category").isEmpty());
+		checkFacetSize(result, "category", 0);
+		checkFacetSize(result, "format", 0);
 	}
 
 	@Test
@@ -413,9 +417,8 @@ public class FullTest {
 			Assert.assertTrue(doc.fields.get("price") instanceof Double);
 		}
 		Assert.assertNotNull(result.facets);
-		Assert.assertTrue(result.facets.containsKey("category"));
-		Assert.assertNotNull(result.facets.get("category"));
-		Assert.assertEquals(5, result.facets.get("category").size());
+		checkFacetSize(result, "category", 5);
+		checkFacetSize(result, "format", 2);
 	}
 
 	@Test
@@ -433,9 +436,8 @@ public class FullTest {
 		Assert.assertEquals("Fourth name", result.documents.get(0).fields.get("name"));
 		Assert.assertEquals("Fifth name", result.documents.get(1).fields.get("name"));
 		Assert.assertNotNull(result.facets);
-		Assert.assertTrue(result.facets.containsKey("category"));
-		Assert.assertNotNull(result.facets.get("category"));
-		Assert.assertEquals(5, result.facets.get("category").size());
+		checkFacetSize(result, "category", 5);
+		checkFacetSize(result, "format", 2);
 	}
 
 	@Test

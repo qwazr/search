@@ -8,6 +8,7 @@
     "cat4",
     "cat5"
   ],
+  "format": "odd",
   "size": 500,
   "price": 10.50,
   "stock": 0

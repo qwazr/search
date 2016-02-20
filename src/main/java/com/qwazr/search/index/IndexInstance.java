@@ -58,7 +58,7 @@ final public class IndexInstance implements Closeable {
 	private final FileSet fileSet;
 
 	private final SchemaInstance schema;
-	private final Directory luceneDirectory;
+	private final Directory dataDirectory;
 	private final LiveIndexWriterConfig indexWriterConfig;
 	private final SnapshotDeletionPolicy snapshotDeletionPolicy;
 	private final IndexWriter indexWriter;
@@ -70,13 +70,13 @@ final public class IndexInstance implements Closeable {
 	private volatile LinkedHashMap<String, FieldDefinition> fieldMap;
 	private volatile LinkedHashMap<String, AnalyzerDefinition> analyzerMap;
 
-	private IndexInstance(SchemaInstance schema, Directory luceneDirectory, IndexSettingsDefinition settings,
-					LinkedHashMap<String, AnalyzerDefinition> analyzerMap,
-					LinkedHashMap<String, FieldDefinition> fieldMap, FileSet fileSet, IndexWriter indexWriter,
-					SearcherManager searcherManager, UpdatableAnalyzer queryAnalyzer) {
+	private IndexInstance(SchemaInstance schema, Directory dataDirectory, IndexSettingsDefinition settings,
+			LinkedHashMap<String, AnalyzerDefinition> analyzerMap, LinkedHashMap<String, FieldDefinition> fieldMap,
+			FileSet fileSet, IndexWriter indexWriter, SearcherManager searcherManager,
+			UpdatableAnalyzer queryAnalyzer) {
 		this.schema = schema;
 		this.fileSet = fileSet;
-		this.luceneDirectory = luceneDirectory;
+		this.dataDirectory = dataDirectory;
 		this.analyzerMap = analyzerMap;
 		this.fieldMap = fieldMap;
 		this.indexWriter = indexWriter;
@@ -113,26 +113,26 @@ final public class IndexInstance implements Closeable {
 	 * @return
 	 */
 	final static IndexInstance newInstance(SchemaInstance schema, File indexDirectory, IndexSettingsDefinition settings)
-					throws ServerException, IOException, ReflectiveOperationException, InterruptedException {
+			throws ServerException, IOException, ReflectiveOperationException, InterruptedException {
 		UpdatableAnalyzer indexAnalyzer = null;
 		UpdatableAnalyzer queryAnalyzer = null;
 		IndexWriter indexWriter = null;
-		Directory luceneDirectory = null;
+		Directory dataDirectory = null;
 		try {
 
 			if (!indexDirectory.exists())
 				indexDirectory.mkdir();
 			if (!indexDirectory.isDirectory())
 				throw new IOException(
-								"This name is not valid. No directory exists for this location: " + indexDirectory);
+						"This name is not valid. No directory exists for this location: " + indexDirectory);
 
 			FileSet fileSet = new FileSet(indexDirectory);
 
 			//Loading the settings
 			if (settings == null) {
 				settings = fileSet.settingsFile.exists() ?
-								JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
-								IndexSettingsDefinition.EMPTY;
+						JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
+						IndexSettingsDefinition.EMPTY;
 			} else {
 				JsonMapper.MAPPER.writeValue(fileSet.settingsFile, settings);
 			}
@@ -140,21 +140,21 @@ final public class IndexInstance implements Closeable {
 			//Loading the fields
 			File fieldMapFile = new File(indexDirectory, FIELDS_FILE);
 			LinkedHashMap<String, FieldDefinition> fieldMap = fieldMapFile.exists() ?
-							JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
-							null;
+					JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
+					null;
 
 			//Loading the fields
 			File analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
 			LinkedHashMap<String, AnalyzerDefinition> analyzerMap = analyzerMapFile.exists() ?
-							JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
-							null;
+					JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
+					null;
 
 			AnalyzerContext context = new AnalyzerContext(analyzerMap, fieldMap);
 			indexAnalyzer = new UpdatableAnalyzer(context, context.indexAnalyzerMap);
 			queryAnalyzer = new UpdatableAnalyzer(context, context.queryAnalyzerMap);
 
 			// Open and lock the data directory
-			luceneDirectory = FSDirectory.open(fileSet.dataDirectory.toPath());
+			dataDirectory = FSDirectory.open(fileSet.dataDirectory.toPath());
 
 			// Set
 			IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
@@ -162,17 +162,17 @@ final public class IndexInstance implements Closeable {
 				indexWriterConfig.setSimilarity(IndexUtils.findSimilarity(settings.similarity_class));
 			indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 			SnapshotDeletionPolicy snapshotDeletionPolicy = new SnapshotDeletionPolicy(
-							indexWriterConfig.getIndexDeletionPolicy());
+					indexWriterConfig.getIndexDeletionPolicy());
 			indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
-			indexWriter = new IndexWriter(luceneDirectory, indexWriterConfig);
+			indexWriter = new IndexWriter(dataDirectory, indexWriterConfig);
 			if (indexWriter.hasUncommittedChanges())
 				indexWriter.commit();
 
 			// Finally we build the SearchSearcherManger
 			SearcherManager searcherManager = new SearcherManager(indexWriter, true, null);
 
-			return new IndexInstance(schema, luceneDirectory, settings, analyzerMap, fieldMap, fileSet, indexWriter,
-							searcherManager, queryAnalyzer);
+			return new IndexInstance(schema, dataDirectory, settings, analyzerMap, fieldMap, fileSet, indexWriter,
+					searcherManager, queryAnalyzer);
 		} catch (IOException | ServerException | ReflectiveOperationException | InterruptedException e) {
 			// We failed in opening the index. We close everything we can
 			if (queryAnalyzer != null)
@@ -181,8 +181,8 @@ final public class IndexInstance implements Closeable {
 				IOUtils.closeQuietly(indexAnalyzer);
 			if (indexWriter != null)
 				IOUtils.closeQuietly(indexWriter);
-			if (luceneDirectory != null)
-				IOUtils.closeQuietly(luceneDirectory);
+			if (dataDirectory != null)
+				IOUtils.closeQuietly(dataDirectory);
 			throw e;
 		}
 	}
@@ -196,7 +196,7 @@ final public class IndexInstance implements Closeable {
 		IOUtils.closeQuietly(searcherManager);
 		if (indexWriter.isOpen())
 			IOUtils.closeQuietly(indexWriter);
-		IOUtils.closeQuietly(luceneDirectory);
+		IOUtils.closeQuietly(dataDirectory);
 	}
 
 	/**
@@ -212,8 +212,7 @@ final public class IndexInstance implements Closeable {
 		final IndexSearcher indexSearcher = searcherManager.acquire();
 		try {
 			return new IndexStatus(indexSearcher.getIndexReader(), settings,
-							analyzerMap == null ? null : analyzerMap.keySet(),
-							fieldMap == null ? null : fieldMap.keySet());
+					analyzerMap == null ? null : analyzerMap.keySet(), fieldMap == null ? null : fieldMap.keySet());
 		} finally {
 			searcherManager.release(indexSearcher);
 		}
@@ -259,7 +258,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	synchronized void setAnalyzers(LinkedHashMap<String, AnalyzerDefinition> analyzers)
-					throws ServerException, IOException {
+			throws ServerException, IOException {
 		AnalyzerContext analyzerContext = new AnalyzerContext(analyzers, fieldMap);
 		indexAnalyzer.update(analyzerContext, analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext, analyzerContext.queryAnalyzerMap);
@@ -269,14 +268,14 @@ final public class IndexInstance implements Closeable {
 
 	void setAnalyzer(String analyzer_name, AnalyzerDefinition analyzer) throws IOException, ServerException {
 		LinkedHashMap<String, AnalyzerDefinition> analyzers = (LinkedHashMap<String, AnalyzerDefinition>) analyzerMap
-						.clone();
+				.clone();
 		analyzers.put(analyzer_name, analyzer);
 		setAnalyzers(analyzers);
 	}
 
 	void deleteAnalyzer(String analyzer_name) throws IOException, ServerException {
 		LinkedHashMap<String, AnalyzerDefinition> analyzers = (LinkedHashMap<String, AnalyzerDefinition>) analyzerMap
-						.clone();
+				.clone();
 		if (analyzers.remove(analyzer_name) == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzer_name);
 		setAnalyzers(analyzers);
@@ -299,8 +298,8 @@ final public class IndexInstance implements Closeable {
 	final synchronized BackupStatus backup(Integer keepLastCount) throws IOException, InterruptedException {
 		Semaphore sem = schema.acquireReadSemaphore();
 		try {
-			final IndexCommit commit = snapshotDeletionPolicy.snapshot();
 			File backupdir = null;
+			final IndexCommit commit = snapshotDeletionPolicy.snapshot();
 			try {
 				int files_count = 0;
 				long bytes_size = 0;
@@ -317,7 +316,7 @@ final public class IndexInstance implements Closeable {
 					files_count++;
 					bytes_size += sourceFile.length();
 					if (targetFile.exists() && targetFile.length() == sourceFile.length()
-									&& targetFile.lastModified() == sourceFile.lastModified())
+							&& targetFile.lastModified() == sourceFile.lastModified())
 						continue;
 					FileUtils.copyFile(sourceFile, targetFile, true);
 				}
@@ -408,7 +407,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final List<Object> postDocuments(List<Map<String, Object>> documents)
-					throws IOException, ServerException, InterruptedException {
+			throws IOException, ServerException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return null;
 		final Semaphore sem = schema.acquireWriteSemaphore();
@@ -427,7 +426,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final void updateDocumentValues(Map<String, Object> document)
-					throws IOException, ServerException, InterruptedException {
+			throws IOException, ServerException, InterruptedException {
 		if (document == null || document.isEmpty())
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
@@ -441,7 +440,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final void updateDocumentsValues(List<Map<String, Object>> documents)
-					throws IOException, ServerException, InterruptedException {
+			throws IOException, ServerException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
@@ -457,8 +456,8 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final ResultDefinition deleteByQuery(QueryDefinition queryDefinition)
-					throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException,
-					ReflectiveOperationException {
+			throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException,
+			ReflectiveOperationException {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			final QueryContext queryContext = new QueryContext(null, queryAnalyzer, queryDefinition);
@@ -475,8 +474,8 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final ResultDefinition search(QueryDefinition queryDefinition)
-					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
-					ReflectiveOperationException {
+			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
+			ReflectiveOperationException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
@@ -493,8 +492,8 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	Directory getLuceneDirectory() {
-		return luceneDirectory;
+	Directory getDataDirectory() {
+		return dataDirectory;
 	}
 
 	void fillFields(final Map<String, FieldDefinition> fields) {
