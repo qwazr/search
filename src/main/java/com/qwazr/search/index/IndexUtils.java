@@ -19,6 +19,7 @@ import com.datastax.driver.core.utils.UUIDs;
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldUtils;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.document.Document;
@@ -37,33 +38,21 @@ import java.util.function.Consumer;
 
 public class IndexUtils {
 
-	private final static void fieldCollection(final AnalyzerContext context, final Map<String, Object> document,
-			final Consumer<Field> consumer) throws IOException {
+	private final static Document newLuceneDocument(final AnalyzerContext context, final Map<String, Object> document)
+			throws IOException {
+		final Document doc = new Document();
 		for (Map.Entry<String, Object> field : document.entrySet()) {
 			final String fieldName = field.getKey();
 			if (FieldDefinition.ID_FIELD.equals(fieldName))
 				continue;
+			FieldDefinition fieldDef = context.fields == null ? null : context.fields.get(fieldName);
+			if (fieldDef == null)
+				throw new IOException("No field definition for the field: " + fieldName);
 			Object fieldValue = field.getValue();
-			if (fieldValue instanceof Map<?, ?>)
-				fieldValue = ((Map<?, Object>) fieldValue).values();
-			if (fieldValue instanceof Collection<?>) {
-				for (Object val : ((Collection<Object>) fieldValue))
-					consumer.accept(context.getNewLuceneField(fieldName, val));
-			} else
-				consumer.accept(context.getNewLuceneField(fieldName, fieldValue));
+			if (fieldValue == null)
+				continue;
+			FieldUtils.newLuceneField(fieldDef, fieldName, fieldValue, doc);
 		}
-	}
-
-	private final static Document newLuceneDocument(final AnalyzerContext context, final Map<String, Object> document)
-			throws IOException {
-		final Document doc = new Document();
-		fieldCollection(context, document, new Consumer<Field>() {
-			@Override
-			public void accept(Field field) {
-				if (field != null)
-					doc.add(field);
-			}
-		});
 		return doc;
 	}
 

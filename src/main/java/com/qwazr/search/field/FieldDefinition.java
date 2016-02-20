@@ -105,5 +105,7 @@ public class FieldDefinition {
 
 	public final static String FACET_FIELD = FacetsConfig.DEFAULT_INDEX_FIELD_NAME;
 
-	public static final String[] RESERVED_NAMES = { ID_FIELD, FACET_FIELD };
+	public final static String SCORE_FIELD = "$score$";
+
+	public static final String[] RESERVED_NAMES = { ID_FIELD, FACET_FIELD, SCORE_FIELD };
 }

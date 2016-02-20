@@ -8,7 +8,10 @@
   "format": {
     "template": "FacetField"
   },
-  "date": {
+  "multi_date": {
+    "template": "HierarchicalMultiFacetField"
+  },
+  "single_date": {
     "template": "HierarchicalFacetField"
   },
   "price": {

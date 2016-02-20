@@ -16,18 +16,10 @@
 package com.qwazr.search.field;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.server.ServerException;
-import org.apache.lucene.document.*;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
+import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortedNumericSortField;
-import org.apache.lucene.search.SortedSetSortField;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.NumericUtils;
-
-import javax.ws.rs.core.Response;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class FieldUtils {
@@ -43,127 +35,6 @@ public class FieldUtils {
 		return new BytesRef(value.toString());
 	}
 
-	public static final Field newLuceneField(FieldDefinition fieldDef, final String fieldName, final Object value) {
-		if (value == null)
-			return null;
-		String stringValue = null;
-		Field field = null;
-		Field.Store store = (fieldDef.stored != null && fieldDef.stored) ? Field.Store.YES : Field.Store.NO;
-		if (fieldDef.template != null) {
-			switch (fieldDef.template) {
-			case DoubleField:
-				field = new DoubleField(fieldName, checkNumberType(fieldName, value).doubleValue(), store);
-				break;
-			case FloatField:
-				field = new FloatField(fieldName, checkNumberType(fieldName, value).floatValue(), store);
-				break;
-			case IntField:
-				field = new IntField(fieldName, checkNumberType(fieldName, value).intValue(), store);
-				break;
-			case LongField:
-				field = new LongField(fieldName, checkNumberType(fieldName, value).longValue(), store);
-				break;
-			case LongDocValuesField:
-				field = new NumericDocValuesField(fieldName, checkNumberType(fieldName, value).longValue());
-				break;
-			case IntDocValuesField:
-				field = new NumericDocValuesField(fieldName, checkNumberType(fieldName, value).intValue());
-				break;
-			case FloatDocValuesField:
-				field = new FloatDocValuesField(fieldName, checkNumberType(fieldName, value).floatValue());
-				break;
-			case DoubleDocValuesField:
-				field = new DoubleDocValuesField(fieldName, checkNumberType(fieldName, value).doubleValue());
-				break;
-			case SortedDocValuesField:
-				field = new SortedDocValuesField(fieldName, checkStringBytesRef(value));
-				break;
-			case SortedLongDocValuesField:
-				field = new SortedNumericDocValuesField(fieldName, checkNumberType(fieldName, value).longValue());
-				break;
-			case SortedIntDocValuesField:
-				field = new SortedNumericDocValuesField(fieldName, checkNumberType(fieldName, value).intValue());
-				break;
-			case SortedDoubleDocValuesField:
-				field = new SortedNumericDocValuesField(fieldName,
-						NumericUtils.doubleToSortableLong(checkNumberType(fieldName, value).doubleValue()));
-				break;
-			case SortedFloatDocValuesField:
-				field = new SortedNumericDocValuesField(fieldName,
-						NumericUtils.floatToSortableInt(checkNumberType(fieldName, value).floatValue()));
-				break;
-			case SortedSetDocValuesField:
-				field = new SortedSetDocValuesField(fieldName, checkStringBytesRef(value));
-				break;
-			case BinaryDocValuesField:
-				field = new BinaryDocValuesField(fieldName, checkStringBytesRef(value));
-				break;
-			case StoredField:
-				if (value instanceof String)
-					field = new StoredField(fieldName, (String) value);
-				else if (value instanceof Integer)
-					field = new StoredField(fieldName, (int) value);
-				else if (value instanceof Long)
-					field = new StoredField(fieldName, (long) value);
-				else if (value instanceof Float)
-					field = new StoredField(fieldName, (float) value);
-				else if (value instanceof Double)
-					field = new StoredField(fieldName, (double) value);
-				else
-					field = new StoredField(fieldName, value.toString());
-				break;
-			case StringField:
-				if (StringUtils.isEmpty(stringValue = value.toString()))
-					return null;
-				field = new StringField(fieldName, stringValue, store);
-				break;
-			case TextField:
-				if (StringUtils.isEmpty(stringValue = value.toString()))
-					return null;
-				field = new TextField(fieldName, stringValue, store);
-				break;
-			case FacetField:
-			case MultiFacetField:
-			case SortedSetDocValuesFacetField:
-			case SortedSetMultiDocValuesFacetField:
-				if (StringUtils.isEmpty(stringValue = value.toString()))
-					return null;
-				field = new SortedSetDocValuesFacetField(fieldName, stringValue);
-				break;
-			}
-		}
-		if (field == null) {
-			FieldType type = new FieldType();
-			if (fieldDef.stored != null)
-				type.setStored(fieldDef.stored);
-			if (fieldDef.tokenized != null)
-				type.setTokenized(fieldDef.tokenized);
-			if (fieldDef.store_termvectors != null)
-				type.setStoreTermVectors(fieldDef.store_termvectors);
-			if (fieldDef.store_termvector_offsets != null)
-				type.setStoreTermVectorOffsets(fieldDef.store_termvector_offsets);
-			if (fieldDef.store_termvector_positions != null)
-				type.setStoreTermVectorPositions(fieldDef.store_termvector_positions);
-			if (fieldDef.store_termvector_payloads != null)
-				type.setStoreTermVectorPayloads(fieldDef.store_termvector_payloads);
-			if (fieldDef.omit_norms != null)
-				type.setOmitNorms(fieldDef.omit_norms);
-			if (fieldDef.numeric_type != null)
-				type.setNumericType(fieldDef.numeric_type);
-			if (fieldDef.index_options != null)
-				type.setIndexOptions(fieldDef.index_options);
-			if (fieldDef.docvalues_type != null)
-				type.setDocValuesType(fieldDef.docvalues_type);
-
-			try {
-				field = new Field(fieldName, value.toString(), type);
-			} catch (IllegalArgumentException e) {
-				throw new IllegalArgumentException("Error on field: " + fieldName + " - " + e.getMessage(), e);
-			}
-		}
-		return field;
-	}
-
 	public final static Object getValue(IndexableField field) {
 		if (field == null)
 			return null;
@@ -176,40 +47,95 @@ public class FieldUtils {
 		return null;
 	}
 
-	public final static SortField getSortField(FieldDefinition fieldDef, String field, boolean reverse)
-			throws ServerException {
-		if (fieldDef.template == null) {
-			if (fieldDef.index_options == null)
-				throw new ServerException(Response.Status.BAD_REQUEST,
-						"A not indexed field cannot be used in sorting: " + field);
-		} else {
-			switch (fieldDef.template) {
-			case DoubleField:
-			case DoubleDocValuesField:
-				return new SortField(field, SortField.Type.DOUBLE, reverse);
-			case FloatField:
-			case FloatDocValuesField:
-				return new SortField(field, SortField.Type.FLOAT, reverse);
-			case IntField:
-			case IntDocValuesField:
-				return new SortField(field, SortField.Type.INT, reverse);
-			case LongField:
-			case LongDocValuesField:
-				return new SortField(field, SortField.Type.LONG, reverse);
-			case SortedDocValuesField:
-				return new SortedSetSortField(field, reverse);
-			case SortedDoubleDocValuesField:
-				return new SortedNumericSortField(field, SortField.Type.DOUBLE, reverse);
-			case SortedFloatDocValuesField:
-				return new SortedNumericSortField(field, SortField.Type.FLOAT, reverse);
-			case SortedSetDocValuesField:
-				return new SortedSetSortField(field, reverse);
-			case StringField:
-				return new SortField(field, SortField.Type.STRING, reverse);
-			default:
-				break;
-			}
+	final static boolean sortReverse(QueryDefinition.SortEnum sortEnum) {
+		if (sortEnum == null)
+			return false;
+		switch (sortEnum) {
+		case ascending:
+		case ascending_missing_last:
+		case ascending_missing_first:
+			return false;
 		}
-		throw new ServerException(Response.Status.BAD_REQUEST, "The field cannot be used for sorting: " + field);
+		return true;
+	}
+
+	final static void sortStringMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
+		if (sortEnum == null)
+			return;
+		switch (sortEnum) {
+		case ascending:
+		case descending:
+			return;
+		case ascending_missing_last:
+		case descending_missing_first:
+			sortField.setMissingValue(SortField.STRING_LAST);
+		case ascending_missing_first:
+		case descending_missing_last:
+			sortField.setMissingValue(SortField.STRING_FIRST);
+		}
+	}
+
+	final static void sortDoubleMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
+		if (sortEnum == null)
+			return;
+		switch (sortEnum) {
+		case ascending:
+		case descending:
+			return;
+		case ascending_missing_last:
+		case descending_missing_first:
+			sortField.setMissingValue(Double.MAX_VALUE);
+		case ascending_missing_first:
+		case descending_missing_last:
+			sortField.setMissingValue(Double.MIN_VALUE);
+		}
+	}
+
+	final static void sortLongMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
+		if (sortEnum == null)
+			return;
+		switch (sortEnum) {
+		case ascending:
+		case descending:
+			return;
+		case ascending_missing_last:
+		case descending_missing_first:
+			sortField.setMissingValue(Long.MAX_VALUE);
+		case ascending_missing_first:
+		case descending_missing_last:
+			sortField.setMissingValue(Long.MIN_VALUE);
+		}
+	}
+
+	final static void sortFloatMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
+		if (sortEnum == null)
+			return;
+		switch (sortEnum) {
+		case ascending:
+		case descending:
+			return;
+		case ascending_missing_last:
+		case descending_missing_first:
+			sortField.setMissingValue(Float.MAX_VALUE);
+		case ascending_missing_first:
+		case descending_missing_last:
+			sortField.setMissingValue(Float.MIN_VALUE);
+		}
+	}
+
+	final static void sortIntMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
+		if (sortEnum == null)
+			return;
+		switch (sortEnum) {
+		case ascending:
+		case descending:
+			return;
+		case ascending_missing_last:
+		case descending_missing_first:
+			sortField.setMissingValue(Integer.MAX_VALUE);
+		case ascending_missing_first:
+		case descending_missing_last:
+			sortField.setMissingValue(Integer.MIN_VALUE);
+		}
 	}
 }
