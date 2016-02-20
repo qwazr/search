@@ -16,7 +16,7 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.search.MultiTermQuery;
 
 import java.io.IOException;
 
@@ -38,7 +38,7 @@ public class TermRangeQuery extends AbstractQuery {
 	}
 
 	public TermRangeQuery(Float boost, String field, String lower_term, String upper_term, Boolean include_lower,
-					Boolean include_upper) {
+			Boolean include_upper) {
 		super(boost);
 		this.field = field;
 		this.lower_term = lower_term;
@@ -48,14 +48,14 @@ public class TermRangeQuery extends AbstractQuery {
 	}
 
 	public TermRangeQuery(String field, String lower_term, String upper_term, Boolean include_lower,
-					Boolean include_upper) {
+			Boolean include_upper) {
 		this(null, field, lower_term, upper_term, include_lower, include_upper);
 	}
 
 	@Override
-	protected Query getQuery(QueryContext queryContext) throws IOException {
-		Query query =  org.apache.lucene.search.TermRangeQuery
-						.newStringRange(field, lower_term, upper_term, include_lower == null ? true : include_lower,
-										include_upper == null ? true : include_upper);
+	protected MultiTermQuery getQuery(QueryContext queryContext) throws IOException {
+		return org.apache.lucene.search.TermRangeQuery
+				.newStringRange(field, lower_term, upper_term, include_lower == null ? true : include_lower,
+						include_upper == null ? true : include_upper);
 	}
 }

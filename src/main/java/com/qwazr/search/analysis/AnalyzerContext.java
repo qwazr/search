@@ -39,7 +39,7 @@ public class AnalyzerContext {
 	public final Map<String, Analyzer> queryAnalyzerMap;
 
 	public AnalyzerContext(Map<String, AnalyzerDefinition> analyzerMap, Map<String, FieldDefinition> fields)
-					throws ServerException {
+			throws ServerException {
 		this.fields = fields;
 		this.facetsConfig = new FacetsConfig();
 		if (fields == null || fields.size() == 0) {
@@ -60,20 +60,20 @@ public class AnalyzerContext {
 			try {
 
 				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ?
-								null :
-								findAnalyzer(analyzerMap, fieldDef.analyzer);
+						null :
+						findAnalyzer(analyzerMap, fieldDef.analyzer);
 				if (indexAnalyzer != null)
 					indexAnalyzerMap.put(fieldName, indexAnalyzer);
 
 				final Analyzer queryAnalyzer = StringUtils.isEmpty(fieldDef.query_analyzer) ?
-								indexAnalyzer :
-								findAnalyzer(analyzerMap, fieldDef.query_analyzer);
+						indexAnalyzer :
+						findAnalyzer(analyzerMap, fieldDef.query_analyzer);
 				if (queryAnalyzer != null)
 					queryAnalyzerMap.put(fieldName, queryAnalyzer);
 
 			} catch (ReflectiveOperationException | InterruptedException | IOException e) {
 				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-								"Class " + fieldDef.analyzer + " not known for the field " + fieldName, e);
+						"Class " + fieldDef.analyzer + " not known for the field " + fieldName, e);
 			}
 		}
 	}
@@ -88,7 +88,7 @@ public class AnalyzerContext {
 	final static String[] analyzerClassPrefixes = { "", "org.apache.lucene.analysis." };
 
 	static private Analyzer findAnalyzer(Map<String, AnalyzerDefinition> analyzerMap, String analyzer)
-					throws InterruptedException, ReflectiveOperationException, IOException {
+			throws InterruptedException, ReflectiveOperationException, IOException {
 		if (analyzerMap != null) {
 			AnalyzerDefinition analyzerDef = analyzerMap.get(analyzer);
 			if (analyzerDef != null)
@@ -96,7 +96,7 @@ public class AnalyzerContext {
 		}
 
 		return (Analyzer) ClassLoaderUtils.findClass(ClassLoaderManager.classLoader, analyzer, analyzerClassPrefixes)
-						.newInstance();
+				.newInstance();
 	}
 
 }

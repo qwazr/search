@@ -16,19 +16,13 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerContext;
-import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.lucene.facet.Facets;
-import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -166,8 +160,7 @@ class QueryUtils {
 
 		final AnalyzerContext analyzerContext = queryContext.analyzer.getContext();
 		final Sort sort = queryDef.sorts == null ? null : buildSort(analyzerContext.fields, queryDef.sorts);
-		final Facets facets;
-		final SortedSetDocValuesReaderState facetState;
+		final FacetsBuilder facetsBuilder;
 
 		final int numHits = queryDef.getEnd();
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
@@ -181,14 +174,9 @@ class QueryUtils {
 
 		timeTracker.next("search_query");
 
-		if (queryCollectors.facetsCollector != null) {
-			facetState = new DefaultSortedSetDocValuesReaderState(indexReader);
-			facets = new SortedSetDocValuesFacetCounts(facetState, queryCollectors.facetsCollector);
-			timeTracker.next("facet_count");
-		} else {
-			facetState = null;
-			facets = null;
-		}
+		facetsBuilder = queryCollectors.facetsCollector == null ?
+				null :
+				new FacetsBuilder(indexReader, queryDef.facets, queryCollectors.facetsCollector, timeTracker);
 
 		Map<String, String[]> postingsHighlightersMap = null;
 		if (queryDef.postings_highlighter != null && topDocs != null) {
@@ -205,7 +193,7 @@ class QueryUtils {
 		}
 
 		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, totalHits, topDocs, queryDef,
-				facetState, facets, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
+				facetsBuilder, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
 	}
 
 }

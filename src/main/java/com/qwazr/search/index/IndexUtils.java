@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import com.datastax.driver.core.utils.UUIDs;
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.analysis.AnalyzerContext;
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.document.Document;
@@ -36,13 +37,11 @@ import java.util.function.Consumer;
 
 public class IndexUtils {
 
-	final static String FIELD_ID = "$id$";
-
 	private final static void fieldCollection(final AnalyzerContext context, final Map<String, Object> document,
-					final Consumer<Field> consumer) throws IOException {
+			final Consumer<Field> consumer) throws IOException {
 		for (Map.Entry<String, Object> field : document.entrySet()) {
 			final String fieldName = field.getKey();
-			if (FIELD_ID.equals(fieldName))
+			if (FieldDefinition.ID_FIELD.equals(fieldName))
 				continue;
 			Object fieldValue = field.getValue();
 			if (fieldValue instanceof Map<?, ?>)
@@ -56,7 +55,7 @@ public class IndexUtils {
 	}
 
 	private final static Document newLuceneDocument(final AnalyzerContext context, final Map<String, Object> document)
-					throws IOException {
+			throws IOException {
 		final Document doc = new Document();
 		fieldCollection(context, document, new Consumer<Field>() {
 			@Override
@@ -69,14 +68,14 @@ public class IndexUtils {
 	}
 
 	static final Object addNewLuceneDocument(final AnalyzerContext context, final Map<String, Object> document,
-					IndexWriter indexWriter) throws IOException {
+			IndexWriter indexWriter) throws IOException {
 		final Document doc = newLuceneDocument(context, document);
-		Object id = document.get(IndexUtils.FIELD_ID);
+		Object id = document.get(FieldDefinition.ID_FIELD);
 		if (id == null)
 			id = UUIDs.timeBased();
 		final String id_string = id.toString();
-		doc.add(new StringField(IndexUtils.FIELD_ID, id_string, Field.Store.NO));
-		final Term termId = new Term(IndexUtils.FIELD_ID, id_string);
+		doc.add(new StringField(FieldDefinition.ID_FIELD, id_string, Field.Store.NO));
+		final Term termId = new Term(FieldDefinition.ID_FIELD, id_string);
 
 		final Document facetedDoc = context.facetsConfig.build(doc);
 		if (termId == null)
@@ -87,7 +86,7 @@ public class IndexUtils {
 	}
 
 	private static final Field[] newFieldList(final AnalyzerContext context, final Map<String, Object> document)
-					throws IOException {
+			throws IOException {
 		final Field[] fields = new Field[document.size() - 1];
 		final AtomicInteger i = new AtomicInteger();
 		fieldCollection(context, document, new Consumer<Field>() {
@@ -100,21 +99,22 @@ public class IndexUtils {
 	}
 
 	static final void updateDocValues(final AnalyzerContext context, final Map<String, Object> document,
-					IndexWriter indexWriter) throws ServerException, IOException {
-		Object id = document.get(IndexUtils.FIELD_ID);
+			IndexWriter indexWriter) throws ServerException, IOException {
+		Object id = document.get(FieldDefinition.ID_FIELD);
 		if (id == null)
-			throw new ServerException(Response.Status.BAD_REQUEST, "The field " + IndexUtils.FIELD_ID + " is missing");
-		final Term termId = new Term(IndexUtils.FIELD_ID, id.toString());
+			throw new ServerException(Response.Status.BAD_REQUEST,
+					"The field " + FieldDefinition.ID_FIELD + " is missing");
+		final Term termId = new Term(FieldDefinition.ID_FIELD, id.toString());
 		indexWriter.updateDocValues(termId, newFieldList(context, document));
 	}
 
 	final static String[] similarityClassPrefixes = { "", "com.qwazr.search.similarity.",
-					"org.apache.lucene.search.similarities." };
+			"org.apache.lucene.search.similarities." };
 
 	final static Similarity findSimilarity(String similarity)
-					throws InterruptedException, ReflectiveOperationException, IOException {
+			throws InterruptedException, ReflectiveOperationException, IOException {
 		return (Similarity) ClassLoaderUtils
-						.findClass(ClassLoaderManager.classLoader, similarity, similarityClassPrefixes).newInstance();
+				.findClass(ClassLoaderManager.classLoader, similarity, similarityClassPrefixes).newInstance();
 	}
 
 }

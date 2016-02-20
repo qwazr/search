@@ -15,17 +15,21 @@
  */
 package com.qwazr.search.test;
 
+import com.google.common.io.Files;
+import com.qwazr.search.SearchServer;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import javax.ws.rs.core.Response;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -51,6 +55,7 @@ public class FullTest {
 	public static final QueryDefinition QUERY_SORTFIELDS = getQuery("query_sortfields.json");
 	public static final QueryDefinition QUERY_CHECK_DOCVALUES = getQuery("query_check_docvalues.json");
 	public static final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
+	public static final QueryDefinition QUERY_RANGE_DOCVALUES = getQuery("query_range_docvalues.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
 	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
 	public static final List<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
@@ -59,6 +64,13 @@ public class FullTest {
 
 	private IndexServiceInterface getClient() throws URISyntaxException {
 		return new IndexSingleClient(BASE_URL, 60000);
+	}
+
+	@BeforeClass
+	public static void startSearchServer() throws Exception {
+		final File dataDir = Files.createTempDir();
+		final String[] parameters = { "-d", dataDir.getAbsolutePath() };
+		SearchServer.main(parameters);
 	}
 
 	@Test
@@ -284,6 +296,20 @@ public class FullTest {
 		}
 	}
 
+	private void checkEmptyFacets(ResultDefinition result) {
+		Assert.assertNotNull(result.facets);
+		Assert.assertTrue(result.facets.containsKey("category"));
+		Assert.assertNotNull(result.facets.get("category"));
+		Assert.assertTrue(result.facets.get("category").isEmpty());
+	}
+
+	@Test
+	public void test190EmptyQueryFacetFilterDoc() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		checkEmptyFacets(checkQueryIndex(client, FACETS_FILTERS_QUERY, 0));
+		checkEmptyFacets(checkQuerySchema(client, FACETS_FILTERS_QUERY, 0));
+	}
+
 	@Test
 	public void test200UpdateDocs() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
@@ -388,6 +414,8 @@ public class FullTest {
 		}
 		Assert.assertNotNull(result.facets);
 		Assert.assertTrue(result.facets.containsKey("category"));
+		Assert.assertNotNull(result.facets.get("category"));
+		Assert.assertEquals(5, result.facets.get("category").size());
 	}
 
 	@Test
@@ -404,6 +432,10 @@ public class FullTest {
 		Assert.assertNotNull(result.documents.get(1).fields);
 		Assert.assertEquals("Fourth name", result.documents.get(0).fields.get("name"));
 		Assert.assertEquals("Fifth name", result.documents.get(1).fields.get("name"));
+		Assert.assertNotNull(result.facets);
+		Assert.assertTrue(result.facets.containsKey("category"));
+		Assert.assertNotNull(result.facets.get("category"));
+		Assert.assertEquals(5, result.facets.get("category").size());
 	}
 
 	@Test

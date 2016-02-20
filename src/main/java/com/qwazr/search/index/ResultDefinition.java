@@ -21,8 +21,6 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.facet.Facets;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -75,10 +73,9 @@ public class ResultDefinition {
 	}
 
 	ResultDefinition(Map<String, FieldDefinition> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
-					Integer totalHits, TopDocs topDocs, QueryDefinition queryDef,
-					SortedSetDocValuesReaderState facetState, Facets facets,
-					Map<String, String[]> postingsHighlightsMap, Collection<FunctionCollector> functionsCollector,
-					Query query) throws IOException {
+			Integer totalHits, TopDocs topDocs, QueryDefinition queryDef, FacetsBuilder facetsBuilder,
+			Map<String, String[]> postingsHighlightsMap, Collection<FunctionCollector> functionsCollector, Query query)
+			throws IOException {
 		this.query = getQuery(queryDef.query_debug, query);
 		this.total_hits = totalHits == null ? null : (long) totalHits;
 		max_score = topDocs != null ? topDocs.getMaxScore() : null;
@@ -88,20 +85,18 @@ public class ResultDefinition {
 		ScoreDoc[] docs = topDocs != null ? topDocs.scoreDocs : null;
 		if (docs != null) {
 			Map<String, ValueUtils.DVConverter> docValuesSources = ResultUtils
-							.extractDocValuesFields(fieldMap, searcher.getIndexReader(), queryDef.returned_fields);
+					.extractDocValuesFields(fieldMap, searcher.getIndexReader(), queryDef.returned_fields);
 			while (pos < total_hits && pos < end) {
 				final ScoreDoc scoreDoc = docs[pos];
 				final Document document = searcher.doc(scoreDoc.doc, queryDef.returned_fields);
 				documents.add(new ResultDocument(pos, scoreDoc, max_score, document, queryDef.postings_highlighter,
-								postingsHighlightsMap, docValuesSources));
+						postingsHighlightsMap, docValuesSources));
 				pos++;
 			}
 			if (timeTracker != null)
 				timeTracker.next("returned_fields");
 		}
-		this.facets = facets != null && queryDef != null ?
-						ResultUtils.buildFacets(facetState, queryDef.facets, facets) :
-						null;
+		this.facets = facetsBuilder == null ? null : facetsBuilder.results;
 		this.functions = functionsCollector != null ? ResultUtils.buildFunctions(functionsCollector) : null;
 		if (timeTracker != null)
 			timeTracker.next("facet_fields");

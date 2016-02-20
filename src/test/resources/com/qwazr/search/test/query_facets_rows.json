@@ -1,8 +1,7 @@
 {
   "query_string": "name",
   "query": {
-    "query": "StandardQueryParser",
-    "default_field": "name"
+    "query": "MatchAllDocsQuery"
   },
   "returned_fields": [
     "name",

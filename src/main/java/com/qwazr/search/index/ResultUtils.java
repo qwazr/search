@@ -18,10 +18,6 @@ package com.qwazr.search.index;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldUtils;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.facet.FacetResult;
-import org.apache.lucene.facet.Facets;
-import org.apache.lucene.facet.LabelAndValue;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.*;
 
 import java.io.IOException;
@@ -61,32 +57,6 @@ class ResultUtils {
 			if (o != null)
 				dest.put(entry.getKey(), o);
 		}
-	}
-
-	final static Map<String, Map<String, Number>> buildFacets(final SortedSetDocValuesReaderState state,
-					final Map<String, QueryDefinition.Facet> facetsDef, final Facets facets) throws IOException {
-		Map<String, Map<String, Number>> facetResults = new LinkedHashMap<String, Map<String, Number>>();
-		for (Map.Entry<String, QueryDefinition.Facet> entry : facetsDef.entrySet()) {
-			String dim = entry.getKey();
-			if (state.getOrdRange(dim) == null)
-				continue;
-			Map<String, Number> facetMap = buildFacet(dim, entry.getValue(), facets);
-			if (facetMap != null)
-				facetResults.put(dim, facetMap);
-		}
-		return facetResults;
-	}
-
-	final static Map<String, Number> buildFacet(String dim, QueryDefinition.Facet facet, Facets facets)
-					throws IOException {
-		int top = facet.top == null ? 10 : facet.top;
-		LinkedHashMap<String, Number> facetMap = new LinkedHashMap<String, Number>();
-		FacetResult facetResult = facets.getTopChildren(top, dim);
-		if (facetResult == null || facetResult.labelValues == null)
-			return null;
-		for (LabelAndValue lv : facetResult.labelValues)
-			facetMap.put(lv.label, lv.value);
-		return facetMap;
 	}
 
 	final static Map<String, ValueUtils.DVConverter> extractDocValuesFields(final Map<String, FieldDefinition> fieldMap,

@@ -30,8 +30,8 @@ public class FunctionCollector implements Collector {
 
 	final QueryDefinition.Function function;
 
-	protected Comparable runningValue;
-	protected Comparable finalValue;
+	protected Object runningValue;
+	protected Object finalValue;
 
 	FunctionCollector(QueryDefinition.Function function, FieldDefinition fieldDef) {
 		this.function = function;
@@ -45,7 +45,7 @@ public class FunctionCollector implements Collector {
 		return false;
 	}
 
-	public Comparable getValue() {
+	public Object getValue() {
 		return finalValue;
 	}
 

@@ -121,12 +121,6 @@
                     <environmentVariables>
                         <QWAZR_MASTERS>localhost:9091</QWAZR_MASTERS>
                     </environmentVariables>
-                    <properties>
-                        <property>
-                            <name>listener</name>
-                            <value>com.qwazr.search.test.ExecutionListener</value>
-                        </property>
-                    </properties>
                 </configuration>
             </plugin>
         </plugins>

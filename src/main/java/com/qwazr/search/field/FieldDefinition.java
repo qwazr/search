@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.lucene.document.FieldType;
+import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 
@@ -96,4 +97,10 @@ public class FieldDefinition {
 	public final static FieldDefinition newField(String jsonString) throws IOException {
 		return JsonMapper.MAPPER.readValue(jsonString, FieldDefinition.class);
 	}
+
+	public final static String ID_FIELD = "$id$";
+
+	public final static String FACET_FIELD = FacetsConfig.DEFAULT_INDEX_FIELD_NAME;
+
+	public static final String[] RESERVED_NAMES = { ID_FIELD, FACET_FIELD };
 }

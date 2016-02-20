@@ -36,7 +36,7 @@ public class FieldUtils {
 	private static Number checkNumberType(String fieldName, Object value) {
 		if (!(value instanceof Number))
 			throw new IllegalArgumentException(
-							"Wrong value type for the field: " + fieldName + " - " + value.getClass().getSimpleName());
+					"Wrong value type for the field: " + fieldName + " - " + value.getClass().getSimpleName());
 		return (Number) value;
 	}
 
@@ -87,11 +87,11 @@ public class FieldUtils {
 				break;
 			case SortedDoubleDocValuesField:
 				field = new SortedNumericDocValuesField(fieldName,
-								NumericUtils.doubleToSortableLong(checkNumberType(fieldName, value).doubleValue()));
+						NumericUtils.doubleToSortableLong(checkNumberType(fieldName, value).doubleValue()));
 				break;
 			case SortedFloatDocValuesField:
 				field = new SortedNumericDocValuesField(fieldName,
-								NumericUtils.floatToSortableInt(checkNumberType(fieldName, value).floatValue()));
+						NumericUtils.floatToSortableInt(checkNumberType(fieldName, value).floatValue()));
 				break;
 			case SortedSetDocValuesField:
 				field = new SortedSetDocValuesField(fieldName, checkStringBytesRef(value));
@@ -181,11 +181,11 @@ public class FieldUtils {
 	}
 
 	public final static SortField getSortField(FieldDefinition fieldDef, String field, boolean reverse)
-					throws ServerException {
+			throws ServerException {
 		if (fieldDef.template == null) {
 			if (fieldDef.index_options == null)
 				throw new ServerException(Response.Status.BAD_REQUEST,
-								"A not indexed field cannot be used in sorting: " + field);
+						"A not indexed field cannot be used in sorting: " + field);
 		} else {
 			switch (fieldDef.template) {
 			case DoubleField:
