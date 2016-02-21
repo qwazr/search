@@ -15,7 +15,8 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldTypeInterface;
+import com.qwazr.search.field.ValueConverter;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.LeafCollector;
@@ -26,16 +27,16 @@ import java.io.IOException;
 
 public class FunctionCollector implements Collector {
 
-	private final FieldDefinition fieldDef;
+	private final FieldTypeInterface fieldType;
 
 	final QueryDefinition.Function function;
 
 	protected Object runningValue;
 	protected Object finalValue;
 
-	FunctionCollector(QueryDefinition.Function function, FieldDefinition fieldDef) {
+	FunctionCollector(QueryDefinition.Function function, FieldTypeInterface fieldType) {
 		this.function = function;
-		this.fieldDef = fieldDef;
+		this.fieldType = fieldType;
 		this.finalValue = null;
 		this.runningValue = null;
 	}
@@ -53,20 +54,20 @@ public class FunctionCollector implements Collector {
 	public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
 		final LeafReader leafReader = context.reader();
 		FieldInfo fieldInfo = leafReader.getFieldInfos().fieldInfo(function.field);
-		ValueUtils.DVConverter dvConverter = ValueUtils.newConverter(fieldDef, leafReader, fieldInfo);
-		if (dvConverter == null)
+		ValueConverter converter = fieldType.getConverter(leafReader);
+		if (converter == null)
 			return DoNothingCollector.INSTANCE;
 		switch (function.function) {
 		case max:
-			if (dvConverter.isNumeric)
-				return new MaxNumericFunctionCollector(dvConverter);
+			if (converter.isNumeric)
+				return new MaxNumericFunctionCollector(converter);
 			else
-				return new MaxBinaryFunctionCollector(dvConverter);
+				return new MaxBinaryFunctionCollector(converter);
 		case min:
-			if (dvConverter.isNumeric)
-				return new MinNumericFunctionCollector(dvConverter);
+			if (converter.isNumeric)
+				return new MinNumericFunctionCollector(converter);
 			else
-				return new MinBinaryFunctionCollector(dvConverter);
+				return new MinBinaryFunctionCollector(converter);
 		default:
 			throw new IOException("Unknown function for field " + function.field);
 		}
@@ -74,10 +75,10 @@ public class FunctionCollector implements Collector {
 
 	static abstract class LeafFunctionCollector implements LeafCollector {
 
-		protected final ValueUtils.DVConverter dvConverter;
+		protected final ValueConverter converter;
 
-		protected LeafFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
-			this.dvConverter = dvConverter;
+		protected LeafFunctionCollector(ValueConverter converter) throws IOException {
+			this.converter = converter;
 		}
 
 		@Override
@@ -90,9 +91,9 @@ public class FunctionCollector implements Collector {
 
 		protected final NumericDocValues docValues;
 
-		protected LeafNumericFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
-			super(dvConverter);
-			docValues = (NumericDocValues) dvConverter.source;
+		protected LeafNumericFunctionCollector(ValueConverter converter) throws IOException {
+			super(converter);
+			docValues = (NumericDocValues) converter.source;
 		}
 	}
 
@@ -100,9 +101,9 @@ public class FunctionCollector implements Collector {
 
 		protected final BinaryDocValues docValues;
 
-		protected LeafBinaryFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
-			super(dvConverter);
-			docValues = (BinaryDocValues) dvConverter.source;
+		protected LeafBinaryFunctionCollector(ValueConverter converter) throws IOException {
+			super(converter);
+			docValues = (BinaryDocValues) converter.source;
 		}
 	}
 
@@ -110,8 +111,8 @@ public class FunctionCollector implements Collector {
 
 		private Long max;
 
-		private MaxNumericFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
-			super(dvConverter);
+		private MaxNumericFunctionCollector(ValueConverter converter) throws IOException {
+			super(converter);
 			this.max = (Long) runningValue;
 		}
 
@@ -121,7 +122,7 @@ public class FunctionCollector implements Collector {
 			if (max == null || value > max) {
 				max = value;
 				runningValue = value;
-				finalValue = dvConverter.convert(doc);
+				finalValue = converter.convert(doc);
 			}
 		}
 	}
@@ -130,8 +131,8 @@ public class FunctionCollector implements Collector {
 
 		private Long min;
 
-		private MinNumericFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
-			super(dvConverter);
+		private MinNumericFunctionCollector(ValueConverter converter) throws IOException {
+			super(converter);
 			min = (Long) runningValue;
 		}
 
@@ -141,7 +142,7 @@ public class FunctionCollector implements Collector {
 			if (min == null || value < min) {
 				min = value;
 				runningValue = value;
-				finalValue = dvConverter.convert(doc);
+				finalValue = converter.convert(doc);
 			}
 		}
 	}
@@ -150,8 +151,8 @@ public class FunctionCollector implements Collector {
 
 		private BytesRef max;
 
-		private MaxBinaryFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
-			super(dvConverter);
+		private MaxBinaryFunctionCollector(ValueConverter converter) throws IOException {
+			super(converter);
 			max = (BytesRef) runningValue;
 		}
 
@@ -161,7 +162,7 @@ public class FunctionCollector implements Collector {
 			if (max == null || value.compareTo(max) > 0) {
 				max = value;
 				runningValue = value;
-				finalValue = dvConverter.convert(doc);
+				finalValue = converter.convert(doc);
 			}
 		}
 	}
@@ -170,8 +171,8 @@ public class FunctionCollector implements Collector {
 
 		private BytesRef min;
 
-		private MinBinaryFunctionCollector(ValueUtils.DVConverter dvConverter) throws IOException {
-			super(dvConverter);
+		private MinBinaryFunctionCollector(ValueConverter converter) throws IOException {
+			super(converter);
 			min = (BytesRef) runningValue;
 		}
 
@@ -181,7 +182,7 @@ public class FunctionCollector implements Collector {
 			if (min == null || value.compareTo(min) < 0) {
 				min = value;
 				runningValue = value;
-				finalValue = dvConverter.convert(doc);
+				finalValue = converter.convert(doc);
 
 			}
 		}

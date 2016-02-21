@@ -17,21 +17,24 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.SortedNumericDocValuesField;
+import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.SortedNumericSortField;
 
+import java.io.IOException;
 import java.util.Collection;
 
 class SortedLongDocValuesType extends FieldTypeAbstract {
 
-	SortedLongDocValuesType() {
-		super();
+	SortedLongDocValuesType(final String fieldName, final FieldDefinition fieldDef) {
+		super(fieldName, fieldDef);
 	}
 
 	@Override
-	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
+	final public void fill(final Object value, FieldConsumer consumer) {
 		if (value instanceof Collection)
-			fillCollection(fieldName, (Collection) value, consumer);
+			fillCollection((Collection) value, consumer);
 		else if (value instanceof Number)
 			consumer.accept(new SortedNumericDocValuesField(fieldName, ((Number) value).longValue()));
 		else
@@ -39,11 +42,19 @@ class SortedLongDocValuesType extends FieldTypeAbstract {
 	}
 
 	@Override
-	public final SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
+	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.LONG,
-				FieldUtils.sortReverse(sortEnum));
-		FieldUtils.sortLongMissingValue(sortEnum, sortField);
+				SortUtils.sortReverse(sortEnum));
+		SortUtils.sortLongMissingValue(sortEnum, sortField);
 		return sortField;
+	}
+
+	@Override
+	final public ValueConverter getConverter(final LeafReader reader) throws IOException {
+		SortedNumericDocValues docValues = reader.getSortedNumericDocValues(fieldName);
+		if (docValues == null)
+			return super.getConverter(reader);
+		return new ValueConverter.LongSetDVConverter(docValues);
 	}
 
 }

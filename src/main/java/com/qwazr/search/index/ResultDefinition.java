@@ -17,7 +17,8 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldTypeInterface;
+import com.qwazr.search.field.ValueConverter;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.document.Document;
@@ -72,7 +73,7 @@ public class ResultDefinition {
 		return query.toString(StringUtils.EMPTY);
 	}
 
-	ResultDefinition(Map<String, FieldDefinition> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
+	ResultDefinition(Map<String, FieldTypeInterface> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
 			Integer totalHits, TopDocs topDocs, QueryDefinition queryDef, FacetsBuilder facetsBuilder,
 			Map<String, String[]> postingsHighlightsMap, Collection<FunctionCollector> functionsCollector, Query query)
 			throws IOException {
@@ -84,7 +85,7 @@ public class ResultDefinition {
 		documents = new ArrayList<ResultDocument>();
 		ScoreDoc[] docs = topDocs != null ? topDocs.scoreDocs : null;
 		if (docs != null) {
-			Map<String, ValueUtils.DVConverter> docValuesSources = ResultUtils
+			Map<String, ValueConverter> docValuesSources = ResultUtils
 					.extractDocValuesFields(fieldMap, searcher.getIndexReader(), queryDef.returned_fields);
 			while (pos < total_hits && pos < end) {
 				final ScoreDoc scoreDoc = docs[pos];

@@ -23,24 +23,24 @@ import java.util.Collection;
 
 class LongFieldType extends StorableFieldType {
 
-	LongFieldType(FieldDefinition fieldDefinition) {
-		super(fieldDefinition);
+	LongFieldType(final String fieldName, final FieldDefinition fieldDef) {
+		super(fieldName, fieldDef);
 	}
 
 	@Override
-	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
+	final public void fill(final Object value, final FieldConsumer consumer) {
 		if (value instanceof Collection)
-			fillCollection(fieldName, (Collection) value, consumer);
+			fillCollection((Collection) value, consumer);
 		else if (value instanceof Number)
-			consumer.accept(new LongField(fieldName, (long) value, store));
+			consumer.accept(new LongField(fieldName, ((Number) value).longValue(), store));
 		else
 			consumer.accept(new LongField(fieldName, Long.parseLong(value.toString()), store));
 	}
 
 	@Override
-	public final SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.LONG, FieldUtils.sortReverse(sortEnum));
-		FieldUtils.sortLongMissingValue(sortEnum, sortField);
+	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+		final SortField sortField = new SortField(fieldName, SortField.Type.LONG, SortUtils.sortReverse(sortEnum));
+		SortUtils.sortLongMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 

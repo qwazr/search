@@ -23,14 +23,12 @@ import java.util.Collection;
 
 class CustomFieldType extends FieldTypeAbstract {
 
-	private final FieldDefinition fieldDef;
-
-	CustomFieldType(FieldDefinition fieldDefinition) {
-		this.fieldDef = fieldDefinition;
+	CustomFieldType(final String fieldName, final FieldDefinition fieldDefinition) {
+		super(fieldName, fieldDefinition);
 	}
 
 	@Override
-	public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
+	final public void fill(final Object value, final FieldConsumer consumer) {
 		final FieldType type = new FieldType();
 		if (fieldDef.stored != null)
 			type.setStored(fieldDef.stored);
@@ -55,7 +53,7 @@ class CustomFieldType extends FieldTypeAbstract {
 
 		try {
 			if (value instanceof Collection) {
-				fillCollection(fieldName, (Collection) value, consumer);
+				fillCollection((Collection) value, consumer);
 			} else
 				consumer.accept(new CustomField(fieldName, type, value));
 		} catch (IllegalArgumentException e) {
@@ -64,39 +62,39 @@ class CustomFieldType extends FieldTypeAbstract {
 	}
 
 	@Override
-	public final SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
+	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
 		if (fieldDef.index_options == null)
 			throw new IllegalArgumentException("A not indexed field cannot be used in sorting: " + fieldName);
 		if (fieldName == FieldDefinition.SCORE_FIELD)
 			return new SortField(fieldName, SortField.Type.SCORE);
-		final boolean reverse = FieldUtils.sortReverse(sortEnum);
+		final boolean reverse = SortUtils.sortReverse(sortEnum);
 		final SortField sortField;
 		if (fieldDef.numeric_type != null) {
 			switch (fieldDef.numeric_type) {
 			case DOUBLE:
 				sortField = new SortField(fieldName, SortField.Type.DOUBLE, reverse);
-				FieldUtils.sortDoubleMissingValue(sortEnum, sortField);
+				SortUtils.sortDoubleMissingValue(sortEnum, sortField);
 				break;
 			case FLOAT:
 				sortField = new SortField(fieldName, SortField.Type.FLOAT, reverse);
-				FieldUtils.sortFloatMissingValue(sortEnum, sortField);
+				SortUtils.sortFloatMissingValue(sortEnum, sortField);
 				break;
 			case INT:
 				sortField = new SortField(fieldName, SortField.Type.INT, reverse);
-				FieldUtils.sortIntMissingValue(sortEnum, sortField);
+				SortUtils.sortIntMissingValue(sortEnum, sortField);
 				break;
 			case LONG:
 				sortField = new SortField(fieldName, SortField.Type.LONG, reverse);
-				FieldUtils.sortLongMissingValue(sortEnum, sortField);
+				SortUtils.sortLongMissingValue(sortEnum, sortField);
 				break;
 			default:
 				sortField = new SortField(fieldName, SortField.Type.STRING, reverse);
-				FieldUtils.sortStringMissingValue(sortEnum, sortField);
+				SortUtils.sortStringMissingValue(sortEnum, sortField);
 				break;
 			}
 		} else {
 			sortField = new SortField(fieldName, SortField.Type.STRING, reverse);
-			FieldUtils.sortStringMissingValue(sortEnum, sortField);
+			SortUtils.sortStringMissingValue(sortEnum, sortField);
 		}
 		return sortField;
 	}

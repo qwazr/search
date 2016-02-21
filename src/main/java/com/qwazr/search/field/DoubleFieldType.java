@@ -23,14 +23,14 @@ import java.util.Collection;
 
 class DoubleFieldType extends StorableFieldType {
 
-	DoubleFieldType(FieldDefinition fieldDefinition) {
-		super(fieldDefinition);
+	DoubleFieldType(final String fieldName, final FieldDefinition fieldDef) {
+		super(fieldName, fieldDef);
 	}
 
 	@Override
-	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
+	final public void fill(final Object value, final FieldConsumer consumer) {
 		if (value instanceof Collection)
-			fillCollection(fieldName, (Collection) value, consumer);
+			fillCollection((Collection) value, consumer);
 		else if (value instanceof Number)
 			consumer.accept(new DoubleField(fieldName, ((Number) value).doubleValue(), store));
 		else
@@ -38,9 +38,9 @@ class DoubleFieldType extends StorableFieldType {
 	}
 
 	@Override
-	public final SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.DOUBLE, FieldUtils.sortReverse(sortEnum));
-		FieldUtils.sortDoubleMissingValue(sortEnum, sortField);
+	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+		final SortField sortField = new SortField(fieldName, SortField.Type.DOUBLE, SortUtils.sortReverse(sortEnum));
+		SortUtils.sortDoubleMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 

@@ -15,34 +15,33 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.index.*;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
 
- public abstract class ValueConverter<T, V> {
+public abstract class ValueConverter<T, V> {
 
-		final boolean isNumeric;
+	final public boolean isNumeric;
 
-		protected final T source;
+	final public T source;
 
-		private ValueConverter(T source) {
-			this.source = source;
-			isNumeric = source instanceof NumericDocValues;
-		}
+	private ValueConverter(T source) {
+		this.source = source;
+		isNumeric = source instanceof NumericDocValues || source instanceof SortedNumericDocValues;
+	}
 
-		abstract V convert(int docId);
+	public abstract V convert(int docId);
 
 	static class BinaryDVConverter extends ValueConverter<BinaryDocValues, String> {
 
-		private BinaryDVConverter(BinaryDocValues source) {
+		BinaryDVConverter(BinaryDocValues source) {
 			super(source);
 		}
 
 		@Override
-		final protected String convert(int docId) {
+		final public String convert(int docId) {
 			BytesRef bytesRef = source.get(docId);
 			if (bytesRef == null)
 				return null;
@@ -53,12 +52,12 @@ import java.io.IOException;
 
 	static class SortedDVConverter extends ValueConverter<SortedDocValues, String> {
 
-		private SortedDVConverter(SortedDocValues source) {
+		SortedDVConverter(SortedDocValues source) {
 			super(source);
 		}
 
 		@Override
-		final protected String convert(int docId) {
+		final public String convert(int docId) {
 			BytesRef bytesRef = source.get(docId);
 			if (bytesRef == null)
 				return null;
@@ -66,62 +65,62 @@ import java.io.IOException;
 		}
 	}
 
-	private static class DoubleDVConverter extends ValueConverter<NumericDocValues, Double> {
+	static class DoubleDVConverter extends ValueConverter<NumericDocValues, Double> {
 
-		private DoubleDVConverter(NumericDocValues source) {
+		DoubleDVConverter(NumericDocValues source) {
 			super(source);
 		}
 
 		@Override
-		protected Double convert(int docId) {
+		final public Double convert(int docId) {
 			return NumericUtils.sortableLongToDouble(source.get(docId));
 		}
 	}
 
-	private static class FloatDVConverter extends ValueConverter<NumericDocValues, Float> {
+	static class FloatDVConverter extends ValueConverter<NumericDocValues, Float> {
 
-		private FloatDVConverter(NumericDocValues source) {
+		FloatDVConverter(NumericDocValues source) {
 			super(source);
 		}
 
 		@Override
-		protected Float convert(int docId) {
+		final public Float convert(int docId) {
 			return NumericUtils.sortableIntToFloat((int) source.get(docId));
 		}
 	}
 
-	private static class LongDVConverter extends ValueConverter<NumericDocValues, Long> {
+	static class LongDVConverter extends ValueConverter<NumericDocValues, Long> {
 
-		private LongDVConverter(NumericDocValues source) {
+		LongDVConverter(NumericDocValues source) {
 			super(source);
 		}
 
 		@Override
-		protected Long convert(int docId) {
+		final public Long convert(int docId) {
 			return source.get(docId);
 		}
 	}
 
-	private static class IntegerDVConverter extends ValueConverter<NumericDocValues, Integer> {
+	static class IntegerDVConverter extends ValueConverter<NumericDocValues, Integer> {
 
-		private IntegerDVConverter(NumericDocValues source) {
+		IntegerDVConverter(NumericDocValues source) {
 			super(source);
 		}
 
 		@Override
-		protected Integer convert(int docId) {
+		final public Integer convert(int docId) {
 			return (int) source.get(docId);
 		}
 	}
 
-	private static class DoubleSetDVConverter extends ValueConverter<SortedNumericDocValues, double[]> {
+	static class DoubleSetDVConverter extends ValueConverter<SortedNumericDocValues, double[]> {
 
-		private DoubleSetDVConverter(SortedNumericDocValues source) {
+		DoubleSetDVConverter(SortedNumericDocValues source) {
 			super(source);
 		}
 
 		@Override
-		protected double[] convert(int docId) {
+		final public double[] convert(int docId) {
 			source.setDocument(docId);
 			double[] set = new double[source.count()];
 			for (int i = 0; i < set.length; i++)
@@ -130,14 +129,14 @@ import java.io.IOException;
 		}
 	}
 
-	private static class FloatSetDVConverter extends ValueConverter<SortedNumericDocValues, float[]> {
+	static class FloatSetDVConverter extends ValueConverter<SortedNumericDocValues, float[]> {
 
-		private FloatSetDVConverter(SortedNumericDocValues source) {
+		FloatSetDVConverter(SortedNumericDocValues source) {
 			super(source);
 		}
 
 		@Override
-		protected float[] convert(int docId) {
+		final public float[] convert(int docId) {
 			source.setDocument(docId);
 			float[] set = new float[source.count()];
 			for (int i = 0; i < set.length; i++)
@@ -146,14 +145,14 @@ import java.io.IOException;
 		}
 	}
 
-	private static class LongSetDVConverter extends ValueConverter<SortedNumericDocValues, long[]> {
+	static class LongSetDVConverter extends ValueConverter<SortedNumericDocValues, long[]> {
 
-		private LongSetDVConverter(SortedNumericDocValues source) {
+		LongSetDVConverter(SortedNumericDocValues source) {
 			super(source);
 		}
 
 		@Override
-		protected long[] convert(int docId) {
+		final public long[] convert(int docId) {
 			source.setDocument(docId);
 			long[] set = new long[source.count()];
 			for (int i = 0; i < set.length; i++)
@@ -162,14 +161,14 @@ import java.io.IOException;
 		}
 	}
 
-	private static class IntegerSetDVConverter extends ValueConverter<SortedNumericDocValues, int[]> {
+	static class IntegerSetDVConverter extends ValueConverter<SortedNumericDocValues, int[]> {
 
-		private IntegerSetDVConverter(SortedNumericDocValues source) {
+		IntegerSetDVConverter(SortedNumericDocValues source) {
 			super(source);
 		}
 
 		@Override
-		protected int[] convert(int docId) {
+		final public int[] convert(int docId) {
 			source.setDocument(docId);
 			int[] set = new int[source.count()];
 			for (int i = 0; i < set.length; i++)
@@ -178,7 +177,7 @@ import java.io.IOException;
 		}
 	}
 
-	static ValueConverter newNumericConverter(FieldDefinition fieldDef, NumericDocValues numericDocValues)
+	private final static ValueConverter newNumericConverter(FieldDefinition fieldDef, NumericDocValues numericDocValues)
 			throws IOException {
 		if (fieldDef.numeric_type == null) {
 			if (fieldDef.template == null)
@@ -209,7 +208,7 @@ import java.io.IOException;
 		return null;
 	}
 
-	static ValueConverter newSortedNumericConverter(FieldDefinition fieldDef,
+	private final static ValueConverter newSortedNumericConverter(FieldDefinition fieldDef,
 			SortedNumericDocValues sortedNumericDocValues) throws IOException {
 		if (fieldDef.numeric_type == null) {
 			if (fieldDef.template == null)
@@ -240,7 +239,7 @@ import java.io.IOException;
 		return null;
 	}
 
-	static ValueConverter newConverter(FieldDefinition fieldDef, LeafReader dvReader, FieldInfo fieldInfo)
+	final static ValueConverter newConverter(FieldDefinition fieldDef, LeafReader dvReader, FieldInfo fieldInfo)
 			throws IOException {
 		if (fieldInfo == null)
 			return null;

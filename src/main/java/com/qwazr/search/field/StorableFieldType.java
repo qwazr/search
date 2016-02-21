@@ -21,10 +21,11 @@ abstract class StorableFieldType extends FieldTypeAbstract {
 
 	protected final Field.Store store;
 
-	StorableFieldType(FieldDefinition fieldDefinition) {
-		this.store = fieldDefinition == null ?
+	StorableFieldType(final String fieldName, final FieldDefinition fieldDef) {
+		super(fieldName, fieldDef);
+		this.store = fieldDef == null ?
 				Field.Store.NO :
-				(fieldDefinition.stored != null && fieldDefinition.stored) ? Field.Store.YES : Field.Store.NO;
+				(fieldDef.stored != null && fieldDef.stored) ? Field.Store.YES : Field.Store.NO;
 	}
 
 }

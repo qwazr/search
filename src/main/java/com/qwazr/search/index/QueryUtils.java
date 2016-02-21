@@ -35,8 +35,6 @@ import java.util.Map;
 
 class QueryUtils {
 
-
-
 	final static String getFinalQueryString(QueryDefinition queryDef) {
 		// Deal wih query string
 		final String qs;
@@ -93,7 +91,8 @@ class QueryUtils {
 		final TimeTracker timeTracker = new TimeTracker();
 
 		final AnalyzerContext analyzerContext = queryContext.analyzer.getContext();
-		final Sort sort = queryDef.sorts == null ? null : SortUtils.buildSort(analyzerContext.fieldTypes, queryDef.sorts);
+		final Sort sort =
+				queryDef.sorts == null ? null : SortUtils.buildSort(analyzerContext.fieldTypes, queryDef.sorts);
 		final FacetsBuilder facetsBuilder;
 
 		final int numHits = queryDef.getEnd();
@@ -126,8 +125,8 @@ class QueryUtils {
 			timeTracker.next("postings_highlighters");
 		}
 
-		return new ResultDefinition(analyzerContext.fields, timeTracker, indexSearcher, totalHits, topDocs, queryDef,
-				facetsBuilder, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
+		return new ResultDefinition(analyzerContext.fieldTypes, timeTracker, indexSearcher, totalHits, topDocs,
+				queryDef, facetsBuilder, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
 	}
 
 }

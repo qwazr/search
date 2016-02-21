@@ -23,14 +23,14 @@ import java.util.Collection;
 
 class StoredFieldType extends FieldTypeAbstract {
 
-	StoredFieldType() {
-		super();
+	StoredFieldType(final String fieldName, final FieldDefinition fieldDef) {
+		super(fieldName, fieldDef);
 	}
 
 	@Override
-	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
+	final public void fill(final Object value, final FieldConsumer consumer) {
 		if (value instanceof Collection)
-			fillCollection(fieldName, (Collection) value, consumer);
+			fillCollection((Collection) value, consumer);
 		else if (value instanceof String)
 			consumer.accept(new StoredField(fieldName, (String) value));
 		else if (value instanceof Integer)
@@ -44,7 +44,7 @@ class StoredFieldType extends FieldTypeAbstract {
 	}
 
 	@Override
-	public final SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
+	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
 		return null;
 	}
 

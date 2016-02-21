@@ -17,29 +17,39 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.BinaryDocValuesField;
+import org.apache.lucene.index.BinaryDocValues;
+import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
+import java.io.IOException;
 import java.util.Collection;
 
 class BinaryDocValuesType extends FieldTypeAbstract {
 
-	BinaryDocValuesType() {
-		super();
+	BinaryDocValuesType(final String fieldName, final FieldDefinition fieldDef) {
+		super(fieldName, fieldDef);
 	}
 
 	@Override
-	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
+	final public void fill(final Object value, final FieldConsumer consumer) {
 		if (value instanceof Collection)
-			fillCollection(fieldName, (Collection) value, consumer);
+			fillCollection((Collection) value, consumer);
 		else
 			consumer.accept(new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
 
 	}
 
 	@Override
-	public final SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
+	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
 		return null;
 	}
 
+	@Override
+	public final ValueConverter getConverter(final LeafReader reader) throws IOException {
+		BinaryDocValues binaryDocValue = reader.getBinaryDocValues(fieldName);
+		if (binaryDocValue == null)
+			return super.getConverter(reader);
+		return new ValueConverter.BinaryDVConverter(binaryDocValue);
+	}
 }

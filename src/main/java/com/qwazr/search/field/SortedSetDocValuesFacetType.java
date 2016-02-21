@@ -23,20 +23,20 @@ import java.util.Collection;
 
 class SortedSetDocValuesFacetType extends FieldTypeAbstract {
 
-	SortedSetDocValuesFacetType() {
-		super();
+	SortedSetDocValuesFacetType(final String fieldName, final FieldDefinition fieldDef) {
+		super(fieldName, fieldDef);
 	}
 
 	@Override
-	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
+	final public void fill(final Object value, final FieldConsumer consumer) {
 		if (value instanceof Collection)
-			fillCollection(fieldName, (Collection) value, consumer);
+			fillCollection((Collection) value, consumer);
 		else
 			consumer.accept(new SortedSetDocValuesFacetField(fieldName, value.toString()));
 	}
 
 	@Override
-	public final SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
+	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
 		return null;
 	}
 

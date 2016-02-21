@@ -16,19 +16,29 @@
 
 package com.qwazr.search.field;
 
-import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.*;
 import org.apache.lucene.util.BytesRef;
 
+import java.io.IOException;
 import java.util.Collection;
 
 abstract class FieldTypeAbstract implements FieldTypeInterface {
 
-	final protected void fillCollection(String fieldName, Collection<Object> values, FieldConsumer consumer) {
-		for (Object value : values)
-			if (value != null)
-				fill(fieldName, value, consumer);
+	final protected String fieldName;
+	final protected FieldDefinition fieldDef;
+
+	protected FieldTypeAbstract(final String fieldName, final FieldDefinition fieldDef) {
+		this.fieldName = fieldName;
+		this.fieldDef = fieldDef;
 	}
 
+	final protected void fillCollection(Collection<Object> values, FieldConsumer consumer) {
+		for (Object value : values)
+			if (value != null)
+				fill(value, consumer);
+	}
+
+	//TODO remove
 	private static Number checkNumberType(String fieldName, Object value) {
 		if (!(value instanceof Number))
 			throw new IllegalArgumentException(
@@ -36,20 +46,19 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 		return (Number) value;
 	}
 
+	//TODO remove
 	private static BytesRef checkStringBytesRef(Object value) {
 		return new BytesRef(value.toString());
 	}
 
-	public final static Object getValue(IndexableField field) {
-		if (field == null)
+	public ValueConverter getConverter(LeafReader leafReader) throws IOException {
+		FieldInfos fieldInfos = leafReader.getFieldInfos();
+		if (fieldInfos == null)
 			return null;
-		String s = field.stringValue();
-		if (s != null)
-			return s;
-		Number n = field.numericValue();
-		if (n != null)
-			return n;
-		return null;
+		FieldInfo fieldInfo = fieldInfos.fieldInfo(fieldName);
+		if (fieldInfo == null)
+			return null;
+		return ValueConverter.newConverter(fieldDef, leafReader, fieldInfo);
 	}
 
 }

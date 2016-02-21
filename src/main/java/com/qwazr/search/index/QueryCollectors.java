@@ -16,7 +16,6 @@
 
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.facet.FacetsCollector;
@@ -79,12 +78,12 @@ class QueryCollectors {
 			return null;
 		Collection<FunctionCollector> functionsCollectors = new ArrayList<FunctionCollector>();
 		for (QueryDefinition.Function function : functions) {
-			FieldDefinition fieldDef = fields.get(function.field);
-			if (fieldDef == null)
+			FieldTypeInterface fieldType = fields.get(function.field);
+			if (fieldType == null)
 				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 						"Cannot compute the function " + function.function + " because the field is unknown: "
 								+ function.field);
-			functionsCollectors.add(new FunctionCollector(function, fieldDef));
+			functionsCollectors.add(new FunctionCollector(function, fieldType));
 		}
 		collectors.addAll(functionsCollectors);
 		return functionsCollectors;

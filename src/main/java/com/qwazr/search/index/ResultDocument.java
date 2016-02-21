@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.qwazr.search.field.ValueConverter;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.search.ScoreDoc;
 
@@ -44,8 +45,8 @@ public class ResultDocument {
 	}
 
 	ResultDocument(int pos, ScoreDoc scoreDoc, Float max_score, Document document,
-					Map<String, Integer> postings_highlighter, Map<String, String[]> postingsHighlightsMap,
-					Map<String, ValueUtils.DVConverter> docValuesReturnedFields) throws IOException {
+			Map<String, Integer> postings_highlighter, Map<String, String[]> postingsHighlightsMap,
+			Map<String, ValueConverter> docValuesReturnedFields) throws IOException {
 		this.score = scoreDoc.score;
 		if (max_score != null && max_score > 0)
 			this.percent_score = this.score == 0 ? 0 : this.score / max_score;

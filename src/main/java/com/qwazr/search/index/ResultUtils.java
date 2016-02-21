@@ -15,20 +15,36 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.field.FieldUtils;
+import com.qwazr.search.field.FieldTypeInterface;
+import com.qwazr.search.field.ValueConverter;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.SlowCompositeReaderWrapper;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BiConsumer;
 
 class ResultUtils {
+
+	final static Object getValue(IndexableField field) {
+		if (field == null)
+			return null;
+		String s = field.stringValue();
+		if (s != null)
+			return s;
+		Number n = field.numericValue();
+		if (n != null)
+			return n;
+		return null;
+	}
 
 	final static Map<String, Object> buildFields(final Document document) {
 		Map<String, Object> fields = new LinkedHashMap<String, Object>();
 		for (IndexableField field : document) {
-			Object newValue = FieldUtils.getValue(field);
+			Object newValue = getValue(field);
 			if (newValue == null)
 				continue;
 			Object oldValue = fields.get(field.name());
@@ -48,41 +64,41 @@ class ResultUtils {
 		return fields;
 	}
 
-	final static void addDocValues(final int docId, Map<String, ValueUtils.DVConverter> sources,
-					final Map<String, Object> dest) {
+	final static void addDocValues(final int docId, Map<String, ValueConverter> sources,
+			final Map<String, Object> dest) {
 		if (sources == null)
 			return;
-		for (Map.Entry<String, ValueUtils.DVConverter> entry : sources.entrySet()) {
-			Object o = entry.getValue().convert(docId);
-			if (o != null)
-				dest.put(entry.getKey(), o);
-		}
+		sources.forEach(new BiConsumer<String, ValueConverter>() {
+			@Override
+			public void accept(String fieldName, ValueConverter converter) {
+				Object o = converter.convert(docId);
+				if (o != null)
+					dest.put(fieldName, o);
+			}
+		});
 	}
 
-	final static Map<String, ValueUtils.DVConverter> extractDocValuesFields(final Map<String, FieldDefinition> fieldMap,
-					final IndexReader indexReader, final Set<String> returned_fields) throws IOException {
+	final static Map<String, ValueConverter> extractDocValuesFields(final Map<String, FieldTypeInterface> fieldTypes,
+			final IndexReader indexReader, final Set<String> returned_fields) throws IOException {
 		if (returned_fields == null)
 			return null;
 		//FieldInfos fieldInfos = MultiFields.getMergedFieldInfos(indexReader);
-		LeafReader dvReader = SlowCompositeReaderWrapper.wrap(indexReader);
-		Map<String, ValueUtils.DVConverter> map = new LinkedHashMap<String, ValueUtils.DVConverter>();
-		for (String field : returned_fields) {
-			FieldInfo fieldInfo = dvReader.getFieldInfos().fieldInfo(field);
-			if (fieldInfo == null)
+		LeafReader leafReader = SlowCompositeReaderWrapper.wrap(indexReader);
+		Map<String, ValueConverter> map = new LinkedHashMap<String, ValueConverter>();
+		for (String fieldName : returned_fields) {
+			FieldTypeInterface fieldType = fieldTypes.get(fieldName);
+			if (fieldType == null)
 				continue;
-			FieldDefinition fieldDef = fieldMap.get(field);
-			if (fieldDef == null)
-				continue;
-			ValueUtils.DVConverter converter = ValueUtils.newConverter(fieldDef, dvReader, fieldInfo);
+			ValueConverter converter = fieldType.getConverter(leafReader);
 			if (converter == null)
 				continue;
-			map.put(field, converter);
+			map.put(fieldName, converter);
 		}
 		return map;
 	}
 
 	final static List<ResultDefinition.Function> buildFunctions(
-					final Collection<FunctionCollector> functionsCollector) {
+			final Collection<FunctionCollector> functionsCollector) {
 		if (functionsCollector == null)
 			return null;
 		List<ResultDefinition.Function> functions = new ArrayList<ResultDefinition.Function>(functionsCollector.size());

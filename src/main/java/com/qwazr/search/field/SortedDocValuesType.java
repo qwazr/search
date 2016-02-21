@@ -24,22 +24,22 @@ import java.util.Collection;
 
 class SortedDocValuesType extends FieldTypeAbstract {
 
-	SortedDocValuesType() {
-		super();
+	SortedDocValuesType(final String fieldName, final FieldDefinition fieldDef) {
+		super(fieldName, fieldDef);
 	}
 
 	@Override
-	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
+	final public void fill(final Object value, final FieldConsumer consumer) {
 		if (value instanceof Collection)
-			fillCollection(fieldName, (Collection) value, consumer);
+			fillCollection((Collection) value, consumer);
 		else
 			consumer.accept(new SortedDocValuesField(fieldName, new BytesRef(value.toString())));
 	}
 
 	@Override
-	public final SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.STRING, FieldUtils.sortReverse(sortEnum));
-		FieldUtils.sortStringMissingValue(sortEnum, sortField);
+	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+		final SortField sortField = new SortField(fieldName, SortField.Type.STRING, SortUtils.sortReverse(sortEnum));
+		SortUtils.sortStringMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 

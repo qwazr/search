@@ -50,9 +50,10 @@ public class AnalyzerContext {
 		this.queryAnalyzerMap = new HashMap<String, Analyzer>();
 
 		for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
-			String fieldName = field.getKey();
-			FieldDefinition fieldDef = field.getValue();
-			FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldDef, facetsConfig);
+			final String fieldName = field.getKey();
+			final FieldDefinition fieldDef = field.getValue();
+			FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldName, fieldDef, facetsConfig);
+			fieldTypes.put(fieldName, fieldType);
 			if (fieldDef.template != null) {
 				switch (fieldDef.template) {
 				case FacetField:

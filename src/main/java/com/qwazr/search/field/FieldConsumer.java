@@ -41,7 +41,7 @@ public abstract class FieldConsumer implements BiConsumer<String, Object>, Consu
 		FieldTypeInterface fieldType = fieldTypes.get(fieldName);
 		if (fieldType == null)
 			throw new IllegalArgumentException("No field definition for the field: " + fieldName);
-		fieldType.fill(fieldName, fieldValue, this);
+		fieldType.fill(fieldValue, this);
 	}
 
 	final public static class FieldsDocument extends FieldConsumer {

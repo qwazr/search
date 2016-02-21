@@ -23,14 +23,14 @@ import java.util.Collection;
 
 class FloatFieldType extends StorableFieldType {
 
-	FloatFieldType(FieldDefinition fieldDefinition) {
-		super(fieldDefinition);
+	FloatFieldType(final String fieldName, final FieldDefinition fieldDef) {
+		super(fieldName, fieldDef);
 	}
 
 	@Override
-	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
+	final public void fill(final Object value, final FieldConsumer consumer) {
 		if (value instanceof Collection)
-			fillCollection(fieldName, (Collection) value, consumer);
+			fillCollection((Collection) value, consumer);
 		else if (value instanceof Number)
 			consumer.accept(new FloatField(fieldName, ((Number) value).floatValue(), store));
 		else
@@ -38,9 +38,9 @@ class FloatFieldType extends StorableFieldType {
 	}
 
 	@Override
-	public final SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.FLOAT, FieldUtils.sortReverse(sortEnum));
-		FieldUtils.sortFloatMissingValue(sortEnum, sortField);
+	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+		final SortField sortField = new SortField(fieldName, SortField.Type.FLOAT, SortUtils.sortReverse(sortEnum));
+		SortUtils.sortFloatMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 

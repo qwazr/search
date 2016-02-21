@@ -17,59 +17,65 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.search.SortField;
+
+import java.io.IOException;
 
 public interface FieldTypeInterface {
 
-	void fill(final String fieldName, final Object value, final FieldConsumer consumer);
+	void fill(final Object value, final FieldConsumer consumer);
 
-	SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
+	SortField getSortField(final QueryDefinition.SortEnum sortEnum);
 
-	static FieldTypeInterface getInstance(FieldDefinition fieldDefinition, FacetsConfig facetsConfig) {
+	ValueConverter getConverter(final LeafReader reader) throws IOException;
+
+	static FieldTypeInterface getInstance(final String fieldName, final FieldDefinition fieldDefinition,
+			FacetsConfig facetsConfig) {
 		if (fieldDefinition.template == null)
-			return new CustomFieldType(fieldDefinition);
+			return new CustomFieldType(fieldName, fieldDefinition);
 		switch (fieldDefinition.template) {
 		case BinaryDocValuesField:
-			return new BinaryDocValuesType();
+			return new BinaryDocValuesType(fieldName, fieldDefinition);
 		case DoubleDocValuesField:
-			return new DoubleDocValuesType();
+			return new DoubleDocValuesType(fieldName, fieldDefinition);
 		case DoubleField:
-			return new DoubleFieldType(fieldDefinition);
+			return new DoubleFieldType(fieldName, fieldDefinition);
 		case FloatDocValuesField:
-			return new FloatDocValuesType();
+			return new FloatDocValuesType(fieldName, fieldDefinition);
 		case FloatField:
-			return new FloatFieldType(fieldDefinition);
+			return new FloatFieldType(fieldName, fieldDefinition);
 		case IntDocValuesField:
-			return new IntDocValuesType();
+			return new IntDocValuesType(fieldName, fieldDefinition);
 		case IntField:
-			return new IntFieldType(fieldDefinition);
+			return new IntFieldType(fieldName, fieldDefinition);
 		case LongDocValuesField:
-			return new LongDocValuesType();
+			return new LongDocValuesType(fieldName, fieldDefinition);
 		case LongField:
-			return new LongFieldType(fieldDefinition);
+			return new LongFieldType(fieldName, fieldDefinition);
 		case SortedDocValuesField:
-			return new SortedDocValuesType();
+			return new SortedDocValuesType(fieldName, fieldDefinition);
 		case SortedDoubleDocValuesField:
-			return new SortedDoubleDocValuesType();
+			return new SortedDoubleDocValuesType(fieldName, fieldDefinition);
 		case SortedFloatDocValuesField:
-			return new SortedFloatDocValuesType();
+			return new SortedFloatDocValuesType(fieldName, fieldDefinition);
 		case SortedIntDocValuesField:
-			return new SortedIntDocValuesType();
+			return new SortedIntDocValuesType(fieldName, fieldDefinition);
 		case SortedLongDocValuesField:
-			return new SortedLongDocValuesType();
+			return new SortedLongDocValuesType(fieldName, fieldDefinition);
 		case SortedSetDocValuesField:
-			return new SortedSetDocValuesType();
+			return new SortedSetDocValuesType(fieldName, fieldDefinition);
 		case FacetField:
 		case SortedSetDocValuesFacetField:
 		case MultiFacetField:
 		case SortedSetMultiDocValuesFacetField:
-			return new SortedSetDocValuesFacetType();
+			return new SortedSetDocValuesFacetType(fieldName, fieldDefinition);
 		case StoredField:
-			return new StoredFieldType();
+			return new StoredFieldType(fieldName, fieldDefinition);
 		case StringField:
-			return new StringFieldType(fieldDefinition);
+			return new StringFieldType(fieldName, fieldDefinition);
 		case TextField:
-			return new TextFieldType(fieldDefinition);
+			return new TextFieldType(fieldName, fieldDefinition);
 		}
 		throw new IllegalArgumentException("Unsupported field type");
 	}
