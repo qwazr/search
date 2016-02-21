@@ -16,8 +16,8 @@
 package com.qwazr.search.analysis;
 
 import com.qwazr.classloader.ClassLoaderManager;
-import com.qwazr.search.field.AbstractFieldType;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
@@ -32,14 +32,14 @@ import java.util.Map;
 
 public class AnalyzerContext {
 
-	public final Map<String, AbstractFieldType> fieldTypes;
+	public final Map<String, FieldTypeInterface> fieldTypes;
 	public final FacetsConfig facetsConfig;
 	public final Map<String, Analyzer> indexAnalyzerMap;
 	public final Map<String, Analyzer> queryAnalyzerMap;
 
 	public AnalyzerContext(Map<String, AnalyzerDefinition> analyzerMap, Map<String, FieldDefinition> fields)
 			throws ServerException {
-		this.fieldTypes = new HashMap<String, AbstractFieldType>();
+		this.fieldTypes = new HashMap<String, FieldTypeInterface>();
 		this.facetsConfig = new FacetsConfig();
 		if (fields == null || fields.size() == 0) {
 			this.indexAnalyzerMap = Collections.<String, Analyzer>emptyMap();
@@ -52,7 +52,7 @@ public class AnalyzerContext {
 		for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
 			String fieldName = field.getKey();
 			FieldDefinition fieldDef = field.getValue();
-			fieldTypes.put(fieldName, AbstractFieldType.getInstance(fieldDef));
+			FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldDef, facetsConfig);
 			if (fieldDef.template != null) {
 				switch (fieldDef.template) {
 				case FacetField:
@@ -64,14 +64,6 @@ public class AnalyzerContext {
 				case SortedSetMultiDocValuesFacetField:
 					facetsConfig.setMultiValued(fieldName, true);
 					facetsConfig.setHierarchical(fieldName, false);
-					break;
-				case HierarchicalFacetField:
-					facetsConfig.setMultiValued(fieldName, false);
-					facetsConfig.setHierarchical(fieldName, true);
-					break;
-				case HierarchicalMultiFacetField:
-					facetsConfig.setMultiValued(fieldName, true);
-					facetsConfig.setHierarchical(fieldName, true);
 					break;
 				}
 			}

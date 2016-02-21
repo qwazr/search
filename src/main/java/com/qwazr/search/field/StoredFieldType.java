@@ -16,37 +16,31 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 
 import java.util.Collection;
 
-class StoredFieldType implements FieldTypeInterface {
+class StoredFieldType extends FieldTypeAbstract {
 
 	StoredFieldType() {
 		super();
 	}
 
 	@Override
-	final public void fillDocument(final String fieldName, final Object value, Document doc) {
+	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
 		if (value instanceof Collection)
-			addCollection(fieldName, (Collection) value, doc);
+			fillCollection(fieldName, (Collection) value, consumer);
 		else if (value instanceof String)
-			doc.add(new StoredField(fieldName, (String) value));
+			consumer.accept(new StoredField(fieldName, (String) value));
 		else if (value instanceof Integer)
-			doc.add(new StoredField(fieldName, (int) value));
+			consumer.accept(new StoredField(fieldName, (int) value));
 		else if (value instanceof Long)
-			doc.add(new StoredField(fieldName, (long) value));
+			consumer.accept(new StoredField(fieldName, (long) value));
 		else if (value instanceof Float)
-			doc.add(new StoredField(fieldName, (float) value));
+			consumer.accept(new StoredField(fieldName, (float) value));
 		else
-			doc.add(new StoredField(fieldName, value.toString()));
-	}
-
-	private final void addCollection(String fieldName, Collection<Object> values, Document doc) {
-		for (Object value : values)
-			fillDocument(fieldName, value, doc);
+			consumer.accept(new StoredField(fieldName, value.toString()));
 	}
 
 	@Override

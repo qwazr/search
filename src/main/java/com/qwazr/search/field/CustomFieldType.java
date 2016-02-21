@@ -16,13 +16,12 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.search.SortField;
 
 import java.util.Collection;
 
-class CustomFieldType implements FieldTypeInterface {
+class CustomFieldType extends FieldTypeAbstract {
 
 	private final FieldDefinition fieldDef;
 
@@ -31,7 +30,7 @@ class CustomFieldType implements FieldTypeInterface {
 	}
 
 	@Override
-	public void fillDocument(final String fieldName, final Object value, Document doc) {
+	public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
 		final FieldType type = new FieldType();
 		if (fieldDef.stored != null)
 			type.setStored(fieldDef.stored);
@@ -56,17 +55,12 @@ class CustomFieldType implements FieldTypeInterface {
 
 		try {
 			if (value instanceof Collection) {
-				addCollection(fieldName, type, (Collection) value, doc);
+				fillCollection(fieldName, (Collection) value, consumer);
 			} else
-				doc.add(new CustomField(fieldName, type, value));
+				consumer.accept(new CustomField(fieldName, type, value));
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("Error on field: " + fieldName + " - " + e.getMessage(), e);
 		}
-	}
-
-	private final void addCollection(String fieldName, FieldType type, Collection<Object> values, Document doc) {
-		for (Object value : values)
-			fillDocument(fieldName, value, doc);
 	}
 
 	@Override

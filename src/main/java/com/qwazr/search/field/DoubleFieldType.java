@@ -16,7 +16,6 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.search.SortField;
 
@@ -29,18 +28,13 @@ class DoubleFieldType extends StorableFieldType {
 	}
 
 	@Override
-	final public void fillDocument(final String fieldName, final Object value, Document doc) {
+	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
 		if (value instanceof Collection)
-			addCollection(fieldName, (Collection) value, doc);
+			fillCollection(fieldName, (Collection) value, consumer);
 		else if (value instanceof Number)
-			doc.add(new DoubleField(fieldName, ((Number) value).doubleValue(), store));
+			consumer.accept(new DoubleField(fieldName, ((Number) value).doubleValue(), store));
 		else
-			doc.add(new DoubleField(fieldName, Double.parseDouble(value.toString()), store));
-	}
-
-	private final void addCollection(String fieldName, Collection<Object> values, Document doc) {
-		for (Object value : values)
-			fillDocument(fieldName, value, doc);
+			consumer.accept(new DoubleField(fieldName, Double.parseDouble(value.toString()), store));
 	}
 
 	@Override

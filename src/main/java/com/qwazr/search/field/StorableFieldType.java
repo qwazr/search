@@ -17,7 +17,7 @@ package com.qwazr.search.field;
 
 import org.apache.lucene.document.Field;
 
-abstract class StorableFieldType implements FieldTypeInterface {
+abstract class StorableFieldType extends FieldTypeAbstract {
 
 	protected final Field.Store store;
 

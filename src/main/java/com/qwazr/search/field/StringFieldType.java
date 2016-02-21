@@ -16,7 +16,6 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.search.SortField;
 
@@ -29,16 +28,11 @@ class StringFieldType extends StorableFieldType {
 	}
 
 	@Override
-	final public void fillDocument(final String fieldName, final Object value, Document doc) {
+	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
 		if (value instanceof Collection)
-			addCollection(fieldName, (Collection) value, doc);
+			fillCollection(fieldName, (Collection) value, consumer);
 		else
-			doc.add(new StringField(fieldName, value.toString(), store));
-	}
-
-	private final void addCollection(String fieldName, Collection<Object> values, Document doc) {
-		for (Object value : values)
-			fillDocument(fieldName, value, doc);
+			consumer.accept(new StringField(fieldName, value.toString(), store));
 	}
 
 	@Override

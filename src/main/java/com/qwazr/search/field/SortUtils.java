@@ -15,37 +15,14 @@
  */
 package com.qwazr.search.field;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.util.BytesRef;
 
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class FieldUtils {
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-	private static Number checkNumberType(String fieldName, Object value) {
-		if (!(value instanceof Number))
-			throw new IllegalArgumentException(
-					"Wrong value type for the field: " + fieldName + " - " + value.getClass().getSimpleName());
-		return (Number) value;
-	}
-
-	private static BytesRef checkStringBytesRef(Object value) {
-		return new BytesRef(value.toString());
-	}
-
-	public final static Object getValue(IndexableField field) {
-		if (field == null)
-			return null;
-		String s = field.stringValue();
-		if (s != null)
-			return s;
-		Number n = field.numericValue();
-		if (n != null)
-			return n;
-		return null;
-	}
+public class SortUtils {
 
 	final static boolean sortReverse(QueryDefinition.SortEnum sortEnum) {
 		if (sortEnum == null)
@@ -137,5 +114,37 @@ public class FieldUtils {
 		case descending_missing_last:
 			sortField.setMissingValue(Integer.MIN_VALUE);
 		}
+	}
+
+	final static SortField buildSortField(final Map<String, FieldTypeInterface> fields, final String fieldName,
+			final QueryDefinition.SortEnum sortEnum) {
+
+		// First check the by score and by doc_id sorting
+		if (FieldDefinition.SCORE_FIELD.equals(fieldName))
+			return new SortField(null, SortField.Type.SCORE, !sortReverse(sortEnum));
+		if (FieldDefinition.DOC_FIELD.equals(fieldName))
+			return new SortField(null, SortField.Type.DOC, sortReverse(sortEnum));
+
+		// Let's check if the field exists and supports sorting
+		FieldTypeInterface fieldType = fields.get(fieldName);
+		if (fieldType == null)
+			throw new IllegalArgumentException("Unknown sort field: " + fieldName);
+		SortField sortField = fieldType.getSortField(fieldName, sortEnum);
+		if (sortField == null)
+			throw new IllegalArgumentException("The field does not support sorting: " + fieldName);
+		return sortField;
+	}
+
+	final public static Sort buildSort(Map<String, FieldTypeInterface> fields,
+			LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
+		if (sorts.isEmpty())
+			return null;
+		final SortField[] sortFields = new SortField[sorts.size()];
+		int i = 0;
+		for (Map.Entry<String, QueryDefinition.SortEnum> sort : sorts.entrySet())
+			sortFields[i++] = buildSortField(fields, sort.getKey(), sort.getValue());
+		if (sortFields.length == 1)
+			return new Sort(sortFields[0]);
+		return new Sort(sortFields);
 	}
 }

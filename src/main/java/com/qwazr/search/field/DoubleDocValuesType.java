@@ -16,32 +16,26 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.document.DoubleDocValuesField;
 import org.apache.lucene.search.SortField;
 
 import java.util.Collection;
 
-class DoubleDocValuesType implements FieldTypeInterface {
+class DoubleDocValuesType extends FieldTypeAbstract {
 
 	DoubleDocValuesType() {
 		super();
 	}
 
 	@Override
-	final public void fillDocument(final String fieldName, final Object value, Document doc) {
+	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
 		if (value instanceof Collection)
-			addCollection(fieldName, (Collection) value, doc);
+			fillCollection(fieldName, (Collection) value, consumer);
 		else if (value instanceof Number)
-			doc.add(new DoubleDocValuesField(fieldName, ((Number) value).doubleValue()));
+			consumer.accept(new DoubleDocValuesField(fieldName, ((Number) value).doubleValue()));
 		else
-			doc.add(new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString())));
+			consumer.accept(new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString())));
 
-	}
-
-	private final void addCollection(String fieldName, Collection<Object> values, Document doc) {
-		for (Object value : values)
-			fillDocument(fieldName, value, doc);
 	}
 
 	@Override

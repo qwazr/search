@@ -16,31 +16,25 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.search.SortField;
 
 import java.util.Collection;
 
-class LongDocValuesType implements FieldTypeInterface {
+class LongDocValuesType extends FieldTypeAbstract {
 
 	LongDocValuesType() {
 		super();
 	}
 
 	@Override
-	final public void fillDocument(final String fieldName, final Object value, Document doc) {
+	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
 		if (value instanceof Collection)
-			addCollection(fieldName, (Collection) value, doc);
+			fillCollection(fieldName, (Collection) value, consumer);
 		else if (value instanceof Number)
-			doc.add(new NumericDocValuesField(fieldName, ((Number) value).longValue()));
+			consumer.accept(new NumericDocValuesField(fieldName, ((Number) value).longValue()));
 		else
-			doc.add(new NumericDocValuesField(fieldName, Long.parseLong(value.toString())));
-	}
-
-	private final void addCollection(String fieldName, Collection<Object> values, Document doc) {
-		for (Object value : values)
-			fillDocument(fieldName, value, doc);
+			consumer.accept(new NumericDocValuesField(fieldName, Long.parseLong(value.toString())));
 	}
 
 	@Override

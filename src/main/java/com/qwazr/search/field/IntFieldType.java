@@ -16,7 +16,6 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.document.IntField;
 import org.apache.lucene.search.SortField;
 
@@ -29,20 +28,15 @@ class IntFieldType extends StorableFieldType {
 	}
 
 	@Override
-	final public void fillDocument(final String fieldName, final Object value, Document doc) {
+	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
 		if (value instanceof Collection)
-			addCollection(fieldName, (Collection) value, doc);
+			fillCollection(fieldName, (Collection) value, consumer);
 		else if (value instanceof Number)
-			doc.add(new IntField(fieldName, ((Number) value).intValue(), store));
+			consumer.accept(new IntField(fieldName, ((Number) value).intValue(), store));
 		else
-			doc.add(new IntField(fieldName, Integer.parseInt(value.toString()), store));
+			consumer.accept(new IntField(fieldName, Integer.parseInt(value.toString()), store));
 	}
-
-	private final void addCollection(String fieldName, Collection<Object> values, Document doc) {
-		for (Object value : values)
-			doc.add(new IntField(fieldName, (int) value, store));
-	}
-
+	
 	@Override
 	public final SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortField(fieldName, SortField.Type.INT, FieldUtils.sortReverse(sortEnum));

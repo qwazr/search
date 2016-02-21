@@ -64,8 +64,6 @@ public class FieldDefinition {
 		TextField,
 		FacetField,
 		MultiFacetField,
-		HierarchicalFacetField,
-		HierarchicalMultiFacetField,
 		SortedSetDocValuesFacetField,
 		SortedSetMultiDocValuesFacetField
 	}
@@ -105,7 +103,9 @@ public class FieldDefinition {
 
 	public final static String FACET_FIELD = FacetsConfig.DEFAULT_INDEX_FIELD_NAME;
 
-	public final static String SCORE_FIELD = "$score$";
+	public final static String SCORE_FIELD = "$score";
 
-	public static final String[] RESERVED_NAMES = { ID_FIELD, FACET_FIELD, SCORE_FIELD };
+	public final static String DOC_FIELD = "$doc";
+
+	public static final String[] RESERVED_NAMES = { ID_FIELD, FACET_FIELD, SCORE_FIELD, DOC_FIELD };
 }

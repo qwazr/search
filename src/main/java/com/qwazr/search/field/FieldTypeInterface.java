@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.Document;
+import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.search.SortField;
 
-interface FieldTypeInterface {
+public interface FieldTypeInterface {
 
-	void fillDocument(final String fieldName, final Object value, Document doc);
+	void fill(final String fieldName, final Object value, final FieldConsumer consumer);
 
 	SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
 
-	static FieldTypeInterface getInstance(FieldDefinition fieldDefinition) {
+	static FieldTypeInterface getInstance(FieldDefinition fieldDefinition, FacetsConfig facetsConfig) {
 		if (fieldDefinition.template == null)
 			return new CustomFieldType(fieldDefinition);
 		switch (fieldDefinition.template) {

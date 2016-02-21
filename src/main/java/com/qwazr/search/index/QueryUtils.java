@@ -16,8 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerContext;
-import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.field.FieldUtils;
+import com.qwazr.search.field.SortUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
@@ -29,7 +28,6 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,71 +35,7 @@ import java.util.Map;
 
 class QueryUtils {
 
-	final static SortField buildSortField(Map<String, FieldDefinition> fields, String field,
-			QueryDefinition.SortEnum sortEnum) throws ServerException {
 
-		final boolean reverse;
-		final Object missingValue;
-		switch (sortEnum) {
-		case ascending:
-			missingValue = null;
-			reverse = false;
-			break;
-		case ascending_missing_first:
-			missingValue = SortField.STRING_LAST;
-			reverse = false;
-			break;
-		case ascending_missing_last:
-			missingValue = SortField.STRING_FIRST;
-			reverse = false;
-			break;
-		case descending:
-			missingValue = null;
-			reverse = true;
-			break;
-		case descending_missing_first:
-			missingValue = SortField.STRING_LAST;
-			reverse = true;
-			break;
-		case descending_missing_last:
-			missingValue = SortField.STRING_FIRST;
-			reverse = true;
-			break;
-		default:
-			missingValue = null;
-			reverse = false;
-			break;
-		}
-
-		final SortField sortField;
-
-		if ("$score".equals(field)) {
-			sortField = new SortField(null, SortField.Type.SCORE, !reverse);
-		} else if ("$doc".equals(field)) {
-			sortField = new SortField(null, SortField.Type.DOC, reverse);
-		} else {
-			FieldDefinition fieldDefinition = fields.get(field);
-			if (fieldDefinition == null)
-				throw new ServerException(Response.Status.BAD_REQUEST, "Unknown sort field: " + field);
-			sortField = FieldUtils.getSortField(fieldDefinition, field, reverse);
-		}
-		if (missingValue != null)
-			sortField.setMissingValue(missingValue);
-		return sortField;
-	}
-
-	final static Sort buildSort(Map<String, FieldDefinition> fields,
-			LinkedHashMap<String, QueryDefinition.SortEnum> sorts) throws ServerException {
-		if (sorts.isEmpty())
-			return null;
-		final SortField[] sortFields = new SortField[sorts.size()];
-		int i = 0;
-		for (Map.Entry<String, QueryDefinition.SortEnum> sort : sorts.entrySet())
-			sortFields[i++] = buildSortField(fields, sort.getKey(), sort.getValue());
-		if (sortFields.length == 1)
-			return new Sort(sortFields[0]);
-		return new Sort(sortFields);
-	}
 
 	final static String getFinalQueryString(QueryDefinition queryDef) {
 		// Deal wih query string
@@ -159,14 +93,14 @@ class QueryUtils {
 		final TimeTracker timeTracker = new TimeTracker();
 
 		final AnalyzerContext analyzerContext = queryContext.analyzer.getContext();
-		final Sort sort = queryDef.sorts == null ? null : buildSort(analyzerContext.fields, queryDef.sorts);
+		final Sort sort = queryDef.sorts == null ? null : SortUtils.buildSort(analyzerContext.fieldTypes, queryDef.sorts);
 		final FacetsBuilder facetsBuilder;
 
 		final int numHits = queryDef.getEnd();
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
 
 		final QueryCollectors queryCollectors = new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets,
-				queryDef.functions, analyzerContext.fields);
+				queryDef.functions, analyzerContext.fieldTypes);
 
 		indexSearcher.search(query, queryCollectors.finalCollector);
 		final TopDocs topDocs = queryCollectors.getTopDocs();

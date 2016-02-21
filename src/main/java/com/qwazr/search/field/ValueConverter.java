@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.index;
+package com.qwazr.search.field;
 
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.index.*;
@@ -22,23 +22,20 @@ import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
 
-class ValueUtils {
-
-	static abstract class DVConverter<T, V> {
+ public abstract class ValueConverter<T, V> {
 
 		final boolean isNumeric;
 
 		protected final T source;
 
-		private DVConverter(T source) {
+		private ValueConverter(T source) {
 			this.source = source;
 			isNumeric = source instanceof NumericDocValues;
 		}
 
 		abstract V convert(int docId);
-	}
 
-	static class BinaryDVConverter extends DVConverter<BinaryDocValues, String> {
+	static class BinaryDVConverter extends ValueConverter<BinaryDocValues, String> {
 
 		private BinaryDVConverter(BinaryDocValues source) {
 			super(source);
@@ -54,7 +51,7 @@ class ValueUtils {
 
 	}
 
-	static class SortedDVConverter extends DVConverter<SortedDocValues, String> {
+	static class SortedDVConverter extends ValueConverter<SortedDocValues, String> {
 
 		private SortedDVConverter(SortedDocValues source) {
 			super(source);
@@ -69,7 +66,7 @@ class ValueUtils {
 		}
 	}
 
-	private static class DoubleDVConverter extends DVConverter<NumericDocValues, Double> {
+	private static class DoubleDVConverter extends ValueConverter<NumericDocValues, Double> {
 
 		private DoubleDVConverter(NumericDocValues source) {
 			super(source);
@@ -81,7 +78,7 @@ class ValueUtils {
 		}
 	}
 
-	private static class FloatDVConverter extends DVConverter<NumericDocValues, Float> {
+	private static class FloatDVConverter extends ValueConverter<NumericDocValues, Float> {
 
 		private FloatDVConverter(NumericDocValues source) {
 			super(source);
@@ -93,7 +90,7 @@ class ValueUtils {
 		}
 	}
 
-	private static class LongDVConverter extends DVConverter<NumericDocValues, Long> {
+	private static class LongDVConverter extends ValueConverter<NumericDocValues, Long> {
 
 		private LongDVConverter(NumericDocValues source) {
 			super(source);
@@ -105,7 +102,7 @@ class ValueUtils {
 		}
 	}
 
-	private static class IntegerDVConverter extends DVConverter<NumericDocValues, Integer> {
+	private static class IntegerDVConverter extends ValueConverter<NumericDocValues, Integer> {
 
 		private IntegerDVConverter(NumericDocValues source) {
 			super(source);
@@ -117,7 +114,7 @@ class ValueUtils {
 		}
 	}
 
-	private static class DoubleSetDVConverter extends DVConverter<SortedNumericDocValues, double[]> {
+	private static class DoubleSetDVConverter extends ValueConverter<SortedNumericDocValues, double[]> {
 
 		private DoubleSetDVConverter(SortedNumericDocValues source) {
 			super(source);
@@ -133,7 +130,7 @@ class ValueUtils {
 		}
 	}
 
-	private static class FloatSetDVConverter extends DVConverter<SortedNumericDocValues, float[]> {
+	private static class FloatSetDVConverter extends ValueConverter<SortedNumericDocValues, float[]> {
 
 		private FloatSetDVConverter(SortedNumericDocValues source) {
 			super(source);
@@ -149,7 +146,7 @@ class ValueUtils {
 		}
 	}
 
-	private static class LongSetDVConverter extends DVConverter<SortedNumericDocValues, long[]> {
+	private static class LongSetDVConverter extends ValueConverter<SortedNumericDocValues, long[]> {
 
 		private LongSetDVConverter(SortedNumericDocValues source) {
 			super(source);
@@ -165,7 +162,7 @@ class ValueUtils {
 		}
 	}
 
-	private static class IntegerSetDVConverter extends DVConverter<SortedNumericDocValues, int[]> {
+	private static class IntegerSetDVConverter extends ValueConverter<SortedNumericDocValues, int[]> {
 
 		private IntegerSetDVConverter(SortedNumericDocValues source) {
 			super(source);
@@ -181,7 +178,7 @@ class ValueUtils {
 		}
 	}
 
-	static DVConverter newNumericConverter(FieldDefinition fieldDef, NumericDocValues numericDocValues)
+	static ValueConverter newNumericConverter(FieldDefinition fieldDef, NumericDocValues numericDocValues)
 			throws IOException {
 		if (fieldDef.numeric_type == null) {
 			if (fieldDef.template == null)
@@ -212,7 +209,7 @@ class ValueUtils {
 		return null;
 	}
 
-	static DVConverter newSortedNumericConverter(FieldDefinition fieldDef,
+	static ValueConverter newSortedNumericConverter(FieldDefinition fieldDef,
 			SortedNumericDocValues sortedNumericDocValues) throws IOException {
 		if (fieldDef.numeric_type == null) {
 			if (fieldDef.template == null)
@@ -243,7 +240,7 @@ class ValueUtils {
 		return null;
 	}
 
-	static DVConverter newConverter(FieldDefinition fieldDef, LeafReader dvReader, FieldInfo fieldInfo)
+	static ValueConverter newConverter(FieldDefinition fieldDef, LeafReader dvReader, FieldInfo fieldInfo)
 			throws IOException {
 		if (fieldInfo == null)
 			return null;

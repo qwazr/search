@@ -17,30 +17,24 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.BinaryDocValuesField;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
 import java.util.Collection;
 
-class BinaryDocValuesType implements FieldTypeInterface {
+class BinaryDocValuesType extends FieldTypeAbstract {
 
 	BinaryDocValuesType() {
 		super();
 	}
 
 	@Override
-	final public void fillDocument(final String fieldName, final Object value, Document doc) {
+	final public void fill(final String fieldName, final Object value, FieldConsumer consumer) {
 		if (value instanceof Collection)
-			addCollection(fieldName, (Collection) value, doc);
+			fillCollection(fieldName, (Collection) value, consumer);
 		else
-			doc.add(new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
+			consumer.accept(new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
 
-	}
-
-	private final void addCollection(String fieldName, Collection<Object> values, Document doc) {
-		for (Object value : values)
-			fillDocument(fieldName, value, doc);
 	}
 
 	@Override
