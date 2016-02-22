@@ -40,10 +40,10 @@ public class SpanPositionsQuery extends AbstractQuery {
 		distance = null;
 	}
 
-	SpanPositionsQuery(Float boost, String field, Integer end, Boolean increment_end, String value, Boolean log_boost) {
+	public SpanPositionsQuery(Float boost, String field, Integer distance) {
 		super(boost);
 		this.field = field;
-		this.distance = end;
+		this.distance = distance;
 	}
 
 	@Override
