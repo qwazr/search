@@ -28,6 +28,10 @@ public class ConstValueSource extends AbstractValueSource {
 		constant = null;
 	}
 
+	public ConstValueSource(Float constant) {
+		this.constant = constant;
+	}
+
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext) {
 		Objects.requireNonNull(constant, "constant value is missing");

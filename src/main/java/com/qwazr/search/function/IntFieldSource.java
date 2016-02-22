@@ -20,6 +20,14 @@ import org.apache.lucene.queries.function.ValueSource;
 
 public class IntFieldSource extends AbstractFieldSource {
 
+	public IntFieldSource() {
+		super(null);
+	}
+
+	public IntFieldSource(String field) {
+		super(field);
+	}
+
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext) {
 		check();

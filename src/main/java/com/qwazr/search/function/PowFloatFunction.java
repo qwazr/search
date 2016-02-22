@@ -33,12 +33,17 @@ public class PowFloatFunction extends AbstractValueSource {
 		b = null;
 	}
 
+	public PowFloatFunction(AbstractValueSource a, AbstractValueSource b) {
+		this.a = null;
+		this.b = null;
+	}
+
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext)
-		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+					throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(a, "a value source is missing");
 		Objects.requireNonNull(b, "b value source is missing");
 		return new org.apache.lucene.queries.function.valuesource.PowFloatFunction(a.getValueSource(queryContext),
-			b.getValueSource(queryContext));
+						b.getValueSource(queryContext));
 	}
 }

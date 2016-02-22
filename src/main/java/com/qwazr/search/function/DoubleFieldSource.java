@@ -20,6 +20,14 @@ import org.apache.lucene.queries.function.ValueSource;
 
 public class DoubleFieldSource extends AbstractFieldSource {
 
+	public DoubleFieldSource() {
+		super(null);
+	}
+
+	public DoubleFieldSource(String field) {
+		super(field);
+	}
+
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext) {
 		check();

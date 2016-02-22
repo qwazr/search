@@ -17,12 +17,12 @@ package com.qwazr.search.function;
 
 import java.util.Objects;
 
-public abstract class AbstractFieldSource extends AbstractValueSource {
+abstract class AbstractFieldSource extends AbstractValueSource {
 
 	public final String field;
 
-	protected AbstractFieldSource() {
-		field = null;
+	protected AbstractFieldSource(String field) {
+		this.field = field;
 	}
 
 	final protected void check() {

@@ -21,6 +21,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,11 +33,19 @@ public class DefFunction extends AbstractValueSource {
 		sources = null;
 	}
 
+	public DefFunction(AbstractValueSource... sources) {
+		this.sources = sources == null ? null : Arrays.asList(sources);
+	}
+
+	public DefFunction(List<AbstractValueSource> sources) {
+		this.sources = sources;
+	}
+
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext)
-		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+					throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(sources, "The sources list is missing (sources)");
 		return new org.apache.lucene.queries.function.valuesource.DefFunction(
-			AbstractValueSource.getValueSourceList(queryContext, sources));
+						AbstractValueSource.getValueSourceList(queryContext, sources));
 	}
 }

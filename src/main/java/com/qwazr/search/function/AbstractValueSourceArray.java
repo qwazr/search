@@ -15,22 +15,18 @@
  */
 package com.qwazr.search.function;
 
-import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.queries.function.ValueSource;
+import java.util.Collection;
 
-public class LongFieldSource extends AbstractFieldSource {
+abstract class AbstractValueSourceArray extends AbstractValueSource {
 
-	public LongFieldSource() {
-		super(null);
+	public final AbstractValueSource[] sources;
+
+	protected AbstractValueSourceArray(AbstractValueSource... sources) {
+		this.sources = sources;
 	}
 
-	public LongFieldSource(String field) {
-		super(field);
+	protected AbstractValueSourceArray(Collection<AbstractValueSource> sources) {
+		this.sources = sources == null ? null : sources.toArray(new AbstractValueSource[sources.size()]);
 	}
 
-	@Override
-	public ValueSource getValueSource(QueryContext queryContext) {
-		check();
-		return new org.apache.lucene.queries.function.valuesource.LongFieldSource(field);
-	}
 }

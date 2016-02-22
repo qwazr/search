@@ -20,6 +20,14 @@ import org.apache.lucene.queries.function.ValueSource;
 
 public class SortedSetFieldSource extends AbstractFieldSource {
 
+	public SortedSetFieldSource() {
+		super(null);
+	}
+
+	public SortedSetFieldSource(String field) {
+		super(field);
+	}
+
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext) {
 		check();
