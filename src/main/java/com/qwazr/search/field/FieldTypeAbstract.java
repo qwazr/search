@@ -16,7 +16,10 @@
 
 package com.qwazr.search.field;
 
-import org.apache.lucene.index.*;
+import jdk.nashorn.api.scripting.JSObject;
+import org.apache.lucene.index.FieldInfo;
+import org.apache.lucene.index.FieldInfos;
+import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
@@ -34,6 +37,12 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 
 	final protected void fillCollection(Collection<Object> values, FieldConsumer consumer) {
 		for (Object value : values)
+			if (value != null)
+				fill(value, consumer);
+	}
+
+	final protected void fillJSObject(JSObject values, FieldConsumer consumer) {
+		for (Object value : values.values())
 			if (value != null)
 				fill(value, consumer);
 	}

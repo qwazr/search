@@ -16,6 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
+import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.SortedNumericDocValues;
@@ -35,6 +36,8 @@ class SortedLongDocValuesType extends FieldTypeAbstract {
 	final public void fill(final Object value, FieldConsumer consumer) {
 		if (value instanceof Collection)
 			fillCollection((Collection) value, consumer);
+		else if (value instanceof JSObject)
+			fillJSObject((JSObject) value, consumer);
 		else if (value instanceof Number)
 			consumer.accept(new SortedNumericDocValuesField(fieldName, ((Number) value).longValue()));
 		else

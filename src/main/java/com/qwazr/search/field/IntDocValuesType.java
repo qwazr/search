@@ -16,6 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
+import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.NumericDocValues;
@@ -34,6 +35,8 @@ class IntDocValuesType extends FieldTypeAbstract {
 	final public void fill(final Object value, final FieldConsumer consumer) {
 		if (value instanceof Collection)
 			fillCollection((Collection) value, consumer);
+		else if (value instanceof JSObject)
+			fillJSObject((JSObject) value, consumer);
 		else if (value instanceof Number)
 			consumer.accept(new NumericDocValuesField(fieldName, ((Number) value).intValue()));
 		else

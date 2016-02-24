@@ -16,6 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
+import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.search.SortField;
 
@@ -31,6 +32,8 @@ class TextFieldType extends StorableFieldType {
 	final public void fill(final Object value, final FieldConsumer consumer) {
 		if (value instanceof Collection)
 			fillCollection((Collection) value, consumer);
+		else if (value instanceof JSObject)
+			fillJSObject((JSObject) value, consumer);
 		else
 			consumer.accept(new TextField(fieldName, value.toString(), store));
 	}

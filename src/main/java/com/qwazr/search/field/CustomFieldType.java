@@ -16,6 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.QueryDefinition;
+import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.search.SortField;
 
@@ -54,8 +55,11 @@ class CustomFieldType extends FieldTypeAbstract {
 		try {
 			if (value instanceof Collection) {
 				fillCollection((Collection) value, consumer);
-			} else
+			} else if (value instanceof JSObject) {
+				fillJSObject((JSObject) value, consumer);
+			} else {
 				consumer.accept(new CustomField(fieldName, type, value));
+			}
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("Error on field: " + fieldName + " - " + e.getMessage(), e);
 		}
