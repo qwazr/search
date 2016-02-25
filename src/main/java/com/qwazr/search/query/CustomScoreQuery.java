@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ClassLoaderUtils;
@@ -33,7 +35,9 @@ public class CustomScoreQuery extends AbstractQuery {
 	public final AbstractQuery subQuery;
 	public final FunctionQuery scoringQuery;
 	public final FunctionQuery[] scoringQueries;
+	@JsonProperty("customScoreProvider")
 	public final String customScoreProviderClassName;
+	@JsonIgnore
 	public final Class<? extends CustomScoreProvider> customScoreProviderClass;
 
 	public CustomScoreQuery() {
