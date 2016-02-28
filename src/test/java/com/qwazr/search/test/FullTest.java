@@ -53,7 +53,7 @@ public class FullTest {
 	public static final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
 	public static final QueryDefinition QUERY_SORTFIELD = getQuery("query_sortfield.json");
 	public static final QueryDefinition QUERY_SORTFIELDS = getQuery("query_sortfields.json");
-	public static final QueryDefinition QUERY_CHECK_DOCVALUES = getQuery("query_check_docvalues.json");
+	public static final QueryDefinition QUERY_CHECK_RETURNED = getQuery("query_check_returned.json");
 	public static final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
 	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
@@ -295,10 +295,12 @@ public class FullTest {
 		}
 	}
 
-	private void checkFacetSize(ResultDefinition result, String dimName, int size) {
+	private Map<String, Number> checkFacetSize(ResultDefinition result, String dimName, int size) {
 		Assert.assertTrue(result.facets.containsKey(dimName));
-		Assert.assertNotNull(result.facets.get(dimName));
+		final Map<String, Number> facetCounts = result.facets.get(dimName);
+		Assert.assertNotNull(facetCounts);
 		Assert.assertEquals(size, result.facets.get(dimName).size());
+		return facetCounts;
 	}
 
 	private void checkEmptyFacets(ResultDefinition result) {
@@ -369,7 +371,7 @@ public class FullTest {
 		IndexServiceInterface client = getClient();
 
 		// Check that the initial stock is 0 for all documents
-		ResultDefinition result = checkQueryIndex(client, QUERY_CHECK_DOCVALUES, 5);
+		ResultDefinition result = checkQueryIndex(client, QUERY_CHECK_RETURNED, 5);
 		Assert.assertNotNull(result.documents);
 		for (ResultDocument document : result.documents) {
 			Integer stock = (Integer) document.fields.get("stock");
@@ -390,7 +392,7 @@ public class FullTest {
 		checkAllSizes(client, 5);
 
 		// Check the result
-		result = checkQueryIndex(client, QUERY_CHECK_DOCVALUES, 5);
+		result = checkQueryIndex(client, QUERY_CHECK_RETURNED, 5);
 		Assert.assertNotNull(result.documents);
 		for (ResultDocument document : result.documents) {
 			// Check that the price is still here
@@ -404,6 +406,20 @@ public class FullTest {
 			Assert.assertNotEquals(0, (double) stock);
 		}
 	}
+
+	/*
+	@Test
+	public void test360ReturnIndexedValue() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		// Check that the initial stock is 0 for all documents
+		ResultDefinition result = checkQueryIndex(client, QUERY_CHECK_RETURNED, 5);
+		Assert.assertNotNull(result.documents);
+		for (ResultDocument document : result.documents) {
+			String single_date = (String) document.fields.get("single_date");
+			Assert.assertNotNull(single_date);
+		}
+	}
+	*/
 
 	private void checkFacetRowsQuery(ResultDefinition result) {
 		Assert.assertNotNull(result.documents);
@@ -419,6 +435,9 @@ public class FullTest {
 		Assert.assertNotNull(result.facets);
 		checkFacetSize(result, "category", 5);
 		checkFacetSize(result, "format", 2);
+		Map<String, Number> facetCounts = checkFacetSize(result, "FacetQueries", 2);
+		Assert.assertEquals(5, facetCounts.get("AllDocs"));
+		Assert.assertEquals(2, facetCounts.get("2016,January"));
 	}
 
 	@Test

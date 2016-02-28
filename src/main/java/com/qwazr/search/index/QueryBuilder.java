@@ -30,7 +30,7 @@ public class QueryBuilder {
 	Boolean escape_query = null;
 	char[] escaped_chars = null;
 
-	LinkedHashMap<String, QueryDefinition.Facet> facets = null;
+	LinkedHashMap<String, FacetDefinition> facets = null;
 
 	LinkedHashMap<String, QueryDefinition.SortEnum> sorts = null;
 	ArrayList<QueryDefinition.Function> functions = null;
@@ -140,23 +140,23 @@ public class QueryBuilder {
 		return this;
 	}
 
-	public Map<String, QueryDefinition.Facet> getFacets() {
+	public Map<String, FacetDefinition> getFacets() {
 		return facets;
 	}
 
-	public QueryBuilder setFacets(LinkedHashMap<String, QueryDefinition.Facet> facets) {
+	public QueryBuilder setFacets(LinkedHashMap<String, FacetDefinition> facets) {
 		this.facets = facets;
 		return this;
 	}
 
-	public QueryBuilder addFacet(String facetName, QueryDefinition.Facet facetDefinition) {
+	public QueryBuilder addFacet(String facetName, FacetDefinition facetDefinition) {
 		if (facets == null)
-			facets = new LinkedHashMap<String, QueryDefinition.Facet>();
+			facets = new LinkedHashMap<String, FacetDefinition>();
 		facets.put(facetName, facetDefinition);
 		return this;
 	}
 
-	public QueryBuilder addFacet(Enum<?> facetName, QueryDefinition.Facet facetDefinition) {
+	public QueryBuilder addFacet(Enum<?> facetName, FacetDefinition facetDefinition) {
 		if (facetName == null)
 			return this;
 		return addFacet(facetName.name(), facetDefinition);

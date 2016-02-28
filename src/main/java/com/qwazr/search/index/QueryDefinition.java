@@ -50,24 +50,12 @@ public class QueryDefinition extends BaseQueryDefinition {
 	}
 
 	final public LinkedHashSet<String> returned_fields;
-	final public LinkedHashMap<String, Facet> facets;
+	
+	final public LinkedHashMap<String, FacetDefinition> facets;
 
 	final public LinkedHashMap<String, Integer> postings_highlighter;
 
 	final public AbstractQuery query;
-
-	public static class Facet {
-
-		final public Integer top;
-
-		public Facet(Integer top) {
-			this.top = top;
-		}
-
-		public Facet() {
-			this(null);
-		}
-	}
 
 	public static class Function {
 

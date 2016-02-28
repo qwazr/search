@@ -11,6 +11,21 @@
   "rows": 3,
   "facets": {
     "category": {},
-    "format": {}
+    "format": {},
+    "FacetQueries": {
+      "queries": {
+        "AllDocs": {
+          "query": "MatchAllDocsQuery"
+        },
+        "2016,January": {
+          "query": "TermRangeQuery",
+          "field": "single_date",
+          "lower_term": "201601",
+          "upper_term": "201602",
+          "include_lower": true,
+          "include_upper": false
+        }
+      }
+    }
   }
 }

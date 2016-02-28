@@ -15,19 +15,17 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.facet.FacetResult;
-import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.LabelAndValue;
-import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.SlowCompositeReaderWrapper;
-import org.apache.lucene.index.SortedSetDocValues;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -36,60 +34,62 @@ import java.util.Map;
 
 class FacetsBuilder {
 
-	private final SortedSetDocValuesReaderState state;
-	private final LinkedHashMap<String, QueryDefinition.Facet> facetsDef;
-	private final Facets facets;
+	private final QueryContext queryContext;
+	private final Query searchQuery;
+	private final SortedSetDocValuesFacetCounts counts;
+	private final LinkedHashMap<String, FacetDefinition> facetsDef;
 
 	final LinkedHashMap<String, Map<String, Number>> results;
 
-	FacetsBuilder(IndexReader indexReader, LinkedHashMap<String, QueryDefinition.Facet> facetsDef,
-			FacetsCollector facetsCollector, TimeTracker timeTracker) throws IOException {
+	FacetsBuilder(QueryContext queryContext, LinkedHashMap<String, FacetDefinition> facetsDef, Query searchQuery,
+			FacetsCollector facetsCollector, TimeTracker timeTracker)
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 
+		this.queryContext = queryContext;
+		this.searchQuery = searchQuery;
 		this.facetsDef = facetsDef;
 		this.results = new LinkedHashMap();
-		this.state = getState(indexReader);
+		this.counts = queryContext.state == null ?
+				null :
+				new SortedSetDocValuesFacetCounts(queryContext.state, facetsCollector);
 
-		if (state != null) {
-			facets = new SortedSetDocValuesFacetCounts(state, facetsCollector);
-			buildFacets();
-		} else {
-			facets = null;
-			facetsDef.forEach((facetName, facet) -> results.put(facetName, Collections.emptyMap()));
+		for (Map.Entry<String, FacetDefinition> entry : facetsDef.entrySet()) {
+			final String dim = entry.getKey();
+			final FacetDefinition facet = entry.getValue();
+			final Map<String, Number> result;
+			if (facet.queries == null || facet.queries.isEmpty())
+				result = buildFacetState(dim, facet);
+			else
+				result = buildFacetQueries(facet);
+			if (result != null)
+				results.put(dim, result);
 		}
-
 		if (timeTracker != null)
 			timeTracker.next("facet_count");
 	}
 
-	private static SortedSetDocValuesReaderState getState(IndexReader indexReader) throws IOException {
-		LeafReader topReader = SlowCompositeReaderWrapper.wrap(indexReader);
-		if (topReader == null)
-			return null;
-		SortedSetDocValues dv = topReader.getSortedSetDocValues(FieldDefinition.FACET_FIELD);
-		if (dv == null)
-			return null;
-		return new DefaultSortedSetDocValuesReaderState(indexReader, FieldDefinition.FACET_FIELD);
-	}
-
-	private void buildFacets() throws IOException {
-		for (Map.Entry<String, QueryDefinition.Facet> entry : facetsDef.entrySet()) {
-			String dim = entry.getKey();
-			if (state.getOrdRange(dim) == null)
-				continue;
-			Map<String, Number> facetMap = buildFacet(dim, entry.getValue());
-			if (facetMap != null)
-				results.put(dim, facetMap);
-		}
-	}
-
-	private Map<String, Number> buildFacet(String dim, QueryDefinition.Facet facet) throws IOException {
+	private Map<String, Number> buildFacetState(String dim, FacetDefinition facet) throws IOException {
+		if (queryContext.state == null || queryContext.state.getOrdRange(dim) == null)
+			return Collections.emptyMap();
 		int top = facet.top == null ? 10 : facet.top;
-		LinkedHashMap<String, Number> facetMap = new LinkedHashMap<String, Number>();
-		FacetResult facetResult = facets.getTopChildren(top, dim);
+		final LinkedHashMap<String, Number> facetMap = new LinkedHashMap<>();
+		final FacetResult facetResult = counts.getTopChildren(top, dim);
 		if (facetResult == null || facetResult.labelValues == null)
-			return null;
+			return Collections.emptyMap();
 		for (LabelAndValue lv : facetResult.labelValues)
 			facetMap.put(lv.label, lv.value);
+		return facetMap;
+	}
+
+	private Map<String, Number> buildFacetQueries(FacetDefinition facet)
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+		final LinkedHashMap<String, Number> facetMap = new LinkedHashMap<String, Number>();
+		for (Map.Entry<String, AbstractQuery> entry : facet.queries.entrySet()) {
+			BooleanQuery.Builder builder = new BooleanQuery.Builder();
+			builder.add(searchQuery, BooleanClause.Occur.FILTER);
+			builder.add(entry.getValue().getBoostedQuery(queryContext), BooleanClause.Occur.FILTER);
+			facetMap.put(entry.getKey(), queryContext.indexSearcher.count(builder.build()));
+		}
 		return facetMap;
 	}
 }

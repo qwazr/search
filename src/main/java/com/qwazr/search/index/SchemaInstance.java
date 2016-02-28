@@ -24,6 +24,7 @@ import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
@@ -112,7 +113,8 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 				ReflectiveOperationException {
 			if (indexSearcher == null)
 				return null;
-			final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, queryDef);
+			SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader());
+			final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, state, queryDef);
 			return QueryUtils.search(queryContext);
 		}
 	}

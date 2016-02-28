@@ -21,7 +21,6 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -86,14 +85,11 @@ class QueryUtils {
 
 		Query query = getLuceneQuery(queryContext);
 
-		final IndexSearcher indexSearcher = queryContext.indexSearcher;
-		final IndexReader indexReader = indexSearcher.getIndexReader();
 		final TimeTracker timeTracker = new TimeTracker();
 
 		final AnalyzerContext analyzerContext = queryContext.analyzer.getContext();
 		final Sort sort =
 				queryDef.sorts == null ? null : SortUtils.buildSort(analyzerContext.fieldTypes, queryDef.sorts);
-		final FacetsBuilder facetsBuilder;
 
 		final int numHits = queryDef.getEnd();
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
@@ -101,15 +97,15 @@ class QueryUtils {
 		final QueryCollectors queryCollectors = new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets,
 				queryDef.functions, analyzerContext.fieldTypes);
 
-		indexSearcher.search(query, queryCollectors.finalCollector);
+		queryContext.indexSearcher.search(query, queryCollectors.finalCollector);
 		final TopDocs topDocs = queryCollectors.getTopDocs();
 		final Integer totalHits = queryCollectors.getTotalHits();
 
 		timeTracker.next("search_query");
 
-		facetsBuilder = queryCollectors.facetsCollector == null ?
+		final FacetsBuilder facetsBuilder = queryCollectors.facetsCollector == null ?
 				null :
-				new FacetsBuilder(indexReader, queryDef.facets, queryCollectors.facetsCollector, timeTracker);
+				new FacetsBuilder(queryContext, queryDef.facets, query, queryCollectors.facetsCollector, timeTracker);
 
 		Map<String, String[]> postingsHighlightersMap = null;
 		if (queryDef.postings_highlighter != null && topDocs != null) {
@@ -117,7 +113,7 @@ class QueryUtils {
 			for (Map.Entry<String, Integer> entry : queryDef.postings_highlighter.entrySet()) {
 				String field = entry.getKey();
 				PostingsHighlighter highlighter = new PostingsHighlighter(entry.getValue());
-				String highlights[] = highlighter.highlight(field, query, indexSearcher, topDocs);
+				String highlights[] = highlighter.highlight(field, query, queryContext.indexSearcher, topDocs);
 				if (highlights != null) {
 					postingsHighlightersMap.put(field, highlights);
 				}
@@ -125,8 +121,8 @@ class QueryUtils {
 			timeTracker.next("postings_highlighters");
 		}
 
-		return new ResultDefinition(analyzerContext.fieldTypes, timeTracker, indexSearcher, totalHits, topDocs,
-				queryDef, facetsBuilder, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
+		return new ResultDefinition(analyzerContext.fieldTypes, timeTracker, queryContext.indexSearcher, totalHits,
+				topDocs, queryDef, facetsBuilder, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
 	}
 
 }

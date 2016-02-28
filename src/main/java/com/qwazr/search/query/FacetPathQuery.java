@@ -50,7 +50,7 @@ public class FacetPathQuery extends AbstractQuery {
 	protected Query getQuery(QueryContext queryContext) throws IOException {
 		Objects.requireNonNull(dimension, "The dimension is missing");
 		final String indexFieldName = queryContext.analyzer.getContext().facetsConfig
-						.getDimConfig(dimension).indexFieldName;
+				.getDimConfig(dimension).indexFieldName;
 		final Term term = new Term(indexFieldName, FacetsConfig.pathToString(dimension, path));
 		return new org.apache.lucene.search.TermQuery(term);
 	}

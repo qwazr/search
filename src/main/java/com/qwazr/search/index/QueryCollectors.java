@@ -39,7 +39,7 @@ class QueryCollectors {
 
 	final Collector finalCollector;
 
-	QueryCollectors(boolean bNeedScore, Sort sort, int numHits, final LinkedHashMap<String, QueryDefinition.Facet> facets,
+	QueryCollectors(boolean bNeedScore, Sort sort, int numHits, final LinkedHashMap<String, FacetDefinition> facets,
 			Collection<QueryDefinition.Function> functions, final Map<String, FieldTypeInterface> fields)
 			throws ServerException, IOException {
 		collectors = new ArrayList<Collector>();
@@ -66,10 +66,13 @@ class QueryCollectors {
 		}
 	}
 
-	private final FacetsCollector buildFacetsCollector(LinkedHashMap<String, QueryDefinition.Facet> facets) {
+	private final FacetsCollector buildFacetsCollector(LinkedHashMap<String, FacetDefinition> facets) {
 		if (facets == null || facets.isEmpty())
 			return null;
-		return add(new FacetsCollector());
+		for (FacetDefinition facet : facets.values())
+			if (facet.queries == null || facet.queries.isEmpty())
+				return add(new FacetsCollector());
+		return null;
 	}
 
 	private final Collection<FunctionCollector> buildFunctionsCollectors(Map<String, FieldTypeInterface> fields,

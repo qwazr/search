@@ -25,8 +25,9 @@ import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
+import org.apache.lucene.index.*;
 import org.apache.lucene.search.similarities.Similarity;
 
 import javax.ws.rs.core.Response;
@@ -73,6 +74,16 @@ public class IndexUtils {
 			throws InterruptedException, ReflectiveOperationException, IOException {
 		return (Similarity) ClassLoaderUtils
 				.findClass(ClassLoaderManager.classLoader, similarity, similarityClassPrefixes).newInstance();
+	}
+
+	final static SortedSetDocValuesReaderState getNewFacetsState(IndexReader indexReader) throws IOException {
+		LeafReader topReader = SlowCompositeReaderWrapper.wrap(indexReader);
+		if (topReader == null)
+			return null;
+		SortedSetDocValues dv = topReader.getSortedSetDocValues(FieldDefinition.FACET_FIELD);
+		if (dv == null)
+			return null;
+		return new DefaultSortedSetDocValuesReaderState(indexReader, FieldDefinition.FACET_FIELD);
 	}
 
 }

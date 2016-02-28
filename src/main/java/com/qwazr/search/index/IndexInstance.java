@@ -24,7 +24,9 @@ import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -70,6 +72,8 @@ final public class IndexInstance implements Closeable {
 	private volatile LinkedHashMap<String, FieldDefinition> fieldMap;
 	private volatile LinkedHashMap<String, AnalyzerDefinition> analyzerMap;
 
+	private volatile Pair<IndexReader, SortedSetDocValuesReaderState> facetsReaderStateCache;
+
 	private IndexInstance(SchemaInstance schema, Directory dataDirectory, IndexSettingsDefinition settings,
 			LinkedHashMap<String, AnalyzerDefinition> analyzerMap, LinkedHashMap<String, FieldDefinition> fieldMap,
 			FileSet fileSet, IndexWriter indexWriter, SearcherManager searcherManager,
@@ -86,6 +90,7 @@ final public class IndexInstance implements Closeable {
 		this.snapshotDeletionPolicy = (SnapshotDeletionPolicy) indexWriterConfig.getIndexDeletionPolicy();
 		this.settings = settings;
 		this.searcherManager = searcherManager;
+		this.facetsReaderStateCache = null;
 	}
 
 	private static class FileSet {
@@ -460,7 +465,7 @@ final public class IndexInstance implements Closeable {
 			ReflectiveOperationException {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			final QueryContext queryContext = new QueryContext(null, queryAnalyzer, queryDefinition);
+			final QueryContext queryContext = new QueryContext(null, queryAnalyzer, null, queryDefinition);
 			final Query query = QueryUtils.getLuceneQuery(queryContext);
 			int docs = indexWriter.numDocs();
 			indexWriter.deleteDocuments(query);
@@ -473,6 +478,15 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
+	private synchronized SortedSetDocValuesReaderState getFacetsState(IndexReader indexReader) throws IOException {
+		Pair<IndexReader, SortedSetDocValuesReaderState> current = facetsReaderStateCache;
+		if (current != null && current.getLeft() == indexReader)
+			return current.getRight();
+		SortedSetDocValuesReaderState newState = IndexUtils.getNewFacetsState(indexReader);
+		facetsReaderStateCache = Pair.of(indexReader, newState);
+		return newState;
+	}
+
 	final ResultDefinition search(QueryDefinition queryDefinition)
 			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
 			ReflectiveOperationException {
@@ -481,7 +495,9 @@ final public class IndexInstance implements Closeable {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
 				indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
-				final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, queryDefinition);
+				final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
+				final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, facetsState,
+						queryDefinition);
 				return QueryUtils.search(queryContext);
 			} finally {
 				searcherManager.release(indexSearcher);

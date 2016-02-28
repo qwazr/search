@@ -9,7 +9,7 @@
     "template": "FacetField"
   },
   "single_date": {
-    "template": "MultiFacetField"
+    "template": "StringField"
   },
   "price": {
     "template": "DoubleDocValuesField"
