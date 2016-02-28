@@ -21,7 +21,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.search.ScoreDoc;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -32,19 +31,18 @@ public class ResultDocument {
 	final private int doc;
 	final private int shard_index;
 	final public Map<String, Object> fields;
-	final public Map<String, String> postings_highlights;
+	final public Map<String, String> highlights;
 
 	public ResultDocument() {
 		score = null;
 		percent_score = null;
 		fields = null;
-		postings_highlights = null;
+		highlights = null;
 		doc = -1;
 		shard_index = -1;
 	}
 
-	ResultDocument(int pos, ScoreDoc scoreDoc, Float max_score, Document document,
-			Map<String, Integer> postings_highlighter, Map<String, String[]> postingsHighlightsMap,
+	ResultDocument(int pos, ScoreDoc scoreDoc, Float max_score, Document document, Map<String, String> highlights,
 			ReturnedFields docValuesReturnedFields) throws IOException {
 		this.score = scoreDoc.score;
 		if (max_score != null && max_score > 0)
@@ -57,20 +55,7 @@ public class ResultDocument {
 		fields = ResultUtils.buildFields(document);
 		docValuesReturnedFields.toReturnedFields(scoreDoc.doc, fields);
 
-		// Build postings hightlights
-		if (postings_highlighter != null && postingsHighlightsMap != null) {
-			postings_highlights = new LinkedHashMap<String, String>();
-			for (String field : postings_highlighter.keySet()) {
-				String[] highlights = postingsHighlightsMap.get(field);
-				if (highlights == null)
-					continue;
-				String highlight = highlights[pos];
-				if (highlight == null)
-					continue;
-				postings_highlights.put(field, highlight);
-			}
-		} else
-			postings_highlights = null;
+		this.highlights = highlights;
 	}
 
 	public Float getScore() {
@@ -95,8 +80,8 @@ public class ResultDocument {
 		return fields;
 	}
 
-	public Map<String, String> getPostings_highlights() {
-		return postings_highlights;
+	public Map<String, String> getHighlights() {
+		return highlights;
 	}
 
 }

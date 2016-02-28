@@ -18,13 +18,11 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.qwazr.search.field.FieldTypeInterface;
-import com.qwazr.search.field.ValueConverter;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.SlowCompositeReaderWrapper;
-import org.apache.lucene.index.Terms;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -32,6 +30,8 @@ import org.apache.lucene.search.TopDocs;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 
 @JsonInclude(Include.NON_NULL)
 public class ResultDefinition {
@@ -78,7 +78,7 @@ public class ResultDefinition {
 
 	ResultDefinition(Map<String, FieldTypeInterface> fieldMap, TimeTracker timeTracker, IndexSearcher searcher,
 			Integer totalHits, TopDocs topDocs, QueryDefinition queryDef, FacetsBuilder facetsBuilder,
-			Map<String, String[]> postingsHighlightsMap, Collection<FunctionCollector> functionsCollector, Query query)
+			Map<String, HighlighterImpl> highlighters, Collection<FunctionCollector> functionsCollector, Query query)
 			throws IOException {
 		this.query = getQuery(queryDef.query_debug, query);
 		this.total_hits = totalHits == null ? null : (long) totalHits;
@@ -89,21 +89,71 @@ public class ResultDefinition {
 		ScoreDoc[] docs = topDocs != null ? topDocs.scoreDocs : null;
 
 		LeafReader leafReader = SlowCompositeReaderWrapper.wrap(searcher.getIndexReader());
+
 		if (docs != null) {
 
+			List<ScoreDoc> scoreDocs = new ArrayList<>();
+			while (pos < total_hits && pos < end) {
+				scoreDocs.add(docs[pos]);
+				pos++;
+			}
+
+			int[] docIDs = new int[scoreDocs.size()];
+			int i = 0;
+			for (ScoreDoc scoreDoc : scoreDocs)
+				docIDs[i++] = scoreDoc.doc;
+
+			// Highlights
+			final Map<String, String>[] highlightsArray;
+			if (highlighters != null) {
+
+				//Compute highlights
+				highlightsArray = new Map[docIDs.length];
+				final LinkedHashMap<String, String[]> highlightsByName = new LinkedHashMap<>();
+				highlighters.forEach(new BiConsumer<String, HighlighterImpl>() {
+					@Override
+					public void accept(String name, HighlighterImpl highlighter) {
+						try {
+							highlightsByName.put(name, highlighter.highlights(query, searcher, docIDs));
+						} catch (IOException e) {
+							throw new RuntimeException("Highlighter failure: " + name, e);
+						}
+					}
+				});
+
+				// Copy results
+				AtomicInteger ai = new AtomicInteger(0);
+				for (ScoreDoc scoreDoc : scoreDocs) {
+					final LinkedHashMap<String, String> highlightsMap = new LinkedHashMap<>();
+					highlightsByName.forEach(new BiConsumer<String, String[]>() {
+						@Override
+						public void accept(String name, String[] highlights) {
+							highlightsMap.put(name, highlights[ai.get()]);
+						}
+					});
+					highlightsArray[ai.getAndIncrement()] = highlightsMap;
+				}
+				if (timeTracker != null)
+					timeTracker.next("highlighting");
+			} else
+				highlightsArray = null;
+
+			// Returned doc values
 			ReturnedFields.DocValuesReturnedFields docValuesReturnedFields = new ReturnedFields.DocValuesReturnedFields(
 					fieldMap, leafReader, queryDef.returned_fields);
 
-			while (pos < total_hits && pos < end) {
-				final ScoreDoc scoreDoc = docs[pos];
+			i = 0;
+			for (ScoreDoc scoreDoc : scoreDocs) {
 				final Document document = searcher.doc(scoreDoc.doc, queryDef.returned_fields);
-				documents.add(new ResultDocument(pos, scoreDoc, max_score, document, queryDef.postings_highlighter,
-						postingsHighlightsMap, docValuesReturnedFields));
-				pos++;
+				Map<String, String> highlights = highlightsArray == null ? null : highlightsArray[i++];
+				documents.add(new ResultDocument(pos, scoreDoc, max_score, document, highlights,
+						docValuesReturnedFields));
 			}
+
 			if (timeTracker != null)
 				timeTracker.next("returned_fields");
 		}
+
 		this.facets = facetsBuilder == null ? null : facetsBuilder.results;
 		this.functions = functionsCollector != null ? ResultUtils.buildFunctions(functionsCollector) : null;
 		if (timeTracker != null)

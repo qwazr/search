@@ -1,0 +1,24 @@
+{
+  "query_string": "search engine",
+  "query": {
+    "query": "StandardQueryParser",
+    "default_field": "description"
+  },
+  "highlighters": {
+    "my_custom_snippet": {
+      "field": "description",
+      "pre_tag": "<strong>",
+      "post_tag": "</strong>",
+      "escape": false,
+      "multivalued_separator": " ",
+      "ellipsis": "… ",
+      "max_passages": 5,
+      "max_length": 5000
+    },
+    "my_default_snippet": {
+      "field": "description"
+    }
+  },
+  "start": 0,
+  "rows": 5
+}

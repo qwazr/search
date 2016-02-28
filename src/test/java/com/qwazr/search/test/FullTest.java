@@ -53,6 +53,7 @@ public class FullTest {
 	public static final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
 	public static final QueryDefinition QUERY_SORTFIELD = getQuery("query_sortfield.json");
 	public static final QueryDefinition QUERY_SORTFIELDS = getQuery("query_sortfields.json");
+	public static final QueryDefinition QUERY_HIGHLIGHT = getQuery("query_highlight.json");
 	public static final QueryDefinition QUERY_CHECK_RETURNED = getQuery("query_check_returned.json");
 	public static final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
@@ -499,6 +500,21 @@ public class FullTest {
 			Assert.assertNotNull(result.functions.get(i).value);
 			Assert.assertEquals(results[i], result.functions.get(i).value);
 		}
+	}
+
+	@Test
+	public void test440QueryHighlight() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		ResultDefinition result = checkQueryIndex(client, QUERY_HIGHLIGHT, 1);
+		ResultDocument document = result.getDocuments().get(0);
+		String snippet = document.getHighlights().get("my_custom_snippet");
+		Assert.assertNotNull(snippet);
+		Assert.assertTrue(snippet.contains("<strong>search</strong>"));
+		Assert.assertTrue(snippet.contains("<strong>engine</strong>"));
+		snippet = document.getHighlights().get("my_default_snippet");
+		Assert.assertNotNull(snippet);
+		Assert.assertTrue(snippet.contains("<b>search</b>"));
+		Assert.assertTrue(snippet.contains("<b>engine</b>"));
 	}
 
 	@Test

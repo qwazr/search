@@ -35,7 +35,7 @@ public class QueryBuilder {
 	LinkedHashMap<String, QueryDefinition.SortEnum> sorts = null;
 	ArrayList<QueryDefinition.Function> functions = null;
 
-	LinkedHashMap<String, Integer> postings_highlighter = null;
+	LinkedHashMap<String, HighlighterDefinition> highlighters = null;
 
 	public AbstractQuery query = null;
 
@@ -60,7 +60,7 @@ public class QueryBuilder {
 		sorts = queryDef.sorts;
 		functions = queryDef.functions;
 
-		postings_highlighter = queryDef.postings_highlighter;
+		highlighters = queryDef.highlighters;
 
 		query = queryDef.query;
 	}
@@ -203,28 +203,22 @@ public class QueryBuilder {
 		return functions;
 	}
 
-	public Map<String, Integer> getPostings_highlighter() {
-		return postings_highlighter;
+	public Map<String, HighlighterDefinition> getHighlighters() {
+		return highlighters;
 	}
 
-	public QueryBuilder setPostings_highlighter(LinkedHashMap<String, Integer> postings_highlighter) {
-		this.postings_highlighter = postings_highlighter;
+	public QueryBuilder setHighlighters(LinkedHashMap<String, HighlighterDefinition> highlighters) {
+		this.highlighters = highlighters;
 		return this;
 	}
 
-	public QueryBuilder addPosting_highlighter(String field, Integer max_size) {
-		if (postings_highlighter == null)
-			postings_highlighter = new LinkedHashMap<String, Integer>();
-		postings_highlighter.put(field, max_size);
+	public QueryBuilder addHighlighter(String name, HighlighterDefinition highlighter) {
+		if (highlighters == null)
+			highlighters = new LinkedHashMap<>();
+		highlighters.put(name, highlighter);
 		return this;
 	}
-
-	public QueryBuilder addPosting_highlighter(Enum<?> field, Integer max_size) {
-		if (field == null)
-			return this;
-		return addPosting_highlighter(field.name(), max_size);
-	}
-
+	
 	public QueryBuilder setQuery(AbstractQuery query) {
 		this.query = query;
 		return this;

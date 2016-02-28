@@ -76,9 +76,8 @@ public class TermQuery extends AbstractQuery {
 			forEachTerm(queryContext.analyzer, field, queryContext.queryString, new AnalyzerUtils.TermConsumer() {
 				@Override
 				public boolean apply(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr,
-								OffsetAttribute offsetAttr, PositionIncrementAttribute posIncAttr,
-								PositionLengthAttribute posLengthAttr, TypeAttribute typeAttr,
-								KeywordAttribute keywordAttr) {
+						OffsetAttribute offsetAttr, PositionIncrementAttribute posIncAttr,
+						PositionLengthAttribute posLengthAttr, TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
 					atomicString.set(charTermAttr.toString());
 					return false;
 				}

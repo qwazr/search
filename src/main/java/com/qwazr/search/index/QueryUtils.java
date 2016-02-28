@@ -27,11 +27,11 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 class QueryUtils {
 
@@ -89,22 +89,20 @@ class QueryUtils {
 				null :
 				new FacetsBuilder(queryContext, queryDef.facets, query, queryCollectors.facetsCollector, timeTracker);
 
-		Map<String, String[]> postingsHighlightersMap = null;
-		if (queryDef.postings_highlighter != null && topDocs != null) {
-			postingsHighlightersMap = new LinkedHashMap<>();
-			for (Map.Entry<String, Integer> entry : queryDef.postings_highlighter.entrySet()) {
-				String field = entry.getKey();
-				PostingsHighlighter highlighter = new PostingsHighlighter(entry.getValue());
-				String highlights[] = highlighter.highlight(field, query, queryContext.indexSearcher, topDocs);
-				if (highlights != null) {
-					postingsHighlightersMap.put(field, highlights);
+		final Map<String, HighlighterImpl> highlighters;
+		if (queryDef.highlighters != null && topDocs != null) {
+			highlighters = new LinkedHashMap<>();
+			queryDef.highlighters.forEach(new BiConsumer<String, HighlighterDefinition>() {
+				@Override
+				public void accept(String name, HighlighterDefinition highlighterDefinition) {
+					highlighters.put(name, new HighlighterImpl(highlighterDefinition, queryContext.analyzer));
 				}
-			}
-			timeTracker.next("postings_highlighters");
-		}
+			});
+		} else
+			highlighters = null;
 
 		return new ResultDefinition(analyzerContext.fieldTypes, timeTracker, queryContext.indexSearcher, totalHits,
-				topDocs, queryDef, facetsBuilder, postingsHighlightersMap, queryCollectors.functionsCollectors, query);
+				topDocs, queryDef, facetsBuilder, highlighters, queryCollectors.functionsCollectors, query);
 	}
 
 }
