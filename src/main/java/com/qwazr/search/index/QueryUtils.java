@@ -20,16 +20,17 @@ import com.qwazr.search.field.SortUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 class QueryUtils {
@@ -56,25 +57,6 @@ class QueryUtils {
 				queryContext.queryDefinition.query.getBoostedQuery(queryContext);
 
 		return query;
-	}
-
-	static private Pair<TotalHitCountCollector, TopDocsCollector> getCollectorPair(List<Collector> collectors,
-			boolean bNeedScore, int numHits, Sort sort) throws IOException {
-		final TotalHitCountCollector totalHitCollector;
-		final TopDocsCollector topDocsCollector;
-		if (numHits == 0) {
-			totalHitCollector = new TotalHitCountCollector();
-			topDocsCollector = null;
-			collectors.add(0, totalHitCollector);
-		} else {
-			if (sort != null)
-				topDocsCollector = TopFieldCollector.create(sort, numHits, true, bNeedScore, bNeedScore);
-			else
-				topDocsCollector = TopScoreDocCollector.create(numHits);
-			totalHitCollector = null;
-			collectors.add(0, topDocsCollector);
-		}
-		return Pair.of(totalHitCollector, topDocsCollector);
 	}
 
 	final static ResultDefinition search(final QueryContext queryContext)

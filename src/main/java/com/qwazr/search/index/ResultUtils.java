@@ -15,17 +15,10 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.FieldTypeInterface;
-import com.qwazr.search.field.ValueConverter;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.SlowCompositeReaderWrapper;
 
-import java.io.IOException;
 import java.util.*;
-import java.util.function.BiConsumer;
 
 class ResultUtils {
 
@@ -64,39 +57,6 @@ class ResultUtils {
 		return fields;
 	}
 
-	final static void addDocValues(final int docId, Map<String, ValueConverter> sources,
-			final Map<String, Object> dest) {
-		if (sources == null)
-			return;
-		sources.forEach(new BiConsumer<String, ValueConverter>() {
-			@Override
-			public void accept(String fieldName, ValueConverter converter) {
-				Object o = converter.convert(docId);
-				if (o != null)
-					dest.put(fieldName, o);
-			}
-		});
-	}
-
-	final static Map<String, ValueConverter> extractDocValuesFields(final Map<String, FieldTypeInterface> fieldTypes,
-			final IndexReader indexReader, final Set<String> returned_fields) throws IOException {
-		if (returned_fields == null)
-			return null;
-		//FieldInfos fieldInfos = MultiFields.getMergedFieldInfos(indexReader);
-		LeafReader leafReader = SlowCompositeReaderWrapper.wrap(indexReader);
-		Map<String, ValueConverter> map = new LinkedHashMap<String, ValueConverter>();
-		for (String fieldName : returned_fields) {
-			FieldTypeInterface fieldType = fieldTypes.get(fieldName);
-			if (fieldType == null)
-				continue;
-			ValueConverter converter = fieldType.getConverter(leafReader);
-			if (converter == null)
-				continue;
-			map.put(fieldName, converter);
-		}
-		return map;
-	}
-
 	final static List<ResultDefinition.Function> buildFunctions(
 			final Collection<FunctionCollector> functionsCollector) {
 		if (functionsCollector == null)
@@ -106,4 +66,5 @@ class ResultUtils {
 			functions.add(new ResultDefinition.Function(functionCollector));
 		return functions;
 	}
+
 }

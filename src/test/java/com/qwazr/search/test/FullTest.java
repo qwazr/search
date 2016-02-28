@@ -407,20 +407,6 @@ public class FullTest {
 		}
 	}
 
-	/*
-	@Test
-	public void test360ReturnIndexedValue() throws URISyntaxException, IOException {
-		IndexServiceInterface client = getClient();
-		// Check that the initial stock is 0 for all documents
-		ResultDefinition result = checkQueryIndex(client, QUERY_CHECK_RETURNED, 5);
-		Assert.assertNotNull(result.documents);
-		for (ResultDocument document : result.documents) {
-			String single_date = (String) document.fields.get("single_date");
-			Assert.assertNotNull(single_date);
-		}
-	}
-	*/
-
 	private void checkFacetRowsQuery(ResultDefinition result) {
 		Assert.assertNotNull(result.documents);
 		Assert.assertEquals(3, result.documents.size());

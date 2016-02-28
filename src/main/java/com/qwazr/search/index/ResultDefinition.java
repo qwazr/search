@@ -22,6 +22,9 @@ import com.qwazr.search.field.ValueConverter;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.SlowCompositeReaderWrapper;
+import org.apache.lucene.index.Terms;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -84,14 +87,18 @@ public class ResultDefinition {
 		int end = queryDef.getEnd();
 		documents = new ArrayList<ResultDocument>();
 		ScoreDoc[] docs = topDocs != null ? topDocs.scoreDocs : null;
+
+		LeafReader leafReader = SlowCompositeReaderWrapper.wrap(searcher.getIndexReader());
 		if (docs != null) {
-			Map<String, ValueConverter> docValuesSources = ResultUtils
-					.extractDocValuesFields(fieldMap, searcher.getIndexReader(), queryDef.returned_fields);
+
+			ReturnedFields.DocValuesReturnedFields docValuesReturnedFields = new ReturnedFields.DocValuesReturnedFields(
+					fieldMap, leafReader, queryDef.returned_fields);
+
 			while (pos < total_hits && pos < end) {
 				final ScoreDoc scoreDoc = docs[pos];
 				final Document document = searcher.doc(scoreDoc.doc, queryDef.returned_fields);
 				documents.add(new ResultDocument(pos, scoreDoc, max_score, document, queryDef.postings_highlighter,
-						postingsHighlightsMap, docValuesSources));
+						postingsHighlightsMap, docValuesReturnedFields));
 				pos++;
 			}
 			if (timeTracker != null)

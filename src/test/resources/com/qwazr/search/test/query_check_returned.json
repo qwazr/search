@@ -1,7 +1,6 @@
 {
   "returned_fields": [
     "stock",
-    "price",
-    "single_date"
+    "price"
   ]
 }
