@@ -46,8 +46,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class SchemaInstance implements Closeable, AutoCloseable {
+public class SchemaInstance implements Closeable {
 
 	private static final Logger logger = LoggerFactory.getLogger(SchemaInstance.class);
 
@@ -72,6 +74,8 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 		private final Map<String, AnalyzerDefinition> analyzerMap;
 		private final Map<String, FieldDefinition> fieldMap;
 		private final UpdatableAnalyzer queryAnalyzer;
+		private final AtomicInteger ref = new AtomicInteger();
+		private final AtomicBoolean closeable = new AtomicBoolean(false);
 
 		private SearchContext() throws IOException, ServerException {
 			if (indexMap.isEmpty()) {
@@ -98,24 +102,52 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 		}
 
 		int numDocs() {
-			if (multiReader == null)
-				return 0;
-			return multiReader.numDocs();
+			incRef();
+			try {
+				if (multiReader == null)
+					return 0;
+				return multiReader.numDocs();
+			} finally {
+				decRef();
+			}
 		}
 
+		private synchronized void doClose() {
+			IOUtils.close(multiReader);
+		}
+
+		@Override
 		public void close() {
-			if (multiReader != null)
-				IOUtils.close(multiReader);
+			closeable.set(true);
+			if (ref.get() > 0)
+				return;
+			doClose();
+
 		}
 
-		public ResultDefinition search(QueryDefinition queryDef)
+		void incRef() {
+			ref.incrementAndGet();
+		}
+
+		void decRef() {
+			ref.decrementAndGet();
+			if (closeable.get())
+				doClose();
+		}
+
+		ResultDefinition search(QueryDefinition queryDef)
 				throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
 				ReflectiveOperationException {
 			if (indexSearcher == null)
 				return null;
-			SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader());
-			final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, state, queryDef);
-			return QueryUtils.search(queryContext);
+			incRef();
+			try {
+				SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader());
+				final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, state, queryDef);
+				return QueryUtils.search(queryContext);
+			} finally {
+				decRef();
+			}
 		}
 	}
 
@@ -231,6 +263,8 @@ public class SchemaInstance implements Closeable, AutoCloseable {
 	}
 
 	synchronized void mayBeRefresh() throws IOException, ServerException {
+		if (searchContext != null)
+			searchContext.close();
 		searchContext = new SearchContext();
 	}
 
