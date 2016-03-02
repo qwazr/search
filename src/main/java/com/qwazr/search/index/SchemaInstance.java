@@ -46,7 +46,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchemaInstance implements Closeable {
@@ -74,8 +73,7 @@ public class SchemaInstance implements Closeable {
 		private final Map<String, AnalyzerDefinition> analyzerMap;
 		private final Map<String, FieldDefinition> fieldMap;
 		private final UpdatableAnalyzer queryAnalyzer;
-		private final AtomicInteger ref = new AtomicInteger();
-		private final AtomicBoolean closeable = new AtomicBoolean(false);
+		private final AtomicInteger ref = new AtomicInteger(1);
 
 		private SearchContext() throws IOException, ServerException {
 			if (indexMap.isEmpty()) {
@@ -117,22 +115,18 @@ public class SchemaInstance implements Closeable {
 		}
 
 		@Override
-		public void close() {
-			closeable.set(true);
-			if (ref.get() > 0)
-				return;
-			doClose();
-
+		final public void close() {
+			decRef();
 		}
 
-		void incRef() {
+		final void incRef() {
 			ref.incrementAndGet();
 		}
 
-		void decRef() {
-			ref.decrementAndGet();
-			if (closeable.get())
-				doClose();
+		final void decRef() {
+			if (ref.decrementAndGet() > 0)
+				return;
+			doClose();
 		}
 
 		ResultDefinition search(QueryDefinition queryDef)
