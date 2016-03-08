@@ -229,9 +229,6 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		}
 	}
 
-	public final static TypeReference<Map<String, Object>> MapStringObjectTypeRef = new TypeReference<Map<String, Object>>() {
-	};
-
 	@Override
 	public Response postDocument(String schema_name, String index_name, Map<String, Object> document) {
 		try {
@@ -326,6 +323,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		} catch (IOException e) {
 			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	public final static TypeReference<LinkedHashMap<String, Object>> MapStringObjectTypeRef = new TypeReference<LinkedHashMap<String, Object>>() {
+	};
+
+	@Override
+	public LinkedHashMap<String, Object> getDocument(String schema_name, String index_name, String doc_id) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc/", doc_id);
+		Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, null, MapStringObjectTypeRef, 200);
 	}
 
 	@Override

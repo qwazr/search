@@ -140,6 +140,16 @@ public class QueryBuilder {
 		return this;
 	}
 
+	public QueryBuilder addReturned_field(Collection<String> returned_fields) {
+		if (returned_fields == null)
+			return this;
+		if (this.returned_fields == null)
+			this.returned_fields = new LinkedHashSet<String>();
+		for (String returned_field : returned_fields)
+			this.returned_fields.add(returned_field);
+		return this;
+	}
+
 	public Map<String, FacetDefinition> getFacets() {
 		return facets;
 	}
@@ -218,7 +228,7 @@ public class QueryBuilder {
 		highlighters.put(name, highlighter);
 		return this;
 	}
-	
+
 	public QueryBuilder setQuery(AbstractQuery query) {
 		this.query = query;
 		return this;

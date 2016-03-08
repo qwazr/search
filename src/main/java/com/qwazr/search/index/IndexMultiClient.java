@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingleClient>
-				implements IndexServiceInterface {
+		implements IndexServiceInterface {
 
 	public IndexMultiClient(ExecutorService executor, String[] urls, Integer msTimeOut) throws URISyntaxException {
 		super(executor, new IndexSingleClient[urls.length], urls, msTimeOut);
@@ -89,7 +89,7 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 
 	@Override
 	public LinkedHashMap<String, FieldDefinition> setFields(String schema_name, String index_name,
-					LinkedHashMap<String, FieldDefinition> fields) {
+			LinkedHashMap<String, FieldDefinition> fields) {
 		return null;
 	}
 
@@ -100,8 +100,8 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 
 	@Override
 	public List<TermDefinition> doAnalyzeIndex(@PathParam("schema_name") String schema_name,
-					@PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
-					@QueryParam("text") String text) {
+			@PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
+			@QueryParam("text") String text) {
 		return null;
 	}
 
@@ -132,13 +132,13 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 
 	@Override
 	public AnalyzerDefinition setAnalyzer(String schema_name, String index_name, String analyzer_name,
-					AnalyzerDefinition analyzer) {
+			AnalyzerDefinition analyzer) {
 		return null;
 	}
 
 	@Override
 	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(String schema_name, String index_name,
-					LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+			LinkedHashMap<String, AnalyzerDefinition> analyzers) {
 		return null;
 	}
 
@@ -194,6 +194,11 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	@Override
 	public Response deleteAll(String schema_name, String index_name) {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public LinkedHashMap<String, Object> getDocument(String schema_name, String index_name, String doc_id) {
 		return null;
 	}
 

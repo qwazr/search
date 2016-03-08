@@ -518,6 +518,20 @@ public class FullTest {
 	}
 
 	@Test
+	public void test450getDocument() throws URISyntaxException {
+		IndexServiceInterface client = getClient();
+		Map<String, Object> result = client.getDocument(SCHEMA_NAME, INDEX_NAME, "5");
+		Assert.assertNotNull(result);
+		Assert.assertTrue(result.containsKey("price"));
+		Assert.assertEquals(10.5D, result.get("price"));
+		Assert.assertTrue(result.containsKey("description"));
+		List<Object> list = (List<Object>) result.get("description");
+		Assert.assertNotNull(list);
+		Assert.assertFalse(list.isEmpty());
+		Assert.assertTrue(list.get(0).toString().length() > 0);
+	}
+
+	@Test
 	public void test500SecondBackup() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		BackupStatus status = doBackup(client);

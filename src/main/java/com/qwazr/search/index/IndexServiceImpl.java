@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.query.TermQuery;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -30,10 +31,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.Principal;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 class IndexServiceImpl implements IndexServiceInterface {
 
@@ -177,7 +175,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	public LinkedHashMap<String, FieldDefinition> setFields(String schema_name, String index_name,
-					LinkedHashMap<String, FieldDefinition> fields) {
+			LinkedHashMap<String, FieldDefinition> fields) {
 		try {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setFields(fields);
@@ -190,12 +188,12 @@ class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	private List<TermDefinition> doAnalyzer(String schema_name, String index_name, String field_name, String text,
-					boolean index) throws ServerException, IOException {
+			boolean index) throws ServerException, IOException {
 		checkRight(schema_name);
 		IndexInstance indexInstance = IndexManager.INSTANCE.get(schema_name).get(index_name);
 		Analyzer analyzer = index ?
-						indexInstance.getIndexAnalyzer(field_name) :
-						indexInstance.getQueryAnalyzer(field_name);
+				indexInstance.getIndexAnalyzer(field_name) :
+				indexInstance.getQueryAnalyzer(field_name);
 		if (analyzer == null)
 			throw new ServerException("No analyzer found for " + field_name);
 		return TermDefinition.buildTermList(analyzer, field_name, text);
@@ -266,7 +264,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 		try {
 			checkRight(schema_name);
 			Map<String, AnalyzerDefinition> analyzerMap = IndexManager.INSTANCE.get(schema_name).get(index_name)
-							.getAnalyzers();
+					.getAnalyzers();
 			AnalyzerDefinition analyzerDef = (analyzerMap != null) ? analyzerMap.get(analyzer_name) : null;
 			if (analyzerDef == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzer_name);
@@ -280,7 +278,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 
 	@Override
 	public AnalyzerDefinition setAnalyzer(String schema_name, String index_name, String analyzer_name,
-					AnalyzerDefinition analyzer) {
+			AnalyzerDefinition analyzer) {
 		try {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setAnalyzer(analyzer_name, analyzer);
@@ -293,7 +291,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(String schema_name, String index_name,
-					LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+			LinkedHashMap<String, AnalyzerDefinition> analyzers) {
 		try {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setAnalyzers(analyzers);
@@ -430,6 +428,30 @@ class IndexServiceImpl implements IndexServiceInterface {
 			IndexManager.INSTANCE.get(schema_name).get(index_name).deleteAll();
 			return Response.ok().build();
 		} catch (ServerException | IOException | InterruptedException e) {
+			logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	public Map<String, Object> getDocument(String schema_name, String index_name, String doc_id) {
+		try {
+			checkRight(schema_name);
+			IndexInstance index = IndexManager.INSTANCE.get(schema_name).get(index_name);
+			QueryBuilder builder = new QueryBuilder();
+			builder.setQuery(new TermQuery(FieldDefinition.ID_FIELD, doc_id));
+			builder.setRows(1);
+			Map<String, FieldDefinition> fields = index.getFields();
+			if (fields != null)
+				builder.addReturned_field(fields.keySet());
+			ResultDefinition result = index.search(builder.build());
+			if (result != null) {
+				List<ResultDocument> docs = result.getDocuments();
+				if (docs != null && !docs.isEmpty())
+					return docs.get(0).getFields();
+			}
+			throw new ServerException(Response.Status.NOT_FOUND, "Document not found: " + doc_id);
+		} catch (ServerException | IOException | ParseException | QueryNodeException | InterruptedException | ReflectiveOperationException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
