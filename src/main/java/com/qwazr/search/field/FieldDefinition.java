@@ -86,6 +86,22 @@ public class FieldDefinition {
 		template = null;
 	}
 
+	private FieldDefinition(Builder builder) {
+		analyzer = builder.analyzer;
+		query_analyzer = builder.query_analyzer;
+		tokenized = builder.tokenized;
+		stored = builder.stored;
+		store_termvectors = builder.store_termvectors;
+		store_termvector_offsets = builder.store_termvector_offsets;
+		store_termvector_positions = builder.store_termvector_positions;
+		store_termvector_payloads = builder.store_termvector_payloads;
+		omit_norms = builder.omit_norms;
+		numeric_type = builder.numeric_type;
+		index_options = builder.index_options;
+		docvalues_type = builder.docvalues_type;
+		template = builder.template;
+	}
+
 	public final static TypeReference<LinkedHashMap<String, FieldDefinition>> MapStringFieldTypeRef = new TypeReference<LinkedHashMap<String, FieldDefinition>>() {
 	};
 
@@ -108,4 +124,106 @@ public class FieldDefinition {
 	public final static String DOC_FIELD = "$doc";
 
 	public static final String[] RESERVED_NAMES = { ID_FIELD, FACET_FIELD, SCORE_FIELD, DOC_FIELD };
+
+	public final static Builder builder() {
+		return new Builder();
+	}
+
+	public final static Builder builder(Template template) {
+		return new Builder(template);
+	}
+
+	public static class Builder {
+
+		private String analyzer = null;
+		private String query_analyzer = null;
+		private Boolean tokenized = null;
+		private Boolean stored = null;
+		private Boolean store_termvectors = null;
+		private Boolean store_termvector_offsets = null;
+		private Boolean store_termvector_positions = null;
+		private Boolean store_termvector_payloads = null;
+		private Boolean omit_norms = null;
+		private FieldType.NumericType numeric_type = null;
+		private IndexOptions index_options = null;
+		private DocValuesType docvalues_type = null;
+		private Template template = null;
+
+		public Builder() {
+		}
+
+		public Builder(Template template) {
+			this.template = template;
+		}
+
+		public Builder setAnalyzer(String analyzer) {
+			this.analyzer = analyzer;
+			return this;
+		}
+
+		public Builder setQueryAnalyzer(String query_analyzer) {
+			this.query_analyzer = query_analyzer;
+			return this;
+		}
+
+		public Builder setTokenized(Boolean tokenized) {
+			this.tokenized = tokenized;
+			return this;
+		}
+
+		public Builder setStored(Boolean stored) {
+			this.stored = stored;
+			return this;
+		}
+
+		public Builder setStoreTermVectors(Boolean store_termvectors) {
+			this.store_termvectors = store_termvectors;
+			return this;
+		}
+
+		public Builder setStoreTermVectorOffsets(Boolean store_termvector_offsets) {
+			this.store_termvector_offsets = store_termvector_offsets;
+			return this;
+		}
+
+		public Builder setStoreTermVectorPositions(Boolean store_termvector_positions) {
+			this.store_termvector_positions = store_termvector_positions;
+			return this;
+		}
+
+		public Builder setStoreTermVectorPayloads(Boolean store_termvector_payloads) {
+			this.store_termvector_payloads = store_termvector_payloads;
+			return this;
+		}
+
+		public Builder setOmitNorms(Boolean omit_norms) {
+			this.omit_norms = omit_norms;
+			return this;
+		}
+
+		public Builder setNumericType(FieldType.NumericType numeric_type) {
+			this.numeric_type = numeric_type;
+			return this;
+		}
+
+		public Builder setIndexOptions(IndexOptions index_options) {
+			this.index_options = index_options;
+			return this;
+		}
+
+		public Builder setDocValuesType(DocValuesType docvalues_type) {
+			this.docvalues_type = docvalues_type;
+			return this;
+		}
+
+		public Builder setTemplate(Template template) {
+			this.template = template;
+			return this;
+		}
+
+		public FieldDefinition build() {
+			return new FieldDefinition(this);
+		}
+
+	}
 }
