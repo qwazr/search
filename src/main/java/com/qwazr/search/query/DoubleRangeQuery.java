@@ -29,7 +29,6 @@ public class DoubleRangeQuery extends AbstractQuery {
 	final public Boolean include_upper;
 
 	public DoubleRangeQuery() {
-		super(null);
 		field = null;
 		lower_term = null;
 		upper_term = null;
@@ -37,9 +36,8 @@ public class DoubleRangeQuery extends AbstractQuery {
 		include_upper = null;
 	}
 
-	public DoubleRangeQuery(Float boost, String field, double lower_term, double upper_term, Boolean include_lower,
+	public DoubleRangeQuery(String field, double lower_term, double upper_term, Boolean include_lower,
 			Boolean include_upper) {
-		super(boost);
 		this.field = field;
 		this.lower_term = lower_term;
 		this.upper_term = upper_term;
@@ -47,13 +45,8 @@ public class DoubleRangeQuery extends AbstractQuery {
 		this.include_upper = include_upper;
 	}
 
-	public DoubleRangeQuery(String field, float lower_term, float upper_term, Boolean include_lower,
-			Boolean include_upper) {
-		this(null, field, lower_term, upper_term, include_lower, include_upper);
-	}
-
 	@Override
-	protected MultiTermQuery getQuery(QueryContext queryContext) throws IOException {
+	public MultiTermQuery getQuery(QueryContext queryContext) throws IOException {
 		return org.apache.lucene.search.NumericRangeQuery
 				.newDoubleRange(field, lower_term, upper_term, include_lower == null ? true : include_lower,
 						include_upper == null ? true : include_upper);

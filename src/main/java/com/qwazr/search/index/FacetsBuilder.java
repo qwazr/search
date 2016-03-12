@@ -87,7 +87,7 @@ class FacetsBuilder {
 		for (Map.Entry<String, AbstractQuery> entry : facet.queries.entrySet()) {
 			BooleanQuery.Builder builder = new BooleanQuery.Builder();
 			builder.add(searchQuery, BooleanClause.Occur.FILTER);
-			builder.add(entry.getValue().getBoostedQuery(queryContext), BooleanClause.Occur.FILTER);
+			builder.add(entry.getValue().getQuery(queryContext), BooleanClause.Occur.FILTER);
 			facetMap.put(entry.getKey(), queryContext.indexSearcher.count(builder.build()));
 		}
 		return facetMap;

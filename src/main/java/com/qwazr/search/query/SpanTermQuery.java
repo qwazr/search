@@ -27,25 +27,17 @@ public class SpanTermQuery extends AbstractSpanQuery {
 	final public String text;
 
 	public SpanTermQuery() {
-		super(null);
 		field = null;
 		text = null;
 	}
 
 	public SpanTermQuery(String field, String text) {
-		super(null);
-		this.field = field;
-		this.text = text;
-	}
-
-	public SpanTermQuery(Float boost, String field, String text) {
-		super(boost);
 		this.field = field;
 		this.text = text;
 	}
 
 	@Override
-	protected SpanQuery getQuery(QueryContext queryContext) throws IOException {
+	final public SpanQuery getQuery(QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.spans.SpanTermQuery(new Term(field, text));
 	}
 }

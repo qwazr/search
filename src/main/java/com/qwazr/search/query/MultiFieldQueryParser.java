@@ -40,7 +40,6 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	final public Boolean lowercase_expanded_terms;
 
 	public MultiFieldQueryParser() {
-		super(null);
 		fields = null;
 		boosts = null;
 		allow_leading_wildcard = null;
@@ -56,7 +55,6 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	}
 
 	public MultiFieldQueryParser(Builder builder) {
-		super(null);
 		this.fields = builder.fields == null ? null : ArrayUtils.toArray(builder.fields);
 		this.boosts = builder.boosts;
 		this.allow_leading_wildcard = builder.allow_leading_wildcard;
@@ -72,9 +70,9 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	}
 
 	@Override
-	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException {
+	final public Query getQuery(QueryContext queryContext) throws IOException, ParseException {
 		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser = new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(
-						fields, queryContext.analyzer, boosts);
+				fields, queryContext.analyzer, boosts);
 		if (default_operator != null)
 			parser.setDefaultOperator(default_operator.queryParseroperator);
 		if (allow_leading_wildcard != null)

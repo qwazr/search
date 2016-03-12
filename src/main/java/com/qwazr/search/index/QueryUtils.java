@@ -54,7 +54,7 @@ class QueryUtils {
 
 		Query query = queryContext.queryDefinition.query == null ?
 				new MatchAllDocsQuery() :
-				queryContext.queryDefinition.query.getBoostedQuery(queryContext);
+				queryContext.queryDefinition.query.getQuery(queryContext);
 
 		return query;
 	}

@@ -33,6 +33,29 @@ public class HighlighterDefinition {
 
 	final public Boolean escape;
 
+	public static class BreakIteratorDefinition {
+
+		public enum Type {
+			character, line, sentence, word
+		}
+
+		final public Type type;
+
+		final public String language;
+
+		public BreakIteratorDefinition() {
+			type = null;
+			language = null;
+		}
+
+		public BreakIteratorDefinition(Type type, String language) {
+			this.type = type == null ? Type.sentence : type;
+			this.language = language;
+		}
+	}
+
+	final public BreakIteratorDefinition break_iterator;
+
 	public HighlighterDefinition() {
 		field = null;
 		max_length = null;
@@ -42,6 +65,7 @@ public class HighlighterDefinition {
 		post_tag = null;
 		ellipsis = null;
 		escape = null;
+		break_iterator = null;
 	}
 
 	private HighlighterDefinition(Builder builder) {
@@ -53,25 +77,28 @@ public class HighlighterDefinition {
 		this.post_tag = builder.postTag;
 		this.ellipsis = builder.ellipsis;
 		this.escape = builder.escape;
+		this.break_iterator = builder.breakIterator;
 	}
 
 	public static class Builder {
 
-		private String field;
+		private String field = null;
 
-		private Integer maxPassages;
+		private Integer maxPassages = null;
 
-		private Integer maxLength;
+		private Integer maxLength = null;
 
 		private char multivaluedSeparator = ' ';
 
-		private String preTag;
+		private String preTag = null;
 
-		private String postTag;
+		private String postTag = null;
 
-		private String ellipsis;
+		private String ellipsis = null;
 
-		private Boolean escape;
+		private Boolean escape = null;
+
+		private BreakIteratorDefinition breakIterator = null;
 
 		public Builder() {
 		}
@@ -149,6 +176,25 @@ public class HighlighterDefinition {
 		 */
 		public Builder setEscape(boolean escape) {
 			this.escape = escape;
+			return this;
+		}
+
+		/**
+		 * @param breakIterator the break iterator parameters
+		 * @return the current builder
+		 */
+		public Builder setBreak(BreakIteratorDefinition breakIterator) {
+			this.breakIterator = breakIterator;
+			return this;
+		}
+
+		/**
+		 * @param type     the break iterator type
+		 * @param language the language tag of the text to break
+		 * @return the current builder
+		 */
+		public Builder setBreak(BreakIteratorDefinition.Type type, String language) {
+			this.breakIterator = new BreakIteratorDefinition(type, language);
 			return this;
 		}
 	}

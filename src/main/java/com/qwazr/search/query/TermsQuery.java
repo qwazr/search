@@ -30,37 +30,22 @@ public class TermsQuery extends AbstractQuery {
 	final public List<String> terms;
 
 	public TermsQuery() {
-		super(null);
 		field = null;
 		terms = null;
 	}
 
 	public TermsQuery(String field, List<String> terms) {
-		super(null);
 		this.field = field;
 		this.terms = terms;
 	}
 
 	public TermsQuery(String field, String... terms) {
-		super(null);
-		this.field = field;
-		this.terms = Arrays.asList(terms);
-	}
-
-	public TermsQuery(Float boost, String field, List<String> terms) {
-		super(boost);
-		this.field = field;
-		this.terms = terms;
-	}
-
-	public TermsQuery(Float boost, String field, String... terms) {
-		super(boost);
 		this.field = field;
 		this.terms = Arrays.asList(terms);
 	}
 
 	@Override
-	protected Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(QueryContext queryContext) throws IOException {
 		final List<Term> termList = new ArrayList<Term>(terms == null ? 0 : terms.size());
 		if (terms != null)
 			terms.forEach(term -> termList.add(new Term(field, term)));

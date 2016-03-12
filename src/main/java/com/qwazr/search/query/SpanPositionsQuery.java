@@ -24,6 +24,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.spans.SpanPositionRangeQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 
@@ -35,19 +36,17 @@ public class SpanPositionsQuery extends AbstractQuery {
 	final public Integer distance;
 
 	public SpanPositionsQuery() {
-		super(null);
 		field = null;
 		distance = null;
 	}
 
-	public SpanPositionsQuery(Float boost, String field, Integer distance) {
-		super(boost);
+	public SpanPositionsQuery(String field, Integer distance) {
 		this.field = field;
 		this.distance = distance;
 	}
 
 	@Override
-	protected Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(QueryContext queryContext) throws IOException {
 
 		BooleanQuery.Builder builder = new BooleanQuery.Builder();
 		TokenStream tokenStream = queryContext.analyzer.tokenStream(field, queryContext.queryString);
@@ -66,9 +65,8 @@ public class SpanPositionsQuery extends AbstractQuery {
 					final float dist = Math.abs(i - pos) + 1;
 					final float boost = 1 / dist;
 					final SpanTermQuery spanTermQuery = new SpanTermQuery(new Term(field, charTerm));
-					SpanPositionRangeQuery spanPositionRangeQuery = new SpanPositionRangeQuery(spanTermQuery, i, i + 1);
-					spanPositionRangeQuery.setBoost(boost * this.boost);
-					builder.add(new BooleanClause(spanPositionRangeQuery, BooleanClause.Occur.SHOULD));
+					Query query = new BoostQuery(new SpanPositionRangeQuery(spanTermQuery, i, i + 1), boost);
+					builder.add(new BooleanClause(query, BooleanClause.Occur.SHOULD));
 				}
 				pos += pocincrAttribute.getPositionIncrement();
 			}

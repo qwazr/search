@@ -41,7 +41,6 @@ public class MoreLikeThisQuery extends AbstractQuery {
 	final public Set<String> stop_words;
 
 	public MoreLikeThisQuery() {
-		super(null);
 		doc_num = null;
 		is_boost = null;
 		boost_factor = null;
@@ -58,10 +57,9 @@ public class MoreLikeThisQuery extends AbstractQuery {
 	}
 
 	public MoreLikeThisQuery(Integer doc_num, Boolean is_boost, Float boost_factor, String[] fieldnames,
-					Integer max_doc_freq, Integer max_doc_freq_pct, Integer max_num_tokens_parsed,
-					Integer max_query_terms, Integer max_word_len, Integer min_doc_freq, Integer min_term_freq,
-					Integer min_word_len, Set<String> stop_words) {
-		super(null);
+			Integer max_doc_freq, Integer max_doc_freq_pct, Integer max_num_tokens_parsed, Integer max_query_terms,
+			Integer max_word_len, Integer min_doc_freq, Integer min_term_freq, Integer min_word_len,
+			Set<String> stop_words) {
 		this.doc_num = doc_num;
 		this.is_boost = is_boost;
 		this.boost_factor = boost_factor;
@@ -78,7 +76,7 @@ public class MoreLikeThisQuery extends AbstractQuery {
 	}
 
 	@Override
-	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException {
+	final public Query getQuery(QueryContext queryContext) throws IOException, ParseException {
 		Objects.requireNonNull(doc_num, "The doc_num field is missing");
 		final MoreLikeThis mlt = new MoreLikeThis(queryContext.indexSearcher.getIndexReader());
 		if (is_boost != null)

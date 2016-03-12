@@ -31,7 +31,6 @@ public class RegexpQuery extends AbstractQuery {
 	final public Integer max_determinized_states;
 
 	public RegexpQuery() {
-		super(null);
 		field = null;
 		text = null;
 		flags = null;
@@ -39,7 +38,6 @@ public class RegexpQuery extends AbstractQuery {
 	}
 
 	public RegexpQuery(String field, String text, Integer flags) {
-		super(null);
 		this.field = field;
 		this.text = text;
 		this.flags = flags;
@@ -47,15 +45,6 @@ public class RegexpQuery extends AbstractQuery {
 	}
 
 	public RegexpQuery(String field, String text, Integer flags, Integer max_determinized_states) {
-		super(null);
-		this.field = field;
-		this.text = text;
-		this.flags = flags;
-		this.max_determinized_states = max_determinized_states;
-	}
-
-	public RegexpQuery(Float boost, String field, String text, Integer flags, Integer max_determinized_states) {
-		super(boost);
 		this.field = field;
 		this.text = text;
 		this.flags = flags;
@@ -63,10 +52,8 @@ public class RegexpQuery extends AbstractQuery {
 	}
 
 	@Override
-	protected Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.RegexpQuery(new Term(field, text), flags == null ? RegExp.ALL : flags,
-						max_determinized_states == null ?
-										Operations.DEFAULT_MAX_DETERMINIZED_STATES :
-										max_determinized_states);
+				max_determinized_states == null ? Operations.DEFAULT_MAX_DETERMINIZED_STATES : max_determinized_states);
 	}
 }

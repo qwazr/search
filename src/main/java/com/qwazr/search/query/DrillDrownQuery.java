@@ -31,26 +31,18 @@ public class DrillDrownQuery extends AbstractQuery {
 	final public List<LinkedHashMap<String, String[]>> dimPath;
 
 	public DrillDrownQuery() {
-		super(null);
 		baseQuery = null;
 		dimPath = null;
 	}
 
 	public DrillDrownQuery(AbstractQuery baseQuery, List<LinkedHashMap<String, String[]>> dimPath) {
-		super(null);
-		this.baseQuery = baseQuery;
-		this.dimPath = dimPath;
-	}
-
-	public DrillDrownQuery(Float boost, AbstractQuery baseQuery, List<LinkedHashMap<String, String[]>> dimPath) {
-		super(boost);
 		this.baseQuery = baseQuery;
 		this.dimPath = dimPath;
 	}
 
 	@Override
-	protected Query getQuery(QueryContext queryContext)
-					throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+	final public Query getQuery(QueryContext queryContext)
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 		final org.apache.lucene.facet.DrillDownQuery drillDownQuery;
 		final FacetsConfig facetsConfig = queryContext.analyzer.getContext().facetsConfig;
 		Objects.requireNonNull(facetsConfig, "FacetsConfig is null");

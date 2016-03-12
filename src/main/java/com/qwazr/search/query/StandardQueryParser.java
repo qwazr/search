@@ -42,7 +42,6 @@ public class StandardQueryParser extends AbstractQuery {
 	final public Boolean lowercase_expanded_terms;
 
 	public StandardQueryParser() {
-		super(null);
 		multi_fields = null;
 		default_field = null;
 		fields_boost = null;
@@ -58,10 +57,9 @@ public class StandardQueryParser extends AbstractQuery {
 	}
 
 	public StandardQueryParser(String[] multi_fields, String default_field, LinkedHashMap<String, Float> fields_boost,
-					Boolean allow_leading_wildcard, QueryParserOperator default_operator, Integer phrase_slop,
-					Boolean enable_position_increments, Boolean analyzer_range_terms, Float fuzzy_min_sim,
-					Integer fuzzy_prefix_length, Integer max_determinized_states, Boolean lowercase_expanded_terms) {
-		super(null);
+			Boolean allow_leading_wildcard, QueryParserOperator default_operator, Integer phrase_slop,
+			Boolean enable_position_increments, Boolean analyzer_range_terms, Float fuzzy_min_sim,
+			Integer fuzzy_prefix_length, Integer max_determinized_states, Boolean lowercase_expanded_terms) {
 		this.multi_fields = multi_fields;
 		this.default_field = default_field;
 		this.fields_boost = fields_boost;
@@ -77,7 +75,6 @@ public class StandardQueryParser extends AbstractQuery {
 	}
 
 	private StandardQueryParser(Builder builder) {
-		super(null);
 		this.multi_fields = builder.multi_fields == null ? null : ArrayUtils.toArray(builder.multi_fields);
 		this.default_field = builder.default_field;
 		this.fields_boost = builder.fields_boost;
@@ -93,10 +90,10 @@ public class StandardQueryParser extends AbstractQuery {
 	}
 
 	@Override
-	final protected Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
+	final public Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
 
 		final org.apache.lucene.queryparser.flexible.standard.StandardQueryParser parser = new org.apache.lucene.queryparser.flexible.standard.StandardQueryParser(
-						queryContext.analyzer);
+				queryContext.analyzer);
 		if (fields_boost != null)
 			parser.setFieldsBoost(fields_boost);
 		if (default_operator != null)

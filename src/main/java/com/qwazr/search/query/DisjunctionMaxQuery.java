@@ -21,8 +21,10 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class DisjunctionMaxQuery extends AbstractQuery {
 
@@ -30,43 +32,28 @@ public class DisjunctionMaxQuery extends AbstractQuery {
 	final public Float tie_breaker_multiplier;
 
 	public DisjunctionMaxQuery() {
-		super(null);
 		queries = null;
 		tie_breaker_multiplier = null;
 	}
 
 	public DisjunctionMaxQuery(List<AbstractQuery> queries, Float tie_breaker_multiplier) {
-		super(null);
 		this.queries = queries;
 		this.tie_breaker_multiplier = tie_breaker_multiplier;
 	}
 
 	public DisjunctionMaxQuery(Float tie_breaker_multiplier, AbstractQuery... queries) {
-		super(null);
-		this.queries = Arrays.asList(queries);
-		this.tie_breaker_multiplier = tie_breaker_multiplier;
-	}
-
-	public DisjunctionMaxQuery(Float boost, List<AbstractQuery> queries, Float tie_breaker_multiplier) {
-		super(boost);
-		this.queries = queries;
-		this.tie_breaker_multiplier = tie_breaker_multiplier;
-	}
-
-	public DisjunctionMaxQuery(Float boost, Float tie_breaker_multiplier, AbstractQuery... queries) {
-		super(boost);
 		this.queries = Arrays.asList(queries);
 		this.tie_breaker_multiplier = tie_breaker_multiplier;
 	}
 
 	@Override
-	final protected Query getQuery(QueryContext queryContext)
-					throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		org.apache.lucene.search.DisjunctionMaxQuery disjunctionMaxQuery = new org.apache.lucene.search.DisjunctionMaxQuery(
-						tie_breaker_multiplier == null ? 0 : tie_breaker_multiplier);
-		if (queries != null)
-			for (AbstractQuery query : queries)
-				disjunctionMaxQuery.add(query.getQuery(queryContext));
-		return disjunctionMaxQuery;
+	final public Query getQuery(QueryContext queryContext)
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+		Objects.requireNonNull(queries, "The queries are missing");
+		final List<Query> queryList = new ArrayList<>(queries.size());
+		for (AbstractQuery query : queries)
+			queryList.add(query.getQuery(queryContext));
+		return new org.apache.lucene.search.DisjunctionMaxQuery(queryList,
+				tie_breaker_multiplier == null ? 0 : tie_breaker_multiplier);
 	}
 }

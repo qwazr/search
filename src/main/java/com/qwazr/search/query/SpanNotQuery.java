@@ -32,7 +32,6 @@ public class SpanNotQuery extends AbstractSpanQuery {
 	final public Integer post;
 
 	public SpanNotQuery() {
-		super(null);
 		include = null;
 		exclude = null;
 		dist = null;
@@ -41,16 +40,6 @@ public class SpanNotQuery extends AbstractSpanQuery {
 	}
 
 	public SpanNotQuery(AbstractSpanQuery include, AbstractSpanQuery exclude) {
-		super(null);
-		this.include = include;
-		this.exclude = exclude;
-		this.dist = null;
-		this.pre = null;
-		this.post = null;
-	}
-
-	public SpanNotQuery(Float boost, AbstractSpanQuery include, AbstractSpanQuery exclude) {
-		super(boost);
 		this.include = include;
 		this.exclude = exclude;
 		this.dist = null;
@@ -59,16 +48,6 @@ public class SpanNotQuery extends AbstractSpanQuery {
 	}
 
 	public SpanNotQuery(AbstractSpanQuery include, AbstractSpanQuery exclude, Integer dist) {
-		super(null);
-		this.include = include;
-		this.exclude = exclude;
-		this.dist = dist;
-		this.pre = null;
-		this.post = null;
-	}
-
-	public SpanNotQuery(Float boost, AbstractSpanQuery include, AbstractSpanQuery exclude, Integer dist) {
-		super(boost);
 		this.include = include;
 		this.exclude = exclude;
 		this.dist = dist;
@@ -77,16 +56,6 @@ public class SpanNotQuery extends AbstractSpanQuery {
 	}
 
 	public SpanNotQuery(AbstractSpanQuery include, AbstractSpanQuery exclude, Integer pre, Integer post) {
-		super(null);
-		this.include = include;
-		this.exclude = exclude;
-		this.dist = null;
-		this.pre = pre;
-		this.post = post;
-	}
-
-	public SpanNotQuery(Float boost, AbstractSpanQuery include, AbstractSpanQuery exclude, Integer pre, Integer post) {
-		super(boost);
 		this.include = include;
 		this.exclude = exclude;
 		this.dist = null;
@@ -95,12 +64,12 @@ public class SpanNotQuery extends AbstractSpanQuery {
 	}
 
 	@Override
-	final protected SpanQuery getQuery(QueryContext queryContext)
-					throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+	final public SpanQuery getQuery(QueryContext queryContext)
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(include);
 		Objects.requireNonNull(exclude);
-		final SpanQuery includeQuery = (SpanQuery) include.getBoostedQuery(queryContext);
-		final SpanQuery excludeQuery = (SpanQuery) exclude.getBoostedQuery(queryContext);
+		final SpanQuery includeQuery = (SpanQuery) include.getQuery(queryContext);
+		final SpanQuery excludeQuery = (SpanQuery) exclude.getQuery(queryContext);
 		if (dist != null)
 			return new org.apache.lucene.search.spans.SpanNotQuery(includeQuery, excludeQuery, dist);
 		else if (pre != null || post != null)

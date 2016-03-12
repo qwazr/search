@@ -29,7 +29,6 @@ public class TermRangeQuery extends AbstractQuery {
 	final public Boolean include_upper;
 
 	public TermRangeQuery() {
-		super(null);
 		field = null;
 		lower_term = null;
 		upper_term = null;
@@ -37,9 +36,8 @@ public class TermRangeQuery extends AbstractQuery {
 		include_upper = null;
 	}
 
-	public TermRangeQuery(Float boost, String field, String lower_term, String upper_term, Boolean include_lower,
+	public TermRangeQuery(String field, String lower_term, String upper_term, Boolean include_lower,
 			Boolean include_upper) {
-		super(boost);
 		this.field = field;
 		this.lower_term = lower_term;
 		this.upper_term = upper_term;
@@ -47,13 +45,8 @@ public class TermRangeQuery extends AbstractQuery {
 		this.include_upper = include_upper;
 	}
 
-	public TermRangeQuery(String field, String lower_term, String upper_term, Boolean include_lower,
-			Boolean include_upper) {
-		this(null, field, lower_term, upper_term, include_lower, include_upper);
-	}
-
 	@Override
-	protected MultiTermQuery getQuery(QueryContext queryContext) throws IOException {
+	final public MultiTermQuery getQuery(QueryContext queryContext) throws IOException {
 		return org.apache.lucene.search.TermRangeQuery
 				.newStringRange(field, lower_term, upper_term, include_lower == null ? true : include_lower,
 						include_upper == null ? true : include_upper);

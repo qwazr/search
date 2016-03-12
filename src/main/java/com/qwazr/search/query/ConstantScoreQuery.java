@@ -27,18 +27,16 @@ public class ConstantScoreQuery extends AbstractQuery {
 	public final AbstractQuery query;
 
 	public ConstantScoreQuery() {
-		super(null);
 		query = null;
 	}
 
 	public ConstantScoreQuery(AbstractQuery query) {
-		super(null);
 		this.query = query;
 	}
 
 	@Override
-	final protected Query getQuery(QueryContext queryContext)
-		throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+	final public Query getQuery(QueryContext queryContext)
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		if (query == null)
 			throw new IOException("No embedded query");
 		return new org.apache.lucene.search.ConstantScoreQuery(query.getQuery(queryContext));

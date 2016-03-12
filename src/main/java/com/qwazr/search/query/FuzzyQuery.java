@@ -31,7 +31,6 @@ public class FuzzyQuery extends AbstractQuery {
 	final public Integer prefix_length;
 
 	public FuzzyQuery() {
-		super(null);
 		field = null;
 		text = null;
 		max_edits = null;
@@ -41,19 +40,7 @@ public class FuzzyQuery extends AbstractQuery {
 	}
 
 	public FuzzyQuery(String field, String text, Integer max_edits, Integer max_expansions, Boolean transpositions,
-					Integer prefix_length) {
-		super(null);
-		this.field = field;
-		this.text = text;
-		this.max_edits = max_edits;
-		this.max_expansions = max_expansions;
-		this.transpositions = transpositions;
-		this.prefix_length = prefix_length;
-	}
-
-	public FuzzyQuery(Float boost, String field, String text, Integer max_edits, Integer max_expansions,
-					Boolean transpositions, Integer prefix_length) {
-		super(boost);
+			Integer prefix_length) {
 		this.field = field;
 		this.text = text;
 		this.max_edits = max_edits;
@@ -63,14 +50,11 @@ public class FuzzyQuery extends AbstractQuery {
 	}
 
 	@Override
-	protected Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.FuzzyQuery(new Term(field, text),
-						max_edits == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxEdits : max_edits,
-						prefix_length == null ? org.apache.lucene.search.FuzzyQuery.defaultPrefixLength : prefix_length,
-						max_expansions == null ?
-										org.apache.lucene.search.FuzzyQuery.defaultMaxExpansions :
-										max_expansions, transpositions == null ?
-						org.apache.lucene.search.FuzzyQuery.defaultTranspositions :
-						transpositions);
+				max_edits == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxEdits : max_edits,
+				prefix_length == null ? org.apache.lucene.search.FuzzyQuery.defaultPrefixLength : prefix_length,
+				max_expansions == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxExpansions : max_expansions,
+				transpositions == null ? org.apache.lucene.search.FuzzyQuery.defaultTranspositions : transpositions);
 	}
 }

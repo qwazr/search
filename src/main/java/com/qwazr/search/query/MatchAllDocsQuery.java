@@ -23,11 +23,10 @@ import java.io.IOException;
 public class MatchAllDocsQuery extends AbstractQuery {
 
 	public MatchAllDocsQuery() {
-		super(null);
 	}
 
 	@Override
-	protected Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.MatchAllDocsQuery();
 	}
 }

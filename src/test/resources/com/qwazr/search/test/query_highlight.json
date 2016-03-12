@@ -13,7 +13,11 @@
       "multivalued_separator": " ",
       "ellipsis": "… ",
       "max_passages": 5,
-      "max_length": 5000
+      "max_length": 5000,
+      "break_iterator": {
+        "type": "sentence",
+        "language": "en-US"
+      }
     },
     "my_default_snippet": {
       "field": "description"

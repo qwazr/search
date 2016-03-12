@@ -32,22 +32,18 @@ public class TermQuery extends AbstractQuery {
 	final public Boolean apply_analyzer;
 
 	public TermQuery() {
-		super(null);
 		field = null;
 		text = null;
 		apply_analyzer = null;
 	}
 
 	public TermQuery(String field, String text) {
-		this(null, field, text, null);
+		this.field = field;
+		this.text = text;
+		this.apply_analyzer = null;
 	}
 
-	public TermQuery(Float boost, String field, String text) {
-		this(boost, field, text, null);
-	}
-
-	public TermQuery(Float boost, String field, String text, Boolean apply_analyzer) {
-		super(boost);
+	public TermQuery(String field, String text, Boolean apply_analyzer) {
 		this.field = field;
 		this.text = text;
 		this.apply_analyzer = apply_analyzer;
@@ -68,7 +64,7 @@ public class TermQuery extends AbstractQuery {
 	}
 
 	@Override
-	protected Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(QueryContext queryContext) throws IOException {
 		final AtomicString atomicString = new AtomicString();
 		final String sourceText = text == null ? queryContext.queryString : text;
 		final String term;

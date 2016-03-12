@@ -30,28 +30,19 @@ public class PhraseQuery extends AbstractQuery {
 	final public Integer slop;
 
 	public PhraseQuery() {
-		super(null);
 		field = null;
 		terms = null;
 		slop = null;
 	}
 
 	public PhraseQuery(String field, Integer slop, List<String> terms) {
-		super(null);
-		this.field = field;
-		this.slop = slop;
-		this.terms = terms;
-	}
-
-	public PhraseQuery(Float boost, String field, Integer slop, List<String> terms) {
-		super(boost);
 		this.field = field;
 		this.slop = slop;
 		this.terms = terms;
 	}
 
 	@Override
-	protected Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(QueryContext queryContext) throws IOException {
 		Objects.requireNonNull(field, "The field property should not be null");
 		org.apache.lucene.search.PhraseQuery.Builder builder = new org.apache.lucene.search.PhraseQuery.Builder();
 		if (slop != null)

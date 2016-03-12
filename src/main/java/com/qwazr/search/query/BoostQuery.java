@@ -16,28 +16,33 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class PrefixQuery extends AbstractQuery {
+public class BoostQuery extends AbstractQuery {
 
-	final public String field;
-	final public String text;
+	final public AbstractQuery query;
+	final public Float boost;
 
-	public PrefixQuery() {
-		field = null;
-		text = null;
+	public BoostQuery() {
+		query = null;
+		boost = null;
 	}
 
-	public PrefixQuery(String field, String text) {
-		this.field = field;
-		this.text = text;
+	public BoostQuery(AbstractQuery query, Float boost) {
+		this.query = query;
+		this.boost = boost;
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.search.PrefixQuery(new Term(field, text));
+	final public Query getQuery(QueryContext queryContext)
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+		Objects.requireNonNull(query, "The query property is missing");
+		Objects.requireNonNull(boost, "The boost property is missing");
+		return new org.apache.lucene.search.BoostQuery(query.getQuery(queryContext), boost);
 	}
 }

@@ -16,6 +16,7 @@
 
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -25,10 +26,7 @@ import java.io.IOException;
 
 public abstract class AbstractSpanQuery extends AbstractQuery {
 
-	protected AbstractSpanQuery(Float boost) {
-		super(boost);
-	}
-
-	protected abstract SpanQuery getQuery(QueryContext queryContext)
-		throws IOException, ParseException, QueryNodeException, ReflectiveOperationException;
+	@JsonIgnore
+	public abstract SpanQuery getQuery(QueryContext queryContext)
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException;
 }
