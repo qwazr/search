@@ -69,8 +69,8 @@ public class FullTest {
 	@BeforeClass
 	public static void startSearchServer() throws Exception {
 		final File dataDir = Files.createTempDir();
-		final String[] parameters = { "-d", dataDir.getAbsolutePath() };
-		SearchServer.main(parameters);
+		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
+		SearchServer.main(new String[] {});
 	}
 
 	@Test
