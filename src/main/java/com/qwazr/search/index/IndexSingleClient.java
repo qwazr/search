@@ -22,6 +22,7 @@ import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.Credentials;
 import org.apache.http.client.fluent.Request;
 
 import javax.ws.rs.WebApplicationException;
@@ -38,6 +39,10 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	public IndexSingleClient(String url, int msTimeOut) throws URISyntaxException {
 		super(url, msTimeOut);
+	}
+
+	public IndexSingleClient(String url, int msTimeOut, Credentials credentials) throws URISyntaxException {
+		super(url, msTimeOut, credentials);
 	}
 
 	public final static TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
