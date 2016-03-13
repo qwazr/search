@@ -46,6 +46,8 @@ class IndexServiceImpl implements IndexServiceInterface {
 		if (v == null)
 			v = System.getenv("QWAZR_ROOT_USER");
 		QWAZR_INDEX_ROOT_USER = v;
+		if (QWAZR_INDEX_ROOT_USER != null)
+			logger.info("QWAZR_ROOT_USER: " + QWAZR_INDEX_ROOT_USER);
 	}
 
 	@Context
