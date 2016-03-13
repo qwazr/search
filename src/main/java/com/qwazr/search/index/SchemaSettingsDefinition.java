@@ -30,6 +30,12 @@ public class SchemaSettingsDefinition {
 		max_size = null;
 	}
 
+	public SchemaSettingsDefinition(Integer max_simultaneous_write, Integer max_simultaneous_read, Long max_size) {
+		this.max_simultaneous_write = max_simultaneous_write;
+		this.max_simultaneous_read = max_simultaneous_read;
+		this.max_size = max_size;
+	}
+
 	static final SchemaSettingsDefinition EMPTY = new SchemaSettingsDefinition();
 
 }
