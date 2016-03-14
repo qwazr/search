@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.annotations;
 
+import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
@@ -26,10 +27,12 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
-@interface Field {
+public @interface Field {
 
 	String name();
-	
+
+	FieldDefinition.Template template();
+
 	String analyzer();
 
 	String queryAnalyzer();
