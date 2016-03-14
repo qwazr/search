@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 public @interface Field {
 
-	String name();
+	String name() default StringUtils.EMPTY;
 
 	FieldDefinition.Template template() default FieldDefinition.Template.NONE;
 
