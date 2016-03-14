@@ -16,6 +16,7 @@
 package com.qwazr.search.annotations;
 
 import com.qwazr.search.field.FieldDefinition;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
@@ -33,9 +34,9 @@ public @interface Field {
 
 	FieldDefinition.Template template();
 
-	String analyzer();
+	String analyzer() default StringUtils.EMPTY;
 
-	String queryAnalyzer();
+	String queryAnalyzer() default StringUtils.EMPTY;
 
 	boolean tokenized() default false;
 
@@ -51,10 +52,24 @@ public @interface Field {
 
 	boolean omitNorms() default false;
 
-	FieldType.NumericType numericType();
+	FieldTypeNumeric numericType() default FieldTypeNumeric.NONE;
 
-	IndexOptions indexOptions();
+	IndexOptions indexOptions() default IndexOptions.NONE;
 
-	DocValuesType docValuesType();
+	DocValuesType docValuesType() default DocValuesType.NONE;
 
+	enum FieldTypeNumeric {
+
+		NONE(null),
+		INT(FieldType.NumericType.INT),
+		FLOAT(FieldType.NumericType.FLOAT),
+		DOUBLE(FieldType.NumericType.DOUBLE),
+		LONG(FieldType.NumericType.LONG);
+
+		final FieldType.NumericType type;
+
+		FieldTypeNumeric(FieldType.NumericType type) {
+			this.type = type;
+		}
+	}
 }

@@ -44,6 +44,7 @@ public class FieldDefinition {
 	public final DocValuesType docvalues_type;
 
 	public enum Template {
+		NONE,
 		DoubleField,
 		FloatField,
 		IntField,
