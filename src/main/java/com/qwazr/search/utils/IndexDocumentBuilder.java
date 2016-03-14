@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.utils;
 
+import com.qwazr.search.annotations.IndexMapping;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -115,7 +117,7 @@ public class IndexDocumentBuilder {
 	 * @throws ReflectiveOperationException
 	 */
 	private static boolean setIfSameType(SourceContext<?> sourceContext, TargetContext<?> targetContext)
-			throws ReflectiveOperationException {
+					throws ReflectiveOperationException {
 		if (targetContext.fieldType != sourceContext.fieldType)
 			return false;
 		targetContext.field.set(targetContext.target, sourceContext.fieldValue);
@@ -131,7 +133,7 @@ public class IndexDocumentBuilder {
 	 * @throws ReflectiveOperationException
 	 */
 	private static boolean setIfTargetString(SourceContext<?> sourceContext, TargetContext<?> targetContext)
-			throws ReflectiveOperationException {
+					throws ReflectiveOperationException {
 		if (targetContext.fieldType != String.class)
 			return false;
 		targetContext.field.set(targetContext.target, sourceContext.fieldValue.toString());
@@ -148,7 +150,7 @@ public class IndexDocumentBuilder {
 	 * @throws ReflectiveOperationException
 	 */
 	private static boolean setIfCollection(SourceContext<?> sourceContext, TargetContext<?> targetContext)
-			throws ReflectiveOperationException {
+					throws ReflectiveOperationException {
 		// Is it a collection ?
 		if (!Collection.class.isAssignableFrom(targetContext.fieldType))
 			return false;
@@ -165,7 +167,7 @@ public class IndexDocumentBuilder {
 
 		// Retrieve the collection
 		@SuppressWarnings("unchecked") Collection<Object> collection = (Collection<Object>) targetContext.field
-				.get(targetContext.target);
+						.get(targetContext.target);
 
 		// Add for same type
 		if (targetCollectionType == sourceContext.fieldType) {

@@ -30,6 +30,10 @@ public class IndexSettingsDefinition {
 		similarity_class = null;
 	}
 
+	public IndexSettingsDefinition(String similarity_class) {
+		this.similarity_class = similarity_class;
+	}
+
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
 
 	public final static IndexSettingsDefinition newSettings(String jsonString) throws IOException {

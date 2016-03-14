@@ -13,14 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.utils;
+package com.qwazr.search.annotations;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-public @interface IndexMapping {
+@Target({ ElementType.TYPE })
+public @interface Index {
 
-	String[] value();
+	String name();
+
+	String schema();
+
+	String similarityClass() default com.qwazr.utils.StringUtils.EMPTY;
 
 }
