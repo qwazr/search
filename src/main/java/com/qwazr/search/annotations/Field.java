@@ -32,7 +32,7 @@ public @interface Field {
 
 	String name();
 
-	FieldDefinition.Template template();
+	FieldDefinition.Template template() default FieldDefinition.Template.NONE;
 
 	String analyzer() default StringUtils.EMPTY;
 
