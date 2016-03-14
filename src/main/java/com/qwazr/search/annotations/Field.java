@@ -28,6 +28,8 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 @interface Field {
 
+	String name();
+	
 	String analyzer();
 
 	String queryAnalyzer();
