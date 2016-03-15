@@ -22,11 +22,11 @@ import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.utils.StringUtils;
 
+import javax.ws.rs.core.Response;
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class AnnotatedIndexService<T> {
 
@@ -39,6 +39,8 @@ public class AnnotatedIndexService<T> {
 	private final String similarityClass;
 
 	private final Map<String, IndexField> indexFieldMap;
+
+	private final Map<String, Field> fieldMap;
 
 	/**
 	 * Create a new index service. A class with Index and IndexField annotations.
@@ -57,6 +59,7 @@ public class AnnotatedIndexService<T> {
 		similarityClass = index.similarityClass();
 		Field[] fields = indexDefinitionClass.getDeclaredFields();
 		if (fields != null && fields.length > 0) {
+			fieldMap = new HashMap<>();
 			indexFieldMap = new HashMap<>();
 			for (Field field : fields) {
 				if (!field.isAnnotationPresent(IndexField.class))
@@ -64,9 +67,12 @@ public class AnnotatedIndexService<T> {
 				IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
 				String indexName = StringUtils.isEmpty(indexField.name()) ? field.getName() : indexField.name();
 				indexFieldMap.put(indexName, indexField);
+				fieldMap.put(indexName, field);
 			}
-		} else
+		} else {
+			fieldMap = null;
 			indexFieldMap = null;
+		}
 	}
 
 	private void checkParameters() {
@@ -112,4 +118,98 @@ public class AnnotatedIndexService<T> {
 		return indexService.setFields(schemaName, indexName, indexFields);
 	}
 
+	/**
+	 * Post a document to the index
+	 *
+	 * @param row the document to index
+	 * @return the status of the request
+	 */
+	public Response postDocument(T row) {
+		checkParameters();
+		Objects.requireNonNull(row, "The document (row) cannot be null");
+		return indexService.postDocument(schemaName, indexName, newMap(row));
+	}
+
+	/**
+	 * Post a collection of document to the index
+	 *
+	 * @param rows a collection of document to index
+	 * @return the status of the request
+	 */
+	public Response postDocuments(Collection<T> rows) {
+		checkParameters();
+		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
+		return indexService.postDocuments(schemaName, indexName, newListMap(rows));
+	}
+
+	/**
+	 * Update the DocValues of one document
+	 *
+	 * @param row a collection of DocValues to update
+	 * @return the status of the request
+	 */
+	public Response updateDocumentValues(T row) {
+		checkParameters();
+		Objects.requireNonNull(row, "The document (row) cannot be null");
+		return indexService.updateDocumentValues(schemaName, indexName, newMap(row));
+	}
+
+	/**
+	 * Update the DocValues of a collection of document
+	 *
+	 * @param rows a collection of document with a collection of DocValues to update
+	 * @return the status of the request
+	 */
+	public Response updateDocumentsValues(Collection<T> rows) {
+		checkParameters();
+		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
+		return indexService.updateDocumentsValues(schemaName, indexName, newListMap(rows));
+	}
+
+	/**
+	 * Build a new Map by reading the IndexField annotations
+	 *
+	 * @param row the record
+	 * @return a new Map
+	 */
+	private Map<String, Object> newMap(final T row) {
+		final Map<String, Object> map = new HashMap<>();
+		fieldMap.forEach(new BiConsumer<String, Field>() {
+			@Override
+			public void accept(String name, Field field) {
+				try {
+					Object value = field.get(row);
+					if (value == null)
+						return;
+					map.put(name, value);
+				} catch (IllegalAccessException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		});
+		return map.isEmpty() ? null : map;
+	}
+
+	/**
+	 * Buid a collection of Map by reading the IndexFields of the annotated documents
+	 *
+	 * @param rows a collection of records
+	 * @return a new collection of map
+	 */
+	private List<Map<String, Object>> newListMap(final Collection<T> rows) {
+		if (rows == null)
+			return null;
+		final List<Map<String, Object>> list = new ArrayList<>();
+		rows.forEach(new Consumer<T>() {
+
+			@Override
+			public void accept(T row) {
+				Map<String, Object> map = newMap(row);
+				if (map == null)
+					return;
+				list.add(map);
+			}
+		});
+		return list.isEmpty() ? null : list;
+	}
 }
