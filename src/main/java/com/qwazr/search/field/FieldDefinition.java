@@ -17,6 +17,7 @@ package com.qwazr.search.field;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.qwazr.search.annotations.IndexField;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.lucene.document.FieldType;
@@ -101,6 +102,22 @@ public class FieldDefinition {
 		index_options = builder.index_options;
 		docvalues_type = builder.docvalues_type;
 		template = builder.template;
+	}
+
+	public FieldDefinition(IndexField indexField) {
+		analyzer = indexField.analyzer();
+		query_analyzer = indexField.queryAnalyzer();
+		tokenized = indexField.tokenized();
+		stored = indexField.stored();
+		store_termvectors = indexField.storeTermVectors();
+		store_termvector_offsets = indexField.storeTermVectorOffsets();
+		store_termvector_positions = indexField.storeTermVectorPositions();
+		store_termvector_payloads = indexField.storeTermVectorPayloads();
+		omit_norms = indexField.omitNorms();
+		numeric_type = indexField.numericType().type;
+		index_options = indexField.indexOptions();
+		docvalues_type = indexField.docValuesType();
+		template = indexField.template();
 	}
 
 	public final static TypeReference<LinkedHashMap<String, FieldDefinition>> MapStringFieldTypeRef = new TypeReference<LinkedHashMap<String, FieldDefinition>>() {

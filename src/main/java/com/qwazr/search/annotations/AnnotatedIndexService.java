@@ -20,18 +20,15 @@ import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.SchemaSettingsDefinition;
-import com.qwazr.utils.AnnotationsUtils;
 import com.qwazr.utils.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.lang.reflect.*;
 import java.lang.reflect.Field;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 
-public class AnnotatedIndexService {
+public class AnnotatedIndexService<T> {
 
 	private final IndexServiceInterface indexService;
 
@@ -41,21 +38,35 @@ public class AnnotatedIndexService {
 
 	private final String similarityClass;
 
+	private final Map<String, IndexField> indexFieldMap;
+
 	/**
-	 * Create a new index service. The Index annotations of the indexDefinition object is read.
+	 * Create a new index service. A class with Index and IndexField annotations.
 	 *
-	 * @param indexService    the IndexServiceInterface to use
-	 * @param indexDefinition an annotated object
+	 * @param indexService         the IndexServiceInterface to use
+	 * @param indexDefinitionClass an annotated class
 	 */
-	public AnnotatedIndexService(IndexServiceInterface indexService, Object indexDefinition) {
+	public AnnotatedIndexService(IndexServiceInterface indexService, Class<T> indexDefinitionClass) {
 		Objects.requireNonNull(indexService, "The indexService parameter is null");
-		Objects.requireNonNull(indexService, "The indexDefinition parameter is null");
+		Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
 		this.indexService = indexService;
-		Index index = indexDefinition.getClass().getAnnotation(Index.class);
-		Objects.requireNonNull(index, "This object does not declare any Index annotation: " + indexDefinition);
+		Index index = indexDefinitionClass.getAnnotation(Index.class);
+		Objects.requireNonNull(index, "This class does not declare any Index annotation: " + indexDefinitionClass);
 		schemaName = index.schema();
 		indexName = index.name();
 		similarityClass = index.similarityClass();
+		Field[] fields = indexDefinitionClass.getDeclaredFields();
+		if (fields != null && fields.length > 0) {
+			indexFieldMap = new HashMap<>();
+			for (Field field : fields) {
+				if (!field.isAnnotationPresent(IndexField.class))
+					continue;
+				IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
+				String indexName = StringUtils.isEmpty(indexField.name()) ? field.getName() : indexField.name();
+				indexFieldMap.put(indexName, indexField);
+			}
+		} else
+			indexFieldMap = null;
 	}
 
 	private void checkParameters() {
@@ -95,7 +106,10 @@ public class AnnotatedIndexService {
 	 */
 	public LinkedHashMap<String, FieldDefinition> createUpdateFields() {
 		checkParameters();
-		return null;
+		final LinkedHashMap<String, FieldDefinition> indexFields = new LinkedHashMap<String, FieldDefinition>();
+		if (indexFieldMap != null)
+			indexFieldMap.forEach((name, indexField) -> indexFields.put(name, new FieldDefinition(indexField)));
+		return indexService.setFields(schemaName, indexName, indexFields);
 	}
 
 }

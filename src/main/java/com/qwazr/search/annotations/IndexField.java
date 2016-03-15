@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
-public @interface Field {
+public @interface IndexField {
 
 	String name() default StringUtils.EMPTY;
 
@@ -66,7 +66,7 @@ public @interface Field {
 		DOUBLE(FieldType.NumericType.DOUBLE),
 		LONG(FieldType.NumericType.LONG);
 
-		final FieldType.NumericType type;
+		final public FieldType.NumericType type;
 
 		FieldTypeNumeric(FieldType.NumericType type) {
 			this.type = type;
