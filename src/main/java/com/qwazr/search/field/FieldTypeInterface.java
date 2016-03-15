@@ -31,7 +31,7 @@ public interface FieldTypeInterface {
 	ValueConverter getConverter(final LeafReader reader) throws IOException;
 
 	static FieldTypeInterface getInstance(final String fieldName, final FieldDefinition fieldDefinition,
-			FacetsConfig facetsConfig) {
+					FacetsConfig facetsConfig) {
 		if (fieldDefinition.template == null)
 			return new CustomFieldType(fieldName, fieldDefinition);
 		switch (fieldDefinition.template) {
@@ -76,6 +76,8 @@ public interface FieldTypeInterface {
 			return new StringFieldType(fieldName, fieldDefinition);
 		case TextField:
 			return new TextFieldType(fieldName, fieldDefinition);
+		case NONE:
+			return new CustomFieldType(fieldName, fieldDefinition);
 		}
 		throw new IllegalArgumentException("Unsupported field type");
 	}

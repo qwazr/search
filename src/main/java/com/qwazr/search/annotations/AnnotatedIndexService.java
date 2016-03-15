@@ -106,7 +106,7 @@ public class AnnotatedIndexService<T> {
 	 */
 	public LinkedHashMap<String, FieldDefinition> createUpdateFields() {
 		checkParameters();
-		final LinkedHashMap<String, FieldDefinition> indexFields = new LinkedHashMap<String, FieldDefinition>();
+		final LinkedHashMap<String, FieldDefinition> indexFields = new LinkedHashMap<>();
 		if (indexFieldMap != null)
 			indexFieldMap.forEach((name, indexField) -> indexFields.put(name, new FieldDefinition(indexField)));
 		return indexService.setFields(schemaName, indexName, indexFields);
