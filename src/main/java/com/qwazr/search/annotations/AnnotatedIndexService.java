@@ -16,10 +16,7 @@
 package com.qwazr.search.annotations;
 
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.index.IndexServiceInterface;
-import com.qwazr.search.index.IndexSettingsDefinition;
-import com.qwazr.search.index.IndexStatus;
-import com.qwazr.search.index.SchemaSettingsDefinition;
+import com.qwazr.search.index.*;
 import com.qwazr.utils.StringUtils;
 
 import javax.ws.rs.core.Response;
@@ -164,6 +161,36 @@ public class AnnotatedIndexService<T> {
 		checkParameters();
 		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
 		return indexService.updateDocumentsValues(schemaName, indexName, newListMap(rows));
+	}
+
+	/**
+	 * @return the status of the index
+	 */
+	public IndexStatus getIndexStatus() {
+		checkParameters();
+		return indexService.getIndex(schemaName, indexName);
+	}
+
+	/**
+	 * Execute a search query
+	 *
+	 * @param query the query to execute
+	 * @return the results
+	 */
+	public ResultDefinition searchQuery(QueryDefinition query) {
+		checkParameters();
+		return indexService.searchQuery(schemaName, indexName, query, false);
+	}
+
+	/**
+	 * Delete the documents matching the query
+	 *
+	 * @param query the query to execute
+	 * @return the results
+	 */
+	public ResultDefinition deleteByQuery(QueryDefinition query) {
+		checkParameters();
+		return indexService.searchQuery(schemaName, indexName, query, true);
 	}
 
 	/**
