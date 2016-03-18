@@ -27,13 +27,13 @@ import java.util.function.Consumer;
 
 public class AnnotatedIndexService<T> {
 
-	private final IndexServiceInterface indexService;
+	protected final IndexServiceInterface indexService;
 
-	private final String schemaName;
+	protected final String schemaName;
 
-	private final String indexName;
+	protected final String indexName;
 
-	private final String similarityClass;
+	protected final String similarityClass;
 
 	private final Map<String, IndexField> indexFieldMap;
 
