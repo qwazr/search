@@ -40,7 +40,7 @@ public class HighlighterImpl extends PostingsHighlighter {
 		this.definition = definition;
 
 		separator = definition.multivalued_separator == null || definition.multivalued_separator.isEmpty() ?
-				' ' :
+				0x2029 :
 				definition.multivalued_separator.charAt(0);
 
 		if (definition.break_iterator != null && definition.break_iterator.language != null)

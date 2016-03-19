@@ -88,7 +88,7 @@ public class HighlighterDefinition {
 
 		private Integer maxLength = null;
 
-		private char multivaluedSeparator = ' ';
+		private char multivaluedSeparator = 0x2029;
 
 		private String preTag = null;
 
