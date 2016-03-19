@@ -6,7 +6,7 @@ These pages describe the REST/JSON API of the Search module.
 
 A schema is a collection of indexes.
 
-* [Create a schema](schema/create.md)
+* [Create/update a schema](schema/create.md)
 * [List all schemas](schema/list.md)
 * [Setting schema settings](schema/set_settings.md)
 * [Getting schema settings](schema/get_settings.md)
@@ -17,17 +17,33 @@ A schema is a collection of indexes.
 An index is a collection of documents.
 
 * [List all indexes](index/list.md)
-* [Create/update an index and its fields](index/create.md)
-* [Getting index fields and status](index/status.md)
-* [Field types](index/field_types.md)
+* [Create/update an index and its settings](index/create.md)
 * [Delete an index](index/delete.md)
+
+## Analyzers
+
+* [Create/update an analyzer](analyzer/set_analyzer.md)
+* [Getting an analyzer](analyzer/get_analyzer.md)
+* [Create/update a analyzer collection](analyzer/set_analyzers.md)
+* [Getting a analyzer collection](analyzer/get_analyzers.md)
+* [Test an analyzer](analyzer/test.md)
+* [Delete an analyzer](analyzer/delete.md)
+
+## Fields
+
+* [Create/update a field](fields/set_field.md)
+* [Getting a field](fields/get_field.md)
+* [Create/update of a field collection](fields/set_fields.md)
+* [Getting a field collection](fields/get_fields.md)
+* [Field types](fields/field_types.md)
+* [Delete a field](fields/delete.md)
 
 ## Document
 
 * [Insert/update a document](document/update_document.md)
-* [Insert/update several documents](document/update_documents.md)
+* [Insert/update a document collection](document/update_documents.md)
 * [Update the DocValue fields of a document](document/update_docvalue.md)
-* [Update the DocValue fields of several documents](document/update_docvalues.md)
+* [Update the DocValue fields of a document collection](document/update_docvalues.md)
 * [Delete all documents](document/truncate_index.md)
 
 ## Search
@@ -35,4 +51,3 @@ An index is a collection of documents.
 * [Search query](search/index_search.md)
 * [Distributed search](search/schema_search.md)
 * [Delete by query](search/delete_by_query.md)
-
