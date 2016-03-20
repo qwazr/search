@@ -1,8 +1,8 @@
-## Getting index fields and status
+# Getting fields
 
 Call this API to display the fields settings of an index:
 
-* **URL pattern**: {server_name}:9091/indexes/{schema_name}/{index_name}
+* **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}
 * **HTTP method**: GET
 
 Parameters:
@@ -12,10 +12,10 @@ Parameters:
 
 
 ```shell
-curl localhost:9091/indexes/my_schema/my_index
+curl -XGET "http://localhost:9091/indexes/my_schema/my_index"
 ```
 
-### Response
+## Response
 
 The API returns the settings.
 

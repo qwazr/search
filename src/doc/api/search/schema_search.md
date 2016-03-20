@@ -1,9 +1,9 @@
-## Distributed search
+# Distributed search
 
 Call this API to execute a distributed search query.
 The search is executed over all indexes of a given schema.
 
-* **URL pattern**: {server_name}:9091/indexes/{schema_name}/*/search
+* **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/*/search
 * **HTTP method**: POST
 * **Content-Type**: application/json
 * **Body**: a JSON object describing the query
@@ -13,8 +13,8 @@ Parameters:
 * **schema_name**: the name of the schema
 
 ```shell
-curl -H 'Content-Type: application/json' \
-    -XPOST localhost:9091/indexes/my_schema/*/search -d '
+curl -XPOST -H 'Content-Type: application/json' \
+     http://localhost:9091/indexes/my_schema/*/search -d '
 {
   "query_string": "name",
   "default_field": "name",

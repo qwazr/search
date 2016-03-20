@@ -2,7 +2,7 @@
 
 This API delete an index and all the documents it contains.
 
-* **URL pattern**: {server_name}:9091/indexes/{schema_name}/{index_name}
+* **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}
 * **HTTP method**: DELETE
 
 Parameters:
@@ -11,7 +11,7 @@ Parameters:
 * **index_name**: the name of the index
 
 ```shell
-curl -XDELETE "localhost:9091/indexes/my_schema/my_index"
+curl -XDELETE "http://localhost:9091/indexes/my_schema/my_index"
 ```
 
 ### Response

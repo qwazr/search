@@ -1,8 +1,8 @@
-## Create an index
+# Create an index
 
 Call this API to create or update an index and set the fields settings:
 
-* **URL pattern**: {server_name}:9091/indexes/{schema_name}/{index_name}
+* **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}
 * **HTTP method**: POST
 * **Content-Type**: application/json
 * **Body**: A JSON structure describing the fields
@@ -13,8 +13,8 @@ Parameters:
 * **index_name**: the name of the index
 
 ```shell
-curl -H 'Content-Type: application/json' \
-    -XPOST localhost:9091/indexes/my_schema/my_index -d '
+curl -XPOST -H 'Content-Type: application/json' \
+     "http://localhost:9091/indexes/my_schema/my_index -d"
 {
   "name": {
     "analyzer": "LikeAnalyzer",
@@ -37,7 +37,7 @@ curl -H 'Content-Type: application/json' \
 }'
 ```
 
-### Response
+## Response
 
 The API returns the settings.
 

@@ -24,8 +24,8 @@ An index is a collection of documents.
 
 * [Create/update an analyzer](analyzer/set_analyzer.md)
 * [Getting an analyzer](analyzer/get_analyzer.md)
-* [Create/update a analyzer collection](analyzer/set_analyzers.md)
-* [Getting a analyzer collection](analyzer/get_analyzers.md)
+* [Create/update a collection of analyzer](analyzer/set_analyzers.md)
+* [Getting a collection of analyzer](analyzer/get_analyzers.md)
 * [Test an analyzer](analyzer/test.md)
 * [Delete an analyzer](analyzer/delete.md)
 
@@ -33,17 +33,17 @@ An index is a collection of documents.
 
 * [Create/update a field](fields/set_field.md)
 * [Getting a field](fields/get_field.md)
-* [Create/update of a field collection](fields/set_fields.md)
-* [Getting a field collection](fields/get_fields.md)
+* [Create/update of a collection of field](fields/set_fields.md)
+* [Getting a collection of field](fields/get_fields.md)
 * [Field types](fields/field_types.md)
 * [Delete a field](fields/delete.md)
 
 ## Document
 
 * [Insert/update a document](document/update_document.md)
-* [Insert/update a document collection](document/update_documents.md)
-* [Update the DocValue fields of a document](document/update_docvalue.md)
-* [Update the DocValue fields of a document collection](document/update_docvalues.md)
+* [Insert/update a collection of document](document/update_documents.md)
+* [Update DocValue fields of a document](document/update_docvalue.md)
+* [Update DocValue fields from a collection of document](document/update_docvalues.md)
 * [Delete all documents](document/truncate_index.md)
 
 ## Search

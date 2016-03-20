@@ -2,7 +2,7 @@
 
 Call this API to execute a search query and get documents:
 
-* **URL pattern**: {server_name}:9091/indexes/{schema_name}/{index_name}/search
+* **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}/search
 * **HTTP method**: POST
 * **Content-Type**: application/json
 * **Body**: a JSON object describing the query
@@ -13,8 +13,8 @@ Parameters:
 * **index_name**: the name of the index
 
 ```shell
-curl -H 'Content-Type: application/json' \
-    -XPOST localhost:9091/indexes/my_schema/my_index/search -d '
+curl -XPOST -H 'Content-Type: application/json' \
+    "http://localhost:9091/indexes/my_schema/my_index/search" -d '
 {
   "query_string": "name",
   "query": {

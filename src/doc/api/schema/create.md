@@ -2,7 +2,7 @@
 
 This API create a new schema:
 
-* **URL pattern**: {server_name}:9091/indexes/{schema_name}
+* **URL pattern**: http://{server_name}:9091/indexes/{schema_name}
 * **HTTP method**: POST
 
 Parameters:
