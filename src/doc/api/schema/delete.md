@@ -1,4 +1,4 @@
-## Delete a schema
+# Delete a schema
 
 This API delete a schema and all the indexes it contains.
 
@@ -13,7 +13,7 @@ Parameters:
 
 * **schema_name**: the name of the schema
 
-### Response
+## Response
 
 If any error occurs:
 
