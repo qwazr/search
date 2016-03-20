@@ -1,4 +1,4 @@
-## List all indexes
+# List all indexes
 
 This API returns a list with all existing indexes:
 
@@ -13,7 +13,7 @@ Parameters:
 curl -XGET "http://localhost:9091/indexes/my_schema"
 ```
 
-### Response
+## Response
 
 ```json
 [my_index]

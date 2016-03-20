@@ -1,4 +1,4 @@
-## Delete an index
+# Delete an index
 
 This API delete an index and all the documents it contains.
 
@@ -14,7 +14,7 @@ Parameters:
 curl -XDELETE "http://localhost:9091/indexes/my_schema/my_index"
 ```
 
-### Response
+## Response
 
 If any error occurs:
 

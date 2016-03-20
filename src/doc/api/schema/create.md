@@ -5,7 +5,7 @@ This API create a new schema:
 * **URL pattern**: http://{server_name}:9091/indexes/{schema_name}
 * **HTTP method**: POST
 
-If the index already exists, nothing is changed.
+If the schema already exists, nothing is changed.
 
 Parameters:
 

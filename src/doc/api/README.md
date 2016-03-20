@@ -8,8 +8,6 @@ A schema is a collection of indexes.
 
 * [Create/update a schema](schema/create.md)
 * [List all schemas](schema/list.md)
-* [Setting schema settings](schema/set_settings.md)
-* [Getting schema settings](schema/get_settings.md)
 * [Delete a schema](schema/delete.md)
 
 ## Index
