@@ -20,8 +20,6 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +27,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.security.Principal;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 class IndexServiceImpl implements IndexServiceInterface {
 
@@ -92,7 +92,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(null);
 			IndexManager.INSTANCE.createUpdate(schema_name, null);
 			return IndexManager.INSTANCE.get(schema_name).getSettings();
-		} catch (ServerException | IOException | ReflectiveOperationException | InterruptedException | URISyntaxException e) {
+		} catch (Exception e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -103,7 +103,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 		try {
 			checkRight(null);
 			return IndexManager.INSTANCE.createUpdate(schema_name, settings);
-		} catch (ServerException | IOException | ReflectiveOperationException | InterruptedException | URISyntaxException e) {
+		} catch (Exception e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -114,7 +114,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 		try {
 			checkRight(null);
 			return IndexManager.INSTANCE.nameSet();
-		} catch (ServerException e) {
+		} catch (Exception e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -126,7 +126,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(null);
 			IndexManager.INSTANCE.delete(schema_name);
 			return Response.ok().build();
-		} catch (ServerException e) {
+		} catch (Exception e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -137,7 +137,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 		try {
 			checkRight(schema_name);
 			return IndexManager.INSTANCE.get(schema_name).createUpdate(index_name, settings);
-		} catch (ServerException | IOException | ReflectiveOperationException | InterruptedException e) {
+		} catch (Exception e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -153,7 +153,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 		try {
 			checkRight(schema_name);
 			return IndexManager.INSTANCE.get(schema_name).get(index_name).getFields();
-		} catch (ServerException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -169,7 +169,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 			if (fieldDef == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + field_name);
 			return fieldDef;
-		} catch (ServerException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -182,7 +182,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setFields(fields);
 			return fields;
-		} catch (ServerException | IOException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -229,7 +229,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setField(field_name, field);
 			return field;
-		} catch (ServerException | IOException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -242,7 +242,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).deleteField(field_name);
 			return Response.ok().build();
-		} catch (ServerException | IOException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -254,7 +254,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 		try {
 			checkRight(schema_name);
 			return IndexManager.INSTANCE.get(schema_name).get(index_name).getAnalyzers();
-		} catch (ServerException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -271,7 +271,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 			if (analyzerDef == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzer_name);
 			return analyzerDef;
-		} catch (ServerException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -285,7 +285,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setAnalyzer(analyzer_name, analyzer);
 			return analyzer;
-		} catch (ServerException | IOException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -298,7 +298,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).setAnalyzers(analyzers);
 			return analyzers;
-		} catch (ServerException | IOException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -311,7 +311,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).deleteAnalyzer(analyzer_name);
 			return Response.ok().build();
-		} catch (ServerException | IOException e) {
+		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
@@ -323,8 +323,9 @@ class IndexServiceImpl implements IndexServiceInterface {
 		try {
 			checkRight(schema_name);
 			return IndexManager.INSTANCE.get(schema_name).get(index_name).getStatus();
-		} catch (ServerException | IOException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}
@@ -335,8 +336,9 @@ class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).delete(index_name);
 			return Response.ok().build();
-		} catch (ServerException | IOException e) {
-			logger.warn(e.getMessage(), e);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}
@@ -349,8 +351,9 @@ class IndexServiceImpl implements IndexServiceInterface {
 				return Response.notModified().build();
 			IndexManager.INSTANCE.get(schema_name).get(index_name).postDocument(document);
 			return Response.ok().build();
-		} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}
@@ -363,8 +366,9 @@ class IndexServiceImpl implements IndexServiceInterface {
 				return Response.notModified().build();
 			IndexManager.INSTANCE.get(schema_name).get(index_name).postDocuments(documents);
 			return Response.ok().build();
-		} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}
@@ -377,7 +381,7 @@ class IndexServiceImpl implements IndexServiceInterface {
 				return Response.notModified().build();
 			IndexManager.INSTANCE.get(schema_name).get(index_name).updateDocumentValues(document);
 			return Response.ok().build();
-		} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
+		} catch (Exception e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -391,8 +395,9 @@ class IndexServiceImpl implements IndexServiceInterface {
 				return Response.notModified().build();
 			IndexManager.INSTANCE.get(schema_name).get(index_name).updateDocumentsValues(documents);
 			return Response.ok().build();
-		} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}
@@ -406,8 +411,9 @@ class IndexServiceImpl implements IndexServiceInterface {
 				return new BackupStatus();
 			} else
 				return IndexManager.INSTANCE.get(schema_name).get(index_name).backup(keep_last_count);
-		} catch (ServerException | IOException | IllegalArgumentException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}
@@ -417,8 +423,9 @@ class IndexServiceImpl implements IndexServiceInterface {
 		try {
 			checkRight(null);
 			return IndexManager.INSTANCE.get(schema_name).get(index_name).getBackups();
-		} catch (ServerException | IllegalArgumentException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}
@@ -429,8 +436,9 @@ class IndexServiceImpl implements IndexServiceInterface {
 			checkRight(schema_name);
 			IndexManager.INSTANCE.get(schema_name).get(index_name).deleteAll();
 			return Response.ok().build();
-		} catch (ServerException | IOException | InterruptedException e) {
-			logger.warn(e.getMessage(), e);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}
@@ -453,8 +461,9 @@ class IndexServiceImpl implements IndexServiceInterface {
 					return docs.get(0).getFields();
 			}
 			throw new ServerException(Response.Status.NOT_FOUND, "Document not found: " + doc_id);
-		} catch (ServerException | IOException | ParseException | QueryNodeException | InterruptedException | ReflectiveOperationException e) {
-			logger.warn(e.getMessage(), e);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}
@@ -470,8 +479,9 @@ class IndexServiceImpl implements IndexServiceInterface {
 				return index.deleteByQuery(query);
 			else
 				return index.search(query);
-		} catch (ServerException | IOException | ParseException | QueryNodeException | InterruptedException | ReflectiveOperationException e) {
-			logger.warn(e.getMessage(), e);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}

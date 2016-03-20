@@ -16,6 +16,18 @@ Parameters:
 curl -XPOST "http://localhost:9091/indexes/my_schema/my_index"
 ```
 
+### Response
+
+```json
+{
+  "num_docs" : 0,
+  "num_deleted_docs" : 0,
+  "settings" : { }
+}
+```
+
+## Create index with settings
+
 It is also possible to set the following settings:
 
 ```shell
@@ -23,7 +35,7 @@ curl -POST -H 'Content-Type: application/json' \
     "http://localhost:9091/indexes/my_schema" -d @my_payload
 ```
 
-Where the payload (my_payload) can contains:
+Where the payload file (my_payload) can contains:
 
 ```json
 {

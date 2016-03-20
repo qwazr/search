@@ -16,6 +16,7 @@ An index is a collection of documents.
 
 * [List all indexes](index/list.md)
 * [Create/update an index and its settings](index/create.md)
+* [Getting the status of an index](index/status.md)
 * [Delete an index](index/delete.md)
 
 ## Analyzers
