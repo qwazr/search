@@ -13,8 +13,11 @@ Parameters:
 * **index_name**: the name of the index
 
 ```shell
-curl -XPOST -H 'Content-Type: application/json' \
-    "http://localhost:9091/indexes/my_schema/my_index/search" -d '
+curl -XPOST -H 'Content-Type: application/json' -d @my_payload \
+    "http://localhost:9091/indexes/my_schema/my_index/search"
+```
+
+```json
 {
   "query_string": "name",
   "query": {
@@ -34,7 +37,7 @@ curl -XPOST -H 'Content-Type: application/json' \
      "$score": "descending",
      "price": "ascending"
   }
-}'
+}
 ```
 
 ### Response

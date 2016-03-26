@@ -18,8 +18,13 @@ curl -XPOST "http://localhost:9091/indexes/my_schema"
 It is also possible to set the following settings:
 
 ```shell
-curl -POST -H 'Content-Type: application/json' \
-    "http://localhost:9091/indexes/my_schema" -d '
+curl -POST -H 'Content-Type: application/json' -d @my_payload \
+    "http://localhost:9091/indexes/my_schema"
+```
+
+Where the payload file (my_payload) contains the settings:
+
+```json
 {
     "max_size": 100000,
     "max_simultaneous_read": 5,

@@ -1,6 +1,6 @@
 # Delete by query
 
-Call this API to execute a search query and delete the document:
+Call this API to execute a search query and delete the document found:
 
 * **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}/search?delete=true
 * **HTTP method**: POST
@@ -13,8 +13,13 @@ Parameters:
 * **index_name**: the name of the index
 
 ```shell
-curl -XPOST -H 'Content-Type: application/json' \
-    localhost:9091/indexes/my_schema/my_index/search?delete=true -d '
+curl -XPOST -H 'Content-Type: application/json' -d @my_payload \
+    "http://localhost:9091/indexes/my_schema/my_index/search?delete=true"
+```
+
+Where the payload file (my_payload) contains the query:
+
+```json
 {
   "query": {
     "query": "FacetPathQuery",
@@ -23,7 +28,7 @@ curl -XPOST -H 'Content-Type: application/json' \
       "cat4"
     ]
   }
-}'
+}
 ```
 
 ## Response
