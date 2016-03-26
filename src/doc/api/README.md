@@ -43,6 +43,7 @@ An index is a collection of documents.
 * [Insert/update a collection of document](document/update_documents.md)
 * [Update DocValue fields of a document](document/update_docvalue.md)
 * [Update DocValue fields from a collection of document](document/update_docvalues.md)
+* [Get a document](document/get_document.md)
 * [Delete all documents](document/truncate_index.md)
 
 ## Search

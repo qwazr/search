@@ -25,5 +25,5 @@ Where the payload file (my_payload) contains the fields to update (only DocValue
 {
   "$id$": "5",
   "stock": 10
-}'
+}
 ```
