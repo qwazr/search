@@ -28,10 +28,20 @@ Where the payload file (my_payload) contains the document to index:
   "name": "Fifth name",
   "category": [
     "cat1",
-    "cat2"
+    "cat2",
+    "cat3",
+    "cat4",
+    "cat5"
   ],
+  "format": "odd",
   "size": 500,
   "price": 10.50,
-  "stock": 0
+  "stock": 0,
+  "description": [
+    "A web search engine is a software system that is designed to search for information on the World Wide Web.",
+    "The search results are generally presented in a line of results often referred to as search engine results pages.",
+    "The information may be a mix of web pages, images, and other types of files.",
+    "Some search engines also mine data available in databases or open directories."
+  ]
 }
 ```

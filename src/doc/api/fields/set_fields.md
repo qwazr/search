@@ -20,7 +20,9 @@ Where the payload file (my_payload) contains the analyzer definitions:
 ```json
 {
   "name": {
-    "template": "TextField"
+    "template": "TextField",
+    "stored": true,
+    "analyzer": "EnglishAnalyzer"
   },
   "description": {
     "analyzer": "EnglishAnalyzer",
