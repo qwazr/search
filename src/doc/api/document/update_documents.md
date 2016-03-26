@@ -1,6 +1,6 @@
 # Insert/update several documents
 
-Use this API to insert or update an array of documents into an index.
+Use this API to insert or update a collection of documents into an index.
 
 * **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}/docs
 * **HTTP method**: POST
@@ -17,7 +17,10 @@ If the ID is not provided, a time based UUID is automatically generated.
 
 ```shell
 curl -XPOST -H 'Content-Type: application/json' \
-    "http://localhost:9091/indexes/my_schema/my_index/docs" -d '
+    "http://localhost:9091/indexes/my_schema/my_index/docs"
+```
+
+```json
 [
   {
     "$id$": "2",
@@ -42,5 +45,5 @@ curl -XPOST -H 'Content-Type: application/json' \
     "price": 3.30,
     "stock": 0
   }
-]'
+]
 ```
