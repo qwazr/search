@@ -32,7 +32,7 @@ It is also possible to set the following settings:
 
 ```shell
 curl -POST -H 'Content-Type: application/json' \
-    "http://localhost:9091/indexes/my_schema" -d @my_payload
+    "http://localhost:9091/indexes/my_schema/my_index" -d @my_payload
 ```
 
 Where the payload file (my_payload) can contains:
