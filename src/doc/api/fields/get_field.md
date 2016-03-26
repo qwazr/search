@@ -1,4 +1,4 @@
-# Get an field settings
+# Get a field settings
 
 Call this API to display a field:
 
