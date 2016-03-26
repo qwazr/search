@@ -1,7 +1,7 @@
 # The list of available field templates
 
 | Name                              | Indexed | Tokenized | Stored | DocValues | Facet | Sort |
-| --------------------------------- | --------| ----------| ------ | --------- | ----- | ---- |
+| --------------------------------- | :------:| :--------:| :----: | :-------: | :---: | :--: |
 | DoubleField                       | Yes     | No        | No     | No        | No    | Yes  |
 | FloatField                        | Yes     | No        | No     | No        | No    | Yes  |
 | IntField                          | Yes     | No        | No     | No        | No    | Yes  |
