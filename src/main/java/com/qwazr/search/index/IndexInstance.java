@@ -146,13 +146,13 @@ final public class IndexInstance implements Closeable {
 			File fieldMapFile = new File(indexDirectory, FIELDS_FILE);
 			LinkedHashMap<String, FieldDefinition> fieldMap = fieldMapFile.exists() ?
 					JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
-					null;
+					new LinkedHashMap<>();
 
 			//Loading the fields
 			File analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
 			LinkedHashMap<String, AnalyzerDefinition> analyzerMap = analyzerMapFile.exists() ?
 					JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
-					null;
+					new LinkedHashMap<>();
 
 			AnalyzerContext context = new AnalyzerContext(analyzerMap, fieldMap);
 			indexAnalyzer = new UpdatableAnalyzer(context, context.indexAnalyzerMap);
@@ -216,8 +216,7 @@ final public class IndexInstance implements Closeable {
 	private IndexStatus getIndexStatus() throws IOException {
 		final IndexSearcher indexSearcher = searcherManager.acquire();
 		try {
-			return new IndexStatus(indexSearcher.getIndexReader(), settings,
-					analyzerMap == null ? null : analyzerMap.keySet(), fieldMap == null ? null : fieldMap.keySet());
+			return new IndexStatus(indexSearcher.getIndexReader(), settings, analyzerMap.keySet(), fieldMap.keySet());
 		} finally {
 			searcherManager.release(indexSearcher);
 		}
@@ -513,7 +512,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	void fillFields(final Map<String, FieldDefinition> fields) {
-		if (fields == null || this.fieldMap == null)
+		if (fields == null)
 			return;
 		this.fieldMap.forEach(new BiConsumer<String, FieldDefinition>() {
 			@Override
@@ -525,7 +524,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	void fillAnalyzers(final Map<String, AnalyzerDefinition> analyzers) {
-		if (analyzers == null || this.analyzerMap == null)
+		if (analyzers == null)
 			return;
 		this.analyzerMap.forEach(new BiConsumer<String, AnalyzerDefinition>() {
 			@Override
