@@ -23,6 +23,7 @@ import com.qwazr.utils.server.ServiceName;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
@@ -152,6 +153,13 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	Response deleteAnalyzer(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
 			@PathParam("analyzer_name") String analyzer_name);
+
+	@POST
+	@Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+	List<TermDefinition> testAnalyzer(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, @PathParam("analyzer_name") String analyzer_name, String text);
 
 	@GET
 	@Path("/{schema_name}/{index_name}")

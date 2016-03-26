@@ -22,6 +22,6 @@ If any error occurs:
 ```json
 {
   "status_code" : 404,
-  "message" : "Index not found: my_index"
+  "message" : "Analyzer not found: FrenchAnalyzer"
 }
 ```

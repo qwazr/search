@@ -148,6 +148,11 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
+	public List<TermDefinition> testAnalyzer(String schema_name, String index_name, String analyzer_name, String text) {
+		return null;
+	}
+
+	@Override
 	public IndexStatus getIndex(String schema_name, String index_name) {
 		// TODO Auto-generated method stub
 		return null;

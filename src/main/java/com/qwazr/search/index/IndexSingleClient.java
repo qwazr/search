@@ -213,6 +213,13 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
+	public List<TermDefinition> testAnalyzer(String schema_name, String index_name, String analyzer_name, String text) {
+		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, text, null, TermDefinition.MapListTermDefinitionRef, 200);
+	}
+
+	@Override
 	public IndexStatus getIndex(String schema_name, String index_name) {
 		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
 		Request request = Request.Get(uriBuilder.build());

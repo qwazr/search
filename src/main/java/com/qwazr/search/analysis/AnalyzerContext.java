@@ -39,15 +39,15 @@ public class AnalyzerContext {
 
 	public AnalyzerContext(Map<String, AnalyzerDefinition> analyzerMap, Map<String, FieldDefinition> fields)
 			throws ServerException {
-		this.fieldTypes = new HashMap<String, FieldTypeInterface>();
+		this.fieldTypes = new HashMap<>();
 		this.facetsConfig = new FacetsConfig();
 		if (fields == null || fields.size() == 0) {
 			this.indexAnalyzerMap = Collections.<String, Analyzer>emptyMap();
 			this.queryAnalyzerMap = Collections.<String, Analyzer>emptyMap();
 			return;
 		}
-		this.indexAnalyzerMap = new HashMap<String, Analyzer>();
-		this.queryAnalyzerMap = new HashMap<String, Analyzer>();
+		this.indexAnalyzerMap = new HashMap<>();
+		this.queryAnalyzerMap = new HashMap<>();
 
 		for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
 			final String fieldName = field.getKey();
@@ -91,7 +91,7 @@ public class AnalyzerContext {
 
 	final static String[] analyzerClassPrefixes = { "", "org.apache.lucene.analysis." };
 
-	static private Analyzer findAnalyzer(Map<String, AnalyzerDefinition> analyzerMap, String analyzer)
+	public final static Analyzer findAnalyzer(Map<String, AnalyzerDefinition> analyzerMap, String analyzer)
 			throws InterruptedException, ReflectiveOperationException, IOException {
 		if (analyzerMap != null) {
 			AnalyzerDefinition analyzerDef = analyzerMap.get(analyzer);

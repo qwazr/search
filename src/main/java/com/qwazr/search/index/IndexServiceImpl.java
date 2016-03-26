@@ -319,6 +319,18 @@ class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	@Override
+	public List<TermDefinition> testAnalyzer(String schema_name, String index_name, String analyzer_name, String text) {
+		try {
+			checkRight(schema_name);
+			return IndexManager.INSTANCE.get(schema_name).get(index_name).testAnalyzer(analyzer_name, text);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
 	public IndexStatus getIndex(String schema_name, String index_name) {
 		try {
 			checkRight(schema_name);

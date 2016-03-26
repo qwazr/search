@@ -17,9 +17,11 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.analysis.CustomAnalyzer;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
@@ -270,18 +272,31 @@ final public class IndexInstance implements Closeable {
 		analyzerMap = analyzers;
 	}
 
-	void setAnalyzer(String analyzer_name, AnalyzerDefinition analyzer) throws IOException, ServerException {
+	void setAnalyzer(String analyzerName, AnalyzerDefinition analyzer) throws IOException, ServerException {
 		LinkedHashMap<String, AnalyzerDefinition> analyzers = (LinkedHashMap<String, AnalyzerDefinition>) analyzerMap
 				.clone();
-		analyzers.put(analyzer_name, analyzer);
+		analyzers.put(analyzerName, analyzer);
 		setAnalyzers(analyzers);
 	}
 
-	void deleteAnalyzer(String analyzer_name) throws IOException, ServerException {
+	List<TermDefinition> testAnalyzer(String analyzerName, String text)
+			throws ServerException, InterruptedException, ReflectiveOperationException, IOException {
+		AnalyzerDefinition analyzerDefinition = analyzerMap.get(analyzerName);
+		if (analyzerDefinition == null)
+			throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
+		Analyzer analyzer = new CustomAnalyzer(analyzerDefinition);
+		try {
+			return TermDefinition.buildTermList(analyzer, StringUtils.EMPTY, text);
+		} finally {
+			analyzer.close();
+		}
+	}
+
+	void deleteAnalyzer(String analyzerName) throws IOException, ServerException {
 		LinkedHashMap<String, AnalyzerDefinition> analyzers = (LinkedHashMap<String, AnalyzerDefinition>) analyzerMap
 				.clone();
-		if (analyzers.remove(analyzer_name) == null)
-			throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzer_name);
+		if (analyzers.remove(analyzerName) == null)
+			throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
 		setAnalyzers(analyzers);
 	}
 

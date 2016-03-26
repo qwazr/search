@@ -204,6 +204,16 @@ public class FullTest {
 	}
 
 	@Test
+	public void test126TestFrenchAnalyzer() throws URISyntaxException {
+		IndexServiceInterface client = getClient();
+		List<TermDefinition> termDefinitions = client
+				.testAnalyzer(SCHEMA_NAME, INDEX_NAME, "FrenchAnalyzer", "Bonjour le monde!");
+		Assert.assertNotNull(termDefinitions);
+		Assert.assertEquals(3, termDefinitions.size());
+		Assert.assertEquals("bonjou", termDefinitions.get(0).char_term);
+	}
+
+	@Test
 	public void test130SetFields() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		LinkedHashMap<String, FieldDefinition> fields = client.setFields(SCHEMA_NAME, INDEX_NAME, FIELDS_JSON);
