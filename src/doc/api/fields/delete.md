@@ -12,12 +12,12 @@ Parameters:
 * **field_name**: the name of the field
 
 ```shell
-curl -XDELETE "http://localhost:9091/indexes/my_schema/my_index/field/my_field"
+curl -XDELETE "http://localhost:9091/indexes/my_schema/my_index/fields/my_field"
 ```
 
 ## Response
 
-If any error occurs:
+If the field does not exist:
 
 ```json
 {
