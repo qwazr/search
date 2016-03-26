@@ -2,7 +2,7 @@
 
 Use this API to return the stored field of a document.
 
-* **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}/docs/{document_id}
+* **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}/doc/{document_id}
 * **HTTP method**: GET
 * **Content-Type**: application/json
 
