@@ -12,7 +12,7 @@ Parameters:
 * **analyzer_name**: the name of the analyzer
 
 ```shell
-curl -POST -H 'Content-Type: application/json'  -d @my_payload \
+curl -XPOST -H 'Content-Type: application/json'  -d @my_payload \
     "http://localhost:9091/indexes/my_schema/my_index/analyzers/my_french_analyzer"
 ```
 
@@ -36,9 +36,4 @@ Where the payload file (my_payload) contains the analyzer definition:
     }
   ]
 }
-```
-
-### Response
-
-```json
 ```
