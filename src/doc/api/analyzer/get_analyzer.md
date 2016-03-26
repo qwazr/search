@@ -21,27 +21,16 @@ The API returns the settings.
 
 ```json
 {
-  "num_docs" : 0,
-  "num_deleted_docs" : 0,
-  "fields" : {
-    "name" : {
-      "analyzer" : "LikeAnalyzer",
-      "tokenized" : true,
-      "stored" : true,
-      "index_options" : "DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS"
-    },
-    "category" : {
-      "template" : "SortedSetMultiDocValuesFacetField"
-    },
-    "price" : {
-      "template" : "DoubleDocValuesField"
-    },
-    "size" : {
-      "template" : "LongField"
-    },
-    "stock" : {
-      "template" : "IntDocValuesField"
-    }
-  }
+  "tokenizer" : {
+    "class" : "standard.StandardTokenizer"
+  },
+  "filters" : [ {
+    "class" : "en.FrenchMinimalStemFilter"
+  }, {
+    "class" : "core.LowerCaseFilter"
+  }, {
+    "class" : "miscellaneous.ASCIIFoldingFilter",
+    "preserveOriginal" : "true"
+  } ]
 }
 ```
