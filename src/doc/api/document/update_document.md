@@ -16,8 +16,8 @@ The field $id$ is a reserved keyword for the primary key of the document.
 If the ID is not provided, a time based UUID is automatically generated.
 
 ```shell
-curl XPOST -H 'Content-Type: application/json' -d @my_payload \
-    "http://localhost:9091/indexes/my_schema/my_index/doc" -d
+curl -XPOST -H 'Content-Type: application/json' -d @my_payload \
+    "http://localhost:9091/indexes/my_schema/my_index/doc"
 ```
 
 ```json
@@ -31,5 +31,5 @@ curl XPOST -H 'Content-Type: application/json' -d @my_payload \
   "size": 500,
   "price": 10.50,
   "stock": 0
-}'
+}
 ```
