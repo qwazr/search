@@ -1,6 +1,6 @@
-# Get an analyzer settings
+# Get the analyzers settings
 
-Call this API to display all the analyzers:
+Call this API to display the collection of analyzers:
 
 * **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}/analyzers
 * **HTTP method**: GET

@@ -1,4 +1,4 @@
-# Create/update all analyzers
+# Create/update the collection of analyzers
 
 This API create a set of analyzers and replace any previous one:
 
