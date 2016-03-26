@@ -15,8 +15,13 @@ Parameters:
 The field $id$ must be provided to identify the document which will be updated.
 
 ```shell
-curl -XPOST -H 'Content-Type: application/json' \
-     "http://localhost:9091/indexes/my_schema/my_index/docs/values" -d '
+curl -XPOST -H 'Content-Type: application/json' -d @my_payload \
+     "http://localhost:9091/indexes/my_schema/my_index/docs/values"
+```
+
+Where the payload file (my_payload) contains the documents to update (only DocValues):
+
+```json
 [
   {
     "$id$": "1",
@@ -26,5 +31,5 @@ curl -XPOST -H 'Content-Type: application/json' \
     "$id$": "2",
     "stock": 13
   }
-]'
+]
 ```

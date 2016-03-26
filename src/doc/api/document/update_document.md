@@ -12,8 +12,8 @@ Parameters:
 * **schema_name**: the name of the schema
 * **index_name**: the name of the index
 
-The field $id$ is a reserved keyword for the primary key of the document.
-If the ID is not provided, a time based UUID is automatically generated.
+The field **$id$** is a reserved keyword for the primary key of the document.
+If the primary key is not provided, a time based UUID is automatically generated.
 
 ```shell
 curl -XPOST -H 'Content-Type: application/json' -d @my_payload \
