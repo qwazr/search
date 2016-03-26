@@ -20,6 +20,8 @@ curl -XPOST -H 'Content-Type: application/json' \
     "http://localhost:9091/indexes/my_schema/my_index/docs"
 ```
 
+Where the payload file (my_payload) contains the collection of documents to index:
+
 ```json
 [
   {
