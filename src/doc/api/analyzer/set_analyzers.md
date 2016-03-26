@@ -55,7 +55,7 @@ Where the payload file (my_payload) contains the analyzer definitions:
     },
     "filters": [
       {
-        "class": "en.FrenchMinimalStemFilter"
+        "class": "fr.FrenchMinimalStemFilter"
       },
       {
         "class": "core.LowerCaseFilter"

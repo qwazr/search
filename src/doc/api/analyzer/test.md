@@ -12,7 +12,7 @@ Parameters:
 * **analyzer_name**: the name of the analyzer
 
 ```shell
-curl -XPOST -H 'Content-Type: application/json'  -d "Déjà vu" \
+curl -XPOST -H 'Content-Type: text/plain'  -d "Déjà vu" \
     "http://localhost:9091/indexes/my_schema/my_index/analyzers/FrenchAnalyzer"
 ```
 

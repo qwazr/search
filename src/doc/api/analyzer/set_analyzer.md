@@ -13,7 +13,7 @@ Parameters:
 
 ```shell
 curl -XPOST -H 'Content-Type: application/json'  -d @my_payload \
-    "http://localhost:9091/indexes/my_schema/my_index/analyzers/my_french_analyzer"
+    "http://localhost:9091/indexes/my_schema/my_index/analyzers/FrenchAnalyzer"
 ```
 
 Where the payload file (my_payload) contains the analyzer definition:
@@ -25,7 +25,7 @@ Where the payload file (my_payload) contains the analyzer definition:
   },
   "filters": [
     {
-      "class": "en.FrenchMinimalStemFilter"
+      "class": "fr.FrenchMinimalStemFilter"
     },
     {
       "class": "core.LowerCaseFilter"
