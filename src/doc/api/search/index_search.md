@@ -42,43 +42,58 @@ curl -XPOST -H 'Content-Type: application/json' -d @my_payload \
 
 ### Response
 
-The API returns the documents.
+The API returns the documents:
 
 ```json
 {
   "timer" : {
-    "search_query" : 3,
-    "facet_count" : 0,
-    "returned_fields" : 1,
-    "facet_fields" : 0
+    "start_time" : "2016-03-27T09:27:54.437+0000",
+    "total_time" : 3,
+    "unknown_time" : 0,
+    "durations" : {
+      "search_query" : 1,
+      "facet_count" : 1,
+      "returned_fields" : 1,
+      "facet_fields" : 0
+    }
   },
-  "total_hits" : 3,
-  "max_score" : "NaN",
+  "total_hits" : 4,
+  "max_score" : 0.48553526,
   "documents" : [ {
-    "score" : "NaN",
+    "score" : 0.48553526,
+    "percent_score" : 1.0,
+    "fields" : {
+      "name" : "First name",
+      "price" : 1.1
+    }
+  }, {
+    "score" : 0.48553526,
+    "percent_score" : 1.0,
     "fields" : {
       "name" : "Second name",
       "price" : 2.2
     }
   }, {
-    "score" : "NaN",
+    "score" : 0.48553526,
+    "percent_score" : 1.0,
     "fields" : {
       "name" : "Third name",
       "price" : 3.3
     }
   }, {
-    "score" : "NaN",
+    "score" : 0.48553526,
+    "percent_score" : 1.0,
     "fields" : {
-      "name" : "Fifth name",
-      "price" : 10.5
+      "name" : "Fourth name",
+      "price" : 4.4
     }
   } ],
   "facets" : {
     "category" : {
-      "cat1" : 3,
+      "cat1" : 4,
       "cat2" : 3,
-      "cat3" : 1
+      "cat3" : 2,
+      "cat4" : 1
     }
   }
-}
 ```

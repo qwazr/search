@@ -13,7 +13,7 @@ Parameters:
 * **document_id**: The primary key of the document
 
 ```shell
-curl -XGET "http://localhost:9091/indexes/my_schema/my_index/doc/5"
+curl -XGET "http://localhost:9091/indexes/my_schema/my_index/doc/3"
 ```
 
 ## Response
@@ -22,6 +22,7 @@ The API returns the stored fields of the document:
 
 ```json
 {
+  "name" : "Third name",
   "price" : 3.3,
   "stock" : 0
 }

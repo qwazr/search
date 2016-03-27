@@ -1,7 +1,7 @@
 # Distributed search
 
 Call this API to execute a distributed search query.
-The search is executed over all indexes of a given schema.
+The search is executed over all indexes of the given schema.
 
 * **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/*/search
 * **HTTP method**: POST
@@ -22,7 +22,10 @@ Where the payload file (my_payload) contains the query:
 ```json
 {
   "query_string": "name",
-  "default_field": "name",
+  "query": {
+    "query": "StandardQueryParser",
+    "default_field": "name"
+  },
   "returned_fields": [
     "name",
     "price"
@@ -32,64 +35,67 @@ Where the payload file (my_payload) contains the query:
   "facets": {
     "category": { "top": 10 }
   },
-  "facet_filters": [
-    {
-      "category": [
-        "cat3",
-        "cat5"
-      ]
-    },
-    {
-      "category": [
-        "cat4"
-      ]
-    }
-  ],
   "sorts": {
-    "$score": "descending",
-    "price": "ascending"
+     "$score": "descending",
+     "price": "ascending"
   }
 }
 ```
 
 ### Response
 
-The API returns the documents.
+The API returns the documents:
 
 ```json
 {
   "timer" : {
-    "search_query" : 3,
-    "facet_count" : 0,
-    "returned_fields" : 1,
-    "facet_fields" : 0
+    "start_time" : "2016-03-27T09:32:41.466+0000",
+    "total_time" : 0,
+    "unknown_time" : 0,
+    "durations" : {
+      "search_query" : 0,
+      "facet_count" : 0,
+      "returned_fields" : 0,
+      "facet_fields" : 0
+    }
   },
-  "total_hits" : 3,
-  "max_score" : "NaN",
+  "total_hits" : 4,
+  "max_score" : 0.48553526,
   "documents" : [ {
-    "score" : "NaN",
+    "score" : 0.48553526,
+    "percent_score" : 1.0,
+    "fields" : {
+      "name" : "First name",
+      "price" : 1.1
+    }
+  }, {
+    "score" : 0.48553526,
+    "percent_score" : 1.0,
     "fields" : {
       "name" : "Second name",
       "price" : 2.2
     }
   }, {
-    "score" : "NaN",
+    "score" : 0.48553526,
+    "percent_score" : 1.0,
     "fields" : {
       "name" : "Third name",
       "price" : 3.3
     }
   }, {
-    "score" : "NaN",
+    "score" : 0.48553526,
+    "percent_score" : 1.0,
     "fields" : {
-      "name" : "Fifth name",
-      "price" : 10.5
+      "name" : "Fourth name",
+      "price" : 4.4
     }
   } ],
   "facets" : {
     "category" : {
-      "cat1" : 3,
+      "cat1" : 4,
       "cat2" : 3,
-      "cat3" : 1
+      "cat3" : 2,
+      "cat4" : 1
     }
   }
 }
