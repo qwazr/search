@@ -17,7 +17,7 @@ curl -XPOST -H 'Content-Type: application/json' -d @my_payload \
     "http://localhost:9091/indexes/my_schema/my_index/search?delete=true"
 ```
 
-Where the payload file (my_payload) contains the query:
+Where the payload file (my_payload) contains the search request:
 
 ```json
 {
