@@ -1,4 +1,4 @@
-## Search query
+# Search query
 
 Call this API to execute a search query and get documents:
 
