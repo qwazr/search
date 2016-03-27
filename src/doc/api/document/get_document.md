@@ -13,7 +13,7 @@ Parameters:
 * **document_id**: The primary key of the document
 
 ```shell
-curl -XGET -d "http://localhost:9091/indexes/my_schema/my_index/doc/5"
+curl -XGET "http://localhost:9091/indexes/my_schema/my_index/doc/5"
 ```
 
 ## Response
