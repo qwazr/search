@@ -49,6 +49,8 @@ import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 
+import static com.qwazr.search.index.DocumentPoster.*;
+
 final public class IndexInstance implements Closeable {
 
 	private static final Logger logger = LoggerFactory.getLogger(IndexInstance.class);
@@ -77,9 +79,9 @@ final public class IndexInstance implements Closeable {
 	private volatile Pair<IndexReader, SortedSetDocValuesReaderState> facetsReaderStateCache;
 
 	private IndexInstance(SchemaInstance schema, Directory dataDirectory, IndexSettingsDefinition settings,
-			LinkedHashMap<String, AnalyzerDefinition> analyzerMap, LinkedHashMap<String, FieldDefinition> fieldMap,
-			FileSet fileSet, IndexWriter indexWriter, SearcherManager searcherManager,
-			UpdatableAnalyzer queryAnalyzer) {
+					LinkedHashMap<String, AnalyzerDefinition> analyzerMap,
+					LinkedHashMap<String, FieldDefinition> fieldMap, FileSet fileSet, IndexWriter indexWriter,
+					SearcherManager searcherManager, UpdatableAnalyzer queryAnalyzer) {
 		this.schema = schema;
 		this.fileSet = fileSet;
 		this.dataDirectory = dataDirectory;
@@ -120,7 +122,7 @@ final public class IndexInstance implements Closeable {
 	 * @return
 	 */
 	final static IndexInstance newInstance(SchemaInstance schema, File indexDirectory, IndexSettingsDefinition settings)
-			throws ServerException, IOException, ReflectiveOperationException, InterruptedException {
+					throws ServerException, IOException, ReflectiveOperationException, InterruptedException {
 		UpdatableAnalyzer indexAnalyzer = null;
 		UpdatableAnalyzer queryAnalyzer = null;
 		IndexWriter indexWriter = null;
@@ -131,15 +133,15 @@ final public class IndexInstance implements Closeable {
 				indexDirectory.mkdir();
 			if (!indexDirectory.isDirectory())
 				throw new IOException(
-						"This name is not valid. No directory exists for this location: " + indexDirectory);
+								"This name is not valid. No directory exists for this location: " + indexDirectory);
 
 			FileSet fileSet = new FileSet(indexDirectory);
 
 			//Loading the settings
 			if (settings == null) {
 				settings = fileSet.settingsFile.exists() ?
-						JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
-						IndexSettingsDefinition.EMPTY;
+								JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
+								IndexSettingsDefinition.EMPTY;
 			} else {
 				JsonMapper.MAPPER.writeValue(fileSet.settingsFile, settings);
 			}
@@ -147,14 +149,14 @@ final public class IndexInstance implements Closeable {
 			//Loading the fields
 			File fieldMapFile = new File(indexDirectory, FIELDS_FILE);
 			LinkedHashMap<String, FieldDefinition> fieldMap = fieldMapFile.exists() ?
-					JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
-					new LinkedHashMap<>();
+							JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
+							new LinkedHashMap<>();
 
 			//Loading the fields
 			File analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
 			LinkedHashMap<String, AnalyzerDefinition> analyzerMap = analyzerMapFile.exists() ?
-					JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
-					new LinkedHashMap<>();
+							JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
+							new LinkedHashMap<>();
 
 			AnalyzerContext context = new AnalyzerContext(analyzerMap, fieldMap);
 			indexAnalyzer = new UpdatableAnalyzer(context, context.indexAnalyzerMap);
@@ -169,7 +171,7 @@ final public class IndexInstance implements Closeable {
 				indexWriterConfig.setSimilarity(IndexUtils.findSimilarity(settings.similarity_class));
 			indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 			SnapshotDeletionPolicy snapshotDeletionPolicy = new SnapshotDeletionPolicy(
-					indexWriterConfig.getIndexDeletionPolicy());
+							indexWriterConfig.getIndexDeletionPolicy());
 			indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
 			indexWriter = new IndexWriter(dataDirectory, indexWriterConfig);
 			if (indexWriter.hasUncommittedChanges())
@@ -179,7 +181,7 @@ final public class IndexInstance implements Closeable {
 			SearcherManager searcherManager = new SearcherManager(indexWriter, true, null);
 
 			return new IndexInstance(schema, dataDirectory, settings, analyzerMap, fieldMap, fileSet, indexWriter,
-					searcherManager, queryAnalyzer);
+							searcherManager, queryAnalyzer);
 		} catch (IOException | ServerException | ReflectiveOperationException | InterruptedException e) {
 			// We failed in opening the index. We close everything we can
 			if (queryAnalyzer != null)
@@ -264,7 +266,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	synchronized void setAnalyzers(LinkedHashMap<String, AnalyzerDefinition> analyzers)
-			throws ServerException, IOException {
+					throws ServerException, IOException {
 		AnalyzerContext analyzerContext = new AnalyzerContext(analyzers, fieldMap);
 		indexAnalyzer.update(analyzerContext, analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext, analyzerContext.queryAnalyzerMap);
@@ -274,13 +276,13 @@ final public class IndexInstance implements Closeable {
 
 	void setAnalyzer(String analyzerName, AnalyzerDefinition analyzer) throws IOException, ServerException {
 		LinkedHashMap<String, AnalyzerDefinition> analyzers = (LinkedHashMap<String, AnalyzerDefinition>) analyzerMap
-				.clone();
+						.clone();
 		analyzers.put(analyzerName, analyzer);
 		setAnalyzers(analyzers);
 	}
 
 	List<TermDefinition> testAnalyzer(String analyzerName, String text)
-			throws ServerException, InterruptedException, ReflectiveOperationException, IOException {
+					throws ServerException, InterruptedException, ReflectiveOperationException, IOException {
 		AnalyzerDefinition analyzerDefinition = analyzerMap.get(analyzerName);
 		if (analyzerDefinition == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
@@ -294,7 +296,7 @@ final public class IndexInstance implements Closeable {
 
 	void deleteAnalyzer(String analyzerName) throws IOException, ServerException {
 		LinkedHashMap<String, AnalyzerDefinition> analyzers = (LinkedHashMap<String, AnalyzerDefinition>) analyzerMap
-				.clone();
+						.clone();
 		if (analyzers.remove(analyzerName) == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
 		setAnalyzers(analyzers);
@@ -335,7 +337,7 @@ final public class IndexInstance implements Closeable {
 					files_count++;
 					bytes_size += sourceFile.length();
 					if (targetFile.exists() && targetFile.length() == sourceFile.length()
-							&& targetFile.lastModified() == sourceFile.lastModified())
+									&& targetFile.lastModified() == sourceFile.lastModified())
 						continue;
 					FileUtils.copyFile(sourceFile, targetFile, true);
 				}
@@ -416,7 +418,9 @@ final public class IndexInstance implements Closeable {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(1);
-			Object id = IndexUtils.addNewLuceneDocument(indexAnalyzer.getContext(), document, indexWriter);
+			DocumentMapPoster poster = new DocumentMapPoster(indexAnalyzer.getContext(), indexWriter);
+			poster.accept(document);
+			Object id = poster.ids.isEmpty() ? null : poster.ids.iterator().next();
 			nrtCommit();
 			return id;
 		} finally {
@@ -426,31 +430,57 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final List<Object> postDocuments(List<Map<String, Object>> documents)
-			throws IOException, ServerException, InterruptedException {
+					throws IOException, ServerException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return null;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(documents.size());
-			final AnalyzerContext context = indexAnalyzer.getContext();
-			List<Object> ids = new ArrayList<Object>(documents.size());
-			for (Map<String, Object> document : documents)
-				ids.add(IndexUtils.addNewLuceneDocument(context, document, indexWriter));
+			DocumentMapPoster poster = new DocumentMapPoster(indexAnalyzer.getContext(), indexWriter);
+			documents.forEach(poster);
 			nrtCommit();
-			return ids;
+			return poster.ids;
 		} finally {
 			if (sem != null)
 				sem.release();
 		}
 	}
 
-	final void updateDocumentValues(Map<String, Object> document)
-			throws IOException, ServerException, InterruptedException {
+	final void updateDocumentValuesFromPojo(Object document) throws InterruptedException, IOException {
+		if (document == null)
+			return;
+		final Semaphore sem = schema.acquireWriteSemaphore();
+		try {
+			DocValuesPojoPoster poster = new DocValuesPojoPoster(indexAnalyzer.getContext(), indexWriter);
+			poster.accept(document);
+			nrtCommit();
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
+	final void updateDocumentValues(Map<String, Object> document) throws IOException, InterruptedException {
 		if (document == null || document.isEmpty())
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			IndexUtils.updateDocValues(indexAnalyzer.getContext(), document, indexWriter);
+			DocValuesMapPoster poster = new DocValuesMapPoster(indexAnalyzer.getContext(), indexWriter);
+			poster.accept(document);
+			nrtCommit();
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
+	final void updateDocumentsValuesFromPojo(List<Object> documents) throws IOException, InterruptedException {
+		if (documents == null || documents.isEmpty())
+			return;
+		final Semaphore sem = schema.acquireWriteSemaphore();
+		try {
+			DocValuesPojoPoster poster = new DocValuesPojoPoster(indexAnalyzer.getContext(), indexWriter);
+			documents.forEach(poster);
 			nrtCommit();
 		} finally {
 			if (sem != null)
@@ -459,14 +489,13 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final void updateDocumentsValues(List<Map<String, Object>> documents)
-			throws IOException, ServerException, InterruptedException {
+					throws IOException, ServerException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			final AnalyzerContext context = indexAnalyzer.getContext();
-			for (Map<String, Object> document : documents)
-				IndexUtils.updateDocValues(context, document, indexWriter);
+			DocValuesMapPoster poster = new DocValuesMapPoster(indexAnalyzer.getContext(), indexWriter);
+			documents.forEach(poster);
 			nrtCommit();
 		} finally {
 			if (sem != null)
@@ -475,8 +504,8 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final ResultDefinition deleteByQuery(QueryDefinition queryDefinition)
-			throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException,
-			ReflectiveOperationException {
+					throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException,
+					ReflectiveOperationException {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			final QueryContext queryContext = new QueryContext(null, queryAnalyzer, null, queryDefinition);
@@ -502,8 +531,8 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final ResultDefinition search(QueryDefinition queryDefinition)
-			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
-			ReflectiveOperationException {
+					throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
+					ReflectiveOperationException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
@@ -511,7 +540,7 @@ final public class IndexInstance implements Closeable {
 				indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
 				final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
 				final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, facetsState,
-						queryDefinition);
+								queryDefinition);
 				return QueryUtils.search(queryContext);
 			} finally {
 				searcherManager.release(indexSearcher);
