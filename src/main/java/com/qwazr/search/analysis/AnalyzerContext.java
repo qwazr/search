@@ -52,7 +52,7 @@ public class AnalyzerContext {
 		for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
 			final String fieldName = field.getKey();
 			final FieldDefinition fieldDef = field.getValue();
-			FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldName, fieldDef, facetsConfig);
+			FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldName, fieldDef);
 			fieldTypes.put(fieldName, fieldType);
 			if (fieldDef.template != null) {
 				switch (fieldDef.template) {

@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.IntField;

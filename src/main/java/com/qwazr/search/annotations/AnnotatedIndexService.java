@@ -65,6 +65,7 @@ public class AnnotatedIndexService<T> {
 			for (Field field : fields) {
 				if (!field.isAnnotationPresent(IndexField.class))
 					continue;
+				field.setAccessible(true);
 				IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
 				String indexName = StringUtils.isEmpty(indexField.name()) ? field.getName() : indexField.name();
 				indexFieldMap.put(indexName, indexField);
@@ -128,7 +129,7 @@ public class AnnotatedIndexService<T> {
 		checkParameters();
 		Objects.requireNonNull(row, "The document (row) cannot be null");
 		if (annotatedService != null)
-			annotatedService.postDocument(schemaName, indexName, row);
+			annotatedService.postDocument(schemaName, indexName, fieldMap, row);
 		else
 			indexService.postMappedDocument(schemaName, indexName, newMap(row));
 	}
@@ -142,7 +143,7 @@ public class AnnotatedIndexService<T> {
 		checkParameters();
 		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
 		if (annotatedService != null)
-			annotatedService.postDocuments(schemaName, indexName, rows);
+			annotatedService.postDocuments(schemaName, indexName, fieldMap, rows);
 		else
 			indexService.postMappedDocuments(schemaName, indexName, newMapCollection(rows));
 	}
@@ -156,7 +157,7 @@ public class AnnotatedIndexService<T> {
 		checkParameters();
 		Objects.requireNonNull(row, "The document (row) cannot be null");
 		if (annotatedService != null)
-			annotatedService.updateDocValues(schemaName, indexName, row);
+			annotatedService.updateDocValues(schemaName, indexName, fieldMap, row);
 		else
 			indexService.updateMappedDocValues(schemaName, indexName, newMap(row));
 	}
@@ -170,7 +171,7 @@ public class AnnotatedIndexService<T> {
 		checkParameters();
 		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
 		if (annotatedService != null)
-			annotatedService.updateDocsValues(schemaName, indexName, rows);
+			annotatedService.updateDocsValues(schemaName, indexName, fieldMap, rows);
 		else
 			indexService.updateMappedDocsValues(schemaName, indexName, newMapCollection(rows));
 	}
@@ -242,4 +243,5 @@ public class AnnotatedIndexService<T> {
 		rows.forEach(row -> list.add(newMap(row)));
 		return list;
 	}
+
 }

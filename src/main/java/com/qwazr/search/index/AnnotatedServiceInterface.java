@@ -16,18 +16,21 @@
 package com.qwazr.search.index;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Collection;
-import java.util.List;
+import java.util.Map;
 
 public interface AnnotatedServiceInterface {
 
-	<T> Object postDocument(String schemaName, String indexName, T document) throws IOException, InterruptedException;
-
-	<T> List<Object> postDocuments(String schemaName, String indexName, Collection<T> documents)
+	<T> Object postDocument(String schemaName, String indexName, Map<String, Field> fields, T document)
 			throws IOException, InterruptedException;
 
-	<T> void updateDocValues(String schemaName, String indexName, T document) throws IOException, InterruptedException;
+	<T> Collection<Object> postDocuments(String schemaName, String indexName, Map<String, Field> fields,
+			Collection<T> documents) throws IOException, InterruptedException;
 
-	<T> void updateDocsValues(String schemaName, String indexName, Collection<T> documents)
+	<T> void updateDocValues(String schemaName, String indexName, Map<String, Field> fields, T document)
+			throws IOException, InterruptedException;
+
+	<T> void updateDocsValues(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents)
 			throws IOException, InterruptedException;
 }

@@ -45,11 +45,10 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
-
-import static com.qwazr.search.index.DocumentPoster.*;
 
 final public class IndexInstance implements Closeable {
 
@@ -412,13 +411,30 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final Object postDocument(Object document) throws IOException, InterruptedException {
+	private final RecordsPoster.UpdateObjectDocument getDocumentPoster(final Map<String, Field> fields) {
+		return new RecordsPoster.UpdateObjectDocument(fields, indexAnalyzer.getContext(), indexWriter);
+	}
+
+	private final RecordsPoster.UpdateMapDocument getDocumentPoster() {
+		return new RecordsPoster.UpdateMapDocument(indexAnalyzer.getContext(), indexWriter);
+	}
+
+	private final RecordsPoster.UpdateObjectDocValues getDocValuesPoster(final Map<String, Field> fields) {
+		return new RecordsPoster.UpdateObjectDocValues(fields, indexAnalyzer.getContext(), indexWriter);
+	}
+
+	private final RecordsPoster.UpdateMapDocValues getDocValuesPoster() {
+		return new RecordsPoster.UpdateMapDocValues(indexAnalyzer.getContext(), indexWriter);
+	}
+
+	final <T> Object postDocument(final Map<String, Field> fields, final T document)
+			throws IOException, InterruptedException {
 		if (document == null)
 			return null;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(1);
-			DocumentPojoPoster poster = new DocumentPojoPoster(indexAnalyzer.getContext(), indexWriter);
+			RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
 			poster.accept(document);
 			Object id = poster.ids.isEmpty() ? null : poster.ids.iterator().next();
 			nrtCommit();
@@ -429,13 +445,13 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final Object postMappedDocument(Map<String, Object> document) throws IOException, InterruptedException {
+	final Object postMappedDocument(final Map<String, Object> document) throws IOException, InterruptedException {
 		if (document == null || document.isEmpty())
 			return null;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(1);
-			DocumentMapPoster poster = new DocumentMapPoster(indexAnalyzer.getContext(), indexWriter);
+			RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
 			poster.accept(document);
 			Object id = poster.ids.isEmpty() ? null : poster.ids.iterator().next();
 			nrtCommit();
@@ -446,14 +462,14 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final List<Object> postMappedDocuments(Collection<Map<String, Object>> documents)
+	final Collection<Object> postMappedDocuments(final Collection<Map<String, Object>> documents)
 			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return null;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(documents.size());
-			DocumentMapPoster poster = new DocumentMapPoster(indexAnalyzer.getContext(), indexWriter);
+			RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
 			documents.forEach(poster);
 			nrtCommit();
 			return poster.ids;
@@ -463,13 +479,14 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final <T> List<Object> postDocuments(Collection<T> documents) throws IOException, InterruptedException {
+	final <T> Collection<Object> postDocuments(final Map<String, Field> fields, final Collection<T> documents)
+			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return null;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(documents.size());
-			DocumentPojoPoster poster = new DocumentPojoPoster(indexAnalyzer.getContext(), indexWriter);
+			RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
 			documents.forEach(poster);
 			nrtCommit();
 			return poster.ids;
@@ -479,12 +496,13 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final void updateDocValues(Object document) throws InterruptedException, IOException {
+	final <T> void updateDocValues(final Map<String, Field> fields, final T document)
+			throws InterruptedException, IOException {
 		if (document == null)
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			DocValuesPojoPoster poster = new DocValuesPojoPoster(indexAnalyzer.getContext(), indexWriter);
+			RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			poster.accept(document);
 			nrtCommit();
 		} finally {
@@ -493,12 +511,12 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final void updateMappedDocValues(Map<String, Object> document) throws IOException, InterruptedException {
+	final void updateMappedDocValues(final Map<String, Object> document) throws IOException, InterruptedException {
 		if (document == null || document.isEmpty())
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			DocValuesMapPoster poster = new DocValuesMapPoster(indexAnalyzer.getContext(), indexWriter);
+			RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			poster.accept(document);
 			nrtCommit();
 		} finally {
@@ -507,12 +525,13 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final <T> void updateDocsValues(Collection<T> documents) throws IOException, InterruptedException {
+	final <T> void updateDocsValues(final Map<String, Field> fields, final Collection<T> documents)
+			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			DocValuesPojoPoster poster = new DocValuesPojoPoster(indexAnalyzer.getContext(), indexWriter);
+			RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			documents.forEach(poster);
 			nrtCommit();
 		} finally {
@@ -521,13 +540,13 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final void updateMappedDocsValues(Collection<Map<String, Object>> documents)
+	final void updateMappedDocsValues(final Collection<Map<String, Object>> documents)
 			throws IOException, ServerException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return;
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			DocValuesMapPoster poster = new DocValuesMapPoster(indexAnalyzer.getContext(), indexWriter);
+			RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			documents.forEach(poster);
 			nrtCommit();
 		} finally {
@@ -536,7 +555,7 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final ResultDefinition deleteByQuery(QueryDefinition queryDefinition)
+	final ResultDefinition deleteByQuery(final QueryDefinition queryDefinition)
 			throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException,
 			ReflectiveOperationException {
 		final Semaphore sem = schema.acquireWriteSemaphore();
@@ -554,7 +573,8 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	private synchronized SortedSetDocValuesReaderState getFacetsState(IndexReader indexReader) throws IOException {
+	private synchronized SortedSetDocValuesReaderState getFacetsState(final IndexReader indexReader)
+			throws IOException {
 		Pair<IndexReader, SortedSetDocValuesReaderState> current = facetsReaderStateCache;
 		if (current != null && current.getLeft() == indexReader)
 			return current.getRight();
@@ -563,7 +583,7 @@ final public class IndexInstance implements Closeable {
 		return newState;
 	}
 
-	final ResultDefinition search(QueryDefinition queryDefinition)
+	final ResultDefinition search(final QueryDefinition queryDefinition)
 			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
 			ReflectiveOperationException {
 		final Semaphore sem = schema.acquireReadSemaphore();

@@ -15,8 +15,8 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.search.SortField;
 
@@ -24,14 +24,13 @@ import java.io.IOException;
 
 public interface FieldTypeInterface {
 
-	void fill(final Object value, final FieldConsumer consumer);
+	void fill(final Object value, final FieldConsumer fieldConsumer);
 
 	SortField getSortField(final QueryDefinition.SortEnum sortEnum);
 
 	ValueConverter getConverter(final LeafReader reader) throws IOException;
 
-	static FieldTypeInterface getInstance(final String fieldName, final FieldDefinition fieldDefinition,
-					FacetsConfig facetsConfig) {
+	static FieldTypeInterface getInstance(final String fieldName, final FieldDefinition fieldDefinition) {
 		if (fieldDefinition.template == null)
 			return new CustomFieldType(fieldName, fieldDefinition);
 		switch (fieldDefinition.template) {
