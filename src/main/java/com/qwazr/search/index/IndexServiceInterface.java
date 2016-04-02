@@ -26,10 +26,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @RolesAllowed(IndexManager.SERVICE_NAME_SEARCH)
 @Path("/indexes")
@@ -186,29 +183,29 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Path("/{schema_name}/{index_name}/doc")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Response postDocument(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-			Map<String, Object> document);
+	Response postMappedDocument(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, Map<String, Object> document);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/docs")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Response postDocuments(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-			List<Map<String, Object>> documents);
+	Response postMappedDocuments(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, Collection<Map<String, Object>> documents);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/doc/values")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Response updateDocumentValues(@PathParam("schema_name") String schema_name,
+	Response updateMappedDocValues(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, Map<String, Object> document);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/docs/values")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Response updateDocumentsValues(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, List<Map<String, Object>> documents);
+	Response updateMappedDocsValues(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, Collection<Map<String, Object>> documents);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/backup")

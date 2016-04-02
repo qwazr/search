@@ -15,8 +15,6 @@
  */
 package com.qwazr.search.test;
 
-import com.google.common.io.Files;
-import com.qwazr.search.SearchServer;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
@@ -29,7 +27,6 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import javax.ws.rs.core.Response;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -40,9 +37,8 @@ public class FullTest {
 
 	private static volatile boolean started;
 
-	public static final String BASE_URL = "http://localhost:9091";
-	public static final String SCHEMA_NAME = "schema-test";
-	public static final String INDEX_NAME = "index-test";
+	public static final String SCHEMA_NAME = "schema-test-full";
+	public static final String INDEX_NAME = "index-test-full";
 	public static final LinkedHashMap<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
 	public static final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
 	public static final LinkedHashMap<String, AnalyzerDefinition> ANALYZERS_JSON = getAnalyzerMap("analyzers.json");
@@ -58,19 +54,17 @@ public class FullTest {
 	public static final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
 	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
-	public static final List<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
+	public static final Collection<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
 	public static final Map<String, Object> UPDATE_DOC_VALUE = getDoc("update_doc_value.json");
-	public static final List<Map<String, Object>> UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
-
-	private IndexServiceInterface getClient() throws URISyntaxException {
-		return new IndexSingleClient(BASE_URL, 60000);
-	}
+	public static final Collection<Map<String, Object>> UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
 
 	@BeforeClass
 	public static void startSearchServer() throws Exception {
-		final File dataDir = Files.createTempDir();
-		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
-		SearchServer.main(new String[] {});
+		TestServer.startServer();
+	}
+
+	public IndexServiceInterface getClient() throws URISyntaxException {
+		return TestServer.getSingleClient();
 	}
 
 	@Test
@@ -284,10 +278,10 @@ public class FullTest {
 		checkIndexSize(client, expectedSize);
 	}
 
-	private static List<Map<String, Object>> getDocs(String res) {
+	private static Collection<Map<String, Object>> getDocs(String res) {
 		InputStream is = FullTest.class.getResourceAsStream(res);
 		try {
-			return JsonMapper.MAPPER.readValue(is, IndexSingleClient.ListMapStringObjectTypeRef);
+			return JsonMapper.MAPPER.readValue(is, IndexSingleClient.CollectionMapStringObjectTypeRef);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -295,7 +289,7 @@ public class FullTest {
 		}
 	}
 
-	private static Map<String, Object> getDoc(String res) {
+	private static HashMap<String, Object> getDoc(String res) {
 		InputStream is = FullTest.class.getResourceAsStream(res);
 		try {
 			return JsonMapper.MAPPER.readValue(is, IndexSingleClient.MapStringObjectTypeRef);
@@ -331,7 +325,7 @@ public class FullTest {
 	public void test200UpdateDocs() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		for (int i = 0; i < 6; i++) { // Yes, six times: we said "testing" !
-			Response response = client.postDocuments(SCHEMA_NAME, INDEX_NAME, UPDATE_DOCS);
+			Response response = client.postMappedDocuments(SCHEMA_NAME, INDEX_NAME, UPDATE_DOCS);
 			Assert.assertNotNull(response);
 			Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
 			checkAllSizes(client, 4);
@@ -370,7 +364,7 @@ public class FullTest {
 	public void test300UpdateDoc() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		for (int i = 0; i < 7; i++) { // Seven times: we said "testing" !
-			Response response = client.postDocument(SCHEMA_NAME, INDEX_NAME, UPDATE_DOC);
+			Response response = client.postMappedDocument(SCHEMA_NAME, INDEX_NAME, UPDATE_DOC);
 			Assert.assertNotNull(response);
 			Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
 			checkAllSizes(client, 5);
@@ -391,13 +385,13 @@ public class FullTest {
 		}
 
 		// Update one document value
-		Response response = client.updateDocumentValues(SCHEMA_NAME, INDEX_NAME, UPDATE_DOC_VALUE);
+		Response response = client.updateMappedDocValues(SCHEMA_NAME, INDEX_NAME, UPDATE_DOC_VALUE);
 		Assert.assertNotNull(response);
 		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
 		checkAllSizes(client, 5);
 
 		// Update a list of documents values
-		response = client.updateDocumentsValues(SCHEMA_NAME, INDEX_NAME, UPDATE_DOCS_VALUES);
+		response = client.updateMappedDocsValues(SCHEMA_NAME, INDEX_NAME, UPDATE_DOCS_VALUES);
 		Assert.assertNotNull(response);
 		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
 		checkAllSizes(client, 5);

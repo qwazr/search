@@ -28,12 +28,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.security.Principal;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-class IndexServiceImpl implements IndexServiceInterface {
+class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(IndexServiceImpl.class);
 
@@ -356,12 +353,12 @@ class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	@Override
-	public Response postDocument(String schema_name, String index_name, Map<String, Object> document) {
+	public Response postMappedDocument(String schema_name, String index_name, Map<String, Object> document) {
 		try {
 			checkRight(schema_name);
 			if (document == null || document.isEmpty())
 				return Response.notModified().build();
-			IndexManager.INSTANCE.get(schema_name).get(index_name).postDocument(document);
+			IndexManager.INSTANCE.get(schema_name).get(index_name).postMappedDocument(document);
 			return Response.ok().build();
 		} catch (Exception e) {
 			if (logger.isWarnEnabled())
@@ -371,12 +368,13 @@ class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	@Override
-	public Response postDocuments(String schema_name, String index_name, List<Map<String, Object>> documents) {
+	public Response postMappedDocuments(String schema_name, String index_name,
+			Collection<Map<String, Object>> documents) {
 		try {
 			checkRight(schema_name);
 			if (documents == null || documents.isEmpty())
 				return Response.notModified().build();
-			IndexManager.INSTANCE.get(schema_name).get(index_name).postDocuments(documents);
+			IndexManager.INSTANCE.get(schema_name).get(index_name).postMappedDocuments(documents);
 			return Response.ok().build();
 		} catch (Exception e) {
 			if (logger.isWarnEnabled())
@@ -386,12 +384,30 @@ class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	@Override
-	public Response updateDocumentValues(String schema_name, String index_name, Map<String, Object> document) {
+	public <T> Object postDocument(String schemaName, String indexName, T document)
+			throws IOException, InterruptedException {
+		checkRight(schemaName);
+		if (document == null)
+			return null;
+		return IndexManager.INSTANCE.get(schemaName).get(indexName).postDocument(document);
+	}
+
+	@Override
+	public <T> List<Object> postDocuments(String schemaName, String indexName, Collection<T> documents)
+			throws IOException, InterruptedException {
+		checkRight(schemaName);
+		if (documents == null || documents.isEmpty())
+			return null;
+		return IndexManager.INSTANCE.get(schemaName).get(indexName).postDocuments(documents);
+	}
+
+	@Override
+	public Response updateMappedDocValues(String schema_name, String index_name, Map<String, Object> document) {
 		try {
 			checkRight(schema_name);
 			if (document == null || document.isEmpty())
 				return Response.notModified().build();
-			IndexManager.INSTANCE.get(schema_name).get(index_name).updateDocumentValues(document);
+			IndexManager.INSTANCE.get(schema_name).get(index_name).updateMappedDocValues(document);
 			return Response.ok().build();
 		} catch (Exception e) {
 			logger.warn(e.getMessage(), e);
@@ -400,18 +416,37 @@ class IndexServiceImpl implements IndexServiceInterface {
 	}
 
 	@Override
-	public Response updateDocumentsValues(String schema_name, String index_name, List<Map<String, Object>> documents) {
+	public Response updateMappedDocsValues(String schema_name, String index_name,
+			Collection<Map<String, Object>> documents) {
 		try {
 			checkRight(schema_name);
 			if (documents == null || documents.isEmpty())
 				return Response.notModified().build();
-			IndexManager.INSTANCE.get(schema_name).get(index_name).updateDocumentsValues(documents);
+			IndexManager.INSTANCE.get(schema_name).get(index_name).updateMappedDocsValues(documents);
 			return Response.ok().build();
 		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
+	}
+
+	@Override
+	public void updateDocValues(String schemaName, String indexName, Object document)
+			throws IOException, InterruptedException {
+		checkRight(schemaName);
+		if (document == null)
+			return;
+		IndexManager.INSTANCE.get(schemaName).get(indexName).updateDocValues(document);
+	}
+
+	@Override
+	public <T> void updateDocsValues(String schemaName, String indexName, Collection<T> documents)
+			throws IOException, InterruptedException {
+		checkRight(schemaName);
+		if (documents == null || documents.isEmpty())
+			return;
+		IndexManager.INSTANCE.get(schemaName).get(indexName).updateDocsValues(documents);
 	}
 
 	@Override

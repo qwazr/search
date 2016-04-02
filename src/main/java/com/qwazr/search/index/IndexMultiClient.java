@@ -19,14 +19,9 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingleClient>
@@ -99,9 +94,7 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
-	public List<TermDefinition> doAnalyzeIndex(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
-			@QueryParam("text") String text) {
+	public List<TermDefinition> doAnalyzeIndex(String schema_name, String index_name, String field_name, String text) {
 		return null;
 	}
 
@@ -165,7 +158,7 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
-	public Response postDocument(String schema_name, String index_name, Map<String, Object> document) {
+	public Response postMappedDocument(String schema_name, String index_name, Map<String, Object> document) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -181,18 +174,20 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
-	public Response postDocuments(String schema_name, String index_name, List<Map<String, Object>> documents) {
+	public Response postMappedDocuments(String schema_name, String index_name,
+			Collection<Map<String, Object>> documents) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Response updateDocumentValues(String schema_name, String index_name, Map<String, Object> document) {
+	public Response updateMappedDocValues(String schema_name, String index_name, Map<String, Object> document) {
 		return null;
 	}
 
 	@Override
-	public Response updateDocumentsValues(String schema_name, String index_name, List<Map<String, Object>> documents) {
+	public Response updateMappedDocsValues(String schema_name, String index_name,
+			Collection<Map<String, Object>> documents) {
 		return null;
 	}
 

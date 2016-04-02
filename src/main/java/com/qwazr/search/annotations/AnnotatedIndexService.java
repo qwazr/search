@@ -19,13 +19,14 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.utils.StringUtils;
 
-import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 public class AnnotatedIndexService<T> {
+
+	protected final AnnotatedServiceInterface annotatedService;
 
 	protected final IndexServiceInterface indexService;
 
@@ -49,6 +50,9 @@ public class AnnotatedIndexService<T> {
 		Objects.requireNonNull(indexService, "The indexService parameter is null");
 		Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
 		this.indexService = indexService;
+		this.annotatedService = indexService instanceof AnnotatedServiceInterface ?
+				(AnnotatedServiceInterface) indexService :
+				null;
 		Index index = indexDefinitionClass.getAnnotation(Index.class);
 		Objects.requireNonNull(index, "This class does not declare any Index annotation: " + indexDefinitionClass);
 		schemaName = index.schema();
@@ -119,48 +123,56 @@ public class AnnotatedIndexService<T> {
 	 * Post a document to the index
 	 *
 	 * @param row the document to index
-	 * @return the status of the request
 	 */
-	public Response postDocument(T row) {
+	public void postDocument(T row) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(row, "The document (row) cannot be null");
-		return indexService.postDocument(schemaName, indexName, newMap(row));
+		if (annotatedService != null)
+			annotatedService.postDocument(schemaName, indexName, row);
+		else
+			indexService.postMappedDocument(schemaName, indexName, newMap(row));
 	}
 
 	/**
 	 * Post a collection of document to the index
 	 *
 	 * @param rows a collection of document to index
-	 * @return the status of the request
 	 */
-	public Response postDocuments(Collection<T> rows) {
+	public void postDocuments(Collection<T> rows) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
-		return indexService.postDocuments(schemaName, indexName, newListMap(rows));
+		if (annotatedService != null)
+			annotatedService.postDocuments(schemaName, indexName, rows);
+		else
+			indexService.postMappedDocuments(schemaName, indexName, newMapCollection(rows));
 	}
 
 	/**
 	 * Update the DocValues of one document
 	 *
 	 * @param row a collection of DocValues to update
-	 * @return the status of the request
 	 */
-	public Response updateDocumentValues(T row) {
+	public void updateDocumentValues(T row) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(row, "The document (row) cannot be null");
-		return indexService.updateDocumentValues(schemaName, indexName, newMap(row));
+		if (annotatedService != null)
+			annotatedService.updateDocValues(schemaName, indexName, row);
+		else
+			indexService.updateMappedDocValues(schemaName, indexName, newMap(row));
 	}
 
 	/**
 	 * Update the DocValues of a collection of document
 	 *
 	 * @param rows a collection of document with a collection of DocValues to update
-	 * @return the status of the request
 	 */
-	public Response updateDocumentsValues(Collection<T> rows) {
+	public void updateDocumentsValues(Collection<T> rows) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
-		return indexService.updateDocumentsValues(schemaName, indexName, newListMap(rows));
+		if (annotatedService != null)
+			annotatedService.updateDocsValues(schemaName, indexName, rows);
+		else
+			indexService.updateMappedDocsValues(schemaName, indexName, newMapCollection(rows));
 	}
 
 	/**
@@ -221,22 +233,13 @@ public class AnnotatedIndexService<T> {
 	 * Buid a collection of Map by reading the IndexFields of the annotated documents
 	 *
 	 * @param rows a collection of records
-	 * @return a new collection of map
+	 * @return a new array of map objects
 	 */
-	private List<Map<String, Object>> newListMap(final Collection<T> rows) {
-		if (rows == null)
+	private Collection<Map<String, Object>> newMapCollection(final Collection<T> rows) {
+		if (rows == null || rows.isEmpty())
 			return null;
-		final List<Map<String, Object>> list = new ArrayList<>();
-		rows.forEach(new Consumer<T>() {
-
-			@Override
-			public void accept(T row) {
-				Map<String, Object> map = newMap(row);
-				if (map == null)
-					return;
-				list.add(map);
-			}
-		});
-		return list.isEmpty() ? null : list;
+		final Collection<Map<String, Object>> list = new ArrayList<>(rows.size());
+		rows.forEach(row -> list.add(newMap(row)));
+		return list;
 	}
 }
