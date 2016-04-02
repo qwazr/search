@@ -33,7 +33,7 @@ import java.net.URISyntaxException;
 import java.util.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class FullTest {
+public class JsonTest {
 
 	private static volatile boolean started;
 
@@ -91,7 +91,7 @@ public class FullTest {
 	}
 
 	private static LinkedHashMap<String, FieldDefinition> getFieldMap(String res) {
-		InputStream is = FullTest.class.getResourceAsStream(res);
+		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
 			return FieldDefinition.newFieldMap(IOUtils.toString(is));
 		} catch (IOException e) {
@@ -102,7 +102,7 @@ public class FullTest {
 	}
 
 	private static FieldDefinition getField(String res) {
-		InputStream is = FullTest.class.getResourceAsStream(res);
+		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
 			return FieldDefinition.newField(IOUtils.toString(is));
 		} catch (IOException e) {
@@ -113,7 +113,7 @@ public class FullTest {
 	}
 
 	private static LinkedHashMap<String, AnalyzerDefinition> getAnalyzerMap(String res) {
-		InputStream is = FullTest.class.getResourceAsStream(res);
+		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
 			return AnalyzerDefinition.newAnalyzerMap(IOUtils.toString(is));
 		} catch (IOException e) {
@@ -124,7 +124,7 @@ public class FullTest {
 	}
 
 	private static AnalyzerDefinition getAnalyzer(String res) {
-		InputStream is = FullTest.class.getResourceAsStream(res);
+		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
 			return AnalyzerDefinition.newAnalyzer(IOUtils.toString(is));
 		} catch (IOException e) {
@@ -135,7 +135,7 @@ public class FullTest {
 	}
 
 	private static IndexSettingsDefinition getIndexSettings(String res) {
-		InputStream is = FullTest.class.getResourceAsStream(res);
+		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
 			return JsonMapper.MAPPER.readValue(is, IndexSettingsDefinition.class);
 		} catch (IOException e) {
@@ -237,7 +237,7 @@ public class FullTest {
 	}
 
 	private static QueryDefinition getQuery(String res) {
-		InputStream is = FullTest.class.getResourceAsStream(res);
+		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
 			return QueryDefinition.newQuery(IOUtils.toString(is));
 		} catch (IOException e) {
@@ -279,7 +279,7 @@ public class FullTest {
 	}
 
 	private static Collection<Map<String, Object>> getDocs(String res) {
-		InputStream is = FullTest.class.getResourceAsStream(res);
+		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
 			return JsonMapper.MAPPER.readValue(is, IndexSingleClient.CollectionMapStringObjectTypeRef);
 		} catch (Exception e) {
@@ -290,7 +290,7 @@ public class FullTest {
 	}
 
 	private static HashMap<String, Object> getDoc(String res) {
-		InputStream is = FullTest.class.getResourceAsStream(res);
+		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
 			return JsonMapper.MAPPER.readValue(is, IndexSingleClient.MapStringObjectTypeRef);
 		} catch (Exception e) {

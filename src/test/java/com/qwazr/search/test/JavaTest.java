@@ -17,8 +17,8 @@ package com.qwazr.search.test;
 
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.index.IndexStatus;
-import com.qwazr.search.index.SchemaSettingsDefinition;
+import com.qwazr.search.index.*;
+import com.qwazr.search.query.TermQuery;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -29,12 +29,14 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class AnnotatedTest {
+public class JavaTest {
 
 	public static final String SCHEMA_NAME = "schema-test-full";
 	public static final String INDEX_NAME = "index-test-full";
+	public static final String[] RETURNED_FIELDS = { "title", "content", "price" };
 
 	@BeforeClass
 	public static void startSearchServer() throws Exception {
@@ -105,5 +107,39 @@ public class AnnotatedTest {
 	public void test210UpdateDocsValues() throws URISyntaxException, IOException, InterruptedException {
 		final AnnotatedIndexService service = getService();
 		service.updateDocumentsValues(Arrays.asList(docValue1, docValue2));
+	}
+
+	@Test
+	public void test300SimpleTermQuery() throws URISyntaxException {
+		final AnnotatedIndexService service = getService();
+		QueryBuilder builder = new QueryBuilder();
+		builder.query = new TermQuery(FieldDefinition.ID_FIELD, "1");
+		ResultDefinition result = service.searchQuery(builder.build());
+		Assert.assertNotNull(result);
+		Assert.assertEquals(new Long(1), result.total_hits);
+	}
+
+	private ResultDocument checkResultDocument(ResultDefinition result, int pos) {
+		Assert.assertNotNull(result);
+		Assert.assertNotNull(result.documents);
+		Assert.assertTrue(result.documents.size() > pos);
+		ResultDocument resultDocument = result.documents.get(pos);
+		Assert.assertNotNull(resultDocument);
+		return resultDocument;
+	}
+
+	@Test
+	public void test30ReturnedFieldQuery() throws URISyntaxException {
+		final AnnotatedIndexService service = getService();
+		QueryBuilder builder = new QueryBuilder();
+		builder.query = new TermQuery(FieldDefinition.ID_FIELD, "2");
+		builder.addReturned_field(RETURNED_FIELDS);
+		ResultDefinition result = service.searchQuery(builder.build());
+		Assert.assertNotNull(result);
+		Assert.assertEquals(new Long(1), result.total_hits);
+		Map<String, Object> fields = checkResultDocument(result, 0).fields;
+		Assert.assertEquals(RETURNED_FIELDS.length, fields.keySet().size());
+		for (String field : RETURNED_FIELDS)
+			Assert.assertTrue(fields.keySet().contains(field));
 	}
 }
