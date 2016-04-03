@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JavaTest {
@@ -43,7 +42,7 @@ public class JavaTest {
 		TestServer.startServer();
 	}
 
-	private AnnotatedIndexService getService() throws URISyntaxException {
+	private AnnotatedIndexService<AnnotatedIndex> getService() throws URISyntaxException {
 		return TestServer.getService(AnnotatedIndex.class);
 	}
 
@@ -82,16 +81,32 @@ public class JavaTest {
 	private final static AnnotatedIndex record2 = new AnnotatedIndex(2, "Second article",
 			"Content of the second article", new String[] { "news", "science" }, 0d);
 
-	@Test
-	public void test100PostDocument() throws URISyntaxException, IOException, InterruptedException {
-		final AnnotatedIndexService service = getService();
-		service.postDocument(record1);
+	private AnnotatedIndex checkRecord(AnnotatedIndex refRecord)
+			throws URISyntaxException, ReflectiveOperationException {
+		final AnnotatedIndexService<AnnotatedIndex> service = getService();
+		AnnotatedIndex record = service.getDocument(refRecord.id.toString());
+		Assert.assertNotNull(record);
+		return record;
 	}
 
 	@Test
-	public void test110PostDocuments() throws URISyntaxException, IOException, InterruptedException {
+	public void test100PostDocument()
+			throws URISyntaxException, IOException, InterruptedException, ReflectiveOperationException {
+		final AnnotatedIndexService service = getService();
+		service.postDocument(record1);
+		AnnotatedIndex newRecord1 = checkRecord(record1);
+		Assert.assertEquals(record1, newRecord1);
+	}
+
+	@Test
+	public void test110PostDocuments()
+			throws URISyntaxException, IOException, InterruptedException, ReflectiveOperationException {
 		final AnnotatedIndexService service = getService();
 		service.postDocuments(Arrays.asList(record1, record2));
+		AnnotatedIndex newRecord1 = checkRecord(record1);
+		Assert.assertEquals(record1, newRecord1);
+		AnnotatedIndex newRecord2 = checkRecord(record2);
+		Assert.assertEquals(record2, newRecord2);
 	}
 
 	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, null, 1.11d);
@@ -104,9 +119,12 @@ public class JavaTest {
 	}
 
 	@Test
-	public void test210UpdateDocsValues() throws URISyntaxException, IOException, InterruptedException {
+	public void test210UpdateDocsValues()
+			throws URISyntaxException, IOException, InterruptedException, ReflectiveOperationException {
 		final AnnotatedIndexService service = getService();
 		service.updateDocumentsValues(Arrays.asList(docValue1, docValue2));
+		checkRecord(record1);
+		checkRecord(record2);
 	}
 
 	@Test
@@ -119,27 +137,25 @@ public class JavaTest {
 		Assert.assertEquals(new Long(1), result.total_hits);
 	}
 
-	private ResultDocument checkResultDocument(ResultDefinition result, int pos) {
+	private ResultDocumentObject<AnnotatedIndex> checkResultDocument(
+			ResultDefinition<ResultDocumentObject<AnnotatedIndex>> result, int pos) {
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.documents);
 		Assert.assertTrue(result.documents.size() > pos);
-		ResultDocument resultDocument = result.documents.get(pos);
+		ResultDocumentObject<AnnotatedIndex> resultDocument = result.documents.get(pos);
 		Assert.assertNotNull(resultDocument);
 		return resultDocument;
 	}
 
 	@Test
-	public void test30ReturnedFieldQuery() throws URISyntaxException {
+	public void test350ReturnedFieldQuery() throws URISyntaxException {
 		final AnnotatedIndexService service = getService();
 		QueryBuilder builder = new QueryBuilder();
-		builder.query = new TermQuery(FieldDefinition.ID_FIELD, "2");
+		builder.query = new TermQuery(FieldDefinition.ID_FIELD, record2.id.toString());
 		builder.addReturned_field(RETURNED_FIELDS);
-		ResultDefinition result = service.searchQuery(builder.build());
+		ResultDefinition.WithObject<AnnotatedIndex> result = service.searchQuery(builder.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(new Long(1), result.total_hits);
-		Map<String, Object> fields = checkResultDocument(result, 0).fields;
-		Assert.assertEquals(RETURNED_FIELDS.length, fields.keySet().size());
-		for (String field : RETURNED_FIELDS)
-			Assert.assertTrue(fields.keySet().contains(field));
+		AnnotatedIndex returnedRecord = checkResultDocument(result, 0).record;
 	}
 }

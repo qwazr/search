@@ -223,7 +223,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Path("/{schema_name}/{index_name}/search")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	ResultDefinition searchQuery(@PathParam("schema_name") String schema_name,
+	ResultDefinition.WithMap searchQuery(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, QueryDefinition query, @QueryParam("delete") Boolean delete);
 
 	public static IndexServiceInterface getClient(Boolean local, String group, Integer msTimeout)

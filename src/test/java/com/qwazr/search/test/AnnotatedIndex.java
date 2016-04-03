@@ -20,11 +20,13 @@ import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.index.IndexOptions;
 
+import java.util.Objects;
+
 @Index(name = "testIndex", schema = "testSchema")
 public class AnnotatedIndex {
 
 	@IndexField(name = FieldDefinition.ID_FIELD)
-	final int id;
+	final public Integer id;
 
 	@IndexField(
 			analyzer = "en.EnglishAnalyzer",
@@ -46,11 +48,29 @@ public class AnnotatedIndex {
 			template = FieldDefinition.Template.DoubleDocValuesField)
 	final public Double price;
 
-	public AnnotatedIndex(int id, String title, String content, String[] category, Double price) {
+	public AnnotatedIndex() {
+		this(null, null, null, null, null);
+	}
+
+	public AnnotatedIndex(Integer id, String title, String content, String[] category, Double price) {
 		this.id = id;
 		this.title = title;
 		this.content = content;
 		this.category = category;
 		this.price = price;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (!(object instanceof AnnotatedIndex))
+			return false;
+		AnnotatedIndex record = (AnnotatedIndex) object;
+		if (!Objects.equals(title, record.title))
+			return false;
+		if (!Objects.equals(content, record.content))
+			return false;
+		if (!Objects.equals(price, record.price))
+			return false;
+		return true;
 	}
 }

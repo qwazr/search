@@ -15,40 +15,88 @@
  */
 package com.qwazr.search.query;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 public class TermsQuery extends AbstractQuery {
 
-	final public String field;
-	final public List<String> terms;
+	final public Collection<Term> terms;
 
 	public TermsQuery() {
-		field = null;
 		terms = null;
 	}
 
-	public TermsQuery(String field, List<String> terms) {
-		this.field = field;
+	private TermsQuery(Collection<Term> terms) {
 		this.terms = terms;
 	}
 
-	public TermsQuery(String field, String... terms) {
-		this.field = field;
-		this.terms = Arrays.asList(terms);
+	public TermsQuery(String field, Collection<Object> terms) {
+		Objects.requireNonNull(field, "The field is null");
+		Objects.requireNonNull(terms, "The term list is null");
+		this.terms = new ArrayList<>(terms.size());
+		terms.forEach(term -> terms.add(new Term(field, BytesRefUtils.fromAny(term))));
+	}
+
+	public TermsQuery(String field, Object... terms) {
+		Objects.requireNonNull(field, "The field is null");
+		Objects.requireNonNull(terms, "The term list is null");
+		this.terms = new ArrayList<>(terms.length);
+		for (Object term : terms)
+			this.terms.add(new Term(field, BytesRefUtils.fromAny(term)));
 	}
 
 	@Override
 	final public Query getQuery(QueryContext queryContext) throws IOException {
-		final List<Term> termList = new ArrayList<Term>(terms == null ? 0 : terms.size());
-		if (terms != null)
-			terms.forEach(term -> termList.add(new Term(field, term)));
-		return new org.apache.lucene.queries.TermsQuery(termList);
+		return new org.apache.lucene.queries.TermsQuery(terms);
+	}
+
+	public static Builder builder() {
+		return new Builder();
+	}
+	
+	public static class Builder {
+
+		private final List<Term> terms;
+
+		public Builder() {
+			terms = new ArrayList<>();
+		}
+
+		final public void add(final String field, final String term) {
+			terms.add(new Term(field, term));
+		}
+
+		final public void add(final String field, final BytesRef bytes) {
+			terms.add(new Term(field, bytes));
+		}
+
+		final public void add(final String field, final Integer value) {
+			add(field, BytesRefUtils.from(value));
+		}
+
+		final public void add(final String field, final Float value) {
+			add(field, BytesRefUtils.from(value));
+		}
+
+		final public void add(final String field, final Long value) {
+			add(field, BytesRefUtils.from(value));
+		}
+
+		final public void add(final String field, final Double value) {
+			add(field, BytesRefUtils.from(value));
+		}
+
+		final public TermsQuery build() {
+			return new TermsQuery(terms);
+		}
 	}
 }

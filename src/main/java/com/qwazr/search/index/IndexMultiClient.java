@@ -203,7 +203,8 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
-	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query, Boolean delete) {
+	public ResultDefinition.WithMap searchQuery(String schema_name, String index_name, QueryDefinition query,
+			Boolean delete) {
 		// TODO Auto-generated method stub
 		return null;
 	}

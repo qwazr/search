@@ -18,6 +18,7 @@ package com.qwazr.search.annotations;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.server.ServerException;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -29,6 +30,8 @@ public class AnnotatedIndexService<T> {
 	protected final AnnotatedServiceInterface annotatedService;
 
 	protected final IndexServiceInterface indexService;
+
+	private final Class<T> indexDefinitionClass;
 
 	protected final String schemaName;
 
@@ -53,6 +56,7 @@ public class AnnotatedIndexService<T> {
 		this.annotatedService = indexService instanceof AnnotatedServiceInterface ?
 				(AnnotatedServiceInterface) indexService :
 				null;
+		this.indexDefinitionClass = indexDefinitionClass;
 		Index index = indexDefinitionClass.getAnnotation(Index.class);
 		Objects.requireNonNull(index, "This class does not declare any Index annotation: " + indexDefinitionClass);
 		schemaName = index.schema();
@@ -77,7 +81,7 @@ public class AnnotatedIndexService<T> {
 		}
 	}
 
-	private void checkParameters() {
+	final private void checkParameters() {
 		if (StringUtils.isEmpty(schemaName))
 			throw new RuntimeException("The schema name is empty");
 		if (StringUtils.isEmpty(indexName))
@@ -177,6 +181,20 @@ public class AnnotatedIndexService<T> {
 	}
 
 	/**
+	 * @param id The ID of the document
+	 * @return an filled object or null if the document does not exist
+	 * @throws ReflectiveOperationException
+	 */
+	public T getDocument(String id) throws ReflectiveOperationException {
+		checkParameters();
+		Objects.requireNonNull(id, "The id cannot be empty");
+		if (annotatedService != null)
+			return annotatedService.getDocument(schemaName, indexName, id, fieldMap, indexDefinitionClass);
+		else
+			return toRecord(indexService.getDocument(schemaName, indexName, id.toString()));
+	}
+
+	/**
 	 * @return the status of the index
 	 */
 	public IndexStatus getIndexStatus() {
@@ -190,7 +208,14 @@ public class AnnotatedIndexService<T> {
 	 * @param query the query to execute
 	 * @return the results
 	 */
-	public ResultDefinition searchQuery(QueryDefinition query) {
+	public ResultDefinition.WithObject<T> searchQuery(QueryDefinition query) {
+		checkParameters();
+		if (annotatedService != null)
+			return annotatedService.searchQuery(schemaName, indexName, query, fieldMap, indexDefinitionClass);
+		throw new ServerException("Remote annotated Search Query not yet implemented");
+	}
+
+	public ResultDefinition.WithMap searchQueryWithMap(QueryDefinition query) {
 		checkParameters();
 		return indexService.searchQuery(schemaName, indexName, query, false);
 	}
@@ -201,7 +226,7 @@ public class AnnotatedIndexService<T> {
 	 * @param query the query to execute
 	 * @return the results
 	 */
-	public ResultDefinition deleteByQuery(QueryDefinition query) {
+	public ResultDefinition<?> deleteByQuery(QueryDefinition query) {
 		checkParameters();
 		return indexService.searchQuery(schemaName, indexName, query, true);
 	}
@@ -242,6 +267,26 @@ public class AnnotatedIndexService<T> {
 		final Collection<Map<String, Object>> list = new ArrayList<>(rows.size());
 		rows.forEach(row -> list.add(newMap(row)));
 		return list;
+	}
+
+	private T toRecord(Map<String, Object> fields) throws ReflectiveOperationException {
+		if (fields == null)
+			return null;
+		final T record = indexDefinitionClass.newInstance();
+		fields.forEach(new BiConsumer<String, Object>() {
+			@Override
+			public void accept(String fieldName, Object fieldValue) {
+				Field field = fieldMap.get(fieldName);
+				if (field == null)
+					return;
+				try {
+					field.set(record, fieldValue);
+				} catch (IllegalAccessException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		});
+		return record;
 	}
 
 }

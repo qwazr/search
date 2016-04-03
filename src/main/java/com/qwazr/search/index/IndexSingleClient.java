@@ -347,11 +347,12 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public ResultDefinition searchQuery(String schema_name, String index_name, QueryDefinition query, Boolean delete) {
+	public ResultDefinition.WithMap searchQuery(String schema_name, String index_name, QueryDefinition query,
+			Boolean delete) {
 		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/search")
 				.setParameterObject("delete", delete);
 		Request request = Request.Post(uriBuilder.build());
-		return commonServiceRequest(request, query, null, ResultDefinition.class, 200);
+		return commonServiceRequest(request, query, null, ResultDefinition.WithMap.class, 200);
 	}
 
 }

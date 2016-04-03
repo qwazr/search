@@ -555,7 +555,7 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final ResultDefinition deleteByQuery(final QueryDefinition queryDefinition)
+	final ResultDefinition.WithMap deleteByQuery(final QueryDefinition queryDefinition)
 			throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException,
 			ReflectiveOperationException {
 		final Semaphore sem = schema.acquireWriteSemaphore();
@@ -566,7 +566,7 @@ final public class IndexInstance implements Closeable {
 			indexWriter.deleteDocuments(query);
 			nrtCommit();
 			docs -= indexWriter.numDocs();
-			return new ResultDefinition(docs);
+			return new ResultDefinition.WithMap(docs);
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -583,18 +583,21 @@ final public class IndexInstance implements Closeable {
 		return newState;
 	}
 
-	final ResultDefinition search(final QueryDefinition queryDefinition)
-			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
-			ReflectiveOperationException {
+	final private QueryContext buildQueryContext(final IndexSearcher indexSearcher,
+			final QueryDefinition queryDefinition) throws IOException {
+		indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
+		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
+		return new QueryContext(indexSearcher, queryAnalyzer, facetsState, queryDefinition);
+	}
+
+	final ResultDefinition search(final QueryDefinition queryDefinition,
+			ResultDocumentBuilder.BuilderFactory<?> documentBuilderFactory)
+			throws IOException, InterruptedException, ParseException, ReflectiveOperationException, QueryNodeException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
-				indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
-				final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
-				final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, facetsState,
-						queryDefinition);
-				return QueryUtils.search(queryContext);
+				return QueryUtils.search(buildQueryContext(indexSearcher, queryDefinition), documentBuilderFactory);
 			} finally {
 				searcherManager.release(indexSearcher);
 			}

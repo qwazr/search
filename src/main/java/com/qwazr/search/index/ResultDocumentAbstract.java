@@ -16,72 +16,63 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.search.ScoreDoc;
 
-import java.io.IOException;
 import java.util.Map;
 
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class ResultDocument {
+public abstract class ResultDocumentAbstract {
 
 	final public Float score;
 	final public Float percent_score;
 	final private int doc;
 	final private int shard_index;
-	final public Map<String, Object> fields;
 	final public Map<String, String> highlights;
 
-	public ResultDocument() {
+	public ResultDocumentAbstract() {
 		score = null;
 		percent_score = null;
-		fields = null;
 		highlights = null;
 		doc = -1;
 		shard_index = -1;
 	}
 
-	ResultDocument(int pos, ScoreDoc scoreDoc, Float max_score, Document document, Map<String, String> highlights,
-			ReturnedFields docValuesReturnedFields) throws IOException {
-		this.score = scoreDoc.score;
-		if (max_score != null && max_score > 0)
-			this.percent_score = this.score == 0 ? 0 : this.score / max_score;
-		else
-			this.percent_score = null;
-		this.doc = scoreDoc.doc;
-		this.shard_index = scoreDoc.shardIndex;
-		// Build field map
-		fields = ResultUtils.buildFields(document);
-		docValuesReturnedFields.toReturnedFields(scoreDoc.doc, fields);
-
-		this.highlights = highlights;
+	protected ResultDocumentAbstract(ResultDocumentBuilder builder) {
+		this.score = builder.scoreDoc.score;
+		this.percent_score = builder.percent_score;
+		highlights = builder.highlights;
+		this.doc = builder.scoreDoc.doc;
+		this.shard_index = builder.scoreDoc.shardIndex;
 	}
 
-	public Float getScore() {
+	final public Float getScore() {
 		return score;
 	}
 
-	public Float getPercent_score() {
+	@JsonIgnore
+	final public Float getPercentScore() {
+		return percent_score;
+	}
+
+	final public Float getPercent_score() {
 		return percent_score;
 	}
 
 	@JsonIgnore
-	public int getDoc() {
+	final public int getDoc() {
 		return doc;
 	}
 
 	@JsonIgnore
-	public int getShard_index() {
+	final public int getShard_index() {
 		return shard_index;
 	}
 
-	public Map<String, Object> getFields() {
-		return fields;
+	@JsonIgnore
+	final public int getShardIndex() {
+		return shard_index;
 	}
 
-	public Map<String, String> getHighlights() {
+	final public Map<String, String> getHighlights() {
 		return highlights;
 	}
-
+	
 }

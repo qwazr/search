@@ -503,25 +503,29 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 		}
 	}
 
+	private QueryDefinition getDocumentQuery(IndexInstance index, Object id) {
+		QueryBuilder builder = new QueryBuilder();
+		builder.setQuery(new TermQuery(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id)));
+		builder.setRows(1);
+		Map<String, FieldDefinition> fields = index.getFields();
+		if (fields != null)
+			builder.addReturned_field(fields.keySet());
+		return builder.build();
+	}
+
 	@Override
-	final public Map<String, Object> getDocument(final String schema_name, final String index_name,
-			final String doc_id) {
+	final public Map<String, Object> getDocument(final String schema_name, final String index_name, final String id) {
 		try {
 			checkRight(schema_name);
 			IndexInstance index = IndexManager.INSTANCE.get(schema_name).get(index_name);
-			QueryBuilder builder = new QueryBuilder();
-			builder.setQuery(new TermQuery(FieldDefinition.ID_FIELD, doc_id));
-			builder.setRows(1);
-			Map<String, FieldDefinition> fields = index.getFields();
-			if (fields != null)
-				builder.addReturned_field(fields.keySet());
-			ResultDefinition result = index.search(builder.build());
+			ResultDefinition result = index
+					.search(getDocumentQuery(index, id), ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
 			if (result != null) {
-				List<ResultDocument> docs = result.getDocuments();
+				List<ResultDocumentMap> docs = result.getDocuments();
 				if (docs != null && !docs.isEmpty())
 					return docs.get(0).getFields();
 			}
-			throw new ServerException(Response.Status.NOT_FOUND, "Document not found: " + doc_id);
+			throw new ServerException(Response.Status.NOT_FOUND, "Document not found: " + id);
 		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
@@ -530,17 +534,58 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	}
 
 	@Override
-	final public ResultDefinition searchQuery(final String schema_name, final String index_name,
+	final public <T> T getDocument(String schemaName, String indexName, String id, Map<String, Field> fields,
+			Class<T> indexDefinitionClass) {
+		try {
+			checkRight(schemaName);
+			final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName);
+			ResultDefinition result = index.search(getDocumentQuery(index, id),
+					ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass));
+			if (result == null)
+				return null;
+			List<ResultDocumentObject<T>> docs = result.getDocuments();
+			if (docs == null || docs.isEmpty())
+				return null;
+			return docs.get(0).record;
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	final public ResultDefinition.WithMap searchQuery(final String schema_name, final String index_name,
 			final QueryDefinition query, final Boolean delete) {
 		try {
 			checkRight(schema_name);
 			if ("*".equals(index_name))
-				return IndexManager.INSTANCE.get(schema_name).search(query);
+				return (ResultDefinition.WithMap) IndexManager.INSTANCE.get(schema_name)
+						.search(query, ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
 			IndexInstance index = IndexManager.INSTANCE.get(schema_name).get(index_name);
 			if (delete != null && delete)
 				return index.deleteByQuery(query);
 			else
-				return index.search(query);
+				return (ResultDefinition.WithMap) index.search(query, ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	final public <T> ResultDefinition.WithObject<T> searchQuery(final String schema_name, final String index_name,
+			final QueryDefinition query, final Map<String, Field> fields, final Class<T> indexDefinitionClass) {
+		try {
+			checkRight(schema_name);
+			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilerFactory = ResultDocumentBuilder.ObjectBuilderFactory
+					.createFactory(fields, indexDefinitionClass);
+			if ("*".equals(index_name))
+				return (ResultDefinition.WithObject<T>) IndexManager.INSTANCE.get(schema_name)
+						.search(query, documentBuilerFactory);
+			IndexInstance index = IndexManager.INSTANCE.get(schema_name).get(index_name);
+			return (ResultDefinition.WithObject<T>) index.search(query, documentBuilerFactory);
 		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);

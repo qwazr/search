@@ -55,7 +55,7 @@ public class TestServer {
 
 	public static Map<Class<?>, AnnotatedIndexService> serviceMap = new HashMap<>();
 
-	public static synchronized AnnotatedIndexService getService(Class<?> indexClass) throws URISyntaxException {
+	public static synchronized <T> AnnotatedIndexService<T> getService(Class<T> indexClass) throws URISyntaxException {
 		AnnotatedIndexService service = serviceMap.get(indexClass);
 		if (service != null)
 			return service;

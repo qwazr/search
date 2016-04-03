@@ -34,7 +34,6 @@ public class QueryContext {
 		this.analyzer = analyzer;
 		this.queryDefinition = queryDefinition;
 		this.queryString = QueryUtils.getFinalQueryString(queryDefinition);
-
 	}
 
 }

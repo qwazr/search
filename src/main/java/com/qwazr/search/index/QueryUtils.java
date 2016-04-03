@@ -19,7 +19,6 @@ import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.SortUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
-import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -59,9 +58,9 @@ class QueryUtils {
 		return query;
 	}
 
-	final static ResultDefinition search(final QueryContext queryContext)
-			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
-			ReflectiveOperationException {
+	final static ResultDefinition search(final QueryContext queryContext,
+			final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 
 		final QueryDefinition queryDef = queryContext.queryDefinition;
 
@@ -101,8 +100,10 @@ class QueryUtils {
 		} else
 			highlighters = null;
 
-		return new ResultDefinition(analyzerContext.fieldTypes, timeTracker, queryContext.indexSearcher, totalHits,
-				topDocs, queryDef, facetsBuilder, highlighters, queryCollectors.functionsCollectors, query);
+		ResultDefinitionBuilder resultBuilder = new ResultDefinitionBuilder(queryDef, topDocs,
+				queryContext.indexSearcher, query, highlighters, queryCollectors.functionsCollectors,
+				analyzerContext.fieldTypes, timeTracker, documentBuilderFactory, facetsBuilder, totalHits);
+		return documentBuilderFactory.build(resultBuilder);
 	}
 
 }

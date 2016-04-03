@@ -129,7 +129,7 @@ public class SchemaInstance implements Closeable {
 			doClose();
 		}
 
-		ResultDefinition search(QueryDefinition queryDef)
+		ResultDefinition search(QueryDefinition queryDef, ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
 				throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
 				ReflectiveOperationException {
 			if (indexSearcher == null)
@@ -138,11 +138,12 @@ public class SchemaInstance implements Closeable {
 			try {
 				SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader());
 				final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, state, queryDef);
-				return QueryUtils.search(queryContext);
+				return QueryUtils.search(queryContext, documentBuilderFactory);
 			} finally {
 				decRef();
 			}
 		}
+
 	}
 
 	SchemaInstance(ExecutorService executorService, File schemaDirectory)
@@ -282,20 +283,22 @@ public class SchemaInstance implements Closeable {
 			writeSemaphore = null;
 	}
 
-	private static ResultDefinition atomicSearch(SearchContext searchContext, QueryDefinition queryDef)
+	private static <T extends ResultDocumentAbstract> ResultDefinition<T> atomicSearch(SearchContext searchContext,
+			QueryDefinition queryDef, ResultDocumentBuilder.BuilderFactory<T> documentBuilderFactory)
 			throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException,
 			ReflectiveOperationException {
 		if (searchContext == null)
 			return null;
-		return searchContext.search(queryDef);
+		return searchContext.search(queryDef, documentBuilderFactory);
 	}
 
-	public ResultDefinition search(QueryDefinition queryDef)
+	public <T extends ResultDocumentAbstract> ResultDefinition<T> search(QueryDefinition queryDef,
+			ResultDocumentBuilder.BuilderFactory<T> documentBuilderFactory)
 			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
 			ReflectiveOperationException {
 		final Semaphore sem = acquireReadSemaphore();
 		try {
-			return atomicSearch(searchContext, queryDef);
+			return atomicSearch(searchContext, queryDef, documentBuilderFactory);
 		} finally {
 			if (sem != null)
 				sem.release();

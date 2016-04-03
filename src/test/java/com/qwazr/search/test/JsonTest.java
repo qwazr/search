@@ -247,18 +247,18 @@ public class JsonTest {
 		}
 	}
 
-	private ResultDefinition checkQuerySchema(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
+	private ResultDefinition.WithMap checkQuerySchema(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
 			throws IOException {
-		ResultDefinition result = client.searchQuery(SCHEMA_NAME, "*", queryDef, null);
+		ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, "*", queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(expectedCount, result.total_hits.intValue());
 		return result;
 	}
 
-	private ResultDefinition checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
-			throws IOException {
-		ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_NAME, queryDef, null);
+	private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef,
+			int expectedCount) throws IOException {
+		ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, INDEX_NAME, queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(expectedCount, result.total_hits.intValue());
@@ -300,7 +300,7 @@ public class JsonTest {
 		}
 	}
 
-	private Map<String, Number> checkFacetSize(ResultDefinition result, String dimName, int size) {
+	private Map<String, Number> checkFacetSize(ResultDefinition.WithMap result, String dimName, int size) {
 		Assert.assertTrue(result.facets.containsKey(dimName));
 		final Map<String, Number> facetCounts = result.facets.get(dimName);
 		Assert.assertNotNull(facetCounts);
@@ -308,7 +308,7 @@ public class JsonTest {
 		return facetCounts;
 	}
 
-	private void checkEmptyFacets(ResultDefinition result) {
+	private void checkEmptyFacets(ResultDefinition.WithMap result) {
 		Assert.assertNotNull(result.facets);
 		checkFacetSize(result, "category", 0);
 		checkFacetSize(result, "format", 0);
@@ -376,9 +376,9 @@ public class JsonTest {
 		IndexServiceInterface client = getClient();
 
 		// Check that the initial stock is 0 for all documents
-		ResultDefinition result = checkQueryIndex(client, QUERY_CHECK_RETURNED, 5);
+		ResultDefinition.WithMap result = checkQueryIndex(client, QUERY_CHECK_RETURNED, 5);
 		Assert.assertNotNull(result.documents);
-		for (ResultDocument document : result.documents) {
+		for (ResultDocumentMap document : result.documents) {
 			Integer stock = (Integer) document.fields.get("stock");
 			Assert.assertNotNull(stock);
 			Assert.assertEquals(0, (int) stock);
@@ -399,7 +399,7 @@ public class JsonTest {
 		// Check the result
 		result = checkQueryIndex(client, QUERY_CHECK_RETURNED, 5);
 		Assert.assertNotNull(result.documents);
-		for (ResultDocument document : result.documents) {
+		for (ResultDocumentMap document : result.documents) {
 			// Check that the price is still here
 			Assert.assertNotNull(document.fields);
 			Double price = (Double) document.fields.get("price");
@@ -412,10 +412,10 @@ public class JsonTest {
 		}
 	}
 
-	private void checkFacetRowsQuery(ResultDefinition result) {
+	private void checkFacetRowsQuery(ResultDefinition.WithMap result) {
 		Assert.assertNotNull(result.documents);
 		Assert.assertEquals(3, result.documents.size());
-		for (ResultDocument doc : result.documents) {
+		for (ResultDocumentMap doc : result.documents) {
 			Assert.assertNotNull(doc.fields);
 			Assert.assertEquals(2, doc.fields.size());
 			Assert.assertTrue(doc.fields.containsKey("name"));
@@ -438,7 +438,7 @@ public class JsonTest {
 		checkFacetRowsQuery(checkQuerySchema(client, FACETS_ROWS_QUERY, 5));
 	}
 
-	private void checkFacetFiltersResult(ResultDefinition result) {
+	private void checkFacetFiltersResult(ResultDefinition.WithMap result) {
 		Assert.assertNotNull(result.documents);
 		Assert.assertEquals(2, result.documents.size());
 		Assert.assertNotNull(result.documents.get(0).fields);
@@ -458,9 +458,9 @@ public class JsonTest {
 	}
 
 	private <T extends Comparable> void checkDescending(T startValue, String field,
-			Collection<ResultDocument> documents) {
+			Collection<ResultDocumentMap> documents) {
 		T old = startValue;
-		for (ResultDocument document : documents) {
+		for (ResultDocumentMap document : documents) {
 			Assert.assertNotNull(document.fields);
 			T val = (T) document.fields.get(field);
 			Assert.assertNotNull(val);
@@ -470,9 +470,9 @@ public class JsonTest {
 	}
 
 	private <T extends Comparable> void checkAscending(T startValue, String field,
-			Collection<ResultDocument> documents) {
+			Collection<ResultDocumentMap> documents) {
 		T old = startValue;
-		for (ResultDocument document : documents) {
+		for (ResultDocumentMap document : documents) {
 			Assert.assertNotNull(document.fields);
 			T val = (T) document.fields.get(field);
 			Assert.assertNotNull(val);
@@ -495,7 +495,7 @@ public class JsonTest {
 	public void test430QueryFunctionsDoc() throws URISyntaxException, IOException {
 		Object[] results = new Object[] { 1.1D, 10.5D, 10, 14 };
 		IndexServiceInterface client = getClient();
-		ResultDefinition result = checkQueryIndex(client, QUERY_CHECK_FUNCTIONS, 5);
+		ResultDefinition.WithMap result = checkQueryIndex(client, QUERY_CHECK_FUNCTIONS, 5);
 		Assert.assertNotNull(result.functions);
 		Assert.assertEquals(results.length, result.functions.size());
 		for (int i = 0; i < result.functions.size(); i++) {
@@ -509,8 +509,8 @@ public class JsonTest {
 	@Test
 	public void test440QueryHighlight() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		ResultDefinition result = checkQueryIndex(client, QUERY_HIGHLIGHT, 1);
-		ResultDocument document = result.getDocuments().get(0);
+		ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_HIGHLIGHT, 1);
+		ResultDocumentMap document = result.getDocuments().get(0);
 		String snippet = document.getHighlights().get("my_custom_snippet");
 		Assert.assertNotNull(snippet);
 		Assert.assertTrue(snippet.contains("<strong>search</strong>"));
