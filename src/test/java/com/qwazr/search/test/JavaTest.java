@@ -33,8 +33,8 @@ import java.util.LinkedHashMap;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JavaTest {
 
-	public static final String SCHEMA_NAME = "schema-test-full";
-	public static final String INDEX_NAME = "index-test-full";
+	public static final String SCHEMA_NAME = "schema-test-java";
+	public static final String INDEX_NAME = "index-test-java";
 	public static final String[] RETURNED_FIELDS = { "title", "content", "price" };
 
 	@BeforeClass
@@ -158,4 +158,17 @@ public class JavaTest {
 		Assert.assertEquals(new Long(1), result.total_hits);
 		AnnotatedIndex returnedRecord = checkResultDocument(result, 0).record;
 	}
+
+	@Test
+	public void test980DeleteIndex() throws URISyntaxException {
+		final AnnotatedIndexService service = getService();
+		service.deleteIndex();
+	}
+
+	@Test
+	public void test990DeleteSchema() throws URISyntaxException {
+		final AnnotatedIndexService service = getService();
+		service.deleteSchema();
+	}
+
 }

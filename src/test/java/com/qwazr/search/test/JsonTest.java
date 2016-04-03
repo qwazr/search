@@ -37,8 +37,8 @@ public class JsonTest {
 
 	private static volatile boolean started;
 
-	public static final String SCHEMA_NAME = "schema-test-full";
-	public static final String INDEX_NAME = "index-test-full";
+	public static final String SCHEMA_NAME = "schema-test-json";
+	public static final String INDEX_NAME = "index-test-json";
 	public static final LinkedHashMap<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
 	public static final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
 	public static final LinkedHashMap<String, AnalyzerDefinition> ANALYZERS_JSON = getAnalyzerMap("analyzers.json");
@@ -247,8 +247,8 @@ public class JsonTest {
 		}
 	}
 
-	private ResultDefinition.WithMap checkQuerySchema(IndexServiceInterface client, QueryDefinition queryDef, int expectedCount)
-			throws IOException {
+	private ResultDefinition.WithMap checkQuerySchema(IndexServiceInterface client, QueryDefinition queryDef,
+			int expectedCount) throws IOException {
 		ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, "*", queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
@@ -589,14 +589,9 @@ public class JsonTest {
 		Response response = client.deleteIndex(SCHEMA_NAME, INDEX_NAME);
 		Assert.assertNotNull(response);
 		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
-	}
-
-	@Test
-	public void test981EmptyIndex() throws URISyntaxException {
-		IndexServiceInterface client = getClient();
 		Set<String> indexes = client.getIndexes(SCHEMA_NAME);
 		Assert.assertNotNull(indexes);
-		Assert.assertTrue(indexes.isEmpty());
+		Assert.assertFalse(indexes.contains(INDEX_SETTINGS));
 	}
 
 	@Test
@@ -605,15 +600,9 @@ public class JsonTest {
 		Response response = client.deleteSchema(SCHEMA_NAME);
 		Assert.assertNotNull(response);
 		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
-
-	}
-
-	@Test
-	public void test991EmptySchema() throws URISyntaxException {
-		IndexServiceInterface client = getClient();
 		Set<String> schemas = client.getSchemas();
 		Assert.assertNotNull(schemas);
-		Assert.assertTrue(schemas.isEmpty());
+		Assert.assertFalse(schemas.contains(SCHEMA_NAME));
 	}
 
 }

@@ -17,10 +17,17 @@ package com.qwazr.search.annotations;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
+import com.qwazr.utils.ArrayUtils;
+import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
+import org.apache.http.HttpEntity;
+import org.apache.http.util.EntityUtils;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -99,6 +106,42 @@ public class AnnotatedIndexService<T> {
 	}
 
 	/**
+	 * Check if the HTTP response returned a valid code. If not a WebApplicationException is thrown
+	 *
+	 * @param response   The HTTP   response
+	 * @param validCodes The valid HTTP codes
+	 */
+	private void checkHttpResponse(Response response, int... validCodes) {
+		if (response == null)
+			throw new WebApplicationException("No response");
+		if (ArrayUtils.contains(validCodes, response.getStatus()))
+			return;
+		String message = null;
+		Object entity = response.getEntity();
+		if (entity != null) {
+			try {
+				if (entity instanceof HttpEntity)
+					message = EntityUtils.toString((HttpEntity) entity);
+				else if (entity instanceof InputStream)
+					message = IOUtils.toString((InputStream) entity);
+			} catch (IOException e) {
+				message = null;
+			}
+		}
+		if (message == null && response.getStatusInfo() != null)
+			message = response.getStatusInfo().getReasonPhrase();
+		throw new WebApplicationException(message, response);
+	}
+
+	/**
+	 * Delete the schema
+	 */
+	public void deleteSchema() {
+		checkParameters();
+		checkHttpResponse(indexService.deleteSchema(schemaName), 200);
+	}
+
+	/**
 	 * Create a new index or update an existing one.
 	 *
 	 * @return the index status
@@ -109,6 +152,11 @@ public class AnnotatedIndexService<T> {
 			return indexService.createUpdateIndex(schemaName, indexName);
 		IndexSettingsDefinition settings = new IndexSettingsDefinition(similarityClass);
 		return indexService.createUpdateIndex(schemaName, indexName, settings);
+	}
+
+	public void deleteIndex() {
+		checkParameters();
+		checkHttpResponse(indexService.deleteIndex(schemaName, indexName), 200);
 	}
 
 	/**
