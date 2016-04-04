@@ -68,12 +68,12 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 	private final static Object getValue(final IndexableField field) {
 		if (field == null)
 			return null;
-		String s = field.stringValue();
-		if (s != null)
-			return s;
 		Number n = field.numericValue();
 		if (n != null)
 			return n;
+		String s = field.stringValue();
+		if (s != null)
+			return s;
 		return null;
 	}
 

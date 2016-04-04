@@ -166,9 +166,9 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 				}
 				if (converter == null)
 					return;
-				for (ResultDocumentBuilder resultDocumentBuider : resultDocumentBuilders)
-					resultDocumentBuider
-							.setReturnedField(fieldName, converter.convert(resultDocumentBuider.scoreDoc.doc));
+				for (ResultDocumentBuilder resultDocumentBuilder : resultDocumentBuilders)
+					resultDocumentBuilder
+							.setReturnedField(fieldName, converter.convert(resultDocumentBuilder.scoreDoc.doc));
 
 			}
 		});
