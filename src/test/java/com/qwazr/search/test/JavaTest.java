@@ -35,7 +35,7 @@ public class JavaTest {
 
 	public static final String SCHEMA_NAME = "schema-test-java";
 	public static final String INDEX_NAME = "index-test-java";
-	public static final String[] RETURNED_FIELDS = { "title", "content", "price" };
+	public static final String[] RETURNED_FIELDS = { "title", "content", "price", "storedCategory" };
 
 	@BeforeClass
 	public static void startSearchServer() throws Exception {
@@ -77,9 +77,9 @@ public class JavaTest {
 	}
 
 	private final static AnnotatedIndex record1 = new AnnotatedIndex(1, "First article", "Content of the first article",
-			new String[] { "news", "economy" }, 0d);
+			0d, "news", "economy");
 	private final static AnnotatedIndex record2 = new AnnotatedIndex(2, "Second article",
-			"Content of the second article", new String[] { "news", "science" }, 0d);
+			"Content of the second article", 0d, "news", "science");
 
 	private AnnotatedIndex checkRecord(AnnotatedIndex refRecord)
 			throws URISyntaxException, ReflectiveOperationException {
@@ -109,8 +109,8 @@ public class JavaTest {
 		Assert.assertEquals(record2, newRecord2);
 	}
 
-	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, null, 1.11d);
-	private final static AnnotatedIndex docValue2 = new AnnotatedIndex(2, null, null, null, 2.22d);
+	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, 1.11d);
+	private final static AnnotatedIndex docValue2 = new AnnotatedIndex(2, null, null, 2.22d);
 
 	@Test
 	public void test200UpdateDocValues() throws URISyntaxException, IOException, InterruptedException {
@@ -157,6 +157,10 @@ public class JavaTest {
 		Assert.assertNotNull(result);
 		Assert.assertEquals(new Long(1), result.total_hits);
 		AnnotatedIndex returnedRecord = checkResultDocument(result, 0).record;
+		Assert.assertEquals(record2.title, returnedRecord.title);
+		Assert.assertEquals(record2.content, returnedRecord.content);
+		Assert.assertEquals(docValue2.price, returnedRecord.price);
+		Assert.assertArrayEquals(record2.storedCategory.toArray(), returnedRecord.storedCategory.toArray());
 	}
 
 	@Test

@@ -17,11 +17,8 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 import org.apache.lucene.search.SortField;
-
-import java.util.Collection;
 
 class SortedSetDocValuesFacetType extends FieldTypeAbstract {
 
@@ -30,13 +27,8 @@ class SortedSetDocValuesFacetType extends FieldTypeAbstract {
 	}
 
 	@Override
-	final public void fill(final Object value, final FieldConsumer consumer) {
-		if (value instanceof Collection)
-			fillCollection((Collection) value, consumer);
-		else if (value instanceof JSObject)
-			fillJSObject((JSObject) value, consumer);
-		else
-			consumer.accept(new SortedSetDocValuesFacetField(fieldName, value.toString()));
+	final public void fillValue(final Object value, final FieldConsumer consumer) {
+		consumer.accept(new SortedSetDocValuesFacetField(fieldName, value.toString()));
 	}
 
 	@Override

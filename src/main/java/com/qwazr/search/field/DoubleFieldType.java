@@ -17,11 +17,8 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.search.SortField;
-
-import java.util.Collection;
 
 class DoubleFieldType extends StorableFieldType {
 
@@ -30,12 +27,8 @@ class DoubleFieldType extends StorableFieldType {
 	}
 
 	@Override
-	final public void fill(final Object value, final FieldConsumer consumer) {
-		if (value instanceof Collection)
-			fillCollection((Collection) value, consumer);
-		else if (value instanceof JSObject)
-			fillJSObject((JSObject) value, consumer);
-		else if (value instanceof Number)
+	final public void fillValue(final Object value, final FieldConsumer consumer) {
+		if (value instanceof Number)
 			consumer.accept(new DoubleField(fieldName, ((Number) value).doubleValue(), store));
 		else
 			consumer.accept(new DoubleField(fieldName, Double.parseDouble(value.toString()), store));

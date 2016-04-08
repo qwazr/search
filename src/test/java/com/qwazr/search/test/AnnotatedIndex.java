@@ -20,6 +20,7 @@ import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.index.IndexOptions;
 
+import java.util.LinkedHashSet;
 import java.util.Objects;
 
 @Index(name = "testIndex", schema = "testSchema")
@@ -48,16 +49,27 @@ public class AnnotatedIndex {
 			template = FieldDefinition.Template.DoubleDocValuesField)
 	final public Double price;
 
+	@IndexField(
+			template = FieldDefinition.Template.StringField, stored = true)
+	final public LinkedHashSet<String> storedCategory;
+
 	public AnnotatedIndex() {
 		this(null, null, null, null, null);
 	}
 
-	public AnnotatedIndex(Integer id, String title, String content, String[] category, Double price) {
+	public AnnotatedIndex(Integer id, String title, String content, Double price, String... categories) {
 		this.id = id;
 		this.title = title;
 		this.content = content;
-		this.category = category;
+		this.category = categories;
 		this.price = price;
+		if (categories == null)
+			this.storedCategory = null;
+		else {
+			this.storedCategory = new LinkedHashSet<>();
+			for (String category : categories)
+				this.storedCategory.add(category);
+		}
 	}
 
 	@Override

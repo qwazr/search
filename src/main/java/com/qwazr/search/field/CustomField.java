@@ -25,14 +25,12 @@ class CustomField extends Field {
 	protected CustomField(String name, FieldType type, Object value) {
 		super(name, type);
 
-		if (!type.stored() && type.indexOptions() == IndexOptions.NONE) {
+		if (!type.stored() && type.indexOptions() == IndexOptions.NONE)
 			throw new IllegalArgumentException(
 					"it doesn't make sense to have a field that " + "is neither indexed nor stored");
-		}
 
-		if (value == null) {
+		if (value == null)
 			throw new IllegalArgumentException("value cannot be null");
-		}
 
 		this.fieldsData = value;
 	}

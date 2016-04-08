@@ -40,7 +40,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		private final Map<String, Field> fieldMap;
 
 		Builder(final int pos, final ScoreDoc scoreDoc, final float maxScore, final Class<T> objectClass,
-						Map<String, Field> fieldMap) {
+				Map<String, Field> fieldMap) {
 			super(pos, scoreDoc, maxScore);
 			try {
 				this.record = objectClass.newInstance();
@@ -66,12 +66,17 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 					field.set(record, fieldValue);
 				else {
 					Object value = field.get(record);
-					if (value != null && value instanceof Collection) {
+					if (value == null) {
+						value = type.newInstance();
+						field.set(record, value);
+					}
+					if (value instanceof Collection) {
 						((Collection) value).add(fieldValue);
 					} else
-						System.out.println("OOCH");
+						throw new UnsupportedOperationException(
+								"The field " + fieldName + " does not support this type: " + type);
 				}
-			} catch (IllegalAccessException e) {
+			} catch (IllegalAccessException | InstantiationException e) {
 				throw new ServerException(e);
 			}
 		}

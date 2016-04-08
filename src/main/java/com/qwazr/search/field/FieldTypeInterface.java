@@ -24,6 +24,8 @@ import java.io.IOException;
 
 public interface FieldTypeInterface {
 
+	void fillValue(final Object value, final FieldConsumer fieldConsumer);
+
 	void fill(final Object value, final FieldConsumer fieldConsumer);
 
 	SortField getSortField(final QueryDefinition.SortEnum sortEnum);

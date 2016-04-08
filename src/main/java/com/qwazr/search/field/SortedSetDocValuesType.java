@@ -17,12 +17,9 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
-
-import java.util.Collection;
 
 class SortedSetDocValuesType extends FieldTypeAbstract {
 
@@ -31,11 +28,9 @@ class SortedSetDocValuesType extends FieldTypeAbstract {
 	}
 
 	@Override
-	final public void fill(final Object value, final FieldConsumer consumer) {
-		if (value instanceof Collection)
-			fillCollection((Collection) value, consumer);
-		else if (value instanceof JSObject)
-			fillJSObject((JSObject) value, consumer);
+	final public void fillValue(final Object value, final FieldConsumer consumer) {
+		if (value instanceof BytesRef)
+			consumer.accept(new SortedSetDocValuesField(fieldName, (BytesRef) value));
 		else
 			consumer.accept(new SortedSetDocValuesField(fieldName, new BytesRef(value.toString())));
 	}

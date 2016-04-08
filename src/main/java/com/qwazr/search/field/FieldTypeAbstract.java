@@ -21,7 +21,6 @@ import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.FieldInfos;
 import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -36,32 +35,71 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 		this.fieldDef = fieldDef;
 	}
 
-	final protected void fillCollection(Collection<Object> values, FieldConsumer consumer) {
+	final private void fillArray(final int[] values, final FieldConsumer consumer) {
+		for (int value : values)
+			fill(value, consumer);
+	}
+
+	final private void fillArray(final long[] values, final FieldConsumer consumer) {
+		for (long value : values)
+			fill(value, consumer);
+	}
+
+	final private void fillArray(final double[] values, final FieldConsumer consumer) {
+		for (double value : values)
+			fill(value, consumer);
+	}
+
+	final private void fillArray(final float[] values, final FieldConsumer consumer) {
+		for (float value : values)
+			fill(value, consumer);
+	}
+
+	final private void fillArray(final Object[] values, final FieldConsumer consumer) {
 		for (Object value : values)
+			fill(value, consumer);
+	}
+
+	final private void fillArray(final String[] values, final FieldConsumer consumer) {
+		for (String value : values)
+			fill(value, consumer);
+	}
+
+	final private void fillCollection(final Collection<Object> values, final FieldConsumer consumer) {
+		values.forEach(value -> {
 			if (value != null)
 				fill(value, consumer);
+		});
 	}
 
-	final protected void fillJSObject(JSObject values, FieldConsumer consumer) {
-		for (Object value : values.values())
-			if (value != null)
-				fill(value, consumer);
+	final private void fillJSObject(final JSObject values, final FieldConsumer consumer) {
+		fillCollection(values.values(), consumer);
 	}
 
-	//TODO remove
-	private static Number checkNumberType(String fieldName, Object value) {
-		if (!(value instanceof Number))
-			throw new IllegalArgumentException(
-					"Wrong value type for the field: " + fieldName + " - " + value.getClass().getSimpleName());
-		return (Number) value;
+	final public void fill(final Object value, final FieldConsumer fieldConsumer) {
+		if (value == null)
+			return;
+		if (value instanceof String[])
+			fillArray((String[]) value, fieldConsumer);
+		else if (value instanceof int[])
+			fillArray((int[]) value, fieldConsumer);
+		else if (value instanceof long[])
+			fillArray((long[]) value, fieldConsumer);
+		else if (value instanceof double[])
+			fillArray((double[]) value, fieldConsumer);
+		else if (value instanceof float[])
+			fillArray((float[]) value, fieldConsumer);
+		else if (value instanceof Object[])
+			fillArray((Object[]) value, fieldConsumer);
+		else if (value instanceof Collection)
+			fillCollection((Collection) value, fieldConsumer);
+		else if (value instanceof JSObject)
+			fillJSObject((JSObject) value, fieldConsumer);
+		else
+			fillValue(value, fieldConsumer);
 	}
 
-	//TODO remove
-	private static BytesRef checkStringBytesRef(Object value) {
-		return new BytesRef(value.toString());
-	}
-
-	public ValueConverter getConverter(LeafReader leafReader) throws IOException {
+	public ValueConverter getConverter(final LeafReader leafReader) throws IOException {
 		FieldInfos fieldInfos = leafReader.getFieldInfos();
 		if (fieldInfos == null)
 			return null;

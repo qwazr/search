@@ -17,11 +17,8 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.search.SortField;
-
-import java.util.Collection;
 
 class TextFieldType extends StorableFieldType {
 
@@ -30,17 +27,12 @@ class TextFieldType extends StorableFieldType {
 	}
 
 	@Override
-	final public void fill(final Object value, final FieldConsumer consumer) {
-		if (value instanceof Collection)
-			fillCollection((Collection) value, consumer);
-		else if (value instanceof JSObject)
-			fillJSObject((JSObject) value, consumer);
-		else
-			consumer.accept(new TextField(fieldName, value.toString(), store));
+	final public void fillValue(final Object value, final FieldConsumer consumer) {
+		consumer.accept(new TextField(fieldName, value.toString(), store));
 	}
 
 	@Override
-	public final SortField getSortField(QueryDefinition.SortEnum sortEnum) {
+	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
 		return null;
 	}
 

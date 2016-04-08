@@ -17,7 +17,6 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.SortedNumericDocValues;
@@ -26,7 +25,6 @@ import org.apache.lucene.search.SortedNumericSortField;
 import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
-import java.util.Collection;
 
 class SortedFloatDocValuesType extends FieldTypeAbstract {
 
@@ -35,12 +33,8 @@ class SortedFloatDocValuesType extends FieldTypeAbstract {
 	}
 
 	@Override
-	final public void fill(final Object value, final FieldConsumer consumer) {
-		if (value instanceof Collection)
-			fillCollection((Collection) value, consumer);
-		else if (value instanceof JSObject)
-			fillJSObject((JSObject) value, consumer);
-		else if (value instanceof Number)
+	final public void fillValue(final Object value, final FieldConsumer consumer) {
+		if (value instanceof Number)
 			consumer.accept(new SortedNumericDocValuesField(fieldName,
 					NumericUtils.floatToSortableInt(((Number) value).floatValue())));
 		else

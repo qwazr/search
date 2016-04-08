@@ -17,14 +17,12 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
-import java.util.Collection;
 
 class LongDocValuesType extends FieldTypeAbstract {
 
@@ -33,12 +31,8 @@ class LongDocValuesType extends FieldTypeAbstract {
 	}
 
 	@Override
-	final public void fill(final Object value, final FieldConsumer consumer) {
-		if (value instanceof Collection)
-			fillCollection((Collection) value, consumer);
-		else if (value instanceof JSObject)
-			fillJSObject((JSObject) value, consumer);
-		else if (value instanceof Number)
+	final public void fillValue(final Object value, final FieldConsumer consumer) {
+		if (value instanceof Number)
 			consumer.accept(new NumericDocValuesField(fieldName, ((Number) value).longValue()));
 		else
 			consumer.accept(new NumericDocValuesField(fieldName, Long.parseLong(value.toString())));

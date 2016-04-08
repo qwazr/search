@@ -17,7 +17,6 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.SortedNumericDocValues;
@@ -25,7 +24,6 @@ import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.SortedNumericSortField;
 
 import java.io.IOException;
-import java.util.Collection;
 
 class SortedIntDocValuesType extends FieldTypeAbstract {
 
@@ -34,19 +32,15 @@ class SortedIntDocValuesType extends FieldTypeAbstract {
 	}
 
 	@Override
-	final public void fill(final Object value, FieldConsumer consumer) {
-		if (value instanceof Collection)
-			fillCollection((Collection) value, consumer);
-		else if (value instanceof JSObject)
-			fillJSObject((JSObject) value, consumer);
-		else if (value instanceof Number)
+	final public void fillValue(final Object value, final FieldConsumer consumer) {
+		if (value instanceof Number)
 			consumer.accept(new SortedNumericDocValuesField(fieldName, ((Number) value).intValue()));
 		else
 			consumer.accept(new SortedNumericDocValuesField(fieldName, Integer.parseInt(value.toString())));
 	}
 
 	@Override
-	final public SortField getSortField(QueryDefinition.SortEnum sortEnum) {
+	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.INT,
 				SortUtils.sortReverse(sortEnum));
 		SortUtils.sortIntMissingValue(sortEnum, sortField);

@@ -17,11 +17,8 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.search.SortField;
-
-import java.util.Collection;
 
 class CustomFieldType extends FieldTypeAbstract {
 
@@ -30,7 +27,7 @@ class CustomFieldType extends FieldTypeAbstract {
 	}
 
 	@Override
-	final public void fill(final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final Object value, final FieldConsumer consumer) {
 		final FieldType type = new FieldType();
 		if (fieldDef.stored != null)
 			type.setStored(fieldDef.stored);
@@ -52,18 +49,7 @@ class CustomFieldType extends FieldTypeAbstract {
 			type.setIndexOptions(fieldDef.index_options);
 		if (fieldDef.docvalues_type != null)
 			type.setDocValuesType(fieldDef.docvalues_type);
-
-		try {
-			if (value instanceof Collection) {
-				fillCollection((Collection) value, consumer);
-			} else if (value instanceof JSObject) {
-				fillJSObject((JSObject) value, consumer);
-			} else {
-				consumer.accept(new CustomField(fieldName, type, value));
-			}
-		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("Error on field: " + fieldName + " - " + e.getMessage(), e);
-		}
+		consumer.accept(new CustomField(fieldName, type, value));
 	}
 
 	@Override
