@@ -25,39 +25,47 @@ import java.io.IOException;
 
 public class TermQuery extends AbstractQuery {
 
-	final public Term term;
+	final public String field;
+	final public Object term;
 
 	public TermQuery() {
+		field = null;
 		term = null;
 	}
 
 	public TermQuery(final String field, final String value) {
-		this.term = new Term(field, value);
+		this.field = field;
+		this.term = value;
 	}
 
 	public TermQuery(final String field, final Long value) {
-		this(field, BytesRefUtils.from(value));
+		this.field = field;
+		this.term = value;
 	}
 
 	public TermQuery(final String field, final Integer value) {
-		this(field, BytesRefUtils.from(value));
+		this.field = field;
+		this.term = value;
 	}
 
 	public TermQuery(final String field, final Double value) {
-		this(field, BytesRefUtils.from(value));
+		this.field = field;
+		this.term = value;
 	}
 
 	public TermQuery(final String field, final Float value) {
-		this(field, BytesRefUtils.from(value));
+		this.field = field;
+		this.term = value;
 	}
 
-	public TermQuery(final String field, final BytesRef bytesRef) {
-		this.term = new Term(field, bytesRef);
+	public TermQuery(final String field, final BytesRef value) {
+		this.field = field;
+		this.term = value;
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.search.TermQuery(term);
+		return new org.apache.lucene.search.TermQuery(new Term(field, BytesRefUtils.fromAny(term)));
 	}
 
 }
