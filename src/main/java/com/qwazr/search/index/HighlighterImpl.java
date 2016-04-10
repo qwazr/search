@@ -18,10 +18,7 @@ package com.qwazr.search.index;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.postingshighlight.DefaultPassageFormatter;
-import org.apache.lucene.search.postingshighlight.PassageFormatter;
-import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
-import org.apache.lucene.search.postingshighlight.WholeBreakIterator;
+import org.apache.lucene.search.postingshighlight.*;
 
 import java.io.IOException;
 import java.text.BreakIterator;

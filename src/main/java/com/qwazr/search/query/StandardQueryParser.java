@@ -40,6 +40,7 @@ public class StandardQueryParser extends AbstractQuery {
 	final public Integer fuzzy_prefix_length;
 	final public Integer max_determinized_states;
 	final public Boolean lowercase_expanded_terms;
+	final public String query_string;
 
 	public StandardQueryParser() {
 		multi_fields = null;
@@ -54,12 +55,14 @@ public class StandardQueryParser extends AbstractQuery {
 		fuzzy_prefix_length = null;
 		max_determinized_states = null;
 		lowercase_expanded_terms = null;
+		query_string = null;
 	}
 
 	public StandardQueryParser(String[] multi_fields, String default_field, LinkedHashMap<String, Float> fields_boost,
 			Boolean allow_leading_wildcard, QueryParserOperator default_operator, Integer phrase_slop,
 			Boolean enable_position_increments, Boolean analyzer_range_terms, Float fuzzy_min_sim,
-			Integer fuzzy_prefix_length, Integer max_determinized_states, Boolean lowercase_expanded_terms) {
+			Integer fuzzy_prefix_length, Integer max_determinized_states, Boolean lowercase_expanded_terms,
+			String query_string) {
 		this.multi_fields = multi_fields;
 		this.default_field = default_field;
 		this.fields_boost = fields_boost;
@@ -72,6 +75,7 @@ public class StandardQueryParser extends AbstractQuery {
 		this.fuzzy_prefix_length = fuzzy_prefix_length;
 		this.max_determinized_states = max_determinized_states;
 		this.lowercase_expanded_terms = lowercase_expanded_terms;
+		this.query_string = query_string;
 	}
 
 	private StandardQueryParser(Builder builder) {
@@ -87,6 +91,7 @@ public class StandardQueryParser extends AbstractQuery {
 		this.fuzzy_prefix_length = builder.fuzzy_prefix_length;
 		this.max_determinized_states = builder.max_determinized_states;
 		this.lowercase_expanded_terms = builder.lowercase_expanded_terms;
+		this.query_string = builder.query_string;
 	}
 
 	@Override
@@ -112,7 +117,7 @@ public class StandardQueryParser extends AbstractQuery {
 			parser.setLowercaseExpandedTerms(lowercase_expanded_terms);
 		if (multi_fields != null)
 			parser.setMultiFields(multi_fields);
-		return parser.parse(queryContext.queryString, default_field);
+		return parser.parse(query_string == null ? queryContext.queryString : query_string, default_field);
 	}
 
 	public static class Builder {
@@ -129,6 +134,7 @@ public class StandardQueryParser extends AbstractQuery {
 		private Integer fuzzy_prefix_length = null;
 		private Integer max_determinized_states = null;
 		private Boolean lowercase_expanded_terms = null;
+		private String query_string = null;
 
 		public Builder addMultiField(String... fields) {
 			if (multi_fields == null)
@@ -192,6 +198,11 @@ public class StandardQueryParser extends AbstractQuery {
 
 		public Builder setLowercaseExpandedTerms(Boolean lowercase_expanded_terms) {
 			this.lowercase_expanded_terms = lowercase_expanded_terms;
+			return this;
+		}
+
+		public Builder setQueryString(String query_string) {
+			this.query_string = query_string;
 			return this;
 		}
 
