@@ -22,6 +22,7 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -111,6 +112,12 @@ public class BooleanQuery extends AbstractQuery {
 		this.clauses = Arrays.asList(clauses);
 	}
 
+	private BooleanQuery(Builder builder) {
+		this.disable_coord = builder.disableCoord;
+		this.minimum_number_should_match = builder.minimumNumberShouldMatch;
+		this.clauses = new ArrayList<>(builder.clauses);
+	}
+
 	@Override
 	final public Query getQuery(QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
@@ -123,5 +130,35 @@ public class BooleanQuery extends AbstractQuery {
 			for (BooleanClause clause : clauses)
 				builder.add(clause.getNewClause(queryContext));
 		return builder.build();
+	}
+
+	public final static class Builder {
+
+		private final List<BooleanClause> clauses;
+		private Boolean disableCoord;
+		private Integer minimumNumberShouldMatch;
+
+		public Builder() {
+			clauses = new ArrayList<>();
+		}
+
+		public final Builder setDisableCoord(final Boolean disableCoord) {
+			this.disableCoord = disableCoord;
+			return this;
+		}
+
+		public final Builder setMinimumNumberShouldMatch(final Integer minimumNumberShouldMatch) {
+			this.minimumNumberShouldMatch = minimumNumberShouldMatch;
+			return this;
+		}
+
+		public final Builder addClause(final Occur occur, final AbstractQuery query) {
+			clauses.add(new BooleanClause(occur, query));
+			return this;
+		}
+
+		final public BooleanQuery build() {
+			return new BooleanQuery(this);
+		}
 	}
 }

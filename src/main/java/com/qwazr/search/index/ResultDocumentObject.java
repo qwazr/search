@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.utils.server.ServerException;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.lucene.search.ScoreDoc;
 
 import java.lang.reflect.Field;
@@ -24,61 +25,62 @@ import java.util.Map;
 
 public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 
-	final public T record;
+    final public T record;
 
-	private ResultDocumentObject(final Builder<T> builder) {
-		this.record = builder.record;
-	}
+    private ResultDocumentObject(final Builder<T> builder) {
+        this.record = builder.record;
+    }
 
-	public T getRecord() {
-		return record;
-	}
+    public T getRecord() {
+        return record;
+    }
 
-	static class Builder<T> extends ResultDocumentBuilder<ResultDocumentObject<T>> {
+    static class Builder<T> extends ResultDocumentBuilder<ResultDocumentObject<T>> {
 
-		private final T record;
-		private final Map<String, Field> fieldMap;
+        private final T record;
+        private final Map<String, Field> fieldMap;
 
-		Builder(final int pos, final ScoreDoc scoreDoc, final float maxScore, final Class<T> objectClass,
-				Map<String, Field> fieldMap) {
-			super(pos, scoreDoc, maxScore);
-			try {
-				this.record = objectClass.newInstance();
-			} catch (ReflectiveOperationException e) {
-				throw new ServerException(e);
-			}
-			this.fieldMap = fieldMap;
-		}
+        Builder(final int pos, final ScoreDoc scoreDoc, final float maxScore, final Class<T> objectClass,
+                Map<String, Field> fieldMap) {
+            super(pos, scoreDoc, maxScore);
+            try {
+                this.record = objectClass.newInstance();
+            } catch (ReflectiveOperationException e) {
+                throw new ServerException(e);
+            }
+            this.fieldMap = fieldMap;
+        }
 
-		@Override
-		final ResultDocumentObject build() {
-			return new ResultDocumentObject(this);
-		}
+        @Override
+        final ResultDocumentObject build() {
+            return new ResultDocumentObject(this);
+        }
 
-		@Override
-		final void setReturnedField(final String fieldName, final Object fieldValue) {
-			Field field = fieldMap.get(fieldName);
-			if (field == null)
-				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
-			try {
-				final Class<?> type = field.getType();
-				if (type.isAssignableFrom(fieldValue.getClass()))
-					field.set(record, fieldValue);
-				else {
-					Object value = field.get(record);
-					if (value == null) {
-						value = type.newInstance();
-						field.set(record, value);
-					}
-					if (value instanceof Collection) {
-						((Collection) value).add(fieldValue);
-					} else
-						throw new UnsupportedOperationException(
-								"The field " + fieldName + " does not support this type: " + type);
-				}
-			} catch (IllegalAccessException | InstantiationException e) {
-				throw new ServerException(e);
-			}
-		}
-	}
+        @Override
+        final void setReturnedField(final String fieldName, final Object fieldValue) {
+            Field field = fieldMap.get(fieldName);
+            if (field == null)
+                throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
+            try {
+                final Class<?> type = field.getType();
+                if (type.isAssignableFrom(fieldValue.getClass()))
+                    field.set(record, fieldValue);
+                else {
+                    Object value = field.get(record);
+                    if (value == null && type.isAssignableFrom(Collection.class)) {
+                        value = type.newInstance();
+                        field.set(record, value);
+                    }
+                    if (value instanceof Collection) {
+                        ((Collection) value).add(fieldValue);
+                    } else
+                        throw new UnsupportedOperationException(
+                                "The field " + fieldName + " does not support this type: " + fieldValue.getClass());
+                }
+            } catch (IllegalAccessException | InstantiationException e) {
+                throw new ServerException(e);
+            }
+        }
+    }
+
 }
