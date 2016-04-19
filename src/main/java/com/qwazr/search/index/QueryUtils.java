@@ -52,14 +52,14 @@ class QueryUtils {
 			throws QueryNodeException, ParseException, IOException, ReflectiveOperationException {
 
 		Query query = queryContext.queryDefinition.query == null ?
-				new MatchAllDocsQuery() :
-				queryContext.queryDefinition.query.getQuery(queryContext);
+		              new MatchAllDocsQuery() :
+		              queryContext.queryDefinition.query.getQuery(queryContext);
 
 		return query;
 	}
 
 	final static ResultDefinition search(final QueryContext queryContext,
-			final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
+	                                     final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 
 		final QueryDefinition queryDef = queryContext.queryDefinition;
@@ -85,18 +85,14 @@ class QueryUtils {
 		timeTracker.next("search_query");
 
 		final FacetsBuilder facetsBuilder = queryCollectors.facetsCollector == null ?
-				null :
-				new FacetsBuilder(queryContext, queryDef.facets, query, queryCollectors.facetsCollector, timeTracker);
+		                                    null :
+		                                    new FacetsBuilder(queryContext, queryDef.facets, query, queryCollectors.facetsCollector, timeTracker);
 
 		final Map<String, HighlighterImpl> highlighters;
 		if (queryDef.highlighters != null && topDocs != null) {
 			highlighters = new LinkedHashMap<>();
-			queryDef.highlighters.forEach(new BiConsumer<String, HighlighterDefinition>() {
-				@Override
-				public void accept(String name, HighlighterDefinition highlighterDefinition) {
-					highlighters.put(name, new HighlighterImpl(highlighterDefinition, queryContext.analyzer));
-				}
-			});
+			queryDef.highlighters.forEach((name, highlighterDefinition) -> highlighters.put(name,
+					new HighlighterImpl(highlighterDefinition, queryContext.analyzer)));
 		} else
 			highlighters = null;
 

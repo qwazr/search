@@ -33,9 +33,7 @@ import java.util.LinkedHashMap;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JavaTest {
 
-	public static final String SCHEMA_NAME = "schema-test-java";
-	public static final String INDEX_NAME = "index-test-java";
-	public static final String[] RETURNED_FIELDS = { "title", "content", "price", "storedCategory" };
+	public static final String[] RETURNED_FIELDS = {"title", "content", "price", "storedCategory"};
 
 	@BeforeClass
 	public static void startSearchServer() throws Exception {
@@ -147,12 +145,11 @@ public class JavaTest {
 		return resultDocument;
 	}
 
-	@Test
-	public void test350ReturnedFieldQuery() throws URISyntaxException {
+	private final void testReturnedFieldQuery(String... returnedFields) throws URISyntaxException {
 		final AnnotatedIndexService service = getService();
 		QueryBuilder builder = new QueryBuilder();
 		builder.query = new TermQuery(FieldDefinition.ID_FIELD, record2.id.toString());
-		builder.addReturned_field(RETURNED_FIELDS);
+		builder.addReturned_field(returnedFields);
 		ResultDefinition.WithObject<AnnotatedIndex> result = service.searchQuery(builder.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(new Long(1), result.total_hits);
@@ -161,6 +158,16 @@ public class JavaTest {
 		Assert.assertEquals(record2.content, returnedRecord.content);
 		Assert.assertEquals(docValue2.price, returnedRecord.price);
 		Assert.assertArrayEquals(record2.storedCategory.toArray(), returnedRecord.storedCategory.toArray());
+	}
+
+	@Test
+	public void test350ReturnedFieldQuery() throws URISyntaxException {
+		testReturnedFieldQuery(RETURNED_FIELDS);
+	}
+
+	@Test
+	public void test360ReturnedFieldQueryAll() throws URISyntaxException {
+		testReturnedFieldQuery("*");
 	}
 
 	@Test

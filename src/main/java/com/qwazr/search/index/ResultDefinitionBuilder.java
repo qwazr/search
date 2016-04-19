@@ -75,9 +75,14 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		if (resultDocumentBuilders != null) {
 			this.documents = new ArrayList<>(resultDocumentBuilders.length);
 			if (resultDocumentBuilders.length > 0) {
-				if (queryDefinition.returned_fields != null && !queryDefinition.returned_fields.isEmpty()) {
-					buildStoredFields();
-					buildDocValueReturnedFields();
+				final Set<String> returnedFields =
+						queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
+						fieldMap.keySet() :
+						queryDefinition.returned_fields;
+
+				if (returnedFields != null && !returnedFields.isEmpty()) {
+					buildStoredFields(returnedFields);
+					buildDocValueReturnedFields(returnedFields);
 				}
 				buildHighlights();
 				for (ResultDocumentBuilder<T> rdb : resultDocumentBuilders)
@@ -121,18 +126,14 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		int pos = 0;
 		for (ResultDocumentBuilder resultDocumentBuilder : resultDocumentBuilders)
 			docIDs[pos++] = resultDocumentBuilder.scoreDoc.doc;
-		final Map<String, String>[] highlightsArray = new Map[docIDs.length];
-		highlighters.forEach(new BiConsumer<String, HighlighterImpl>() {
-			@Override
-			public void accept(String name, HighlighterImpl highlighter) {
-				try {
-					String[] snippetsByDoc = highlighter.highlights(luceneQuery, indexSearcher, docIDs);
-					int i = 0;
-					for (String snippet : snippetsByDoc)
-						resultDocumentBuilders[i++].setHighlight(name, snippet);
-				} catch (IOException e) {
-					throw new RuntimeException("Highlighter failure: " + name, e);
-				}
+		highlighters.forEach((name, highlighter) -> {
+			try {
+				String[] snippetsByDoc = highlighter.highlights(luceneQuery, indexSearcher, docIDs);
+				int i = 0;
+				for (String snippet : snippetsByDoc)
+					resultDocumentBuilders[i++].setHighlight(name, snippet);
+			} catch (IOException e) {
+				throw new RuntimeException("Highlighter failure: " + name, e);
 			}
 		});
 
@@ -140,19 +141,19 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 			timeTracker.next("highlighting");
 	}
 
-	final private void buildStoredFields() throws IOException {
+	final private void buildStoredFields(final Set<String> returnedFields) throws IOException {
 		for (ResultDocumentBuilder resultDocumentBuider : resultDocumentBuilders) {
 			resultDocumentBuider.setStoredFields(
-					indexSearcher.doc(resultDocumentBuider.scoreDoc.doc, queryDefinition.returned_fields));
+					indexSearcher.doc(resultDocumentBuider.scoreDoc.doc, returnedFields));
 		}
 		if (timeTracker != null)
 			timeTracker.next("storedFields");
 	}
 
-	final private void buildDocValueReturnedFields() throws IOException {
+	final private void buildDocValueReturnedFields(final Set<String> returnedFields) throws IOException {
 		LeafReader leafReader = SlowCompositeReaderWrapper.wrap(indexSearcher.getIndexReader());
 
-		queryDefinition.returned_fields.forEach(fieldName -> {
+		returnedFields.forEach(fieldName -> {
 			final FieldTypeInterface fieldType = fieldMap.get(fieldName);
 			if (fieldType == null)
 				return;
