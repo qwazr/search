@@ -49,6 +49,8 @@ public class TermsQuery extends AbstractQuery {
 		Objects.requireNonNull(terms, "The term list is null");
 		this.field = field;
 		this.terms = new ArrayList<>(terms.length);
+		for (Object term : terms)
+			this.terms.add(term);
 	}
 
 	@Override

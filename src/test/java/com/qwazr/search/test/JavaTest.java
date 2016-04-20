@@ -19,6 +19,7 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.search.query.TermQuery;
+import com.qwazr.search.query.TermsQuery;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -33,7 +34,7 @@ import java.util.LinkedHashMap;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JavaTest {
 
-	public static final String[] RETURNED_FIELDS = {"title", "content", "price", "storedCategory"};
+	public static final String[] RETURNED_FIELDS = { "title", "content", "price", "storedCategory" };
 
 	@BeforeClass
 	public static void startSearchServer() throws Exception {
@@ -133,6 +134,16 @@ public class JavaTest {
 		ResultDefinition result = service.searchQuery(builder.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(new Long(1), result.total_hits);
+	}
+
+	@Test
+	public void test301MultiTermQuery() throws URISyntaxException {
+		final AnnotatedIndexService service = getService();
+		QueryBuilder builder = new QueryBuilder();
+		builder.query = new TermsQuery(FieldDefinition.ID_FIELD, "1", "2");
+		ResultDefinition result = service.searchQuery(builder.build());
+		Assert.assertNotNull(result);
+		Assert.assertEquals(new Long(2), result.total_hits);
 	}
 
 	private ResultDocumentObject<AnnotatedIndex> checkResultDocument(
