@@ -195,6 +195,8 @@ public abstract class ValueConverter<T, V> {
 				return null;
 			}
 		}
+		if (fieldDef.docvalues_type != DocValuesType.NUMERIC)
+			return null;
 		switch (fieldDef.numeric_type) {
 		case DOUBLE:
 			return new DoubleDVConverter(numericDocValues);
@@ -226,6 +228,8 @@ public abstract class ValueConverter<T, V> {
 				return null;
 			}
 		}
+		if (fieldDef.docvalues_type != DocValuesType.SORTED_SET)
+			return null;
 		switch (fieldDef.numeric_type) {
 		case DOUBLE:
 			return new DoubleSetDVConverter(sortedNumericDocValues);
