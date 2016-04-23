@@ -20,6 +20,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.query.TermsQuery;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -68,7 +69,7 @@ public class JavaTest {
 		Assert.assertNotNull("The Title field is not present", field = fields.get("title"));
 		Assert.assertEquals("en.EnglishAnalyzer", field.analyzer);
 		Assert.assertNotNull("The Content field is not present", field = fields.get("content"));
-		Assert.assertEquals("en.EnglishAnalyzer", field.analyzer);
+		Assert.assertEquals(EnglishAnalyzer.class.getName(), field.analyzer);
 		Assert.assertNotNull("The Category field is not present", field = fields.get("category"));
 		Assert.assertEquals(FieldDefinition.Template.SortedSetMultiDocValuesFacetField, field.template);
 		Assert.assertNotNull("The Price field is not present", field = fields.get("price"));

@@ -17,6 +17,7 @@ package com.qwazr.search.annotations;
 
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
@@ -37,6 +38,10 @@ public @interface IndexField {
 	String analyzer() default StringUtils.EMPTY;
 
 	String queryAnalyzer() default StringUtils.EMPTY;
+
+	Class<? extends Analyzer> analyzerClass() default Analyzer.class;
+
+	Class<? extends Analyzer> queryAnalyzerClass() default Analyzer.class;
 
 	boolean tokenized() default false;
 

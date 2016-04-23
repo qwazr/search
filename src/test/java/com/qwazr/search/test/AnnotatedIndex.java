@@ -18,6 +18,7 @@ package com.qwazr.search.test;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.IndexOptions;
 
 import java.util.LinkedHashSet;
@@ -36,7 +37,8 @@ public class AnnotatedIndex {
 	final public String title;
 
 	@IndexField(
-			analyzer = "en.EnglishAnalyzer",
+			analyzerClass = EnglishAnalyzer.class,
+			queryAnalyzerClass = EnglishAnalyzer.class,
 			stored = true,
 			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 	final public String content;

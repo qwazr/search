@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.DocValuesType;
@@ -105,8 +106,12 @@ public class FieldDefinition {
 	}
 
 	public FieldDefinition(IndexField indexField) {
-		analyzer = indexField.analyzer();
-		query_analyzer = indexField.queryAnalyzer();
+		analyzer = indexField.analyzerClass() != Analyzer.class ?
+				indexField.analyzerClass().getName() :
+				indexField.analyzer();
+		query_analyzer = indexField.queryAnalyzerClass() != Analyzer.class ?
+				indexField.queryAnalyzerClass().getName() :
+				indexField.queryAnalyzer();
 		tokenized = indexField.tokenized();
 		stored = indexField.stored();
 		store_termvectors = indexField.storeTermVectors();
