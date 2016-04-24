@@ -243,45 +243,47 @@ public abstract class ValueConverter<T, V> {
 		return null;
 	}
 
-	final static ValueConverter newConverter(FieldDefinition fieldDef, LeafReader dvReader, FieldInfo fieldInfo)
+	final static ValueConverter newConverter(String fieldName, final FieldDefinition fieldDef, final IndexReader reader)
 			throws IOException {
-		if (fieldInfo == null)
+		if (fieldDef == null)
 			return null;
-		DocValuesType type = fieldInfo.getDocValuesType();
-		if (type == null)
-			return null;
+		DocValuesType type = fieldDef.docvalues_type;
+		if (type != null && type != DocValuesType.NONE)
+			return newDocValueConverter(reader, fieldName, fieldDef, type);
+		return null;
+	}
+
+	final static ValueConverter newDocValueConverter(final IndexReader reader, final String fieldName,
+			final FieldDefinition fieldDef, final DocValuesType type) throws IOException {
 		switch (type) {
 		case BINARY:
-			BinaryDocValues binaryDocValue = dvReader.getBinaryDocValues(fieldInfo.name);
+			BinaryDocValues binaryDocValue = MultiDocValues.getBinaryValues(reader, fieldName);
 			if (binaryDocValue == null)
 				return null;
 			return new BinaryDVConverter(binaryDocValue);
 		case SORTED:
-			SortedDocValues sortedDocValues = dvReader.getSortedDocValues(fieldInfo.name);
+			SortedDocValues sortedDocValues = MultiDocValues.getSortedValues(reader, fieldName);
 			if (sortedDocValues == null)
 				return null;
 			return new SortedDVConverter(sortedDocValues);
 		case NONE:
 			break;
 		case NUMERIC:
-			NumericDocValues numericDocValues = dvReader.getNumericDocValues(fieldInfo.name);
+			NumericDocValues numericDocValues = MultiDocValues.getNumericValues(reader, fieldName);
 			if (numericDocValues == null)
 				return null;
 			return newNumericConverter(fieldDef, numericDocValues);
 		case SORTED_NUMERIC:
-			SortedNumericDocValues sortedNumericDocValues = dvReader.getSortedNumericDocValues(fieldInfo.name);
+			SortedNumericDocValues sortedNumericDocValues = MultiDocValues.getSortedNumericValues(reader, fieldName);
 			if (sortedNumericDocValues == null)
 				return null;
 			return newSortedNumericConverter(fieldDef, sortedNumericDocValues);
 		case SORTED_SET:
-			SortedSetDocValues sortedSetDocValues = dvReader.getSortedSetDocValues(fieldInfo.name);
+			SortedSetDocValues sortedSetDocValues = MultiDocValues.getSortedSetValues(reader, fieldName);
 			if (sortedSetDocValues == null)
 				return null;
 			return null;
-		default:
-			throw new IOException("Unsupported doc value type: " + type + " for field: " + fieldInfo.name);
 		}
-		return null;
+		throw new IOException("Unsupported doc value type: " + type + " for field: " + fieldName);
 	}
-
 }

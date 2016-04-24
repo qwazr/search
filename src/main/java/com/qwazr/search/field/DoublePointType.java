@@ -17,21 +17,21 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.DoubleField;
+import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.SortField;
 
-class DoubleFieldType extends StorableFieldType {
+class DoublePointType extends FieldTypeAbstract {
 
-	DoubleFieldType(final String fieldName, final FieldDefinition fieldDef) {
+	DoublePointType(final String fieldName, final FieldDefinition fieldDef) {
 		super(fieldName, fieldDef);
 	}
 
 	@Override
 	final public void fillValue(final Object value, final FieldConsumer consumer) {
 		if (value instanceof Number)
-			consumer.accept(new DoubleField(fieldName, ((Number) value).doubleValue(), store));
+			consumer.accept(new DoublePoint(fieldName, ((Number) value).doubleValue()));
 		else
-			consumer.accept(new DoubleField(fieldName, Double.parseDouble(value.toString()), store));
+			consumer.accept(new DoublePoint(fieldName, Double.parseDouble(value.toString())));
 	}
 
 	@Override

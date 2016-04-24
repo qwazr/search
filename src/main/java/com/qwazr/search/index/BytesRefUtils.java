@@ -31,7 +31,7 @@ public class BytesRefUtils {
 		if (value == null)
 			return new BytesRef(BytesRef.EMPTY_BYTES);
 		final BytesRefBuilder builder = new BytesRefBuilder();
-		NumericUtils.intToPrefixCoded(value, 0, builder);
+		NumericUtils.intToSortableBytes(value, new byte[4], 0);
 		return builder.toBytesRef();
 	}
 
@@ -39,7 +39,7 @@ public class BytesRefUtils {
 		if (value == null)
 			return new BytesRef(BytesRef.EMPTY_BYTES);
 		final BytesRefBuilder builder = new BytesRefBuilder();
-		NumericUtils.longToPrefixCoded(value, 0, builder);
+		NumericUtils.longToSortableBytes(value, new byte[8], 0);
 		return builder.toBytesRef();
 	}
 
@@ -47,7 +47,7 @@ public class BytesRefUtils {
 		if (value == null)
 			return new BytesRef(BytesRef.EMPTY_BYTES);
 		final BytesRefBuilder builder = new BytesRefBuilder();
-		NumericUtils.intToPrefixCoded(NumericUtils.floatToSortableInt(value), 0, builder);
+		NumericUtils.intToSortableBytes(NumericUtils.floatToSortableInt(value), new byte[4], 0);
 		return builder.toBytesRef();
 	}
 
@@ -55,7 +55,7 @@ public class BytesRefUtils {
 		if (value == null)
 			return new BytesRef(BytesRef.EMPTY_BYTES);
 		final BytesRefBuilder builder = new BytesRefBuilder();
-		NumericUtils.longToPrefixCoded(NumericUtils.doubleToSortableLong(value), 0, builder);
+		NumericUtils.longToSortableBytes(NumericUtils.doubleToSortableLong(value), new byte[8], 0);
 		return builder.toBytesRef();
 	}
 

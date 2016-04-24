@@ -17,27 +17,27 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.IntField;
+import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.search.SortField;
 
-class IntFieldType extends StorableFieldType {
+class LongPointType extends FieldTypeAbstract {
 
-	IntFieldType(final String fieldName, final FieldDefinition fieldDef) {
+	LongPointType(final String fieldName, final FieldDefinition fieldDef) {
 		super(fieldName, fieldDef);
 	}
 
 	@Override
 	final public void fillValue(final Object value, final FieldConsumer consumer) {
 		if (value instanceof Number)
-			consumer.accept(new IntField(fieldName, ((Number) value).intValue(), store));
+			consumer.accept(new LongPoint(fieldName, ((Number) value).longValue()));
 		else
-			consumer.accept(new IntField(fieldName, Integer.parseInt(value.toString()), store));
+			consumer.accept(new LongPoint(fieldName, Long.parseLong(value.toString())));
 	}
 
 	@Override
-	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.INT, SortUtils.sortReverse(sortEnum));
-		SortUtils.sortIntMissingValue(sortEnum, sortField);
+	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+		final SortField sortField = new SortField(fieldName, SortField.Type.LONG, SortUtils.sortReverse(sortEnum));
+		SortUtils.sortLongMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 

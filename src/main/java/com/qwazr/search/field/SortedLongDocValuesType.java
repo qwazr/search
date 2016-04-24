@@ -18,7 +18,8 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.SortedNumericDocValuesField;
-import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.SortedNumericSortField;
@@ -48,8 +49,8 @@ class SortedLongDocValuesType extends FieldTypeAbstract {
 	}
 
 	@Override
-	final public ValueConverter getConverter(final LeafReader reader) throws IOException {
-		SortedNumericDocValues docValues = reader.getSortedNumericDocValues(fieldName);
+	final public ValueConverter getConverter(final IndexReader reader) throws IOException {
+		SortedNumericDocValues docValues = MultiDocValues.getSortedNumericValues(reader, fieldName);
 		if (docValues == null)
 			return super.getConverter(reader);
 		return new ValueConverter.LongSetDVConverter(docValues);

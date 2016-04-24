@@ -18,9 +18,7 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import jdk.nashorn.api.scripting.JSObject;
-import org.apache.lucene.index.FieldInfo;
-import org.apache.lucene.index.FieldInfos;
-import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.IndexReader;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -35,44 +33,44 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 		this.fieldDef = fieldDef;
 	}
 
-	final private void fillArray(final int[] values, final FieldConsumer consumer) {
+	protected void fillArray(final int[] values, final FieldConsumer consumer) {
 		for (int value : values)
 			fill(value, consumer);
 	}
 
-	final private void fillArray(final long[] values, final FieldConsumer consumer) {
+	protected void fillArray(final long[] values, final FieldConsumer consumer) {
 		for (long value : values)
 			fill(value, consumer);
 	}
 
-	final private void fillArray(final double[] values, final FieldConsumer consumer) {
+	protected void fillArray(final double[] values, final FieldConsumer consumer) {
 		for (double value : values)
 			fill(value, consumer);
 	}
 
-	final private void fillArray(final float[] values, final FieldConsumer consumer) {
+	protected void fillArray(final float[] values, final FieldConsumer consumer) {
 		for (float value : values)
 			fill(value, consumer);
 	}
 
-	final private void fillArray(final Object[] values, final FieldConsumer consumer) {
+	protected void fillArray(final Object[] values, final FieldConsumer consumer) {
 		for (Object value : values)
 			fill(value, consumer);
 	}
 
-	final private void fillArray(final String[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String[] values, final FieldConsumer consumer) {
 		for (String value : values)
 			fill(value, consumer);
 	}
 
-	final private void fillCollection(final Collection<Object> values, final FieldConsumer consumer) {
+	protected void fillCollection(final Collection<Object> values, final FieldConsumer consumer) {
 		values.forEach(value -> {
 			if (value != null)
 				fill(value, consumer);
 		});
 	}
 
-	final private void fillJSObject(final JSObject values, final FieldConsumer consumer) {
+	protected void fillJSObject(final JSObject values, final FieldConsumer consumer) {
 		fillCollection(values.values(), consumer);
 	}
 
@@ -99,14 +97,8 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 			fillValue(value, fieldConsumer);
 	}
 
-	public ValueConverter getConverter(final LeafReader leafReader) throws IOException {
-		FieldInfos fieldInfos = leafReader.getFieldInfos();
-		if (fieldInfos == null)
-			return null;
-		FieldInfo fieldInfo = fieldInfos.fieldInfo(fieldName);
-		if (fieldInfo == null)
-			return null;
-		return ValueConverter.newConverter(fieldDef, leafReader, fieldInfo);
+	public ValueConverter getConverter(final IndexReader reader) throws IOException {
+		return ValueConverter.newConverter(fieldName, fieldDef, reader);
 	}
 
 }

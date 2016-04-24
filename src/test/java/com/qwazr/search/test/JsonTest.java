@@ -47,7 +47,7 @@ public class JsonTest {
 	public static final IndexSettingsDefinition INDEX_SETTINGS = getIndexSettings("index_settings.json");
 	public static final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
 	public static final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
-	public static final QueryDefinition QUERY_SORTFIELD = getQuery("query_sortfield.json");
+	public static final QueryDefinition QUERY_SORTFIELD_PRICE = getQuery("query_sortfield_price.json");
 	public static final QueryDefinition QUERY_SORTFIELDS = getQuery("query_sortfields.json");
 	public static final QueryDefinition QUERY_HIGHLIGHT = getQuery("query_highlight.json");
 	public static final QueryDefinition QUERY_CHECK_RETURNED = getQuery("query_check_returned.json");
@@ -482,12 +482,17 @@ public class JsonTest {
 	}
 
 	@Test
-	public void test420QuerySortFieldDoc() throws URISyntaxException, IOException {
+	public void test420QuerySortFieldPriceDoc() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		ResultDefinition result = checkQueryIndex(client, QUERY_SORTFIELD, 5);
+		ResultDefinition result = checkQueryIndex(client, QUERY_SORTFIELD_PRICE, 5);
 		Assert.assertNotNull(result.documents);
 		checkDescending(Double.MAX_VALUE, "price", result.documents);
-		result = checkQueryIndex(client, QUERY_SORTFIELDS, 5);
+	}
+
+	@Test
+	public void test425QuerySortFieldsDoc() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		ResultDefinition result = checkQueryIndex(client, QUERY_SORTFIELDS, 5);
 		checkAscending(Double.MIN_VALUE, "price", result.documents);
 	}
 

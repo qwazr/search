@@ -19,7 +19,8 @@ import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.BinaryDocValuesField;
 import org.apache.lucene.index.BinaryDocValues;
-import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
@@ -42,8 +43,8 @@ class BinaryDocValuesType extends FieldTypeAbstract {
 	}
 
 	@Override
-	public final ValueConverter getConverter(final LeafReader reader) throws IOException {
-		BinaryDocValues binaryDocValue = reader.getBinaryDocValues(fieldName);
+	public final ValueConverter getConverter(final IndexReader reader) throws IOException {
+		BinaryDocValues binaryDocValue = MultiDocValues.getBinaryValues(reader, fieldName);
 		if (binaryDocValue == null)
 			return super.getConverter(reader);
 		return new ValueConverter.BinaryDVConverter(binaryDocValue);

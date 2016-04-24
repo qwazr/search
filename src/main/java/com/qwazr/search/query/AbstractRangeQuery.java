@@ -15,24 +15,23 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.document.DoublePoint;
-import org.apache.lucene.search.Query;
+public abstract class AbstractRangeQuery<T> extends AbstractQuery {
 
-import java.io.IOException;
+	final public String field;
+	final public T lower_value;
+	final public T upper_value;
 
-public class DoubleRangeQuery extends AbstractRangeQuery<Double> {
+	public AbstractRangeQuery() {
+		field = null;
+		lower_value = null;
+		upper_value = null;
 
-	public DoubleRangeQuery() {
 	}
 
-	public DoubleRangeQuery(String field, Double lower_value, Double upper_value) {
-		super(field, lower_value == null ? Double.MIN_VALUE : lower_value,
-				upper_value == null ? Double.MAX_VALUE : upper_value);
+	public AbstractRangeQuery(String field, T lower_value, T upper_value) {
+		this.field = field;
+		this.lower_value = lower_value;
+		this.upper_value = upper_value;
 	}
 
-	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
-		return DoublePoint.newRangeQuery(field, lower_value, upper_value);
-	}
 }

@@ -20,16 +20,13 @@ import com.qwazr.search.field.ValueConverter;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
-import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.SlowCompositeReaderWrapper;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
@@ -53,10 +50,10 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 	final LinkedHashMap<String, Map<String, Number>> facets;
 
 	ResultDefinitionBuilder(final QueryDefinition queryDefinition, final TopDocs topDocs,
-	                        final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
-	                        final Collection<FunctionCollector> functionsCollector, final Map<String, FieldTypeInterface> fieldMap,
-	                        final TimeTracker timeTracker, final ResultDocumentBuilder.BuilderFactory documentBuilderFactory,
-	                        final FacetsBuilder facetsBuilder, Integer totalHits) throws IOException {
+			final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
+			final Collection<FunctionCollector> functionsCollector, final Map<String, FieldTypeInterface> fieldMap,
+			final TimeTracker timeTracker, final ResultDocumentBuilder.BuilderFactory documentBuilderFactory,
+			final FacetsBuilder facetsBuilder, Integer totalHits) throws IOException {
 
 		this.queryDefinition = queryDefinition;
 		this.topDocs = topDocs;
@@ -77,8 +74,8 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 			if (resultDocumentBuilders.length > 0) {
 				final Set<String> returnedFields =
 						queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
-						fieldMap.keySet() :
-						queryDefinition.returned_fields;
+								fieldMap.keySet() :
+								queryDefinition.returned_fields;
 
 				if (returnedFields != null && !returnedFields.isEmpty()) {
 					buildStoredFields(returnedFields);
@@ -143,15 +140,15 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
 	final private void buildStoredFields(final Set<String> returnedFields) throws IOException {
 		for (ResultDocumentBuilder resultDocumentBuider : resultDocumentBuilders) {
-			resultDocumentBuider.setStoredFields(
-					indexSearcher.doc(resultDocumentBuider.scoreDoc.doc, returnedFields));
+			resultDocumentBuider.setStoredFields(indexSearcher.doc(resultDocumentBuider.scoreDoc.doc, returnedFields));
 		}
 		if (timeTracker != null)
 			timeTracker.next("storedFields");
 	}
 
 	final private void buildDocValueReturnedFields(final Set<String> returnedFields) throws IOException {
-		LeafReader leafReader = SlowCompositeReaderWrapper.wrap(indexSearcher.getIndexReader());
+
+		final IndexReader indexReader = indexSearcher.getIndexReader();
 
 		returnedFields.forEach(fieldName -> {
 			final FieldTypeInterface fieldType = fieldMap.get(fieldName);
@@ -159,7 +156,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 				return;
 			final ValueConverter converter;
 			try {
-				converter = fieldType.getConverter(leafReader);
+				converter = fieldType.getConverter(indexReader);
 			} catch (IOException e) {
 				throw new ServerException(e);
 			}

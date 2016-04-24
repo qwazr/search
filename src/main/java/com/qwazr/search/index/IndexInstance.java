@@ -177,7 +177,7 @@ final public class IndexInstance implements Closeable {
 				indexWriter.commit();
 
 			// Finally we build the SearchSearcherManger
-			SearcherManager searcherManager = new SearcherManager(indexWriter, true, null);
+			SearcherManager searcherManager = new SearcherManager(indexWriter, null);
 
 			return new IndexInstance(schema, dataDirectory, settings, analyzerMap, fieldMap, fileSet, indexWriter,
 					searcherManager, queryAnalyzer);

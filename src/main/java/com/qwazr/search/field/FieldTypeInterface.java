@@ -17,7 +17,7 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
@@ -30,7 +30,7 @@ public interface FieldTypeInterface {
 
 	SortField getSortField(final QueryDefinition.SortEnum sortEnum);
 
-	ValueConverter getConverter(final LeafReader reader) throws IOException;
+	ValueConverter getConverter(final IndexReader reader) throws IOException;
 
 	static FieldTypeInterface getInstance(final String fieldName, final FieldDefinition fieldDefinition) {
 		if (fieldDefinition.template == null)
@@ -41,19 +41,19 @@ public interface FieldTypeInterface {
 		case DoubleDocValuesField:
 			return new DoubleDocValuesType(fieldName, fieldDefinition);
 		case DoubleField:
-			return new DoubleFieldType(fieldName, fieldDefinition);
+			return new DoublePointType(fieldName, fieldDefinition);
 		case FloatDocValuesField:
 			return new FloatDocValuesType(fieldName, fieldDefinition);
 		case FloatField:
-			return new FloatFieldType(fieldName, fieldDefinition);
+			return new FloatPointType(fieldName, fieldDefinition);
 		case IntDocValuesField:
 			return new IntDocValuesType(fieldName, fieldDefinition);
 		case IntField:
-			return new IntFieldType(fieldName, fieldDefinition);
+			return new IntPointType(fieldName, fieldDefinition);
 		case LongDocValuesField:
 			return new LongDocValuesType(fieldName, fieldDefinition);
 		case LongField:
-			return new LongFieldType(fieldName, fieldDefinition);
+			return new LongPointType(fieldName, fieldDefinition);
 		case SortedDocValuesField:
 			return new SortedDocValuesType(fieldName, fieldDefinition);
 		case SortedDoubleDocValuesField:
