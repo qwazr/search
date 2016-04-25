@@ -20,7 +20,6 @@ import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 
@@ -46,10 +45,10 @@ abstract class RecordsPoster {
 		this.ids = ids;
 	}
 
-	final protected void updateDocument(final Object id, final FieldConsumer.ForDocument fields) {
-		final String id_string = id == null ? UUIDs.timeBased().toString() : id.toString();
-		fields.document.add(new StringField(FieldDefinition.ID_FIELD, id_string, StringField.Store.NO));
-		final Term termId = new Term(FieldDefinition.ID_FIELD, id_string);
+	final protected void updateDocument(Object id, final FieldConsumer.ForDocument fields) {
+		if (id == null)
+			id = UUIDs.timeBased().toString();
+		final Term termId = new Term(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id));
 		try {
 			final Document facetedDoc = context.facetsConfig.build(fields.document);
 			indexWriter.updateDocument(termId, facetedDoc);
@@ -63,7 +62,7 @@ abstract class RecordsPoster {
 		if (id == null)
 			throw new ServerException(Response.Status.BAD_REQUEST,
 					"The field " + FieldDefinition.ID_FIELD + " is missing");
-		final Term termId = new Term(FieldDefinition.ID_FIELD, id.toString());
+		final Term termId = new Term(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id));
 		try {
 			indexWriter.updateDocValues(termId, fields.toArray());
 		} catch (IOException e) {
@@ -89,7 +88,7 @@ abstract class RecordsPoster {
 	final static class UpdateObjectDocument extends RecordsPoster implements Consumer<Object> {
 
 		UpdateObjectDocument(final Map<String, java.lang.reflect.Field> fields, final AnalyzerContext context,
-				final IndexWriter indexWriter) {
+		                     final IndexWriter indexWriter) {
 			super(fields, context, indexWriter, new ArrayList<>());
 		}
 

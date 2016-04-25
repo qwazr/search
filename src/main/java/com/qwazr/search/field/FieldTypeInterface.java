@@ -36,49 +36,53 @@ public interface FieldTypeInterface {
 		if (fieldDefinition.template == null)
 			return new CustomFieldType(fieldName, fieldDefinition);
 		switch (fieldDefinition.template) {
-		case BinaryDocValuesField:
-			return new BinaryDocValuesType(fieldName, fieldDefinition);
-		case DoubleDocValuesField:
-			return new DoubleDocValuesType(fieldName, fieldDefinition);
-		case DoubleField:
-			return new DoublePointType(fieldName, fieldDefinition);
-		case FloatDocValuesField:
-			return new FloatDocValuesType(fieldName, fieldDefinition);
-		case FloatField:
-			return new FloatPointType(fieldName, fieldDefinition);
-		case IntDocValuesField:
-			return new IntDocValuesType(fieldName, fieldDefinition);
-		case IntField:
-			return new IntPointType(fieldName, fieldDefinition);
-		case LongDocValuesField:
-			return new LongDocValuesType(fieldName, fieldDefinition);
-		case LongField:
-			return new LongPointType(fieldName, fieldDefinition);
-		case SortedDocValuesField:
-			return new SortedDocValuesType(fieldName, fieldDefinition);
-		case SortedDoubleDocValuesField:
-			return new SortedDoubleDocValuesType(fieldName, fieldDefinition);
-		case SortedFloatDocValuesField:
-			return new SortedFloatDocValuesType(fieldName, fieldDefinition);
-		case SortedIntDocValuesField:
-			return new SortedIntDocValuesType(fieldName, fieldDefinition);
-		case SortedLongDocValuesField:
-			return new SortedLongDocValuesType(fieldName, fieldDefinition);
-		case SortedSetDocValuesField:
-			return new SortedSetDocValuesType(fieldName, fieldDefinition);
-		case FacetField:
-		case SortedSetDocValuesFacetField:
-		case MultiFacetField:
-		case SortedSetMultiDocValuesFacetField:
-			return new SortedSetDocValuesFacetType(fieldName, fieldDefinition);
-		case StoredField:
-			return new StoredFieldType(fieldName, fieldDefinition);
-		case StringField:
-			return new StringFieldType(fieldName, fieldDefinition);
-		case TextField:
-			return new TextFieldType(fieldName, fieldDefinition);
-		case NONE:
-			return new CustomFieldType(fieldName, fieldDefinition);
+			case BinaryDocValuesField:
+				return new BinaryDocValuesType(fieldName, fieldDefinition);
+			case DoubleDocValuesField:
+				return new DoubleDocValuesType(fieldName, fieldDefinition);
+			case DoubleField:
+			case DoublePoint:
+				return new DoublePointType(fieldName, fieldDefinition);
+			case FloatDocValuesField:
+				return new FloatDocValuesType(fieldName, fieldDefinition);
+			case FloatField:
+			case FloatPoint:
+				return new FloatPointType(fieldName, fieldDefinition);
+			case IntDocValuesField:
+				return new IntDocValuesType(fieldName, fieldDefinition);
+			case IntField:
+			case IntPoint:
+				return new IntPointType(fieldName, fieldDefinition);
+			case LongDocValuesField:
+				return new LongDocValuesType(fieldName, fieldDefinition);
+			case LongField:
+			case LongPoint:
+				return new LongPointType(fieldName, fieldDefinition);
+			case SortedDocValuesField:
+				return new SortedDocValuesType(fieldName, fieldDefinition);
+			case SortedDoubleDocValuesField:
+				return new SortedDoubleDocValuesType(fieldName, fieldDefinition);
+			case SortedFloatDocValuesField:
+				return new SortedFloatDocValuesType(fieldName, fieldDefinition);
+			case SortedIntDocValuesField:
+				return new SortedIntDocValuesType(fieldName, fieldDefinition);
+			case SortedLongDocValuesField:
+				return new SortedLongDocValuesType(fieldName, fieldDefinition);
+			case SortedSetDocValuesField:
+				return new SortedSetDocValuesType(fieldName, fieldDefinition);
+			case FacetField:
+			case SortedSetDocValuesFacetField:
+			case MultiFacetField:
+			case SortedSetMultiDocValuesFacetField:
+				return new SortedSetDocValuesFacetType(fieldName, fieldDefinition);
+			case StoredField:
+				return new StoredFieldType(fieldName, fieldDefinition);
+			case StringField:
+				return new StringFieldType(fieldName, fieldDefinition);
+			case TextField:
+				return new TextFieldType(fieldName, fieldDefinition);
+			case NONE:
+				return new CustomFieldType(fieldName, fieldDefinition);
 		}
 		throw new IllegalArgumentException("Unsupported field type");
 	}

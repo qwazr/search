@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
+import org.apache.lucene.util.BytesRef;
 
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -26,7 +27,7 @@ abstract class RecordBuilder {
 	private final FieldConsumer fieldConsumer;
 	private final Map<String, FieldTypeInterface> fieldTypes;
 
-	volatile Object id;
+	volatile BytesRef id;
 
 	RecordBuilder(final Map<String, FieldTypeInterface> fieldTypes, final FieldConsumer fieldConsumer) {
 		this.fieldTypes = fieldTypes;
@@ -37,14 +38,14 @@ abstract class RecordBuilder {
 	final protected void addFieldValue(final String fieldName, final Object fieldValue) {
 		if (fieldValue == null)
 			return;
-		if (FieldDefinition.ID_FIELD.equals(fieldName)) {
-			id = fieldValue;
-			return;
-		}
+
 		FieldTypeInterface fieldType = fieldTypes.get(fieldName);
 		if (fieldType == null)
 			throw new IllegalArgumentException("No field definition for the field: " + fieldName);
 		fieldType.fill(fieldValue, fieldConsumer);
+
+		if (FieldDefinition.ID_FIELD.equals(fieldName))
+			id = BytesRefUtils.fromAny(fieldValue);
 	}
 
 	final static class ForMap extends RecordBuilder implements BiConsumer<String, Object> {
@@ -65,7 +66,7 @@ abstract class RecordBuilder {
 		private final Object record;
 
 		ForObject(final Map<String, FieldTypeInterface> fieldTypes, final FieldConsumer fieldConsumer,
-				final Object record) {
+		          final Object record) {
 			super(fieldTypes, fieldConsumer);
 			this.record = record;
 		}

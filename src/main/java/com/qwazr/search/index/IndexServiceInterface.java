@@ -178,7 +178,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	Map<String, Object> getDocument(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, @PathParam("id") String doc_id);
-
+	
 	@POST
 	@Path("/{schema_name}/{index_name}/doc")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)

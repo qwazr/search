@@ -26,7 +26,7 @@ public interface AnnotatedServiceInterface {
 			throws IOException, InterruptedException;
 
 	<T> Collection<Object> postDocuments(String schemaName, String indexName, Map<String, Field> fields,
-			Collection<T> documents) throws IOException, InterruptedException;
+	                                     Collection<T> documents) throws IOException, InterruptedException;
 
 	<T> void updateDocValues(String schemaName, String indexName, Map<String, Field> fields, T document)
 			throws IOException, InterruptedException;
@@ -34,9 +34,9 @@ public interface AnnotatedServiceInterface {
 	<T> void updateDocsValues(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents)
 			throws IOException, InterruptedException;
 
-	<T> T getDocument(String schemaName, String indexName, String id, Map<String, Field> fields,
-			Class<T> indexDefinitionClass);
+	<T> T getDocument(String schemaName, String indexName, Object id, Map<String, Field> fields,
+	                  Class<T> indexDefinitionClass);
 
 	<T> ResultDefinition.WithObject<T> searchQuery(String schemaName, String indexName, QueryDefinition query,
-			Map<String, Field> fields, Class<T> indexDefinitionClass);
+	                                               Map<String, Field> fields, Class<T> indexDefinitionClass);
 }

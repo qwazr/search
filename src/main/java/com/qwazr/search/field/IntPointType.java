@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.IntPoint;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 
 class IntPointType extends FieldTypeAbstract {
@@ -28,17 +29,16 @@ class IntPointType extends FieldTypeAbstract {
 
 	@Override
 	final public void fillValue(final Object value, final FieldConsumer consumer) {
-		if (value instanceof Number)
-			consumer.accept(new IntPoint(fieldName, ((Number) value).intValue()));
-		else
-			consumer.accept(new IntPoint(fieldName, Integer.parseInt(value.toString())));
+		int intValue = value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
+		consumer.accept(new IntPoint(fieldName, intValue));
+		if (fieldDef.stored != null && fieldDef.stored)
+			consumer.accept(new StoredField(fieldName, intValue));
 	}
 
 	@Override
-	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortField(fieldName, SortField.Type.INT, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortIntMissingValue(sortEnum, sortField);
 		return sortField;
 	}
-
 }

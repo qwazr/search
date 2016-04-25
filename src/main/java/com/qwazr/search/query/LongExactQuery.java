@@ -15,21 +15,26 @@
  */
 package com.qwazr.search.query;
 
-public abstract class AbstractRangeQuery<T> extends AbstractFieldQuery {
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.search.Query;
 
-	final public T lower_value;
-	final public T upper_value;
+import java.io.IOException;
 
-	protected AbstractRangeQuery() {
-		lower_value = null;
-		upper_value = null;
+public class LongExactQuery extends AbstractFieldQuery {
+
+	public long value;
+
+	public LongExactQuery() {
 	}
 
-
-	protected AbstractRangeQuery(final String field, final T lowerValue, final T upperValue) {
+	public LongExactQuery(String field, long value) {
 		super(field);
-		this.lower_value = lowerValue;
-		this.upper_value = upperValue;
+		this.value = value;
 	}
 
+	@Override
+	public Query getQuery(QueryContext queryContext) throws IOException {
+		return LongPoint.newExactQuery(field, value);
+	}
 }

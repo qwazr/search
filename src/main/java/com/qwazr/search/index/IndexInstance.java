@@ -139,8 +139,8 @@ final public class IndexInstance implements Closeable {
 			//Loading the settings
 			if (settings == null) {
 				settings = fileSet.settingsFile.exists() ?
-						JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
-						IndexSettingsDefinition.EMPTY;
+				           JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
+				           IndexSettingsDefinition.EMPTY;
 			} else {
 				JsonMapper.MAPPER.writeValue(fileSet.settingsFile, settings);
 			}
@@ -148,14 +148,16 @@ final public class IndexInstance implements Closeable {
 			//Loading the fields
 			File fieldMapFile = new File(indexDirectory, FIELDS_FILE);
 			LinkedHashMap<String, FieldDefinition> fieldMap = fieldMapFile.exists() ?
-					JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
-					new LinkedHashMap<>();
+			                                                  JsonMapper.MAPPER.readValue(fieldMapFile,
+					                                                  FieldDefinition.MapStringFieldTypeRef) :
+			                                                  new LinkedHashMap<>();
 
 			//Loading the fields
 			File analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
 			LinkedHashMap<String, AnalyzerDefinition> analyzerMap = analyzerMapFile.exists() ?
-					JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
-					new LinkedHashMap<>();
+			                                                        JsonMapper.MAPPER.readValue(analyzerMapFile,
+					                                                        AnalyzerDefinition.MapStringAnalyzerTypeRef) :
+			                                                        new LinkedHashMap<>();
 
 			AnalyzerContext context = new AnalyzerContext(analyzerMap, fieldMap);
 			indexAnalyzer = new UpdatableAnalyzer(context, context.indexAnalyzerMap);
@@ -614,24 +616,18 @@ final public class IndexInstance implements Closeable {
 	void fillFields(final Map<String, FieldDefinition> fields) {
 		if (fields == null)
 			return;
-		this.fieldMap.forEach(new BiConsumer<String, FieldDefinition>() {
-			@Override
-			public void accept(String name, FieldDefinition fieldDefinition) {
-				if (!fields.containsKey(name))
-					fields.put(name, fieldDefinition);
-			}
+		this.fieldMap.forEach((name, fieldDef) -> {
+			if (!fields.containsKey(name))
+				fields.put(name, fieldDef);
 		});
 	}
 
 	void fillAnalyzers(final Map<String, AnalyzerDefinition> analyzers) {
 		if (analyzers == null)
 			return;
-		this.analyzerMap.forEach(new BiConsumer<String, AnalyzerDefinition>() {
-			@Override
-			public void accept(String name, AnalyzerDefinition analyzerDefinition) {
-				if (!analyzers.containsKey(name))
-					analyzers.put(name, analyzerDefinition);
-			}
+		this.analyzerMap.forEach((name, analyzerDef) -> {
+			if (!analyzers.containsKey(name))
+				analyzers.put(name, analyzerDef);
 		});
 	}
 

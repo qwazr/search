@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 
 class LongPointType extends FieldTypeAbstract {
@@ -28,10 +29,10 @@ class LongPointType extends FieldTypeAbstract {
 
 	@Override
 	final public void fillValue(final Object value, final FieldConsumer consumer) {
-		if (value instanceof Number)
-			consumer.accept(new LongPoint(fieldName, ((Number) value).longValue()));
-		else
-			consumer.accept(new LongPoint(fieldName, Long.parseLong(value.toString())));
+		long longValue = value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString());
+		consumer.accept(new LongPoint(fieldName, longValue));
+		if (fieldDef.stored != null && fieldDef.stored)
+			consumer.accept(new StoredField(fieldName, longValue));
 	}
 
 	@Override

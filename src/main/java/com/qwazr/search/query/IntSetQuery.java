@@ -15,21 +15,26 @@
  */
 package com.qwazr.search.query;
 
-public abstract class AbstractRangeQuery<T> extends AbstractFieldQuery {
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.document.IntPoint;
+import org.apache.lucene.search.Query;
 
-	final public T lower_value;
-	final public T upper_value;
+import java.io.IOException;
 
-	protected AbstractRangeQuery() {
-		lower_value = null;
-		upper_value = null;
+public class IntSetQuery extends AbstractFieldQuery {
+
+	public int[] values;
+
+	public IntSetQuery() {
 	}
 
-
-	protected AbstractRangeQuery(final String field, final T lowerValue, final T upperValue) {
+	public IntSetQuery(String field, int... values) {
 		super(field);
-		this.lower_value = lowerValue;
-		this.upper_value = upperValue;
+		this.values = values;
 	}
 
+	@Override
+	public Query getQuery(QueryContext queryContext) throws IOException {
+		return IntPoint.newSetQuery(field, values);
+	}
 }

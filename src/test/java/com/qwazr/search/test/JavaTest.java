@@ -18,8 +18,7 @@ package com.qwazr.search.test;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
-import com.qwazr.search.query.TermQuery;
-import com.qwazr.search.query.TermsQuery;
+import com.qwazr.search.query.*;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -35,7 +34,8 @@ import java.util.LinkedHashMap;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JavaTest {
 
-	public static final String[] RETURNED_FIELDS = { "title", "content", "price", "storedCategory" };
+	public static final String[] RETURNED_FIELDS =
+			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory"};
 
 	@BeforeClass
 	public static void startSearchServer() throws Exception {
@@ -77,14 +77,14 @@ public class JavaTest {
 	}
 
 	private final static AnnotatedIndex record1 = new AnnotatedIndex(1, "First article", "Content of the first article",
-			0d, "news", "economy");
+			0d, 10L, "news", "economy");
 	private final static AnnotatedIndex record2 = new AnnotatedIndex(2, "Second article",
-			"Content of the second article", 0d, "news", "science");
+			"Content of the second article", 0d, 20L, "news", "science");
 
 	private AnnotatedIndex checkRecord(AnnotatedIndex refRecord)
 			throws URISyntaxException, ReflectiveOperationException {
 		final AnnotatedIndexService<AnnotatedIndex> service = getService();
-		AnnotatedIndex record = service.getDocument(refRecord.id.toString());
+		AnnotatedIndex record = service.getDocument(refRecord.id);
 		Assert.assertNotNull(record);
 		return record;
 	}
@@ -109,8 +109,8 @@ public class JavaTest {
 		Assert.assertEquals(record2, newRecord2);
 	}
 
-	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, 1.11d);
-	private final static AnnotatedIndex docValue2 = new AnnotatedIndex(2, null, null, 2.22d);
+	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, 1.11d, null);
+	private final static AnnotatedIndex docValue2 = new AnnotatedIndex(2, null, null, 2.22d, null);
 
 	@Test
 	public void test200UpdateDocValues() throws URISyntaxException, IOException, InterruptedException {
@@ -127,24 +127,62 @@ public class JavaTest {
 		checkRecord(record2);
 	}
 
+	private ResultDefinition.WithObject<AnnotatedIndex> checkQueryResult(QueryBuilder builder, Long expectedHits)
+			throws URISyntaxException {
+		final AnnotatedIndexService service = getService();
+		builder.addReturned_field(RETURNED_FIELDS);
+		ResultDefinition.WithObject<AnnotatedIndex> result = service.searchQuery(builder.build());
+		Assert.assertNotNull(result);
+		if (expectedHits != null)
+			Assert.assertEquals(expectedHits, result.total_hits);
+		return result;
+	}
+
 	@Test
 	public void test300SimpleTermQuery() throws URISyntaxException {
-		final AnnotatedIndexService service = getService();
 		QueryBuilder builder = new QueryBuilder();
 		builder.query = new TermQuery(FieldDefinition.ID_FIELD, "1");
-		ResultDefinition result = service.searchQuery(builder.build());
-		Assert.assertNotNull(result);
-		Assert.assertEquals(new Long(1), result.total_hits);
+		checkQueryResult(builder, 1L);
 	}
 
 	@Test
 	public void test301MultiTermQuery() throws URISyntaxException {
-		final AnnotatedIndexService service = getService();
 		QueryBuilder builder = new QueryBuilder();
 		builder.query = new TermsQuery(FieldDefinition.ID_FIELD, "1", "2");
-		ResultDefinition result = service.searchQuery(builder.build());
-		Assert.assertNotNull(result);
-		Assert.assertEquals(new Long(2), result.total_hits);
+		ResultDefinition result = checkQueryResult(builder, 2L);
+	}
+
+	@Test
+	public void test320PointExactQuery() throws URISyntaxException {
+		QueryBuilder builder = new QueryBuilder();
+		builder.query = new LongExactQuery("quantity", 10);
+		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
+		Assert.assertEquals("1", result.documents.get(0).record.id);
+	}
+
+	@Test
+	public void test320PointSetQuery() throws URISyntaxException {
+		QueryBuilder builder = new QueryBuilder();
+		builder.query = new LongSetQuery("quantity", 20, 25);
+		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
+		Assert.assertEquals("2", result.documents.get(0).record.id);
+	}
+
+	@Test
+	public void test320PointRangeQuery() throws URISyntaxException {
+		QueryBuilder builder = new QueryBuilder();
+		builder.query = new LongRangeQuery("quantity", 15, 25);
+		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
+		Assert.assertEquals("2", result.documents.get(0).record.id);
+	}
+
+	@Test
+	public void test320PointMultiRangeQuery() throws URISyntaxException {
+		QueryBuilder builder = new QueryBuilder();
+		LongMultiRangeQuery.Builder qBuilder = new LongMultiRangeQuery.Builder("quantity");
+		qBuilder.addRange(5L, 15L);
+		qBuilder.addRange(15L, 25L);
+		checkQueryResult(builder, 2L);
 	}
 
 	private ResultDocumentObject<AnnotatedIndex> checkResultDocument(

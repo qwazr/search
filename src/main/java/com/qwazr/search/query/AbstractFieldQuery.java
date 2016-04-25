@@ -13,23 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.qwazr.search.query;
 
-public abstract class AbstractRangeQuery<T> extends AbstractFieldQuery {
+public abstract class AbstractFieldQuery extends AbstractQuery {
 
-	final public T lower_value;
-	final public T upper_value;
+	final public String field;
 
-	protected AbstractRangeQuery() {
-		lower_value = null;
-		upper_value = null;
+	protected AbstractFieldQuery() {
+		this.field = null;
 	}
 
-
-	protected AbstractRangeQuery(final String field, final T lowerValue, final T upperValue) {
-		super(field);
-		this.lower_value = lowerValue;
-		this.upper_value = upperValue;
+	protected AbstractFieldQuery(String field) {
+		this.field = field;
 	}
 
+	public abstract class AbstractFieldBuilder {
+
+		final public String field;
+
+		protected AbstractFieldBuilder(String field) {
+			this.field = field;
+		}
+	}
 }

@@ -22,7 +22,7 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 
 public class DoubleRangeQuery extends AbstractRangeQuery<Double> {
-
+	
 	public DoubleRangeQuery() {
 	}
 

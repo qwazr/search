@@ -15,6 +15,7 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -40,6 +41,9 @@ abstract public class FieldConsumer implements Consumer<Field> {
 
 		@Override
 		final public void accept(Field field) {
+			// We will not update the internal ID of the document
+			if (FieldDefinition.ID_FIELD.equals(field.name()))
+				return;
 			fieldList.add(field);
 		}
 

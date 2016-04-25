@@ -17,7 +17,8 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.FloatPoint;
+import org.apache.lucene.document.DoublePoint;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 
 class FloatPointType extends FieldTypeAbstract {
@@ -28,10 +29,11 @@ class FloatPointType extends FieldTypeAbstract {
 
 	@Override
 	final public void fillValue(final Object value, final FieldConsumer consumer) {
-		if (value instanceof Number)
-			consumer.accept(new FloatPoint(fieldName, ((Number) value).floatValue()));
-		else
-			consumer.accept(new FloatPoint(fieldName, Float.parseFloat(value.toString())));
+		float floatValue =
+				value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(value.toString());
+		consumer.accept(new DoublePoint(fieldName, floatValue));
+		if (fieldDef.stored != null && fieldDef.stored)
+			consumer.accept(new StoredField(fieldName, floatValue));
 	}
 
 	@Override

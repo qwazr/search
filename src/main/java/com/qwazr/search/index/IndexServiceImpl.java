@@ -194,8 +194,8 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 		checkRight(schema_name);
 		IndexInstance indexInstance = IndexManager.INSTANCE.get(schema_name).get(index_name);
 		Analyzer analyzer = index ?
-				indexInstance.getIndexAnalyzer(field_name) :
-				indexInstance.getQueryAnalyzer(field_name);
+		                    indexInstance.getIndexAnalyzer(field_name) :
+		                    indexInstance.getQueryAnalyzer(field_name);
 		if (analyzer == null)
 			throw new ServerException("No analyzer found for " + field_name);
 		return TermDefinition.buildTermList(analyzer, field_name, text);
@@ -534,7 +534,7 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	}
 
 	@Override
-	final public <T> T getDocument(String schemaName, String indexName, String id, Map<String, Field> fields,
+	final public <T> T getDocument(String schemaName, String indexName, Object id, Map<String, Field> fields,
 			Class<T> indexDefinitionClass) {
 		try {
 			checkRight(schemaName);
@@ -579,8 +579,9 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 			final QueryDefinition query, final Map<String, Field> fields, final Class<T> indexDefinitionClass) {
 		try {
 			checkRight(schema_name);
-			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilerFactory = ResultDocumentBuilder.ObjectBuilderFactory
-					.createFactory(fields, indexDefinitionClass);
+			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilerFactory =
+					ResultDocumentBuilder.ObjectBuilderFactory
+							.createFactory(fields, indexDefinitionClass);
 			if ("*".equals(index_name))
 				return (ResultDefinition.WithObject<T>) IndexManager.INSTANCE.get(schema_name)
 						.search(query, documentBuilerFactory);

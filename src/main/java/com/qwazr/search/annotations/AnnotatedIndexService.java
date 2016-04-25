@@ -228,7 +228,7 @@ public class AnnotatedIndexService<T> {
 	 * @return an filled object or null if the document does not exist
 	 * @throws ReflectiveOperationException
 	 */
-	public T getDocument(String id) throws ReflectiveOperationException {
+	public T getDocument(Object id) throws ReflectiveOperationException {
 		checkParameters();
 		Objects.requireNonNull(id, "The id cannot be empty");
 		if (annotatedService != null)
