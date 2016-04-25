@@ -23,6 +23,9 @@
   "price": {
     "template": "DoubleDocValuesField"
   },
+  "alpha_rank": {
+    "template": "SortedDocValuesField"
+  },
   "size": {
     "template": "LongField"
   },

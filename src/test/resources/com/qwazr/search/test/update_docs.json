@@ -9,7 +9,8 @@
     "single_date": "20160101",
     "size": 100,
     "price": 1.10,
-    "stock": 0
+    "stock": 0,
+    "alpha_rank": "a"
   },
   {
     "$id$": "2",
@@ -22,7 +23,8 @@
     "single_date": "20160202",
     "size": 200,
     "price": 2.20,
-    "stock": 0
+    "stock": 0,
+    "alpha_rank": "b"
   },
   {
     "$id$": "3",
@@ -36,7 +38,8 @@
     "single_date": "20160103",
     "size": 300,
     "price": 3.30,
-    "stock": 0
+    "stock": 0,
+    "alpha_rank": "c"
   },
   {
     "$id$": "4",
@@ -50,6 +53,7 @@
     "format": "even",
     "size": 400,
     "price": 4.40,
-    "stock": 0
+    "stock": 0,
+    "alpha_rank": "d"
   }
 ]

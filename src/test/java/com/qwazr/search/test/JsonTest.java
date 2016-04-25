@@ -498,7 +498,7 @@ public class JsonTest {
 
 	@Test
 	public void test430QueryFunctionsDoc() throws URISyntaxException, IOException {
-		Object[] results = new Object[] { 1.1D, 10.5D, 10, 14 };
+		Object[] results = new Object[]{1.1D, 10.5D, 10, 14};
 		IndexServiceInterface client = getClient();
 		ResultDefinition.WithMap result = checkQueryIndex(client, QUERY_CHECK_FUNCTIONS, 5);
 		Assert.assertNotNull(result.functions);
@@ -531,6 +531,8 @@ public class JsonTest {
 		IndexServiceInterface client = getClient();
 		Map<String, Object> result = client.getDocument(SCHEMA_NAME, INDEX_NAME, "5");
 		Assert.assertNotNull(result);
+		Assert.assertTrue(result.containsKey("alpha_rank"));
+		Assert.assertEquals("e", result.get("alpha_rank"));
 		Assert.assertTrue(result.containsKey("price"));
 		Assert.assertEquals(10.5D, result.get("price"));
 		Assert.assertTrue(result.containsKey("description"));
@@ -560,7 +562,7 @@ public class JsonTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
+		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
 		IndexServiceInterface client = getClient();
 		checkAnalyzerResult(term_results,
 				client.doAnalyzeIndex(SCHEMA_NAME, INDEX_NAME, "name", "There are few parts of texts"));

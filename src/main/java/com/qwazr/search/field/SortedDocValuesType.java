@@ -18,8 +18,14 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.SortedDocValuesField;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiDocValues;
+import org.apache.lucene.index.SortedDocValues;
+import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
+
+import java.io.IOException;
 
 class SortedDocValuesType extends FieldTypeAbstract {
 
@@ -37,6 +43,14 @@ class SortedDocValuesType extends FieldTypeAbstract {
 		final SortField sortField = new SortField(fieldName, SortField.Type.STRING, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortStringMissingValue(sortEnum, sortField);
 		return sortField;
+	}
+
+	@Override
+	final public ValueConverter getConverter(final IndexReader reader) throws IOException {
+		SortedDocValues docValues = MultiDocValues.getSortedValues(reader, fieldName);
+		if (docValues == null)
+			return super.getConverter(reader);
+		return new ValueConverter.SortedDVConverter(docValues);
 	}
 
 }

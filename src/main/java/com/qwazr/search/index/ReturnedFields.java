@@ -53,13 +53,10 @@ abstract class ReturnedFields {
 		final void toReturnedFields(final int docId, final Map<String, Object> dest) {
 			if (valueConverterMap == null)
 				return;
-			valueConverterMap.forEach(new BiConsumer<String, ValueConverter>() {
-				@Override
-				public void accept(String fieldName, ValueConverter converter) {
-					Object o = converter.convert(docId);
-					if (o != null)
-						dest.put(fieldName, o);
-				}
+			valueConverterMap.forEach((fieldName, converter) -> {
+				Object o = converter.convert(docId);
+				if (o != null)
+					dest.put(fieldName, o);
 			});
 		}
 
