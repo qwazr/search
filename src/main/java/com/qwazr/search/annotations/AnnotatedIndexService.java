@@ -17,6 +17,7 @@ package com.qwazr.search.annotations;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
+import com.qwazr.utils.AnnotationsUtils;
 import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
@@ -61,31 +62,25 @@ public class AnnotatedIndexService<T> {
 		Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
 		this.indexService = indexService;
 		this.annotatedService = indexService instanceof AnnotatedServiceInterface ?
-				(AnnotatedServiceInterface) indexService :
-				null;
+		                        (AnnotatedServiceInterface) indexService :
+		                        null;
 		this.indexDefinitionClass = indexDefinitionClass;
 		Index index = indexDefinitionClass.getAnnotation(Index.class);
 		Objects.requireNonNull(index, "This class does not declare any Index annotation: " + indexDefinitionClass);
 		schemaName = index.schema();
 		indexName = index.name();
 		similarityClass = index.similarityClass();
-		Field[] fields = indexDefinitionClass.getDeclaredFields();
-		if (fields != null && fields.length > 0) {
-			fieldMap = new HashMap<>();
-			indexFieldMap = new HashMap<>();
-			for (Field field : fields) {
-				if (!field.isAnnotationPresent(IndexField.class))
-					continue;
-				field.setAccessible(true);
-				IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
-				String indexName = StringUtils.isEmpty(indexField.name()) ? field.getName() : indexField.name();
-				indexFieldMap.put(indexName, indexField);
-				fieldMap.put(indexName, field);
-			}
-		} else {
-			fieldMap = null;
-			indexFieldMap = null;
-		}
+		fieldMap = new LinkedHashMap<>();
+		indexFieldMap = new LinkedHashMap<>();
+		AnnotationsUtils.browseFieldsRecursive(indexDefinitionClass, field -> {
+			if (!field.isAnnotationPresent(IndexField.class))
+				return;
+			field.setAccessible(true);
+			IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
+			String indexName = StringUtils.isEmpty(indexField.name()) ? field.getName() : indexField.name();
+			indexFieldMap.put(indexName, indexField);
+			fieldMap.put(indexName, field);
+		});
 	}
 
 	final private void checkParameters() {
