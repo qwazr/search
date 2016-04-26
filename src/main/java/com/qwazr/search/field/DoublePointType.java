@@ -18,10 +18,11 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.DoublePoint;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 
-class DoublePointType extends FieldTypeAbstract {
+class DoublePointType extends StorableFieldType {
 
 	DoublePointType(final String fieldName, final FieldDefinition fieldDef) {
 		super(fieldName, fieldDef);
@@ -32,7 +33,7 @@ class DoublePointType extends FieldTypeAbstract {
 		double doubleValue =
 				value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString());
 		consumer.accept(new DoublePoint(fieldName, doubleValue));
-		if (fieldDef.stored != null && fieldDef.stored)
+		if (store == store.YES)
 			consumer.accept(new StoredField(fieldName, doubleValue));
 	}
 

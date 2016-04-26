@@ -21,7 +21,7 @@ import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 
-class IntPointType extends FieldTypeAbstract {
+class IntPointType extends StorableFieldType {
 
 	IntPointType(final String fieldName, final FieldDefinition fieldDef) {
 		super(fieldName, fieldDef);
@@ -31,7 +31,7 @@ class IntPointType extends FieldTypeAbstract {
 	final public void fillValue(final Object value, final FieldConsumer consumer) {
 		int intValue = value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
 		consumer.accept(new IntPoint(fieldName, intValue));
-		if (fieldDef.stored != null && fieldDef.stored)
+		if (store == store.YES)
 			consumer.accept(new StoredField(fieldName, intValue));
 	}
 

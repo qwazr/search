@@ -21,7 +21,7 @@ import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 
-class FloatPointType extends FieldTypeAbstract {
+class FloatPointType extends StorableFieldType {
 
 	FloatPointType(final String fieldName, final FieldDefinition fieldDef) {
 		super(fieldName, fieldDef);
@@ -32,7 +32,7 @@ class FloatPointType extends FieldTypeAbstract {
 		float floatValue =
 				value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(value.toString());
 		consumer.accept(new DoublePoint(fieldName, floatValue));
-		if (fieldDef.stored != null && fieldDef.stored)
+		if (store == store.YES)
 			consumer.accept(new StoredField(fieldName, floatValue));
 	}
 

@@ -21,7 +21,7 @@ import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 
-class LongPointType extends FieldTypeAbstract {
+class LongPointType extends StorableFieldType {
 
 	LongPointType(final String fieldName, final FieldDefinition fieldDef) {
 		super(fieldName, fieldDef);
@@ -31,7 +31,7 @@ class LongPointType extends FieldTypeAbstract {
 	final public void fillValue(final Object value, final FieldConsumer consumer) {
 		long longValue = value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString());
 		consumer.accept(new LongPoint(fieldName, longValue));
-		if (fieldDef.stored != null && fieldDef.stored)
+		if (store == store.YES)
 			consumer.accept(new StoredField(fieldName, longValue));
 	}
 

@@ -48,6 +48,8 @@ public interface FieldTypeInterface {
 			case FloatField:
 			case FloatPoint:
 				return new FloatPointType(fieldName, fieldDefinition);
+			case GeoPointField:
+				return new GeoPointType(fieldName, fieldDefinition);
 			case IntDocValuesField:
 				return new IntDocValuesType(fieldName, fieldDefinition);
 			case IntField:

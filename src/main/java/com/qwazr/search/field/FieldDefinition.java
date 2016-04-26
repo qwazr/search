@@ -62,6 +62,7 @@ public class FieldDefinition {
 		IntDocValuesField,
 		FloatDocValuesField,
 		DoubleDocValuesField,
+		GeoPointField,
 		SortedDocValuesField,
 		SortedLongDocValuesField,
 		SortedIntDocValuesField,
