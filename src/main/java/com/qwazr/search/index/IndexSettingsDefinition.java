@@ -20,18 +20,26 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexSettingsDefinition {
 
 	final public String similarity_class;
 
+	final public URI replication_master;
+
 	public IndexSettingsDefinition() {
 		similarity_class = null;
+		replication_master = null;
 	}
 
-	public IndexSettingsDefinition(String similarity_class) {
+	public IndexSettingsDefinition(final String similarity_class, final String replication_master)
+			throws URISyntaxException {
 		this.similarity_class = similarity_class;
+		this.replication_master =
+				replication_master == null || replication_master.isEmpty() ? null : new URI(replication_master);
 	}
 
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();

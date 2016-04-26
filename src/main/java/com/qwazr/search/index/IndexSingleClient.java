@@ -29,6 +29,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.*;
 
@@ -266,9 +267,48 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public List<BackupStatus> getBackups(String schema_name, String index_name) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup");
-		Request request = Request.Get(uriBuilder.build());
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup");
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, ListBackupStatusTypeRef, 200);
+	}
+
+	@Override
+	public InputStream replicationObtain(String schema_name, String index_name, String sessionID, String source,
+			String fileName) {
+		try {
+			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/",
+					sessionID, "/", source, "/", fileName);
+			final Request request = Request.Get(uriBuilder.build());
+			return execute(request, null, null).getEntity().getContent();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public Response replicationRelease(String schema_name, String index_name, String sessionID) {
+		try {
+			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/",
+					sessionID);
+			final Request request = Request.Delete(uriBuilder.build());
+			execute(request, null, null, 200);
+			return Response.ok().build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Override
+	public ReplicationSessionDefinition replicationUpdate(String schema_name, String index_name,
+			String current_version) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/",
+				current_version);
+		final Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, null, ReplicationSessionDefinition.class, 200);
 	}
 
 	public final static TypeReference<Collection<Map<String, Object>>> CollectionMapStringObjectTypeRef = new TypeReference<Collection<Map<String, Object>>>() {

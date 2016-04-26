@@ -24,9 +24,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.security.Principal;
 import java.util.*;
@@ -50,6 +52,9 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 
 	@Context
 	private HttpServletRequest request;
+
+	@Context
+	private HttpServletResponse response;
 
 	/**
 	 * Check the right permissions
@@ -194,8 +199,8 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 		checkRight(schema_name);
 		IndexInstance indexInstance = IndexManager.INSTANCE.get(schema_name).get(index_name);
 		Analyzer analyzer = index ?
-		                    indexInstance.getIndexAnalyzer(field_name) :
-		                    indexInstance.getQueryAnalyzer(field_name);
+				indexInstance.getIndexAnalyzer(field_name) :
+				indexInstance.getQueryAnalyzer(field_name);
 		if (analyzer == null)
 			throw new ServerException("No analyzer found for " + field_name);
 		return TermDefinition.buildTermList(analyzer, field_name, text);
@@ -491,6 +496,49 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	}
 
 	@Override
+	final public InputStream replicationObtain(final String schema_name, final String index_name,
+			final String sessionID, final String source, String fileName) {
+		try {
+			checkRight(null);
+			return IndexManager.INSTANCE.get(schema_name).get(index_name).getReplicator()
+					.obtainFile(sessionID, source, fileName);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	final public Response replicationRelease(final String schema_name, final String index_name,
+			final String sessionID) {
+		try {
+			checkRight(null);
+			IndexManager.INSTANCE.get(schema_name).get(index_name).getReplicator().release(sessionID);
+			return Response.ok().build();
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	final public ReplicationSessionDefinition replicationUpdate(final String schema_name, final String index_name,
+			final String currentVersion) {
+		try {
+			checkRight(null);
+			return ReplicationSessionDefinition.newInstance(
+					IndexManager.INSTANCE.get(schema_name).get(index_name).getReplicator()
+							.checkForUpdate(currentVersion));
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
 	final public Response deleteAll(final String schema_name, final String index_name) {
 		try {
 			checkRight(schema_name);
@@ -579,9 +627,8 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 			final QueryDefinition query, final Map<String, Field> fields, final Class<T> indexDefinitionClass) {
 		try {
 			checkRight(schema_name);
-			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilerFactory =
-					ResultDocumentBuilder.ObjectBuilderFactory
-							.createFactory(fields, indexDefinitionClass);
+			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilerFactory = ResultDocumentBuilder.ObjectBuilderFactory
+					.createFactory(fields, indexDefinitionClass);
 			if ("*".equals(index_name))
 				return (ResultDefinition.WithObject<T>) IndexManager.INSTANCE.get(schema_name)
 						.search(query, documentBuilerFactory);

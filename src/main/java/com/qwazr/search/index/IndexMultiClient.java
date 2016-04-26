@@ -20,6 +20,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 
 import javax.ws.rs.core.Response;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -170,6 +171,23 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 
 	@Override
 	public List<BackupStatus> getBackups(String schema_name, String index_name) {
+		return null;
+	}
+
+	@Override
+	public InputStream replicationObtain(String schema_name, String index_name, String sessionID, String source,
+			String fileName) {
+		return null;
+	}
+
+	@Override
+	public Response replicationRelease(String schema_name, String index_name, String sessionID) {
+		return null;
+	}
+
+	@Override
+	public ReplicationSessionDefinition replicationUpdate(String schema_name, String index_name,
+			String current_version) {
 		return null;
 	}
 

@@ -30,6 +30,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
@@ -47,6 +48,8 @@ public class AnnotatedIndexService<T> {
 
 	protected final String similarityClass;
 
+	protected final String replicationMaster;
+
 	private final Map<String, IndexField> indexFieldMap;
 
 	private final Map<String, Field> fieldMap;
@@ -62,14 +65,15 @@ public class AnnotatedIndexService<T> {
 		Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
 		this.indexService = indexService;
 		this.annotatedService = indexService instanceof AnnotatedServiceInterface ?
-		                        (AnnotatedServiceInterface) indexService :
-		                        null;
+				(AnnotatedServiceInterface) indexService :
+				null;
 		this.indexDefinitionClass = indexDefinitionClass;
 		Index index = indexDefinitionClass.getAnnotation(Index.class);
 		Objects.requireNonNull(index, "This class does not declare any Index annotation: " + indexDefinitionClass);
 		schemaName = index.schema();
 		indexName = index.name();
 		similarityClass = index.similarityClass();
+		replicationMaster = index.replicationMaster();
 		fieldMap = new LinkedHashMap<>();
 		indexFieldMap = new LinkedHashMap<>();
 		AnnotationsUtils.browseFieldsRecursive(indexDefinitionClass, field -> {
@@ -141,11 +145,11 @@ public class AnnotatedIndexService<T> {
 	 *
 	 * @return the index status
 	 */
-	public IndexStatus createUpdateIndex() {
+	public IndexStatus createUpdateIndex() throws URISyntaxException {
 		checkParameters();
 		if (StringUtils.isEmpty(similarityClass))
 			return indexService.createUpdateIndex(schemaName, indexName);
-		IndexSettingsDefinition settings = new IndexSettingsDefinition(similarityClass);
+		IndexSettingsDefinition settings = new IndexSettingsDefinition(similarityClass, replicationMaster);
 		return indexService.createUpdateIndex(schemaName, indexName, settings);
 	}
 

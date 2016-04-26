@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.annotations;
 
+import com.qwazr.utils.StringUtils;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,6 +30,8 @@ public @interface Index {
 
 	String schema();
 
-	String similarityClass() default com.qwazr.utils.StringUtils.EMPTY;
+	String similarityClass() default StringUtils.EMPTY;
+
+	String replicationMaster() default StringUtils.EMPTY;
 
 }

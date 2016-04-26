@@ -25,6 +25,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.*;
 
@@ -178,7 +179,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	Map<String, Object> getDocument(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, @PathParam("id") String doc_id);
-	
+
 	@POST
 	@Path("/{schema_name}/{index_name}/doc")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
@@ -218,6 +219,22 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	List<BackupStatus> getBackups(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name);
+
+	@GET
+	@Path("/{schema_name}/{index_name}/replication/{session_id}/{source}/{filename}")
+	InputStream replicationObtain(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, @PathParam("session_id") String sessionID,
+			@PathParam("source") String source, @PathParam("filename") String fileName);
+
+	@DELETE
+	@Path("/{schema_name}/{index_name}/replication/{session_id}")
+	Response replicationRelease(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, @PathParam("session_id") String sessionID);
+
+	@GET
+	@Path("/{schema_name}/{index_name}/replication/{current_version}")
+	ReplicationSessionDefinition replicationUpdate(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, @PathParam("current_version") String current_version);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/search")
