@@ -26,8 +26,7 @@ import java.util.Objects;
 
 import static com.qwazr.search.field.FieldDefinition.Template.StringField;
 
-@Index(name = "testIndex", schema = "testSchema")
-public class AnnotatedIndex {
+public abstract class AnnotatedIndex {
 
 	@IndexField(name = FieldDefinition.ID_FIELD, template = StringField, stored = true)
 	final public String id;
@@ -52,7 +51,6 @@ public class AnnotatedIndex {
 	@IndexField(
 			template = FieldDefinition.Template.DoubleDocValuesField)
 	final public Double price;
-
 
 	@IndexField(
 			template = FieldDefinition.Template.LongField)
@@ -94,5 +92,25 @@ public class AnnotatedIndex {
 		if (!Objects.equals(price, record.price))
 			return false;
 		return true;
+	}
+
+	@Index(name = "testIndexMaster", schema = "testSchema")
+	public static class Master extends AnnotatedIndex {
+
+		public Master() {
+		}
+
+		public Master(Integer id, String title, String content, Double price, Long quantity, String... categories) {
+			super(id, title, content, price, quantity, categories);
+		}
+	}
+
+	@Index(name = "testIndexSlave",
+			schema = "testSchema",
+			replicationMaster = "http://localhost:9091/indexes/testSchema/testIndexMaster")
+	public static class Slave extends AnnotatedIndex {
+
+		public Slave() {
+		}
 	}
 }

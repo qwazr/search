@@ -184,7 +184,8 @@ public class SchemaInstance implements Closeable {
 	}
 
 	IndexStatus createUpdate(String indexName, IndexSettingsDefinition settings)
-			throws ServerException, IOException, InterruptedException, ReflectiveOperationException {
+			throws ServerException, IOException, InterruptedException, ReflectiveOperationException,
+			URISyntaxException {
 		synchronized (indexMap) {
 			IndexInstance indexInstance = indexMap.get(indexName);
 			if (indexInstance != null && settings != null) {

@@ -24,20 +24,23 @@ import com.qwazr.utils.json.JsonMapper;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
-import org.apache.lucene.replicator.IndexRevision;
-import org.apache.lucene.replicator.LocalReplicator;
+import org.apache.lucene.replicator.*;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.concurrent.Callable;
 
 class IndexInstanceBuilder {
 
 	final static String INDEX_DATA = "data";
 	final static String INDEX_BACKUP = "backup";
+	final static String REPL_WORK = "repl_work";
 	final static String SETTINGS_FILE = "settings.json";
 	final static String FIELDS_FILE = "fields.json";
 	final static String ANALYZERS_FILE = "analyzers.json";
@@ -50,6 +53,7 @@ class IndexInstanceBuilder {
 		final File dataDirectory;
 		final File analyzerMapFile;
 		final File fieldMapFile;
+		final Path replWorkPath;
 
 		private FileSet(File indexDirectory) {
 			this.indexDirectory = indexDirectory;
@@ -58,6 +62,7 @@ class IndexInstanceBuilder {
 			this.analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
 			this.fieldMapFile = new File(indexDirectory, FIELDS_FILE);
 			this.settingsFile = new File(indexDirectory, SETTINGS_FILE);
+			this.replWorkPath = indexDirectory.toPath().resolve(REPL_WORK);
 		}
 	}
 
@@ -78,6 +83,7 @@ class IndexInstanceBuilder {
 	UpdatableAnalyzer queryAnalyzer = null;
 
 	LocalReplicator replicator = null;
+	ReplicationClient replicationClient = null;
 
 	private IndexInstanceBuilder(final SchemaInstance schema, final File indexDirectory,
 			final IndexSettingsDefinition settings) {
@@ -87,7 +93,8 @@ class IndexInstanceBuilder {
 		this.fileSet = new FileSet(indexDirectory);
 	}
 
-	private IndexInstance build() throws IOException, ReflectiveOperationException, InterruptedException {
+	private IndexInstance build()
+			throws IOException, ReflectiveOperationException, InterruptedException, URISyntaxException {
 
 		if (!indexDirectory.exists())
 			indexDirectory.mkdir();
@@ -123,11 +130,11 @@ class IndexInstanceBuilder {
 
 		// Set
 		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
-		if (settings != null && settings.similarity_class != null)
+		if (settings != null && settings.similarity_class != null && !settings.similarity_class.isEmpty())
 			indexWriterConfig.setSimilarity(IndexUtils.findSimilarity(settings.similarity_class));
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
-		SnapshotDeletionPolicy snapshotDeletionPolicy = new SnapshotDeletionPolicy(
-				indexWriterConfig.getIndexDeletionPolicy());
+		SnapshotDeletionPolicy snapshotDeletionPolicy =
+				new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
 		indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
 		indexWriter = new IndexWriter(dataDirectory, indexWriterConfig);
 		if (indexWriter.hasUncommittedChanges())
@@ -139,20 +146,28 @@ class IndexInstanceBuilder {
 		replicator = new LocalReplicator();
 		replicator.publish(new IndexRevision(indexWriter));
 
+		if (settings.master != null && settings.master.length > 0) {
+			Callable<Boolean> callback = null; // can also be null if no callback is needed
+			ReplicationClient.ReplicationHandler handler = new IndexReplicationHandler(dataDirectory, callback);
+			ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(fileSet.replWorkPath);
+			replicationClient = new ReplicationClient(new IndexReplicator(settings.master), handler, factory);
+		}
+
 		return new IndexInstance(this);
 	}
 
 	private void abort() {
-		IOUtils.closeQuietly(searcherManager, queryAnalyzer, indexAnalyzer, replicator, indexWriter, dataDirectory);
+		IOUtils.closeQuietly(replicationClient, searcherManager, queryAnalyzer, indexAnalyzer, replicator, indexWriter,
+				dataDirectory);
 	}
 
 	static IndexInstance build(final SchemaInstance schema, final File indexDirectory,
 			final IndexSettingsDefinition settings)
-			throws InterruptedException, ReflectiveOperationException, IOException {
+			throws InterruptedException, ReflectiveOperationException, IOException, URISyntaxException {
 		final IndexInstanceBuilder builder = new IndexInstanceBuilder(schema, indexDirectory, settings);
 		try {
 			return builder.build();
-		} catch (IOException | ReflectiveOperationException | InterruptedException e) {
+		} catch (IOException | ReflectiveOperationException | InterruptedException | URISyntaxException e) {
 			builder.abort();
 			throw e;
 		}

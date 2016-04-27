@@ -48,7 +48,7 @@ public class AnnotatedIndexService<T> {
 
 	protected final String similarityClass;
 
-	protected final String replicationMaster;
+	protected final RemoteIndex[] masters;
 
 	private final Map<String, IndexField> indexFieldMap;
 
@@ -60,20 +60,20 @@ public class AnnotatedIndexService<T> {
 	 * @param indexService         the IndexServiceInterface to use
 	 * @param indexDefinitionClass an annotated class
 	 */
-	public AnnotatedIndexService(IndexServiceInterface indexService, Class<T> indexDefinitionClass) {
+	public AnnotatedIndexService(IndexServiceInterface indexService, Class<T> indexDefinitionClass)
+			throws URISyntaxException {
 		Objects.requireNonNull(indexService, "The indexService parameter is null");
 		Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
 		this.indexService = indexService;
-		this.annotatedService = indexService instanceof AnnotatedServiceInterface ?
-				(AnnotatedServiceInterface) indexService :
-				null;
+		this.annotatedService =
+				indexService instanceof AnnotatedServiceInterface ? (AnnotatedServiceInterface) indexService : null;
 		this.indexDefinitionClass = indexDefinitionClass;
 		Index index = indexDefinitionClass.getAnnotation(Index.class);
 		Objects.requireNonNull(index, "This class does not declare any Index annotation: " + indexDefinitionClass);
 		schemaName = index.schema();
 		indexName = index.name();
 		similarityClass = index.similarityClass();
-		replicationMaster = index.replicationMaster();
+		masters = RemoteIndex.build(index.replicationMaster());
 		fieldMap = new LinkedHashMap<>();
 		indexFieldMap = new LinkedHashMap<>();
 		AnnotationsUtils.browseFieldsRecursive(indexDefinitionClass, field -> {
@@ -147,9 +147,7 @@ public class AnnotatedIndexService<T> {
 	 */
 	public IndexStatus createUpdateIndex() throws URISyntaxException {
 		checkParameters();
-		if (StringUtils.isEmpty(similarityClass))
-			return indexService.createUpdateIndex(schemaName, indexName);
-		IndexSettingsDefinition settings = new IndexSettingsDefinition(similarityClass, replicationMaster);
+		IndexSettingsDefinition settings = new IndexSettingsDefinition(similarityClass, masters);
 		return indexService.createUpdateIndex(schemaName, indexName, settings);
 	}
 
@@ -276,6 +274,13 @@ public class AnnotatedIndexService<T> {
 	public ResultDefinition<?> deleteByQuery(QueryDefinition query) {
 		checkParameters();
 		return indexService.searchQuery(schemaName, indexName, query, true);
+	}
+
+	public void replicationCheck() {
+		Response response = indexService.replicationCheck(schemaName, indexName);
+		Objects.requireNonNull(response, "The response is null");
+		if (response.getStatus() != 200)
+			throw new WebApplicationException(response);
 	}
 
 	/**

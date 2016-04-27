@@ -33,6 +33,7 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.replicator.LocalReplicator;
+import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -63,7 +64,9 @@ final public class IndexInstance implements Closeable {
 	private final IndexWriter indexWriter;
 	private final SearcherManager searcherManager;
 	private final IndexSettingsDefinition settings;
+
 	private final LocalReplicator replicator;
+	private final ReplicationClient replicationClient;
 
 	private final UpdatableAnalyzer indexAnalyzer;
 	private final UpdatableAnalyzer queryAnalyzer;
@@ -86,6 +89,7 @@ final public class IndexInstance implements Closeable {
 		this.settings = builder.settings;
 		this.searcherManager = builder.searcherManager;
 		this.replicator = builder.replicator;
+		this.replicationClient = builder.replicationClient;
 		this.facetsReaderStateCache = null;
 	}
 
@@ -95,7 +99,7 @@ final public class IndexInstance implements Closeable {
 
 	@Override
 	public void close() {
-		IOUtils.closeQuietly(searcherManager, indexAnalyzer, queryAnalyzer, replicator);
+		IOUtils.closeQuietly(replicationClient, searcherManager, indexAnalyzer, queryAnalyzer, replicator);
 		if (indexWriter.isOpen())
 			IOUtils.closeQuietly(indexWriter);
 		IOUtils.closeQuietly(dataDirectory);
@@ -168,8 +172,8 @@ final public class IndexInstance implements Closeable {
 	}
 
 	void setAnalyzer(String analyzerName, AnalyzerDefinition analyzer) throws IOException, ServerException {
-		LinkedHashMap<String, AnalyzerDefinition> analyzers = (LinkedHashMap<String, AnalyzerDefinition>) analyzerMap
-				.clone();
+		LinkedHashMap<String, AnalyzerDefinition> analyzers =
+				(LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone();
 		analyzers.put(analyzerName, analyzer);
 		setAnalyzers(analyzers);
 	}
@@ -188,8 +192,8 @@ final public class IndexInstance implements Closeable {
 	}
 
 	void deleteAnalyzer(String analyzerName) throws IOException, ServerException {
-		LinkedHashMap<String, AnalyzerDefinition> analyzers = (LinkedHashMap<String, AnalyzerDefinition>) analyzerMap
-				.clone();
+		LinkedHashMap<String, AnalyzerDefinition> analyzers =
+				(LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone();
 		if (analyzers.remove(analyzerName) == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
 		setAnalyzers(analyzers);
@@ -296,6 +300,20 @@ final public class IndexInstance implements Closeable {
 
 	final Replicator getReplicator() {
 		return replicator;
+	}
+
+	void replicationCheck() throws IOException, InterruptedException {
+		if (replicationClient == null)
+			throw new UnsupportedOperationException("No replication master has been setup.");
+		final Semaphore sem = schema.acquireWriteSemaphore();
+		try {
+			replicationClient.updateNow();
+			searcherManager.maybeRefresh();
+			schema.mayBeRefresh();
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
 	}
 
 	final void deleteAll() throws IOException, InterruptedException, ServerException {

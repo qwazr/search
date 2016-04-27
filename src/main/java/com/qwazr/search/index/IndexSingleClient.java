@@ -35,11 +35,11 @@ import java.util.*;
 
 public class IndexSingleClient extends JsonClientAbstract implements IndexServiceInterface {
 
-	public IndexSingleClient(String url, int msTimeOut) throws URISyntaxException {
+	public IndexSingleClient(String url, Integer msTimeOut) throws URISyntaxException {
 		super(url, msTimeOut);
 	}
 
-	public IndexSingleClient(String url, int msTimeOut, Credentials credentials) throws URISyntaxException {
+	public IndexSingleClient(String url, Integer msTimeOut, Credentials credentials) throws URISyntaxException {
 		super(url, msTimeOut, credentials);
 	}
 
@@ -120,8 +120,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public List<TermDefinition> doAnalyzeQuery(String schema_name, String index_name, String field_name, String text) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name,
-				"/analyzer/query");
+		UBuilder uriBuilder =
+				new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name, "/analyzer/query");
 		uriBuilder.setParameter("text", text);
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, TermDefinition.MapListTermDefinitionRef, 200);
@@ -129,8 +129,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public List<TermDefinition> doAnalyzeIndex(String schema_name, String index_name, String field_name, String text) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name,
-				"/analyzer/index");
+		UBuilder uriBuilder =
+				new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name, "/analyzer/index");
 		uriBuilder.setParameter("text", text);
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, TermDefinition.MapListTermDefinitionRef, 200);
@@ -262,8 +262,9 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		return commonServiceRequest(request, null, null, BackupStatus.class, 200);
 	}
 
-	public final static TypeReference<List<BackupStatus>> ListBackupStatusTypeRef = new TypeReference<List<BackupStatus>>() {
-	};
+	public final static TypeReference<List<BackupStatus>> ListBackupStatusTypeRef =
+			new TypeReference<List<BackupStatus>>() {
+			};
 
 	@Override
 	public List<BackupStatus> getBackups(String schema_name, String index_name) {
@@ -276,8 +277,9 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public InputStream replicationObtain(String schema_name, String index_name, String sessionID, String source,
 			String fileName) {
 		try {
-			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/",
-					sessionID, "/", source, "/", fileName);
+			final UBuilder uriBuilder =
+					new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/", sessionID, "/", source,
+							"/", fileName);
 			final Request request = Request.Get(uriBuilder.build());
 			return execute(request, null, null).getEntity().getContent();
 		} catch (HttpResponseEntityException e) {
@@ -290,11 +292,13 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Response replicationRelease(String schema_name, String index_name, String sessionID) {
 		try {
-			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/",
-					sessionID);
+			final UBuilder uriBuilder =
+					new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/", sessionID);
 			final Request request = Request.Delete(uriBuilder.build());
-			execute(request, null, null, 200);
-			return Response.ok().build();
+			HttpResponse response = execute(request, null, null);
+			if (response == null)
+				return Response.serverError().build();
+			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
 		} catch (IOException e) {
@@ -303,16 +307,43 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public ReplicationSessionDefinition replicationUpdate(String schema_name, String index_name,
-			String current_version) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/",
-				current_version);
-		final Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, null, ReplicationSessionDefinition.class, 200);
+	public Response replicationUpdate(String schema_name, String index_name, String current_version) {
+		try {
+			final UBuilder uriBuilder =
+					new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/", current_version);
+			final Request request = Request.Get(uriBuilder.build());
+			HttpResponse response = execute(request, null, null);
+			if (response == null)
+				return Response.serverError().build();
+			if (response.getStatusLine().getStatusCode() != 200)
+				return Response.status(response.getStatusLine().getStatusCode()).build();
+			return Response.ok(response.getEntity().getContent()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
 	}
 
-	public final static TypeReference<Collection<Map<String, Object>>> CollectionMapStringObjectTypeRef = new TypeReference<Collection<Map<String, Object>>>() {
-	};
+	@Override
+	public Response replicationCheck(String schema_name, String index_name) {
+		try {
+			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/replication");
+			final Request request = Request.Get(uriBuilder.build());
+			HttpResponse response = execute(request, null, null);
+			if (response == null)
+				return Response.serverError().build();
+			return Response.status(response.getStatusLine().getStatusCode()).build();
+		} catch (HttpResponseEntityException e) {
+			throw e.getWebApplicationException();
+		} catch (IOException e) {
+			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	public final static TypeReference<Collection<Map<String, Object>>> CollectionMapStringObjectTypeRef =
+			new TypeReference<Collection<Map<String, Object>>>() {
+			};
 
 	@Override
 	public Response postMappedDocuments(String schema_name, String index_name,
@@ -376,8 +407,9 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		}
 	}
 
-	public final static TypeReference<LinkedHashMap<String, Object>> MapStringObjectTypeRef = new TypeReference<LinkedHashMap<String, Object>>() {
-	};
+	public final static TypeReference<LinkedHashMap<String, Object>> MapStringObjectTypeRef =
+			new TypeReference<LinkedHashMap<String, Object>>() {
+			};
 
 	@Override
 	public LinkedHashMap<String, Object> getDocument(String schema_name, String index_name, String doc_id) {
@@ -389,8 +421,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public ResultDefinition.WithMap searchQuery(String schema_name, String index_name, QueryDefinition query,
 			Boolean delete) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/search")
-				.setParameterObject("delete", delete);
+		final UBuilder uriBuilder =
+				new UBuilder("/indexes/", schema_name, "/", index_name, "/search").setParameterObject("delete", delete);
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, query, null, ResultDefinition.WithMap.class, 200);
 	}

@@ -186,8 +186,12 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
-	public ReplicationSessionDefinition replicationUpdate(String schema_name, String index_name,
-			String current_version) {
+	public Response replicationUpdate(String schema_name, String index_name, String current_version) {
+		return null;
+	}
+
+	@Override
+	public Response replicationCheck(String schema_name, String index_name) {
 		return null;
 	}
 

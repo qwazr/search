@@ -233,8 +233,12 @@ public interface IndexServiceInterface extends ServiceInterface {
 
 	@GET
 	@Path("/{schema_name}/{index_name}/replication/{current_version}")
-	ReplicationSessionDefinition replicationUpdate(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, @PathParam("current_version") String current_version);
+	Response replicationUpdate(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			@PathParam("current_version") String current_version);
+
+	@GET
+	@Path("/{schema_name}/{index_name}/replication")
+	Response replicationCheck(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/search")

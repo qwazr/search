@@ -18,6 +18,7 @@ package com.qwazr.search.test;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
+import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.junit.Assert;
@@ -93,7 +94,7 @@ public class JsonTest {
 	private static LinkedHashMap<String, FieldDefinition> getFieldMap(String res) {
 		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
-			return FieldDefinition.newFieldMap(IOUtils.toString(is));
+			return FieldDefinition.newFieldMap(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -104,7 +105,7 @@ public class JsonTest {
 	private static FieldDefinition getField(String res) {
 		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
-			return FieldDefinition.newField(IOUtils.toString(is));
+			return FieldDefinition.newField(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -115,7 +116,7 @@ public class JsonTest {
 	private static LinkedHashMap<String, AnalyzerDefinition> getAnalyzerMap(String res) {
 		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
-			return AnalyzerDefinition.newAnalyzerMap(IOUtils.toString(is));
+			return AnalyzerDefinition.newAnalyzerMap(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -126,7 +127,7 @@ public class JsonTest {
 	private static AnalyzerDefinition getAnalyzer(String res) {
 		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
-			return AnalyzerDefinition.newAnalyzer(IOUtils.toString(is));
+			return AnalyzerDefinition.newAnalyzer(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -170,8 +171,8 @@ public class JsonTest {
 	@Test
 	public void test120SetAnalyzers() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		LinkedHashMap<String, AnalyzerDefinition> analyzers = client
-				.setAnalyzers(SCHEMA_NAME, INDEX_NAME, ANALYZERS_JSON);
+		LinkedHashMap<String, AnalyzerDefinition> analyzers =
+				client.setAnalyzers(SCHEMA_NAME, INDEX_NAME, ANALYZERS_JSON);
 		Assert.assertEquals(analyzers.size(), ANALYZERS_JSON.size());
 		IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_NAME);
 		Assert.assertNotNull(indexStatus.analyzers);
@@ -200,8 +201,8 @@ public class JsonTest {
 	@Test
 	public void test126TestFrenchAnalyzer() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
-		List<TermDefinition> termDefinitions = client
-				.testAnalyzer(SCHEMA_NAME, INDEX_NAME, "FrenchAnalyzer", "Bonjour le monde!");
+		List<TermDefinition> termDefinitions =
+				client.testAnalyzer(SCHEMA_NAME, INDEX_NAME, "FrenchAnalyzer", "Bonjour le monde!");
 		Assert.assertNotNull(termDefinitions);
 		Assert.assertEquals(3, termDefinitions.size());
 		Assert.assertEquals("bonjou", termDefinitions.get(0).char_term);
@@ -239,7 +240,7 @@ public class JsonTest {
 	private static QueryDefinition getQuery(String res) {
 		InputStream is = JsonTest.class.getResourceAsStream(res);
 		try {
-			return QueryDefinition.newQuery(IOUtils.toString(is));
+			return QueryDefinition.newQuery(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -498,7 +499,7 @@ public class JsonTest {
 
 	@Test
 	public void test430QueryFunctionsDoc() throws URISyntaxException, IOException {
-		Object[] results = new Object[]{1.1D, 10.5D, 10, 14};
+		Object[] results = new Object[] { 1.1D, 10.5D, 10, 14 };
 		IndexServiceInterface client = getClient();
 		ResultDefinition.WithMap result = checkQueryIndex(client, QUERY_CHECK_FUNCTIONS, 5);
 		Assert.assertNotNull(result.functions);
@@ -562,7 +563,7 @@ public class JsonTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
+		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
 		IndexServiceInterface client = getClient();
 		checkAnalyzerResult(term_results,
 				client.doAnalyzeIndex(SCHEMA_NAME, INDEX_NAME, "name", "There are few parts of texts"));
