@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.annotations;
 
+import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.utils.AnnotationsUtils;
@@ -247,6 +248,16 @@ public class AnnotatedIndexService<T> {
 		return indexService.getIndex(schemaName, indexName);
 	}
 
+	public LinkedHashMap<String, FieldDefinition> getFields() {
+		checkParameters();
+		return indexService.getFields(schemaName, indexName);
+	}
+
+	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers() {
+		checkParameters();
+		return indexService.getAnalyzers(schemaName, indexName);
+	}
+
 	/**
 	 * Execute a search query
 	 *
@@ -291,17 +302,14 @@ public class AnnotatedIndexService<T> {
 	 */
 	private Map<String, Object> newMap(final T row) {
 		final Map<String, Object> map = new HashMap<>();
-		fieldMap.forEach(new BiConsumer<String, Field>() {
-			@Override
-			public void accept(String name, Field field) {
-				try {
-					Object value = field.get(row);
-					if (value == null)
-						return;
-					map.put(name, value);
-				} catch (IllegalAccessException e) {
-					throw new RuntimeException(e);
-				}
+		fieldMap.forEach((name, field) -> {
+			try {
+				Object value = field.get(row);
+				if (value == null)
+					return;
+				map.put(name, value);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
 			}
 		});
 		return map.isEmpty() ? null : map;
@@ -325,17 +333,14 @@ public class AnnotatedIndexService<T> {
 		if (fields == null)
 			return null;
 		final T record = indexDefinitionClass.newInstance();
-		fields.forEach(new BiConsumer<String, Object>() {
-			@Override
-			public void accept(String fieldName, Object fieldValue) {
-				Field field = fieldMap.get(fieldName);
-				if (field == null)
-					return;
-				try {
-					field.set(record, fieldValue);
-				} catch (IllegalAccessException e) {
-					throw new RuntimeException(e);
-				}
+		fields.forEach((fieldName, fieldValue) -> {
+			Field field = fieldMap.get(fieldName);
+			if (field == null)
+				return;
+			try {
+				field.set(record, fieldValue);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
 			}
 		});
 		return record;

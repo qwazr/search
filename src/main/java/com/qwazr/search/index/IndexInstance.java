@@ -68,6 +68,7 @@ final public class IndexInstance implements Closeable {
 
 	private final LocalReplicator replicator;
 	private final ReplicationClient replicationClient;
+	private final IndexReplicator indexReplicator;
 
 	private final UpdatableAnalyzer indexAnalyzer;
 	private final UpdatableAnalyzer queryAnalyzer;
@@ -83,14 +84,20 @@ final public class IndexInstance implements Closeable {
 		this.analyzerMap = builder.analyzerMap;
 		this.fieldMap = builder.fieldMap;
 		this.indexWriter = builder.indexWriter;
-		this.indexWriterConfig = indexWriter.getConfig();
-		this.indexAnalyzer = (UpdatableAnalyzer) indexWriterConfig.getAnalyzer();
+		if (builder.indexWriter != null) { // We are a master
+			this.indexWriterConfig = indexWriter.getConfig();
+			this.snapshotDeletionPolicy = (SnapshotDeletionPolicy) indexWriterConfig.getIndexDeletionPolicy();
+		} else { // We are a slave (no write)
+			this.indexWriterConfig = null;
+			this.snapshotDeletionPolicy = null;
+		}
+		this.indexAnalyzer = builder.indexAnalyzer;
 		this.queryAnalyzer = builder.queryAnalyzer;
-		this.snapshotDeletionPolicy = (SnapshotDeletionPolicy) indexWriterConfig.getIndexDeletionPolicy();
 		this.settings = builder.settings;
 		this.searcherManager = builder.searcherManager;
 		this.replicator = builder.replicator;
 		this.replicationClient = builder.replicationClient;
+		this.indexReplicator = builder.indexReplicator;
 		this.facetsReaderStateCache = null;
 	}
 
@@ -101,7 +108,7 @@ final public class IndexInstance implements Closeable {
 	@Override
 	public void close() {
 		IOUtils.closeQuietly(replicationClient, searcherManager, indexAnalyzer, queryAnalyzer, replicator);
-		if (indexWriter.isOpen())
+		if (indexWriter != null && indexWriter.isOpen())
 			IOUtils.closeQuietly(indexWriter);
 		IOUtils.closeQuietly(dataDirectory);
 	}
@@ -208,7 +215,7 @@ final public class IndexInstance implements Closeable {
 		return queryAnalyzer.getWrappedAnalyzer(field);
 	}
 
-	private void nrtCommit() throws IOException, ServerException {
+	private void nrtCommit() throws IOException {
 		indexWriter.commit();
 		replicator.publish(new IndexRevision(indexWriter));
 		searcherManager.maybeRefresh();
@@ -216,6 +223,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final synchronized BackupStatus backup(Integer keepLastCount) throws IOException, InterruptedException {
+		checkIsMaster();
 		Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			File backupdir = null;
@@ -256,6 +264,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private void purgeBackups(Integer keepLastCount) {
+		checkIsMaster();
 		if (keepLastCount == null)
 			return;
 		if (keepLastCount == 0)
@@ -270,6 +279,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private List<BackupStatus> backups() {
+		checkIsMaster();
 		List<BackupStatus> list = new ArrayList<BackupStatus>();
 		if (!fileSet.backupDirectory.exists())
 			return list;
@@ -281,16 +291,12 @@ final public class IndexInstance implements Closeable {
 			if (status != null)
 				list.add(status);
 		}
-		list.sort(new Comparator<BackupStatus>() {
-			@Override
-			public int compare(BackupStatus o1, BackupStatus o2) {
-				return o2.generation.compareTo(o1.generation);
-			}
-		});
+		list.sort((o1, o2) -> o2.generation.compareTo(o1.generation));
 		return list;
 	}
 
 	final List<BackupStatus> getBackups() throws InterruptedException {
+		checkIsMaster();
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			return backups();
@@ -298,6 +304,11 @@ final public class IndexInstance implements Closeable {
 			if (sem != null)
 				sem.release();
 		}
+	}
+
+	final void checkIsMaster() {
+		if (indexWriter == null)
+			throw new UnsupportedOperationException("Writing in a read only index (slave) is not allowed.");
 	}
 
 	final Replicator getReplicator() {
@@ -309,9 +320,9 @@ final public class IndexInstance implements Closeable {
 			throw new UnsupportedOperationException("No replication master has been setup.");
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
+			setAnalyzers(indexReplicator.getMasterAnalyzers());
+			setFields(indexReplicator.getMasterFields());
 			replicationClient.updateNow();
-			searcherManager.maybeRefresh();
-			schema.mayBeRefresh();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -319,6 +330,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final void deleteAll() throws IOException, InterruptedException, ServerException {
+		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			indexWriter.deleteAll();
@@ -349,6 +361,7 @@ final public class IndexInstance implements Closeable {
 			throws IOException, InterruptedException {
 		if (document == null)
 			return null;
+		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(1);
@@ -366,6 +379,7 @@ final public class IndexInstance implements Closeable {
 	final Object postMappedDocument(final Map<String, Object> document) throws IOException, InterruptedException {
 		if (document == null || document.isEmpty())
 			return null;
+		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(1);
@@ -384,6 +398,7 @@ final public class IndexInstance implements Closeable {
 			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return null;
+		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(documents.size());
@@ -401,6 +416,7 @@ final public class IndexInstance implements Closeable {
 			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return null;
+		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(documents.size());
@@ -418,6 +434,7 @@ final public class IndexInstance implements Closeable {
 			throws InterruptedException, IOException {
 		if (document == null)
 			return;
+		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
@@ -432,6 +449,7 @@ final public class IndexInstance implements Closeable {
 	final void updateMappedDocValues(final Map<String, Object> document) throws IOException, InterruptedException {
 		if (document == null || document.isEmpty())
 			return;
+		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
@@ -447,6 +465,7 @@ final public class IndexInstance implements Closeable {
 			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return;
+		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
@@ -462,6 +481,7 @@ final public class IndexInstance implements Closeable {
 			throws IOException, ServerException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return;
+		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
@@ -476,6 +496,7 @@ final public class IndexInstance implements Closeable {
 	final ResultDefinition.WithMap deleteByQuery(final QueryDefinition queryDefinition)
 			throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException,
 			ReflectiveOperationException {
+		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			final QueryContext queryContext = new QueryContext(null, queryAnalyzer, null, queryDefinition);

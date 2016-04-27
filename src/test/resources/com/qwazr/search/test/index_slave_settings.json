@@ -1,0 +1,10 @@
+{
+  "similarity_class": "ClassicSimilarity",
+  "master": [
+    {
+      "uri": "http://localhost:9091",
+      "schema": "schema-test-json",
+      "index": "index-test-master-json"
+    }
+  ]
+}

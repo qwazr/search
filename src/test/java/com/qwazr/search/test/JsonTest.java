@@ -16,6 +16,7 @@
 package com.qwazr.search.test;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.utils.CharsetUtils;
@@ -39,13 +40,15 @@ public class JsonTest {
 	private static volatile boolean started;
 
 	public static final String SCHEMA_NAME = "schema-test-json";
-	public static final String INDEX_NAME = "index-test-json";
+	public static final String INDEX_MASTER_NAME = "index-test-master-json";
+	public static final String INDEX_SLAVE_NAME = "index-test-slave-json";
 	public static final LinkedHashMap<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
 	public static final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
 	public static final LinkedHashMap<String, AnalyzerDefinition> ANALYZERS_JSON = getAnalyzerMap("analyzers.json");
 	public static final AnalyzerDefinition ANALYZER_FRENCH_JSON = getAnalyzer("analyzer_french.json");
 	public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
-	public static final IndexSettingsDefinition INDEX_SETTINGS = getIndexSettings("index_settings.json");
+	public static final IndexSettingsDefinition INDEX_MASTER_SETTINGS = getIndexSettings("index_master_settings.json");
+	public static final IndexSettingsDefinition INDEX_SLAVE_SETTINGS = getIndexSettings("index_slave_settings.json");
 	public static final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
 	public static final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
 	public static final QueryDefinition QUERY_SORTFIELD_PRICE = getQuery("query_sortfield_price.json");
@@ -149,19 +152,19 @@ public class JsonTest {
 	@Test
 	public void test100CreateIndexWithoutSettings() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_NAME, null);
+		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_MASTER_NAME, null);
 		Assert.assertNotNull(indexStatus);
-		indexStatus = client.getIndex(SCHEMA_NAME, INDEX_NAME);
+		indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(indexStatus);
 		Assert.assertEquals(new Long(0), indexStatus.num_docs);
 		checkAllSizes(client, 0);
-		client.deleteIndex(SCHEMA_NAME, INDEX_NAME);
+		client.deleteIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
 	}
 
 	@Test
 	public void test110CreateIndexWithSettings() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_NAME, INDEX_SETTINGS);
+		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_MASTER_SETTINGS);
 		Assert.assertNotNull(indexStatus);
 		Assert.assertNotNull(indexStatus.settings);
 		Assert.assertNotNull(indexStatus.settings.similarity_class);
@@ -172,9 +175,9 @@ public class JsonTest {
 	public void test120SetAnalyzers() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		LinkedHashMap<String, AnalyzerDefinition> analyzers =
-				client.setAnalyzers(SCHEMA_NAME, INDEX_NAME, ANALYZERS_JSON);
+				client.setAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME, ANALYZERS_JSON);
 		Assert.assertEquals(analyzers.size(), ANALYZERS_JSON.size());
-		IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_NAME);
+		IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(indexStatus.analyzers);
 		Assert.assertEquals(indexStatus.analyzers.size(), ANALYZERS_JSON.size());
 		checkAllSizes(client, 0);
@@ -183,8 +186,8 @@ public class JsonTest {
 	@Test
 	public void test122DeleteFrenchAnalyzer() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
-		client.deleteAnalyzer(SCHEMA_NAME, INDEX_NAME, "FrenchAnalyzer");
-		Map<String, AnalyzerDefinition> analyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_NAME);
+		client.deleteAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, "FrenchAnalyzer");
+		Map<String, AnalyzerDefinition> analyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(analyzers);
 		Assert.assertNull(analyzers.get("FrenchAnalyzer"));
 	}
@@ -192,8 +195,8 @@ public class JsonTest {
 	@Test
 	public void test124SetFrenchAnalyzer() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
-		client.setAnalyzer(SCHEMA_NAME, INDEX_NAME, "FrenchAnalyzer", ANALYZER_FRENCH_JSON);
-		Map<String, AnalyzerDefinition> analyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_NAME);
+		client.setAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, "FrenchAnalyzer", ANALYZER_FRENCH_JSON);
+		Map<String, AnalyzerDefinition> analyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(analyzers);
 		Assert.assertNotNull(analyzers.get("FrenchAnalyzer"));
 	}
@@ -202,7 +205,7 @@ public class JsonTest {
 	public void test126TestFrenchAnalyzer() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
 		List<TermDefinition> termDefinitions =
-				client.testAnalyzer(SCHEMA_NAME, INDEX_NAME, "FrenchAnalyzer", "Bonjour le monde!");
+				client.testAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, "FrenchAnalyzer", "Bonjour le monde!");
 		Assert.assertNotNull(termDefinitions);
 		Assert.assertEquals(3, termDefinitions.size());
 		Assert.assertEquals("bonjou", termDefinitions.get(0).char_term);
@@ -211,9 +214,9 @@ public class JsonTest {
 	@Test
 	public void test130SetFields() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		LinkedHashMap<String, FieldDefinition> fields = client.setFields(SCHEMA_NAME, INDEX_NAME, FIELDS_JSON);
+		LinkedHashMap<String, FieldDefinition> fields = client.setFields(SCHEMA_NAME, INDEX_MASTER_NAME, FIELDS_JSON);
 		Assert.assertEquals(fields.size(), FIELDS_JSON.size());
-		IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_NAME);
+		IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(indexStatus.fields);
 		Assert.assertEquals(indexStatus.fields.size(), FIELDS_JSON.size());
 		checkAllSizes(client, 0);
@@ -222,8 +225,8 @@ public class JsonTest {
 	@Test
 	public void test132DeleteNameField() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
-		client.deleteField(SCHEMA_NAME, INDEX_NAME, "name");
-		Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_NAME);
+		client.deleteField(SCHEMA_NAME, INDEX_MASTER_NAME, "name");
+		Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(fields);
 		Assert.assertNull(fields.get("name"));
 	}
@@ -231,8 +234,8 @@ public class JsonTest {
 	@Test
 	public void test134SetNameField() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
-		client.setField(SCHEMA_NAME, INDEX_NAME, "name", FIELD_NAME_JSON);
-		Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_NAME);
+		client.setField(SCHEMA_NAME, INDEX_MASTER_NAME, "name", FIELD_NAME_JSON);
+		Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(fields);
 		Assert.assertNotNull(fields.get("name"));
 	}
@@ -259,7 +262,7 @@ public class JsonTest {
 
 	private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef,
 			int expectedCount) throws IOException {
-		ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, INDEX_NAME, queryDef, null);
+		ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(expectedCount, result.total_hits.intValue());
@@ -267,7 +270,7 @@ public class JsonTest {
 	}
 
 	private void checkIndexSize(IndexServiceInterface client, long expectedCount) throws IOException {
-		IndexStatus status = client.getIndex(SCHEMA_NAME, INDEX_NAME);
+		IndexStatus status = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(status);
 		Assert.assertNotNull(status.num_docs);
 		Assert.assertEquals(expectedCount, status.num_docs.longValue());
@@ -326,7 +329,7 @@ public class JsonTest {
 	public void test200UpdateDocs() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		for (int i = 0; i < 6; i++) { // Yes, six times: we said "testing" !
-			Response response = client.postMappedDocuments(SCHEMA_NAME, INDEX_NAME, UPDATE_DOCS);
+			Response response = client.postMappedDocuments(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOCS);
 			Assert.assertNotNull(response);
 			Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
 			checkAllSizes(client, 4);
@@ -334,7 +337,7 @@ public class JsonTest {
 	}
 
 	private BackupStatus doBackup(IndexServiceInterface client) {
-		BackupStatus status = client.doBackup(SCHEMA_NAME, INDEX_NAME, null);
+		BackupStatus status = client.doBackup(SCHEMA_NAME, INDEX_MASTER_NAME, null);
 		Assert.assertNotNull(status);
 		Assert.assertNotNull(status.date);
 		Assert.assertNotNull(status.bytes_size);
@@ -345,7 +348,7 @@ public class JsonTest {
 	}
 
 	private List<BackupStatus> getBackups(IndexServiceInterface client, int expectedSize) {
-		List<BackupStatus> backups = client.getBackups(SCHEMA_NAME, INDEX_NAME);
+		List<BackupStatus> backups = client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(backups);
 		Assert.assertEquals(expectedSize, backups.size());
 		return backups;
@@ -354,7 +357,7 @@ public class JsonTest {
 	@Test
 	public void test250FirstBackup() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		List<BackupStatus> backups = client.getBackups(SCHEMA_NAME, INDEX_NAME);
+		List<BackupStatus> backups = client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(backups);
 		Assert.assertTrue(backups.isEmpty());
 		BackupStatus status = doBackup(client);
@@ -365,7 +368,7 @@ public class JsonTest {
 	public void test300UpdateDoc() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		for (int i = 0; i < 7; i++) { // Seven times: we said "testing" !
-			Response response = client.postMappedDocument(SCHEMA_NAME, INDEX_NAME, UPDATE_DOC);
+			Response response = client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC);
 			Assert.assertNotNull(response);
 			Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
 			checkAllSizes(client, 5);
@@ -386,13 +389,13 @@ public class JsonTest {
 		}
 
 		// Update one document value
-		Response response = client.updateMappedDocValues(SCHEMA_NAME, INDEX_NAME, UPDATE_DOC_VALUE);
+		Response response = client.updateMappedDocValues(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_VALUE);
 		Assert.assertNotNull(response);
 		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
 		checkAllSizes(client, 5);
 
 		// Update a list of documents values
-		response = client.updateMappedDocsValues(SCHEMA_NAME, INDEX_NAME, UPDATE_DOCS_VALUES);
+		response = client.updateMappedDocsValues(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOCS_VALUES);
 		Assert.assertNotNull(response);
 		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
 		checkAllSizes(client, 5);
@@ -499,7 +502,7 @@ public class JsonTest {
 
 	@Test
 	public void test430QueryFunctionsDoc() throws URISyntaxException, IOException {
-		Object[] results = new Object[] { 1.1D, 10.5D, 10, 14 };
+		Object[] results = new Object[]{1.1D, 10.5D, 10, 14};
 		IndexServiceInterface client = getClient();
 		ResultDefinition.WithMap result = checkQueryIndex(client, QUERY_CHECK_FUNCTIONS, 5);
 		Assert.assertNotNull(result.functions);
@@ -530,7 +533,7 @@ public class JsonTest {
 	@Test
 	public void test450getDocument() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
-		Map<String, Object> result = client.getDocument(SCHEMA_NAME, INDEX_NAME, "5");
+		Map<String, Object> result = client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, "5");
 		Assert.assertNotNull(result);
 		Assert.assertTrue(result.containsKey("alpha_rank"));
 		Assert.assertEquals("e", result.get("alpha_rank"));
@@ -563,19 +566,19 @@ public class JsonTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
+		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
 		IndexServiceInterface client = getClient();
 		checkAnalyzerResult(term_results,
-				client.doAnalyzeIndex(SCHEMA_NAME, INDEX_NAME, "name", "There are few parts of texts"));
+				client.doAnalyzeIndex(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "There are few parts of texts"));
 
 		checkAnalyzerResult(term_results,
-				client.doAnalyzeQuery(SCHEMA_NAME, INDEX_NAME, "name", "There are few parts of texts"));
+				client.doAnalyzeQuery(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "There are few parts of texts"));
 	}
 
 	@Test
 	public void test700DeleteDoc() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_NAME, DELETE_QUERY, true);
+		ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, DELETE_QUERY, true);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(2L, (long) result.total_hits);
@@ -584,7 +587,7 @@ public class JsonTest {
 
 	@Test
 	public void test800ThirdBackup() throws URISyntaxException, IOException {
-		IndexServiceInterface client = getClient();
+		final IndexServiceInterface client = getClient();
 		BackupStatus status = doBackup(client);
 		Assert.assertEquals(status, getBackups(client, 3).get(0));
 		client.doBackup("*", "*", 2);
@@ -592,14 +595,48 @@ public class JsonTest {
 	}
 
 	@Test
+	public void test850replicationCheck() throws URISyntaxException {
+		final IndexServiceInterface client = getClient();
+
+		IndexStatus masterStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
+		Assert.assertNotNull(masterStatus);
+		Assert.assertNotNull(masterStatus.version);
+
+		final LinkedHashMap<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
+		final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers =
+				client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
+		Assert.assertNotNull(masterFields);
+		Assert.assertNotNull(masterAnalyzers);
+
+		IndexStatus slaveStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_SLAVE_NAME, INDEX_SLAVE_SETTINGS);
+		Assert.assertNotNull(slaveStatus);
+		client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
+
+		slaveStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		Assert.assertNotNull(slaveStatus);
+		Assert.assertNotNull(slaveStatus.version);
+		Assert.assertEquals(masterStatus.version, slaveStatus.version);
+		Assert.assertEquals(masterStatus.num_docs, slaveStatus.num_docs);
+
+		final LinkedHashMap<String, FieldDefinition> slaveFields = client.getFields(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		final LinkedHashMap<String, AnalyzerDefinition> slaveAnalyzers =
+				client.getAnalyzers(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		Assert.assertNotNull(slaveFields);
+		Assert.assertNotNull(slaveAnalyzers);
+
+		Assert.assertArrayEquals(slaveFields.keySet().toArray(), masterFields.keySet().toArray());
+		Assert.assertArrayEquals(slaveAnalyzers.keySet().toArray(), masterAnalyzers.keySet().toArray());
+	}
+
+	@Test
 	public void test980DeleteIndex() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
-		Response response = client.deleteIndex(SCHEMA_NAME, INDEX_NAME);
+		Response response = client.deleteIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(response);
 		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
 		Set<String> indexes = client.getIndexes(SCHEMA_NAME);
 		Assert.assertNotNull(indexes);
-		Assert.assertFalse(indexes.contains(INDEX_SETTINGS));
+		Assert.assertFalse(indexes.contains(INDEX_MASTER_NAME));
 	}
 
 	@Test

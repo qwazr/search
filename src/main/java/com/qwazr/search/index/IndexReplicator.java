@@ -1,5 +1,7 @@
 package com.qwazr.search.index;
 
+import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.replicator.Revision;
 import org.apache.lucene.replicator.SessionToken;
@@ -10,6 +12,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
 
 class IndexReplicator implements Replicator {
 
@@ -19,8 +22,8 @@ class IndexReplicator implements Replicator {
 
 	IndexReplicator(final RemoteIndex... masters) throws URISyntaxException {
 		this.indexService = masters[0].uri == null ?
-				new IndexServiceImpl() :
-				new IndexSingleClient(masters[0].uri, masters[0].timeout);
+		                    new IndexServiceImpl() :
+		                    new IndexSingleClient(masters[0].uri, masters[0].timeout);
 		this.schemaName = masters[0].schema;
 		this.indexName = masters[0].index;
 	}
@@ -53,5 +56,13 @@ class IndexReplicator implements Replicator {
 
 	@Override
 	public void close() throws IOException {
+	}
+
+	final LinkedHashMap<String, AnalyzerDefinition> getMasterAnalyzers() {
+		return indexService.getAnalyzers(schemaName, indexName);
+	}
+
+	final LinkedHashMap<String, FieldDefinition> getMasterFields() {
+		return indexService.getFields(schemaName, indexName);
 	}
 }

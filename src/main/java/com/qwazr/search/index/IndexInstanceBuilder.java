@@ -84,6 +84,7 @@ class IndexInstanceBuilder {
 
 	LocalReplicator replicator = null;
 	ReplicationClient replicationClient = null;
+	IndexReplicator indexReplicator = null;
 
 	private IndexInstanceBuilder(final SchemaInstance schema, final File indexDirectory,
 			final IndexSettingsDefinition settings) {
@@ -93,7 +94,7 @@ class IndexInstanceBuilder {
 		this.fileSet = new FileSet(indexDirectory);
 	}
 
-	private IndexInstance build()
+	private void buildCommon()
 			throws IOException, ReflectiveOperationException, InterruptedException, URISyntaxException {
 
 		if (!indexDirectory.exists())
@@ -104,22 +105,22 @@ class IndexInstanceBuilder {
 		//Loading the settings
 		if (settings == null)
 			settings = fileSet.settingsFile.exists() ?
-					JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
-					IndexSettingsDefinition.EMPTY;
+			           JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
+			           IndexSettingsDefinition.EMPTY;
 		else
 			JsonMapper.MAPPER.writeValue(fileSet.settingsFile, settings);
 
 		//Loading the fields
 		File fieldMapFile = new File(indexDirectory, FIELDS_FILE);
 		fieldMap = fieldMapFile.exists() ?
-				JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
-				new LinkedHashMap<>();
+		           JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
+		           new LinkedHashMap<>();
 
 		//Loading the fields
 		File analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
 		analyzerMap = analyzerMapFile.exists() ?
-				JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
-				new LinkedHashMap<>();
+		              JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
+		              new LinkedHashMap<>();
 
 		AnalyzerContext context = new AnalyzerContext(analyzerMap, fieldMap);
 		indexAnalyzer = new UpdatableAnalyzer(context, context.indexAnalyzerMap);
@@ -128,7 +129,9 @@ class IndexInstanceBuilder {
 		// Open and lock the data directory
 		dataDirectory = FSDirectory.open(fileSet.dataDirectory.toPath());
 
-		// Set
+	}
+
+	private void openOrCreateIndex() throws InterruptedException, ReflectiveOperationException, IOException {
 		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
 		if (settings != null && settings.similarity_class != null && !settings.similarity_class.isEmpty())
 			indexWriterConfig.setSimilarity(IndexUtils.findSimilarity(settings.similarity_class));
@@ -139,20 +142,49 @@ class IndexInstanceBuilder {
 		indexWriter = new IndexWriter(dataDirectory, indexWriterConfig);
 		if (indexWriter.hasUncommittedChanges())
 			indexWriter.commit();
+	}
+
+	private void buildSlave() throws IOException, URISyntaxException, ReflectiveOperationException,
+			InterruptedException {
+
+		// We just want to be sure the index exist.
+		openOrCreateIndex();
+		indexWriter.close();
+		indexWriter = null;
+
+		Callable<Boolean> callback = () -> {
+			searcherManager.maybeRefresh();
+			schema.mayBeRefresh();
+			return true;
+		};
+		ReplicationClient.ReplicationHandler handler = new IndexReplicationHandler(dataDirectory, callback);
+		ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(fileSet.replWorkPath);
+		indexReplicator = new IndexReplicator(settings.master);
+		replicationClient = new ReplicationClient(indexReplicator, handler, factory);
 
 		// Finally we build the SearchSearcherManger
-		searcherManager = new SearcherManager(indexWriter, null);
+		searcherManager = new SearcherManager(dataDirectory, null);
+	}
 
+	private void buildMaster() throws IOException, ReflectiveOperationException, InterruptedException {
+
+		openOrCreateIndex();
+
+		// Manage the master replication (revision publishing)
 		replicator = new LocalReplicator();
 		replicator.publish(new IndexRevision(indexWriter));
 
-		if (settings.master != null && settings.master.length > 0) {
-			Callable<Boolean> callback = null; // can also be null if no callback is needed
-			ReplicationClient.ReplicationHandler handler = new IndexReplicationHandler(dataDirectory, callback);
-			ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(fileSet.replWorkPath);
-			replicationClient = new ReplicationClient(new IndexReplicator(settings.master), handler, factory);
-		}
+		// Finally we build the SearchSearcherManger
+		searcherManager = new SearcherManager(indexWriter, null);
+	}
 
+	private IndexInstance build()
+			throws InterruptedException, ReflectiveOperationException, URISyntaxException, IOException {
+		buildCommon();
+		if (settings.master != null && settings.master.length > 0)
+			buildSlave();
+		else
+			buildMaster();
 		return new IndexInstance(this);
 	}
 

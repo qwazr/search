@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.test;
 
+import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
@@ -35,7 +36,7 @@ import java.util.LinkedHashMap;
 public class JavaTest {
 
 	public static final String[] RETURNED_FIELDS =
-			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory" };
+			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory"};
 
 	@BeforeClass
 	public static void startSearchServer() throws Exception {
@@ -228,13 +229,36 @@ public class JavaTest {
 
 	@Test
 	public void test800replicationCheck() throws URISyntaxException {
+		final AnnotatedIndexService master = getMaster();
+		final IndexStatus masterStatus = master.getIndexStatus();
+		Assert.assertNotNull(masterStatus);
+		Assert.assertNotNull(masterStatus.version);
+
+		final LinkedHashMap<String, FieldDefinition> masterFields = master.getFields();
+		final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers = master.getAnalyzers();
+
+
 		final AnnotatedIndexService slave = getSlave();
-		IndexStatus indexStatus = slave.createUpdateIndex();
+		final IndexStatus indexStatus = slave.createUpdateIndex();
 		Assert.assertNotNull(indexStatus);
 		slave.replicationCheck();
-		IndexStatus status = slave.getIndexStatus();
-		Assert.assertNotNull(status);
-		Assert.assertEquals(new Long(2), status.num_docs);
+
+
+		final IndexStatus slaveStatus = slave.getIndexStatus();
+		Assert.assertNotNull(slaveStatus);
+		Assert.assertNotNull(slaveStatus.version);
+
+		Assert.assertEquals(masterStatus.version, slaveStatus.version);
+		Assert.assertEquals(masterStatus.num_docs, slaveStatus.num_docs);
+
+		final LinkedHashMap<String, FieldDefinition> slaveFields = slave.getFields();
+		final LinkedHashMap<String, AnalyzerDefinition> slaveAnalyzers = slave.getAnalyzers();
+		Assert.assertNotNull(slaveFields);
+		Assert.assertNotNull(slaveAnalyzers);
+
+		Assert.assertArrayEquals(slaveFields.keySet().toArray(), masterFields.keySet().toArray());
+		Assert.assertArrayEquals(slaveAnalyzers.keySet().toArray(), masterAnalyzers.keySet().toArray());
+
 	}
 
 	@Test
