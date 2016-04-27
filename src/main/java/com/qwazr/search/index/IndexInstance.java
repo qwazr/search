@@ -32,6 +32,7 @@ import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.replicator.IndexRevision;
 import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.replicator.Replicator;
@@ -209,6 +210,7 @@ final public class IndexInstance implements Closeable {
 
 	private void nrtCommit() throws IOException, ServerException {
 		indexWriter.commit();
+		replicator.publish(new IndexRevision(indexWriter));
 		searcherManager.maybeRefresh();
 		schema.mayBeRefresh();
 	}

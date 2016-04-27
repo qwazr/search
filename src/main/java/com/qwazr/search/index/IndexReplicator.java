@@ -3,7 +3,6 @@ package com.qwazr.search.index;
 import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.replicator.Revision;
 import org.apache.lucene.replicator.SessionToken;
-import org.apache.lucene.replicator.http.HttpReplicator;
 
 import javax.ws.rs.core.Response;
 import java.io.DataInput;
@@ -13,8 +12,6 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 
 class IndexReplicator implements Replicator {
-
-	private HttpReplicator repl;
 
 	private final IndexServiceInterface indexService;
 	private final String schemaName;
