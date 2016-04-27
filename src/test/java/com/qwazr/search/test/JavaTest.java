@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JavaTest {
@@ -202,6 +203,14 @@ public class JavaTest {
 		return resultDocument;
 	}
 
+	private void checkEqualsReturnedFields(AnnotatedIndex record, AnnotatedIndex recordRef,
+			AnnotatedIndex docValueRef) {
+		Assert.assertEquals(record.title, recordRef.title);
+		Assert.assertEquals(record.content, recordRef.content);
+		Assert.assertEquals(record.price, docValueRef.price);
+		Assert.assertArrayEquals(record.storedCategory.toArray(), recordRef.storedCategory.toArray());
+	}
+
 	private final void testReturnedFieldQuery(String... returnedFields) throws URISyntaxException {
 		final AnnotatedIndexService service = getMaster();
 		QueryBuilder builder = new QueryBuilder();
@@ -211,10 +220,7 @@ public class JavaTest {
 		Assert.assertNotNull(result);
 		Assert.assertEquals(new Long(1), result.total_hits);
 		AnnotatedIndex returnedRecord = checkResultDocument(result, 0).record;
-		Assert.assertEquals(record2.title, returnedRecord.title);
-		Assert.assertEquals(record2.content, returnedRecord.content);
-		Assert.assertEquals(docValue2.price, returnedRecord.price);
-		Assert.assertArrayEquals(record2.storedCategory.toArray(), returnedRecord.storedCategory.toArray());
+		checkEqualsReturnedFields(returnedRecord, record2, docValue2);
 	}
 
 	@Test
@@ -225,6 +231,23 @@ public class JavaTest {
 	@Test
 	public void test360ReturnedFieldQueryAll() throws URISyntaxException {
 		testReturnedFieldQuery("*");
+	}
+
+	@Test
+	public void test400getDocumentById() throws ReflectiveOperationException, URISyntaxException {
+		final AnnotatedIndexService<AnnotatedIndex.Master> master = getMaster();
+		AnnotatedIndex.Master record = master.getDocument(record1.id);
+		checkEqualsReturnedFields(record, record1, docValue1);
+	}
+
+	@Test
+	public void test420getDocuments() throws ReflectiveOperationException, URISyntaxException {
+		final AnnotatedIndexService<AnnotatedIndex.Master> master = getMaster();
+		List<AnnotatedIndex.Master> records = master.getDocuments(0, 2);
+		Assert.assertNotNull(records);
+		Assert.assertEquals(2L, records.size());
+		checkEqualsReturnedFields(records.get(0), record1, docValue1);
+		checkEqualsReturnedFields(records.get(1), record2, docValue2);
 	}
 
 	@Test

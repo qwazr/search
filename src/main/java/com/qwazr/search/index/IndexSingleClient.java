@@ -418,6 +418,20 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		return commonServiceRequest(request, null, null, MapStringObjectTypeRef, 200);
 	}
 
+	public final static TypeReference<ArrayList<LinkedHashMap<String, Object>>> ListMapStringObjectTypeRef =
+			new TypeReference<ArrayList<LinkedHashMap<String, Object>>>() {
+			};
+
+	@Override
+	public List<LinkedHashMap<String, Object>> getDocuments(String schema_name, String index_name, Integer start,
+			Integer rows) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc");
+		uriBuilder.addParameter("start", start == null ? null : start.toString())
+				.addParameter("rows", rows == null ? null : rows.toString());
+		Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, null, ListMapStringObjectTypeRef, 200);
+	}
+
 	@Override
 	public ResultDefinition.WithMap searchQuery(String schema_name, String index_name, QueryDefinition query,
 			Boolean delete) {

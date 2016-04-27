@@ -240,6 +240,14 @@ public class AnnotatedIndexService<T> {
 			return toRecord(indexService.getDocument(schemaName, indexName, id.toString()));
 	}
 
+	public List<T> getDocuments(Integer start, Integer rows) {
+		checkParameters();
+		if (annotatedService != null)
+			return annotatedService.getDocuments(schemaName, indexName, start, rows, fieldMap, indexDefinitionClass);
+		else
+			return toRecords(indexService.getDocuments(schemaName, indexName, start, rows));
+	}
+
 	/**
 	 * @return the status of the index
 	 */
@@ -344,6 +352,20 @@ public class AnnotatedIndexService<T> {
 			}
 		});
 		return record;
+	}
+
+	private List<T> toRecords(List<LinkedHashMap<String, Object>> docs) {
+		if (docs == null)
+			return null;
+		final List<T> records = new ArrayList<>();
+		docs.forEach(doc -> {
+			try {
+				records.add(toRecord(doc));
+			} catch (ReflectiveOperationException e) {
+				throw new RuntimeException(e);
+			}
+		});
+		return records;
 	}
 
 }

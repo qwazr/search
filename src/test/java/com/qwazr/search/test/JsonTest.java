@@ -442,6 +442,22 @@ public class JsonTest {
 		checkFacetRowsQuery(checkQuerySchema(client, FACETS_ROWS_QUERY, 5));
 	}
 
+	@Test
+	public void test410GetDocumentById() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		LinkedHashMap<String, Object> doc =
+				client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, (String) UPDATE_DOC.get(FieldDefinition.ID_FIELD));
+		Assert.assertNotNull(doc);
+	}
+
+	@Test
+	public void test412GetDocuments() throws URISyntaxException, IOException {
+		IndexServiceInterface client = getClient();
+		List<LinkedHashMap<String, Object>> docs = client.getDocuments(SCHEMA_NAME, INDEX_MASTER_NAME, 0, 10);
+		Assert.assertNotNull(docs);
+		Assert.assertEquals(5L, docs.size());
+	}
+
 	private void checkFacetFiltersResult(ResultDefinition.WithMap result) {
 		Assert.assertNotNull(result.documents);
 		Assert.assertEquals(2, result.documents.size());

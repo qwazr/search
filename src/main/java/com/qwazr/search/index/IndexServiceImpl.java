@@ -17,9 +17,12 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.replicator.SessionToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -571,29 +574,53 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 		}
 	}
 
-	private QueryDefinition getDocumentQuery(IndexInstance index, Object id) {
+	private QueryDefinition getDocumentQuery(Object id) {
 		QueryBuilder builder = new QueryBuilder();
 		builder.setQuery(new TermQuery(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id)));
 		builder.setRows(1);
-		Map<String, FieldDefinition> fields = index.getFields();
-		if (fields != null)
-			builder.addReturned_field(fields.keySet());
+		builder.addReturned_field("*");
 		return builder.build();
 	}
 
+	private QueryDefinition getMatchAllDocQuery(Integer start, Integer rows) {
+		QueryBuilder builder = new QueryBuilder();
+		builder.setQuery(new MatchAllDocsQuery());
+		builder.setStart(start).setRows(rows);
+		builder.addReturned_field("*");
+		return builder.build();
+	}
+
+	private ResultDefinition doSearchMap(final String schemaName, final String indexName, final QueryDefinition query)
+			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
+		checkRight(schemaName);
+		IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName);
+		return index.search(query, ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
+	}
+
+	private ResultDefinition doSearchObject(final String schemaName, final String indexName,
+			final QueryDefinition query,
+			final Map<String, Field> fields,
+			final Class<?> indexDefinitionClass)
+			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
+		checkRight(schemaName);
+		IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName);
+		return index.search(query,
+				ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass));
+	}
+
 	@Override
-	final public Map<String, Object> getDocument(final String schema_name, final String index_name, final String id) {
+	final public LinkedHashMap<String, Object> getDocument(final String schemaName, final String indexName,
+			final String id) {
 		try {
-			checkRight(schema_name);
-			IndexInstance index = IndexManager.INSTANCE.get(schema_name).get(index_name);
 			ResultDefinition result =
-					index.search(getDocumentQuery(index, id), ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
+					doSearchMap(schemaName, indexName, getDocumentQuery(id));
 			if (result != null) {
 				List<ResultDocumentMap> docs = result.getDocuments();
 				if (docs != null && !docs.isEmpty())
 					return docs.get(0).getFields();
 			}
 			throw new ServerException(Response.Status.NOT_FOUND, "Document not found: " + id);
+
 		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
@@ -602,19 +629,59 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	}
 
 	@Override
-	final public <T> T getDocument(String schemaName, String indexName, Object id, Map<String, Field> fields,
-			Class<T> indexDefinitionClass) {
+	final public List<LinkedHashMap<String, Object>> getDocuments(final String schemaName, final String indexName,
+			final Integer start, final Integer rows) {
 		try {
-			checkRight(schemaName);
-			final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName);
-			ResultDefinition result = index.search(getDocumentQuery(index, id),
-					ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass));
+			ResultDefinition result =
+					doSearchMap(schemaName, indexName, getMatchAllDocQuery(start, rows));
+			if (result == null)
+				throw new ServerException(Response.Status.NOT_FOUND, "No document found");
+			List<LinkedHashMap<String, Object>> documents = new ArrayList<>();
+			List<ResultDocumentMap> docs = result.getDocuments();
+			if (docs != null)
+				docs.forEach(resultDocument -> documents.add(resultDocument.fields));
+			return documents;
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	final public <T> T getDocument(final String schemaName, final String indexName, final Object id,
+			final Map<String, Field> fields, final Class<T> indexDefinitionClass) {
+		try {
+			ResultDefinition result = doSearchObject(schemaName, indexName, getDocumentQuery(id),
+					fields, indexDefinitionClass);
 			if (result == null)
 				return null;
 			List<ResultDocumentObject<T>> docs = result.getDocuments();
 			if (docs == null || docs.isEmpty())
 				return null;
 			return docs.get(0).record;
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	final public <T> List<T> getDocuments(final String schemaName, final String indexName,
+			final Integer start, final Integer rows, final Map<String, Field> fields,
+			final Class<T> indexDefinitionClass) {
+		try {
+			ResultDefinition result =
+					doSearchObject(schemaName, indexName, getMatchAllDocQuery(start, rows), fields,
+							indexDefinitionClass);
+			if (result == null)
+				throw new ServerException(Response.Status.NOT_FOUND, "No document found");
+			List<T> documents = new ArrayList<>();
+			List<ResultDocumentObject<T>> docs = result.getDocuments();
+			if (docs != null)
+				docs.forEach(resultDocument -> documents.add(resultDocument.record));
+			return documents;
 		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);

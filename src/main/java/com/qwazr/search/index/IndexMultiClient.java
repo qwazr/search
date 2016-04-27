@@ -220,6 +220,12 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
+	public List<LinkedHashMap<String, Object>> getDocuments(String schema_name, String index_name, Integer start,
+			Integer rows) {
+		return null;
+	}
+
+	@Override
 	public LinkedHashMap<String, Object> getDocument(String schema_name, String index_name, String doc_id) {
 		return null;
 	}

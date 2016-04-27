@@ -37,7 +37,7 @@ public class ResultDocumentMap extends ResultDocumentAbstract {
 		fields = builder.fields;
 	}
 
-	public Map<String, Object> getFields() {
+	public LinkedHashMap<String, Object> getFields() {
 		return fields;
 	}
 

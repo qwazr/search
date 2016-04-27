@@ -174,10 +174,18 @@ public interface IndexServiceInterface extends ServiceInterface {
 	Response deleteAll(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
 	@GET
+	@Path("/{schema_name}/{index_name}/doc")
+	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+	List<LinkedHashMap<String, Object>> getDocuments(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, @QueryParam("start") Integer start,
+			@QueryParam("rows") Integer rows);
+
+	@GET
 	@Path("/{schema_name}/{index_name}/doc/{id}")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Map<String, Object> getDocument(@PathParam("schema_name") String schema_name,
+	LinkedHashMap<String, Object> getDocument(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, @PathParam("id") String doc_id);
 
 	@POST
