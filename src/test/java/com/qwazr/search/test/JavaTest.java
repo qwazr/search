@@ -112,6 +112,7 @@ public class JavaTest {
 		Assert.assertEquals(record1, newRecord1);
 		AnnotatedIndex newRecord2 = checkRecord(record2);
 		Assert.assertEquals(record2, newRecord2);
+		Assert.assertEquals(new Long(10), service.getIndexStatus().version);
 	}
 
 	private final static AnnotatedIndex.Master docValue1 = new AnnotatedIndex.Master(1, null, null, 1.11d, null);

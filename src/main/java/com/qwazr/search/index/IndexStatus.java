@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 
 import java.util.Set;
@@ -26,6 +27,7 @@ public class IndexStatus {
 
 	final public Long num_docs;
 	final public Long num_deleted_docs;
+	final public Long version;
 	final public Set<String> analyzers;
 	final public Set<String> fields;
 	final public IndexSettingsDefinition settings;
@@ -33,15 +35,17 @@ public class IndexStatus {
 	public IndexStatus() {
 		num_docs = null;
 		num_deleted_docs = null;
+		version = null;
 		analyzers = null;
 		fields = null;
 		settings = null;
 	}
 
-	public IndexStatus(IndexReader indexReader, IndexSettingsDefinition settings,Set<String> analyzers,
+	public IndexStatus(IndexReader indexReader, IndexSettingsDefinition settings, Set<String> analyzers,
 			Set<String> fields) {
 		num_docs = (long) indexReader.numDocs();
 		num_deleted_docs = (long) indexReader.numDeletedDocs();
+		version = indexReader instanceof DirectoryReader ? ((DirectoryReader) indexReader).getVersion() : null;
 		this.settings = settings;
 		this.analyzers = analyzers;
 		this.fields = fields;
