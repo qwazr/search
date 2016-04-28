@@ -28,24 +28,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "source")
-@JsonSubTypes({ @JsonSubTypes.Type(value = ConstValueSource.class), @JsonSubTypes.Type(value = DefFunction.class),
-	@JsonSubTypes.Type(value = DivFloatFunction.class), @JsonSubTypes.Type(value = DoubleConstValueSource.class),
-	@JsonSubTypes.Type(value = DoubleFieldSource.class), @JsonSubTypes.Type(value = FloatFieldSource.class),
-	@JsonSubTypes.Type(value = IfFunction.class), @JsonSubTypes.Type(value = IntFieldSource.class),
-	@JsonSubTypes.Type(value = LongFieldSource.class), @JsonSubTypes.Type(value = MaxFloatFunction.class),
-	@JsonSubTypes.Type(value = MinFloatFunction.class), @JsonSubTypes.Type(value = NumDocsValueSource.class),
-	@JsonSubTypes.Type(value = PowFloatFunction.class), @JsonSubTypes.Type(value = ProductFloatFunction.class),
-	@JsonSubTypes.Type(value = QueryValueSource.class), @JsonSubTypes.Type(value = SortedSetFieldSource.class),
-	@JsonSubTypes.Type(value = SumFloatFunction.class) })
+@JsonSubTypes({@JsonSubTypes.Type(value = ConstValueSource.class), @JsonSubTypes.Type(value = DefFunction.class),
+		@JsonSubTypes.Type(value = DivFloatFunction.class), @JsonSubTypes.Type(value = DoubleConstValueSource.class),
+		@JsonSubTypes.Type(value = DoubleFieldSource.class), @JsonSubTypes.Type(value = FloatFieldSource.class),
+		@JsonSubTypes.Type(value = IfFunction.class), @JsonSubTypes.Type(value = IntFieldSource.class),
+		@JsonSubTypes.Type(value = LongFieldSource.class), @JsonSubTypes.Type(value = MaxFloatFunction.class),
+		@JsonSubTypes.Type(value = MinFloatFunction.class), @JsonSubTypes.Type(value = NumDocsValueSource.class),
+		@JsonSubTypes.Type(value = PowFloatFunction.class), @JsonSubTypes.Type(value = ProductFloatFunction.class),
+		@JsonSubTypes.Type(value = QueryValueSource.class), @JsonSubTypes.Type(value = SortedSetFieldSource.class),
+		@JsonSubTypes.Type(value = SumFloatFunction.class)})
 public abstract class AbstractValueSource {
 
 	@JsonIgnore
 	public abstract ValueSource getValueSource(QueryContext queryContext)
-		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException;
+			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException;
 
 	@JsonIgnore
 	public static final ValueSource[] getValueSourceArray(QueryContext queryContext, AbstractValueSource[] sources)
-		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		if (sources == null)
 			return null;
 		ValueSource[] valueSources = new ValueSource[sources.length];
@@ -57,7 +57,7 @@ public abstract class AbstractValueSource {
 
 	@JsonIgnore
 	public static List<ValueSource> getValueSourceList(QueryContext queryContext, List<AbstractValueSource> sources)
-		throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		if (sources == null)
 			return null;
 		List<ValueSource> valueSources = new ArrayList<ValueSource>(sources.size());

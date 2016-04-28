@@ -40,7 +40,7 @@ public class BoostQuery extends AbstractQuery {
 
 	@Override
 	final public Query getQuery(QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(query, "The query property is missing");
 		Objects.requireNonNull(boost, "The boost property is missing");
 		return new org.apache.lucene.search.BoostQuery(query.getQuery(queryContext), boost);

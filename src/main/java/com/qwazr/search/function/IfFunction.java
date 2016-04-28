@@ -43,11 +43,11 @@ public class IfFunction extends AbstractValueSource {
 
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext)
-					throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(ifSource, "ifSource value source is missing");
 		Objects.requireNonNull(trueSource, "trueSource value source is missing");
 		Objects.requireNonNull(falseSource, "falseSource value source is missing");
 		return new org.apache.lucene.queries.function.valuesource.IfFunction(ifSource.getValueSource(queryContext),
-						trueSource.getValueSource(queryContext), falseSource.getValueSource(queryContext));
+				trueSource.getValueSource(queryContext), falseSource.getValueSource(queryContext));
 	}
 }

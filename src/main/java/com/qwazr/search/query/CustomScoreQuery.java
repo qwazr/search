@@ -82,7 +82,7 @@ public class CustomScoreQuery extends AbstractQuery {
 
 	@Override
 	final public Query getQuery(QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(subQuery, "Missing subQuery property");
 		final Query query = subQuery.getQuery(queryContext);
 		final org.apache.lucene.queries.CustomScoreQuery customScoreQuery;
@@ -98,7 +98,7 @@ public class CustomScoreQuery extends AbstractQuery {
 
 	private final org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQuery(Query query,
 			QueryContext queryContext)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		if (scoringQueries != null)
 			return new org.apache.lucene.queries.CustomScoreQuery(query,
 					FunctionQuery.getQueries(scoringQueries, queryContext));
@@ -118,7 +118,7 @@ public class CustomScoreQuery extends AbstractQuery {
 
 	private final org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQueryProvider(Query query,
 			QueryContext queryContext, Class<? extends CustomScoreProvider> customScoreProviderClass)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 
 		Constructor<? extends CustomScoreProvider> customScoreProviderConstructor = customScoreProviderClass
 				.getConstructor(LeafReaderContext.class);
@@ -135,7 +135,7 @@ public class CustomScoreQuery extends AbstractQuery {
 
 	private final org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQueryWithProviderInstance(Query query,
 			QueryContext queryContext)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 
 		if (scoringQueries != null)
 			return new org.apache.lucene.queries.CustomScoreQuery(query,

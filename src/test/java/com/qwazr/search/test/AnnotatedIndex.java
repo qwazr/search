@@ -19,11 +19,15 @@ import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
+import org.apache.lucene.index.SortedSetDocValues;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
+import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValuesField;
+import static com.qwazr.search.field.FieldDefinition.Template.StoredField;
 import static com.qwazr.search.field.FieldDefinition.Template.StringField;
 
 public abstract class AnnotatedIndex {
@@ -44,21 +48,20 @@ public abstract class AnnotatedIndex {
 			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 	final public String content;
 
-	@IndexField(
-			template = FieldDefinition.Template.SortedSetMultiDocValuesFacetField)
+	@IndexField(template = FieldDefinition.Template.SortedSetMultiDocValuesFacetField)
 	final public String[] category;
 
-	@IndexField(
-			template = FieldDefinition.Template.DoubleDocValuesField)
+	@IndexField(template = FieldDefinition.Template.DoubleDocValuesField)
 	final public Double price;
 
-	@IndexField(
-			template = FieldDefinition.Template.LongField)
+	@IndexField(template = FieldDefinition.Template.LongField)
 	final public Long quantity;
 
-	@IndexField(
-			template = StringField, stored = true)
+	@IndexField(template = StringField, stored = true)
 	final public LinkedHashSet<String> storedCategory;
+
+	@IndexField(template = SortedSetDocValuesField)
+	final public LinkedHashSet<String> docValuesCategory;
 
 	public AnnotatedIndex() {
 		this(null, null, null, null, null);
@@ -71,10 +74,12 @@ public abstract class AnnotatedIndex {
 		this.category = categories;
 		this.price = price;
 		this.quantity = quantity;
-		if (categories == null)
+		if (categories == null) {
 			this.storedCategory = null;
-		else {
+			this.docValuesCategory = null;
+		} else {
 			this.storedCategory = new LinkedHashSet<>();
+			this.docValuesCategory = this.storedCategory;
 			for (String category : categories)
 				this.storedCategory.add(category);
 		}
@@ -94,8 +99,12 @@ public abstract class AnnotatedIndex {
 		return true;
 	}
 
-	@Index(name = "testIndexMaster", schema = "testSchema")
+	public final static String SCHEMA_NAME = "testSchema";
+
+	@Index(name = Master.INDEX_NAME, schema = SCHEMA_NAME)
 	public static class Master extends AnnotatedIndex {
+
+		public final static String INDEX_NAME = "testIndexMaster";
 
 		public Master() {
 		}
@@ -105,12 +114,14 @@ public abstract class AnnotatedIndex {
 		}
 	}
 
-	@Index(name = "testIndexSlave",
-			schema = "testSchema",
+	@Index(name = Slave.INDEX_NAME, schema = SCHEMA_NAME,
 			replicationMaster = "http://localhost:9091/indexes/testSchema/testIndexMaster")
 	public static class Slave extends AnnotatedIndex {
+
+		public final static String INDEX_NAME = "testIndexSlave";
 
 		public Slave() {
 		}
 	}
+
 }

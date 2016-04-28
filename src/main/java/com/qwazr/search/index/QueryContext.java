@@ -19,21 +19,24 @@ import com.qwazr.search.analysis.UpdatableAnalyzer;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.search.IndexSearcher;
 
-public class QueryContext {
+final public class QueryContext {
 
 	final public IndexSearcher indexSearcher;
 	final public SortedSetDocValuesReaderState state;
 	final public UpdatableAnalyzer analyzer;
 	final public QueryDefinition queryDefinition;
 	final public String queryString;
+	final public SchemaInstance schemaInstance;
 
-	QueryContext(IndexSearcher indexSearcher, UpdatableAnalyzer analyzer, SortedSetDocValuesReaderState state,
-			QueryDefinition queryDefinition) {
+	QueryContext(final SchemaInstance schemaInstance, final IndexSearcher indexSearcher,
+			final UpdatableAnalyzer analyzer, final SortedSetDocValuesReaderState state,
+			final QueryDefinition queryDefinition) {
+		this.schemaInstance = schemaInstance;
 		this.indexSearcher = indexSearcher;
 		this.state = state;
 		this.analyzer = analyzer;
 		this.queryDefinition = queryDefinition;
-		this.queryString = QueryUtils.getFinalQueryString(queryDefinition);
+		this.queryString = queryDefinition == null ? null : QueryUtils.getFinalQueryString(queryDefinition);
 	}
 
 }

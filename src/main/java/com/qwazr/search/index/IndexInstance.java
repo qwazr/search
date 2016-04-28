@@ -20,6 +20,7 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.CustomAnalyzer;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.query.JoinQuery;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
@@ -37,8 +38,11 @@ import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SearcherManager;
+import org.apache.lucene.search.join.JoinUtil;
+import org.apache.lucene.search.join.ScoreMode;
 import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -207,12 +211,32 @@ final public class IndexInstance implements Closeable {
 		setAnalyzers(analyzers);
 	}
 
-	public Analyzer getIndexAnalyzer(String field) throws ServerException, IOException {
+	Analyzer getIndexAnalyzer(String field) throws ServerException, IOException {
 		return indexAnalyzer.getWrappedAnalyzer(field);
 	}
 
-	public Analyzer getQueryAnalyzer(String field) throws ServerException, IOException {
+	Analyzer getQueryAnalyzer(String field) throws ServerException, IOException {
 		return queryAnalyzer.getWrappedAnalyzer(field);
+	}
+
+	public Query createJoinQuery(JoinQuery joinQuery)
+			throws InterruptedException, IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+		final Semaphore sem = schema.acquireReadSemaphore();
+		try {
+			final IndexSearcher indexSearcher = searcherManager.acquire();
+			try {
+				final Query fromQuery = joinQuery.from_query == null ? new MatchAllDocsQuery() :
+				                        joinQuery.from_query.getQuery(buildQueryContext(indexSearcher, null));
+				return JoinUtil.createJoinQuery(joinQuery.from_field, joinQuery.multiple_values_per_document,
+						joinQuery.to_field, fromQuery, indexSearcher,
+						joinQuery.score_mode == null ? ScoreMode.None : joinQuery.score_mode);
+			} finally {
+				searcherManager.release(indexSearcher);
+			}
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
 	}
 
 	private void nrtCommit() throws IOException {
@@ -497,10 +521,12 @@ final public class IndexInstance implements Closeable {
 			throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException,
 			ReflectiveOperationException {
 		checkIsMaster();
+		Objects.requireNonNull(queryDefinition, "The queryDefinition is missing");
+		Objects.requireNonNull(queryDefinition.query, "The query is missing");
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			final QueryContext queryContext = new QueryContext(null, queryAnalyzer, null, queryDefinition);
-			final Query query = QueryUtils.getLuceneQuery(queryContext);
+			final QueryContext queryContext = new QueryContext(schema, null, queryAnalyzer, null, queryDefinition);
+			final Query query = queryDefinition.query.getQuery(queryContext);
 			int docs = indexWriter.numDocs();
 			indexWriter.deleteDocuments(query);
 			nrtCommit();
@@ -524,9 +550,10 @@ final public class IndexInstance implements Closeable {
 
 	final private QueryContext buildQueryContext(final IndexSearcher indexSearcher,
 			final QueryDefinition queryDefinition) throws IOException {
-		indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
+		if (indexWriterConfig != null)
+			indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
 		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
-		return new QueryContext(indexSearcher, queryAnalyzer, facetsState, queryDefinition);
+		return new QueryContext(schema, indexSearcher, queryAnalyzer, facetsState, queryDefinition);
 	}
 
 	final ResultDefinition search(final QueryDefinition queryDefinition,

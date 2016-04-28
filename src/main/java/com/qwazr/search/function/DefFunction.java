@@ -43,9 +43,9 @@ public class DefFunction extends AbstractValueSource {
 
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext)
-					throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(sources, "The sources list is missing (sources)");
 		return new org.apache.lucene.queries.function.valuesource.DefFunction(
-						AbstractValueSource.getValueSourceList(queryContext, sources));
+				AbstractValueSource.getValueSourceList(queryContext, sources));
 	}
 }

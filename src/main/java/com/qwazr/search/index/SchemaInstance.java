@@ -137,7 +137,8 @@ public class SchemaInstance implements Closeable {
 			incRef();
 			try {
 				SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader());
-				final QueryContext queryContext = new QueryContext(indexSearcher, queryAnalyzer, state, queryDef);
+				final QueryContext queryContext =
+						new QueryContext(SchemaInstance.this, indexSearcher, queryAnalyzer, state, queryDef);
 				return QueryUtils.search(queryContext, documentBuilderFactory);
 			} finally {
 				decRef();
@@ -159,8 +160,8 @@ public class SchemaInstance implements Closeable {
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
 		settingsDefinition = settingsFile.exists() ?
-				JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
-				SchemaSettingsDefinition.EMPTY;
+		                     JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
+		                     SchemaSettingsDefinition.EMPTY;
 		checkSettings();
 
 		File[] directories = schemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -210,7 +211,7 @@ public class SchemaInstance implements Closeable {
 	 * @return the indexInstance
 	 * @throws ServerException if any error occurs
 	 */
-	IndexInstance get(String indexName) throws ServerException {
+	public IndexInstance get(String indexName) throws ServerException {
 		IndexInstance indexInstance = indexMap.get(indexName);
 		if (indexInstance == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);

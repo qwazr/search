@@ -21,6 +21,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.search.query.*;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.search.join.ScoreMode;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -281,7 +282,19 @@ public class JavaTest {
 
 		Assert.assertArrayEquals(slaveFields.keySet().toArray(), masterFields.keySet().toArray());
 		Assert.assertArrayEquals(slaveAnalyzers.keySet().toArray(), masterAnalyzers.keySet().toArray());
+	}
 
+	@Test
+	public void test900join() throws URISyntaxException {
+		final AnnotatedIndexService master = getMaster();
+		final QueryBuilder builder = new QueryBuilder();
+		builder.setQuery(
+				new JoinQuery(AnnotatedIndex.Slave.INDEX_NAME, "docValuesCategory", "storedCategory",
+						true, ScoreMode.Max, new MatchAllDocsQuery()));
+		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		Assert.assertNotNull(result);
+		Assert.assertNotNull(result.total_hits);
+		Assert.assertEquals(new Long(2), result.total_hits);
 	}
 
 	@Test

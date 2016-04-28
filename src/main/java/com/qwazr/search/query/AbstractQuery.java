@@ -78,6 +78,6 @@ public abstract class AbstractQuery {
 
 	@JsonIgnore
 	public abstract Query getQuery(QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException;
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException;
 
 }

@@ -17,20 +17,22 @@ package com.qwazr.search.index;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.query.JoinQuery;
 import com.qwazr.utils.ClassLoaderUtils;
 import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.SortedSetDocValues;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.IOException;
 
 class IndexUtils {
 
-	final static String[] similarityClassPrefixes = { "", "com.qwazr.search.similarity.",
-			"org.apache.lucene.search.similarities." };
+	final static String[] similarityClassPrefixes = {"", "com.qwazr.search.similarity.",
+			"org.apache.lucene.search.similarities."};
 
 	final static Similarity findSimilarity(String similarity)
 			throws InterruptedException, ReflectiveOperationException, IOException {

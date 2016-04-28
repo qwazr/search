@@ -30,7 +30,6 @@ import org.apache.lucene.search.TopDocs;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 class QueryUtils {
 
@@ -48,23 +47,14 @@ class QueryUtils {
 		return qs;
 	}
 
-	final static Query getLuceneQuery(QueryContext queryContext)
-			throws QueryNodeException, ParseException, IOException, ReflectiveOperationException {
-
-		Query query = queryContext.queryDefinition.query == null ?
-		              new MatchAllDocsQuery() :
-		              queryContext.queryDefinition.query.getQuery(queryContext);
-
-		return query;
-	}
-
 	final static ResultDefinition search(final QueryContext queryContext,
-	                                     final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+			final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException, InterruptedException {
 
 		final QueryDefinition queryDef = queryContext.queryDefinition;
 
-		Query query = getLuceneQuery(queryContext);
+		final Query query = queryContext.queryDefinition.query == null ? new MatchAllDocsQuery() :
+		                    queryContext.queryDefinition.query.getQuery(queryContext);
 
 		final TimeTracker timeTracker = new TimeTracker();
 
@@ -86,7 +76,8 @@ class QueryUtils {
 
 		final FacetsBuilder facetsBuilder = queryCollectors.facetsCollector == null ?
 		                                    null :
-		                                    new FacetsBuilder(queryContext, queryDef.facets, query, queryCollectors.facetsCollector, timeTracker);
+		                                    new FacetsBuilder(queryContext, queryDef.facets, query,
+				                                    queryCollectors.facetsCollector, timeTracker);
 
 		final Map<String, HighlighterImpl> highlighters;
 		if (queryDef.highlighters != null && topDocs != null) {

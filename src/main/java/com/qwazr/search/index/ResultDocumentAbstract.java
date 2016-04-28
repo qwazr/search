@@ -74,5 +74,5 @@ public abstract class ResultDocumentAbstract {
 	final public Map<String, String> getHighlights() {
 		return highlights;
 	}
-	
+
 }

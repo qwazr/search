@@ -43,15 +43,15 @@ class FacetsBuilder {
 
 	FacetsBuilder(QueryContext queryContext, LinkedHashMap<String, FacetDefinition> facetsDef, Query searchQuery,
 			FacetsCollector facetsCollector, TimeTracker timeTracker)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException, InterruptedException {
 
 		this.queryContext = queryContext;
 		this.searchQuery = searchQuery;
 		this.facetsDef = facetsDef;
 		this.results = new LinkedHashMap();
 		this.counts = queryContext.state == null ?
-				null :
-				new SortedSetDocValuesFacetCounts(queryContext.state, facetsCollector);
+		              null :
+		              new SortedSetDocValuesFacetCounts(queryContext.state, facetsCollector);
 
 		for (Map.Entry<String, FacetDefinition> entry : facetsDef.entrySet()) {
 			final String dim = entry.getKey();
@@ -82,7 +82,7 @@ class FacetsBuilder {
 	}
 
 	private Map<String, Number> buildFacetQueries(FacetDefinition facet)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException, InterruptedException {
 		final LinkedHashMap<String, Number> facetMap = new LinkedHashMap<String, Number>();
 		for (Map.Entry<String, AbstractQuery> entry : facet.queries.entrySet()) {
 			BooleanQuery.Builder builder = new BooleanQuery.Builder();
