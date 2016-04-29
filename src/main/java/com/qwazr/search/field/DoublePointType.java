@@ -15,12 +15,15 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.util.BytesRef;
 
 class DoublePointType extends StorableFieldType {
 
@@ -42,6 +45,13 @@ class DoublePointType extends StorableFieldType {
 		final SortField sortField = new SortField(fieldName, SortField.Type.DOUBLE, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortDoubleMissingValue(sortEnum, sortField);
 		return sortField;
+	}
+
+	@Override
+	public final Object toTerm(final BytesRef bytesRef) {
+		if (bytesRef == null || bytesRef.bytes == null)
+			return null;
+		return DoublePoint.decodeDimension(bytesRef.bytes, 0);
 	}
 
 }

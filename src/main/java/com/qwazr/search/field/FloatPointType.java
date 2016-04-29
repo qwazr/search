@@ -18,8 +18,10 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.DoublePoint;
+import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.util.BytesRef;
 
 class FloatPointType extends StorableFieldType {
 
@@ -43,4 +45,10 @@ class FloatPointType extends StorableFieldType {
 		return sortField;
 	}
 
+	@Override
+	public final Object toTerm(final BytesRef bytesRef) {
+		if (bytesRef == null || bytesRef.bytes == null)
+			return null;
+		return FloatPoint.decodeDimension(bytesRef.bytes, 0);
+	}
 }

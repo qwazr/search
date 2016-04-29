@@ -20,6 +20,7 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.CustomAnalyzer;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
@@ -545,11 +546,16 @@ final public class IndexInstance implements Closeable {
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
+				FieldDefinition fieldDef = fieldMap.get(fieldName);
+				if (fieldDef == null)
+					throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + fieldName);
+				FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldName, fieldDef);
 				Terms terms = MultiFields.getTerms(indexSearcher.getIndexReader(), fieldName);
 				if (terms == null)
 					throw new ServerException(Response.Status.NOT_FOUND, "No terms for this field: " + fieldName);
 				return TermEnumDefinition
-						.buildTermList(terms.iterator(), prefix, start == null ? 0 : start, rows == null ? 20 : rows);
+						.buildTermList(fieldType, terms.iterator(), prefix, start == null ? 0 : start,
+								rows == null ? 20 : rows);
 			} finally {
 				searcherManager.release(indexSearcher);
 			}

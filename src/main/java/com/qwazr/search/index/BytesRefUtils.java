@@ -77,4 +77,47 @@ public class BytesRefUtils {
 		return new BytesRef(value.toString());
 	}
 
+	final static private byte[] checkByteSize(final BytesRef bytesRef, final int expectedSize,
+			final String errorMessage) {
+		if (bytesRef == null || bytesRef.bytes == null)
+			return null;
+		if (bytesRef.bytes.length != expectedSize)
+			throw new RuntimeException(errorMessage);
+		return bytesRef.bytes;
+	}
+
+	final static public Integer toInt(final BytesRef bytesRef) {
+		final byte[] bytes = checkByteSize(bytesRef, Integer.BYTES, "Cannot convert value to int");
+		if (bytes == null)
+			return null;
+		return NumericUtils.sortableBytesToInt(bytesRef.bytes, 0);
+	}
+
+	final static public Float toFloat(final BytesRef bytesRef) {
+		final byte[] bytes = checkByteSize(bytesRef, Float.BYTES, "Cannot convert value to float");
+		if (bytes == null)
+			return null;
+		return NumericUtils.sortableIntToFloat(NumericUtils.sortableBytesToInt(bytesRef.bytes, 0));
+	}
+
+	final static public Long toLong(final BytesRef bytesRef) {
+		final byte[] bytes = checkByteSize(bytesRef, Long.BYTES, "Cannot convert value to long");
+		if (bytes == null)
+			return null;
+		return NumericUtils.sortableBytesToLong(bytesRef.bytes, 0);
+	}
+
+	final static public Double toDouble(final BytesRef bytesRef) {
+		final byte[] bytes = checkByteSize(bytesRef, Double.BYTES, "Cannot convert value to double");
+		if (bytes == null)
+			return null;
+		return NumericUtils.sortableLongToDouble(NumericUtils.sortableBytesToLong(bytesRef.bytes, 0));
+	}
+
+	final static public String toString(final BytesRef bytesRef) {
+		if (bytesRef == null || bytesRef.bytes == null)
+			return null;
+		return bytesRef.utf8ToString();
+	}
+
 }

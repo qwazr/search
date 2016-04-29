@@ -19,6 +19,7 @@ import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 
@@ -31,6 +32,8 @@ public interface FieldTypeInterface {
 	SortField getSortField(final QueryDefinition.SortEnum sortEnum);
 
 	ValueConverter getConverter(final IndexReader reader) throws IOException;
+
+	Object toTerm(final BytesRef bytesRef);
 
 	static FieldTypeInterface getInstance(final String fieldName, final FieldDefinition fieldDefinition) {
 		if (fieldDefinition.template == null)

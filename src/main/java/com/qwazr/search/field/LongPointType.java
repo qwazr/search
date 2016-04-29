@@ -20,6 +20,7 @@ import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.util.BytesRef;
 
 class LongPointType extends StorableFieldType {
 
@@ -42,4 +43,10 @@ class LongPointType extends StorableFieldType {
 		return sortField;
 	}
 
+	@Override
+	public final Object toTerm(final BytesRef bytesRef) {
+		if (bytesRef == null || bytesRef.bytes == null)
+			return null;
+		return LongPoint.decodeDimension(bytesRef.bytes, 0);
+	}
 }

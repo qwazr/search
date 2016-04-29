@@ -17,9 +17,7 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.qwazr.search.analysis.AnalyzerUtils;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.tokenattributes.*;
+import com.qwazr.search.field.FieldTypeInterface;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.BytesRef;
 
@@ -40,13 +38,14 @@ public class TermEnumDefinition {
 		total_term_freq = null;
 	}
 
-	TermEnumDefinition(final TermsEnum termsEnum) throws IOException {
-		term = termsEnum.term().utf8ToString();
+	TermEnumDefinition(final FieldTypeInterface field, final TermsEnum termsEnum) throws IOException {
+		term = field.toTerm(termsEnum.term());
 		doc_freq = termsEnum.docFreq();
 		total_term_freq = termsEnum.totalTermFreq();
 	}
 
-	final static List<TermEnumDefinition> buildTermList(final TermsEnum termsEnum, final String prefix, int start,
+	final static List<TermEnumDefinition> buildTermList(final FieldTypeInterface field, final TermsEnum termsEnum,
+			final String prefix, int start,
 			int rows) throws IOException {
 		final List<TermEnumDefinition> termList = new ArrayList<TermEnumDefinition>();
 		if (prefix != null)
@@ -54,7 +53,7 @@ public class TermEnumDefinition {
 		while (start-- > 0 && termsEnum.next() != null)
 			;
 		while (rows-- > 0 && termsEnum.next() != null)
-			termList.add(new TermEnumDefinition(termsEnum));
+			termList.add(new TermEnumDefinition(field, termsEnum));
 		return termList;
 	}
 

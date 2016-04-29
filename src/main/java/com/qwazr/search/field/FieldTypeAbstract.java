@@ -19,6 +19,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.FieldConsumer;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -95,6 +96,10 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 			fillJSObject((JSObject) value, fieldConsumer);
 		else
 			fillValue(value, fieldConsumer);
+	}
+
+	public Object toTerm(final BytesRef bytesRef) {
+		return bytesRef == null ? null : bytesRef.utf8ToString();
 	}
 
 	public ValueConverter getConverter(final IndexReader reader) throws IOException {
