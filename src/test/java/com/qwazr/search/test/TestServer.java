@@ -19,14 +19,13 @@ import com.google.common.io.Files;
 import com.qwazr.search.SearchServer;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.index.IndexServiceInterface;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexSingleClient;
 
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class TestServer {
 
@@ -40,7 +39,7 @@ public class TestServer {
 			return;
 		final File dataDir = Files.createTempDir();
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
-		SearchServer.main(new String[] {});
+		SearchServer.main(new String[]{});
 		serverStarted = true;
 	}
 
@@ -53,15 +52,14 @@ public class TestServer {
 		return singleClient;
 	}
 
-	public static Map<Class<?>, AnnotatedIndexService> serviceMap = new HashMap<>();
+	public static synchronized <T> AnnotatedIndexService<T> getService(Class<T> indexClass, String indexName,
+			IndexSettingsDefinition settings) throws URISyntaxException {
+		return new AnnotatedIndexService(IndexServiceInterface.getClient(true, null, null), indexClass, null,
+				indexName, settings);
+	}
 
 	public static synchronized <T> AnnotatedIndexService<T> getService(Class<T> indexClass) throws URISyntaxException {
-		AnnotatedIndexService service = serviceMap.get(indexClass);
-		if (service != null)
-			return service;
-		service = new AnnotatedIndexService(IndexServiceInterface.getClient(true, null, null), indexClass);
-		serviceMap.put(indexClass, service);
-		return service;
+		return getService(indexClass, null, null);
 	}
 
 }

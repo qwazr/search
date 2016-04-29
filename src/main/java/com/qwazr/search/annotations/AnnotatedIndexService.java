@@ -47,9 +47,7 @@ public class AnnotatedIndexService<T> {
 
 	protected final String indexName;
 
-	protected final String similarityClass;
-
-	protected final RemoteIndex[] masters;
+	protected final IndexSettingsDefinition settings;
 
 	private final Map<String, IndexField> indexFieldMap;
 
@@ -59,9 +57,12 @@ public class AnnotatedIndexService<T> {
 	 * Create a new index service. A class with Index and IndexField annotations.
 	 *
 	 * @param indexService         the IndexServiceInterface to use
+	 * @param schemaName           the IndexServiceInterface to use
+	 * @param indexName            the IndexServiceInterface to use
 	 * @param indexDefinitionClass an annotated class
 	 */
-	public AnnotatedIndexService(IndexServiceInterface indexService, Class<T> indexDefinitionClass)
+	public AnnotatedIndexService(final IndexServiceInterface indexService, Class<T> indexDefinitionClass,
+			final String schemaName, final String indexName, final IndexSettingsDefinition settings)
 			throws URISyntaxException {
 		Objects.requireNonNull(indexService, "The indexService parameter is null");
 		Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
@@ -71,21 +72,27 @@ public class AnnotatedIndexService<T> {
 		this.indexDefinitionClass = indexDefinitionClass;
 		Index index = indexDefinitionClass.getAnnotation(Index.class);
 		Objects.requireNonNull(index, "This class does not declare any Index annotation: " + indexDefinitionClass);
-		schemaName = index.schema();
-		indexName = index.name();
-		similarityClass = index.similarityClass();
-		masters = RemoteIndex.build(index.replicationMaster());
+
+		this.schemaName = schemaName != null ? schemaName : index.schema();
+		this.indexName = indexName != null ? indexName : index.name();
+		this.settings = settings != null ? settings : new IndexSettingsDefinition(index);
+
 		fieldMap = new LinkedHashMap<>();
 		indexFieldMap = new LinkedHashMap<>();
 		AnnotationsUtils.browseFieldsRecursive(indexDefinitionClass, field -> {
 			if (!field.isAnnotationPresent(IndexField.class))
 				return;
 			field.setAccessible(true);
-			IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
-			String indexName = StringUtils.isEmpty(indexField.name()) ? field.getName() : indexField.name();
-			indexFieldMap.put(indexName, indexField);
-			fieldMap.put(indexName, field);
+			final IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
+			final String fieldName = StringUtils.isEmpty(indexField.name()) ? field.getName() : indexField.name();
+			indexFieldMap.put(fieldName, indexField);
+			fieldMap.put(fieldName, field);
 		});
+	}
+
+	public AnnotatedIndexService(IndexServiceInterface indexService, Class<T> indexDefinitionClass)
+			throws URISyntaxException {
+		this(indexService, indexDefinitionClass, null, null, null);
 	}
 
 	final private void checkParameters() {
@@ -148,7 +155,6 @@ public class AnnotatedIndexService<T> {
 	 */
 	public IndexStatus createUpdateIndex() throws URISyntaxException {
 		checkParameters();
-		IndexSettingsDefinition settings = new IndexSettingsDefinition(similarityClass, masters);
 		return indexService.createUpdateIndex(schemaName, indexName, settings);
 	}
 

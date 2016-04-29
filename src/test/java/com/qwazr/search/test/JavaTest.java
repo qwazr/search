@@ -45,12 +45,14 @@ public class JavaTest {
 		TestServer.startServer();
 	}
 
-	private AnnotatedIndexService<AnnotatedIndex.Master> getMaster() throws URISyntaxException {
-		return TestServer.getService(AnnotatedIndex.Master.class);
+	private AnnotatedIndexService<AnnotatedIndex> getMaster() throws URISyntaxException {
+		return TestServer.getService(AnnotatedIndex.class);
 	}
 
-	private AnnotatedIndexService<AnnotatedIndex.Slave> getSlave() throws URISyntaxException {
-		return TestServer.getService(AnnotatedIndex.Slave.class);
+	private AnnotatedIndexService<AnnotatedIndex> getSlave() throws URISyntaxException {
+		IndexSettingsDefinition settings =
+				new IndexSettingsDefinition(null, "http://localhost:9091/indexes/testSchema/testIndexMaster");
+		return TestServer.getService(AnnotatedIndex.class, AnnotatedIndex.INDEX_NAME_SLAVE, settings);
 	}
 
 	@Test
@@ -83,15 +85,15 @@ public class JavaTest {
 		Assert.assertEquals(FieldDefinition.Template.DoubleDocValuesField, field.template);
 	}
 
-	private final static AnnotatedIndex.Master record1 =
-			new AnnotatedIndex.Master(1, "First article", "Content of the first article", 0d, 10L, "news", "economy");
+	private final static AnnotatedIndex record1 =
+			new AnnotatedIndex(1, "First article", "Content of the first article", 0d, 10L, "news", "economy");
 
-	private final static AnnotatedIndex.Master record2 =
-			new AnnotatedIndex.Master(2, "Second article", "Content of the second article", 0d, 20L, "news", "science");
+	private final static AnnotatedIndex record2 =
+			new AnnotatedIndex(2, "Second article", "Content of the second article", 0d, 20L, "news", "science");
 
 	private AnnotatedIndex checkRecord(AnnotatedIndex refRecord)
 			throws URISyntaxException, ReflectiveOperationException {
-		final AnnotatedIndexService<AnnotatedIndex.Master> service = getMaster();
+		final AnnotatedIndexService<AnnotatedIndex> service = getMaster();
 		AnnotatedIndex record = service.getDocument(refRecord.id);
 		Assert.assertNotNull(record);
 		return record;
@@ -100,7 +102,7 @@ public class JavaTest {
 	@Test
 	public void test100PostDocument()
 			throws URISyntaxException, IOException, InterruptedException, ReflectiveOperationException {
-		final AnnotatedIndexService<AnnotatedIndex.Master> service = getMaster();
+		final AnnotatedIndexService<AnnotatedIndex> service = getMaster();
 		service.postDocument(record1);
 		AnnotatedIndex newRecord1 = checkRecord(record1);
 		Assert.assertEquals(record1, newRecord1);
@@ -109,7 +111,7 @@ public class JavaTest {
 	@Test
 	public void test110PostDocuments()
 			throws URISyntaxException, IOException, InterruptedException, ReflectiveOperationException {
-		final AnnotatedIndexService<AnnotatedIndex.Master> service = getMaster();
+		final AnnotatedIndexService<AnnotatedIndex> service = getMaster();
 		service.postDocuments(Arrays.asList(record1, record2));
 		AnnotatedIndex newRecord1 = checkRecord(record1);
 		Assert.assertEquals(record1, newRecord1);
@@ -118,8 +120,8 @@ public class JavaTest {
 		Assert.assertEquals(new Long(10), service.getIndexStatus().version);
 	}
 
-	private final static AnnotatedIndex.Master docValue1 = new AnnotatedIndex.Master(1, null, null, 1.11d, null);
-	private final static AnnotatedIndex.Master docValue2 = new AnnotatedIndex.Master(2, null, null, 2.22d, null);
+	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, 1.11d, null);
+	private final static AnnotatedIndex docValue2 = new AnnotatedIndex(2, null, null, 2.22d, null);
 
 	@Test
 	public void test200UpdateDocValues() throws URISyntaxException, IOException, InterruptedException {
@@ -136,11 +138,11 @@ public class JavaTest {
 		checkRecord(record2);
 	}
 
-	private ResultDefinition.WithObject<AnnotatedIndex.Master> checkQueryResult(QueryBuilder builder, Long expectedHits)
+	private ResultDefinition.WithObject<AnnotatedIndex> checkQueryResult(QueryBuilder builder, Long expectedHits)
 			throws URISyntaxException {
 		final AnnotatedIndexService service = getMaster();
 		builder.addReturned_field(RETURNED_FIELDS);
-		ResultDefinition.WithObject<AnnotatedIndex.Master> result = service.searchQuery(builder.build());
+		ResultDefinition.WithObject<AnnotatedIndex> result = service.searchQuery(builder.build());
 		Assert.assertNotNull(result);
 		if (expectedHits != null)
 			Assert.assertEquals(expectedHits, result.total_hits);
@@ -165,7 +167,7 @@ public class JavaTest {
 	public void test320PointExactQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
 		builder.query = new LongExactQuery("quantity", 10);
-		ResultDefinition.WithObject<AnnotatedIndex.Master> result = checkQueryResult(builder, 1L);
+		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("1", result.documents.get(0).record.id);
 	}
 
@@ -173,7 +175,7 @@ public class JavaTest {
 	public void test320PointSetQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
 		builder.query = new LongSetQuery("quantity", 20, 25);
-		ResultDefinition.WithObject<AnnotatedIndex.Master> result = checkQueryResult(builder, 1L);
+		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("2", result.documents.get(0).record.id);
 	}
 
@@ -181,7 +183,7 @@ public class JavaTest {
 	public void test320PointRangeQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
 		builder.query = new LongRangeQuery("quantity", 15, 25);
-		ResultDefinition.WithObject<AnnotatedIndex.Master> result = checkQueryResult(builder, 1L);
+		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("2", result.documents.get(0).record.id);
 	}
 
@@ -236,15 +238,15 @@ public class JavaTest {
 
 	@Test
 	public void test400getDocumentById() throws ReflectiveOperationException, URISyntaxException {
-		final AnnotatedIndexService<AnnotatedIndex.Master> master = getMaster();
-		AnnotatedIndex.Master record = master.getDocument(record1.id);
+		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		AnnotatedIndex record = master.getDocument(record1.id);
 		checkEqualsReturnedFields(record, record1, docValue1);
 	}
 
 	@Test
 	public void test420getDocuments() throws ReflectiveOperationException, URISyntaxException {
-		final AnnotatedIndexService<AnnotatedIndex.Master> master = getMaster();
-		List<AnnotatedIndex.Master> records = master.getDocuments(0, 2);
+		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		List<AnnotatedIndex> records = master.getDocuments(0, 2);
 		Assert.assertNotNull(records);
 		Assert.assertEquals(2L, records.size());
 		checkEqualsReturnedFields(records.get(0), record1, docValue1);
@@ -289,7 +291,7 @@ public class JavaTest {
 		final AnnotatedIndexService master = getMaster();
 		final QueryBuilder builder = new QueryBuilder();
 		builder.setQuery(
-				new JoinQuery(AnnotatedIndex.Slave.INDEX_NAME, "docValuesCategory", "storedCategory",
+				new JoinQuery(AnnotatedIndex.INDEX_NAME_SLAVE, "docValuesCategory", "storedCategory",
 						true, ScoreMode.Max, new MatchAllDocsQuery()));
 		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
 		Assert.assertNotNull(result);

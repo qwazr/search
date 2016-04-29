@@ -30,7 +30,12 @@ import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValues
 import static com.qwazr.search.field.FieldDefinition.Template.StoredField;
 import static com.qwazr.search.field.FieldDefinition.Template.StringField;
 
-public abstract class AnnotatedIndex {
+@Index(name = AnnotatedIndex.INDEX_NAME_MASTER, schema = AnnotatedIndex.SCHEMA_NAME)
+public class AnnotatedIndex {
+
+	public final static String SCHEMA_NAME = "testSchema";
+	public final static String INDEX_NAME_MASTER = "testIndexMaster";
+	public final static String INDEX_NAME_SLAVE = "testIndexSlave";
 
 	@IndexField(name = FieldDefinition.ID_FIELD, template = StringField, stored = true)
 	final public String id;
@@ -97,31 +102,6 @@ public abstract class AnnotatedIndex {
 		if (!Objects.equals(price, record.price))
 			return false;
 		return true;
-	}
-
-	public final static String SCHEMA_NAME = "testSchema";
-
-	@Index(name = Master.INDEX_NAME, schema = SCHEMA_NAME)
-	public static class Master extends AnnotatedIndex {
-
-		public final static String INDEX_NAME = "testIndexMaster";
-
-		public Master() {
-		}
-
-		public Master(Integer id, String title, String content, Double price, Long quantity, String... categories) {
-			super(id, title, content, price, quantity, categories);
-		}
-	}
-
-	@Index(name = Slave.INDEX_NAME, schema = SCHEMA_NAME,
-			replicationMaster = "http://localhost:9091/indexes/testSchema/testIndexMaster")
-	public static class Slave extends AnnotatedIndex {
-
-		public final static String INDEX_NAME = "testIndexSlave";
-
-		public Slave() {
-		}
 	}
 
 }

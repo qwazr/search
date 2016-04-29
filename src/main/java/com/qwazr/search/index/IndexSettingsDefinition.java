@@ -16,10 +16,12 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.qwazr.search.annotations.Index;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexSettingsDefinition {
@@ -35,6 +37,15 @@ public class IndexSettingsDefinition {
 	public IndexSettingsDefinition(final String similarity_class, final RemoteIndex... masters) {
 		this.similarity_class = similarity_class;
 		this.master = masters;
+	}
+
+	public IndexSettingsDefinition(final String similarity_class, final String... masters) throws URISyntaxException {
+		this.similarity_class = similarity_class;
+		this.master = RemoteIndex.build(masters);
+	}
+
+	public IndexSettingsDefinition(final Index annotatedIndex) throws URISyntaxException {
+		this(annotatedIndex.similarityClass(), annotatedIndex.replicationMaster());
 	}
 
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();

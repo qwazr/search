@@ -31,10 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.security.Principal;
 import java.util.*;
@@ -505,8 +502,9 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 			final String sessionID, final String source, String fileName) {
 		try {
 			checkRight(null);
-			return IndexManager.INSTANCE.get(schema_name).get(index_name).getReplicator()
+			final InputStream input = IndexManager.INSTANCE.get(schema_name).get(index_name).getReplicator()
 					.obtainFile(sessionID, source, fileName);
+			return input == null ? null : new BufferedInputStream(input);
 		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn(e.getMessage(), e);
