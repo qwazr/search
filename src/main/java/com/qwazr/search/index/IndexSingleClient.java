@@ -124,7 +124,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 				new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name, "/analyzer/query");
 		uriBuilder.setParameter("text", text);
 		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, null, TermDefinition.MapListTermDefinitionRef, 200);
+		return commonServiceRequest(request, null, null, TermDefinition.ListTermDefinitionRef, 200);
 	}
 
 	@Override
@@ -133,7 +133,23 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 				new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name, "/analyzer/index");
 		uriBuilder.setParameter("text", text);
 		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, null, TermDefinition.MapListTermDefinitionRef, 200);
+		return commonServiceRequest(request, null, null, TermDefinition.ListTermDefinitionRef, 200);
+	}
+
+	@Override
+	public List<TermEnumDefinition> doExtractTerms(String schema_name, String index_name, String field_name,
+			Integer start, Integer rows) {
+		return this.doExtractTerms(schema_name, index_name, field_name, null, start, rows);
+	}
+
+	@Override
+	public List<TermEnumDefinition> doExtractTerms(String schema_name, String index_name, String field_name,
+			String prefix, Integer start, Integer rows) {
+		UBuilder uriBuilder =
+				new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name, "/terms/", prefix);
+		uriBuilder.setParameter("start", start).setParameter("rows", rows);
+		Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, null, TermEnumDefinition.ListTermEnumDefinitionRef, 200);
 	}
 
 	@Override
@@ -214,7 +230,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public List<TermDefinition> testAnalyzer(String schema_name, String index_name, String analyzer_name, String text) {
 		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
 		Request request = Request.Post(uriBuilder.build());
-		return commonServiceRequest(request, text, null, TermDefinition.MapListTermDefinitionRef, 200);
+		return commonServiceRequest(request, text, null, TermDefinition.ListTermDefinitionRef, 200);
 	}
 
 	@Override

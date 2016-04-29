@@ -56,9 +56,9 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 
-final public class IndexInstance implements Closeable {
+import org.apache.lucene.index.MultiFields;
 
-	private static final Logger logger = LoggerFactory.getLogger(IndexInstance.class);
+final public class IndexInstance implements Closeable {
 
 	private final IndexInstanceBuilder.FileSet fileSet;
 
@@ -532,6 +532,27 @@ final public class IndexInstance implements Closeable {
 			nrtCommit();
 			docs -= indexWriter.numDocs();
 			return new ResultDefinition.WithMap(docs);
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
+	final List<TermEnumDefinition> getTermsEnum(final String fieldName, final String prefix, final Integer start,
+			final Integer rows) throws InterruptedException, IOException {
+		Objects.requireNonNull(fieldName, "The field name is missing");
+		final Semaphore sem = schema.acquireReadSemaphore();
+		try {
+			final IndexSearcher indexSearcher = searcherManager.acquire();
+			try {
+				Terms terms = MultiFields.getTerms(indexSearcher.getIndexReader(), fieldName);
+				if (terms == null)
+					throw new ServerException(Response.Status.NOT_FOUND, "No terms for this field: " + fieldName);
+				return TermEnumDefinition
+						.buildTermList(terms.iterator(), prefix, start == null ? 0 : start, rows == null ? 20 : rows);
+			} finally {
+				searcherManager.release(indexSearcher);
+			}
 		} finally {
 			if (sem != null)
 				sem.release();

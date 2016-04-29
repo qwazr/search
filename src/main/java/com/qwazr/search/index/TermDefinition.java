@@ -49,8 +49,8 @@ public class TermDefinition {
 	}
 
 	TermDefinition(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr, OffsetAttribute offsetAttr,
-					PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr,
-					TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
+			PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr,
+			TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
 		char_term = charTermAttr == null ? null : charTermAttr.toString();
 		if (offsetAttr != null) {
 			start_offset = offsetAttr.startOffset();
@@ -71,16 +71,17 @@ public class TermDefinition {
 		AnalyzerUtils.forEachTerm(analyzer, field, text, new AnalyzerUtils.TermConsumer() {
 			@Override
 			public boolean apply(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr, OffsetAttribute offsetAttr,
-							PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr,
-							TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
+					PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr,
+					TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
 				termList.add(new TermDefinition(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr,
-								typeAttr, keywordAttr));
+						typeAttr, keywordAttr));
 				return true;
 			}
 		});
 		return termList;
 	}
 
-	public final static TypeReference<List<TermDefinition>> MapListTermDefinitionRef = new TypeReference<List<TermDefinition>>() {
-	};
+	public final static TypeReference<List<TermDefinition>> ListTermDefinitionRef =
+			new TypeReference<List<TermDefinition>>() {
+			};
 }

@@ -42,6 +42,7 @@ public class AnnotatedIndex {
 
 	@IndexField(
 			analyzer = "en.EnglishAnalyzer",
+			tokenized = true,
 			stored = true,
 			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 	final public String title;
@@ -49,6 +50,7 @@ public class AnnotatedIndex {
 	@IndexField(
 			analyzerClass = EnglishAnalyzer.class,
 			queryAnalyzerClass = EnglishAnalyzer.class,
+			tokenized = true,
 			stored = true,
 			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 	final public String content;

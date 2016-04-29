@@ -253,6 +253,21 @@ public class JavaTest {
 		checkEqualsReturnedFields(records.get(1), record2, docValue2);
 	}
 
+	public static List<TermEnumDefinition> checkTermList(List<TermEnumDefinition> terms) {
+		Assert.assertNotNull(terms);
+		Assert.assertFalse(terms.isEmpty());
+		return terms;
+	}
+
+	@Test
+	public void test610TermsEnum() throws URISyntaxException {
+		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		int firstSize = checkTermList(master.doExtractTerms("content", null, null, 10000)).size();
+		int secondSize = checkTermList(master.doExtractTerms("content", null, 2, 10000)).size();
+		Assert.assertEquals(firstSize, secondSize + 2);
+		checkTermList(master.doExtractTerms("content", "a", null, null));
+	}
+
 	@Test
 	public void test800replicationCheck() throws URISyntaxException {
 		final AnnotatedIndexService master = getMaster();

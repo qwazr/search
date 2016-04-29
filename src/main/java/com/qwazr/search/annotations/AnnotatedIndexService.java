@@ -290,6 +290,12 @@ public class AnnotatedIndexService<T> {
 		return indexService.searchQuery(schemaName, indexName, query, false);
 	}
 
+	public List<TermEnumDefinition> doExtractTerms(final String fieldName, final String prefix, final Integer start,
+			final Integer rows) {
+		checkParameters();
+		return indexService.doExtractTerms(schemaName, indexName, fieldName, prefix, start, rows);
+	}
+
 	/**
 	 * Delete the documents matching the query
 	 *

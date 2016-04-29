@@ -100,6 +100,18 @@ public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingl
 	}
 
 	@Override
+	public List<TermEnumDefinition> doExtractTerms(String schema_name, String index_name, String field_name,
+			Integer start, Integer rows) {
+		return null;
+	}
+
+	@Override
+	public List<TermEnumDefinition> doExtractTerms(String schema_name, String index_name, String field_name,
+			String prefix, Integer start, Integer rows) {
+		return null;
+	}
+
+	@Override
 	public FieldDefinition getField(String schema_name, String index_name, String field_name) {
 		return null;
 	}

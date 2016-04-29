@@ -592,6 +592,21 @@ public class JsonTest {
 	}
 
 	@Test
+	public void test610TermsEnum() throws URISyntaxException {
+		IndexServiceInterface client = getClient();
+		List<TermEnumDefinition> terms =
+				client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, null);
+		int firstSize =
+				JavaTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, 10000))
+						.size();
+		int secondSize =
+				JavaTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, 2, 10000))
+						.size();
+		Assert.assertEquals(firstSize, secondSize + 2);
+		JavaTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "a", null, null));
+	}
+
+	@Test
 	public void test700DeleteDoc() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, DELETE_QUERY, true);
