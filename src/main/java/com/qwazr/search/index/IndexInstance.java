@@ -45,8 +45,6 @@ import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.join.JoinUtil;
 import org.apache.lucene.search.join.ScoreMode;
 import org.apache.lucene.store.Directory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
@@ -56,8 +54,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.Semaphore;
-
-import org.apache.lucene.index.MultiFields;
 
 final public class IndexInstance implements Closeable {
 
@@ -226,8 +222,9 @@ final public class IndexInstance implements Closeable {
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
-				final Query fromQuery = joinQuery.from_query == null ? new MatchAllDocsQuery() :
-				                        joinQuery.from_query.getQuery(buildQueryContext(indexSearcher, null));
+				final Query fromQuery = joinQuery.from_query == null ?
+						new MatchAllDocsQuery() :
+						joinQuery.from_query.getQuery(buildQueryContext(indexSearcher, null));
 				return JoinUtil.createJoinQuery(joinQuery.from_field, joinQuery.multiple_values_per_document,
 						joinQuery.to_field, fromQuery, indexSearcher,
 						joinQuery.score_mode == null ? ScoreMode.None : joinQuery.score_mode);
@@ -526,7 +523,8 @@ final public class IndexInstance implements Closeable {
 		Objects.requireNonNull(queryDefinition.query, "The query is missing");
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			final QueryContext queryContext = new QueryContext(schema, null, queryAnalyzer, null, queryDefinition);
+			final QueryContext queryContext =
+					new QueryContext(schema, null, indexAnalyzer, queryAnalyzer, null, queryDefinition);
 			final Query query = queryDefinition.query.getQuery(queryContext);
 			int docs = indexWriter.numDocs();
 			indexWriter.deleteDocuments(query);
@@ -553,9 +551,8 @@ final public class IndexInstance implements Closeable {
 				Terms terms = MultiFields.getTerms(indexSearcher.getIndexReader(), fieldName);
 				if (terms == null)
 					throw new ServerException(Response.Status.NOT_FOUND, "No terms for this field: " + fieldName);
-				return TermEnumDefinition
-						.buildTermList(fieldType, terms.iterator(), prefix, start == null ? 0 : start,
-								rows == null ? 20 : rows);
+				return TermEnumDefinition.buildTermList(fieldType, terms.iterator(), prefix, start == null ? 0 : start,
+						rows == null ? 20 : rows);
 			} finally {
 				searcherManager.release(indexSearcher);
 			}
@@ -580,7 +577,7 @@ final public class IndexInstance implements Closeable {
 		if (indexWriterConfig != null)
 			indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
 		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
-		return new QueryContext(schema, indexSearcher, queryAnalyzer, facetsState, queryDefinition);
+		return new QueryContext(schema, indexSearcher, indexAnalyzer, queryAnalyzer, facetsState, queryDefinition);
 	}
 
 	final ResultDefinition search(final QueryDefinition queryDefinition,

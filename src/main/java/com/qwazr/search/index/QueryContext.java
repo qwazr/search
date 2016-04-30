@@ -23,18 +23,20 @@ final public class QueryContext {
 
 	final public IndexSearcher indexSearcher;
 	final public SortedSetDocValuesReaderState state;
-	final public UpdatableAnalyzer analyzer;
+	final public UpdatableAnalyzer indexAnalyzer;
+	final public UpdatableAnalyzer queryAnalyzer;
 	final public QueryDefinition queryDefinition;
 	final public String queryString;
 	final public SchemaInstance schemaInstance;
 
 	QueryContext(final SchemaInstance schemaInstance, final IndexSearcher indexSearcher,
-			final UpdatableAnalyzer analyzer, final SortedSetDocValuesReaderState state,
-			final QueryDefinition queryDefinition) {
+			final UpdatableAnalyzer indexAnalyzer, final UpdatableAnalyzer queryAnalyzer,
+			final SortedSetDocValuesReaderState state, final QueryDefinition queryDefinition) {
 		this.schemaInstance = schemaInstance;
 		this.indexSearcher = indexSearcher;
 		this.state = state;
-		this.analyzer = analyzer;
+		this.indexAnalyzer = indexAnalyzer;
+		this.queryAnalyzer = queryAnalyzer;
 		this.queryDefinition = queryDefinition;
 		this.queryString = queryDefinition == null ? null : QueryUtils.getFinalQueryString(queryDefinition);
 	}

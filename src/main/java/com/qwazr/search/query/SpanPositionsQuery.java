@@ -49,7 +49,7 @@ public class SpanPositionsQuery extends AbstractQuery {
 	final public Query getQuery(QueryContext queryContext) throws IOException {
 
 		BooleanQuery.Builder builder = new BooleanQuery.Builder();
-		TokenStream tokenStream = queryContext.analyzer.tokenStream(field, queryContext.queryString);
+		TokenStream tokenStream = queryContext.queryAnalyzer.tokenStream(field, queryContext.queryString);
 		try {
 			CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
 			PositionIncrementAttribute pocincrAttribute = tokenStream.getAttribute(PositionIncrementAttribute.class);

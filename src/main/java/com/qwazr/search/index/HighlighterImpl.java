@@ -32,12 +32,15 @@ public class HighlighterImpl extends PostingsHighlighter {
 
 	private final Locale locale;
 
+	private final Analyzer analyzer;
+
 	HighlighterImpl(HighlighterDefinition definition, Analyzer analyzer) {
 		super(definition.max_length == null ? PostingsHighlighter.DEFAULT_MAX_LENGTH : definition.max_length);
 		this.definition = definition;
+		this.analyzer = analyzer;
 
 		separator = definition.multivalued_separator == null || definition.multivalued_separator.isEmpty() ?
-				0x2029 :
+				' ' :
 				definition.multivalued_separator.charAt(0);
 
 		if (definition.break_iterator != null && definition.break_iterator.language != null)
@@ -69,6 +72,11 @@ public class HighlighterImpl extends PostingsHighlighter {
 		case sentence:
 			return BreakIterator.getSentenceInstance(locale);
 		}
+	}
+
+	@Override
+	protected Analyzer getIndexAnalyzer(String field) {
+		return analyzer;
 	}
 
 	@Override

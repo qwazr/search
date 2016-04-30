@@ -38,7 +38,7 @@ import java.util.List;
 public class JavaTest {
 
 	public static final String[] RETURNED_FIELDS =
-			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory"};
+			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory" };
 
 	@BeforeClass
 	public static void startSearchServer() throws Exception {
@@ -278,12 +278,10 @@ public class JavaTest {
 		final LinkedHashMap<String, FieldDefinition> masterFields = master.getFields();
 		final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers = master.getAnalyzers();
 
-
 		final AnnotatedIndexService slave = getSlave();
 		final IndexStatus indexStatus = slave.createUpdateIndex();
 		Assert.assertNotNull(indexStatus);
 		slave.replicationCheck();
-
 
 		final IndexStatus slaveStatus = slave.getIndexStatus();
 		Assert.assertNotNull(slaveStatus);
@@ -305,9 +303,8 @@ public class JavaTest {
 	public void test900join() throws URISyntaxException {
 		final AnnotatedIndexService master = getMaster();
 		final QueryBuilder builder = new QueryBuilder();
-		builder.setQuery(
-				new JoinQuery(AnnotatedIndex.INDEX_NAME_SLAVE, "docValuesCategory", "storedCategory",
-						true, ScoreMode.Max, new MatchAllDocsQuery()));
+		builder.setQuery(new JoinQuery(AnnotatedIndex.INDEX_NAME_SLAVE, "docValuesCategory", "storedCategory", true,
+				ScoreMode.Max, new MatchAllDocsQuery()));
 		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);

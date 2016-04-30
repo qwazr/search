@@ -53,20 +53,22 @@ class QueryUtils {
 
 		final QueryDefinition queryDef = queryContext.queryDefinition;
 
-		final Query query = queryContext.queryDefinition.query == null ? new MatchAllDocsQuery() :
-		                    queryContext.queryDefinition.query.getQuery(queryContext);
+		final Query query = queryContext.queryDefinition.query == null ?
+				new MatchAllDocsQuery() :
+				queryContext.queryDefinition.query.getQuery(queryContext);
 
 		final TimeTracker timeTracker = new TimeTracker();
 
-		final AnalyzerContext analyzerContext = queryContext.analyzer.getContext();
+		final AnalyzerContext analyzerContext = queryContext.queryAnalyzer.getContext();
 		final Sort sort =
 				queryDef.sorts == null ? null : SortUtils.buildSort(analyzerContext.fieldTypes, queryDef.sorts);
 
 		final int numHits = queryDef.getEnd();
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
 
-		final QueryCollectors queryCollectors = new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets,
-				queryDef.functions, analyzerContext.fieldTypes);
+		final QueryCollectors queryCollectors =
+				new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets, queryDef.functions,
+						analyzerContext.fieldTypes);
 
 		queryContext.indexSearcher.search(query, queryCollectors.finalCollector);
 		final TopDocs topDocs = queryCollectors.getTopDocs();
@@ -75,21 +77,22 @@ class QueryUtils {
 		timeTracker.next("search_query");
 
 		final FacetsBuilder facetsBuilder = queryCollectors.facetsCollector == null ?
-		                                    null :
-		                                    new FacetsBuilder(queryContext, queryDef.facets, query,
-				                                    queryCollectors.facetsCollector, timeTracker);
+				null :
+				new FacetsBuilder(queryContext, queryDef.facets, query, queryCollectors.facetsCollector, timeTracker);
 
 		final Map<String, HighlighterImpl> highlighters;
 		if (queryDef.highlighters != null && topDocs != null) {
 			highlighters = new LinkedHashMap<>();
 			queryDef.highlighters.forEach((name, highlighterDefinition) -> highlighters.put(name,
-					new HighlighterImpl(highlighterDefinition, queryContext.analyzer)));
+					new HighlighterImpl(highlighterDefinition,
+							queryContext.indexAnalyzer.getWrappedAnalyzer(highlighterDefinition.field))));
 		} else
 			highlighters = null;
 
-		ResultDefinitionBuilder resultBuilder = new ResultDefinitionBuilder(queryDef, topDocs,
-				queryContext.indexSearcher, query, highlighters, queryCollectors.functionsCollectors,
-				analyzerContext.fieldTypes, timeTracker, documentBuilderFactory, facetsBuilder, totalHits);
+		ResultDefinitionBuilder resultBuilder =
+				new ResultDefinitionBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
+						queryCollectors.functionsCollectors, analyzerContext.fieldTypes, timeTracker,
+						documentBuilderFactory, facetsBuilder, totalHits);
 		return documentBuilderFactory.build(resultBuilder);
 	}
 

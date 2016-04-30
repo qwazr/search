@@ -103,7 +103,7 @@ public class MoreLikeThisQuery extends AbstractQuery {
 			mlt.setMinWordLen(min_word_len);
 		if (stop_words != null)
 			mlt.setStopWords(stop_words);
-		mlt.setAnalyzer(queryContext.analyzer);
+		mlt.setAnalyzer(queryContext.queryAnalyzer);
 		return mlt.like(doc_num);
 	}
 }

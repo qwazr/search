@@ -44,7 +44,7 @@ public class DrillDrownQuery extends AbstractQuery {
 	final public Query getQuery(QueryContext queryContext)
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException, InterruptedException {
 		final org.apache.lucene.facet.DrillDownQuery drillDownQuery;
-		final FacetsConfig facetsConfig = queryContext.analyzer.getContext().facetsConfig;
+		final FacetsConfig facetsConfig = queryContext.queryAnalyzer.getContext().facetsConfig;
 		Objects.requireNonNull(facetsConfig, "FacetsConfig is null");
 		if (baseQuery == null)
 			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig);

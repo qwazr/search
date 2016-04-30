@@ -97,8 +97,8 @@ public class StandardQueryParser extends AbstractQuery {
 	@Override
 	final public Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
 
-		final org.apache.lucene.queryparser.flexible.standard.StandardQueryParser parser = new org.apache.lucene.queryparser.flexible.standard.StandardQueryParser(
-				queryContext.analyzer);
+		final org.apache.lucene.queryparser.flexible.standard.StandardQueryParser parser =
+				new org.apache.lucene.queryparser.flexible.standard.StandardQueryParser(queryContext.queryAnalyzer);
 		if (fields_boost != null)
 			parser.setFieldsBoost(fields_boost);
 		if (default_operator != null)

@@ -72,6 +72,7 @@ public class SchemaInstance implements Closeable {
 		private final IndexSearcher indexSearcher;
 		private final Map<String, AnalyzerDefinition> analyzerMap;
 		private final Map<String, FieldDefinition> fieldMap;
+		private final UpdatableAnalyzer indexAnalyzer;
 		private final UpdatableAnalyzer queryAnalyzer;
 		private final AtomicInteger ref = new AtomicInteger(1);
 
@@ -79,6 +80,7 @@ public class SchemaInstance implements Closeable {
 			if (indexMap.isEmpty()) {
 				indexSearcher = null;
 				multiReader = null;
+				indexAnalyzer = null;
 				queryAnalyzer = null;
 				analyzerMap = null;
 				fieldMap = null;
@@ -86,8 +88,8 @@ public class SchemaInstance implements Closeable {
 			}
 			IndexReader[] indexReaders = new IndexReader[indexMap.size()];
 			int i = 0;
-			analyzerMap = new HashMap<String, AnalyzerDefinition>();
-			fieldMap = new HashMap<String, FieldDefinition>();
+			analyzerMap = new HashMap<>();
+			fieldMap = new HashMap<>();
 			for (IndexInstance indexInstance : indexMap.values()) {
 				indexReaders[i++] = DirectoryReader.open(indexInstance.getDataDirectory());
 				indexInstance.fillFields(fieldMap);
@@ -96,6 +98,7 @@ public class SchemaInstance implements Closeable {
 			multiReader = new MultiReader(indexReaders);
 			indexSearcher = new IndexSearcher(multiReader);
 			AnalyzerContext analyzerContext = new AnalyzerContext(analyzerMap, fieldMap);
+			indexAnalyzer = new UpdatableAnalyzer(analyzerContext, analyzerContext.indexAnalyzerMap);
 			queryAnalyzer = new UpdatableAnalyzer(analyzerContext, analyzerContext.queryAnalyzerMap);
 		}
 
@@ -138,7 +141,8 @@ public class SchemaInstance implements Closeable {
 			try {
 				SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader());
 				final QueryContext queryContext =
-						new QueryContext(SchemaInstance.this, indexSearcher, queryAnalyzer, state, queryDef);
+						new QueryContext(SchemaInstance.this, indexSearcher, indexAnalyzer, queryAnalyzer, state,
+								queryDef);
 				return QueryUtils.search(queryContext, documentBuilderFactory);
 			} finally {
 				decRef();
@@ -160,8 +164,8 @@ public class SchemaInstance implements Closeable {
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
 		settingsDefinition = settingsFile.exists() ?
-		                     JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
-		                     SchemaSettingsDefinition.EMPTY;
+				JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
+				SchemaSettingsDefinition.EMPTY;
 		checkSettings();
 
 		File[] directories = schemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
