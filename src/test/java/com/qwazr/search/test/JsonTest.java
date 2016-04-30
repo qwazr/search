@@ -16,7 +16,6 @@
 package com.qwazr.search.test;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
-import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.utils.CharsetUtils;
@@ -518,7 +517,7 @@ public class JsonTest {
 
 	@Test
 	public void test430QueryFunctionsDoc() throws URISyntaxException, IOException {
-		Object[] results = new Object[]{1.1D, 10.5D, 10, 14};
+		Object[] results = new Object[] { 1.1D, 10.5D, 10, 14 };
 		IndexServiceInterface client = getClient();
 		ResultDefinition.WithMap result = checkQueryIndex(client, QUERY_CHECK_FUNCTIONS, 5);
 		Assert.assertNotNull(result.functions);
@@ -582,7 +581,7 @@ public class JsonTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
+		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
 		IndexServiceInterface client = getClient();
 		checkAnalyzerResult(term_results,
 				client.doAnalyzeIndex(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "There are few parts of texts"));
