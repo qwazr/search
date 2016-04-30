@@ -36,11 +36,13 @@ import java.lang.reflect.Field;
 import java.security.Principal;
 import java.util.*;
 
-class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterface {
+final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(IndexServiceImpl.class);
 
 	private static final String QWAZR_INDEX_ROOT_USER;
+
+	public final static IndexServiceImpl INSTANCE = new IndexServiceImpl();
 
 	static {
 		String v = System.getProperty("QWAZR_INDEX_ROOT_USER");
@@ -65,13 +67,13 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	 * @param schemaName
 	 * @throws ServerException
 	 */
-	private void checkRight(String schemaName) throws ServerException {
+	private void checkRight(final String schemaName) throws ServerException {
 		if (QWAZR_INDEX_ROOT_USER == null)
 			return;
-		Principal principal = request.getUserPrincipal();
+		final Principal principal = request.getUserPrincipal();
 		if (principal == null)
 			throw new ServerException(Response.Status.UNAUTHORIZED);
-		String name = principal.getName();
+		final String name = principal.getName();
 		if (name == null)
 			throw new ServerException(Response.Status.UNAUTHORIZED);
 		if (name.equals(QWAZR_INDEX_ROOT_USER))
@@ -201,7 +203,7 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 			final String text, final boolean index) throws ServerException, IOException {
 		checkRight(schemaName);
 		IndexInstance indexInstance = IndexManager.INSTANCE.get(schemaName).get(indexName);
-		Analyzer analyzer =
+		final Analyzer analyzer =
 				index ? indexInstance.getIndexAnalyzer(fieldName) : indexInstance.getQueryAnalyzer(fieldName);
 		if (analyzer == null)
 			throw new ServerException("No analyzer found for " + fieldName);
@@ -238,7 +240,6 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 			throw ServerException.getJsonException(e);
 		}
 	}
-
 
 	@Override
 	final public List<TermDefinition> doAnalyzeQuery(final String schemaName, final String indexName,
@@ -297,9 +298,9 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 			final String analyzerName) {
 		try {
 			checkRight(schemaName);
-			Map<String, AnalyzerDefinition> analyzerMap =
+			final Map<String, AnalyzerDefinition> analyzerMap =
 					IndexManager.INSTANCE.get(schemaName).get(indexName).getAnalyzers();
-			AnalyzerDefinition analyzerDef = (analyzerMap != null) ? analyzerMap.get(analyzerName) : null;
+			final AnalyzerDefinition analyzerDef = (analyzerMap != null) ? analyzerMap.get(analyzerName) : null;
 			if (analyzerDef == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
 			return analyzerDef;
@@ -312,7 +313,7 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 
 	@Override
 	final public AnalyzerDefinition setAnalyzer(final String schemaName, final String indexName,
-			final String analyzerName, AnalyzerDefinition analyzer) {
+			final String analyzerName, final AnalyzerDefinition analyzer) {
 		try {
 			checkRight(schemaName);
 			IndexManager.INSTANCE.get(schemaName).get(indexName).setAnalyzer(analyzerName, analyzer);
@@ -324,8 +325,8 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 		}
 	}
 
-	final public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String schemaName,
-			final String indexName, final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+	final public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String schemaName, final String indexName,
+			final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
 		try {
 			checkRight(schemaName);
 			IndexManager.INSTANCE.get(schemaName).get(indexName).setAnalyzers(analyzers);
@@ -338,8 +339,7 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	}
 
 	@Override
-	final public Response deleteAnalyzer(final String schemaName, final String indexName,
-			final String analyzerName) {
+	final public Response deleteAnalyzer(final String schemaName, final String indexName, final String analyzerName) {
 		try {
 			checkRight(schemaName);
 			IndexManager.INSTANCE.get(schemaName).get(indexName).deleteAnalyzer(analyzerName);
@@ -489,8 +489,7 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	}
 
 	@Override
-	final public BackupStatus doBackup(final String schemaName, final String indexName,
-			final Integer keep_last_count) {
+	final public BackupStatus doBackup(final String schemaName, final String indexName, final Integer keep_last_count) {
 		try {
 			checkRight(null);
 			if ("*".equals(schemaName) && "*".equals(indexName)) {
@@ -518,8 +517,8 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	}
 
 	@Override
-	final public InputStream replicationObtain(final String schemaName, final String indexName,
-			final String sessionID, final String source, String fileName) {
+	final public InputStream replicationObtain(final String schemaName, final String indexName, final String sessionID,
+			final String source, String fileName) {
 		try {
 			checkRight(null);
 			final InputStream input = IndexManager.INSTANCE.get(schemaName).get(indexName).getReplicator()
@@ -533,8 +532,7 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	}
 
 	@Override
-	final public Response replicationRelease(final String schemaName, final String indexName,
-			final String sessionID) {
+	final public Response replicationRelease(final String schemaName, final String indexName, final String sessionID) {
 		try {
 			checkRight(null);
 			IndexManager.INSTANCE.get(schemaName).get(indexName).getReplicator().release(sessionID);
@@ -551,12 +549,12 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 			final String currentVersion) {
 		try {
 			checkRight(null);
-			SessionToken token = IndexManager.INSTANCE.get(schemaName).get(indexName).getReplicator()
-					.checkForUpdate(currentVersion);
+			final SessionToken token =
+					IndexManager.INSTANCE.get(schemaName).get(indexName).getReplicator().checkForUpdate(currentVersion);
 			if (token == null)
 				return Response.noContent().build();
-			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			DataOutputStream dataOutput = new DataOutputStream(outputStream);
+			final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			final DataOutputStream dataOutput = new DataOutputStream(outputStream);
 			token.serialize(dataOutput);
 			return Response.ok(outputStream.toByteArray()).build();
 		} catch (Exception e) {
@@ -592,16 +590,16 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 		}
 	}
 
-	private QueryDefinition getDocumentQuery(Object id) {
-		QueryBuilder builder = new QueryBuilder();
+	private QueryDefinition getDocumentQuery(final Object id) {
+		final QueryBuilder builder = new QueryBuilder();
 		builder.setQuery(new TermQuery(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id)));
 		builder.setRows(1);
 		builder.addReturned_field("*");
 		return builder.build();
 	}
 
-	private QueryDefinition getMatchAllDocQuery(Integer start, Integer rows) {
-		QueryBuilder builder = new QueryBuilder();
+	private QueryDefinition getMatchAllDocQuery(final Integer start, final Integer rows) {
+		final QueryBuilder builder = new QueryBuilder();
 		builder.setQuery(new MatchAllDocsQuery());
 		builder.setStart(start).setRows(rows);
 		builder.addReturned_field("*");
@@ -616,22 +614,19 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	}
 
 	private ResultDefinition doSearchObject(final String schemaName, final String indexName,
-			final QueryDefinition query,
-			final Map<String, Field> fields,
-			final Class<?> indexDefinitionClass)
+			final QueryDefinition query, final Map<String, Field> fields, final Class<?> indexDefinitionClass)
 			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
 		checkRight(schemaName);
-		IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName);
-		return index.search(query,
-				ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass));
+		final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName);
+		return index
+				.search(query, ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass));
 	}
 
 	@Override
 	final public LinkedHashMap<String, Object> getDocument(final String schemaName, final String indexName,
 			final String id) {
 		try {
-			ResultDefinition result =
-					doSearchMap(schemaName, indexName, getDocumentQuery(id));
+			final ResultDefinition result = doSearchMap(schemaName, indexName, getDocumentQuery(id));
 			if (result != null) {
 				List<ResultDocumentMap> docs = result.getDocuments();
 				if (docs != null && !docs.isEmpty())
@@ -650,8 +645,7 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	final public List<LinkedHashMap<String, Object>> getDocuments(final String schemaName, final String indexName,
 			final Integer start, final Integer rows) {
 		try {
-			ResultDefinition result =
-					doSearchMap(schemaName, indexName, getMatchAllDocQuery(start, rows));
+			ResultDefinition result = doSearchMap(schemaName, indexName, getMatchAllDocQuery(start, rows));
 			if (result == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "No document found");
 			List<LinkedHashMap<String, Object>> documents = new ArrayList<>();
@@ -670,11 +664,11 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	final public <T> T getDocument(final String schemaName, final String indexName, final Object id,
 			final Map<String, Field> fields, final Class<T> indexDefinitionClass) {
 		try {
-			ResultDefinition result = doSearchObject(schemaName, indexName, getDocumentQuery(id),
-					fields, indexDefinitionClass);
+			final ResultDefinition result =
+					doSearchObject(schemaName, indexName, getDocumentQuery(id), fields, indexDefinitionClass);
 			if (result == null)
 				return null;
-			List<ResultDocumentObject<T>> docs = result.getDocuments();
+			final List<ResultDocumentObject<T>> docs = result.getDocuments();
 			if (docs == null || docs.isEmpty())
 				return null;
 			return docs.get(0).record;
@@ -686,17 +680,16 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	}
 
 	@Override
-	final public <T> List<T> getDocuments(final String schemaName, final String indexName,
-			final Integer start, final Integer rows, final Map<String, Field> fields,
-			final Class<T> indexDefinitionClass) {
+	final public <T> List<T> getDocuments(final String schemaName, final String indexName, final Integer start,
+			final Integer rows, final Map<String, Field> fields, final Class<T> indexDefinitionClass) {
 		try {
-			ResultDefinition result =
+			final ResultDefinition result =
 					doSearchObject(schemaName, indexName, getMatchAllDocQuery(start, rows), fields,
 							indexDefinitionClass);
 			if (result == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "No document found");
-			List<T> documents = new ArrayList<>();
-			List<ResultDocumentObject<T>> docs = result.getDocuments();
+			final List<T> documents = new ArrayList<>();
+			final List<ResultDocumentObject<T>> docs = result.getDocuments();
 			if (docs != null)
 				docs.forEach(resultDocument -> documents.add(resultDocument.record));
 			return documents;
@@ -715,7 +708,7 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 			if ("*".equals(indexName))
 				return (ResultDefinition.WithMap) IndexManager.INSTANCE.get(schemaName)
 						.search(query, ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
-			IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName);
+			final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName);
 			if (delete != null && delete)
 				return index.deleteByQuery(query);
 			else
@@ -737,7 +730,7 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 			if ("*".equals(indexName))
 				return (ResultDefinition.WithObject<T>) IndexManager.INSTANCE.get(schemaName)
 						.search(query, documentBuilerFactory);
-			IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName);
+			final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName);
 			return (ResultDefinition.WithObject<T>) index.search(query, documentBuilerFactory);
 		} catch (Exception e) {
 			if (logger.isWarnEnabled())

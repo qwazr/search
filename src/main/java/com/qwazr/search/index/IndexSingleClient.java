@@ -21,8 +21,8 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
+import com.qwazr.utils.server.RemoteService;
 import org.apache.http.HttpResponse;
-import org.apache.http.auth.Credentials;
 import org.apache.http.client.fluent.Request;
 
 import javax.ws.rs.WebApplicationException;
@@ -30,49 +30,45 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.*;
 
 public class IndexSingleClient extends JsonClientAbstract implements IndexServiceInterface {
 
-	public IndexSingleClient(String url, Integer msTimeOut) throws URISyntaxException {
-		super(url, msTimeOut);
-	}
-
-	public IndexSingleClient(String url, Integer msTimeOut, Credentials credentials) throws URISyntaxException {
-		super(url, msTimeOut, credentials);
+	public IndexSingleClient(final RemoteService remote) {
+		super(remote);
 	}
 
 	public final static TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
 	};
 
 	@Override
-	public SchemaSettingsDefinition createUpdateSchema(String schema_name) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
-		Request request = Request.Post(uriBuilder.build());
+	public SchemaSettingsDefinition createUpdateSchema(final String schema_name) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
+		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, null, null, SchemaSettingsDefinition.class, 200);
 	}
 
 	@Override
-	public SchemaSettingsDefinition createUpdateSchema(String schema_name, SchemaSettingsDefinition settings) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
-		Request request = Request.Post(uriBuilder.build());
+	public SchemaSettingsDefinition createUpdateSchema(final String schema_name,
+			final SchemaSettingsDefinition settings) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
+		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, settings, null, SchemaSettingsDefinition.class, 200);
 	}
 
 	@Override
 	public Set<String> getSchemas() {
-		UBuilder uriBuilder = new UBuilder("/indexes");
-		Request request = Request.Get(uriBuilder.build());
+		final UBuilder uriBuilder = new UBuilder("/indexes");
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, SetStringTypeRef, 200);
 	}
 
 	@Override
-	public Response deleteSchema(String schema_name) {
+	public Response deleteSchema(final String schema_name) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
-			Request request = Request.Delete(uriBuilder.build());
-			HttpResponse response = execute(request, null, null);
+			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
+			final Request request = Request.Delete(uriBuilder.build());
+			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
@@ -83,95 +79,99 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Set<String> getIndexes(String schema_name) {
-		UBuilder uriBuilder = new UBuilder("/indexes/" + schema_name);
-		Request request = Request.Get(uriBuilder.build());
+	public Set<String> getIndexes(final String schema_name) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/" + schema_name);
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, SetStringTypeRef, 200);
 	}
 
 	@Override
-	public IndexStatus createUpdateIndex(String schema_name, String index_name) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
-		Request request = Request.Post(uriBuilder.build());
+	public IndexStatus createUpdateIndex(final String schema_name, final String index_name) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
+		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, null, null, IndexStatus.class, 200);
 	}
 
 	@Override
-	public IndexStatus createUpdateIndex(String schema_name, String index_name, IndexSettingsDefinition settings) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
-		Request request = Request.Post(uriBuilder.build());
+	public IndexStatus createUpdateIndex(final String schema_name, final String index_name,
+			final IndexSettingsDefinition settings) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
+		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, settings, null, IndexStatus.class, 200);
 	}
 
 	@Override
-	public LinkedHashMap<String, FieldDefinition> getFields(String schema_name, String index_name) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields");
-		Request request = Request.Get(uriBuilder.build());
+	public LinkedHashMap<String, FieldDefinition> getFields(final String schema_name, final String index_name) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields");
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, FieldDefinition.MapStringFieldTypeRef, 200);
 	}
 
 	@Override
-	public LinkedHashMap<String, FieldDefinition> setFields(String schema_name, String index_name,
-			LinkedHashMap<String, FieldDefinition> fields) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields");
-		Request request = Request.Post(uriBuilder.build());
+	public LinkedHashMap<String, FieldDefinition> setFields(final String schema_name, final String index_name,
+			final LinkedHashMap<String, FieldDefinition> fields) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields");
+		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, fields, null, FieldDefinition.MapStringFieldTypeRef, 200);
 	}
 
 	@Override
-	public List<TermDefinition> doAnalyzeQuery(String schema_name, String index_name, String field_name, String text) {
-		UBuilder uriBuilder =
+	public List<TermDefinition> doAnalyzeQuery(final String schema_name, final String index_name,
+			final String field_name, final String text) {
+		final UBuilder uriBuilder =
 				new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name, "/analyzer/query");
 		uriBuilder.setParameter("text", text);
-		Request request = Request.Get(uriBuilder.build());
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, TermDefinition.ListTermDefinitionRef, 200);
 	}
 
 	@Override
-	public List<TermDefinition> doAnalyzeIndex(String schema_name, String index_name, String field_name, String text) {
-		UBuilder uriBuilder =
+	public List<TermDefinition> doAnalyzeIndex(final String schema_name, final String index_name,
+			final String field_name, final String text) {
+		final UBuilder uriBuilder =
 				new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name, "/analyzer/index");
 		uriBuilder.setParameter("text", text);
-		Request request = Request.Get(uriBuilder.build());
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, TermDefinition.ListTermDefinitionRef, 200);
 	}
 
 	@Override
-	public List<TermEnumDefinition> doExtractTerms(String schema_name, String index_name, String field_name,
-			Integer start, Integer rows) {
+	public List<TermEnumDefinition> doExtractTerms(final String schema_name, final String index_name,
+			final String field_name, final Integer start, final Integer rows) {
 		return this.doExtractTerms(schema_name, index_name, field_name, null, start, rows);
 	}
 
 	@Override
-	public List<TermEnumDefinition> doExtractTerms(String schema_name, String index_name, String field_name,
-			String prefix, Integer start, Integer rows) {
-		UBuilder uriBuilder =
+	public List<TermEnumDefinition> doExtractTerms(final String schema_name, final String index_name,
+			final String field_name, final String prefix, final Integer start, final Integer rows) {
+		final UBuilder uriBuilder =
 				new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name, "/terms/", prefix);
 		uriBuilder.setParameter("start", start).setParameter("rows", rows);
-		Request request = Request.Get(uriBuilder.build());
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, TermEnumDefinition.ListTermEnumDefinitionRef, 200);
 	}
 
 	@Override
-	public FieldDefinition getField(String schema_name, String index_name, String field_name) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
-		Request request = Request.Get(uriBuilder.build());
+	public FieldDefinition getField(final String schema_name, final String index_name, final String field_name) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, FieldDefinition.class, 200);
 	}
 
 	@Override
-	public FieldDefinition setField(String schema_name, String index_name, String field_name, FieldDefinition field) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
-		Request request = Request.Post(uriBuilder.build());
+	public FieldDefinition setField(final String schema_name, final String index_name, final String field_name,
+			final FieldDefinition field) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
+		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, field, null, FieldDefinition.class, 200);
 	}
 
 	@Override
-	public Response deleteField(String schema_name, String index_name, String field_name) {
+	public Response deleteField(final String schema_name, final String index_name, final String field_name) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
-			Request request = Request.Delete(uriBuilder.build());
-			HttpResponse response = execute(request, null, null);
+			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
+			final Request request = Request.Delete(uriBuilder.build());
+			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
@@ -182,41 +182,45 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(String schema_name, String index_name) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers");
-		Request request = Request.Get(uriBuilder.build());
+	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(final String schema_name, final String index_name) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers");
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, AnalyzerDefinition.MapStringAnalyzerTypeRef, 200);
 	}
 
 	@Override
-	public AnalyzerDefinition getAnalyzer(String schema_name, String index_name, String analyzer_name) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
-		Request request = Request.Get(uriBuilder.build());
+	public AnalyzerDefinition getAnalyzer(final String schema_name, final String index_name,
+			final String analyzer_name) {
+		final UBuilder uriBuilder =
+				new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, AnalyzerDefinition.class, 200);
 	}
 
 	@Override
-	public AnalyzerDefinition setAnalyzer(String schema_name, String index_name, String analyzer_name,
-			AnalyzerDefinition analyzer) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
-		Request request = Request.Post(uriBuilder.build());
+	public AnalyzerDefinition setAnalyzer(final String schema_name, final String index_name, final String analyzer_name,
+			final AnalyzerDefinition analyzer) {
+		final UBuilder uriBuilder =
+				new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
+		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, analyzer, null, AnalyzerDefinition.class, 200);
 	}
 
 	@Override
-	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(String schema_name, String index_name,
-			LinkedHashMap<String, AnalyzerDefinition> analyzers) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers");
-		Request request = Request.Post(uriBuilder.build());
+	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String schema_name, final String index_name,
+			final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers");
+		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, analyzers, null, AnalyzerDefinition.MapStringAnalyzerTypeRef, 200);
 	}
 
 	@Override
-	public Response deleteAnalyzer(String schema_name, String index_name, String analyzer_name) {
+	public Response deleteAnalyzer(final String schema_name, final String index_name, final String analyzer_name) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
-			Request request = Request.Delete(uriBuilder.build());
-			HttpResponse response = execute(request, null, null);
+			final UBuilder uriBuilder =
+					new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
+			final Request request = Request.Delete(uriBuilder.build());
+			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
@@ -227,25 +231,27 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public List<TermDefinition> testAnalyzer(String schema_name, String index_name, String analyzer_name, String text) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
-		Request request = Request.Post(uriBuilder.build());
+	public List<TermDefinition> testAnalyzer(final String schema_name, final String index_name,
+			final String analyzer_name, final String text) {
+		final UBuilder uriBuilder =
+				new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
+		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, text, null, TermDefinition.ListTermDefinitionRef, 200);
 	}
 
 	@Override
-	public IndexStatus getIndex(String schema_name, String index_name) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
-		Request request = Request.Get(uriBuilder.build());
+	public IndexStatus getIndex(final String schema_name, final String index_name) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, IndexStatus.class, 200);
 	}
 
 	@Override
-	public Response deleteIndex(String schema_name, String index_name) {
+	public Response deleteIndex(final String schema_name, final String index_name) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
-			Request request = Request.Delete(uriBuilder.build());
-			HttpResponse response = execute(request, null, null);
+			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
+			final Request request = Request.Delete(uriBuilder.build());
+			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
@@ -256,11 +262,12 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Response postMappedDocument(String schema_name, String index_name, Map<String, Object> document) {
+	public Response postMappedDocument(final String schema_name, final String index_name,
+			final Map<String, Object> document) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc");
-			Request request = Request.Post(uriBuilder.build());
-			HttpResponse response = execute(request, document, null);
+			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc");
+			final Request request = Request.Post(uriBuilder.build());
+			final HttpResponse response = execute(request, document, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
@@ -271,10 +278,10 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public BackupStatus doBackup(String schema_name, String index_name, Integer keep_last_count) {
-		UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup")
+	public BackupStatus doBackup(final String schema_name, final String index_name, final Integer keep_last_count) {
+		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup")
 				.setParameterObject("keep_last", keep_last_count);
-		Request request = Request.Post(uriBuilder.build());
+		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, null, null, BackupStatus.class, 200);
 	}
 
@@ -283,15 +290,15 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 			};
 
 	@Override
-	public List<BackupStatus> getBackups(String schema_name, String index_name) {
+	public List<BackupStatus> getBackups(final String schema_name, final String index_name) {
 		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup");
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, ListBackupStatusTypeRef, 200);
 	}
 
 	@Override
-	public InputStream replicationObtain(String schema_name, String index_name, String sessionID, String source,
-			String fileName) {
+	public InputStream replicationObtain(final String schema_name, final String index_name, final String sessionID,
+			final String source, final String fileName) {
 		try {
 			final UBuilder uriBuilder =
 					new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/", sessionID, "/", source,
@@ -306,12 +313,12 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Response replicationRelease(String schema_name, String index_name, String sessionID) {
+	public Response replicationRelease(final String schema_name, final String index_name, final String sessionID) {
 		try {
 			final UBuilder uriBuilder =
 					new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/", sessionID);
 			final Request request = Request.Delete(uriBuilder.build());
-			HttpResponse response = execute(request, null, null);
+			final HttpResponse response = execute(request, null, null);
 			if (response == null)
 				return Response.serverError().build();
 			return Response.status(response.getStatusLine().getStatusCode()).build();
@@ -323,12 +330,12 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Response replicationUpdate(String schema_name, String index_name, String current_version) {
+	public Response replicationUpdate(final String schema_name, final String index_name, final String current_version) {
 		try {
 			final UBuilder uriBuilder =
 					new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/", current_version);
 			final Request request = Request.Get(uriBuilder.build());
-			HttpResponse response = execute(request, null, null);
+			final HttpResponse response = execute(request, null, null);
 			if (response == null)
 				return Response.serverError().build();
 			if (response.getStatusLine().getStatusCode() != 200)
@@ -342,11 +349,11 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Response replicationCheck(String schema_name, String index_name) {
+	public Response replicationCheck(final String schema_name, final String index_name) {
 		try {
 			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/replication");
 			final Request request = Request.Get(uriBuilder.build());
-			HttpResponse response = execute(request, null, null);
+			final HttpResponse response = execute(request, null, null);
 			if (response == null)
 				return Response.serverError().build();
 			return Response.status(response.getStatusLine().getStatusCode()).build();
@@ -362,12 +369,12 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 			};
 
 	@Override
-	public Response postMappedDocuments(String schema_name, String index_name,
-			Collection<Map<String, Object>> documents) {
+	public Response postMappedDocuments(final String schema_name, final String index_name,
+			final Collection<Map<String, Object>> documents) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs");
-			Request request = Request.Post(uriBuilder.build());
-			HttpResponse response = execute(request, documents, null);
+			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs");
+			final Request request = Request.Post(uriBuilder.build());
+			final HttpResponse response = execute(request, documents, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
@@ -378,11 +385,12 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Response updateMappedDocValues(String schema_name, String index_name, Map<String, Object> document) {
+	public Response updateMappedDocValues(final String schema_name, final String index_name,
+			final Map<String, Object> document) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc/values");
-			Request request = Request.Post(uriBuilder.build());
-			HttpResponse response = execute(request, document, null);
+			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc/values");
+			final Request request = Request.Post(uriBuilder.build());
+			final HttpResponse response = execute(request, document, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
@@ -393,12 +401,12 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Response updateMappedDocsValues(String schema_name, String index_name,
-			Collection<Map<String, Object>> documents) {
+	public Response updateMappedDocsValues(final String schema_name, final String index_name,
+			final Collection<Map<String, Object>> documents) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs/values");
-			Request request = Request.Post(uriBuilder.build());
-			HttpResponse response = execute(request, documents, null);
+			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs/values");
+			final Request request = Request.Post(uriBuilder.build());
+			final HttpResponse response = execute(request, documents, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
@@ -409,11 +417,11 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Response deleteAll(String schema_name, String index_name) {
+	public Response deleteAll(final String schema_name, final String index_name) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs");
-			Request request = Request.Delete(uriBuilder.build());
-			HttpResponse response = execute(request, null, null);
+			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs");
+			final Request request = Request.Delete(uriBuilder.build());
+			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
@@ -428,9 +436,10 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 			};
 
 	@Override
-	public LinkedHashMap<String, Object> getDocument(String schema_name, String index_name, String doc_id) {
+	public LinkedHashMap<String, Object> getDocument(final String schema_name, final String index_name,
+			final String doc_id) {
 		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc/", doc_id);
-		Request request = Request.Get(uriBuilder.build());
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, MapStringObjectTypeRef, 200);
 	}
 
@@ -439,21 +448,21 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 			};
 
 	@Override
-	public List<LinkedHashMap<String, Object>> getDocuments(String schema_name, String index_name, Integer start,
-			Integer rows) {
+	public List<LinkedHashMap<String, Object>> getDocuments(final String schema_name, final String index_name,
+			final Integer start, final Integer rows) {
 		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc");
 		uriBuilder.addParameter("start", start == null ? null : start.toString())
 				.addParameter("rows", rows == null ? null : rows.toString());
-		Request request = Request.Get(uriBuilder.build());
+		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, ListMapStringObjectTypeRef, 200);
 	}
 
 	@Override
-	public ResultDefinition.WithMap searchQuery(String schema_name, String index_name, QueryDefinition query,
-			Boolean delete) {
+	public ResultDefinition.WithMap searchQuery(final String schema_name, final String index_name,
+			final QueryDefinition query, final Boolean delete) {
 		final UBuilder uriBuilder =
 				new UBuilder("/indexes/", schema_name, "/", index_name, "/search").setParameterObject("delete", delete);
-		Request request = Request.Post(uriBuilder.build());
+		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, query, null, ResultDefinition.WithMap.class, 200);
 	}
 

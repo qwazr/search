@@ -15,75 +15,63 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.utils.StringUtils;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.qwazr.utils.server.RemoteService;
 
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 
-public class RemoteIndex {
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+public class RemoteIndex extends RemoteService {
 
-	final public String uri;
 	final public String schema;
 	final public String index;
-	final public Integer timeout;
 
 	public RemoteIndex() {
-		uri = null;
 		schema = null;
 		index = null;
-		timeout = null;
 	}
 
-	private RemoteIndex(String uri) throws URISyntaxException {
-
-		URI u = new URI(uri);
-		this.uri = new URI(u.getScheme(), null, u.getHost(), u.getPort(), null, null, null).toASCIIString();
-
-		String[] pathSegments = StringUtils.split(u.getPath(), '/');
-		if (pathSegments == null || pathSegments.length != 3)
-			throw new IllegalArgumentException("The URL is not formatted as expected: " + uri);
-		this.schema = pathSegments[1];
-		this.index = pathSegments[2];
-
-		String q = u.getQuery();
-		Integer timeout = null;
-		if (q != null && !q.isEmpty()) {
-			String[] params = StringUtils.split(q, "&");
-			for (String param : params) {
-				String[] keyvalue = StringUtils.split(q, "=");
-				if (keyvalue == null || keyvalue.length != 2)
-					continue;
-				if ("timeout".equals(keyvalue[0]))
-					timeout = Integer.parseInt(keyvalue[1]);
-			}
-		}
-		this.timeout = timeout;
-	}
-
-	public RemoteIndex(final String uri, final String schema, final String index, final Integer timeout) {
-		this.uri = uri;
+	public RemoteIndex(final RemoteService.Builder builder, final String schema, final String index) {
+		super(builder);
 		this.schema = schema;
 		this.index = index;
-		this.timeout = timeout;
 	}
 
 	/**
 	 * Build an array of RemoteIndex using an array of URL.
-	 * The form of the URL should be: {protocol}://{host}:{port}/indexes/{schema}/{index}?timeout={timeout}
+	 * The form of the URL should be:
+	 * {protocol}://{username:password@}{host}:{port}/indexes/{schema}/{index}?timeout={timeout}
 	 *
 	 * @param remoteIndexUrl
-	 * @return
+	 * @return an array of RemoteIndex
 	 */
 	public static RemoteIndex[] build(String... remoteIndexUrl) throws URISyntaxException {
+
 		if (remoteIndexUrl == null || remoteIndexUrl.length == 0)
 			return null;
-		final List<RemoteIndex> remoteIndexList = new ArrayList<>();
-		for (String url : remoteIndexUrl)
-			if (url != null && !url.isEmpty())
-				remoteIndexList.add(new RemoteIndex(url));
-		return remoteIndexList.isEmpty() ? null : remoteIndexList.toArray(new RemoteIndex[remoteIndexList.size()]);
+
+		List<RemoteService.Builder> builders = RemoteService.builders(remoteIndexUrl);
+		if (builders == null)
+			return null;
+
+		final RemoteIndex[] remotes = new RemoteIndex[builders.size()];
+		int i = 0;
+		for (RemoteService.Builder builder : builders) {
+
+			final String schema = builder.getPathSegment(1);
+			final String index = builder.getPathSegment(2);
+
+			if (schema == null || index == null)
+				throw new URISyntaxException(remoteIndexUrl[i],
+						"The URL form should be: /" + IndexServiceInterface.PATH + "/{shema}/{index}?"
+								+ TIMEOUT_PARAMETER + "={timeout}");
+
+			builder.setPath(IndexServiceInterface.PATH);
+			remotes[i++] = new RemoteIndex(builder, schema, index);
+
+		}
+		return remotes;
 	}
 
 }

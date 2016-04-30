@@ -18,23 +18,22 @@ package com.qwazr.search.index;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
+import com.qwazr.utils.server.RemoteService;
 
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 
-public class IndexMultiClient extends JsonMultiClientAbstract<String, IndexSingleClient>
-		implements IndexServiceInterface {
+public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient> implements IndexServiceInterface {
 
-	public IndexMultiClient(ExecutorService executor, String[] urls, Integer msTimeOut) throws URISyntaxException {
-		super(executor, new IndexSingleClient[urls.length], urls, msTimeOut);
+	public IndexMultiClient(ExecutorService executor, RemoteService... remotes) {
+		super(executor, new IndexSingleClient[remotes.length], remotes);
 	}
 
 	@Override
-	protected IndexSingleClient newClient(String url, Integer msTimeOut) throws URISyntaxException {
-		return new IndexSingleClient(url, msTimeOut);
+	protected IndexSingleClient newClient(RemoteService remote) {
+		return new IndexSingleClient(remote);
 	}
 
 	@Override

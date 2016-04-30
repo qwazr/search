@@ -21,6 +21,7 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexSingleClient;
+import com.qwazr.utils.server.RemoteService;
 
 import javax.servlet.ServletException;
 import java.io.File;
@@ -39,7 +40,7 @@ public class TestServer {
 			return;
 		final File dataDir = Files.createTempDir();
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
-		SearchServer.main(new String[]{});
+		SearchServer.main(new String[] {});
 		serverStarted = true;
 	}
 
@@ -48,14 +49,13 @@ public class TestServer {
 	public static synchronized IndexServiceInterface getSingleClient() throws URISyntaxException {
 		if (singleClient != null)
 			return singleClient;
-		singleClient = new IndexSingleClient(BASE_URL, 60000);
+		singleClient = new IndexSingleClient(new RemoteService(BASE_URL));
 		return singleClient;
 	}
 
 	public static synchronized <T> AnnotatedIndexService<T> getService(Class<T> indexClass, String indexName,
 			IndexSettingsDefinition settings) throws URISyntaxException {
-		return new AnnotatedIndexService(IndexServiceInterface.getClient(true, null, null), indexClass, null,
-				indexName, settings);
+		return new AnnotatedIndexService(IndexServiceInterface.getClient(), indexClass, null, indexName, settings);
 	}
 
 	public static synchronized <T> AnnotatedIndexService<T> getService(Class<T> indexClass) throws URISyntaxException {

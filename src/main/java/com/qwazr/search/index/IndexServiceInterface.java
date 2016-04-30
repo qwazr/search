@@ -15,9 +15,9 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServiceInterface;
 import com.qwazr.utils.server.ServiceName;
 
@@ -30,9 +30,11 @@ import java.net.URISyntaxException;
 import java.util.*;
 
 @RolesAllowed(IndexManager.SERVICE_NAME_SEARCH)
-@Path("/indexes")
+@Path("/" + IndexServiceInterface.PATH)
 @ServiceName(IndexManager.SERVICE_NAME_SEARCH)
 public interface IndexServiceInterface extends ServiceInterface {
+
+	String PATH = "indexes";
 
 	@POST
 	@Path("/{schema_name}")
@@ -269,18 +271,10 @@ public interface IndexServiceInterface extends ServiceInterface {
 	ResultDefinition.WithMap searchQuery(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, QueryDefinition query, @QueryParam("delete") Boolean delete);
 
-	public static IndexServiceInterface getClient(Boolean local, String group, Integer msTimeout)
-			throws URISyntaxException {
-		if (local != null && local)
-			return new IndexServiceImpl();
-		if (!ClusterManager.INSTANCE.isCluster())
-			return new IndexServiceImpl();
-		String[] nodes = ClusterManager.INSTANCE.getClusterClient()
-				.getActiveNodesByService(IndexManager.SERVICE_NAME_SEARCH, group);
-		if (nodes == null)
-			throw new RuntimeException("Index service not available");
-		if (nodes.length == 1)
-			return new IndexSingleClient(nodes[0], msTimeout);
-		return new IndexMultiClient(ClusterManager.INSTANCE.executor, nodes, msTimeout);
+	static IndexServiceInterface getClient(final RemoteService... remotes) throws URISyntaxException {
+		return remotes == null || remotes.length == 0 ?
+				IndexServiceImpl.INSTANCE :
+				remotes.length == 1 ? new IndexSingleClient(remotes[0]) : new IndexMultiClient(null, remotes);
 	}
+
 }

@@ -21,9 +21,9 @@ class IndexReplicator implements Replicator {
 	private final String indexName;
 
 	IndexReplicator(final RemoteIndex... masters) throws URISyntaxException {
-		this.indexService = masters[0].uri == null ?
-		                    new IndexServiceImpl() :
-		                    new IndexSingleClient(masters[0].uri, masters[0].timeout);
+		this.indexService = masters[0].host == null || "localhost".equals(masters[0]) ?
+				new IndexServiceImpl() :
+				new IndexSingleClient(masters[0]);
 		this.schemaName = masters[0].schema;
 		this.indexName = masters[0].index;
 	}
