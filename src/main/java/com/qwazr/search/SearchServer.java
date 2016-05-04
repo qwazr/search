@@ -38,7 +38,7 @@ public class SearchServer extends AbstractServer<ServerConfiguration> {
 	@Override
 	public ServletApplication load(Collection<Class<? extends ServiceInterface>> services) throws IOException {
 		File currentDataDir = getCurrentDataDir();
-		services.add(ClusterManager.load(executorService, getWebServicePublicAddress(), null));
+		services.add(ClusterManager.load(executorService, udpServer, getWebServicePublicAddress(), null));
 		services.add(IndexManager.load(executorService, currentDataDir));
 		return null;
 	}

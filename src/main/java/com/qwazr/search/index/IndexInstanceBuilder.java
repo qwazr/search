@@ -21,6 +21,7 @@ import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
+import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
@@ -147,7 +148,7 @@ class IndexInstanceBuilder {
 	private void buildSlave() throws IOException, URISyntaxException, ReflectiveOperationException,
 			InterruptedException {
 
-		// We just want to be sure the index exist.
+		// We just want to be sure the index exists.
 		openOrCreateIndex();
 		indexWriter.close();
 		indexWriter = null;
@@ -189,8 +190,10 @@ class IndexInstanceBuilder {
 	}
 
 	private void abort() {
-		IOUtils.closeQuietly(replicationClient, searcherManager, queryAnalyzer, indexAnalyzer, replicator, indexWriter,
-				dataDirectory);
+		IOUtils.closeQuietly(replicationClient, searcherManager, indexAnalyzer, queryAnalyzer, replicator);
+		if (indexWriter != null && indexWriter.isOpen())
+			IOUtils.closeQuietly(indexWriter);
+		IOUtils.closeQuietly(dataDirectory);
 	}
 
 	static IndexInstance build(final SchemaInstance schema, final File indexDirectory,
@@ -202,6 +205,9 @@ class IndexInstanceBuilder {
 		} catch (IOException | ReflectiveOperationException | InterruptedException | URISyntaxException e) {
 			builder.abort();
 			throw e;
+		} catch (Exception e) {
+			builder.abort();
+			throw new ServerException(e);
 		}
 	}
 }
