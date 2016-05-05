@@ -26,12 +26,13 @@ import io.undertow.security.idm.IdentityManager;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.concurrent.Executors;
 
 public class SearchServer extends AbstractServer<ServerConfiguration> {
 
-	private SearchServer() {
+	private SearchServer() throws UnknownHostException {
 		super(Executors.newSingleThreadExecutor(), new ServerConfiguration());
 	}
 
