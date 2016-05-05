@@ -14,10 +14,6 @@
         <version>1.0.1-SNAPSHOT</version>
     </parent>
 
-    <properties>
-        <lucene.version>6.0.0</lucene.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.undertow</groupId>
