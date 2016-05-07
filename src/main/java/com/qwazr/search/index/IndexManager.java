@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.slf4j.Logger;
@@ -39,36 +40,29 @@ public class IndexManager {
 
 	static IndexManager INSTANCE = null;
 
-	public synchronized static Class<? extends IndexServiceInterface> load(ExecutorService executorService,
-			File dataDirectory) throws IOException {
+	public synchronized static void load(final ServerBuilder builder) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
-		File indexesDirectory = new File(dataDirectory, INDEXES_DIRECTORY);
-		if (!indexesDirectory.exists())
-			indexesDirectory.mkdir();
-		if (!indexesDirectory.isDirectory())
-			throw new IOException(
-					"This name is not valid. No directory exists for this location: " + indexesDirectory.getName());
-		INSTANCE = new IndexManager(executorService, indexesDirectory);
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			@Override
-			public void run() {
-				INSTANCE.shutdown();
-			}
-		});
-		return IndexServiceImpl.class;
+		INSTANCE = new IndexManager(builder);
 	}
-
-	private final ConcurrentHashMap<String, SchemaInstance> schemaMap;
 
 	private final ExecutorService executorService;
 
+	private final ConcurrentHashMap<String, SchemaInstance> schemaMap;
+
 	private final File rootDirectory;
 
-	private IndexManager(ExecutorService executorService, File rootDirectory) {
-		this.executorService = executorService;
-		this.rootDirectory = rootDirectory;
-		schemaMap = new ConcurrentHashMap<String, SchemaInstance>();
+	private IndexManager(final ServerBuilder builder) throws IOException {
+		this.executorService = builder.getExecutorService();
+		rootDirectory = new File(builder.getServerConfiguration().dataDirectory, INDEXES_DIRECTORY);
+		if (!rootDirectory.exists())
+			rootDirectory.mkdir();
+		if (!rootDirectory.isDirectory())
+			throw new IOException(
+					"This name is not valid. No directory exists for this location: " + rootDirectory.getName());
+		builder.registerWebService(IndexServiceImpl.class);
+		builder.registerShutdownListener(server -> shutdown());
+		schemaMap = new ConcurrentHashMap<>();
 		File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
 		if (directories == null)
 			return;

@@ -15,43 +15,29 @@
  */
 package com.qwazr.search;
 
+import com.qwazr.cluster.ClusterServer;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.search.index.IndexManager;
-import com.qwazr.utils.server.AbstractServer;
-import com.qwazr.utils.server.ServerConfiguration;
-import com.qwazr.utils.server.ServiceInterface;
-import com.qwazr.utils.server.ServletApplication;
-import io.undertow.security.idm.IdentityManager;
+import com.qwazr.utils.server.GenericServer;
+import com.qwazr.utils.server.ServerBuilder;
 
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.concurrent.Executors;
 
-public class SearchServer extends AbstractServer<ServerConfiguration> {
+public class SearchServer {
 
-	private SearchServer() throws UnknownHostException {
-		super(Executors.newSingleThreadExecutor(), new ServerConfiguration());
-	}
-
-	@Override
-	public ServletApplication load(Collection<Class<? extends ServiceInterface>> services) throws IOException {
-		File currentDataDir = getCurrentDataDir();
-		services.add(ClusterManager.load(executorService, udpServer, getWebServicePublicAddress(), null));
-		services.add(IndexManager.load(executorService, currentDataDir));
-		return null;
-	}
-
-	@Override
-	protected IdentityManager getIdentityManager(String realm) {
-		return null;
+	public static GenericServer start()
+			throws IOException, InstantiationException, ServletException, IllegalAccessException {
+		final ServerBuilder builder = new ServerBuilder();
+		ClusterManager.load(builder, null);
+		IndexManager.load(builder);
+		return new GenericServer(builder).start(true);
 	}
 
 	public static void main(String[] args)
 			throws IOException, ServletException, InstantiationException, IllegalAccessException {
-		new SearchServer().start(true);
+		SearchServer.start();
 	}
 
 }
