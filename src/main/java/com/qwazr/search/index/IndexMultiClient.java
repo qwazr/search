@@ -23,12 +23,11 @@ import com.qwazr.utils.server.RemoteService;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 
 public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient> implements IndexServiceInterface {
 
-	public IndexMultiClient(ExecutorService executor, RemoteService... remotes) {
-		super(executor, new IndexSingleClient[remotes.length], remotes);
+	public IndexMultiClient(RemoteService... remotes) {
+		super(new IndexSingleClient[remotes.length], remotes);
 	}
 
 	@Override

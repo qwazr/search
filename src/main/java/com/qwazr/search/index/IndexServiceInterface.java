@@ -274,7 +274,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	static IndexServiceInterface getClient(final RemoteService... remotes) throws URISyntaxException {
 		return remotes == null || remotes.length == 0 ?
 				IndexServiceImpl.INSTANCE :
-				remotes.length == 1 ? new IndexSingleClient(remotes[0]) : new IndexMultiClient(null, remotes);
+				remotes.length == 1 ? new IndexSingleClient(remotes[0]) : new IndexMultiClient(remotes);
 	}
 
 }
