@@ -15,14 +15,12 @@
  */
 package com.qwazr.search;
 
-import com.qwazr.cluster.ClusterServer;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
 
 import javax.servlet.ServletException;
-import java.io.File;
 import java.io.IOException;
 
 public class SearchServer {
@@ -32,7 +30,7 @@ public class SearchServer {
 		final ServerBuilder builder = new ServerBuilder();
 		ClusterManager.load(builder, null);
 		IndexManager.load(builder);
-		return new GenericServer(builder).start(true);
+		return builder.build().start(true);
 	}
 
 	public static void main(String[] args)
