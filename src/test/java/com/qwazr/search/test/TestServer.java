@@ -40,7 +40,9 @@ public class TestServer {
 			return;
 		final File dataDir = Files.createTempDir();
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
-		SearchServer.main(new String[] {});
+		System.setProperty("PUBLIC_ADDR", "localhost");
+		System.setProperty("LISTEN_ADDR", "localhost");
+		SearchServer.main(new String[]{});
 		serverStarted = true;
 	}
 
