@@ -15,8 +15,10 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 
@@ -25,6 +27,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
 public class MultiFieldQueryParser extends AbstractQuery {
+
+	@JsonIgnore
+	final private Analyzer analyzer;
 
 	final public String[] fields;
 	final public LinkedHashMap<String, Float> boosts;
@@ -40,6 +45,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	final public Boolean lowercase_expanded_terms;
 
 	public MultiFieldQueryParser() {
+		analyzer = null;
 		fields = null;
 		boosts = null;
 		allow_leading_wildcard = null;
@@ -55,6 +61,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	}
 
 	public MultiFieldQueryParser(Builder builder) {
+		this.analyzer = builder.analyzer;
 		this.fields = builder.fields == null ? null : ArrayUtils.toArray(builder.fields);
 		this.boosts = builder.boosts;
 		this.allow_leading_wildcard = builder.allow_leading_wildcard;
@@ -72,8 +79,8 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	@Override
 	final public Query getQuery(QueryContext queryContext) throws IOException, ParseException {
 		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser =
-				new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(fields, queryContext.queryAnalyzer,
-						boosts);
+				new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(fields,
+						analyzer == null ? queryContext.queryAnalyzer : analyzer, boosts);
 		if (default_operator != null)
 			parser.setDefaultOperator(default_operator.queryParseroperator);
 		if (allow_leading_wildcard != null)
@@ -99,6 +106,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 
 	public static class Builder {
 
+		private Analyzer analyzer = null;
 		private LinkedHashSet<String> fields = null;
 		private LinkedHashMap<String, Float> boosts = null;
 		private Boolean allow_leading_wildcard = null;
@@ -114,6 +122,11 @@ public class MultiFieldQueryParser extends AbstractQuery {
 
 		public MultiFieldQueryParser build() {
 			return new MultiFieldQueryParser(this);
+		}
+
+		public Builder setAnalyzer(Analyzer analyzer) {
+			this.analyzer = analyzer;
+			return this;
 		}
 
 		public Builder addField(String... fieldSet) {
