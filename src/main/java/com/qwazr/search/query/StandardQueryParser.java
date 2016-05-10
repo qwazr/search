@@ -15,8 +15,10 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
@@ -27,6 +29,9 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class StandardQueryParser extends AbstractQuery {
+
+	@JsonIgnore
+	final private Analyzer analyzer;
 
 	final public String[] multi_fields;
 	final public String default_field;
@@ -43,6 +48,7 @@ public class StandardQueryParser extends AbstractQuery {
 	final public String query_string;
 
 	public StandardQueryParser() {
+		analyzer = null;
 		multi_fields = null;
 		default_field = null;
 		fields_boost = null;
@@ -58,11 +64,13 @@ public class StandardQueryParser extends AbstractQuery {
 		query_string = null;
 	}
 
-	public StandardQueryParser(String[] multi_fields, String default_field, LinkedHashMap<String, Float> fields_boost,
+	public StandardQueryParser(Analyzer analyzer, String[] multi_fields, String default_field,
+			LinkedHashMap<String, Float> fields_boost,
 			Boolean allow_leading_wildcard, QueryParserOperator default_operator, Integer phrase_slop,
 			Boolean enable_position_increments, Boolean analyzer_range_terms, Float fuzzy_min_sim,
 			Integer fuzzy_prefix_length, Integer max_determinized_states, Boolean lowercase_expanded_terms,
 			String query_string) {
+		this.analyzer = analyzer;
 		this.multi_fields = multi_fields;
 		this.default_field = default_field;
 		this.fields_boost = fields_boost;
@@ -79,6 +87,7 @@ public class StandardQueryParser extends AbstractQuery {
 	}
 
 	private StandardQueryParser(Builder builder) {
+		this.analyzer = builder.analyzer;
 		this.multi_fields = builder.multi_fields == null ? null : ArrayUtils.toArray(builder.multi_fields);
 		this.default_field = builder.default_field;
 		this.fields_boost = builder.fields_boost;
@@ -98,7 +107,8 @@ public class StandardQueryParser extends AbstractQuery {
 	final public Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
 
 		final org.apache.lucene.queryparser.flexible.standard.StandardQueryParser parser =
-				new org.apache.lucene.queryparser.flexible.standard.StandardQueryParser(queryContext.queryAnalyzer);
+				new org.apache.lucene.queryparser.flexible.standard.StandardQueryParser(
+						analyzer != null ? analyzer : queryContext.queryAnalyzer);
 		if (fields_boost != null)
 			parser.setFieldsBoost(fields_boost);
 		if (default_operator != null)
@@ -122,6 +132,7 @@ public class StandardQueryParser extends AbstractQuery {
 
 	public static class Builder {
 
+		private Analyzer analyzer = null;
 		private Set<String> multi_fields = null;
 		private String default_field = null;
 		private LinkedHashMap<String, Float> fields_boost = null;
@@ -135,6 +146,11 @@ public class StandardQueryParser extends AbstractQuery {
 		private Integer max_determinized_states = null;
 		private Boolean lowercase_expanded_terms = null;
 		private String query_string = null;
+
+		public Builder setAnalyzerClass(Analyzer analyzer) {
+			this.analyzer = analyzer;
+			return this;
+		}
 
 		public Builder addMultiField(String... fields) {
 			if (multi_fields == null)
