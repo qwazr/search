@@ -26,7 +26,7 @@ public class LongRangeQuery extends AbstractRangeQuery<Long> {
 	public LongRangeQuery() {
 	}
 
-	public LongRangeQuery(String field, Integer lower_value, Integer upper_value) {
+	public LongRangeQuery(String field, Long lower_value, Long upper_value) {
 		super(field, lower_value == null ? Long.MIN_VALUE : lower_value,
 				upper_value == null ? Long.MAX_VALUE : upper_value);
 	}
