@@ -38,7 +38,7 @@ import java.util.List;
 public class JavaTest {
 
 	public static final String[] RETURNED_FIELDS =
-			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory" };
+			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory"};
 
 	@BeforeClass
 	public static void startSearchServer() throws Exception {
@@ -182,7 +182,7 @@ public class JavaTest {
 	@Test
 	public void test320PointRangeQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
-		builder.query = new LongRangeQuery("quantity", 15, 25);
+		builder.query = new LongRangeQuery("quantity", 15L, 25L);
 		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("2", result.documents.get(0).record.id);
 	}
