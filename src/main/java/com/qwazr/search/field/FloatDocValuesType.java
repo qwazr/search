@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.SingleDVConverter;
+import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.FloatDocValuesField;
@@ -51,6 +53,6 @@ class FloatDocValuesType extends FieldTypeAbstract {
 		NumericDocValues docValues = MultiDocValues.getNumericValues(reader, fieldName);
 		if (docValues == null)
 			return super.getConverter(reader);
-		return new ValueConverter.FloatDVConverter(docValues);
+		return new SingleDVConverter.FloatDVConverter(docValues);
 	}
 }

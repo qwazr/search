@@ -15,8 +15,8 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.field.FieldTypeInterface;
-import com.qwazr.search.field.ValueConverter;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.LeafCollector;
@@ -54,7 +54,7 @@ public class FunctionCollector implements Collector {
 	public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
 		final LeafReader leafReader = context.reader();
 		FieldInfo fieldInfo = leafReader.getFieldInfos().fieldInfo(function.field);
-		ValueConverter converter = fieldType.getConverter(leafReader);
+		final ValueConverter converter = fieldType.getConverter(leafReader);
 		if (converter == null)
 			return DoNothingCollector.INSTANCE;
 		switch (function.function) {

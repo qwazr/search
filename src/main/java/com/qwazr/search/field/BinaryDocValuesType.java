@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.SingleDVConverter;
+import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.BinaryDocValuesField;
@@ -47,6 +49,6 @@ class BinaryDocValuesType extends FieldTypeAbstract {
 		BinaryDocValues binaryDocValue = MultiDocValues.getBinaryValues(reader, fieldName);
 		if (binaryDocValue == null)
 			return super.getConverter(reader);
-		return new ValueConverter.BinaryDVConverter(binaryDocValue);
+		return new SingleDVConverter.BinaryDVConverter(binaryDocValue);
 	}
 }

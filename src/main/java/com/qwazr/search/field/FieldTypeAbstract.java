@@ -16,6 +16,7 @@
 
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.index.IndexReader;

@@ -15,7 +15,7 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.ValueConverter;
+import com.qwazr.search.field.Converters.ValueConverter;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.ScoreDoc;

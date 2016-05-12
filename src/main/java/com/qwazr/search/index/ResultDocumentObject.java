@@ -15,9 +15,8 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.ValueConverter;
+import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.utils.server.ServerException;
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.lucene.search.ScoreDoc;
 
 import java.lang.reflect.Field;
@@ -59,8 +58,18 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 
 		@Override
 		void setDocValuesField(final String fieldName, final ValueConverter converter, final int docId) {
-			//TODO Optimize
-			setStoredField(fieldName, converter.convert(docId));
+			final Field field = fieldMap.get(fieldName);
+			if (field == null)
+				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
+			final Class<?> fieldType = field.getType();
+			try {
+				if (Collection.class.isAssignableFrom(fieldType))
+					converter.fillCollection(record, field, fieldType, docId);
+				else
+					converter.fillSingleValue(record, field, docId);
+			} catch (ReflectiveOperationException e) {
+				throw new ServerException(e);
+			}
 		}
 
 		@Override
@@ -68,9 +77,11 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 			final Field field = fieldMap.get(fieldName);
 			if (field == null)
 				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
+
+			final Class<?> fieldType = field.getType();
 			final Class<?> fieldValueClass = fieldValue.getClass();
+
 			try {
-				final Class<?> fieldType = field.getType();
 				if (fieldType.isAssignableFrom(fieldValueClass)) {
 					field.set(record, fieldValue);
 					return;

@@ -15,8 +15,8 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.field.FieldTypeInterface;
-import com.qwazr.search.field.ValueConverter;
 import org.apache.lucene.index.*;
 
 import java.io.IOException;

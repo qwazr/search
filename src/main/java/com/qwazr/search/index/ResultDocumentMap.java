@@ -16,7 +16,7 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.qwazr.search.field.ValueConverter;
+import com.qwazr.search.field.Converters.ValueConverter;
 import org.apache.lucene.search.ScoreDoc;
 
 import java.util.ArrayList;

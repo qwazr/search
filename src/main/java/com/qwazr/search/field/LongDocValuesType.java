@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.SingleDVConverter;
+import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.NumericDocValuesField;
@@ -48,9 +50,9 @@ class LongDocValuesType extends FieldTypeAbstract {
 
 	@Override
 	final public ValueConverter getConverter(final IndexReader reader) throws IOException {
-		NumericDocValues docValues = MultiDocValues.getNumericValues(reader, fieldName);
+		final NumericDocValues docValues = MultiDocValues.getNumericValues(reader, fieldName);
 		if (docValues == null)
 			return super.getConverter(reader);
-		return new ValueConverter.LongDVConverter(docValues);
+		return new SingleDVConverter.LongDVConverter(docValues);
 	}
 }
