@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.qwazr.search.field.ValueConverter;
 import org.apache.lucene.search.ScoreDoc;
 
 import java.util.ArrayList;
@@ -56,7 +57,13 @@ public class ResultDocumentMap extends ResultDocumentAbstract {
 		}
 
 		@Override
-		final void setReturnedField(final String fieldName, final Object fieldValue) {
+		final void setDocValuesField(final String fieldName, final ValueConverter converter, final int docId) {
+			// TODO optimize for map
+			setStoredField(fieldName, converter.convert(docId));
+		}
+
+		@Override
+		final void setStoredField(final String fieldName, final Object fieldValue) {
 			Object oldValue = fields.get(fieldName);
 			if (oldValue == null) {
 				fields.put(fieldName, fieldValue);

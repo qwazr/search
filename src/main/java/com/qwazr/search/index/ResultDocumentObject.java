@@ -15,6 +15,7 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.ValueConverter;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.lucene.search.ScoreDoc;
@@ -41,7 +42,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		private final Map<String, Field> fieldMap;
 
 		Builder(final int pos, final ScoreDoc scoreDoc, final float maxScore, final Class<T> objectClass,
-		        Map<String, Field> fieldMap) {
+				Map<String, Field> fieldMap) {
 			super(pos, scoreDoc, maxScore);
 			try {
 				this.record = objectClass.newInstance();
@@ -57,26 +58,38 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		}
 
 		@Override
-		final void setReturnedField(final String fieldName, final Object fieldValue) {
-			Field field = fieldMap.get(fieldName);
+		void setDocValuesField(final String fieldName, final ValueConverter converter, final int docId) {
+			//TODO Optimize
+			setStoredField(fieldName, converter.convert(docId));
+		}
+
+		@Override
+		final void setStoredField(final String fieldName, final Object fieldValue) {
+			final Field field = fieldMap.get(fieldName);
 			if (field == null)
 				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
+			final Class<?> fieldValueClass = fieldValue.getClass();
 			try {
-				final Class<?> type = field.getType();
-				if (type.isAssignableFrom(fieldValue.getClass()))
+				final Class<?> fieldType = field.getType();
+				if (fieldType.isAssignableFrom(fieldValueClass)) {
 					field.set(record, fieldValue);
-				else {
-					Object value = field.get(record);
-					if (value == null && Collection.class.isAssignableFrom(type)) {
-						value = type.newInstance();
+					return;
+				}
+				Object value = field.get(record);
+				if (value == null) {
+					if (Collection.class.isAssignableFrom(fieldType)) {
+						value = fieldType.newInstance();
 						field.set(record, value);
+						return;
 					}
+				} else {
 					if (value instanceof Collection) {
 						((Collection) value).add(fieldValue);
-					} else
-						throw new UnsupportedOperationException(
-								"The field " + fieldName + " does not support this type: " + fieldValue.getClass());
+						return;
+					}
 				}
+				throw new UnsupportedOperationException(
+						"The field " + fieldName + " does not support this type: " + fieldValueClass.getSimpleName());
 			} catch (IllegalAccessException | InstantiationException e) {
 				throw new ServerException(e);
 			}

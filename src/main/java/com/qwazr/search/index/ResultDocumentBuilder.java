@@ -15,6 +15,7 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.ValueConverter;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.ScoreDoc;
@@ -51,14 +52,16 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 
 	abstract T build();
 
-	abstract void setReturnedField(final String fieldName, final Object fieldValue);
+	abstract void setDocValuesField(final String fieldName, final ValueConverter converter, final int docId);
+
+	abstract void setStoredField(final String fieldName, final Object value);
 
 	@Override
 	public final void accept(final IndexableField field) {
 		Object value = getValue(field);
 		if (value == null)
 			return;
-		setReturnedField(field.name(), value);
+		setStoredField(field.name(), value);
 	}
 
 	final void setStoredFields(final Document document) {

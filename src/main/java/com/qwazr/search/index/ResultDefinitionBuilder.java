@@ -79,7 +79,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
 				if (returnedFields != null && !returnedFields.isEmpty()) {
 					buildStoredFields(returnedFields);
-					buildDocValueReturnedFields(returnedFields);
+					buildDocValuesReturnedFields(returnedFields);
 				}
 				buildHighlights();
 				for (ResultDocumentBuilder<T> rdb : resultDocumentBuilders)
@@ -146,7 +146,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 			timeTracker.next("storedFields");
 	}
 
-	final private void buildDocValueReturnedFields(final Set<String> returnedFields) throws IOException {
+	final private void buildDocValuesReturnedFields(final Set<String> returnedFields) throws IOException {
 
 		final IndexReader indexReader = indexSearcher.getIndexReader();
 
@@ -164,7 +164,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 				return;
 			for (ResultDocumentBuilder resultDocumentBuilder : resultDocumentBuilders)
 				resultDocumentBuilder
-						.setReturnedField(fieldName, converter.convert(resultDocumentBuilder.scoreDoc.doc));
+						.setDocValuesField(fieldName, converter, resultDocumentBuilder.scoreDoc.doc);
 		});
 		if (timeTracker != null)
 			timeTracker.next("docValuesFields");
