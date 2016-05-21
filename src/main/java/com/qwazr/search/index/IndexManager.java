@@ -77,8 +77,7 @@ public class IndexManager {
 
 	private void shutdown() {
 		synchronized (schemaMap) {
-			for (SchemaInstance instance : schemaMap.values())
-				IOUtils.closeQuietly(instance);
+			schemaMap.values().forEach(IOUtils::closeQuietly);
 		}
 	}
 

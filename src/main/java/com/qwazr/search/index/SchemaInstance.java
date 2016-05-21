@@ -183,8 +183,7 @@ public class SchemaInstance implements Closeable {
 			searchContext = null;
 		}
 		synchronized (indexMap) {
-			for (IndexInstance instance : indexMap.values())
-				IOUtils.closeQuietly(instance);
+			indexMap.values().forEach(IOUtils::closeQuietly);
 		}
 	}
 

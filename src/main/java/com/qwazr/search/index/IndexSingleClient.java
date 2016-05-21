@@ -38,12 +38,15 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		super(remote);
 	}
 
+	private final static String PATH = "/" + IndexServiceInterface.PATH;
+	private final static String PATH_SLASH = PATH + "/";
+
 	public final static TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
 	};
 
 	@Override
 	public SchemaSettingsDefinition createUpdateSchema(final String schema_name) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name);
 		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, null, null, SchemaSettingsDefinition.class, 200);
 	}
@@ -51,14 +54,14 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public SchemaSettingsDefinition createUpdateSchema(final String schema_name,
 			final SchemaSettingsDefinition settings) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name);
 		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, settings, null, SchemaSettingsDefinition.class, 200);
 	}
 
 	@Override
 	public Set<String> getSchemas() {
-		final UBuilder uriBuilder = new UBuilder("/indexes");
+		final UBuilder uriBuilder = new UBuilder(PATH);
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, SetStringTypeRef, 200);
 	}
@@ -66,7 +69,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Response deleteSchema(final String schema_name) {
 		try {
-			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name);
+			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name);
 			final Request request = Request.Delete(uriBuilder.build());
 			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -80,14 +83,14 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public Set<String> getIndexes(final String schema_name) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/" + schema_name);
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name);
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, SetStringTypeRef, 200);
 	}
 
 	@Override
 	public IndexStatus createUpdateIndex(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, " / ", index_name);
 		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, null, null, IndexStatus.class, 200);
 	}
@@ -95,14 +98,14 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public IndexStatus createUpdateIndex(final String schema_name, final String index_name,
 			final IndexSettingsDefinition settings) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name);
 		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, settings, null, IndexStatus.class, 200);
 	}
 
 	@Override
 	public LinkedHashMap<String, FieldDefinition> getFields(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields");
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/fields");
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, FieldDefinition.MapStringFieldTypeRef, 200);
 	}
@@ -110,7 +113,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public LinkedHashMap<String, FieldDefinition> setFields(final String schema_name, final String index_name,
 			final LinkedHashMap<String, FieldDefinition> fields) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields");
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/fields");
 		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, fields, null, FieldDefinition.MapStringFieldTypeRef, 200);
 	}
@@ -119,7 +122,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public List<TermDefinition> doAnalyzeQuery(final String schema_name, final String index_name,
 			final String field_name, final String text) {
 		final UBuilder uriBuilder =
-				new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name, "/analyzer/query");
+				new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name, "/analyzer/query");
 		uriBuilder.setParameter("text", text);
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, TermDefinition.ListTermDefinitionRef, 200);
@@ -129,7 +132,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public List<TermDefinition> doAnalyzeIndex(final String schema_name, final String index_name,
 			final String field_name, final String text) {
 		final UBuilder uriBuilder =
-				new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name, "/analyzer/index");
+				new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name, "/analyzer/index");
 		uriBuilder.setParameter("text", text);
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, TermDefinition.ListTermDefinitionRef, 200);
@@ -145,7 +148,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public List<TermEnumDefinition> doExtractTerms(final String schema_name, final String index_name,
 			final String field_name, final String prefix, final Integer start, final Integer rows) {
 		final UBuilder uriBuilder =
-				new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name, "/terms/", prefix);
+				new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name, "/terms/", prefix);
 		uriBuilder.setParameter("start", start).setParameter("rows", rows);
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, TermEnumDefinition.ListTermEnumDefinitionRef, 200);
@@ -153,7 +156,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public FieldDefinition getField(final String schema_name, final String index_name, final String field_name) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name);
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, FieldDefinition.class, 200);
 	}
@@ -161,7 +164,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public FieldDefinition setField(final String schema_name, final String index_name, final String field_name,
 			final FieldDefinition field) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name);
 		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, field, null, FieldDefinition.class, 200);
 	}
@@ -169,7 +172,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Response deleteField(final String schema_name, final String index_name, final String field_name) {
 		try {
-			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/fields/", field_name);
+			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name);
 			final Request request = Request.Delete(uriBuilder.build());
 			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -183,7 +186,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers");
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/analyzers");
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, AnalyzerDefinition.MapStringAnalyzerTypeRef, 200);
 	}
@@ -192,7 +195,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public AnalyzerDefinition getAnalyzer(final String schema_name, final String index_name,
 			final String analyzer_name) {
 		final UBuilder uriBuilder =
-				new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
+				new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/analyzers/", analyzer_name);
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, AnalyzerDefinition.class, 200);
 	}
@@ -201,7 +204,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public AnalyzerDefinition setAnalyzer(final String schema_name, final String index_name, final String analyzer_name,
 			final AnalyzerDefinition analyzer) {
 		final UBuilder uriBuilder =
-				new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
+				new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/analyzers/", analyzer_name);
 		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, analyzer, null, AnalyzerDefinition.class, 200);
 	}
@@ -209,7 +212,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String schema_name, final String index_name,
 			final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers");
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/analyzers");
 		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, analyzers, null, AnalyzerDefinition.MapStringAnalyzerTypeRef, 200);
 	}
@@ -218,7 +221,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public Response deleteAnalyzer(final String schema_name, final String index_name, final String analyzer_name) {
 		try {
 			final UBuilder uriBuilder =
-					new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
+					new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/analyzers/", analyzer_name);
 			final Request request = Request.Delete(uriBuilder.build());
 			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -234,14 +237,14 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public List<TermDefinition> testAnalyzer(final String schema_name, final String index_name,
 			final String analyzer_name, final String text) {
 		final UBuilder uriBuilder =
-				new UBuilder("/indexes/", schema_name, "/", index_name, "/analyzers/", analyzer_name);
+				new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/analyzers/", analyzer_name);
 		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, text, null, TermDefinition.ListTermDefinitionRef, 200);
 	}
 
 	@Override
 	public IndexStatus getIndex(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name);
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, IndexStatus.class, 200);
 	}
@@ -249,7 +252,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Response deleteIndex(final String schema_name, final String index_name) {
 		try {
-			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name);
+			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name);
 			final Request request = Request.Delete(uriBuilder.build());
 			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -265,7 +268,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public Response postMappedDocument(final String schema_name, final String index_name,
 			final Map<String, Object> document) {
 		try {
-			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc");
+			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/doc");
 			final Request request = Request.Post(uriBuilder.build());
 			final HttpResponse response = execute(request, document, null);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -279,7 +282,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public BackupStatus doBackup(final String schema_name, final String index_name, final Integer keep_last_count) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup")
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/backup")
 				.setParameterObject("keep_last", keep_last_count);
 		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, null, null, BackupStatus.class, 200);
@@ -291,7 +294,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public List<BackupStatus> getBackups(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/backup");
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/backup");
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, ListBackupStatusTypeRef, 200);
 	}
@@ -301,8 +304,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 			final String source, final String fileName) {
 		try {
 			final UBuilder uriBuilder =
-					new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/", sessionID, "/", source,
-							"/", fileName);
+					new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/replication/", sessionID, "/", source, "/",
+							fileName);
 			final Request request = Request.Get(uriBuilder.build());
 			return execute(request, null, null).getEntity().getContent();
 		} catch (HttpResponseEntityException e) {
@@ -316,7 +319,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public Response replicationRelease(final String schema_name, final String index_name, final String sessionID) {
 		try {
 			final UBuilder uriBuilder =
-					new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/", sessionID);
+					new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/replication/", sessionID);
 			final Request request = Request.Delete(uriBuilder.build());
 			final HttpResponse response = execute(request, null, null);
 			if (response == null)
@@ -333,7 +336,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public Response replicationUpdate(final String schema_name, final String index_name, final String current_version) {
 		try {
 			final UBuilder uriBuilder =
-					new UBuilder("/indexes/", schema_name, "/", index_name, "/replication/", current_version);
+					new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/replication/", current_version);
 			final Request request = Request.Get(uriBuilder.build());
 			final HttpResponse response = execute(request, null, null);
 			if (response == null)
@@ -351,7 +354,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Response replicationCheck(final String schema_name, final String index_name) {
 		try {
-			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/replication");
+			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/replication");
 			final Request request = Request.Get(uriBuilder.build());
 			final HttpResponse response = execute(request, null, null);
 			if (response == null)
@@ -372,7 +375,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public Response postMappedDocuments(final String schema_name, final String index_name,
 			final Collection<Map<String, Object>> documents) {
 		try {
-			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs");
+			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/docs");
 			final Request request = Request.Post(uriBuilder.build());
 			final HttpResponse response = execute(request, documents, null);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -388,7 +391,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public Response updateMappedDocValues(final String schema_name, final String index_name,
 			final Map<String, Object> document) {
 		try {
-			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc/values");
+			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/doc/values");
 			final Request request = Request.Post(uriBuilder.build());
 			final HttpResponse response = execute(request, document, null);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -404,7 +407,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public Response updateMappedDocsValues(final String schema_name, final String index_name,
 			final Collection<Map<String, Object>> documents) {
 		try {
-			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs/values");
+			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/docs/values");
 			final Request request = Request.Post(uriBuilder.build());
 			final HttpResponse response = execute(request, documents, null);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -419,7 +422,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Response deleteAll(final String schema_name, final String index_name) {
 		try {
-			final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/docs");
+			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/docs");
 			final Request request = Request.Delete(uriBuilder.build());
 			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -438,7 +441,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public LinkedHashMap<String, Object> getDocument(final String schema_name, final String index_name,
 			final String doc_id) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc/", doc_id);
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/doc/", doc_id);
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, MapStringObjectTypeRef, 200);
 	}
@@ -450,7 +453,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public List<LinkedHashMap<String, Object>> getDocuments(final String schema_name, final String index_name,
 			final Integer start, final Integer rows) {
-		final UBuilder uriBuilder = new UBuilder("/indexes/", schema_name, "/", index_name, "/doc");
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/doc");
 		uriBuilder.addParameter("start", start == null ? null : start.toString())
 				.addParameter("rows", rows == null ? null : rows.toString());
 		final Request request = Request.Get(uriBuilder.build());
@@ -461,7 +464,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public ResultDefinition.WithMap searchQuery(final String schema_name, final String index_name,
 			final QueryDefinition query, final Boolean delete) {
 		final UBuilder uriBuilder =
-				new UBuilder("/indexes/", schema_name, "/", index_name, "/search").setParameterObject("delete", delete);
+				new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/search").setParameterObject("delete", delete);
 		final Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, query, null, ResultDefinition.WithMap.class, 200);
 	}
