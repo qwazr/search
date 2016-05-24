@@ -16,7 +16,6 @@
 package com.qwazr.search.index;
 
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.BytesRefBuilder;
 import org.apache.lucene.util.NumericUtils;
 
 public class BytesRefUtils {
@@ -30,33 +29,33 @@ public class BytesRefUtils {
 	final static public BytesRef from(final Integer value) {
 		if (value == null)
 			return new BytesRef(BytesRef.EMPTY_BYTES);
-		final BytesRefBuilder builder = new BytesRefBuilder();
-		NumericUtils.intToSortableBytes(value, new byte[4], 0);
-		return builder.toBytesRef();
+		final BytesRef bytesRef = new BytesRef(new byte[4]);
+		NumericUtils.intToSortableBytes(value, bytesRef.bytes, 0);
+		return bytesRef;
 	}
 
 	final static public BytesRef from(final Long value) {
 		if (value == null)
 			return new BytesRef(BytesRef.EMPTY_BYTES);
-		final BytesRefBuilder builder = new BytesRefBuilder();
-		NumericUtils.longToSortableBytes(value, new byte[8], 0);
-		return builder.toBytesRef();
+		final BytesRef bytesRef = new BytesRef(new byte[8]);
+		NumericUtils.longToSortableBytes(value, bytesRef.bytes, 0);
+		return bytesRef;
 	}
 
 	final static public BytesRef from(final Float value) {
 		if (value == null)
 			return new BytesRef(BytesRef.EMPTY_BYTES);
-		final BytesRefBuilder builder = new BytesRefBuilder();
-		NumericUtils.intToSortableBytes(NumericUtils.floatToSortableInt(value), new byte[4], 0);
-		return builder.toBytesRef();
+		final BytesRef bytesRef = new BytesRef(new byte[4]);
+		NumericUtils.intToSortableBytes(NumericUtils.floatToSortableInt(value), bytesRef.bytes, 0);
+		return bytesRef;
 	}
 
 	final static public BytesRef from(final Double value) {
 		if (value == null)
 			return new BytesRef(BytesRef.EMPTY_BYTES);
-		final BytesRefBuilder builder = new BytesRefBuilder();
-		NumericUtils.longToSortableBytes(NumericUtils.doubleToSortableLong(value), new byte[8], 0);
-		return builder.toBytesRef();
+		final BytesRef bytesRef = new BytesRef(new byte[8]);
+		NumericUtils.longToSortableBytes(NumericUtils.doubleToSortableLong(value), bytesRef.bytes, 0);
+		return bytesRef;
 	}
 
 	final static public BytesRef fromAny(final Object value) {
