@@ -61,7 +61,8 @@ public class AnnotatedIndex {
 	@IndexField(template = FieldDefinition.Template.DoubleDocValuesField)
 	final public Double price;
 
-	@IndexField(template = FieldDefinition.Template.LongField)
+	final static String QUANTITY_FIELD = "quantity";
+	@IndexField(name = QUANTITY_FIELD, template = FieldDefinition.Template.LongField)
 	final public Long quantity;
 
 	@IndexField(template = StringField, stored = true)

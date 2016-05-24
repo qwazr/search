@@ -34,6 +34,8 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import static com.qwazr.search.test.AnnotatedIndex.QUANTITY_FIELD;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JavaTest {
 
@@ -166,7 +168,7 @@ public class JavaTest {
 	@Test
 	public void test320PointExactQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
-		builder.query = new LongExactQuery("quantity", 10);
+		builder.query = new LongExactQuery(QUANTITY_FIELD, 10);
 		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("1", result.documents.get(0).record.id);
 	}
@@ -174,7 +176,7 @@ public class JavaTest {
 	@Test
 	public void test320PointSetQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
-		builder.query = new LongSetQuery("quantity", 20, 25);
+		builder.query = new LongSetQuery(QUANTITY_FIELD, 20, 25);
 		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("2", result.documents.get(0).record.id);
 	}
@@ -182,7 +184,7 @@ public class JavaTest {
 	@Test
 	public void test320PointRangeQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
-		builder.query = new LongRangeQuery("quantity", 15L, 25L);
+		builder.query = new LongRangeQuery(QUANTITY_FIELD, 15L, 25L);
 		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("2", result.documents.get(0).record.id);
 	}
@@ -190,7 +192,7 @@ public class JavaTest {
 	@Test
 	public void test320PointMultiRangeQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
-		LongMultiRangeQuery.Builder qBuilder = new LongMultiRangeQuery.Builder("quantity");
+		LongMultiRangeQuery.Builder qBuilder = new LongMultiRangeQuery.Builder(QUANTITY_FIELD);
 		qBuilder.addRange(5L, 15L);
 		qBuilder.addRange(15L, 25L);
 		checkQueryResult(builder, 2L);

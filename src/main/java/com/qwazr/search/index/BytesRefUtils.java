@@ -68,9 +68,9 @@ public class BytesRefUtils {
 		if (value instanceof Float)
 			return from((Float) value);
 		if (value instanceof Long)
-			return from((String) value);
+			return from((Long) value);
 		if (value instanceof Double)
-			return from((String) value);
+			return from((Double) value);
 		if (value instanceof BytesRef)
 			return (BytesRef) value;
 		return new BytesRef(value.toString());
