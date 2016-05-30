@@ -22,7 +22,6 @@ import com.qwazr.utils.AnnotationsUtils;
 import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.server.ServerException;
 import org.apache.http.HttpEntity;
 import org.apache.http.util.EntityUtils;
 
@@ -33,7 +32,6 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.function.BiConsumer;
 
 public class AnnotatedIndexService<T> {
 
@@ -282,7 +280,7 @@ public class AnnotatedIndexService<T> {
 		checkParameters();
 		if (annotatedService != null)
 			return annotatedService.searchQuery(schemaName, indexName, query, fieldMap, indexDefinitionClass);
-		throw new ServerException("Remote annotated Search Query not yet implemented");
+		return toRecords(indexService.searchQuery(schemaName, indexName, query, false));
 	}
 
 	public ResultDefinition.WithMap searchQueryWithMap(QueryDefinition query) {
@@ -354,11 +352,24 @@ public class AnnotatedIndexService<T> {
 			return null;
 		final T record = indexDefinitionClass.newInstance();
 		fields.forEach((fieldName, fieldValue) -> {
-			Field field = fieldMap.get(fieldName);
-			if (field == null)
+			final Field field = fieldMap.get(fieldName);
+			if (field == null || fieldValue == null)
 				return;
+			final Class<?> fieldType = field.getType();
+			final Class<?> fieldValueType = fieldValue.getClass();
 			try {
-				field.set(record, fieldValue);
+				if (fieldType.isAssignableFrom(fieldValueType)) {
+					field.set(record, fieldValue);
+					return;
+				}
+				if (fieldValue instanceof Collection) {
+					Collection<?> fieldValues = (Collection<?>) fieldValue;
+					if (fieldValues.isEmpty())
+						return;
+					field.set(record, fieldValues.iterator().next());
+					return;
+				}
+				throw new RuntimeException("Field not assignable: " + fieldType + " -> " + fieldValueType);
 			} catch (IllegalAccessException e) {
 				throw new RuntimeException(e);
 			}
@@ -378,6 +389,22 @@ public class AnnotatedIndexService<T> {
 			}
 		});
 		return records;
+	}
+
+	private ResultDefinition.WithObject<T> toRecords(ResultDefinition.WithMap resultWithMap) {
+		if (resultWithMap == null)
+			return null;
+		final List<ResultDocumentObject<T>> documents = new ArrayList<>();
+		if (resultWithMap.documents != null) {
+			resultWithMap.documents.forEach(resultDocMap -> {
+				try {
+					documents.add(new ResultDocumentObject(resultDocMap, toRecord(resultDocMap.fields)));
+				} catch (ReflectiveOperationException e) {
+					throw new RuntimeException(e);
+				}
+			});
+		}
+		return new ResultDefinition.WithObject<T>(resultWithMap, documents);
 	}
 
 }

@@ -67,6 +67,17 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		this.functions = builder.functions;
 	}
 
+	protected ResultDefinition(final ResultDefinition<?> src, final List<T> documents) {
+		this.query = src.query;
+		this.timer = src.timer;
+		this.total_hits = src.total_hits;
+		this.max_score = src.max_score;
+		this.documents = documents;
+		this.facets = src.facets;
+		this.functions = src.functions;
+
+	}
+
 	ResultDefinition(TimeTracker timeTracker) {
 		query = null;
 		total_hits = 0L;
@@ -131,6 +142,11 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		WithObject(ResultDefinitionBuilder<ResultDocumentObject<T>> builder) {
 			super(builder);
 		}
+
+		public WithObject(final ResultDefinition<?> result, final List<ResultDocumentObject<T>> documents) {
+			super(result, documents);
+		}
+
 	}
 
 }

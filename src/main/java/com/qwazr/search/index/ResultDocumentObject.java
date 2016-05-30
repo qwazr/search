@@ -28,7 +28,13 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 	final public T record;
 
 	private ResultDocumentObject(final Builder<T> builder) {
+		super(builder);
 		this.record = builder.record;
+	}
+
+	public ResultDocumentObject(final ResultDocumentAbstract resultDocument, final T record) {
+		super(resultDocument);
+		this.record = record;
 	}
 
 	public T getRecord() {

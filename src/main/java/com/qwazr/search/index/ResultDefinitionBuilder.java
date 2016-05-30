@@ -163,8 +163,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 			if (converter == null)
 				return;
 			for (ResultDocumentBuilder resultDocumentBuilder : resultDocumentBuilders)
-				resultDocumentBuilder
-						.setDocValuesField(fieldName, converter, resultDocumentBuilder.scoreDoc.doc);
+				resultDocumentBuilder.setDocValuesField(fieldName, converter, resultDocumentBuilder.scoreDoc.doc);
 		});
 		if (timeTracker != null)
 			timeTracker.next("docValuesFields");

@@ -35,12 +35,20 @@ public abstract class ResultDocumentAbstract {
 		shard_index = -1;
 	}
 
-	protected ResultDocumentAbstract(ResultDocumentBuilder builder) {
+	protected ResultDocumentAbstract(final ResultDocumentBuilder builder) {
 		this.score = builder.scoreDoc.score;
 		this.percent_score = builder.percent_score;
 		highlights = builder.highlights;
 		this.doc = builder.scoreDoc.doc;
 		this.shard_index = builder.scoreDoc.shardIndex;
+	}
+
+	protected ResultDocumentAbstract(final ResultDocumentAbstract src) {
+		this.score = src.score;
+		this.percent_score = src.percent_score;
+		highlights = src.highlights;
+		this.doc = src.doc;
+		this.shard_index = src.shard_index;
 	}
 
 	final public Float getScore() {
@@ -56,12 +64,10 @@ public abstract class ResultDocumentAbstract {
 		return percent_score;
 	}
 
-	@JsonIgnore
 	final public int getDoc() {
 		return doc;
 	}
 
-	@JsonIgnore
 	final public int getShard_index() {
 		return shard_index;
 	}
