@@ -22,23 +22,22 @@ import org.junit.runners.Suite;
 import java.net.URISyntaxException;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({JsonTestSuite.JsonLocalTest.class, JsonTestSuite.JsonRemoteTest.class})
-public class JsonTestSuite {
+@Suite.SuiteClasses({JavaTest.JavaLocalTest.class, JavaTest.JavaRemoteTest.class})
+public class JavaTest {
 
-	public static class JsonLocalTest extends JsonAbstractTest {
+	public static class JavaLocalTest extends JavaAbstractTest {
 
 		@Override
-		protected IndexServiceInterface getClient() throws URISyntaxException {
+		protected IndexServiceInterface getIndexService() throws URISyntaxException {
 			return IndexServiceInterface.getClient();
 		}
 	}
 
-	public static class JsonRemoteTest extends JsonAbstractTest {
+	public static class JavaRemoteTest extends JavaAbstractTest {
 
 		@Override
-		protected IndexServiceInterface getClient() throws URISyntaxException {
+		protected IndexServiceInterface getIndexService() throws URISyntaxException {
 			return TestServer.getSingleClient();
 		}
 	}
-
 }
