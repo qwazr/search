@@ -34,9 +34,7 @@ import java.net.URISyntaxException;
 import java.util.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class JsonTest {
-
-	private static volatile boolean started;
+public abstract class JsonAbstractTest {
 
 	public static final String SCHEMA_NAME = "schema-test-json";
 	public static final String INDEX_MASTER_NAME = "index-test-master-json";
@@ -66,9 +64,7 @@ public class JsonTest {
 		TestServer.startServer();
 	}
 
-	public IndexServiceInterface getClient() throws URISyntaxException {
-		return TestServer.getSingleClient();
-	}
+	protected abstract IndexServiceInterface getClient() throws URISyntaxException;
 
 	@Test
 	public void test000CreateSchema() throws URISyntaxException {
@@ -94,7 +90,7 @@ public class JsonTest {
 	}
 
 	private static LinkedHashMap<String, FieldDefinition> getFieldMap(String res) {
-		InputStream is = JsonTest.class.getResourceAsStream(res);
+		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
 		try {
 			return FieldDefinition.newFieldMap(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
 		} catch (IOException e) {
@@ -105,7 +101,7 @@ public class JsonTest {
 	}
 
 	private static FieldDefinition getField(String res) {
-		InputStream is = JsonTest.class.getResourceAsStream(res);
+		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
 		try {
 			return FieldDefinition.newField(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
 		} catch (IOException e) {
@@ -116,7 +112,7 @@ public class JsonTest {
 	}
 
 	private static LinkedHashMap<String, AnalyzerDefinition> getAnalyzerMap(String res) {
-		InputStream is = JsonTest.class.getResourceAsStream(res);
+		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
 		try {
 			return AnalyzerDefinition.newAnalyzerMap(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
 		} catch (IOException e) {
@@ -127,7 +123,7 @@ public class JsonTest {
 	}
 
 	private static AnalyzerDefinition getAnalyzer(String res) {
-		InputStream is = JsonTest.class.getResourceAsStream(res);
+		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
 		try {
 			return AnalyzerDefinition.newAnalyzer(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
 		} catch (IOException e) {
@@ -138,7 +134,7 @@ public class JsonTest {
 	}
 
 	private static IndexSettingsDefinition getIndexSettings(String res) {
-		InputStream is = JsonTest.class.getResourceAsStream(res);
+		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
 		try {
 			return JsonMapper.MAPPER.readValue(is, IndexSettingsDefinition.class);
 		} catch (IOException e) {
@@ -240,7 +236,7 @@ public class JsonTest {
 	}
 
 	private static QueryDefinition getQuery(String res) {
-		InputStream is = JsonTest.class.getResourceAsStream(res);
+		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
 		try {
 			return QueryDefinition.newQuery(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
 		} catch (IOException e) {
@@ -282,7 +278,7 @@ public class JsonTest {
 	}
 
 	private static Collection<Map<String, Object>> getDocs(String res) {
-		InputStream is = JsonTest.class.getResourceAsStream(res);
+		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
 		try {
 			return JsonMapper.MAPPER.readValue(is, IndexSingleClient.CollectionMapStringObjectTypeRef);
 		} catch (Exception e) {
@@ -293,7 +289,7 @@ public class JsonTest {
 	}
 
 	private static HashMap<String, Object> getDoc(String res) {
-		InputStream is = JsonTest.class.getResourceAsStream(res);
+		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
 		try {
 			return JsonMapper.MAPPER.readValue(is, IndexSingleClient.MapStringObjectTypeRef);
 		} catch (Exception e) {
@@ -517,7 +513,7 @@ public class JsonTest {
 
 	@Test
 	public void test430QueryFunctionsDoc() throws URISyntaxException, IOException {
-		Object[] results = new Object[] { 1.1D, 10.5D, 10, 14 };
+		Object[] results = new Object[]{1.1D, 10.5D, 10, 14};
 		IndexServiceInterface client = getClient();
 		ResultDefinition.WithMap result = checkQueryIndex(client, QUERY_CHECK_FUNCTIONS, 5);
 		Assert.assertNotNull(result.functions);
@@ -581,7 +577,7 @@ public class JsonTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
+		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
 		IndexServiceInterface client = getClient();
 		checkAnalyzerResult(term_results,
 				client.doAnalyzeIndex(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "There are few parts of texts"));
@@ -593,16 +589,17 @@ public class JsonTest {
 	@Test
 	public void test610TermsEnum() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
-		List<TermEnumDefinition> terms =
-				client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, null);
+		Assert.assertNotNull(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, null));
 		int firstSize =
-				JavaTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, 10000))
+				JavaAbstractTest
+						.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, 10000))
 						.size();
 		int secondSize =
-				JavaTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, 2, 10000))
+				JavaAbstractTest
+						.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, 2, 10000))
 						.size();
 		Assert.assertEquals(firstSize, secondSize + 2);
-		JavaTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "a", null, null));
+		JavaAbstractTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "a", null, null));
 	}
 
 	@Test
@@ -658,14 +655,22 @@ public class JsonTest {
 		Assert.assertArrayEquals(slaveAnalyzers.keySet().toArray(), masterAnalyzers.keySet().toArray());
 	}
 
+	private Response checkDelete(String indexName, int expectedCode) throws URISyntaxException {
+		final IndexServiceInterface client = getClient();
+		final Response response = client.deleteIndex(SCHEMA_NAME, indexName);
+		Assert.assertNotNull(response);
+		Assert.assertEquals(expectedCode, response.getStatusInfo().getStatusCode());
+		return response;
+	}
+
 	@Test
 	public void test980DeleteIndex() throws URISyntaxException {
-		IndexServiceInterface client = getClient();
-		Response response = client.deleteIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
-		Assert.assertNotNull(response);
-		Assert.assertEquals(200, response.getStatusInfo().getStatusCode());
+		checkDelete(INDEX_SLAVE_NAME, 200);
+		checkDelete(INDEX_MASTER_NAME, 200);
+		final IndexServiceInterface client = getClient();
 		Set<String> indexes = client.getIndexes(SCHEMA_NAME);
 		Assert.assertNotNull(indexes);
+		Assert.assertFalse(indexes.contains(INDEX_SLAVE_NAME));
 		Assert.assertFalse(indexes.contains(INDEX_MASTER_NAME));
 	}
 

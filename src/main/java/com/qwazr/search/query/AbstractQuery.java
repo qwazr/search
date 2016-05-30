@@ -54,6 +54,7 @@ import java.io.IOException;
 		@JsonSubTypes.Type(value = IntMultiRangeQuery.class),
 		@JsonSubTypes.Type(value = IntRangeQuery.class),
 		@JsonSubTypes.Type(value = IntSetQuery.class),
+		@JsonSubTypes.Type(value = JoinQuery.class),
 		@JsonSubTypes.Type(value = LongExactQuery.class),
 		@JsonSubTypes.Type(value = LongMultiRangeQuery.class),
 		@JsonSubTypes.Type(value = LongRangeQuery.class),

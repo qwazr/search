@@ -37,7 +37,7 @@ import java.util.List;
 import static com.qwazr.search.test.AnnotatedIndex.QUANTITY_FIELD;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class JavaTest {
+public abstract class JavaAbstractTest {
 
 	public static final String[] RETURNED_FIELDS =
 			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory"};
@@ -47,14 +47,17 @@ public class JavaTest {
 		TestServer.startServer();
 	}
 
+	protected abstract IndexServiceInterface getIndexService() throws URISyntaxException;
+
 	private AnnotatedIndexService<AnnotatedIndex> getMaster() throws URISyntaxException {
-		return TestServer.getService(AnnotatedIndex.class);
+		return TestServer.getService(getIndexService(), AnnotatedIndex.class);
 	}
 
 	private AnnotatedIndexService<AnnotatedIndex> getSlave() throws URISyntaxException {
 		IndexSettingsDefinition settings =
 				new IndexSettingsDefinition(null, "http://localhost:9091/indexes/testSchema/testIndexMaster");
-		return TestServer.getService(AnnotatedIndex.class, AnnotatedIndex.INDEX_NAME_SLAVE, settings);
+		return TestServer
+				.getService(getIndexService(), AnnotatedIndex.class, AnnotatedIndex.INDEX_NAME_SLAVE, settings);
 	}
 
 	@Test

@@ -55,13 +55,15 @@ public class TestServer {
 		return singleClient;
 	}
 
-	public static synchronized <T> AnnotatedIndexService<T> getService(Class<T> indexClass, String indexName,
-			IndexSettingsDefinition settings) throws URISyntaxException {
-		return new AnnotatedIndexService(IndexServiceInterface.getClient(), indexClass, null, indexName, settings);
+	public static synchronized <T> AnnotatedIndexService<T> getService(final IndexServiceInterface indexService,
+			final Class<T> indexClass, final String indexName,
+			final IndexSettingsDefinition settings) throws URISyntaxException {
+		return new AnnotatedIndexService(indexService, indexClass, null, indexName, settings);
 	}
 
-	public static synchronized <T> AnnotatedIndexService<T> getService(Class<T> indexClass) throws URISyntaxException {
-		return getService(indexClass, null, null);
+	public static synchronized <T> AnnotatedIndexService<T> getService(final IndexServiceInterface indexService,
+			final Class<T> indexClass) throws URISyntaxException {
+		return getService(indexService, indexClass, null, null);
 	}
 
 }

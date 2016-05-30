@@ -23,6 +23,7 @@ import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.SortedSetDocValues;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
@@ -66,10 +67,10 @@ public class AnnotatedIndex {
 	final public Long quantity;
 
 	@IndexField(template = StringField, stored = true)
-	final public LinkedHashSet<String> storedCategory;
+	final public Collection<String> storedCategory;
 
 	@IndexField(template = SortedSetDocValuesField)
-	final public LinkedHashSet<String> docValuesCategory;
+	final public Collection<String> docValuesCategory;
 
 	public AnnotatedIndex() {
 		this(null, null, null, null, null);
