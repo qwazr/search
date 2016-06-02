@@ -45,6 +45,8 @@ import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.join.JoinUtil;
 import org.apache.lucene.search.join.ScoreMode;
 import org.apache.lucene.store.Directory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
@@ -53,6 +55,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.Semaphore;
 
 final public class IndexInstance implements Closeable {
@@ -104,6 +107,10 @@ final public class IndexInstance implements Closeable {
 
 	public IndexSettingsDefinition getSettings() {
 		return settings;
+	}
+
+	boolean isIndexWriterOpen() {
+		return indexWriter != null && indexWriter.isOpen();
 	}
 
 	@Override

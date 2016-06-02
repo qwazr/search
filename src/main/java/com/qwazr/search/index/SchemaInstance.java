@@ -20,6 +20,7 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
@@ -49,8 +50,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchemaInstance implements Closeable {
-
-	private static final Logger logger = LoggerFactory.getLogger(SchemaInstance.class);
 
 	private final static String SETTINGS_FILE = "settings.json";
 
@@ -187,7 +186,7 @@ public class SchemaInstance implements Closeable {
 		}
 	}
 
-	IndexStatus createUpdate(String indexName, IndexSettingsDefinition settings)
+	IndexInstance createUpdate(String indexName, IndexSettingsDefinition settings)
 			throws ServerException, IOException, InterruptedException, ReflectiveOperationException,
 			URISyntaxException {
 		synchronized (indexMap) {
@@ -202,7 +201,7 @@ public class SchemaInstance implements Closeable {
 				indexMap.put(indexName, indexInstance);
 			}
 			mayBeRefresh();
-			return indexInstance.getStatus();
+			return indexInstance;
 		}
 	}
 
@@ -210,15 +209,24 @@ public class SchemaInstance implements Closeable {
 	 * Returns the indexInstance. If the index does not exists, an exception it
 	 * thrown. This method never returns a null value.
 	 *
-	 * @param indexName The name of the index
+	 * @param indexName        The name of the index
+	 * @param ensureWriterOpen if true the index will be reopen if the writer has been closed
 	 * @return the indexInstance
 	 * @throws ServerException if any error occurs
+	 * @throws IOException     if any I/O error occurs
 	 */
-	public IndexInstance get(String indexName) throws ServerException {
+	public IndexInstance get(String indexName, boolean ensureWriterOpen)
+			throws ServerException, IOException {
 		IndexInstance indexInstance = indexMap.get(indexName);
 		if (indexInstance == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);
-		return indexInstance;
+		if (!ensureWriterOpen)
+			return indexInstance;
+		try {
+			return indexInstance.isIndexWriterOpen() ? indexInstance : createUpdate(indexName, null);
+		} catch (InterruptedException | ReflectiveOperationException | URISyntaxException e) {
+			throw new ServerException(e);
+		}
 	}
 
 	void delete() {
@@ -234,7 +242,7 @@ public class SchemaInstance implements Closeable {
 
 	void delete(String indexName) throws ServerException, IOException {
 		synchronized (indexMap) {
-			IndexInstance indexInstance = get(indexName);
+			IndexInstance indexInstance = get(indexName, false);
 			indexInstance.delete();
 			indexMap.remove(indexName);
 			mayBeRefresh();
@@ -338,7 +346,8 @@ public class SchemaInstance implements Closeable {
 					"This schema is limited to " + settingsDefinition.max_size + " documents");
 	}
 
-	void checkSize(int addSize) throws IOException, ServerException {
+	final void checkSize(final int addSize) throws IOException, ServerException {
 		atomicCheckSize(settingsDefinition, searchContext, addSize);
 	}
+
 }
