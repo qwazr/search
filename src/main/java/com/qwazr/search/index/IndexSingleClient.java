@@ -265,22 +265,6 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public Response postMappedDocument(final String schema_name, final String index_name,
-			final Map<String, Object> document) {
-		try {
-			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/doc");
-			final Request request = Request.Post(uriBuilder.build());
-			final HttpResponse response = execute(request, document, null);
-			HttpUtils.checkStatusCodes(response, 200);
-			return Response.status(response.getStatusLine().getStatusCode()).build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	@Override
 	public BackupStatus doBackup(final String schema_name, final String index_name, final Integer keep_last_count) {
 		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/backup")
 				.setParameterObject("keep_last", keep_last_count);
@@ -372,51 +356,35 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 			};
 
 	@Override
-	public Response postMappedDocuments(final String schema_name, final String index_name,
-			final Collection<Map<String, Object>> documents) {
-		try {
-			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/docs");
-			final Request request = Request.Post(uriBuilder.build());
-			final HttpResponse response = execute(request, documents, null);
-			HttpUtils.checkStatusCodes(response, 200);
-			return Response.status(response.getStatusLine().getStatusCode()).build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	@Override
-	public Response updateMappedDocValues(final String schema_name, final String index_name,
+	public Integer postMappedDocument(final String schema_name, final String index_name,
 			final Map<String, Object> document) {
-		try {
-			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/doc/values");
-			final Request request = Request.Post(uriBuilder.build());
-			final HttpResponse response = execute(request, document, null);
-			HttpUtils.checkStatusCodes(response, 200);
-			return Response.status(response.getStatusLine().getStatusCode()).build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/doc");
+		final Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, document, null, Integer.class, 200);
 	}
 
 	@Override
-	public Response updateMappedDocsValues(final String schema_name, final String index_name,
+	public Integer postMappedDocuments(final String schema_name, final String index_name,
 			final Collection<Map<String, Object>> documents) {
-		try {
-			final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/docs/values");
-			final Request request = Request.Post(uriBuilder.build());
-			final HttpResponse response = execute(request, documents, null);
-			HttpUtils.checkStatusCodes(response, 200);
-			return Response.status(response.getStatusLine().getStatusCode()).build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/docs");
+		final Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, documents, null, Integer.class, 200);
+	}
+
+	@Override
+	public Integer updateMappedDocValues(final String schema_name, final String index_name,
+			final Map<String, Object> document) {
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/doc/values");
+		final Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, document, null, Integer.class, 200);
+	}
+
+	@Override
+	public Integer updateMappedDocsValues(final String schema_name, final String index_name,
+			final Collection<Map<String, Object>> documents) {
+		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/docs/values");
+		final Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, documents, null, Integer.class, 200);
 	}
 
 	@Override
@@ -441,6 +409,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public LinkedHashMap<String, Object> getDocument(final String schema_name, final String index_name,
 			final String doc_id) {
+		Objects.requireNonNull(doc_id, "The document must not be empty");
 		final UBuilder uriBuilder = new UBuilder(PATH_SLASH, schema_name, "/", index_name, "/doc/", doc_id);
 		final Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, MapStringObjectTypeRef, 200);

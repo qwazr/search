@@ -45,8 +45,6 @@ import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.join.JoinUtil;
 import org.apache.lucene.search.join.ScoreMode;
 import org.apache.lucene.store.Directory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
@@ -55,7 +53,6 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.Semaphore;
 
 final public class IndexInstance implements Closeable {
@@ -370,152 +367,154 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	private final RecordsPoster.UpdateObjectDocument getDocumentPoster(final Map<String, Field> fields) {
+	private RecordsPoster.UpdateObjectDocument getDocumentPoster(final Map<String, Field> fields) {
 		return new RecordsPoster.UpdateObjectDocument(fields, indexAnalyzer.getContext(), indexWriter);
 	}
 
-	private final RecordsPoster.UpdateMapDocument getDocumentPoster() {
+	private RecordsPoster.UpdateMapDocument getDocumentPoster() {
 		return new RecordsPoster.UpdateMapDocument(indexAnalyzer.getContext(), indexWriter);
 	}
 
-	private final RecordsPoster.UpdateObjectDocValues getDocValuesPoster(final Map<String, Field> fields) {
+	private RecordsPoster.UpdateObjectDocValues getDocValuesPoster(final Map<String, Field> fields) {
 		return new RecordsPoster.UpdateObjectDocValues(fields, indexAnalyzer.getContext(), indexWriter);
 	}
 
-	private final RecordsPoster.UpdateMapDocValues getDocValuesPoster() {
+	private RecordsPoster.UpdateMapDocValues getDocValuesPoster() {
 		return new RecordsPoster.UpdateMapDocValues(indexAnalyzer.getContext(), indexWriter);
 	}
 
-	final <T> Object postDocument(final Map<String, Field> fields, final T document)
+	final <T> int postDocument(final Map<String, Field> fields, final T document)
 			throws IOException, InterruptedException {
 		if (document == null)
-			return null;
+			return 0;
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(1);
-			RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
+			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
 			poster.accept(document);
-			Object id = poster.ids.isEmpty() ? null : poster.ids.iterator().next();
 			nrtCommit();
-			return id;
+			return poster.counter;
 		} finally {
 			if (sem != null)
 				sem.release();
 		}
 	}
 
-	final Object postMappedDocument(final Map<String, Object> document) throws IOException, InterruptedException {
+	final int postMappedDocument(final Map<String, Object> document) throws IOException, InterruptedException {
 		if (document == null || document.isEmpty())
-			return null;
+			return 0;
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(1);
-			RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
+			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
 			poster.accept(document);
-			Object id = poster.ids.isEmpty() ? null : poster.ids.iterator().next();
 			nrtCommit();
-			return id;
+			return poster.counter;
 		} finally {
 			if (sem != null)
 				sem.release();
 		}
 	}
 
-	final Collection<Object> postMappedDocuments(final Collection<Map<String, Object>> documents)
+	final int postMappedDocuments(final Collection<Map<String, Object>> documents)
 			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
-			return null;
+			return 0;
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(documents.size());
-			RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
+			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
 			documents.forEach(poster);
 			nrtCommit();
-			return poster.ids;
+			return poster.counter;
 		} finally {
 			if (sem != null)
 				sem.release();
 		}
 	}
 
-	final <T> Collection<Object> postDocuments(final Map<String, Field> fields, final Collection<T> documents)
+	final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents)
 			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
-			return null;
+			return 0;
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			schema.checkSize(documents.size());
-			RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
+			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
 			documents.forEach(poster);
 			nrtCommit();
-			return poster.ids;
+			return poster.counter;
 		} finally {
 			if (sem != null)
 				sem.release();
 		}
 	}
 
-	final <T> void updateDocValues(final Map<String, Field> fields, final T document)
+	final <T> int updateDocValues(final Map<String, Field> fields, final T document)
 			throws InterruptedException, IOException {
 		if (document == null)
-			return;
+			return 0;
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
+			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			poster.accept(document);
 			nrtCommit();
+			return poster.counter;
 		} finally {
 			if (sem != null)
 				sem.release();
 		}
 	}
 
-	final void updateMappedDocValues(final Map<String, Object> document) throws IOException, InterruptedException {
+	final int updateMappedDocValues(final Map<String, Object> document) throws IOException, InterruptedException {
 		if (document == null || document.isEmpty())
-			return;
+			return 0;
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			poster.accept(document);
 			nrtCommit();
+			return poster.counter;
 		} finally {
 			if (sem != null)
 				sem.release();
 		}
 	}
 
-	final <T> void updateDocsValues(final Map<String, Field> fields, final Collection<T> documents)
+	final <T> int updateDocsValues(final Map<String, Field> fields, final Collection<T> documents)
 			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
-			return;
+			return 0;
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			documents.forEach(poster);
 			nrtCommit();
+			return poster.counter;
 		} finally {
 			if (sem != null)
 				sem.release();
 		}
 	}
 
-	final void updateMappedDocsValues(final Collection<Map<String, Object>> documents)
+	final int updateMappedDocsValues(final Collection<Map<String, Object>> documents)
 			throws IOException, ServerException, InterruptedException {
 		if (documents == null || documents.isEmpty())
-			return;
+			return 0;
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			documents.forEach(poster);
 			nrtCommit();
+			return poster.counter;
 		} finally {
 			if (sem != null)
 				sem.release();

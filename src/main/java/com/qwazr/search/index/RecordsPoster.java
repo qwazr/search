@@ -26,8 +26,6 @@ import org.apache.lucene.index.Term;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -36,13 +34,13 @@ abstract class RecordsPoster {
 	protected final Map<String, Field> fields;
 	protected final AnalyzerContext context;
 	protected final IndexWriter indexWriter;
-	protected final Collection<Object> ids;
+	protected int counter;
 
-	RecordsPoster(Map<String, Field> fields, AnalyzerContext context, IndexWriter indexWriter, Collection<Object> ids) {
+	RecordsPoster(Map<String, Field> fields, AnalyzerContext context, IndexWriter indexWriter) {
 		this.fields = fields;
 		this.context = context;
 		this.indexWriter = indexWriter;
-		this.ids = ids;
+		this.counter = 0;
 	}
 
 	final protected void updateDocument(Object id, final FieldConsumer.ForDocument fields) {
@@ -55,7 +53,7 @@ abstract class RecordsPoster {
 		} catch (IOException e) {
 			throw new ServerException(e);
 		}
-		ids.add(id);
+		counter++;
 	}
 
 	final protected void updateDocValues(final Object id, final FieldConsumer.ForDocValues fields) {
@@ -68,12 +66,13 @@ abstract class RecordsPoster {
 		} catch (IOException e) {
 			throw new ServerException(e);
 		}
+		counter++;
 	}
 
 	final static class UpdateMapDocument extends RecordsPoster implements Consumer<Map<String, Object>> {
 
 		UpdateMapDocument(final AnalyzerContext context, final IndexWriter indexWriter) {
-			super(null, context, indexWriter, new ArrayList<>());
+			super(null, context, indexWriter);
 		}
 
 		@Override
@@ -88,15 +87,15 @@ abstract class RecordsPoster {
 	final static class UpdateObjectDocument extends RecordsPoster implements Consumer<Object> {
 
 		UpdateObjectDocument(final Map<String, java.lang.reflect.Field> fields, final AnalyzerContext context,
-		                     final IndexWriter indexWriter) {
-			super(fields, context, indexWriter, new ArrayList<>());
+				final IndexWriter indexWriter) {
+			super(fields, context, indexWriter);
 		}
 
 		@Override
 		final public void accept(final Object record) {
 			final FieldConsumer.ForDocument documentBuilder = new FieldConsumer.ForDocument();
-			final RecordBuilder.ForObject recordBuilder = new RecordBuilder.ForObject(context.fieldTypes,
-					documentBuilder, record);
+			final RecordBuilder.ForObject recordBuilder =
+					new RecordBuilder.ForObject(context.fieldTypes, documentBuilder, record);
 			fields.forEach(recordBuilder);
 			updateDocument(recordBuilder.id, documentBuilder);
 		}
@@ -105,7 +104,7 @@ abstract class RecordsPoster {
 	final static class UpdateMapDocValues extends RecordsPoster implements Consumer<Map<String, Object>> {
 
 		UpdateMapDocValues(final AnalyzerContext context, final IndexWriter indexWriter) {
-			super(null, context, indexWriter, null);
+			super(null, context, indexWriter);
 		}
 
 		@Override
@@ -120,14 +119,14 @@ abstract class RecordsPoster {
 	final static class UpdateObjectDocValues extends RecordsPoster implements Consumer<Object> {
 
 		UpdateObjectDocValues(Map<String, Field> fields, AnalyzerContext context, IndexWriter indexWriter) {
-			super(fields, context, indexWriter, null);
+			super(fields, context, indexWriter);
 		}
 
 		@Override
 		final public void accept(Object record) {
 			final FieldConsumer.ForDocValues fieldsBuilder = new FieldConsumer.ForDocValues();
-			final RecordBuilder.ForObject recordBuilder = new RecordBuilder.ForObject(context.fieldTypes, fieldsBuilder,
-					record);
+			final RecordBuilder.ForObject recordBuilder =
+					new RecordBuilder.ForObject(context.fieldTypes, fieldsBuilder, record);
 			fields.forEach(recordBuilder);
 			updateDocValues(recordBuilder.id, fieldsBuilder);
 		}

@@ -169,12 +169,6 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	}
 
 	@Override
-	public Response postMappedDocument(String schema_name, String index_name, Map<String, Object> document) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public BackupStatus doBackup(String schema_name, String index_name, Integer keep_last_count) {
 		return null;
 	}
@@ -206,19 +200,25 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	}
 
 	@Override
-	public Response postMappedDocuments(String schema_name, String index_name,
+	public Integer postMappedDocument(String schema_name, String index_name, Map<String, Object> document) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Integer postMappedDocuments(String schema_name, String index_name,
 			Collection<Map<String, Object>> documents) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Response updateMappedDocValues(String schema_name, String index_name, Map<String, Object> document) {
+	public Integer updateMappedDocValues(String schema_name, String index_name, Map<String, Object> document) {
 		return null;
 	}
 
 	@Override
-	public Response updateMappedDocsValues(String schema_name, String index_name,
+	public Integer updateMappedDocsValues(String schema_name, String index_name,
 			Collection<Map<String, Object>> documents) {
 		return null;
 	}

@@ -89,8 +89,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).nameSet();
 		} catch (ServerException e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -101,8 +100,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.createUpdate(schemaName, null);
 			return IndexManager.INSTANCE.get(schemaName).getSettings();
 		} catch (Exception e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -113,8 +111,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(null);
 			return IndexManager.INSTANCE.createUpdate(schemaName, settings);
 		} catch (Exception e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -124,8 +121,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(null);
 			return IndexManager.INSTANCE.nameSet();
 		} catch (Exception e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -136,8 +132,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.delete(schemaName);
 			return Response.ok().build();
 		} catch (Exception e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -148,8 +143,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).createUpdate(indexName, settings).getStatus();
 		} catch (Exception e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -164,9 +158,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getFields();
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -181,9 +173,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + fieldName);
 			return fieldDef;
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -194,9 +184,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setFields(fields);
 			return fields;
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -217,9 +205,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		try {
 			return doAnalyzer(schemaName, indexName, fieldName, text, true);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -237,9 +223,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false)
 					.getTermsEnum(fieldName, prefix, start, rows);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -249,9 +233,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		try {
 			return doAnalyzer(schemaName, indexName, fieldName, text, false);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -263,9 +245,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setField(fieldName, field);
 			return field;
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -276,9 +256,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteField(fieldName);
 			return Response.ok().build();
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -289,9 +267,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getAnalyzers();
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -307,9 +283,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
 			return analyzerDef;
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -321,9 +295,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setAnalyzer(analyzerName, analyzer);
 			return analyzer;
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -334,9 +306,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setAnalyzers(analyzers);
 			return analyzers;
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -347,9 +317,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteAnalyzer(analyzerName);
 			return Response.ok().build();
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -360,9 +328,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -372,9 +338,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getStatus();
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -385,109 +349,80 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).delete(indexName);
 			return Response.ok().build();
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
 	@Override
-	final public Response postMappedDocument(final String schemaName, final String indexName,
+	final public Integer postMappedDocument(final String schemaName, final String indexName,
 			final Map<String, Object> document) {
 		try {
 			checkRight(schemaName);
-			if (document == null || document.isEmpty())
-				return Response.notModified().build();
-			IndexManager.INSTANCE.get(schemaName).get(indexName, true).postMappedDocument(document);
-			return Response.ok().build();
+			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).postMappedDocument(document);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
 	@Override
-	final public Response postMappedDocuments(final String schemaName, final String indexName,
+	final public Integer postMappedDocuments(final String schemaName, final String indexName,
 			final Collection<Map<String, Object>> documents) {
 		try {
 			checkRight(schemaName);
-			if (documents == null || documents.isEmpty())
-				return Response.notModified().build();
-			IndexManager.INSTANCE.get(schemaName).get(indexName, true).postMappedDocuments(documents);
-			return Response.ok().build();
+			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).postMappedDocuments(documents);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
 	@Override
-	final public <T> Object postDocument(final String schemaName, final String indexName,
-			final Map<String, Field> fields, final T document) throws IOException, InterruptedException {
+	final public <T> int postDocument(final String schemaName, final String indexName, final Map<String, Field> fields,
+			final T document) throws IOException, InterruptedException {
 		checkRight(schemaName);
-		if (document == null)
-			return null;
 		return IndexManager.INSTANCE.get(schemaName).get(indexName, true).postDocument(fields, document);
 	}
 
 	@Override
-	final public <T> Collection<Object> postDocuments(final String schemaName, final String indexName,
-			final Map<String, Field> fields, final Collection<T> documents) throws IOException, InterruptedException {
+	final public <T> int postDocuments(final String schemaName, final String indexName, final Map<String, Field> fields,
+			final Collection<T> documents) throws IOException, InterruptedException {
 		checkRight(schemaName);
-		if (documents == null || documents.isEmpty())
-			return null;
 		return IndexManager.INSTANCE.get(schemaName).get(indexName, true).postDocuments(fields, documents);
 	}
 
 	@Override
-	final public Response updateMappedDocValues(final String schemaName, final String indexName,
+	final public Integer updateMappedDocValues(final String schemaName, final String indexName,
 			final Map<String, Object> document) {
 		try {
 			checkRight(schemaName);
-			if (document == null || document.isEmpty())
-				return Response.notModified().build();
-			IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateMappedDocValues(document);
-			return Response.ok().build();
+			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateMappedDocValues(document);
 		} catch (Exception e) {
-			logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
 	@Override
-	final public Response updateMappedDocsValues(final String schemaName, final String indexName,
+	final public Integer updateMappedDocsValues(final String schemaName, final String indexName,
 			final Collection<Map<String, Object>> documents) {
 		try {
 			checkRight(schemaName);
-			if (documents == null || documents.isEmpty())
-				return Response.notModified().build();
-			IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateMappedDocsValues(documents);
-			return Response.ok().build();
+			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateMappedDocsValues(documents);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
 	@Override
-	final public <T> void updateDocValues(final String schemaName, final String indexName,
+	final public <T> int updateDocValues(final String schemaName, final String indexName,
 			final Map<String, Field> fields, final T document) throws IOException, InterruptedException {
 		checkRight(schemaName);
-		if (document == null)
-			return;
-		IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateDocValues(fields, document);
+		return IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateDocValues(fields, document);
 	}
 
 	@Override
-	final public <T> void updateDocsValues(final String schemaName, final String indexName,
+	final public <T> int updateDocsValues(final String schemaName, final String indexName,
 			final Map<String, Field> fields, final Collection<T> documents) throws IOException, InterruptedException {
 		checkRight(schemaName);
-		if (documents == null || documents.isEmpty())
-			return;
-		IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateDocsValues(fields, documents);
+		return IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateDocsValues(fields, documents);
 	}
 
 	@Override
@@ -500,9 +435,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			} else
 				return IndexManager.INSTANCE.get(schemaName).get(indexName, false).backup(keep_last_count);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -512,9 +445,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(null);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getBackups();
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -527,9 +458,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 					.obtainFile(sessionID, source, fileName);
 			return input == null ? null : new BufferedInputStream(input);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -540,9 +469,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator().release(sessionID);
 			return Response.ok().build();
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -551,9 +478,8 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String currentVersion) {
 		try {
 			checkRight(null);
-			final SessionToken token =
-					IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator()
-							.checkForUpdate(currentVersion);
+			final SessionToken token = IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator()
+					.checkForUpdate(currentVersion);
 			if (token == null)
 				return Response.noContent().build();
 			final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -561,9 +487,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			token.serialize(dataOutput);
 			return Response.ok(outputStream.toByteArray()).build();
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -574,9 +498,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).replicationCheck();
 			return Response.ok().build();
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -587,9 +509,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteAll();
 			return Response.ok().build();
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -629,18 +549,18 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public LinkedHashMap<String, Object> getDocument(final String schemaName, final String indexName,
 			final String id) {
 		try {
-			final ResultDefinition result = doSearchMap(schemaName, indexName, getDocumentQuery(id));
-			if (result != null) {
-				List<ResultDocumentMap> docs = result.getDocuments();
-				if (docs != null && !docs.isEmpty())
-					return docs.get(0).getFields();
+			if (id != null) {
+				final ResultDefinition result = doSearchMap(schemaName, indexName, getDocumentQuery(id));
+				if (result != null) {
+					List<ResultDocumentMap> docs = result.getDocuments();
+					if (docs != null && !docs.isEmpty())
+						return docs.get(0).getFields();
+				}
 			}
 			throw new ServerException(Response.Status.NOT_FOUND, "Document not found: " + id);
 
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -657,9 +577,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				docs.forEach(resultDocument -> documents.add(resultDocument.fields));
 			return documents;
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -676,9 +594,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				return null;
 			return docs.get(0).record;
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -697,9 +613,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				docs.forEach(resultDocument -> documents.add(resultDocument.record));
 			return documents;
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -717,9 +631,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			else
 				return (ResultDefinition.WithMap) index.search(query, ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -736,9 +648,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName, false);
 			return (ResultDefinition.WithObject<T>) index.search(query, documentBuilerFactory);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 }

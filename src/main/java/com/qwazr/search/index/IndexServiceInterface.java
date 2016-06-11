@@ -208,28 +208,28 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Path("/{schema_name}/{index_name}/doc")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Response postMappedDocument(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, Map<String, Object> document);
+	Integer postMappedDocument(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			Map<String, Object> document);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/docs")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Response postMappedDocuments(@PathParam("schema_name") String schema_name,
+	Integer postMappedDocuments(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, Collection<Map<String, Object>> documents);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/doc/values")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Response updateMappedDocValues(@PathParam("schema_name") String schema_name,
+	Integer updateMappedDocValues(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, Map<String, Object> document);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/docs/values")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Response updateMappedDocsValues(@PathParam("schema_name") String schema_name,
+	Integer updateMappedDocsValues(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, Collection<Map<String, Object>> documents);
 
 	@POST
