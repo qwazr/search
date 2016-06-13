@@ -90,6 +90,45 @@ public abstract class JavaAbstractTest {
 		Assert.assertEquals(FieldDefinition.Template.DoubleDocValuesField, field.template);
 	}
 
+	@Test
+	public void test075GetFields() throws URISyntaxException {
+		final AnnotatedIndexService service = getMaster();
+		LinkedHashMap<String, FieldDefinition> fields = service.getFields();
+		Assert.assertNotNull(fields);
+		Assert.assertFalse(fields.isEmpty());
+		fields.forEach((fieldName, fieldDefinition) -> {
+			FieldDefinition fieldDef = service.getField(fieldName);
+			Assert.assertNotNull(fieldDef);
+			Assert.assertEquals(fieldDef.template, fieldDefinition.template);
+			Assert.assertEquals(fieldDef.analyzer, fieldDefinition.analyzer);
+		});
+	}
+
+	private void checkTermDef(List<TermDefinition> terms, int expectedSize) {
+		Assert.assertNotNull(terms);
+		Assert.assertEquals(expectedSize, terms.size());
+	}
+
+	@Test
+	public void test080GetAnalyzers() throws URISyntaxException {
+		final AnnotatedIndexService service = getMaster();
+		LinkedHashMap<String, AnalyzerDefinition> analyzers = service.getAnalyzers();
+		Assert.assertNotNull(analyzers);
+		Assert.assertTrue(analyzers.isEmpty());
+		analyzers.forEach((analyzerName, analyzerDefinition) -> {
+			AnalyzerDefinition anaDef = service.getAnalyzer(analyzerName);
+			Assert.assertNotNull(anaDef);
+			checkTermDef(service.testAnalyzer(analyzerName, "Please analyzer this text"), 3);
+		});
+	}
+
+	@Test
+	public void test082doAnalyzer() throws URISyntaxException {
+		final AnnotatedIndexService service = getMaster();
+		checkTermDef(service.doAnalyzeIndex("content", "Please analyzer this text"), 3);
+		checkTermDef(service.doAnalyzeQuery("content", "Please analyzer this text"), 3);
+	}
+
 	private final static AnnotatedIndex record1 =
 			new AnnotatedIndex(1, "First article", "Content of the first article", 0d, 10L, "news", "economy");
 
@@ -316,6 +355,11 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(new Long(2), result.total_hits);
+	}
+
+	@Test
+	public void test950DeleteAll() throws URISyntaxException {
+		getMaster().deleteAll();
 	}
 
 	@Test

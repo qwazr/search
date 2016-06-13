@@ -265,9 +265,70 @@ public class AnnotatedIndexService<T> {
 		return indexService.getFields(schemaName, indexName);
 	}
 
+	public FieldDefinition getField(String fieldName) {
+		checkParameters();
+		return indexService.getField(schemaName, indexName, fieldName);
+	}
+
+	public void setField(String fieldName, FieldDefinition fieldDefinition) {
+		checkParameters();
+		indexService.setField(schemaName, indexName, fieldName, fieldDefinition);
+	}
+
+	public void deleteField(String fieldName) {
+		checkParameters();
+		indexService.deleteField(schemaName, indexName, fieldName);
+	}
+
 	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers() {
 		checkParameters();
 		return indexService.getAnalyzers(schemaName, indexName);
+	}
+
+	public AnalyzerDefinition getAnalyzer(String analyzerName) {
+		checkParameters();
+		return indexService.getAnalyzer(schemaName, indexName, analyzerName);
+	}
+
+	public AnalyzerDefinition setAnalyzer(String analyzerName, AnalyzerDefinition analyzerDefinition) {
+		checkParameters();
+		return indexService.setAnalyzer(schemaName, indexName, analyzerName, analyzerDefinition);
+	}
+
+	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(String analyzerName,
+			LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+		checkParameters();
+		return indexService.setAnalyzers(schemaName, indexName, analyzers);
+	}
+
+	public void deleteAnalyzer(String analyzerName) {
+		checkParameters();
+		indexService.deleteAnalyzer(schemaName, indexName, analyzerName);
+	}
+
+	public List<TermDefinition> testAnalyzer(String analyzerName, String text) {
+		checkParameters();
+		return indexService.testAnalyzer(schemaName, indexName, analyzerName, text);
+	}
+
+	public List<TermDefinition> doAnalyzeIndex(String fieldName, String text) {
+		checkParameters();
+		return indexService.doAnalyzeIndex(schemaName, indexName, fieldName, text);
+	}
+
+	public List<TermDefinition> doAnalyzeQuery(String fieldName, String text) {
+		checkParameters();
+		return indexService.doAnalyzeQuery(schemaName, indexName, fieldName, text);
+	}
+
+	public List<BackupStatus> getBackups() {
+		checkParameters();
+		return indexService.getBackups(schemaName, indexName);
+	}
+
+	public BackupStatus doBackup(Integer keepLastCount) {
+		checkParameters();
+		return indexService.doBackup(schemaName, indexName, keepLastCount);
 	}
 
 	/**
@@ -286,6 +347,11 @@ public class AnnotatedIndexService<T> {
 	public ResultDefinition.WithMap searchQueryWithMap(QueryDefinition query) {
 		checkParameters();
 		return indexService.searchQuery(schemaName, indexName, query, false);
+	}
+
+	public List<TermEnumDefinition> doExtractTerms(final String fieldName, final Integer start, final Integer rows) {
+		checkParameters();
+		return indexService.doExtractTerms(schemaName, indexName, fieldName, start, rows);
 	}
 
 	public List<TermEnumDefinition> doExtractTerms(final String fieldName, final String prefix, final Integer start,
@@ -407,4 +473,8 @@ public class AnnotatedIndexService<T> {
 		return new ResultDefinition.WithObject<T>(resultWithMap, documents);
 	}
 
+	public void deleteAll() {
+		checkParameters();
+		indexService.deleteAll(schemaName, indexName);
+	}
 }
