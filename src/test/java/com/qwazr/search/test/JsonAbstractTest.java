@@ -22,7 +22,6 @@ import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -65,29 +64,36 @@ public abstract class JsonAbstractTest {
 	public static final Map<String, Object> UPDATE_DOC_VALUE = getDoc("update_doc_value.json");
 	public static final Collection<Map<String, Object>> UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
 
-	@BeforeClass
-	public static void startSearchServer() throws Exception {
-		TestServer.startServer();
-	}
-
 	protected abstract IndexServiceInterface getClient() throws URISyntaxException;
 
 	@Test
-	public void test000CreateSchema() throws URISyntaxException {
+	public void test000startServer() throws Exception {
+		TestServer.startServer();
+		Assert.assertTrue(TestServer.serverStarted);
+	}
+
+	@Test
+	public void test050CreateSchema() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
 		SchemaSettingsDefinition settings = client.createUpdateSchema(SCHEMA_NAME, null);
 		Assert.assertNotNull(settings);
 	}
 
 	@Test
-	public void test001UpdateSchema() throws URISyntaxException {
+	public void test055GetDummySchema() throws URISyntaxException {
+		IndexServiceInterface client = getClient();
+		checkErrorStatusCode(() -> client.getIndexes(SCHEMA_DUMMY_NAME), 404);
+	}
+
+	@Test
+	public void test060UpdateSchema() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
 		SchemaSettingsDefinition settings = client.createUpdateSchema(SCHEMA_NAME, null);
 		Assert.assertNotNull(settings);
 	}
 
 	@Test
-	public void test005ListSchema() throws URISyntaxException {
+	public void test070ListSchema() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
 		Set<String> schemas = client.getSchemas();
 		Assert.assertNotNull(schemas);
@@ -102,12 +108,6 @@ public abstract class JsonAbstractTest {
 		} catch (WebApplicationException e) {
 			Assert.assertEquals(expectedStatusCode, e.getResponse().getStatus());
 		}
-	}
-
-	@Test
-	public void test002GetDummySchema() throws URISyntaxException {
-		IndexServiceInterface client = getClient();
-		checkErrorStatusCode(() -> client.getIndexes(SCHEMA_DUMMY_NAME), 404);
 	}
 
 	private static LinkedHashMap<String, FieldDefinition> getFieldMap(String res) {

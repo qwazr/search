@@ -106,22 +106,22 @@ class IndexInstanceBuilder {
 		//Loading the settings
 		if (settings == null)
 			settings = fileSet.settingsFile.exists() ?
-			           JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
-			           IndexSettingsDefinition.EMPTY;
+					JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
+					IndexSettingsDefinition.EMPTY;
 		else
 			JsonMapper.MAPPER.writeValue(fileSet.settingsFile, settings);
 
 		//Loading the fields
 		File fieldMapFile = new File(indexDirectory, FIELDS_FILE);
 		fieldMap = fieldMapFile.exists() ?
-		           JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
-		           new LinkedHashMap<>();
+				JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
+				new LinkedHashMap<>();
 
 		//Loading the fields
 		File analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
 		analyzerMap = analyzerMapFile.exists() ?
-		              JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
-		              new LinkedHashMap<>();
+				JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
+				new LinkedHashMap<>();
 
 		AnalyzerContext context = new AnalyzerContext(analyzerMap, fieldMap);
 		indexAnalyzer = new UpdatableAnalyzer(context, context.indexAnalyzerMap);
@@ -145,8 +145,8 @@ class IndexInstanceBuilder {
 			indexWriter.commit();
 	}
 
-	private void buildSlave() throws IOException, URISyntaxException, ReflectiveOperationException,
-			InterruptedException {
+	private void buildSlave()
+			throws IOException, URISyntaxException, ReflectiveOperationException, InterruptedException {
 
 		// We just want to be sure the index exists.
 		openOrCreateIndex();
@@ -163,7 +163,7 @@ class IndexInstanceBuilder {
 		indexReplicator = new IndexReplicator(settings.master);
 		replicationClient = new ReplicationClient(indexReplicator, handler, factory);
 
-		// Finally we build the SearchSearcherManger
+		// Finally we build the SearcherManager
 		searcherManager = new SearcherManager(dataDirectory, null);
 	}
 
@@ -175,7 +175,7 @@ class IndexInstanceBuilder {
 		replicator = new LocalReplicator();
 		replicator.publish(new IndexRevision(indexWriter));
 
-		// Finally we build the SearchSearcherManger
+		// Finally we build the SearcherManager
 		searcherManager = new SearcherManager(indexWriter, null);
 	}
 

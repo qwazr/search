@@ -23,7 +23,6 @@ import com.qwazr.search.query.*;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.search.join.ScoreMode;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -40,12 +39,7 @@ import static com.qwazr.search.test.AnnotatedIndex.QUANTITY_FIELD;
 public abstract class JavaAbstractTest {
 
 	public static final String[] RETURNED_FIELDS =
-			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory"};
-
-	@BeforeClass
-	public static void startSearchServer() throws Exception {
-		TestServer.startServer();
-	}
+			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory" };
 
 	protected abstract IndexServiceInterface getIndexService() throws URISyntaxException;
 
@@ -61,21 +55,27 @@ public abstract class JavaAbstractTest {
 	}
 
 	@Test
-	public void test000CreateSchema() throws URISyntaxException {
+	public void test000startServer() throws Exception {
+		TestServer.startServer();
+		Assert.assertTrue(TestServer.serverStarted);
+	}
+
+	@Test
+	public void test050CreateSchema() throws URISyntaxException {
 		final AnnotatedIndexService service = getMaster();
 		SchemaSettingsDefinition settings = service.createUpdateSchema();
 		Assert.assertNotNull(settings);
 	}
 
 	@Test
-	public void test010CreateIndex() throws URISyntaxException {
+	public void test060CreateIndex() throws URISyntaxException {
 		final AnnotatedIndexService service = getMaster();
 		IndexStatus indexStatus = service.createUpdateIndex();
 		Assert.assertNotNull(indexStatus);
 	}
 
 	@Test
-	public void test020CreateUpdateFields() throws URISyntaxException {
+	public void test070CreateUpdateFields() throws URISyntaxException {
 		final AnnotatedIndexService service = getMaster();
 		LinkedHashMap<String, FieldDefinition> fields = service.createUpdateFields();
 		Assert.assertNotNull(fields);

@@ -22,6 +22,7 @@ import com.qwazr.utils.json.JsonMapper;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexSettingsDefinition {
@@ -56,4 +57,18 @@ public class IndexSettingsDefinition {
 		return JsonMapper.MAPPER.readValue(jsonString, IndexSettingsDefinition.class);
 	}
 
+	public final static boolean equals(final IndexSettingsDefinition settings1,
+			final IndexSettingsDefinition settings2) {
+		if (settings1 == null && settings2 == null)
+			return true;
+		if (settings1 == null || settings2 == null)
+			return false;
+		if (StringUtils.compareNullString(settings1.similarity_class, settings2.similarity_class) != 0)
+			return false;
+		if (settings1.master == null && settings2.master == null)
+			return true;
+		if (settings1.master == null || settings2.master == null)
+			return false;
+		return Arrays.equals(settings1.master, settings2.master);
+	}
 }

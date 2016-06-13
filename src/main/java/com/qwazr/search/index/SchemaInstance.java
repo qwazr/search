@@ -20,7 +20,6 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
@@ -32,8 +31,6 @@ import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.IndexSearcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
@@ -191,7 +188,7 @@ public class SchemaInstance implements Closeable {
 			URISyntaxException {
 		synchronized (indexMap) {
 			IndexInstance indexInstance = indexMap.get(indexName);
-			if (indexInstance != null && settings != null) {
+			if (indexInstance != null && !IndexSettingsDefinition.equals(indexInstance.getSettings(), settings)) {
 				IOUtils.closeQuietly(indexInstance);
 				indexMap.remove(indexName);
 				indexInstance = null;
@@ -215,8 +212,7 @@ public class SchemaInstance implements Closeable {
 	 * @throws ServerException if any error occurs
 	 * @throws IOException     if any I/O error occurs
 	 */
-	public IndexInstance get(String indexName, boolean ensureWriterOpen)
-			throws ServerException, IOException {
+	public IndexInstance get(String indexName, boolean ensureWriterOpen) throws ServerException, IOException {
 		IndexInstance indexInstance = indexMap.get(indexName);
 		if (indexInstance == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);
