@@ -63,7 +63,7 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test050CreateSchema() throws URISyntaxException {
 		final AnnotatedIndexService service = getMaster();
-		SchemaSettingsDefinition settings = service.createUpdateSchema();
+		final SchemaSettingsDefinition settings = service.createUpdateSchema();
 		Assert.assertNotNull(settings);
 	}
 
@@ -286,6 +286,8 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService slave = getSlave();
 		final IndexStatus indexStatus = slave.createUpdateIndex();
 		Assert.assertNotNull(indexStatus);
+		// Second call to check setting comparison
+		Assert.assertNotNull(slave.createUpdateIndex());
 		slave.replicationCheck();
 
 		final IndexStatus slaveStatus = slave.getIndexStatus();
