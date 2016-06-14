@@ -204,7 +204,16 @@ public abstract class JavaAbstractTest {
 	public void test301MultiTermQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
 		builder.query = new TermsQuery(FieldDefinition.ID_FIELD, "1", "2");
-		ResultDefinition result = checkQueryResult(builder, 2L);
+		checkQueryResult(builder, 2L);
+	}
+
+	@Test
+	public void test302WildcardQuery() throws URISyntaxException {
+		QueryBuilder builder = new QueryBuilder();
+		builder.query = new WildcardQuery("title", "art*");
+		checkQueryResult(builder, 2L);
+		builder.query = new WildcardQuery("title", "*econ?");
+		checkQueryResult(builder, 1L);
 	}
 
 	@Test
