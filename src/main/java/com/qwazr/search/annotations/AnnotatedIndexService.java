@@ -18,10 +18,7 @@ package com.qwazr.search.annotations;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
-import com.qwazr.utils.AnnotationsUtils;
-import com.qwazr.utils.ArrayUtils;
-import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.*;
 import org.apache.http.HttpEntity;
 import org.apache.http.util.EntityUtils;
 
@@ -128,7 +125,7 @@ public class AnnotatedIndexService<T> {
 				if (entity instanceof HttpEntity)
 					message = EntityUtils.toString((HttpEntity) entity);
 				else if (entity instanceof InputStream)
-					message = IOUtils.toString((InputStream) entity);
+					message = IOUtils.toString((InputStream) entity, CharsetUtils.CharsetUTF8);
 			} catch (IOException e) {
 				message = null;
 			}
