@@ -16,23 +16,24 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.search.SortField;
 
 class StringFieldType extends StorableFieldType {
 
-	StringFieldType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	StringFieldType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
-		consumer.accept(new StringField(fieldName, value.toString(), store));
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
+		consumer.accept(fieldName, new StringField(fieldName, value.toString(), store));
 	}
 
 	@Override
-	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortField(fieldName, SortField.Type.STRING, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortStringMissingValue(sortEnum, sortField);
 		return sortField;

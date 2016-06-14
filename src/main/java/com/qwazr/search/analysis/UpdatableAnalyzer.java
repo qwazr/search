@@ -27,18 +27,14 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 
 	private final Analyzer defaultAnalyzer = new KeywordAnalyzer();
 
-	private volatile AnalyzerContext context;
-
 	private volatile Map<String, Analyzer> analyzerMap;
 
-	public UpdatableAnalyzer(AnalyzerContext context, Map<String, Analyzer> analyzerMap) throws ServerException {
+	public UpdatableAnalyzer(Map<String, Analyzer> analyzerMap) throws ServerException {
 		super(PER_FIELD_REUSE_STRATEGY);
-		update(context, analyzerMap);
+		update(analyzerMap);
 	}
 
-	final public synchronized void update(AnalyzerContext context, Map<String, Analyzer> analyzerMap)
-					throws ServerException {
-		this.context = context;
+	final public synchronized void update(Map<String, Analyzer> analyzerMap) throws ServerException {
 		Map<String, Analyzer> oldAnalyzerMap = this.analyzerMap;
 		this.analyzerMap = analyzerMap;
 		close(oldAnalyzerMap);
@@ -54,10 +50,6 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 	final public void close() {
 		close(analyzerMap);
 		super.close();
-	}
-
-	final public AnalyzerContext getContext() {
-		return context;
 	}
 
 	@Override

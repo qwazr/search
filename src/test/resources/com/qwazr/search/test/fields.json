@@ -31,5 +31,11 @@
   },
   "stock": {
     "template": "IntDocValuesField"
+  },
+  "dynamic_simple_facet_*": {
+    "template": "FacetField"
+  },
+  "dynamic_multi_facet_*": {
+    "template": "MultiFacetField"
   }
 }

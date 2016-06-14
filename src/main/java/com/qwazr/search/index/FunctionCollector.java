@@ -54,7 +54,7 @@ public class FunctionCollector implements Collector {
 	public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
 		final LeafReader leafReader = context.reader();
 		FieldInfo fieldInfo = leafReader.getFieldInfos().fieldInfo(function.field);
-		final ValueConverter converter = fieldType.getConverter(leafReader);
+		final ValueConverter converter = fieldType.getConverter(function.field, leafReader);
 		if (converter == null)
 			return DoNothingCollector.INSTANCE;
 		switch (function.function) {

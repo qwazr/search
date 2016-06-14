@@ -16,6 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.search.SortField;
@@ -23,20 +24,20 @@ import org.apache.lucene.util.BytesRef;
 
 class SortedSetDocValuesType extends FieldTypeAbstract {
 
-	SortedSetDocValuesType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	SortedSetDocValuesType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
 		if (value instanceof BytesRef)
-			consumer.accept(new SortedSetDocValuesField(fieldName, (BytesRef) value));
+			consumer.accept(fieldName, new SortedSetDocValuesField(fieldName, (BytesRef) value));
 		else
-			consumer.accept(new SortedSetDocValuesField(fieldName, new BytesRef(value.toString())));
+			consumer.accept(fieldName, new SortedSetDocValuesField(fieldName, new BytesRef(value.toString())));
 	}
 
 	@Override
-	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		return null;
 	}
 

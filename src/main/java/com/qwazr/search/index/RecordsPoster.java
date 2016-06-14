@@ -16,10 +16,10 @@
 package com.qwazr.search.index;
 
 import com.datastax.driver.core.utils.UUIDs;
-import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 
@@ -32,13 +32,13 @@ import java.util.function.Consumer;
 abstract class RecordsPoster {
 
 	protected final Map<String, Field> fields;
-	protected final AnalyzerContext context;
+	protected final FieldMap fieldMap;
 	protected final IndexWriter indexWriter;
 	protected int counter;
 
-	RecordsPoster(Map<String, Field> fields, AnalyzerContext context, IndexWriter indexWriter) {
+	RecordsPoster(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter) {
 		this.fields = fields;
-		this.context = context;
+		this.fieldMap = fieldMap;
 		this.indexWriter = indexWriter;
 		this.counter = 0;
 	}
@@ -47,8 +47,9 @@ abstract class RecordsPoster {
 		if (id == null)
 			id = UUIDs.timeBased().toString();
 		final Term termId = new Term(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id));
+		final FacetsConfig facetsConfig = fieldMap.getNewFacetsConfig(fields.fieldNameSet);
 		try {
-			final Document facetedDoc = context.facetsConfig.build(fields.document);
+			final Document facetedDoc = facetsConfig.build(fields.document);
 			indexWriter.updateDocument(termId, facetedDoc);
 		} catch (IOException e) {
 			throw new ServerException(e);
@@ -71,14 +72,14 @@ abstract class RecordsPoster {
 
 	final static class UpdateMapDocument extends RecordsPoster implements Consumer<Map<String, Object>> {
 
-		UpdateMapDocument(final AnalyzerContext context, final IndexWriter indexWriter) {
-			super(null, context, indexWriter);
+		UpdateMapDocument(final FieldMap fieldMap, final IndexWriter indexWriter) {
+			super(null, fieldMap, indexWriter);
 		}
 
 		@Override
 		final public void accept(final Map<String, Object> document) {
 			final FieldConsumer.ForDocument documentBuilder = new FieldConsumer.ForDocument();
-			final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(context.fieldTypes, documentBuilder);
+			final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(fieldMap, documentBuilder);
 			document.forEach(recordBuilder);
 			updateDocument(recordBuilder.id, documentBuilder);
 		}
@@ -86,16 +87,16 @@ abstract class RecordsPoster {
 
 	final static class UpdateObjectDocument extends RecordsPoster implements Consumer<Object> {
 
-		UpdateObjectDocument(final Map<String, java.lang.reflect.Field> fields, final AnalyzerContext context,
+		UpdateObjectDocument(final Map<String, java.lang.reflect.Field> fields, final FieldMap fieldMap,
 				final IndexWriter indexWriter) {
-			super(fields, context, indexWriter);
+			super(fields, fieldMap, indexWriter);
 		}
 
 		@Override
 		final public void accept(final Object record) {
 			final FieldConsumer.ForDocument documentBuilder = new FieldConsumer.ForDocument();
 			final RecordBuilder.ForObject recordBuilder =
-					new RecordBuilder.ForObject(context.fieldTypes, documentBuilder, record);
+					new RecordBuilder.ForObject(fieldMap, documentBuilder, record);
 			fields.forEach(recordBuilder);
 			updateDocument(recordBuilder.id, documentBuilder);
 		}
@@ -103,14 +104,14 @@ abstract class RecordsPoster {
 
 	final static class UpdateMapDocValues extends RecordsPoster implements Consumer<Map<String, Object>> {
 
-		UpdateMapDocValues(final AnalyzerContext context, final IndexWriter indexWriter) {
-			super(null, context, indexWriter);
+		UpdateMapDocValues(final FieldMap fieldMap, final IndexWriter indexWriter) {
+			super(null, fieldMap, indexWriter);
 		}
 
 		@Override
 		final public void accept(final Map<String, Object> document) {
 			final FieldConsumer.ForDocValues fieldsBuilder = new FieldConsumer.ForDocValues();
-			final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(context.fieldTypes, fieldsBuilder);
+			final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(fieldMap, fieldsBuilder);
 			document.forEach(recordBuilder);
 			updateDocValues(recordBuilder.id, fieldsBuilder);
 		}
@@ -118,15 +119,14 @@ abstract class RecordsPoster {
 
 	final static class UpdateObjectDocValues extends RecordsPoster implements Consumer<Object> {
 
-		UpdateObjectDocValues(Map<String, Field> fields, AnalyzerContext context, IndexWriter indexWriter) {
-			super(fields, context, indexWriter);
+		UpdateObjectDocValues(Map<String, Field> fields, FieldMap fieldMap, IndexWriter indexWriter) {
+			super(fields, fieldMap, indexWriter);
 		}
 
 		@Override
 		final public void accept(Object record) {
 			final FieldConsumer.ForDocValues fieldsBuilder = new FieldConsumer.ForDocValues();
-			final RecordBuilder.ForObject recordBuilder =
-					new RecordBuilder.ForObject(context.fieldTypes, fieldsBuilder, record);
+			final RecordBuilder.ForObject recordBuilder = new RecordBuilder.ForObject(fieldMap, fieldsBuilder, record);
 			fields.forEach(recordBuilder);
 			updateDocValues(recordBuilder.id, fieldsBuilder);
 		}

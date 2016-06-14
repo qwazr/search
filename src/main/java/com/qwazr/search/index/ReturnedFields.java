@@ -17,11 +17,12 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.field.FieldTypeInterface;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.LeafReader;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 abstract class ReturnedFields {
 
@@ -42,7 +43,7 @@ abstract class ReturnedFields {
 				FieldTypeInterface fieldType = fieldTypes.get(fieldName);
 				if (fieldType == null)
 					continue;
-				ValueConverter converter = fieldType.getConverter(leafReader);
+				ValueConverter converter = fieldType.getConverter(fieldName, leafReader);
 				if (converter == null)
 					continue;
 				valueConverterMap.put(fieldName, converter);

@@ -19,18 +19,17 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import org.apache.lucene.util.BytesRef;
 
-import java.util.Map;
 import java.util.function.BiConsumer;
 
 abstract class RecordBuilder {
 
 	private final FieldConsumer fieldConsumer;
-	private final Map<String, FieldTypeInterface> fieldTypes;
+	private final FieldMap fieldMap;
 
 	volatile BytesRef id;
 
-	RecordBuilder(final Map<String, FieldTypeInterface> fieldTypes, final FieldConsumer fieldConsumer) {
-		this.fieldTypes = fieldTypes;
+	RecordBuilder(final FieldMap fieldMap, final FieldConsumer fieldConsumer) {
+		this.fieldMap = fieldMap;
 		this.fieldConsumer = fieldConsumer;
 		this.id = null;
 	}
@@ -39,10 +38,8 @@ abstract class RecordBuilder {
 		if (fieldValue == null)
 			return;
 
-		FieldTypeInterface fieldType = fieldTypes.get(fieldName);
-		if (fieldType == null)
-			throw new IllegalArgumentException("No field definition for the field: " + fieldName);
-		fieldType.fill(fieldValue, fieldConsumer);
+		FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
+		fieldType.dispatch(fieldValue, fieldConsumer);
 
 		if (FieldDefinition.ID_FIELD.equals(fieldName))
 			id = BytesRefUtils.fromAny(fieldValue);
@@ -50,8 +47,8 @@ abstract class RecordBuilder {
 
 	final static class ForMap extends RecordBuilder implements BiConsumer<String, Object> {
 
-		ForMap(final Map<String, FieldTypeInterface> fieldTypes, final FieldConsumer fieldConsumer) {
-			super(fieldTypes, fieldConsumer);
+		ForMap(final FieldMap fieldMap, final FieldConsumer fieldConsumer) {
+			super(fieldMap, fieldConsumer);
 		}
 
 		@Override
@@ -65,9 +62,8 @@ abstract class RecordBuilder {
 
 		private final Object record;
 
-		ForObject(final Map<String, FieldTypeInterface> fieldTypes, final FieldConsumer fieldConsumer,
-		          final Object record) {
-			super(fieldTypes, fieldConsumer);
+		ForObject(final FieldMap fieldMap, final FieldConsumer fieldConsumer, final Object record) {
+			super(fieldMap, fieldConsumer);
 			this.record = record;
 		}
 

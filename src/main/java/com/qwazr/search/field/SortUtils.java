@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
@@ -116,7 +117,7 @@ public class SortUtils {
 		}
 	}
 
-	final static SortField buildSortField(final Map<String, FieldTypeInterface> fields, final String fieldName,
+	final static SortField buildSortField(final FieldMap fieldMap, final String fieldName,
 			final QueryDefinition.SortEnum sortEnum) {
 
 		// First check the by score and by doc_id sorting
@@ -126,23 +127,23 @@ public class SortUtils {
 			return new SortField(null, SortField.Type.DOC, sortReverse(sortEnum));
 
 		// Let's check if the field exists and supports sorting
-		FieldTypeInterface fieldType = fields.get(fieldName);
+		FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
 		if (fieldType == null)
 			throw new IllegalArgumentException("Unknown sort field: " + fieldName);
-		SortField sortField = fieldType.getSortField(sortEnum);
+		SortField sortField = fieldType.getSortField(fieldName, sortEnum);
 		if (sortField == null)
 			throw new IllegalArgumentException("The field does not support sorting: " + fieldName);
 		return sortField;
 	}
 
-	final public static Sort buildSort(Map<String, FieldTypeInterface> fields,
-			LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
+	final public static Sort buildSort(final FieldMap fieldMap,
+			final LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
 		if (sorts.isEmpty())
 			return null;
 		final SortField[] sortFields = new SortField[sorts.size()];
 		int i = 0;
 		for (Map.Entry<String, QueryDefinition.SortEnum> sort : sorts.entrySet())
-			sortFields[i++] = buildSortField(fields, sort.getKey(), sort.getValue());
+			sortFields[i++] = buildSortField(fieldMap, sort.getKey(), sort.getValue());
 		if (sortFields.length == 1)
 			return new Sort(sortFields[0]);
 		return new Sort(sortFields);

@@ -16,52 +16,53 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.search.SortField;
 
 class CustomFieldType extends FieldTypeAbstract {
 
-	CustomFieldType(final String fieldName, final FieldDefinition fieldDefinition) {
-		super(fieldName, fieldDefinition);
+	CustomFieldType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
 		final FieldType type = new FieldType();
-		if (fieldDef.stored != null)
-			type.setStored(fieldDef.stored);
-		if (fieldDef.tokenized != null)
-			type.setTokenized(fieldDef.tokenized);
-		if (fieldDef.store_termvectors != null)
-			type.setStoreTermVectors(fieldDef.store_termvectors);
-		if (fieldDef.store_termvector_offsets != null)
-			type.setStoreTermVectorOffsets(fieldDef.store_termvector_offsets);
-		if (fieldDef.store_termvector_positions != null)
-			type.setStoreTermVectorPositions(fieldDef.store_termvector_positions);
-		if (fieldDef.store_termvector_payloads != null)
-			type.setStoreTermVectorPayloads(fieldDef.store_termvector_payloads);
-		if (fieldDef.omit_norms != null)
-			type.setOmitNorms(fieldDef.omit_norms);
-		if (fieldDef.numeric_type != null)
-			type.setNumericType(fieldDef.numeric_type);
-		if (fieldDef.index_options != null)
-			type.setIndexOptions(fieldDef.index_options);
-		if (fieldDef.docvalues_type != null)
-			type.setDocValuesType(fieldDef.docvalues_type);
-		consumer.accept(new CustomField(fieldName, type, value));
+		if (fieldMapItem.definition.stored != null)
+			type.setStored(fieldMapItem.definition.stored);
+		if (fieldMapItem.definition.tokenized != null)
+			type.setTokenized(fieldMapItem.definition.tokenized);
+		if (fieldMapItem.definition.store_termvectors != null)
+			type.setStoreTermVectors(fieldMapItem.definition.store_termvectors);
+		if (fieldMapItem.definition.store_termvector_offsets != null)
+			type.setStoreTermVectorOffsets(fieldMapItem.definition.store_termvector_offsets);
+		if (fieldMapItem.definition.store_termvector_positions != null)
+			type.setStoreTermVectorPositions(fieldMapItem.definition.store_termvector_positions);
+		if (fieldMapItem.definition.store_termvector_payloads != null)
+			type.setStoreTermVectorPayloads(fieldMapItem.definition.store_termvector_payloads);
+		if (fieldMapItem.definition.omit_norms != null)
+			type.setOmitNorms(fieldMapItem.definition.omit_norms);
+		if (fieldMapItem.definition.numeric_type != null)
+			type.setNumericType(fieldMapItem.definition.numeric_type);
+		if (fieldMapItem.definition.index_options != null)
+			type.setIndexOptions(fieldMapItem.definition.index_options);
+		if (fieldMapItem.definition.docvalues_type != null)
+			type.setDocValuesType(fieldMapItem.definition.docvalues_type);
+		consumer.accept(fieldName, new CustomField(fieldName, type, value));
 	}
 
 	@Override
-	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
-		if (fieldDef.index_options == null)
+	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+		if (fieldMapItem.definition.index_options == null)
 			throw new IllegalArgumentException("A not indexed field cannot be used in sorting: " + fieldName);
 		if (fieldName == FieldDefinition.SCORE_FIELD)
 			return new SortField(fieldName, SortField.Type.SCORE);
 		final boolean reverse = SortUtils.sortReverse(sortEnum);
 		final SortField sortField;
-		if (fieldDef.numeric_type != null) {
-			switch (fieldDef.numeric_type) {
+		if (fieldMapItem.definition.numeric_type != null) {
+			switch (fieldMapItem.definition.numeric_type) {
 			case DOUBLE:
 				sortField = new SortField(fieldName, SortField.Type.DOUBLE, reverse);
 				SortUtils.sortDoubleMissingValue(sortEnum, sortField);

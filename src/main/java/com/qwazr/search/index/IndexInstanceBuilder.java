@@ -124,8 +124,8 @@ class IndexInstanceBuilder {
 				new LinkedHashMap<>();
 
 		AnalyzerContext context = new AnalyzerContext(analyzerMap, fieldMap);
-		indexAnalyzer = new UpdatableAnalyzer(context, context.indexAnalyzerMap);
-		queryAnalyzer = new UpdatableAnalyzer(context, context.queryAnalyzerMap);
+		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
+		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
 
 		// Open and lock the data directory
 		dataDirectory = FSDirectory.open(fileSet.dataDirectory.toPath());

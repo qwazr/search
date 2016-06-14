@@ -16,51 +16,50 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.IntPoint;
-import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.spatial.geopoint.document.GeoPointField;
 
 class GeoPointType extends StorableFieldType {
 
-	GeoPointType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
-	}
-
-	protected void fillArray(final double[] values, final FieldConsumer consumer) {
-		if ((values.length & 1) != 0)
-			throw new RuntimeException("Expect even double values, but got: " + values.length);
-		for (int i = 0; i < values.length; )
-			consumer.accept(new GeoPointField(fieldName, values[i++], values[i++], store));
-	}
-
-	protected void fillArray(final float[] values, final FieldConsumer consumer) {
-		if ((values.length & 1) != 0)
-			throw new RuntimeException("Expect even float values, but got: " + values.length);
-		for (int i = 0; i < values.length; )
-			consumer.accept(new GeoPointField(fieldName, values[i++], values[i++], store));
-	}
-
-	protected void fillArray(final Object[] values, final FieldConsumer consumer) {
-		if ((values.length & 1) != 0)
-			throw new RuntimeException("Expect even number values, but got: " + values.length);
-		for (int i = 0; i < values.length; )
-			consumer.accept(
-					new GeoPointField(fieldName, ((Number) values[i++]).doubleValue(),
-							((Number) values[i++]).doubleValue(),
-							store));
+	GeoPointType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	public void fillValue(Object value, FieldConsumer fieldConsumer) {
+	protected void fillArray(final String fieldName, final double[] values, final FieldConsumer consumer) {
+		if ((values.length & 1) != 0)
+			throw new RuntimeException("Expect even double values, but got: " + values.length);
+		for (int i = 0; i < values.length; )
+			consumer.accept(fieldName, new GeoPointField(fieldName, values[i++], values[i++], store));
+	}
+
+	@Override
+	protected void fillArray(final String fieldName, final float[] values, final FieldConsumer consumer) {
+		if ((values.length & 1) != 0)
+			throw new RuntimeException("Expect even float values, but got: " + values.length);
+		for (int i = 0; i < values.length; )
+			consumer.accept(fieldName, new GeoPointField(fieldName, values[i++], values[i++], store));
+	}
+
+	@Override
+	protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
+		if ((values.length & 1) != 0)
+			throw new RuntimeException("Expect even number values, but got: " + values.length);
+		for (int i = 0; i < values.length; )
+			consumer.accept(fieldName, new GeoPointField(fieldName, ((Number) values[i++]).doubleValue(),
+					((Number) values[i++]).doubleValue(), store));
+	}
+
+	@Override
+	public void fillValue(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
 		throw new RuntimeException("Unsupported value type for GeoPoint: " + value.getClass() +
 				". An array of numbers is expected.");
 	}
 
 	@Override
-	public SortField getSortField(QueryDefinition.SortEnum sortEnum) {
+	public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		return null;
 	}
 }

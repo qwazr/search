@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.IndexReader;
@@ -29,30 +30,30 @@ import java.io.IOException;
 
 class LongDocValuesType extends FieldTypeAbstract {
 
-	LongDocValuesType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	LongDocValuesType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
 		if (value instanceof Number)
-			consumer.accept(new NumericDocValuesField(fieldName, ((Number) value).longValue()));
+			consumer.accept(fieldName, new NumericDocValuesField(fieldName, ((Number) value).longValue()));
 		else
-			consumer.accept(new NumericDocValuesField(fieldName, Long.parseLong(value.toString())));
+			consumer.accept(fieldName, new NumericDocValuesField(fieldName, Long.parseLong(value.toString())));
 	}
 
 	@Override
-	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortField(fieldName, SortField.Type.LONG, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortLongMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 
 	@Override
-	final public ValueConverter getConverter(final IndexReader reader) throws IOException {
+	final public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
 		final NumericDocValues docValues = MultiDocValues.getNumericValues(reader, fieldName);
 		if (docValues == null)
-			return super.getConverter(reader);
+			return super.getConverter(fieldName, reader);
 		return new SingleDVConverter.LongDVConverter(docValues);
 	}
 }

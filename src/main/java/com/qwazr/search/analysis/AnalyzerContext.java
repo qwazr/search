@@ -17,12 +17,10 @@ package com.qwazr.search.analysis;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.facet.FacetsConfig;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -32,47 +30,26 @@ import java.util.Map;
 
 public class AnalyzerContext {
 
-	public final Map<String, FieldTypeInterface> fieldTypes;
-	public final FacetsConfig facetsConfig;
 	public final Map<String, Analyzer> indexAnalyzerMap;
 	public final Map<String, Analyzer> queryAnalyzerMap;
 
-	public AnalyzerContext(Map<String, AnalyzerDefinition> analyzerMap, Map<String, FieldDefinition> fields)
+	public AnalyzerContext(final Map<String, AnalyzerDefinition> analyzerMap, final Map<String, FieldDefinition> fields)
 			throws ServerException {
-		this.fieldTypes = new HashMap<>();
-		this.facetsConfig = new FacetsConfig();
+
 		if (fields == null || fields.size() == 0) {
-			this.indexAnalyzerMap = Collections.<String, Analyzer>emptyMap();
-			this.queryAnalyzerMap = Collections.<String, Analyzer>emptyMap();
+			this.indexAnalyzerMap = Collections.emptyMap();
+			this.queryAnalyzerMap = Collections.emptyMap();
 			return;
 		}
+
 		this.indexAnalyzerMap = new HashMap<>();
 		this.queryAnalyzerMap = new HashMap<>();
 
-		for (Map.Entry<String, FieldDefinition> field : fields.entrySet()) {
-			final String fieldName = field.getKey();
-			final FieldDefinition fieldDef = field.getValue();
-			FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldName, fieldDef);
-			fieldTypes.put(fieldName, fieldType);
-			if (fieldDef.template != null) {
-				switch (fieldDef.template) {
-				case FacetField:
-				case SortedSetDocValuesFacetField:
-					facetsConfig.setMultiValued(fieldName, false);
-					facetsConfig.setHierarchical(fieldName, false);
-					break;
-				case MultiFacetField:
-				case SortedSetMultiDocValuesFacetField:
-					facetsConfig.setMultiValued(fieldName, true);
-					facetsConfig.setHierarchical(fieldName, false);
-					break;
-				}
-			}
+		fields.forEach((fieldName, fieldDef) -> {
 			try {
 
-				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ?
-						null :
-						findAnalyzer(analyzerMap, fieldDef.analyzer);
+				final Analyzer indexAnalyzer =
+						StringUtils.isEmpty(fieldDef.analyzer) ? null : findAnalyzer(analyzerMap, fieldDef.analyzer);
 				if (indexAnalyzer != null)
 					indexAnalyzerMap.put(fieldName, indexAnalyzer);
 
@@ -86,19 +63,18 @@ public class AnalyzerContext {
 				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 						"Class " + fieldDef.analyzer + " not known for the field " + fieldName, e);
 			}
-		}
+		});
 	}
 
 	final static String[] analyzerClassPrefixes = { "", "org.apache.lucene.analysis." };
 
-	public final static Analyzer findAnalyzer(Map<String, AnalyzerDefinition> analyzerMap, String analyzer)
+	private static Analyzer findAnalyzer(final Map<String, AnalyzerDefinition> analyzerMap, final String analyzer)
 			throws InterruptedException, ReflectiveOperationException, IOException {
 		if (analyzerMap != null) {
 			AnalyzerDefinition analyzerDef = analyzerMap.get(analyzer);
 			if (analyzerDef != null)
 				return new CustomAnalyzer(analyzerDef);
 		}
-
 		return (Analyzer) ClassLoaderUtils.findClass(ClassLoaderManager.classLoader, analyzer, analyzerClassPrefixes)
 				.newInstance();
 	}

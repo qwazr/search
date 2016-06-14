@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -67,7 +68,7 @@ public class SchemaInstance implements Closeable {
 		private final MultiReader multiReader;
 		private final IndexSearcher indexSearcher;
 		private final Map<String, AnalyzerDefinition> analyzerMap;
-		private final Map<String, FieldDefinition> fieldMap;
+		private final FieldMap fieldMap;
 		private final UpdatableAnalyzer indexAnalyzer;
 		private final UpdatableAnalyzer queryAnalyzer;
 		private final AtomicInteger ref = new AtomicInteger(1);
@@ -85,17 +86,18 @@ public class SchemaInstance implements Closeable {
 			IndexReader[] indexReaders = new IndexReader[indexMap.size()];
 			int i = 0;
 			analyzerMap = new HashMap<>();
-			fieldMap = new HashMap<>();
+			LinkedHashMap<String, FieldDefinition> fieldDefinitionMap = new LinkedHashMap<>();
 			for (IndexInstance indexInstance : indexMap.values()) {
 				indexReaders[i++] = DirectoryReader.open(indexInstance.getDataDirectory());
-				indexInstance.fillFields(fieldMap);
+				indexInstance.fillFields(fieldDefinitionMap);
 				indexInstance.fillAnalyzers(analyzerMap);
 			}
+			fieldMap = new FieldMap(fieldDefinitionMap);
 			multiReader = new MultiReader(indexReaders);
 			indexSearcher = new IndexSearcher(multiReader);
-			AnalyzerContext analyzerContext = new AnalyzerContext(analyzerMap, fieldMap);
-			indexAnalyzer = new UpdatableAnalyzer(analyzerContext, analyzerContext.indexAnalyzerMap);
-			queryAnalyzer = new UpdatableAnalyzer(analyzerContext, analyzerContext.queryAnalyzerMap);
+			AnalyzerContext analyzerContext = new AnalyzerContext(analyzerMap, fieldDefinitionMap);
+			indexAnalyzer = new UpdatableAnalyzer(analyzerContext.indexAnalyzerMap);
+			queryAnalyzer = new UpdatableAnalyzer(analyzerContext.queryAnalyzerMap);
 		}
 
 		int numDocs() {
@@ -137,8 +139,8 @@ public class SchemaInstance implements Closeable {
 			try {
 				SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader());
 				final QueryContext queryContext =
-						new QueryContext(SchemaInstance.this, indexSearcher, indexAnalyzer, queryAnalyzer, state,
-								queryDef);
+						new QueryContext(SchemaInstance.this, indexSearcher, indexAnalyzer, queryAnalyzer, fieldMap,
+								state, queryDef);
 				return QueryUtils.search(queryContext, documentBuilderFactory);
 			} finally {
 				decRef();

@@ -16,23 +16,24 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 import org.apache.lucene.search.SortField;
 
 class SortedSetDocValuesFacetType extends FieldTypeAbstract {
 
-	SortedSetDocValuesFacetType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	SortedSetDocValuesFacetType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
-		consumer.accept(new SortedSetDocValuesFacetField(fieldName, value.toString()));
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
+		consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, value.toString()));
 	}
 
 	@Override
-	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		return null;
 	}
 

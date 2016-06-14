@@ -40,11 +40,11 @@ class QueryCollectors {
 	final Collector finalCollector;
 
 	QueryCollectors(boolean bNeedScore, Sort sort, int numHits, final LinkedHashMap<String, FacetDefinition> facets,
-			Collection<QueryDefinition.Function> functions, final Map<String, FieldTypeInterface> fields)
+			Collection<QueryDefinition.Function> functions, final FieldMap fieldMap)
 			throws ServerException, IOException {
 		collectors = new ArrayList<Collector>();
 		facetsCollector = buildFacetsCollector(facets);
-		functionsCollectors = buildFunctionsCollectors(fields, functions);
+		functionsCollectors = buildFunctionsCollectors(fieldMap, functions);
 		totalHitCountCollector = buildTotalHitsCollector(numHits);
 		topDocsCollector = buildTopDocCollector(sort, numHits, bNeedScore);
 		finalCollector = getFinalCollector();
@@ -75,13 +75,13 @@ class QueryCollectors {
 		return null;
 	}
 
-	private final Collection<FunctionCollector> buildFunctionsCollectors(Map<String, FieldTypeInterface> fields,
+	private final Collection<FunctionCollector> buildFunctionsCollectors(final FieldMap fieldMap,
 			Collection<QueryDefinition.Function> functions) throws ServerException {
 		if (functions == null || functions.isEmpty())
 			return null;
 		Collection<FunctionCollector> functionsCollectors = new ArrayList<FunctionCollector>();
 		for (QueryDefinition.Function function : functions) {
-			FieldTypeInterface fieldType = fields.get(function.field);
+			FieldTypeInterface fieldType = fieldMap.getFieldType(function.field);
 			if (fieldType == null)
 				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 						"Cannot compute the function " + function.function + " because the field is unknown: "

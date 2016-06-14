@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.FloatDocValuesField;
 import org.apache.lucene.index.IndexReader;
@@ -29,30 +30,30 @@ import java.io.IOException;
 
 class FloatDocValuesType extends FieldTypeAbstract {
 
-	FloatDocValuesType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	FloatDocValuesType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
 		if (value instanceof Number)
-			consumer.accept(new FloatDocValuesField(fieldName, ((Number) value).floatValue()));
+			consumer.accept(fieldName, new FloatDocValuesField(fieldName, ((Number) value).floatValue()));
 		else
-			consumer.accept(new FloatDocValuesField(fieldName, Float.parseFloat(value.toString())));
+			consumer.accept(fieldName, new FloatDocValuesField(fieldName, Float.parseFloat(value.toString())));
 	}
 
 	@Override
-	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortField(fieldName, SortField.Type.FLOAT, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortFloatMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 
 	@Override
-	final public ValueConverter getConverter(final IndexReader reader) throws IOException {
+	final public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
 		NumericDocValues docValues = MultiDocValues.getNumericValues(reader, fieldName);
 		if (docValues == null)
-			return super.getConverter(reader);
+			return super.getConverter(fieldName, reader);
 		return new SingleDVConverter.FloatDVConverter(docValues);
 	}
 }

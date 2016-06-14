@@ -19,17 +19,15 @@ import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
-import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
-import org.apache.lucene.index.SortedSetDocValues;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
-import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValuesField;
-import static com.qwazr.search.field.FieldDefinition.Template.StoredField;
-import static com.qwazr.search.field.FieldDefinition.Template.StringField;
+import static com.qwazr.search.field.FieldDefinition.Template.*;
 
 @Index(name = AnnotatedIndex.INDEX_NAME_MASTER, schema = AnnotatedIndex.SCHEMA_NAME)
 public class AnnotatedIndex {
@@ -72,11 +70,18 @@ public class AnnotatedIndex {
 	@IndexField(template = SortedSetDocValuesField)
 	final public Collection<String> docValuesCategory;
 
+	@IndexField(name = "dynamic_simple_facet_*", template = FacetField)
+	final public Map<String, Object> simpleFacets;
+
+	@IndexField(name = "dynamic_multi_facet_*", template = MultiFacetField)
+	final public Map<String, Object> multiFacets;
+
 	public AnnotatedIndex() {
-		this(null, null, null, null, null);
+		this(null, null, null, null, null, false);
 	}
 
-	public AnnotatedIndex(Integer id, String title, String content, Double price, Long quantity, String... categories) {
+	public AnnotatedIndex(Integer id, String title, String content, Double price, Long quantity, boolean withFacets,
+			String... categories) {
 		this.id = id == null ? null : id.toString();
 		this.title = title;
 		this.content = content;
@@ -92,6 +97,18 @@ public class AnnotatedIndex {
 			for (String category : categories)
 				this.storedCategory.add(category);
 		}
+		this.simpleFacets = withFacets ? new LinkedHashMap<>() : null;
+		this.multiFacets = withFacets ? new LinkedHashMap<>() : null;
+	}
+
+	public AnnotatedIndex simpleFacet(String field, String value) {
+		simpleFacets.put("dynamic_simple_facet_" + field, value);
+		return this;
+	}
+
+	public AnnotatedIndex multiFacet(String field, String... values) {
+		multiFacets.put("dynamic_multi_facet_" + field, values);
+		return this;
 	}
 
 	@Override

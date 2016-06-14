@@ -15,33 +15,32 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
 class DoublePointType extends StorableFieldType {
 
-	DoublePointType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	DoublePointType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
 		double doubleValue =
 				value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString());
-		consumer.accept(new DoublePoint(fieldName, doubleValue));
-		if (store == store.YES)
-			consumer.accept(new StoredField(fieldName, doubleValue));
+		consumer.accept(fieldName, new DoublePoint(fieldName, doubleValue));
+		if (store == Field.Store.YES)
+			consumer.accept(fieldName, new StoredField(fieldName, doubleValue));
 	}
 
 	@Override
-	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortField(fieldName, SortField.Type.DOUBLE, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortDoubleMissingValue(sortEnum, sortField);
 		return sortField;

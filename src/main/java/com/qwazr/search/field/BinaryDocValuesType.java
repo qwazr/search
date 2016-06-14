@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.BinaryDocValuesField;
 import org.apache.lucene.index.BinaryDocValues;
@@ -30,25 +31,25 @@ import java.io.IOException;
 
 class BinaryDocValuesType extends FieldTypeAbstract {
 
-	BinaryDocValuesType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	BinaryDocValuesType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
-		consumer.accept(new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
+		consumer.accept(fieldName, new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
 	}
 
 	@Override
-	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		return null;
 	}
 
 	@Override
-	public final ValueConverter getConverter(final IndexReader reader) throws IOException {
+	public final ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
 		BinaryDocValues binaryDocValue = MultiDocValues.getBinaryValues(reader, fieldName);
 		if (binaryDocValue == null)
-			return super.getConverter(reader);
+			return super.getConverter(fieldName, reader);
 		return new SingleDVConverter.BinaryDVConverter(binaryDocValue);
 	}
 }

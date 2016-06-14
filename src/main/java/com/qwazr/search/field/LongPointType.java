@@ -16,7 +16,9 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
@@ -24,20 +26,20 @@ import org.apache.lucene.util.BytesRef;
 
 class LongPointType extends StorableFieldType {
 
-	LongPointType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	LongPointType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
 		long longValue = value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString());
-		consumer.accept(new LongPoint(fieldName, longValue));
-		if (store == store.YES)
-			consumer.accept(new StoredField(fieldName, longValue));
+		consumer.accept(fieldName, new LongPoint(fieldName, longValue));
+		if (store == Field.Store.YES)
+			consumer.accept(fieldName, new StoredField(fieldName, longValue));
 	}
 
 	@Override
-	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortField(fieldName, SortField.Type.LONG, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortLongMissingValue(sortEnum, sortField);
 		return sortField;

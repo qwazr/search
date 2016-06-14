@@ -73,7 +73,7 @@ final public class IndexInstance implements Closeable {
 
 	private final UpdatableAnalyzer indexAnalyzer;
 	private final UpdatableAnalyzer queryAnalyzer;
-	private volatile LinkedHashMap<String, FieldDefinition> fieldMap;
+	private volatile FieldMap fieldMap;
 	private volatile LinkedHashMap<String, AnalyzerDefinition> analyzerMap;
 
 	private volatile Pair<IndexReader, SortedSetDocValuesReaderState> facetsReaderStateCache;
@@ -83,7 +83,7 @@ final public class IndexInstance implements Closeable {
 		this.fileSet = builder.fileSet;
 		this.dataDirectory = builder.dataDirectory;
 		this.analyzerMap = builder.analyzerMap;
-		this.fieldMap = builder.fieldMap;
+		this.fieldMap = builder.fieldMap == null ? null : new FieldMap(builder.fieldMap);
 		this.indexWriter = builder.indexWriter;
 		if (builder.indexWriter != null) { // We are a master
 			this.indexWriterConfig = indexWriter.getConfig();
@@ -130,14 +130,15 @@ final public class IndexInstance implements Closeable {
 	private IndexStatus getIndexStatus() throws IOException {
 		final IndexSearcher indexSearcher = searcherManager.acquire();
 		try {
-			return new IndexStatus(indexSearcher.getIndexReader(), settings, analyzerMap.keySet(), fieldMap.keySet());
+			return new IndexStatus(indexSearcher.getIndexReader(), settings, analyzerMap.keySet(),
+					fieldMap.getFieldDefinitionMap().keySet());
 		} finally {
 			searcherManager.release(indexSearcher);
 		}
 	}
 
 	LinkedHashMap<String, FieldDefinition> getFields() {
-		return fieldMap;
+		return fieldMap.getFieldDefinitionMap();
 	}
 
 	IndexStatus getStatus() throws IOException, InterruptedException {
@@ -150,22 +151,30 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
+	private void refreshFieldsAnalyzers(LinkedHashMap<String, AnalyzerDefinition> analyzers,
+			LinkedHashMap<String, FieldDefinition> fields) throws IOException {
+		AnalyzerContext analyzerContext = new AnalyzerContext(analyzers, fields);
+		indexAnalyzer.update(analyzerContext.indexAnalyzerMap);
+		queryAnalyzer.update(analyzerContext.queryAnalyzerMap);
+	}
+
 	synchronized void setFields(LinkedHashMap<String, FieldDefinition> fields) throws ServerException, IOException {
-		AnalyzerContext analyzerContext = new AnalyzerContext(analyzerMap, fields);
-		indexAnalyzer.update(analyzerContext, analyzerContext.indexAnalyzerMap);
-		queryAnalyzer.update(analyzerContext, analyzerContext.queryAnalyzerMap);
 		JsonMapper.MAPPER.writeValue(fileSet.fieldMapFile, fields);
-		fieldMap = fields;
+		fieldMap = new FieldMap(fields);
+		refreshFieldsAnalyzers(analyzerMap, fields);
+		schema.mayBeRefresh();
 	}
 
 	void setField(String field_name, FieldDefinition field) throws IOException, ServerException {
-		LinkedHashMap<String, FieldDefinition> fields = (LinkedHashMap<String, FieldDefinition>) fieldMap.clone();
+		LinkedHashMap<String, FieldDefinition> fields =
+				(LinkedHashMap<String, FieldDefinition>) fieldMap.getFieldDefinitionMap().clone();
 		fields.put(field_name, field);
 		setFields(fields);
 	}
 
 	void deleteField(String field_name) throws IOException, ServerException {
-		LinkedHashMap<String, FieldDefinition> fields = (LinkedHashMap<String, FieldDefinition>) fieldMap.clone();
+		LinkedHashMap<String, FieldDefinition> fields =
+				(LinkedHashMap<String, FieldDefinition>) fieldMap.getFieldDefinitionMap().clone();
 		if (fields.remove(field_name) == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + field_name);
 		setFields(fields);
@@ -177,11 +186,10 @@ final public class IndexInstance implements Closeable {
 
 	synchronized void setAnalyzers(LinkedHashMap<String, AnalyzerDefinition> analyzers)
 			throws ServerException, IOException {
-		AnalyzerContext analyzerContext = new AnalyzerContext(analyzers, fieldMap);
-		indexAnalyzer.update(analyzerContext, analyzerContext.indexAnalyzerMap);
-		queryAnalyzer.update(analyzerContext, analyzerContext.queryAnalyzerMap);
+		refreshFieldsAnalyzers(analyzerMap, fieldMap.getFieldDefinitionMap());
 		JsonMapper.MAPPER.writeValue(fileSet.analyzerMapFile, analyzers);
 		analyzerMap = analyzers;
+		schema.mayBeRefresh();
 	}
 
 	void setAnalyzer(String analyzerName, AnalyzerDefinition analyzer) throws IOException, ServerException {
@@ -368,19 +376,19 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private RecordsPoster.UpdateObjectDocument getDocumentPoster(final Map<String, Field> fields) {
-		return new RecordsPoster.UpdateObjectDocument(fields, indexAnalyzer.getContext(), indexWriter);
+		return new RecordsPoster.UpdateObjectDocument(fields, fieldMap, indexWriter);
 	}
 
 	private RecordsPoster.UpdateMapDocument getDocumentPoster() {
-		return new RecordsPoster.UpdateMapDocument(indexAnalyzer.getContext(), indexWriter);
+		return new RecordsPoster.UpdateMapDocument(fieldMap, indexWriter);
 	}
 
 	private RecordsPoster.UpdateObjectDocValues getDocValuesPoster(final Map<String, Field> fields) {
-		return new RecordsPoster.UpdateObjectDocValues(fields, indexAnalyzer.getContext(), indexWriter);
+		return new RecordsPoster.UpdateObjectDocValues(fields, fieldMap, indexWriter);
 	}
 
 	private RecordsPoster.UpdateMapDocValues getDocValuesPoster() {
-		return new RecordsPoster.UpdateMapDocValues(indexAnalyzer.getContext(), indexWriter);
+		return new RecordsPoster.UpdateMapDocValues(fieldMap, indexWriter);
 	}
 
 	final <T> int postDocument(final Map<String, Field> fields, final T document)
@@ -530,7 +538,7 @@ final public class IndexInstance implements Closeable {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			final QueryContext queryContext =
-					new QueryContext(schema, null, indexAnalyzer, queryAnalyzer, null, queryDefinition);
+					new QueryContext(schema, null, indexAnalyzer, queryAnalyzer, fieldMap, null, queryDefinition);
 			final Query query = queryDefinition.query.getQuery(queryContext);
 			int docs = indexWriter.numDocs();
 			indexWriter.deleteDocuments(query);
@@ -550,10 +558,10 @@ final public class IndexInstance implements Closeable {
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
-				FieldDefinition fieldDef = fieldMap.get(fieldName);
-				if (fieldDef == null)
+				FieldMap.Item fieldMapItem = fieldMap.find(fieldName);
+				if (fieldMapItem == null)
 					throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + fieldName);
-				FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldName, fieldDef);
+				FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldMapItem);
 				Terms terms = MultiFields.getTerms(indexSearcher.getIndexReader(), fieldName);
 				if (terms == null)
 					throw new ServerException(Response.Status.NOT_FOUND, "No terms for this field: " + fieldName);
@@ -583,7 +591,8 @@ final public class IndexInstance implements Closeable {
 		if (indexWriterConfig != null)
 			indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
 		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
-		return new QueryContext(schema, indexSearcher, indexAnalyzer, queryAnalyzer, facetsState, queryDefinition);
+		return new QueryContext(schema, indexSearcher, indexAnalyzer, queryAnalyzer, fieldMap, facetsState,
+				queryDefinition);
 	}
 
 	final ResultDefinition search(final QueryDefinition queryDefinition,
@@ -610,7 +619,7 @@ final public class IndexInstance implements Closeable {
 	void fillFields(final Map<String, FieldDefinition> fields) {
 		if (fields == null)
 			return;
-		this.fieldMap.forEach((name, fieldDef) -> {
+		this.fieldMap.getFieldDefinitionMap().forEach((name, fieldDef) -> {
 			if (!fields.containsKey(name))
 				fields.put(name, fieldDef);
 		});

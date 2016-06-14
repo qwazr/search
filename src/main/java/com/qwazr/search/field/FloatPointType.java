@@ -16,8 +16,10 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.DoublePoint;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
@@ -25,21 +27,20 @@ import org.apache.lucene.util.BytesRef;
 
 class FloatPointType extends StorableFieldType {
 
-	FloatPointType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	FloatPointType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
-		float floatValue =
-				value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(value.toString());
-		consumer.accept(new DoublePoint(fieldName, floatValue));
-		if (store == store.YES)
-			consumer.accept(new StoredField(fieldName, floatValue));
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
+		float floatValue = value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(value.toString());
+		consumer.accept(fieldName, new DoublePoint(fieldName, floatValue));
+		if (store == Field.Store.YES)
+			consumer.accept(fieldName, new StoredField(fieldName, floatValue));
 	}
 
 	@Override
-	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortField(fieldName, SortField.Type.FLOAT, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortFloatMissingValue(sortEnum, sortField);
 		return sortField;

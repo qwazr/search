@@ -16,7 +16,9 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
@@ -24,20 +26,20 @@ import org.apache.lucene.util.BytesRef;
 
 class IntPointType extends StorableFieldType {
 
-	IntPointType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	IntPointType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
 		int intValue = value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
-		consumer.accept(new IntPoint(fieldName, intValue));
-		if (store == store.YES)
-			consumer.accept(new StoredField(fieldName, intValue));
+		consumer.accept(fieldName, new IntPoint(fieldName, intValue));
+		if (store == Field.Store.YES)
+			consumer.accept(fieldName, new StoredField(fieldName, intValue));
 	}
 
 	@Override
-	public final SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortField(fieldName, SortField.Type.INT, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortIntMissingValue(sortEnum, sortField);
 		return sortField;

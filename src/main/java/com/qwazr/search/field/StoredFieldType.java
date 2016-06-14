@@ -16,32 +16,33 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 
 class StoredFieldType extends FieldTypeAbstract {
 
-	StoredFieldType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	StoredFieldType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
 		if (value instanceof String)
-			consumer.accept(new StoredField(fieldName, (String) value));
+			consumer.accept(fieldName, new StoredField(fieldName, (String) value));
 		else if (value instanceof Integer)
-			consumer.accept(new StoredField(fieldName, (int) value));
+			consumer.accept(fieldName, new StoredField(fieldName, (int) value));
 		else if (value instanceof Long)
-			consumer.accept(new StoredField(fieldName, (long) value));
+			consumer.accept(fieldName, new StoredField(fieldName, (long) value));
 		else if (value instanceof Float)
-			consumer.accept(new StoredField(fieldName, (float) value));
+			consumer.accept(fieldName, new StoredField(fieldName, (float) value));
 		else
-			consumer.accept(new StoredField(fieldName, value.toString()));
+			consumer.accept(fieldName, new StoredField(fieldName, value.toString()));
 	}
 
 	@Override
-	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		return null;
 	}
 

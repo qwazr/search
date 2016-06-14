@@ -15,7 +15,6 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.SortUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
@@ -59,16 +58,14 @@ class QueryUtils {
 
 		final TimeTracker timeTracker = new TimeTracker();
 
-		final AnalyzerContext analyzerContext = queryContext.queryAnalyzer.getContext();
-		final Sort sort =
-				queryDef.sorts == null ? null : SortUtils.buildSort(analyzerContext.fieldTypes, queryDef.sorts);
+		final Sort sort = queryDef.sorts == null ? null : SortUtils.buildSort(queryContext.fieldMap, queryDef.sorts);
 
 		final int numHits = queryDef.getEnd();
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
 
 		final QueryCollectors queryCollectors =
 				new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets, queryDef.functions,
-						analyzerContext.fieldTypes);
+						queryContext.fieldMap);
 
 		queryContext.indexSearcher.search(query, queryCollectors.finalCollector);
 		final TopDocs topDocs = queryCollectors.getTopDocs();
@@ -91,8 +88,8 @@ class QueryUtils {
 
 		ResultDefinitionBuilder resultBuilder =
 				new ResultDefinitionBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
-						queryCollectors.functionsCollectors, analyzerContext.fieldTypes, timeTracker,
-						documentBuilderFactory, facetsBuilder, totalHits);
+						queryCollectors.functionsCollectors, queryContext.fieldMap, timeTracker, documentBuilderFactory,
+						facetsBuilder, totalHits);
 		return documentBuilderFactory.build(resultBuilder);
 	}
 

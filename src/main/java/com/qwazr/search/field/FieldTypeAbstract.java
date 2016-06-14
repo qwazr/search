@@ -18,93 +18,123 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
+import com.qwazr.utils.server.ServerException;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.BytesRef;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 
 abstract class FieldTypeAbstract implements FieldTypeInterface {
 
-	final protected String fieldName;
-	final protected FieldDefinition fieldDef;
+	final protected FieldMap.Item fieldMapItem;
 
-	protected FieldTypeAbstract(final String fieldName, final FieldDefinition fieldDef) {
-		this.fieldName = fieldName;
-		this.fieldDef = fieldDef;
+	protected FieldTypeAbstract(final FieldMap.Item fieldMapItem) {
+		this.fieldMapItem = fieldMapItem;
 	}
 
-	protected void fillArray(final int[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final int[] values, final FieldConsumer consumer) {
 		for (int value : values)
-			fill(value, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillArray(final long[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final long[] values, final FieldConsumer consumer) {
 		for (long value : values)
-			fill(value, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillArray(final double[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final double[] values, final FieldConsumer consumer) {
 		for (double value : values)
-			fill(value, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillArray(final float[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final float[] values, final FieldConsumer consumer) {
 		for (float value : values)
-			fill(value, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillArray(final Object[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
 		for (Object value : values)
-			fill(value, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillArray(final String[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final String[] values, final FieldConsumer consumer) {
 		for (String value : values)
-			fill(value, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillCollection(final Collection<Object> values, final FieldConsumer consumer) {
+	protected void fillCollection(final String fieldName, final Collection<Object> values,
+			final FieldConsumer consumer) {
 		values.forEach(value -> {
 			if (value != null)
-				fill(value, consumer);
+				fill(fieldName, value, consumer);
 		});
 	}
 
-	protected void fillJSObject(final JSObject values, final FieldConsumer consumer) {
-		fillCollection(values.values(), consumer);
+	protected void fillJSObject(final String fieldName, final JSObject values, final FieldConsumer consumer) {
+		fillCollection(fieldName, values.values(), consumer);
 	}
 
-	final public void fill(final Object value, final FieldConsumer fieldConsumer) {
+	protected void fillDynamic(final Object value, final FieldConsumer fieldConsumer) {
+		if (!(value instanceof Map))
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+					"Wrong value type for the field: " + fieldMapItem.name + ". A map was expected. We got a: " + value
+							.getClass());
+		((Map<String, Object>) value).forEach((fieldName, valueObject) -> {
+			if (!fieldMapItem.match(fieldName))
+				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+						"The field name does not match the field pattern: " + fieldMapItem.name);
+			fill(fieldName, valueObject, fieldConsumer);
+		});
+	}
+
+	protected void fill(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
 		if (value == null)
 			return;
 		if (value instanceof String[])
-			fillArray((String[]) value, fieldConsumer);
+			fillArray(fieldName, (String[]) value, fieldConsumer);
 		else if (value instanceof int[])
-			fillArray((int[]) value, fieldConsumer);
+			fillArray(fieldName, (int[]) value, fieldConsumer);
 		else if (value instanceof long[])
-			fillArray((long[]) value, fieldConsumer);
+			fillArray(fieldName, (long[]) value, fieldConsumer);
 		else if (value instanceof double[])
-			fillArray((double[]) value, fieldConsumer);
+			fillArray(fieldName, (double[]) value, fieldConsumer);
 		else if (value instanceof float[])
-			fillArray((float[]) value, fieldConsumer);
+			fillArray(fieldName, (float[]) value, fieldConsumer);
 		else if (value instanceof Object[])
-			fillArray((Object[]) value, fieldConsumer);
+			fillArray(fieldName, (Object[]) value, fieldConsumer);
 		else if (value instanceof Collection)
-			fillCollection((Collection) value, fieldConsumer);
+			fillCollection(fieldName, (Collection) value, fieldConsumer);
 		else if (value instanceof JSObject)
-			fillJSObject((JSObject) value, fieldConsumer);
+			fillJSObject(fieldName, (JSObject) value, fieldConsumer);
 		else
-			fillValue(value, fieldConsumer);
+			fillValue(fieldName, value, fieldConsumer);
 	}
 
+	abstract protected void fillValue(final String fieldName, final Object value, final FieldConsumer fieldConsumer);
+
+	@Override
+	final public void dispatch(final Object value, final FieldConsumer fieldConsumer) {
+		if (value == null)
+			return;
+		if (fieldMapItem.matcher == null)
+			fill(fieldMapItem.name, value, fieldConsumer);
+		else
+			fillDynamic(value, fieldConsumer);
+	}
+
+	@Override
 	public Object toTerm(final BytesRef bytesRef) {
 		return bytesRef == null ? null : bytesRef.utf8ToString();
 	}
 
-	public ValueConverter getConverter(final IndexReader reader) throws IOException {
-		return ValueConverter.newConverter(fieldName, fieldDef, reader);
+	@Override
+	public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
+		return ValueConverter.newConverter(fieldName, fieldMapItem.definition, reader);
 	}
 
 }

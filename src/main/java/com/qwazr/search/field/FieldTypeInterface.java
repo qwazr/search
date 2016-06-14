@@ -17,6 +17,7 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.SortField;
@@ -26,69 +27,67 @@ import java.io.IOException;
 
 public interface FieldTypeInterface {
 
-	void fillValue(final Object value, final FieldConsumer fieldConsumer);
+	void dispatch(final Object value, final FieldConsumer fieldConsumer);
 
-	void fill(final Object value, final FieldConsumer fieldConsumer);
+	SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
 
-	SortField getSortField(final QueryDefinition.SortEnum sortEnum);
-
-	ValueConverter getConverter(final IndexReader reader) throws IOException;
+	ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException;
 
 	Object toTerm(final BytesRef bytesRef);
 
-	static FieldTypeInterface getInstance(final String fieldName, final FieldDefinition fieldDefinition) {
-		if (fieldDefinition.template == null)
-			return new CustomFieldType(fieldName, fieldDefinition);
-		switch (fieldDefinition.template) {
-			case BinaryDocValuesField:
-				return new BinaryDocValuesType(fieldName, fieldDefinition);
-			case DoubleDocValuesField:
-				return new DoubleDocValuesType(fieldName, fieldDefinition);
-			case DoubleField:
-			case DoublePoint:
-				return new DoublePointType(fieldName, fieldDefinition);
-			case FloatDocValuesField:
-				return new FloatDocValuesType(fieldName, fieldDefinition);
-			case FloatField:
-			case FloatPoint:
-				return new FloatPointType(fieldName, fieldDefinition);
-			case GeoPointField:
-				return new GeoPointType(fieldName, fieldDefinition);
-			case IntDocValuesField:
-				return new IntDocValuesType(fieldName, fieldDefinition);
-			case IntField:
-			case IntPoint:
-				return new IntPointType(fieldName, fieldDefinition);
-			case LongDocValuesField:
-				return new LongDocValuesType(fieldName, fieldDefinition);
-			case LongField:
-			case LongPoint:
-				return new LongPointType(fieldName, fieldDefinition);
-			case SortedDocValuesField:
-				return new SortedDocValuesType(fieldName, fieldDefinition);
-			case SortedDoubleDocValuesField:
-				return new SortedDoubleDocValuesType(fieldName, fieldDefinition);
-			case SortedFloatDocValuesField:
-				return new SortedFloatDocValuesType(fieldName, fieldDefinition);
-			case SortedIntDocValuesField:
-				return new SortedIntDocValuesType(fieldName, fieldDefinition);
-			case SortedLongDocValuesField:
-				return new SortedLongDocValuesType(fieldName, fieldDefinition);
-			case SortedSetDocValuesField:
-				return new SortedSetDocValuesType(fieldName, fieldDefinition);
-			case FacetField:
-			case SortedSetDocValuesFacetField:
-			case MultiFacetField:
-			case SortedSetMultiDocValuesFacetField:
-				return new SortedSetDocValuesFacetType(fieldName, fieldDefinition);
-			case StoredField:
-				return new StoredFieldType(fieldName, fieldDefinition);
-			case StringField:
-				return new StringFieldType(fieldName, fieldDefinition);
-			case TextField:
-				return new TextFieldType(fieldName, fieldDefinition);
-			case NONE:
-				return new CustomFieldType(fieldName, fieldDefinition);
+	static FieldTypeInterface getInstance(final FieldMap.Item fieldMapItem) {
+		if (fieldMapItem.definition.template == null)
+			return new CustomFieldType(fieldMapItem);
+		switch (fieldMapItem.definition.template) {
+		case BinaryDocValuesField:
+			return new BinaryDocValuesType(fieldMapItem);
+		case DoubleDocValuesField:
+			return new DoubleDocValuesType(fieldMapItem);
+		case DoubleField:
+		case DoublePoint:
+			return new DoublePointType(fieldMapItem);
+		case FloatDocValuesField:
+			return new FloatDocValuesType(fieldMapItem);
+		case FloatField:
+		case FloatPoint:
+			return new FloatPointType(fieldMapItem);
+		case GeoPointField:
+			return new GeoPointType(fieldMapItem);
+		case IntDocValuesField:
+			return new IntDocValuesType(fieldMapItem);
+		case IntField:
+		case IntPoint:
+			return new IntPointType(fieldMapItem);
+		case LongDocValuesField:
+			return new LongDocValuesType(fieldMapItem);
+		case LongField:
+		case LongPoint:
+			return new LongPointType(fieldMapItem);
+		case SortedDocValuesField:
+			return new SortedDocValuesType(fieldMapItem);
+		case SortedDoubleDocValuesField:
+			return new SortedDoubleDocValuesType(fieldMapItem);
+		case SortedFloatDocValuesField:
+			return new SortedFloatDocValuesType(fieldMapItem);
+		case SortedIntDocValuesField:
+			return new SortedIntDocValuesType(fieldMapItem);
+		case SortedLongDocValuesField:
+			return new SortedLongDocValuesType(fieldMapItem);
+		case SortedSetDocValuesField:
+			return new SortedSetDocValuesType(fieldMapItem);
+		case FacetField:
+		case SortedSetDocValuesFacetField:
+		case MultiFacetField:
+		case SortedSetMultiDocValuesFacetField:
+			return new SortedSetDocValuesFacetType(fieldMapItem);
+		case StoredField:
+			return new StoredFieldType(fieldMapItem);
+		case StringField:
+			return new StringFieldType(fieldMapItem);
+		case TextField:
+			return new TextFieldType(fieldMapItem);
+		case NONE:
+			return new CustomFieldType(fieldMapItem);
 		}
 		throw new IllegalArgumentException("Unsupported field type");
 	}

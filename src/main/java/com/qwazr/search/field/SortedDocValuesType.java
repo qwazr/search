@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.index.IndexReader;
@@ -30,27 +31,27 @@ import java.io.IOException;
 
 class SortedDocValuesType extends FieldTypeAbstract {
 
-	SortedDocValuesType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	SortedDocValuesType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
-		consumer.accept(new SortedDocValuesField(fieldName, new BytesRef(value.toString())));
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
+		consumer.accept(fieldName, new SortedDocValuesField(fieldName, new BytesRef(value.toString())));
 	}
 
 	@Override
-	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortField(fieldName, SortField.Type.STRING, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortStringMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 
 	@Override
-	final public ValueConverter getConverter(final IndexReader reader) throws IOException {
+	final public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
 		final SortedDocValues docValues = MultiDocValues.getSortedValues(reader, fieldName);
 		if (docValues == null)
-			return super.getConverter(reader);
+			return super.getConverter(fieldName, reader);
 		return new SingleDVConverter.SortedDVConverter(docValues);
 	}
 

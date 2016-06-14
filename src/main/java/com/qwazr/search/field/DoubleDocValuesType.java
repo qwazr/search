@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.DoubleDocValuesField;
 import org.apache.lucene.index.IndexReader;
@@ -29,30 +30,30 @@ import java.io.IOException;
 
 class DoubleDocValuesType extends FieldTypeAbstract {
 
-	DoubleDocValuesType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
+	DoubleDocValuesType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
 	}
 
 	@Override
-	final public void fillValue(final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
 		if (value instanceof Number)
-			consumer.accept(new DoubleDocValuesField(fieldName, ((Number) value).doubleValue()));
+			consumer.accept(fieldName, new DoubleDocValuesField(fieldName, ((Number) value).doubleValue()));
 		else
-			consumer.accept(new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString())));
+			consumer.accept(fieldName, new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString())));
 	}
 
 	@Override
-	final public SortField getSortField(final QueryDefinition.SortEnum sortEnum) {
+	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		final SortField sortField = new SortField(fieldName, SortField.Type.DOUBLE, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortDoubleMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 
 	@Override
-	final public ValueConverter getConverter(final IndexReader reader) throws IOException {
+	final public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
 		final NumericDocValues docValues = MultiDocValues.getNumericValues(reader, fieldName);
 		if (docValues == null)
-			return super.getConverter(reader);
+			return super.getConverter(fieldName, reader);
 		return new SingleDVConverter.DoubleDVConverter(docValues);
 	}
 

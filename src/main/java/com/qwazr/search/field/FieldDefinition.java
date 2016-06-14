@@ -119,11 +119,11 @@ public class FieldDefinition {
 
 	public FieldDefinition(IndexField indexField) {
 		analyzer = indexField.analyzerClass() != Analyzer.class ?
-		           indexField.analyzerClass().getName() :
-		           indexField.analyzer();
+				indexField.analyzerClass().getName() :
+				indexField.analyzer();
 		query_analyzer = indexField.queryAnalyzerClass() != Analyzer.class ?
-		                 indexField.queryAnalyzerClass().getName() :
-		                 indexField.queryAnalyzer();
+				indexField.queryAnalyzerClass().getName() :
+				indexField.queryAnalyzer();
 		tokenized = indexField.tokenized();
 		stored = indexField.stored();
 		store_termvectors = indexField.storeTermVectors();
@@ -161,7 +161,7 @@ public class FieldDefinition {
 
 	public final static String DOC_FIELD = "$doc";
 
-	public static final String[] RESERVED_NAMES = {ID_FIELD, FACET_FIELD, SCORE_FIELD, DOC_FIELD};
+	public static final String[] RESERVED_NAMES = { ID_FIELD, FACET_FIELD, SCORE_FIELD, DOC_FIELD };
 
 	public final static Builder builder() {
 		return new Builder();

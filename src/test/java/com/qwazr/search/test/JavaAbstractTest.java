@@ -130,10 +130,12 @@ public abstract class JavaAbstractTest {
 	}
 
 	private final static AnnotatedIndex record1 =
-			new AnnotatedIndex(1, "First article", "Content of the first article", 0d, 10L, "news", "economy");
+			new AnnotatedIndex(1, "First article", "Content of the first article", 0d, 10L, true, "news", "economy")
+					.multiFacet("cat", "news", "economy");
 
 	private final static AnnotatedIndex record2 =
-			new AnnotatedIndex(2, "Second article", "Content of the second article", 0d, 20L, "news", "science");
+			new AnnotatedIndex(2, "Second article", "Content of the second article", 0d, 20L, true, "news", "science")
+					.multiFacet("cat", "news", "science");
 
 	private AnnotatedIndex checkRecord(AnnotatedIndex refRecord)
 			throws URISyntaxException, ReflectiveOperationException {
@@ -164,8 +166,8 @@ public abstract class JavaAbstractTest {
 		Assert.assertEquals(new Long(10), service.getIndexStatus().version);
 	}
 
-	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, 1.11d, null);
-	private final static AnnotatedIndex docValue2 = new AnnotatedIndex(2, null, null, 2.22d, null);
+	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, 1.11d, null, false);
+	private final static AnnotatedIndex docValue2 = new AnnotatedIndex(2, null, null, 2.22d, null, false);
 
 	@Test
 	public void test200UpdateDocValues() throws URISyntaxException, IOException, InterruptedException {

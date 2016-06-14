@@ -20,18 +20,21 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
-abstract public class FieldConsumer implements Consumer<Field> {
+abstract public class FieldConsumer implements BiConsumer<String, Field> {
 
 	static class ForDocument extends FieldConsumer {
 
+		HashSet<String> fieldNameSet = new HashSet<>();
 		Document document = new Document();
 
 		@Override
-		final public void accept(Field field) {
+		final public void accept(final String fieldName, final Field field) {
 			document.add(field);
+			fieldNameSet.add(fieldName);
 		}
 	}
 
@@ -40,7 +43,7 @@ abstract public class FieldConsumer implements Consumer<Field> {
 		private List<Field> fieldList = new ArrayList<>();
 
 		@Override
-		final public void accept(Field field) {
+		final public void accept(final String fieldName, final Field field) {
 			// We will not update the internal ID of the document
 			if (FieldDefinition.ID_FIELD.equals(field.name()))
 				return;

@@ -15,17 +15,20 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.FieldMap;
 import org.apache.lucene.document.Field;
 
 abstract class StorableFieldType extends FieldTypeAbstract {
 
 	protected final Field.Store store;
 
-	StorableFieldType(final String fieldName, final FieldDefinition fieldDef) {
-		super(fieldName, fieldDef);
-		this.store = fieldDef == null ?
+	StorableFieldType(final FieldMap.Item fieldMapItem) {
+		super(fieldMapItem);
+		this.store = fieldMapItem.definition == null ?
 				Field.Store.NO :
-				(fieldDef.stored != null && fieldDef.stored) ? Field.Store.YES : Field.Store.NO;
+				(fieldMapItem.definition.stored != null && fieldMapItem.definition.stored) ?
+						Field.Store.YES :
+						Field.Store.NO;
 	}
 
 }

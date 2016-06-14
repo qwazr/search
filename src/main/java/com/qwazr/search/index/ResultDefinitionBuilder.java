@@ -35,7 +35,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 	private final Query luceneQuery;
 	private final Map<String, HighlighterImpl> highlighters;
 	private final Collection<FunctionCollector> functionsCollector;
-	private final Map<String, FieldTypeInterface> fieldMap;
+	private final FieldMap fieldMap;
 	private final TimeTracker timeTracker;
 	private final ResultDocumentBuilder.BuilderFactory documentBuilderFactory;
 	private final TopDocs topDocs;
@@ -51,7 +51,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
 	ResultDefinitionBuilder(final QueryDefinition queryDefinition, final TopDocs topDocs,
 			final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
-			final Collection<FunctionCollector> functionsCollector, final Map<String, FieldTypeInterface> fieldMap,
+			final Collection<FunctionCollector> functionsCollector, final FieldMap fieldMap,
 			final TimeTracker timeTracker, final ResultDocumentBuilder.BuilderFactory documentBuilderFactory,
 			final FacetsBuilder facetsBuilder, Integer totalHits) throws IOException {
 
@@ -74,7 +74,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 			if (resultDocumentBuilders.length > 0) {
 				final Set<String> returnedFields =
 						queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
-								fieldMap.keySet() :
+								fieldMap.getStaticFieldSet() :
 								queryDefinition.returned_fields;
 
 				if (returnedFields != null && !returnedFields.isEmpty()) {
@@ -151,12 +151,12 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		final IndexReader indexReader = indexSearcher.getIndexReader();
 
 		returnedFields.forEach(fieldName -> {
-			final FieldTypeInterface fieldType = fieldMap.get(fieldName);
+			final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
 			if (fieldType == null)
 				return;
 			final ValueConverter converter;
 			try {
-				converter = fieldType.getConverter(indexReader);
+				converter = fieldType.getConverter(fieldName, indexReader);
 			} catch (IOException e) {
 				throw new ServerException(e);
 			}
