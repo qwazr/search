@@ -36,6 +36,7 @@
     "template": "FacetField"
   },
   "dynamic_multi_facet_*": {
-    "template": "MultiFacetField"
+    "template": "MultiFacetField",
+    "stored": true
   }
 }

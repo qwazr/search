@@ -8,6 +8,13 @@
     "cat4",
     "cat5"
   ],
+  "dynamic_multi_facet_cat": [
+    "dyn_cat1",
+    "dyn_cat2",
+    "dyn_cat3",
+    "dyn_cat4",
+    "dyn_cat5"
+  ],
   "format": "odd",
   "size": 500,
   "price": 10.50,

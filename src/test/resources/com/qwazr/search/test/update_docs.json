@@ -5,6 +5,9 @@
     "category": [
       "cat1"
     ],
+    "dynamic_multi_facet_cat": [
+      "dyn_cat1"
+    ],
     "format": "odd",
     "single_date": "20160101",
     "size": 100,
@@ -18,6 +21,10 @@
     "category": [
       "cat1",
       "cat2"
+    ],
+    "dynamic_multi_facet_cat": [
+      "dyn_cat1",
+      "dyn_cat2"
     ],
     "format": "even",
     "single_date": "20160202",
@@ -34,6 +41,11 @@
       "cat2",
       "cat3"
     ],
+    "dynamic_multi_facet_cat": [
+      "dyn_cat1",
+      "dyn_cat2",
+      "dyn_cat3"
+    ],
     "format": "odd",
     "single_date": "20160103",
     "size": 300,
@@ -49,6 +61,12 @@
       "cat2",
       "cat3",
       "cat4"
+    ],
+    "dynamic_multi_facet_cat": [
+      "dyn_cat1",
+      "dyn_cat2",
+      "dyn_cat3",
+      "dyn_cat4"
     ],
     "format": "even",
     "size": 400,

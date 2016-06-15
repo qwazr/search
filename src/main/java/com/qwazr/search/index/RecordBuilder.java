@@ -39,7 +39,7 @@ abstract class RecordBuilder {
 			return;
 
 		FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
-		fieldType.dispatch(fieldValue, fieldConsumer);
+		fieldType.dispatch(fieldName, fieldValue, fieldConsumer);
 
 		if (FieldDefinition.ID_FIELD.equals(fieldName))
 			id = BytesRefUtils.fromAny(fieldValue);

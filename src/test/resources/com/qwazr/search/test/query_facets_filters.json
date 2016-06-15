@@ -39,9 +39,9 @@
               "occur": "must",
               "query": {
                 "query": "FacetPathQuery",
-                "dimension": "category",
+                "dimension": "dynamic_multi_facet_cat",
                 "path": [
-                  "cat4"
+                  "dyn_cat4"
                 ]
               }
             }
@@ -52,12 +52,14 @@
   },
   "returned_fields": [
     "name",
-    "price"
+    "price",
+    "dynamic_multi_facet_cat"
   ],
   "start": 0,
   "rows": 10,
   "facets": {
     "category": {},
+    "dynamic_multi_facet_cat": {},
     "format": {}
   }
 }

@@ -73,7 +73,7 @@ public class AnnotatedIndex {
 	@IndexField(name = "dynamic_simple_facet_*", template = FacetField)
 	final public Map<String, Object> simpleFacets;
 
-	@IndexField(name = "dynamic_multi_facet_*", template = MultiFacetField)
+	@IndexField(name = "dynamic_multi_facet_*", template = MultiFacetField, stored = true)
 	final public Map<String, Object> multiFacets;
 
 	public AnnotatedIndex() {

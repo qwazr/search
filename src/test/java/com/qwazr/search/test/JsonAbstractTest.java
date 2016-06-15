@@ -517,6 +517,15 @@ public abstract class JsonAbstractTest {
 		Assert.assertEquals(5L, docs.size());
 	}
 
+	private void checkReturnedFields(LinkedHashMap<String, Object> fields, String fieldName, Object... values) {
+		Assert.assertNotNull(fields);
+		Object object = fields.get(fieldName);
+		Assert.assertNotNull(object);
+		if (object instanceof ArrayList)
+			object = ((ArrayList) object).toArray();
+		Assert.assertTrue(Objects.deepEquals(object, values));
+	}
+
 	private void checkFacetFiltersResult(ResultDefinition.WithMap result) {
 		Assert.assertNotNull(result.documents);
 		Assert.assertEquals(2, result.documents.size());
@@ -524,8 +533,13 @@ public abstract class JsonAbstractTest {
 		Assert.assertNotNull(result.documents.get(1).fields);
 		Assert.assertEquals("Fourth name", result.documents.get(0).fields.get("name"));
 		Assert.assertEquals("Fifth name", result.documents.get(1).fields.get("name"));
+		checkReturnedFields(result.documents.get(0).fields, "dynamic_multi_facet_cat", "dyn_cat1", "dyn_cat2",
+				"dyn_cat3", "dyn_cat4");
+		checkReturnedFields(result.documents.get(1).fields, "dynamic_multi_facet_cat", "dyn_cat1", "dyn_cat2",
+				"dyn_cat3", "dyn_cat4", "dyn_cat5");
 		Assert.assertNotNull(result.facets);
 		checkFacetSize(result, "category", 5);
+		checkFacetSize(result, "dynamic_multi_facet_cat", 5);
 		checkFacetSize(result, "format", 2);
 	}
 

@@ -18,10 +18,12 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 import org.apache.lucene.search.SortField;
 
-class SortedSetDocValuesFacetType extends FieldTypeAbstract {
+class SortedSetDocValuesFacetType extends StorableFieldType {
 
 	SortedSetDocValuesFacetType(final FieldMap.Item fieldMapItem) {
 		super(fieldMapItem);
@@ -29,7 +31,10 @@ class SortedSetDocValuesFacetType extends FieldTypeAbstract {
 
 	@Override
 	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
-		consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, value.toString()));
+		String stringValue = value.toString();
+		consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
+		if (store == Field.Store.YES)
+			consumer.accept(fieldName, new StoredField(fieldName, stringValue));
 	}
 
 	@Override

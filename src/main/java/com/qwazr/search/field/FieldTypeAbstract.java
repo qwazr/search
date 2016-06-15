@@ -118,13 +118,13 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 	abstract protected void fillValue(final String fieldName, final Object value, final FieldConsumer fieldConsumer);
 
 	@Override
-	final public void dispatch(final Object value, final FieldConsumer fieldConsumer) {
+	final public void dispatch(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
 		if (value == null)
 			return;
-		if (fieldMapItem.matcher == null)
-			fill(fieldMapItem.name, value, fieldConsumer);
-		else
+		if (fieldMapItem.matcher != null && fieldMapItem.name.equals(fieldName))
 			fillDynamic(value, fieldConsumer);
+		else
+			fill(fieldName, value, fieldConsumer);
 	}
 
 	@Override

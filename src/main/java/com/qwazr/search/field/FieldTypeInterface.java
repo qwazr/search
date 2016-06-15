@@ -27,7 +27,7 @@ import java.io.IOException;
 
 public interface FieldTypeInterface {
 
-	void dispatch(final Object value, final FieldConsumer fieldConsumer);
+	void dispatch(final String fieldName, final Object value, final FieldConsumer fieldConsumer);
 
 	SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
 
