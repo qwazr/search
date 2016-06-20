@@ -64,7 +64,7 @@ class QueryUtils {
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
 
 		final QueryCollectors queryCollectors =
-				new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets, queryDef.functions,
+				new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets, queryDef.functions, queryDef.collectors,
 						queryContext.fieldMap);
 
 		queryContext.indexSearcher.search(query, queryCollectors.finalCollector);
@@ -88,7 +88,8 @@ class QueryUtils {
 
 		ResultDefinitionBuilder resultBuilder =
 				new ResultDefinitionBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
-						queryCollectors.functionsCollectors, queryContext.fieldMap, timeTracker, documentBuilderFactory,
+						queryCollectors.functionsCollectors, queryCollectors.collectors, queryContext.fieldMap,
+						timeTracker, documentBuilderFactory,
 						facetsBuilder, totalHits);
 		return documentBuilderFactory.build(resultBuilder);
 	}

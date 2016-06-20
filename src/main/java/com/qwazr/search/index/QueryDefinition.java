@@ -33,6 +33,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	final public LinkedHashMap<String, SortEnum> sorts;
 	final public ArrayList<Function> functions;
+	final public ArrayList<String> collectors;
 
 	public enum SortEnum {
 
@@ -90,6 +91,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		facets = null;
 		sorts = null;
 		functions = null;
+		collectors = null;
 		highlighters = null;
 		query = null;
 	}
@@ -103,6 +105,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		facets = builder.facets;
 		sorts = builder.sorts;
 		functions = builder.functions;
+		collectors = builder.collectors;
 		highlighters = builder.highlighters;
 		query = builder.query;
 	}

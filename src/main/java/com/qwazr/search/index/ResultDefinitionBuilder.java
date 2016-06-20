@@ -15,12 +15,14 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
@@ -35,6 +37,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 	private final Query luceneQuery;
 	private final Map<String, HighlighterImpl> highlighters;
 	private final Collection<FunctionCollector> functionsCollector;
+	private final Collection<Collector> externalCollectors;
 	private final FieldMap fieldMap;
 	private final TimeTracker timeTracker;
 	private final ResultDocumentBuilder.BuilderFactory documentBuilderFactory;
@@ -43,6 +46,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 	final ResultDocumentBuilder<T>[] resultDocumentBuilders;
 	final List<T> documents;
 	final List<ResultDefinition.Function> functions;
+	final Map<String, Collector> collectors;
 	final String queryDebug;
 	final TimeTracker.Status timeTrackerStatus;
 	final Long totalHits;
@@ -51,9 +55,10 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
 	ResultDefinitionBuilder(final QueryDefinition queryDefinition, final TopDocs topDocs,
 			final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
-			final Collection<FunctionCollector> functionsCollector, final FieldMap fieldMap,
+			final Collection<FunctionCollector> functionsCollector, Collection<Collector> externalCollectors,
+			final FieldMap fieldMap,
 			final TimeTracker timeTracker, final ResultDocumentBuilder.BuilderFactory documentBuilderFactory,
-			final FacetsBuilder facetsBuilder, Integer totalHits) throws IOException {
+			final FacetsBuilder facetsBuilder, Integer totalHits) throws ReflectiveOperationException, IOException {
 
 		this.queryDefinition = queryDefinition;
 		this.topDocs = topDocs;
@@ -61,6 +66,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		this.luceneQuery = luceneQuery;
 		this.highlighters = highlighters;
 		this.functionsCollector = functionsCollector;
+		this.externalCollectors = externalCollectors;
 		this.fieldMap = fieldMap;
 		this.timeTracker = timeTracker;
 		this.documentBuilderFactory = documentBuilderFactory;
@@ -90,6 +96,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
 		this.facets = facetsBuilder == null ? null : facetsBuilder.results;
 		this.functions = buildFunctions();
+		this.collectors = buildCollectors();
 		this.queryDebug = buildQueryDebug();
 
 		this.timeTrackerStatus = timeTracker == null ? null : timeTracker.getStatus();
@@ -180,10 +187,18 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 	final private List<ResultDefinition.Function> buildFunctions() {
 		if (functionsCollector == null || functionsCollector.isEmpty())
 			return null;
-		List<ResultDefinition.Function> functions = new ArrayList<>(functionsCollector.size());
+		final List<ResultDefinition.Function> functions = new ArrayList<>(functionsCollector.size());
 		functionsCollector
 				.forEach(functionCollector -> functions.add(new ResultDefinition.Function(functionCollector)));
 		return functions;
+	}
+
+	final private Map<String, Collector> buildCollectors() {
+		if (externalCollectors == null || externalCollectors.isEmpty())
+			return null;
+		final Map<String, Collector> collectors = new LinkedHashMap<>();
+		externalCollectors.forEach(collector -> collectors.put(collector.getClass().getName(), collector));
+		return collectors;
 	}
 
 }

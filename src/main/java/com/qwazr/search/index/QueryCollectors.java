@@ -16,6 +16,7 @@
 
 package com.qwazr.search.index;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.facet.FacetsCollector;
@@ -33,6 +34,8 @@ class QueryCollectors {
 
 	final Collection<FunctionCollector> functionsCollectors;
 
+	final Collection<Collector> extCollectors;
+
 	final TotalHitCountCollector totalHitCountCollector;
 
 	final TopDocsCollector topDocsCollector;
@@ -40,13 +43,15 @@ class QueryCollectors {
 	final Collector finalCollector;
 
 	QueryCollectors(boolean bNeedScore, Sort sort, int numHits, final LinkedHashMap<String, FacetDefinition> facets,
-			Collection<QueryDefinition.Function> functions, final FieldMap fieldMap)
-			throws ServerException, IOException {
-		collectors = new ArrayList<Collector>();
+			Collection<QueryDefinition.Function> functions, final Collection<String> externalCollectors,
+			final FieldMap fieldMap)
+			throws ReflectiveOperationException, IOException {
+		collectors = new ArrayList<>();
 		facetsCollector = buildFacetsCollector(facets);
 		functionsCollectors = buildFunctionsCollectors(fieldMap, functions);
 		totalHitCountCollector = buildTotalHitsCollector(numHits);
 		topDocsCollector = buildTopDocCollector(sort, numHits, bNeedScore);
+		extCollectors = buildExternalCollectors(externalCollectors);
 		finalCollector = getFinalCollector();
 	}
 
@@ -57,12 +62,12 @@ class QueryCollectors {
 
 	private final Collector getFinalCollector() {
 		switch (collectors.size()) {
-		case 0:
-			return null;
-		case 1:
-			return collectors.get(0);
-		default:
-			return MultiCollector.wrap(collectors);
+			case 0:
+				return null;
+			case 1:
+				return collectors.get(0);
+			default:
+				return MultiCollector.wrap(collectors);
 		}
 	}
 
@@ -90,6 +95,23 @@ class QueryCollectors {
 		}
 		collectors.addAll(functionsCollectors);
 		return functionsCollectors;
+	}
+
+	final private Collection<Collector> buildExternalCollectors(
+			Collection<String> collectorClassNames)
+			throws ReflectiveOperationException {
+		if (collectorClassNames == null || collectorClassNames.isEmpty())
+			return null;
+		final LinkedHashMap<Class<? extends Collector>, Collector> externalCollectors = new LinkedHashMap<>();
+		for (String collectorClassName : collectorClassNames) {
+			final Class<? extends Collector> collectorClass = ClassLoaderManager.findClass(collectorClassName);
+			if (externalCollectors.containsKey(collectorClass))
+				continue;
+			final Collector collector = collectorClass.newInstance();
+			externalCollectors.put(collectorClass, collector);
+			add(collector);
+		}
+		return externalCollectors.values();
 	}
 
 	private final TopDocsCollector buildTopDocCollector(Sort sort, int numHits, boolean bNeedScore) throws IOException {

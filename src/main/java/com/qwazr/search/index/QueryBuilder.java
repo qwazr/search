@@ -34,6 +34,7 @@ public class QueryBuilder {
 
 	LinkedHashMap<String, QueryDefinition.SortEnum> sorts = null;
 	ArrayList<QueryDefinition.Function> functions = null;
+	ArrayList<String> collectors = null;
 
 	LinkedHashMap<String, HighlighterDefinition> highlighters = null;
 
@@ -59,6 +60,7 @@ public class QueryBuilder {
 		facets = queryDef.facets;
 		sorts = queryDef.sorts;
 		functions = queryDef.functions;
+		collectors = queryDef.collectors;
 
 		highlighters = queryDef.highlighters;
 
@@ -211,6 +213,19 @@ public class QueryBuilder {
 
 	public ArrayList<QueryDefinition.Function> getFunctions() {
 		return functions;
+	}
+
+	public QueryBuilder addCollector(String collectorClass) {
+		if (collectorClass == null)
+			return this;
+		if (collectors == null)
+			collectors = new ArrayList<>();
+		collectors.add(collectorClass);
+		return this;
+	}
+
+	public ArrayList<String> getCollectors() {
+		return collectors;
 	}
 
 	public Map<String, HighlighterDefinition> getHighlighters() {
