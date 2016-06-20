@@ -15,14 +15,13 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.classloader.ClassLoaderManager;
+import com.qwazr.search.collector.BaseCollector;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
@@ -37,7 +36,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 	private final Query luceneQuery;
 	private final Map<String, HighlighterImpl> highlighters;
 	private final Collection<FunctionCollector> functionsCollector;
-	private final Collection<Collector> externalCollectors;
+	private final Collection<BaseCollector> externalCollectors;
 	private final FieldMap fieldMap;
 	private final TimeTracker timeTracker;
 	private final ResultDocumentBuilder.BuilderFactory documentBuilderFactory;
@@ -46,7 +45,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 	final ResultDocumentBuilder<T>[] resultDocumentBuilders;
 	final List<T> documents;
 	final List<ResultDefinition.Function> functions;
-	final Map<String, Collector> collectors;
+	final Map<String, BaseCollector> collectors;
 	final String queryDebug;
 	final TimeTracker.Status timeTrackerStatus;
 	final Long totalHits;
@@ -55,10 +54,10 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
 	ResultDefinitionBuilder(final QueryDefinition queryDefinition, final TopDocs topDocs,
 			final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
-			final Collection<FunctionCollector> functionsCollector, Collection<Collector> externalCollectors,
-			final FieldMap fieldMap,
-			final TimeTracker timeTracker, final ResultDocumentBuilder.BuilderFactory documentBuilderFactory,
-			final FacetsBuilder facetsBuilder, Integer totalHits) throws ReflectiveOperationException, IOException {
+			final Collection<FunctionCollector> functionsCollector, final Collection<BaseCollector> externalCollectors,
+			final FieldMap fieldMap, final TimeTracker timeTracker,
+			final ResultDocumentBuilder.BuilderFactory documentBuilderFactory, final FacetsBuilder facetsBuilder,
+			Integer totalHits) throws ReflectiveOperationException, IOException {
 
 		this.queryDefinition = queryDefinition;
 		this.topDocs = topDocs;
@@ -193,10 +192,10 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		return functions;
 	}
 
-	final private Map<String, Collector> buildCollectors() {
+	final private Map<String, BaseCollector> buildCollectors() {
 		if (externalCollectors == null || externalCollectors.isEmpty())
 			return null;
-		final Map<String, Collector> collectors = new LinkedHashMap<>();
+		final Map<String, BaseCollector> collectors = new LinkedHashMap<>();
 		externalCollectors.forEach(collector -> collectors.put(collector.getClass().getName(), collector));
 		return collectors;
 	}

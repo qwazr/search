@@ -43,8 +43,8 @@ class QueryCollectors {
 	final Collector finalCollector;
 
 	QueryCollectors(boolean bNeedScore, Sort sort, int numHits, final LinkedHashMap<String, FacetDefinition> facets,
-			Collection<QueryDefinition.Function> functions, final Collection<String> externalCollectors,
-			final FieldMap fieldMap)
+			final Collection<QueryDefinition.Function> functions,
+			final Collection<QueryDefinition.Collector> externalCollectors, final FieldMap fieldMap)
 			throws ReflectiveOperationException, IOException {
 		collectors = new ArrayList<>();
 		facetsCollector = buildFacetsCollector(facets);
@@ -62,12 +62,12 @@ class QueryCollectors {
 
 	private final Collector getFinalCollector() {
 		switch (collectors.size()) {
-			case 0:
-				return null;
-			case 1:
-				return collectors.get(0);
-			default:
-				return MultiCollector.wrap(collectors);
+		case 0:
+			return null;
+		case 1:
+			return collectors.get(0);
+		default:
+			return MultiCollector.wrap(collectors);
 		}
 	}
 
@@ -97,19 +97,18 @@ class QueryCollectors {
 		return functionsCollectors;
 	}
 
-	final private Collection<Collector> buildExternalCollectors(
-			Collection<String> collectorClassNames)
+	final private Collection<Collector> buildExternalCollectors(final Collection<QueryDefinition.Collector> collectors)
 			throws ReflectiveOperationException {
-		if (collectorClassNames == null || collectorClassNames.isEmpty())
+		if (collectors == null || collectors.isEmpty())
 			return null;
 		final LinkedHashMap<Class<? extends Collector>, Collector> externalCollectors = new LinkedHashMap<>();
-		for (String collectorClassName : collectorClassNames) {
-			final Class<? extends Collector> collectorClass = ClassLoaderManager.findClass(collectorClassName);
+		for (QueryDefinition.Collector collector : collectors) {
+			final Class<? extends Collector> collectorClass = ClassLoaderManager.findClass(collector.classname);
 			if (externalCollectors.containsKey(collectorClass))
 				continue;
-			final Collector collector = collectorClass.newInstance();
-			externalCollectors.put(collectorClass, collector);
-			add(collector);
+			final Collector luceneCollector = collectorClass.newInstance();
+			externalCollectors.put(collectorClass, luceneCollector);
+			add(luceneCollector);
 		}
 		return externalCollectors.values();
 	}

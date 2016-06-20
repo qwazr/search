@@ -15,11 +15,10 @@
  **/
 package com.qwazr.search.index;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.qwazr.search.collector.BaseCollector;
 import com.qwazr.utils.TimeTracker;
-import org.apache.lucene.search.Collector;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +33,7 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 	final public Map<String, Map<String, Number>> facets;
 	final public String query;
 	final public List<Function> functions;
-	final public Map<String, Collector> collectors;
+	final public Map<String, BaseCollector> collectors;
 
 	public static class Function extends QueryDefinition.Function {
 

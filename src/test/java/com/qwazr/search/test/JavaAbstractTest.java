@@ -368,6 +368,12 @@ public abstract class JavaAbstractTest {
 		Assert.assertEquals(new Long(2), result.total_hits);
 	}
 
+	//TODO
+	public void test950collector() throws URISyntaxException {
+		final AnnotatedIndexService master = getMaster();
+		final QueryBuilder builder = new QueryBuilder();
+	}
+
 	@Test
 	public void test950DeleteAll() throws URISyntaxException {
 		getMaster().deleteAll();

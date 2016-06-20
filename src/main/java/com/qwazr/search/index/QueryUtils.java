@@ -88,9 +88,8 @@ class QueryUtils {
 
 		ResultDefinitionBuilder resultBuilder =
 				new ResultDefinitionBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
-						queryCollectors.functionsCollectors, queryCollectors.collectors, queryContext.fieldMap,
-						timeTracker, documentBuilderFactory,
-						facetsBuilder, totalHits);
+						queryCollectors.functionsCollectors, queryCollectors.extCollectors, queryContext.fieldMap,
+						timeTracker, documentBuilderFactory, facetsBuilder, totalHits);
 		return documentBuilderFactory.build(resultBuilder);
 	}
 

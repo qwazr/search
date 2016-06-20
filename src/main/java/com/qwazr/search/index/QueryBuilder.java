@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.query.AbstractQuery;
+import org.apache.lucene.search.Collector;
 
 import java.util.*;
 
@@ -34,7 +35,7 @@ public class QueryBuilder {
 
 	LinkedHashMap<String, QueryDefinition.SortEnum> sorts = null;
 	ArrayList<QueryDefinition.Function> functions = null;
-	ArrayList<String> collectors = null;
+	ArrayList<QueryDefinition.Collector> collectors = null;
 
 	LinkedHashMap<String, HighlighterDefinition> highlighters = null;
 
@@ -215,16 +216,16 @@ public class QueryBuilder {
 		return functions;
 	}
 
-	public QueryBuilder addCollector(String collectorClass) {
+	public QueryBuilder addCollector(Class<? extends Collector> collectorClass, Object... arguments) {
 		if (collectorClass == null)
 			return this;
 		if (collectors == null)
 			collectors = new ArrayList<>();
-		collectors.add(collectorClass);
+		collectors.add(new QueryDefinition.Collector(collectorClass.getName(), arguments));
 		return this;
 	}
 
-	public ArrayList<String> getCollectors() {
+	public ArrayList<QueryDefinition.Collector> getCollectors() {
 		return collectors;
 	}
 
