@@ -35,7 +35,6 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 	private final IndexSearcher indexSearcher;
 	private final Query luceneQuery;
 	private final Map<String, HighlighterImpl> highlighters;
-	private final Collection<FunctionCollector> functionsCollector;
 	private final Collection<BaseCollector> externalCollectors;
 	private final FieldMap fieldMap;
 	private final TimeTracker timeTracker;
@@ -44,7 +43,6 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
 	final ResultDocumentBuilder<T>[] resultDocumentBuilders;
 	final List<T> documents;
-	final List<ResultDefinition.Function> functions;
 	final Map<String, Object> collectors;
 	final String queryDebug;
 	final TimeTracker.Status timeTrackerStatus;
@@ -54,7 +52,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
 	ResultDefinitionBuilder(final QueryDefinition queryDefinition, final TopDocs topDocs,
 			final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
-			final Collection<FunctionCollector> functionsCollector, final Collection<BaseCollector> externalCollectors,
+			final Collection<BaseCollector> externalCollectors,
 			final FieldMap fieldMap, final TimeTracker timeTracker,
 			final ResultDocumentBuilder.BuilderFactory documentBuilderFactory, final FacetsBuilder facetsBuilder,
 			Integer totalHits) throws ReflectiveOperationException, IOException {
@@ -64,7 +62,6 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		this.indexSearcher = indexSearcher;
 		this.luceneQuery = luceneQuery;
 		this.highlighters = highlighters;
-		this.functionsCollector = functionsCollector;
 		this.externalCollectors = externalCollectors;
 		this.fieldMap = fieldMap;
 		this.timeTracker = timeTracker;
@@ -94,7 +91,6 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 			this.documents = null;
 
 		this.facets = facetsBuilder == null ? null : facetsBuilder.results;
-		this.functions = buildFunctions();
 		this.collectors = buildCollectors();
 		this.queryDebug = buildQueryDebug();
 
@@ -181,15 +177,6 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		if (!queryDefinition.query_debug)
 			return null;
 		return luceneQuery.toString(StringUtils.EMPTY);
-	}
-
-	final private List<ResultDefinition.Function> buildFunctions() {
-		if (functionsCollector == null || functionsCollector.isEmpty())
-			return null;
-		final List<ResultDefinition.Function> functions = new ArrayList<>(functionsCollector.size());
-		functionsCollector
-				.forEach(functionCollector -> functions.add(new ResultDefinition.Function(functionCollector)));
-		return functions;
 	}
 
 	final private Map<String, Object> buildCollectors() {

@@ -17,6 +17,7 @@ package com.qwazr.search.test;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.annotations.AnnotatedIndexService;
+import com.qwazr.search.collector.MaxNumericCollector;
 import com.qwazr.search.collector.MinNumericCollector;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
@@ -33,8 +34,6 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
-
-import static com.qwazr.search.test.AnnotatedIndex.QUANTITY_FIELD;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class JavaAbstractTest {
@@ -222,7 +221,7 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test320PointExactQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
-		builder.query = new LongExactQuery(QUANTITY_FIELD, 10);
+		builder.query = new LongExactQuery(AnnotatedIndex.QUANTITY_FIELD, 10);
 		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("1", result.documents.get(0).record.id);
 	}
@@ -230,7 +229,7 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test320PointSetQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
-		builder.query = new LongSetQuery(QUANTITY_FIELD, 20, 25);
+		builder.query = new LongSetQuery(AnnotatedIndex.QUANTITY_FIELD, 20, 25);
 		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("2", result.documents.get(0).record.id);
 	}
@@ -238,7 +237,7 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test320PointRangeQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
-		builder.query = new LongRangeQuery(QUANTITY_FIELD, 15L, 25L);
+		builder.query = new LongRangeQuery(AnnotatedIndex.QUANTITY_FIELD, 15L, 25L);
 		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("2", result.documents.get(0).record.id);
 	}
@@ -246,7 +245,7 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test320PointMultiRangeQuery() throws URISyntaxException {
 		QueryBuilder builder = new QueryBuilder();
-		LongMultiRangeQuery.Builder qBuilder = new LongMultiRangeQuery.Builder(QUANTITY_FIELD);
+		LongMultiRangeQuery.Builder qBuilder = new LongMultiRangeQuery.Builder(AnnotatedIndex.QUANTITY_FIELD);
 		qBuilder.addRange(5L, 15L);
 		qBuilder.addRange(15L, 25L);
 		checkQueryResult(builder, 2L);
@@ -369,17 +368,28 @@ public abstract class JavaAbstractTest {
 		Assert.assertEquals(new Long(2), result.total_hits);
 	}
 
+	static void checkCollector(ResultDefinition result, String name, Object value) {
+		Assert.assertNotNull(result);
+		Assert.assertNotNull(result.collectors);
+		Object collectorResult = result.getCollector(name);
+		if (value == null) {
+			Assert.assertNull(collectorResult);
+		} else {
+			Assert.assertNotNull(collectorResult);
+			Assert.assertEquals(value, collectorResult);
+		}
+	}
+
 	@Test
 	public void test910collector() throws URISyntaxException {
 		final AnnotatedIndexService master = getMaster();
 		final QueryBuilder builder = new QueryBuilder();
 		builder.addCollector("minPrice", MinNumericCollector.MinDouble.class, "price");
+		builder.addCollector("maxPrice", MaxNumericCollector.MaxDouble.class, "price");
 		builder.setQuery(new MatchAllDocsQuery());
 		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
-		Assert.assertNotNull(result);
-		Assert.assertNotNull(result.collectors);
-		Object collectorResult = result.collectors.get("minPrice");
-		Assert.assertNotNull(collectorResult);
+		checkCollector(result, "minPrice", 1.11d);
+		checkCollector(result, "maxPrice", 2.22d);
 	}
 
 	@Test

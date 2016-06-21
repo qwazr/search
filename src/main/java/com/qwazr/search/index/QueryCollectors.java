@@ -35,8 +35,6 @@ class QueryCollectors {
 
 	final FacetsCollector facetsCollector;
 
-	final Collection<FunctionCollector> functionsCollectors;
-
 	final Collection<BaseCollector> externalCollectors;
 
 	final TotalHitCountCollector totalHitCountCollector;
@@ -51,7 +49,6 @@ class QueryCollectors {
 			throws ReflectiveOperationException, IOException {
 		collectors = new ArrayList<>();
 		facetsCollector = buildFacetsCollector(facets);
-		functionsCollectors = buildFunctionsCollectors(fieldMap, functions);
 		totalHitCountCollector = buildTotalHitsCollector(numHits);
 		topDocsCollector = buildTopDocCollector(sort, numHits, bNeedScore);
 		externalCollectors = buildExternalCollectors(extCollectors);
@@ -81,23 +78,6 @@ class QueryCollectors {
 			if (facet.queries == null || facet.queries.isEmpty())
 				return add(new FacetsCollector());
 		return null;
-	}
-
-	private final Collection<FunctionCollector> buildFunctionsCollectors(final FieldMap fieldMap,
-			Collection<QueryDefinition.Function> functions) throws ServerException {
-		if (functions == null || functions.isEmpty())
-			return null;
-		Collection<FunctionCollector> functionsCollectors = new ArrayList<>();
-		for (QueryDefinition.Function function : functions) {
-			FieldTypeInterface fieldType = fieldMap.getFieldType(function.field);
-			if (fieldType == null)
-				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-						"Cannot compute the function " + function.function + " because the field is unknown: "
-								+ function.field);
-			functionsCollectors.add(new FunctionCollector(function, fieldType));
-		}
-		collectors.addAll(functionsCollectors);
-		return functionsCollectors;
 	}
 
 	final private Collection<BaseCollector> buildExternalCollectors(

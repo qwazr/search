@@ -1,21 +1,29 @@
 {
   "rows": 0,
-  "functions": [
-    {
-      "function": "min",
-      "field": "price"
+  "collectors": {
+    "minPrice": {
+      "class": "com.qwazr.search.collector.MinNumericCollector$MinDouble",
+      "arguments": [
+        "price"
+      ]
     },
-    {
-      "function": "max",
-      "field": "price"
+    "maxPrice": {
+      "class": "com.qwazr.search.collector.MaxNumericCollector$MaxDouble",
+      "arguments": [
+        "price"
+      ]
     },
-    {
-      "function": "min",
-      "field": "stock"
+    "minStock": {
+      "class": "com.qwazr.search.collector.MinNumericCollector$MinInteger",
+      "arguments": [
+        "stock"
+      ]
     },
-    {
-      "function": "max",
-      "field": "stock"
+    "maxStock": {
+      "class": "com.qwazr.search.collector.MaxNumericCollector$MaxInteger",
+      "arguments": [
+        "stock"
+      ]
     }
-  ]
+  }
 }

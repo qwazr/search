@@ -32,29 +32,13 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 	final public List<T> documents;
 	final public Map<String, Map<String, Number>> facets;
 	final public String query;
-	final public List<Function> functions;
 	final public Map<String, Object> collectors;
-
-	public static class Function extends QueryDefinition.Function {
-
-		final public Object value;
-
-		public Function() {
-			value = null;
-		}
-
-		Function(FunctionCollector functionCollector) {
-			super(functionCollector.function);
-			this.value = functionCollector.getValue();
-		}
-	}
 
 	public ResultDefinition() {
 		this.timer = null;
 		this.total_hits = null;
 		this.documents = null;
 		this.facets = null;
-		this.functions = null;
 		this.collectors = null;
 		this.max_score = null;
 		this.query = null;
@@ -67,7 +51,6 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		this.max_score = builder.maxScore;
 		this.documents = builder.documents;
 		this.facets = builder.facets;
-		this.functions = builder.functions;
 		this.collectors = builder.collectors;
 	}
 
@@ -78,7 +61,6 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		this.max_score = src.max_score;
 		this.documents = documents;
 		this.facets = src.facets;
-		this.functions = src.functions;
 		this.collectors = src.collectors;
 	}
 
@@ -87,7 +69,6 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		total_hits = 0L;
 		documents = Collections.emptyList();
 		facets = null;
-		functions = null;
 		collectors = null;
 		max_score = null;
 		this.timer = timeTracker != null ? timeTracker.getStatus() : null;
@@ -98,7 +79,6 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		this.total_hits = total_hits;
 		documents = Collections.emptyList();
 		facets = null;
-		functions = null;
 		collectors = null;
 		max_score = null;
 		this.timer = null;
@@ -126,6 +106,10 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 
 	public String getQuery() {
 		return query;
+	}
+
+	public <O> O getCollector(String name) {
+		return collectors == null ? null : (O) collectors.get(name);
 	}
 
 	@JsonInclude(Include.NON_NULL)

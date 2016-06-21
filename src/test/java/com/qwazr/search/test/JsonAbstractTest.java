@@ -16,8 +16,12 @@
 package com.qwazr.search.test;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.annotations.AnnotatedIndexService;
+import com.qwazr.search.collector.MaxNumericCollector;
+import com.qwazr.search.collector.MinNumericCollector;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
+import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
@@ -32,6 +36,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.*;
+
+import static com.qwazr.search.test.JavaAbstractTest.checkCollector;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class JsonAbstractTest {
@@ -590,18 +596,13 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
-	public void test430QueryFunctionsDoc() throws URISyntaxException, IOException {
-		final Object[] results = new Object[] { 1.1D, 10.5D, 10, 14 };
+	public void test430collectorFunctions() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
 		final ResultDefinition.WithMap result = checkQueryIndex(client, QUERY_CHECK_FUNCTIONS, 5);
-		Assert.assertNotNull(result.functions);
-		Assert.assertEquals(results.length, result.functions.size());
-		for (int i = 0; i < result.functions.size(); i++) {
-			Assert.assertEquals(QUERY_CHECK_FUNCTIONS.functions.get(i).field, result.functions.get(i).field);
-			Assert.assertEquals(QUERY_CHECK_FUNCTIONS.functions.get(i).function, result.functions.get(i).function);
-			Assert.assertNotNull(result.functions.get(i).value);
-			Assert.assertEquals(results[i], result.functions.get(i).value);
-		}
+		checkCollector(result, "minStock", 10);
+		checkCollector(result, "maxStock", 14);
+		checkCollector(result, "minPrice", 1.1D);
+		checkCollector(result, "maxPrice", 10.5D);
 	}
 
 	@Test
@@ -655,7 +656,7 @@ public abstract class JsonAbstractTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
+		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(
 				() -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),
