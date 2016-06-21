@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
 public class QueryDefinition extends BaseQueryDefinition {
@@ -36,7 +38,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	final public LinkedHashMap<String, SortEnum> sorts;
 	final public ArrayList<Function> functions;
-	final public ArrayList<Collector> collectors;
+	final public LinkedHashMap<String, CollectorDefinition> collectors;
 
 	public enum SortEnum {
 
@@ -61,19 +63,19 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	final public AbstractQuery query;
 
-	public static class Collector {
+	public static class CollectorDefinition {
 
 		@JsonProperty("class")
 		final public String classname;
 
 		final public Object[] arguments;
 
-		public Collector() {
+		public CollectorDefinition() {
 			classname = null;
 			arguments = null;
 		}
 
-		public Collector(final String classname, final Object... arguments) {
+		public CollectorDefinition(final String classname, final Object... arguments) {
 			this.classname = classname;
 			this.arguments = arguments == null || arguments.length == 0 ? null : arguments;
 		}

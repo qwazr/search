@@ -21,15 +21,26 @@ import org.apache.lucene.search.LeafCollector;
 
 import java.io.IOException;
 
-public class BaseCollector implements Collector {
-	
-	@Override
-	public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
+public class BaseCollector<R> implements Collector {
+
+	public final String name;
+
+	public BaseCollector(String name) {
+		this.name = name;
+	}
+
+	public R getResult() {
 		return null;
+	}
+
+	@Override
+	public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
+		return DoNothingCollector.INSTANCE;
 	}
 
 	@Override
 	public boolean needsScores() {
 		return false;
 	}
+
 }

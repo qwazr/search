@@ -17,13 +17,16 @@
 package com.qwazr.search.index;
 
 import com.qwazr.classloader.ClassLoaderManager;
+import com.qwazr.search.collector.BaseCollector;
 import com.qwazr.search.field.FieldTypeInterface;
+import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.search.*;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.*;
 
 class QueryCollectors {
@@ -34,7 +37,7 @@ class QueryCollectors {
 
 	final Collection<FunctionCollector> functionsCollectors;
 
-	final Collection<Collector> extCollectors;
+	final Collection<BaseCollector> externalCollectors;
 
 	final TotalHitCountCollector totalHitCountCollector;
 
@@ -44,14 +47,14 @@ class QueryCollectors {
 
 	QueryCollectors(boolean bNeedScore, Sort sort, int numHits, final LinkedHashMap<String, FacetDefinition> facets,
 			final Collection<QueryDefinition.Function> functions,
-			final Collection<QueryDefinition.Collector> externalCollectors, final FieldMap fieldMap)
+			final LinkedHashMap<String, QueryDefinition.CollectorDefinition> extCollectors, final FieldMap fieldMap)
 			throws ReflectiveOperationException, IOException {
 		collectors = new ArrayList<>();
 		facetsCollector = buildFacetsCollector(facets);
 		functionsCollectors = buildFunctionsCollectors(fieldMap, functions);
 		totalHitCountCollector = buildTotalHitsCollector(numHits);
 		topDocsCollector = buildTopDocCollector(sort, numHits, bNeedScore);
-		extCollectors = buildExternalCollectors(externalCollectors);
+		externalCollectors = buildExternalCollectors(extCollectors);
 		finalCollector = getFinalCollector();
 	}
 
@@ -62,12 +65,12 @@ class QueryCollectors {
 
 	private final Collector getFinalCollector() {
 		switch (collectors.size()) {
-		case 0:
-			return null;
-		case 1:
-			return collectors.get(0);
-		default:
-			return MultiCollector.wrap(collectors);
+			case 0:
+				return null;
+			case 1:
+				return collectors.get(0);
+			default:
+				return MultiCollector.wrap(collectors);
 		}
 	}
 
@@ -84,7 +87,7 @@ class QueryCollectors {
 			Collection<QueryDefinition.Function> functions) throws ServerException {
 		if (functions == null || functions.isEmpty())
 			return null;
-		Collection<FunctionCollector> functionsCollectors = new ArrayList<FunctionCollector>();
+		Collection<FunctionCollector> functionsCollectors = new ArrayList<>();
 		for (QueryDefinition.Function function : functions) {
 			FieldTypeInterface fieldType = fieldMap.getFieldType(function.field);
 			if (fieldType == null)
@@ -97,20 +100,29 @@ class QueryCollectors {
 		return functionsCollectors;
 	}
 
-	final private Collection<Collector> buildExternalCollectors(final Collection<QueryDefinition.Collector> collectors)
+	final private Collection<BaseCollector> buildExternalCollectors(
+			final Map<String, QueryDefinition.CollectorDefinition> collectors)
 			throws ReflectiveOperationException {
 		if (collectors == null || collectors.isEmpty())
 			return null;
-		final LinkedHashMap<Class<? extends Collector>, Collector> externalCollectors = new LinkedHashMap<>();
-		for (QueryDefinition.Collector collector : collectors) {
+		final Collection<BaseCollector> externalCollectors = new ArrayList<>();
+		FunctionUtils.forEach(collectors, (name, collector) -> {
 			final Class<? extends Collector> collectorClass = ClassLoaderManager.findClass(collector.classname);
-			if (externalCollectors.containsKey(collectorClass))
-				continue;
-			final Collector luceneCollector = collectorClass.newInstance();
-			externalCollectors.put(collectorClass, luceneCollector);
-			add(luceneCollector);
-		}
-		return externalCollectors.values();
+			Constructor<?>[] constructors = collectorClass.getConstructors();
+			if (constructors.length == 0)
+				throw new ReflectiveOperationException("No constructor for class: " + collectorClass);
+			final BaseCollector baseCollector;
+			if (collector.arguments == null || collector.arguments.length == 0)
+				baseCollector = (BaseCollector) constructors[0].newInstance(name);
+			else {
+				Object[] arguments = new Object[collector.arguments.length + 1];
+				arguments[0] = name;
+				System.arraycopy(collector.arguments, 0, arguments, 1, collector.arguments.length);
+				baseCollector = (BaseCollector) constructors[0].newInstance(arguments);
+			}
+			externalCollectors.add(add(baseCollector));
+		});
+		return externalCollectors;
 	}
 
 	private final TopDocsCollector buildTopDocCollector(Sort sort, int numHits, boolean bNeedScore) throws IOException {

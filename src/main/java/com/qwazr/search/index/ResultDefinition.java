@@ -33,7 +33,7 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 	final public Map<String, Map<String, Number>> facets;
 	final public String query;
 	final public List<Function> functions;
-	final public Map<String, BaseCollector> collectors;
+	final public Map<String, Object> collectors;
 
 	public static class Function extends QueryDefinition.Function {
 

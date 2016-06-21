@@ -45,7 +45,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 	final ResultDocumentBuilder<T>[] resultDocumentBuilders;
 	final List<T> documents;
 	final List<ResultDefinition.Function> functions;
-	final Map<String, BaseCollector> collectors;
+	final Map<String, Object> collectors;
 	final String queryDebug;
 	final TimeTracker.Status timeTrackerStatus;
 	final Long totalHits;
@@ -192,11 +192,11 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		return functions;
 	}
 
-	final private Map<String, BaseCollector> buildCollectors() {
+	final private Map<String, Object> buildCollectors() {
 		if (externalCollectors == null || externalCollectors.isEmpty())
 			return null;
-		final Map<String, BaseCollector> collectors = new LinkedHashMap<>();
-		externalCollectors.forEach(collector -> collectors.put(collector.getClass().getName(), collector));
+		final Map<String, Object> collectors = new LinkedHashMap<>();
+		externalCollectors.forEach(collector -> collectors.put(collector.name, collector.getResult()));
 		return collectors;
 	}
 
