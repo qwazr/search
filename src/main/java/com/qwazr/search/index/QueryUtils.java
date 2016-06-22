@@ -64,8 +64,7 @@ class QueryUtils {
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
 
 		final QueryCollectors queryCollectors =
-				new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets, queryDef.functions, queryDef.collectors,
-						queryContext.fieldMap);
+				new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets, queryDef.collectors);
 
 		queryContext.indexSearcher.search(query, queryCollectors.finalCollector);
 		final TopDocs topDocs = queryCollectors.getTopDocs();

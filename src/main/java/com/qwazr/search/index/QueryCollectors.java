@@ -44,8 +44,7 @@ class QueryCollectors {
 	final Collector finalCollector;
 
 	QueryCollectors(boolean bNeedScore, Sort sort, int numHits, final LinkedHashMap<String, FacetDefinition> facets,
-			final Collection<QueryDefinition.Function> functions,
-			final LinkedHashMap<String, QueryDefinition.CollectorDefinition> extCollectors, final FieldMap fieldMap)
+			final LinkedHashMap<String, QueryDefinition.CollectorDefinition> extCollectors)
 			throws ReflectiveOperationException, IOException {
 		collectors = new ArrayList<>();
 		facetsCollector = buildFacetsCollector(facets);

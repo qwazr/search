@@ -37,7 +37,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public char[] escaped_chars;
 
 	final public LinkedHashMap<String, SortEnum> sorts;
-	final public ArrayList<Function> functions;
 	final public LinkedHashMap<String, CollectorDefinition> collectors;
 
 	public enum SortEnum {
@@ -81,31 +80,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		}
 	}
 
-	public static class Function {
-
-		public enum FunctionEnum {
-			max, min
-		}
-
-		final public FunctionEnum function;
-		final public String field;
-
-		public Function() {
-			function = null;
-			field = null;
-		}
-
-		Function(Function function) {
-			this.function = function.function;
-			this.field = function.field;
-		}
-
-		Function(FunctionEnum function, String field) {
-			this.function = function;
-			this.field = field;
-		}
-	}
-
 	public QueryDefinition() {
 		query_string = null;
 		escape_query = null;
@@ -113,7 +87,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		returned_fields = null;
 		facets = null;
 		sorts = null;
-		functions = null;
 		collectors = null;
 		highlighters = null;
 		query = null;
@@ -127,7 +100,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		returned_fields = builder.returned_fields;
 		facets = builder.facets;
 		sorts = builder.sorts;
-		functions = builder.functions;
 		collectors = builder.collectors;
 		highlighters = builder.highlighters;
 		query = builder.query;
