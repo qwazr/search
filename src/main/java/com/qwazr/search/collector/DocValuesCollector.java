@@ -40,11 +40,9 @@ public abstract class DocValuesCollector<R, D> extends BaseCollector<R> {
 		FieldInfo fieldInfo = leafReader.getFieldInfos().fieldInfo(fieldName);
 		if (fieldInfo == null)
 			return DoNothingCollector.INSTANCE;
-
 		final DocValuesType type = fieldInfo.getDocValuesType();
 		if (type == null)
-			throw new IOException("Wrong type (DocValues expected): " + fieldName);
-
+			return DoNothingCollector.INSTANCE;
 		return newLeafCollector(leafReader, getDocValues(leafReader));
 	}
 
