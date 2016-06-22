@@ -39,7 +39,7 @@ public abstract class DocValuesCollector<R, D> extends BaseCollector<R> {
 		final LeafReader leafReader = context.reader();
 		FieldInfo fieldInfo = leafReader.getFieldInfos().fieldInfo(fieldName);
 		if (fieldInfo == null)
-			throw new IOException("Field not found " + fieldName);
+			return DoNothingCollector.INSTANCE;
 
 		final DocValuesType type = fieldInfo.getDocValuesType();
 		if (type == null)
