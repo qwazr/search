@@ -26,7 +26,7 @@ import java.io.IOException;
 public class SearchServer {
 
 	public static GenericServer start()
-			throws IOException, InstantiationException, ServletException, IllegalAccessException {
+			throws Exception {
 		final ServerBuilder builder = new ServerBuilder();
 		ClusterManager.load(builder, null);
 		IndexManager.load(builder);
@@ -34,7 +34,7 @@ public class SearchServer {
 	}
 
 	public static void main(String[] args)
-			throws IOException, ServletException, InstantiationException, IllegalAccessException {
+			throws Exception {
 		SearchServer.start();
 	}
 

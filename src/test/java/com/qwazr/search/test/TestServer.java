@@ -35,7 +35,7 @@ public class TestServer {
 	private static final String BASE_URL = "http://localhost:9091";
 
 	public static synchronized void startServer()
-			throws InstantiationException, IllegalAccessException, ServletException, IOException {
+			throws Exception {
 		if (serverStarted)
 			return;
 		final File dataDir = Files.createTempDir();
