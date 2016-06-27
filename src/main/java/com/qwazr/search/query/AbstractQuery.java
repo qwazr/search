@@ -28,7 +28,7 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "query")
-@JsonSubTypes({ @JsonSubTypes.Type(value = BooleanQuery.class),
+@JsonSubTypes({@JsonSubTypes.Type(value = BooleanQuery.class),
 		@JsonSubTypes.Type(value = BoostedQuery.class),
 		@JsonSubTypes.Type(value = BoostQuery.class),
 		@JsonSubTypes.Type(value = ConstantScoreQuery.class),
@@ -62,6 +62,7 @@ import java.io.IOException;
 		@JsonSubTypes.Type(value = MatchNoDocsQuery.class),
 		@JsonSubTypes.Type(value = MoreLikeThisQuery.class),
 		@JsonSubTypes.Type(value = MultiFieldQueryParser.class),
+		@JsonSubTypes.Type(value = PayloadScoreQuery.class),
 		@JsonSubTypes.Type(value = PhraseQuery.class),
 		@JsonSubTypes.Type(value = PrefixQuery.class),
 		@JsonSubTypes.Type(value = RegexpQuery.class),
@@ -74,7 +75,7 @@ import java.io.IOException;
 		@JsonSubTypes.Type(value = TermQuery.class),
 		@JsonSubTypes.Type(value = TermRangeQuery.class),
 		@JsonSubTypes.Type(value = TermsQuery.class),
-		@JsonSubTypes.Type(value = WildcardQuery.class) })
+		@JsonSubTypes.Type(value = WildcardQuery.class)})
 
 public abstract class AbstractQuery {
 

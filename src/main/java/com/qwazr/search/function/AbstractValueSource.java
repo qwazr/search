@@ -60,7 +60,7 @@ public abstract class AbstractValueSource {
 			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		if (sources == null)
 			return null;
-		List<ValueSource> valueSources = new ArrayList<ValueSource>(sources.size());
+		List<ValueSource> valueSources = new ArrayList<>(sources.size());
 		for (AbstractValueSource source : sources)
 			valueSources.add(source.getValueSource(queryContext));
 		return valueSources;

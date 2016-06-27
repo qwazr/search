@@ -24,7 +24,7 @@ public abstract class AbstractFieldQuery extends AbstractQuery {
 		this.field = null;
 	}
 
-	protected AbstractFieldQuery(String field) {
+	protected AbstractFieldQuery(final String field) {
 		this.field = field;
 	}
 
@@ -32,7 +32,7 @@ public abstract class AbstractFieldQuery extends AbstractQuery {
 
 		final public String field;
 
-		protected AbstractFieldBuilder(String field) {
+		protected AbstractFieldBuilder(final String field) {
 			this.field = field;
 		}
 	}

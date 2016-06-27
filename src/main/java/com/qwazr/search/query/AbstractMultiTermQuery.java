@@ -15,29 +15,26 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.MultiTermQuery;
-import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-public class WildcardQuery extends AbstractMultiTermQuery {
+public abstract class AbstractMultiTermQuery extends AbstractFieldQuery {
 
-	final public String term;
-
-	public WildcardQuery() {
-		term = null;
+	public AbstractMultiTermQuery() {
 	}
 
-	public WildcardQuery(final String field, final String term) {
+	protected AbstractMultiTermQuery(final String field) {
 		super(field);
-		this.term = term;
 	}
 
+	@JsonIgnore
 	@Override
-	final public MultiTermQuery getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.search.WildcardQuery(new Term(field, term));
-	}
+	public abstract MultiTermQuery getQuery(QueryContext queryContext)
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException;
 
 }

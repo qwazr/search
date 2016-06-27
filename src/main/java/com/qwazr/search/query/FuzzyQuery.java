@@ -17,13 +17,13 @@ package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.MultiTermQuery;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-public class FuzzyQuery extends AbstractQuery {
+public class FuzzyQuery extends AbstractMultiTermQuery {
 
-	final public String field;
 	final public String text;
 	final public Integer max_edits;
 	final public Integer max_expansions;
@@ -31,7 +31,6 @@ public class FuzzyQuery extends AbstractQuery {
 	final public Integer prefix_length;
 
 	public FuzzyQuery() {
-		field = null;
 		text = null;
 		max_edits = null;
 		max_expansions = null;
@@ -39,9 +38,9 @@ public class FuzzyQuery extends AbstractQuery {
 		prefix_length = null;
 	}
 
-	public FuzzyQuery(String field, String text, Integer max_edits, Integer max_expansions, Boolean transpositions,
-			Integer prefix_length) {
-		this.field = field;
+	public FuzzyQuery(final String field, final String text, final Integer max_edits, final Integer max_expansions,
+			final Boolean transpositions, final Integer prefix_length) {
+		super(field);
 		this.text = text;
 		this.max_edits = max_edits;
 		this.max_expansions = max_expansions;
@@ -50,7 +49,7 @@ public class FuzzyQuery extends AbstractQuery {
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException {
+	final public MultiTermQuery getQuery(QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.FuzzyQuery(new Term(field, text),
 				max_edits == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxEdits : max_edits,
 				prefix_length == null ? org.apache.lucene.search.FuzzyQuery.defaultPrefixLength : prefix_length,

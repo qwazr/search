@@ -17,27 +17,30 @@ package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.MultiTermQuery;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
 
-public class WildcardQuery extends AbstractMultiTermQuery {
+public class SpanBoostQuery extends AbstractSpanQuery {
 
-	final public String term;
+	final public AbstractSpanQuery query;
+	final public float boost;
 
-	public WildcardQuery() {
-		term = null;
+	public SpanBoostQuery() {
+		query = null;
+		boost = 1.0F;
 	}
 
-	public WildcardQuery(final String field, final String term) {
-		super(field);
-		this.term = term;
+	public SpanBoostQuery(final AbstractSpanQuery query, final float boost) {
+		this.query = query;
+		this.boost = boost;
 	}
 
 	@Override
-	final public MultiTermQuery getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.search.WildcardQuery(new Term(field, term));
+	final public SpanQuery getQuery(final QueryContext queryContext)
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+		return new org.apache.lucene.search.spans.SpanBoostQuery(query.getQuery(queryContext), boost);
 	}
-
 }
