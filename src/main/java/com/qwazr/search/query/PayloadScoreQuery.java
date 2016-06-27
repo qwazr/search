@@ -32,6 +32,7 @@ import java.util.Objects;
 public class PayloadScoreQuery extends AbstractQuery {
 
 	public final AbstractSpanQuery query;
+	public final Boolean include_span_score;
 
 	@JsonIgnore
 	private final PayloadFunction payloadFunction;
@@ -46,24 +47,29 @@ public class PayloadScoreQuery extends AbstractQuery {
 		query = null;
 		payloadFunction = null;
 		payload_function = null;
+		include_span_score = null;
 	}
 
-	public PayloadScoreQuery(final AbstractSpanQuery query, final PayloadFunction payloadFunction) {
+	public PayloadScoreQuery(final AbstractSpanQuery query, final PayloadFunction payloadFunction,
+			final Boolean includeSpanScore) {
 		this.query = query;
 		this.payloadFunction = payloadFunction;
 		this.payload_function = payloadFunction == null ? null : payloadFunction.getClass().getName();
+		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
 	}
 
-	public PayloadScoreQuery(final AbstractSpanQuery query, final String payload_function)
+	public PayloadScoreQuery(final AbstractSpanQuery query, final String payloadFunction,
+			final Boolean includeSpanScore)
 			throws ReflectiveOperationException {
 		this.query = query;
 		this.payload_function = null;
 		this.payloadFunction =
-				payload_function == null ? null :
-						(PayloadFunction) ClassLoaderManager.findClass(payload_function).newInstance();
+				payloadFunction == null ? null :
+						(PayloadFunction) ClassLoaderManager.findClass(payloadFunction).newInstance();
+		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
 	}
 
-	public PayloadScoreQuery(final AbstractSpanQuery query, final FunctionType type) {
+	public PayloadScoreQuery(final AbstractSpanQuery query, final FunctionType type, final Boolean includeSpanScore) {
 		this.query = query;
 		if (type != null) {
 			switch (type) {
@@ -85,6 +91,7 @@ public class PayloadScoreQuery extends AbstractQuery {
 			payloadFunction = null;
 			payload_function = null;
 		}
+		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
 	}
 
 	@Override
@@ -92,6 +99,7 @@ public class PayloadScoreQuery extends AbstractQuery {
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(query, "The wrapped span query is missing");
 		Objects.requireNonNull(payloadFunction, "The payload function is missing");
-		return new org.apache.lucene.queries.payloads.PayloadScoreQuery(query.getQuery(queryContext), payloadFunction);
+		return new org.apache.lucene.queries.payloads.PayloadScoreQuery(query.getQuery(queryContext), payloadFunction,
+				include_span_score);
 	}
 }
