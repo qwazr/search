@@ -16,31 +16,37 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.search.MultiTermQuery;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
 
-public class SpanBoostQuery extends AbstractSpanQuery {
+public class SpanQueryWrapper extends AbstractSpanQuery {
 
-	final public AbstractSpanQuery query;
-	final public float boost;
+	final public AbstractQuery query;
 
-	public SpanBoostQuery() {
+	public SpanQueryWrapper() {
 		query = null;
-		boost = 1.0F;
 	}
 
-	public SpanBoostQuery(final AbstractSpanQuery query, final float boost) {
+	public SpanQueryWrapper(final AbstractQuery query) {
 		this.query = query;
-		this.boost = boost;
 	}
 
 	@Override
 	final public SpanQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
-		return new org.apache.lucene.search.spans.SpanBoostQuery(query.getQuery(queryContext), boost);
+			throws IOException, InterruptedException, ReflectiveOperationException, ParseException, QueryNodeException {
+		final Query subQuery = query.getQuery(queryContext);
+		if (subQuery instanceof SpanQuery)
+			return (SpanQuery) subQuery;
+		else if (subQuery instanceof MultiTermQuery)
+			return new org.apache.lucene.search.spans.SpanMultiTermQueryWrapper((MultiTermQuery) subQuery);
+		else if (subQuery instanceof org.apache.lucene.search.TermQuery)
+			return new org.apache.lucene.search.spans.SpanTermQuery(
+					((org.apache.lucene.search.TermQuery) subQuery).getTerm());
+		throw new ParseException("Cannot convert " + subQuery.getClass().getName() + " as SpanQuery");
 	}
 }

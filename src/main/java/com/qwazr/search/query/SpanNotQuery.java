@@ -65,7 +65,7 @@ public class SpanNotQuery extends AbstractSpanQuery {
 
 	@Override
 	final public SpanQuery getQuery(QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(include);
 		Objects.requireNonNull(exclude);
 		final SpanQuery includeQuery = (SpanQuery) include.getQuery(queryContext);

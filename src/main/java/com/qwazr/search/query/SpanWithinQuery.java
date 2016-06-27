@@ -18,34 +18,29 @@ package com.qwazr.search.query;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
 
-public class SpanFirstQuery extends AbstractQuery {
+public class SpanWithinQuery extends AbstractSpanQuery {
 
-	final public AbstractSpanQuery spanQuery;
-	final public Integer end;
+	final public AbstractSpanQuery big;
+	final public AbstractSpanQuery little;
 
-	public SpanFirstQuery() {
-		spanQuery = null;
-		end = null;
+	public SpanWithinQuery() {
+		big = null;
+		little = null;
 	}
 
-	public SpanFirstQuery(AbstractSpanQuery spanQuery) {
-		this.spanQuery = spanQuery;
-		this.end = null;
-	}
-
-	public SpanFirstQuery(AbstractSpanQuery spanQuery, Integer end) {
-		this.spanQuery = spanQuery;
-		this.end = end;
+	public SpanWithinQuery(final AbstractSpanQuery big, final AbstractSpanQuery little) {
+		this.big = big;
+		this.little = little;
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
-		return new org.apache.lucene.search.spans.SpanFirstQuery(spanQuery.getQuery(queryContext),
-				end == null ? 0 : end);
+	final public SpanQuery getQuery(final QueryContext queryContext)
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException, InterruptedException {
+		return new org.apache.lucene.search.spans.SpanWithinQuery(big.getQuery(queryContext),
+				little.getQuery(queryContext));
 	}
 }
