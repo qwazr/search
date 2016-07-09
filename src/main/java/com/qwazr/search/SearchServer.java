@@ -20,21 +20,16 @@ import com.qwazr.search.index.IndexManager;
 import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
-
 public class SearchServer {
 
-	public static GenericServer start()
-			throws Exception {
+	public static GenericServer start() throws Exception {
 		final ServerBuilder builder = new ServerBuilder();
-		ClusterManager.load(builder, null);
+		ClusterManager.load(builder, null, null);
 		IndexManager.load(builder);
 		return builder.build().start(true);
 	}
 
-	public static void main(String[] args)
-			throws Exception {
+	public static void main(String[] args) throws Exception {
 		SearchServer.start();
 	}
 
