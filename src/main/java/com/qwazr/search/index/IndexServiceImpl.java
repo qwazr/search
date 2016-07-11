@@ -454,9 +454,8 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String source, String fileName) {
 		try {
 			checkRight(null);
-			final InputStream input = IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator()
+			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator()
 					.obtainFile(sessionID, source, fileName);
-			return input == null ? null : new BufferedInputStream(input);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(logger, e);
 		}

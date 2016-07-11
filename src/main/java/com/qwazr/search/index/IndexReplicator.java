@@ -8,10 +8,7 @@ import org.apache.lucene.replicator.Revision;
 import org.apache.lucene.replicator.SessionToken;
 
 import javax.ws.rs.core.Response;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
