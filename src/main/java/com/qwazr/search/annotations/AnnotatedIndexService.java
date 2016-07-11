@@ -90,6 +90,15 @@ public class AnnotatedIndexService<T> {
 		this(indexService, indexDefinitionClass, null, null, null);
 	}
 
+
+	public String getSchemaName() {
+		return schemaName;
+	}
+
+	public String getIndexName() {
+		return indexName;
+	}
+	
 	final private void checkParameters() {
 		if (StringUtils.isEmpty(schemaName))
 			throw new RuntimeException("The schema name is empty");
