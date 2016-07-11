@@ -61,6 +61,16 @@ public abstract class JavaAbstractTest {
 	}
 
 	@Test
+	public void test010CheckClient() throws URISyntaxException {
+		final AnnotatedIndexService master = getMaster();
+		Assert.assertEquals(AnnotatedIndex.SCHEMA_NAME, master.getSchemaName());
+		Assert.assertEquals(AnnotatedIndex.INDEX_NAME_MASTER, master.getIndexName());
+		final AnnotatedIndexService slave = getSlave();
+		Assert.assertEquals(AnnotatedIndex.SCHEMA_NAME, slave.getSchemaName());
+		Assert.assertEquals(AnnotatedIndex.INDEX_NAME_SLAVE, slave.getIndexName());
+	}
+
+	@Test
 	public void test050CreateSchema() throws URISyntaxException {
 		final AnnotatedIndexService service = getMaster();
 		final SchemaSettingsDefinition settings = service.createUpdateSchema();
