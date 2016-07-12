@@ -179,7 +179,8 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	}
 
 	@Override
-	public InputStream replicationObtain(String schema_name, String index_name, String sessionID, String source,
+	public InputStream replicationObtain(String schema_name, String index_name, String sessionID,
+			String source,
 			String fileName) {
 		return null;
 	}

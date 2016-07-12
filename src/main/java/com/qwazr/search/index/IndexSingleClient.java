@@ -23,8 +23,11 @@ import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
 import com.qwazr.utils.server.RemoteService;
+import com.qwazr.utils.server.ServerException;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.client.methods.HttpGet;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -303,8 +306,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 			final UBuilder uriBuilder = RemoteService
 					.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/", sessionID, "/",
 							source, "/", fileName);
-			final Request request = Request.Get(uriBuilder.buildNoEx());
-			return execute(request, null, null).getEntity().getContent();
+			final HttpResponse response = execute(new HttpGet(uriBuilder.buildNoEx()), null);
+			if (response == null)
+				throw new ServerException(Status.INTERNAL_SERVER_ERROR);
+			final HttpEntity entity = response.getEntity();
+			if (entity == null)
+				throw new ServerException(Status.INTERNAL_SERVER_ERROR, response.getStatusLine().getReasonPhrase());
+			final InputStream input = entity.getContent();
+			if (input == null)
+				throw new ServerException(Status.INTERNAL_SERVER_ERROR, "No content");
+			return input;
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
 		} catch (IOException e) {

@@ -23,6 +23,7 @@ import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.replicator.SessionToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.security.Principal;
 import java.util.*;
@@ -450,12 +454,15 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	}
 
 	@Override
-	final public InputStream replicationObtain(final String schemaName, final String indexName, final String sessionID,
-			final String source, String fileName) {
+	final public InputStream replicationObtain(final String schemaName, final String indexName,
+			final String sessionID, final String source, String fileName) {
 		try {
 			checkRight(null);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator()
-					.obtainFile(sessionID, source, fileName);
+			final Replicator replicator = IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator();
+			final InputStream input = replicator.obtainFile(sessionID, source, fileName);
+			if (input == null)
+				throw new ServerException(Response.Status.NOT_FOUND, "File not found: " + fileName);
+			return input;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(logger, e);
 		}

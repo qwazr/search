@@ -246,6 +246,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 
 	@GET
 	@Path("/{schema_name}/{index_name}/replication/{session_id}/{source}/{filename}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	InputStream replicationObtain(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, @PathParam("session_id") String sessionID,
 			@PathParam("source") String source, @PathParam("filename") String fileName);
