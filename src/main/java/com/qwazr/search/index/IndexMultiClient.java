@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.utils.json.CloseableStreamingOutput;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.RemoteService;
 
@@ -179,9 +180,8 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	}
 
 	@Override
-	public InputStream replicationObtain(String schema_name, String index_name, String sessionID,
-			String source,
-			String fileName) {
+	public CloseableStreamingOutput replicationObtain(String schema_name, String index_name, String sessionID,
+			String source, String fileName) {
 		return null;
 	}
 
@@ -191,7 +191,7 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	}
 
 	@Override
-	public Response replicationUpdate(String schema_name, String index_name, String current_version) {
+	public CloseableStreamingOutput replicationUpdate(String schema_name, String index_name, String current_version) {
 		return null;
 	}
 

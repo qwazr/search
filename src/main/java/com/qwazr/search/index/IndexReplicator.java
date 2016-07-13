@@ -7,7 +7,6 @@ import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.replicator.Revision;
 import org.apache.lucene.replicator.SessionToken;
 
-import javax.ws.rs.core.Response;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -41,11 +40,8 @@ class IndexReplicator implements Replicator {
 
 	@Override
 	public SessionToken checkForUpdate(String currVersion) throws IOException {
-		Response response = indexService.replicationUpdate(schemaName, indexName, currVersion);
-		if (response == null || response.getStatus() == Response.Status.NO_CONTENT.getStatusCode())
-			return null;
-		Object entity = response.getEntity();
-		DataInput input = new DataInputStream((InputStream) entity);
+		final DataInput input = new DataInputStream(
+				indexService.replicationUpdate(schemaName, indexName, currVersion).getInputStream());
 		return new SessionToken(input);
 	}
 
@@ -56,7 +52,7 @@ class IndexReplicator implements Replicator {
 
 	@Override
 	public InputStream obtainFile(String sessionID, String source, String fileName) throws IOException {
-		return indexService.replicationObtain(schemaName, indexName, sessionID, source, fileName);
+		return indexService.replicationObtain(schemaName, indexName, sessionID, source, fileName).getInputStream();
 	}
 
 	@Override
