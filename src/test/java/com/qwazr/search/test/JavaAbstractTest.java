@@ -22,6 +22,8 @@ import com.qwazr.search.collector.MinNumericCollector;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.search.query.*;
+import com.qwazr.utils.http.HttpClients;
+import org.apache.http.pool.PoolStats;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.search.join.ScoreMode;
 import org.junit.Assert;
@@ -39,7 +41,7 @@ import java.util.List;
 public abstract class JavaAbstractTest {
 
 	public static final String[] RETURNED_FIELDS =
-			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory"};
+			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory" };
 
 	protected abstract IndexServiceInterface getIndexService() throws URISyntaxException;
 
@@ -50,8 +52,8 @@ public abstract class JavaAbstractTest {
 	private AnnotatedIndexService<AnnotatedIndex> getSlave() throws URISyntaxException {
 		IndexSettingsDefinition settings =
 				new IndexSettingsDefinition(null, "http://localhost:9091/indexes/testSchema/testIndexMaster");
-		return TestServer
-				.getService(getIndexService(), AnnotatedIndex.class, AnnotatedIndex.INDEX_NAME_SLAVE, settings);
+		return TestServer.getService(getIndexService(), AnnotatedIndex.class, AnnotatedIndex.INDEX_NAME_SLAVE,
+				settings);
 	}
 
 	@Test
@@ -140,12 +142,12 @@ public abstract class JavaAbstractTest {
 	}
 
 	private final static AnnotatedIndex record1 =
-			new AnnotatedIndex(1, "First article", "Content of the first article", 0d, 10L, true, "news", "economy")
-					.multiFacet("cat", "news", "economy");
+			new AnnotatedIndex(1, "First article", "Content of the first article", 0d, 10L, true, "news",
+					"economy").multiFacet("cat", "news", "economy");
 
 	private final static AnnotatedIndex record2 =
-			new AnnotatedIndex(2, "Second article", "Content of the second article", 0d, 20L, true, "news", "science")
-					.multiFacet("cat", "news", "science");
+			new AnnotatedIndex(2, "Second article", "Content of the second article", 0d, 20L, true, "news",
+					"science").multiFacet("cat", "news", "science");
 
 	private AnnotatedIndex checkRecord(AnnotatedIndex refRecord)
 			throws URISyntaxException, ReflectiveOperationException {
@@ -416,6 +418,14 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test990DeleteSchema() throws URISyntaxException {
 		getMaster().deleteSchema();
+	}
+
+	@Test
+	public void test999httpClient() {
+		final PoolStats stats = HttpClients.CNX_MANAGER.getTotalStats();
+		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
+		Assert.assertEquals(0, stats.getPending());
+		Assert.assertTrue(stats.getAvailable() > 0);
 	}
 
 }

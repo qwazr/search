@@ -16,15 +16,13 @@
 package com.qwazr.search.test;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
-import com.qwazr.search.annotations.AnnotatedIndexService;
-import com.qwazr.search.collector.MaxNumericCollector;
-import com.qwazr.search.collector.MinNumericCollector;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
-import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.json.JsonMapper;
+import org.apache.http.pool.PoolStats;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -656,7 +654,7 @@ public abstract class JsonAbstractTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
+		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(
 				() -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),
@@ -673,10 +671,10 @@ public abstract class JsonAbstractTest {
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(() -> client.doExtractTerms(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", null, null, null), 404);
 		Assert.assertNotNull(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, null));
-		final int firstSize = JavaAbstractTest
-				.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, 10000)).size();
-		final int secondSize = JavaAbstractTest
-				.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, 2, 10000)).size();
+		final int firstSize = JavaAbstractTest.checkTermList(
+				client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, 10000)).size();
+		final int secondSize = JavaAbstractTest.checkTermList(
+				client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, 2, 10000)).size();
 		Assert.assertEquals(firstSize, secondSize + 2);
 		JavaAbstractTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "a", null, null));
 	}
@@ -716,6 +714,7 @@ public abstract class JsonAbstractTest {
 
 		IndexStatus slaveStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_SLAVE_NAME, INDEX_SLAVE_SETTINGS);
 		Assert.assertNotNull(slaveStatus);
+
 		client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
 
 		slaveStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);
@@ -764,6 +763,14 @@ public abstract class JsonAbstractTest {
 		Set<String> schemas = client.getSchemas();
 		Assert.assertNotNull(schemas);
 		Assert.assertFalse(schemas.contains(SCHEMA_NAME));
+	}
+
+	@Test
+	public void test999httpClient() {
+		final PoolStats stats = HttpClients.CNX_MANAGER.getTotalStats();
+		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
+		Assert.assertEquals(0, stats.getPending());
+		Assert.assertTrue(stats.getAvailable() > 0);
 	}
 
 }

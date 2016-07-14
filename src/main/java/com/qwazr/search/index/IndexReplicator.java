@@ -40,9 +40,11 @@ class IndexReplicator implements Replicator {
 
 	@Override
 	public SessionToken checkForUpdate(String currVersion) throws IOException {
-		final DataInput input = new DataInputStream(
-				indexService.replicationUpdate(schemaName, indexName, currVersion).getInputStream());
-		return new SessionToken(input);
+		try (final InputStream inputStream = indexService.replicationUpdate(schemaName, indexName, currVersion)
+				.getInputStream()) {
+			final DataInput input = new DataInputStream(inputStream);
+			return new SessionToken(input);
+		}
 	}
 
 	@Override
@@ -52,7 +54,10 @@ class IndexReplicator implements Replicator {
 
 	@Override
 	public InputStream obtainFile(String sessionID, String source, String fileName) throws IOException {
-		return indexService.replicationObtain(schemaName, indexName, sessionID, source, fileName).getInputStream();
+		final InputStream stream =
+				indexService.replicationObtain(schemaName, indexName, sessionID, source, fileName).getInputStream();
+		inputStreams.add(stream);
+		return stream;
 	}
 
 	@Override
