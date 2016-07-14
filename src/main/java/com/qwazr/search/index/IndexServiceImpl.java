@@ -19,7 +19,7 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.TermQuery;
-import com.qwazr.utils.json.CloseableStreamingOutput;
+import com.qwazr.utils.json.AbstractStreamingOutput;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -222,7 +222,8 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String fieldName, final String prefix, final Integer start, final Integer rows) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, false)
+			return IndexManager.INSTANCE.get(schemaName)
+					.get(indexName, false)
 					.getTermsEnum(fieldName, prefix, start, rows);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(logger, e);
@@ -452,7 +453,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	}
 
 	@Override
-	final public CloseableStreamingOutput replicationObtain(final String schemaName, final String indexName,
+	final public AbstractStreamingOutput replicationObtain(final String schemaName, final String indexName,
 			final String sessionID, final String source, String fileName) {
 		try {
 			checkRight(null);
@@ -460,7 +461,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final InputStream input = replicator.obtainFile(sessionID, source, fileName);
 			if (input == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "File not found: " + fileName);
-			return new CloseableStreamingOutput(input);
+			return AbstractStreamingOutput.with(input);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(logger, e);
 		}
@@ -478,18 +479,24 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	}
 
 	@Override
-	final public CloseableStreamingOutput replicationUpdate(final String schemaName, final String indexName,
+	final public AbstractStreamingOutput replicationUpdate(final String schemaName, final String indexName,
 			final String currentVersion) {
 		try {
 			checkRight(null);
-			final SessionToken token = IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator()
+			final SessionToken token = IndexManager.INSTANCE.get(schemaName)
+					.get(indexName, false)
+					.getReplicator()
 					.checkForUpdate(currentVersion);
 			if (token == null)
 				throw new ServerException(Response.Status.NOT_FOUND);
-			final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			final DataOutputStream dataOutput = new DataOutputStream(outputStream);
-			token.serialize(dataOutput);
-			return new CloseableStreamingOutput(outputStream);
+			try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+				try (final DataOutputStream dataOutput = new DataOutputStream(outputStream)) {
+					token.serialize(dataOutput);
+					dataOutput.flush();
+				}
+				outputStream.flush();
+				return AbstractStreamingOutput.with(new ByteArrayInputStream(outputStream.toByteArray()));
+			}
 		} catch (Exception e) {
 			throw ServerException.getJsonException(logger, e);
 		}
@@ -545,8 +552,8 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
 		checkRight(schemaName);
 		final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName, false);
-		return index
-				.search(query, ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass));
+		return index.search(query,
+				ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass));
 	}
 
 	@Override

@@ -17,7 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.utils.json.CloseableStreamingOutput;
+import com.qwazr.utils.json.AbstractStreamingOutput;
 import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServiceInterface;
 import com.qwazr.utils.server.ServiceName;
@@ -247,7 +247,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/{schema_name}/{index_name}/replication/{session_id}/{source}/{filename}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	CloseableStreamingOutput replicationObtain(@PathParam("schema_name") String schema_name,
+	AbstractStreamingOutput replicationObtain(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, @PathParam("session_id") String sessionID,
 			@PathParam("source") String source, @PathParam("filename") String fileName);
 
@@ -258,9 +258,8 @@ public interface IndexServiceInterface extends ServiceInterface {
 
 	@GET
 	@Path("/{schema_name}/{index_name}/replication/{current_version}")
-	CloseableStreamingOutput replicationUpdate(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name,
-			@PathParam("current_version") String current_version);
+	AbstractStreamingOutput replicationUpdate(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, @PathParam("current_version") String current_version);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/replication")
