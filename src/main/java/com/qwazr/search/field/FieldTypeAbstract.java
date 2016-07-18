@@ -19,13 +19,16 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
+import com.qwazr.utils.SerializationUtils;
 import com.qwazr.utils.server.ServerException;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.BytesRef;
 
 import javax.ws.rs.core.Response;
+import java.io.Externalizable;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -137,4 +140,21 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 		return ValueConverter.newConverter(fieldName, fieldMapItem.definition, reader);
 	}
 
+	final protected byte[] toBytes(final String fieldName, final Serializable value) {
+		try {
+			return SerializationUtils.getBytes(value, 64);
+		} catch (IOException e) {
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+					"Cannot serialize the value of the field " + fieldName, e);
+		}
+	}
+
+	final protected byte[] toBytes(final String fieldName, final Externalizable value) {
+		try {
+			return SerializationUtils.getBytes(value, 64);
+		} catch (IOException e) {
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+					"Cannot serialize the value of the field " + fieldName, e);
+		}
+	}
 }

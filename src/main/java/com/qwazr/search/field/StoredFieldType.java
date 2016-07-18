@@ -21,6 +21,9 @@ import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 
+import java.io.Externalizable;
+import java.io.Serializable;
+
 class StoredFieldType extends FieldTypeAbstract {
 
 	StoredFieldType(final FieldMap.Item fieldMapItem) {
@@ -37,6 +40,12 @@ class StoredFieldType extends FieldTypeAbstract {
 			consumer.accept(fieldName, new StoredField(fieldName, (long) value));
 		else if (value instanceof Float)
 			consumer.accept(fieldName, new StoredField(fieldName, (float) value));
+		else if (value instanceof Externalizable)
+			consumer.accept(fieldName,
+					new StoredField(fieldName, toBytes(fieldName, (Externalizable) value)));
+		else if (value instanceof Serializable)
+			consumer.accept(fieldName,
+					new StoredField(fieldName, toBytes(fieldName, (Serializable) value)));
 		else
 			consumer.accept(fieldName, new StoredField(fieldName, value.toString()));
 	}

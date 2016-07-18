@@ -41,7 +41,7 @@ import java.util.List;
 public abstract class JavaAbstractTest {
 
 	public static final String[] RETURNED_FIELDS =
-			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory" };
+			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory"};
 
 	protected abstract IndexServiceInterface getIndexService() throws URISyntaxException;
 
@@ -142,11 +142,11 @@ public abstract class JavaAbstractTest {
 	}
 
 	private final static AnnotatedIndex record1 =
-			new AnnotatedIndex(1, "First article", "Content of the first article", 0d, 10L, true, "news",
+			new AnnotatedIndex(1, "First article", "Content of the first article", 0d, 10L, true, false, "news",
 					"economy").multiFacet("cat", "news", "economy");
 
 	private final static AnnotatedIndex record2 =
-			new AnnotatedIndex(2, "Second article", "Content of the second article", 0d, 20L, true, "news",
+			new AnnotatedIndex(2, "Second article", "Content of the second article", 0d, 20L, true, false, "news",
 					"science").multiFacet("cat", "news", "science");
 
 	private AnnotatedIndex checkRecord(AnnotatedIndex refRecord)
@@ -178,8 +178,8 @@ public abstract class JavaAbstractTest {
 		Assert.assertEquals(new Long(10), service.getIndexStatus().version);
 	}
 
-	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, 1.11d, null, false);
-	private final static AnnotatedIndex docValue2 = new AnnotatedIndex(2, null, null, 2.22d, null, false);
+	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, 1.11d, null, false, true);
+	private final static AnnotatedIndex docValue2 = new AnnotatedIndex(2, null, null, 2.22d, null, false, true);
 
 	@Test
 	public void test200UpdateDocValues() throws URISyntaxException, IOException, InterruptedException {
@@ -275,10 +275,12 @@ public abstract class JavaAbstractTest {
 
 	private void checkEqualsReturnedFields(AnnotatedIndex record, AnnotatedIndex recordRef,
 			AnnotatedIndex docValueRef) {
-		Assert.assertEquals(record.title, recordRef.title);
-		Assert.assertEquals(record.content, recordRef.content);
-		Assert.assertEquals(record.price, docValueRef.price);
-		Assert.assertArrayEquals(record.storedCategory.toArray(), recordRef.storedCategory.toArray());
+		Assert.assertEquals(recordRef.title, record.title);
+		Assert.assertEquals(recordRef.content, record.content);
+		Assert.assertEquals(docValueRef.price, record.price);
+		Assert.assertArrayEquals(recordRef.storedCategory.toArray(), record.storedCategory.toArray());
+		Assert.assertEquals(recordRef.externalValue, record.externalValue);
+		Assert.assertEquals(recordRef.serialValue, record.serialValue);
 	}
 
 	private final void testReturnedFieldQuery(String... returnedFields) throws URISyntaxException {
