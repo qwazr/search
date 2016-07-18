@@ -19,13 +19,16 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.utils.*;
+import com.qwazr.utils.server.ServerException;
 import org.apache.http.HttpEntity;
 import org.apache.http.util.EntityUtils;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -56,7 +59,7 @@ public class AnnotatedIndexService<T> {
 	 * @param indexName            the IndexServiceInterface to use
 	 * @param indexDefinitionClass an annotated class
 	 */
-	public AnnotatedIndexService(final IndexServiceInterface indexService, Class<T> indexDefinitionClass,
+	public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass,
 			final String schemaName, final String indexName, final IndexSettingsDefinition settings)
 			throws URISyntaxException {
 		Objects.requireNonNull(indexService, "The indexService parameter is null");
@@ -85,11 +88,10 @@ public class AnnotatedIndexService<T> {
 		});
 	}
 
-	public AnnotatedIndexService(IndexServiceInterface indexService, Class<T> indexDefinitionClass)
+	public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass)
 			throws URISyntaxException {
 		this(indexService, indexDefinitionClass, null, null, null);
 	}
-
 
 	public String getSchemaName() {
 		return schemaName;
@@ -98,7 +100,7 @@ public class AnnotatedIndexService<T> {
 	public String getIndexName() {
 		return indexName;
 	}
-	
+
 	final private void checkParameters() {
 		if (StringUtils.isEmpty(schemaName))
 			throw new RuntimeException("The schema name is empty");
@@ -122,7 +124,7 @@ public class AnnotatedIndexService<T> {
 	 * @param response   The HTTP   response
 	 * @param validCodes The valid HTTP codes
 	 */
-	private void checkHttpResponse(Response response, int... validCodes) {
+	private void checkHttpResponse(final Response response, final int... validCodes) {
 		if (response == null)
 			throw new WebApplicationException("No response");
 		if (ArrayUtils.contains(validCodes, response.getStatus()))
@@ -185,7 +187,7 @@ public class AnnotatedIndexService<T> {
 	 *
 	 * @param row the document to index
 	 */
-	public void postDocument(T row) throws IOException, InterruptedException {
+	public void postDocument(final T row) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(row, "The document (row) cannot be null");
 		if (annotatedService != null)
@@ -199,7 +201,7 @@ public class AnnotatedIndexService<T> {
 	 *
 	 * @param rows a collection of document to index
 	 */
-	public void postDocuments(Collection<T> rows) throws IOException, InterruptedException {
+	public void postDocuments(final Collection<T> rows) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
 		if (annotatedService != null)
@@ -213,7 +215,7 @@ public class AnnotatedIndexService<T> {
 	 *
 	 * @param row a collection of DocValues to update
 	 */
-	public void updateDocumentValues(T row) throws IOException, InterruptedException {
+	public void updateDocumentValues(final T row) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(row, "The document (row) cannot be null");
 		if (annotatedService != null)
@@ -227,7 +229,7 @@ public class AnnotatedIndexService<T> {
 	 *
 	 * @param rows a collection of document with a collection of DocValues to update
 	 */
-	public void updateDocumentsValues(Collection<T> rows) throws IOException, InterruptedException {
+	public void updateDocumentsValues(final Collection<T> rows) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
 		if (annotatedService != null)
@@ -241,7 +243,7 @@ public class AnnotatedIndexService<T> {
 	 * @return an filled object or null if the document does not exist
 	 * @throws ReflectiveOperationException
 	 */
-	public T getDocument(Object id) throws ReflectiveOperationException {
+	public T getDocument(final Object id) throws ReflectiveOperationException {
 		checkParameters();
 		Objects.requireNonNull(id, "The id cannot be empty");
 		if (annotatedService != null)
@@ -250,7 +252,7 @@ public class AnnotatedIndexService<T> {
 			return toRecord(indexService.getDocument(schemaName, indexName, id.toString()));
 	}
 
-	public List<T> getDocuments(Integer start, Integer rows) {
+	public List<T> getDocuments(final Integer start, final Integer rows) {
 		checkParameters();
 		if (annotatedService != null)
 			return annotatedService.getDocuments(schemaName, indexName, start, rows, fieldMap, indexDefinitionClass);
@@ -271,17 +273,17 @@ public class AnnotatedIndexService<T> {
 		return indexService.getFields(schemaName, indexName);
 	}
 
-	public FieldDefinition getField(String fieldName) {
+	public FieldDefinition getField(final String fieldName) {
 		checkParameters();
 		return indexService.getField(schemaName, indexName, fieldName);
 	}
 
-	public void setField(String fieldName, FieldDefinition fieldDefinition) {
+	public void setField(final String fieldName, final FieldDefinition fieldDefinition) {
 		checkParameters();
 		indexService.setField(schemaName, indexName, fieldName, fieldDefinition);
 	}
 
-	public void deleteField(String fieldName) {
+	public void deleteField(final String fieldName) {
 		checkParameters();
 		indexService.deleteField(schemaName, indexName, fieldName);
 	}
@@ -291,38 +293,38 @@ public class AnnotatedIndexService<T> {
 		return indexService.getAnalyzers(schemaName, indexName);
 	}
 
-	public AnalyzerDefinition getAnalyzer(String analyzerName) {
+	public AnalyzerDefinition getAnalyzer(final String analyzerName) {
 		checkParameters();
 		return indexService.getAnalyzer(schemaName, indexName, analyzerName);
 	}
 
-	public AnalyzerDefinition setAnalyzer(String analyzerName, AnalyzerDefinition analyzerDefinition) {
+	public AnalyzerDefinition setAnalyzer(final String analyzerName, final AnalyzerDefinition analyzerDefinition) {
 		checkParameters();
 		return indexService.setAnalyzer(schemaName, indexName, analyzerName, analyzerDefinition);
 	}
 
-	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(String analyzerName,
-			LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String analyzerName,
+			final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
 		checkParameters();
 		return indexService.setAnalyzers(schemaName, indexName, analyzers);
 	}
 
-	public void deleteAnalyzer(String analyzerName) {
+	public void deleteAnalyzer(final String analyzerName) {
 		checkParameters();
 		indexService.deleteAnalyzer(schemaName, indexName, analyzerName);
 	}
 
-	public List<TermDefinition> testAnalyzer(String analyzerName, String text) {
+	public List<TermDefinition> testAnalyzer(final String analyzerName, final String text) {
 		checkParameters();
 		return indexService.testAnalyzer(schemaName, indexName, analyzerName, text);
 	}
 
-	public List<TermDefinition> doAnalyzeIndex(String fieldName, String text) {
+	public List<TermDefinition> doAnalyzeIndex(final String fieldName, final String text) {
 		checkParameters();
 		return indexService.doAnalyzeIndex(schemaName, indexName, fieldName, text);
 	}
 
-	public List<TermDefinition> doAnalyzeQuery(String fieldName, String text) {
+	public List<TermDefinition> doAnalyzeQuery(final String fieldName, final String text) {
 		checkParameters();
 		return indexService.doAnalyzeQuery(schemaName, indexName, fieldName, text);
 	}
@@ -332,7 +334,7 @@ public class AnnotatedIndexService<T> {
 		return indexService.getBackups(schemaName, indexName);
 	}
 
-	public BackupStatus doBackup(Integer keepLastCount) {
+	public BackupStatus doBackup(final Integer keepLastCount) {
 		checkParameters();
 		return indexService.doBackup(schemaName, indexName, keepLastCount);
 	}
@@ -343,14 +345,14 @@ public class AnnotatedIndexService<T> {
 	 * @param query the query to execute
 	 * @return the results
 	 */
-	public ResultDefinition.WithObject<T> searchQuery(QueryDefinition query) {
+	public ResultDefinition.WithObject<T> searchQuery(final QueryDefinition query) {
 		checkParameters();
 		if (annotatedService != null)
 			return annotatedService.searchQuery(schemaName, indexName, query, fieldMap, indexDefinitionClass);
 		return toRecords(indexService.searchQuery(schemaName, indexName, query, false));
 	}
 
-	public ResultDefinition.WithMap searchQueryWithMap(QueryDefinition query) {
+	public ResultDefinition.WithMap searchQueryWithMap(final QueryDefinition query) {
 		checkParameters();
 		return indexService.searchQuery(schemaName, indexName, query, false);
 	}
@@ -372,7 +374,7 @@ public class AnnotatedIndexService<T> {
 	 * @param query the query to execute
 	 * @return the results
 	 */
-	public ResultDefinition<?> deleteByQuery(QueryDefinition query) {
+	public ResultDefinition<?> deleteByQuery(final QueryDefinition query) {
 		checkParameters();
 		return indexService.searchQuery(schemaName, indexName, query, true);
 	}
@@ -397,9 +399,36 @@ public class AnnotatedIndexService<T> {
 				Object value = field.get(row);
 				if (value == null)
 					return;
-				map.put(name, value);
-			} catch (IllegalAccessException e) {
-				throw new RuntimeException(e);
+				if (value instanceof Number || value instanceof String) {
+					map.put(name, value);
+					return;
+				}
+				if (value instanceof Collection) {
+					if (((Collection) value).isEmpty())
+						return;
+					map.put(name, value);
+					return;
+				}
+				if (value instanceof Map) {
+					if (((Map) value).isEmpty())
+						return;
+					map.put(name, value);
+					return;
+				}
+				if (value.getClass().isArray()) {
+					map.put(name, value);
+					return;
+				}
+				if (value instanceof Externalizable) {
+					map.put(name, SerializationUtils.getBytes((Externalizable) value, 64));
+					return;
+				}
+				if (value instanceof Serializable) {
+					map.put(name, SerializationUtils.getBytes((Serializable) value, 64));
+					return;
+				}
+			} catch (IllegalAccessException | IOException e) {
+				throw new ServerException("Cannot convert the field " + name, e);
 			}
 		});
 		return map.isEmpty() ? null : map;
@@ -419,7 +448,7 @@ public class AnnotatedIndexService<T> {
 		return list;
 	}
 
-	private T toRecord(Map<String, Object> fields) throws ReflectiveOperationException {
+	private T toRecord(final Map<String, Object> fields) throws ReflectiveOperationException {
 		if (fields == null)
 			return null;
 		final T record = indexDefinitionClass.newInstance();
@@ -441,15 +470,28 @@ public class AnnotatedIndexService<T> {
 					field.set(record, fieldValues.iterator().next());
 					return;
 				}
-				throw new RuntimeException("Field not assignable: " + fieldType + " -> " + fieldValueType);
-			} catch (IllegalAccessException e) {
-				throw new RuntimeException(e);
+				if (Externalizable.class.isAssignableFrom(fieldType)) {
+					final Object recordValue = field.get(record);
+					final Externalizable ext =
+							(Externalizable) (recordValue == null ? fieldType.newInstance() : recordValue);
+					SerializationUtils.deserialize(Base64.getDecoder().decode((String) fieldValue), ext);
+					field.set(record, ext);
+					return;
+				}
+				if (Serializable.class.isAssignableFrom(fieldType)) {
+					field.set(record, SerializationUtils.deserialize(Base64.getDecoder().decode((String) fieldValue)));
+					return;
+				}
+				throw new UnsupportedOperationException(
+						"Field " + fieldName + " not assignable: " + fieldType + " -> " + fieldValueType);
+			} catch (ReflectiveOperationException | IOException e) {
+				throw new ServerException(e);
 			}
 		});
 		return record;
 	}
 
-	private List<T> toRecords(List<LinkedHashMap<String, Object>> docs) {
+	private List<T> toRecords(final List<LinkedHashMap<String, Object>> docs) {
 		if (docs == null)
 			return null;
 		final List<T> records = new ArrayList<>();
@@ -463,7 +505,7 @@ public class AnnotatedIndexService<T> {
 		return records;
 	}
 
-	private ResultDefinition.WithObject<T> toRecords(ResultDefinition.WithMap resultWithMap) {
+	private ResultDefinition.WithObject<T> toRecords(final ResultDefinition.WithMap resultWithMap) {
 		if (resultWithMap == null)
 			return null;
 		final List<ResultDocumentObject<T>> documents = new ArrayList<>();

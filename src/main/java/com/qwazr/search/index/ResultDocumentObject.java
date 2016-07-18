@@ -16,9 +16,14 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.utils.SerializationUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.util.BytesRef;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Map;
@@ -92,6 +97,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 					field.set(record, fieldValue);
 					return;
 				}
+				// Check collection
 				Object value = field.get(record);
 				if (value == null) {
 					if (Collection.class.isAssignableFrom(fieldType)) {
@@ -105,9 +111,22 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 						return;
 					}
 				}
+				if (fieldValue instanceof BytesRef) {
+					final BytesRef br = (BytesRef) fieldValue;
+					if (Externalizable.class.isAssignableFrom(fieldType)) {
+						final Externalizable ext = (Externalizable) (value == null ? fieldType.newInstance() : value);
+						SerializationUtils.deserialize(br.bytes, ext);
+						field.set(record, ext);
+						return;
+					}
+					if (Serializable.class.isAssignableFrom(fieldType)) {
+						field.set(record, SerializationUtils.deserialize(br.bytes));
+						return;
+					}
+				}
 				throw new UnsupportedOperationException(
 						"The field " + fieldName + " does not support this type: " + fieldValueClass.getSimpleName());
-			} catch (IllegalAccessException | InstantiationException e) {
+			} catch (IllegalAccessException | IOException | ClassNotFoundException | InstantiationException e) {
 				throw new ServerException(e);
 			}
 		}

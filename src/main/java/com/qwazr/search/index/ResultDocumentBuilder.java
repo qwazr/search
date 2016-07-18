@@ -19,6 +19,7 @@ import com.qwazr.search.field.Converters.ValueConverter;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.util.BytesRef;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
@@ -71,12 +72,15 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 	private final static Object getValue(final IndexableField field) {
 		if (field == null)
 			return null;
-		Number n = field.numericValue();
+		final Number n = field.numericValue();
 		if (n != null)
 			return n;
-		String s = field.stringValue();
+		final String s = field.stringValue();
 		if (s != null)
 			return s;
+		final BytesRef b = field.binaryValue();
+		if (b != null)
+			return b;
 		return null;
 	}
 

@@ -485,7 +485,7 @@ final public class IndexInstance implements Closeable {
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
+			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			poster.accept(document);
 			nrtCommit();
 			return poster.counter;
@@ -502,7 +502,7 @@ final public class IndexInstance implements Closeable {
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
+			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			documents.forEach(poster);
 			nrtCommit();
 			return poster.counter;

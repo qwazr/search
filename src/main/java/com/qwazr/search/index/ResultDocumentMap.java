@@ -18,11 +18,12 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qwazr.search.field.Converters.ValueConverter;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.util.BytesRef;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ResultDocumentMap extends ResultDocumentAbstract {
@@ -63,17 +64,19 @@ public class ResultDocumentMap extends ResultDocumentAbstract {
 		}
 
 		@Override
-		final void setStoredField(final String fieldName, final Object fieldValue) {
-			Object oldValue = fields.get(fieldName);
+		final void setStoredField(final String fieldName, Object fieldValue) {
+			if (fieldValue instanceof BytesRef)
+				fieldValue = ((BytesRef) fieldValue).bytes;
+			final Object oldValue = fields.get(fieldName);
 			if (oldValue == null) {
 				fields.put(fieldName, fieldValue);
 				return;
 			}
-			if (oldValue instanceof List<?>) {
-				((List<Object>) oldValue).add(fieldValue);
+			if (oldValue instanceof Collection<?>) {
+				((Collection<Object>) oldValue).add(fieldValue);
 				return;
 			}
-			List<Object> list = new ArrayList<Object>(2);
+			final List<Object> list = new ArrayList<>(2);
 			list.add(oldValue);
 			list.add(fieldValue);
 			fields.put(fieldName, list);

@@ -41,7 +41,7 @@ import java.util.List;
 public abstract class JavaAbstractTest {
 
 	public static final String[] RETURNED_FIELDS =
-			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory"};
+			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue" };
 
 	protected abstract IndexServiceInterface getIndexService() throws URISyntaxException;
 

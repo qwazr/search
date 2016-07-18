@@ -18,7 +18,6 @@ package com.qwazr.search.test;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.IndexOptions;
 
@@ -40,15 +39,13 @@ public class AnnotatedIndex {
 	@IndexField(name = FieldDefinition.ID_FIELD, template = StringField, stored = true)
 	final public String id;
 
-	@IndexField(
-			analyzer = "en.EnglishAnalyzer",
+	@IndexField(analyzer = "en.EnglishAnalyzer",
 			tokenized = true,
 			stored = true,
 			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 	final public String title;
 
-	@IndexField(
-			analyzerClass = EnglishAnalyzer.class,
+	@IndexField(analyzerClass = EnglishAnalyzer.class,
 			queryAnalyzerClass = EnglishAnalyzer.class,
 			tokenized = true,
 			stored = true,
@@ -148,6 +145,9 @@ public class AnnotatedIndex {
 
 		public int id;
 		public String title;
+
+		public ExternalTest() {
+		}
 
 		ExternalTest(int id, String title) {
 			this.id = id;
