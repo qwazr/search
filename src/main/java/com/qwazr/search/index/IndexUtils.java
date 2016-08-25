@@ -16,15 +16,14 @@
 package com.qwazr.search.index;
 
 import com.qwazr.classloader.ClassLoaderManager;
+import com.qwazr.library.LibraryManager;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.query.JoinQuery;
 import com.qwazr.utils.ClassLoaderUtils;
 import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.SortedSetDocValues;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.IOException;
@@ -34,10 +33,10 @@ class IndexUtils {
 	final static String[] similarityClassPrefixes = {"", "com.qwazr.search.similarity.",
 			"org.apache.lucene.search.similarities."};
 
-	final static Similarity findSimilarity(String similarity)
+	final static Similarity findSimilarity(String similarityClassname)
 			throws InterruptedException, ReflectiveOperationException, IOException {
-		return (Similarity) ClassLoaderUtils
-				.findClass(ClassLoaderManager.classLoader, similarity, similarityClassPrefixes).newInstance();
+		return LibraryManager.newInstance(ClassLoaderUtils
+				.findClass(ClassLoaderManager.classLoader, similarityClassname, similarityClassPrefixes));
 	}
 
 	final static SortedSetDocValuesReaderState getNewFacetsState(IndexReader indexReader) throws IOException {

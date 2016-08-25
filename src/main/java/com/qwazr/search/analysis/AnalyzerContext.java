@@ -16,6 +16,7 @@
 package com.qwazr.search.analysis;
 
 import com.qwazr.classloader.ClassLoaderManager;
+import com.qwazr.library.LibraryManager;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.StringUtils;
@@ -66,17 +67,17 @@ public class AnalyzerContext {
 		});
 	}
 
-	final static String[] analyzerClassPrefixes = { "", "org.apache.lucene.analysis." };
+	final static String[] analyzerClassPrefixes = {"", "org.apache.lucene.analysis."};
 
-	private static Analyzer findAnalyzer(final Map<String, AnalyzerDefinition> analyzerMap, final String analyzer)
+	private static Analyzer findAnalyzer(final Map<String, AnalyzerDefinition> analyzerMap, final String analyzerName)
 			throws InterruptedException, ReflectiveOperationException, IOException {
 		if (analyzerMap != null) {
-			AnalyzerDefinition analyzerDef = analyzerMap.get(analyzer);
+			AnalyzerDefinition analyzerDef = analyzerMap.get(analyzerName);
 			if (analyzerDef != null)
 				return new CustomAnalyzer(analyzerDef);
 		}
-		return (Analyzer) ClassLoaderUtils.findClass(ClassLoaderManager.classLoader, analyzer, analyzerClassPrefixes)
-				.newInstance();
+		return LibraryManager.newInstance(
+				ClassLoaderUtils.findClass(ClassLoaderManager.classLoader, analyzerName, analyzerClassPrefixes));
 	}
 
 }
