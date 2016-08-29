@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.query.AbstractQuery;
 import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.similarities.Similarity;
 
 import java.util.*;
 
@@ -30,6 +31,8 @@ public class QueryBuilder {
 	String query_string = null;
 	Boolean escape_query = null;
 	char[] escaped_chars = null;
+
+	Similarity similarity = null;
 
 	LinkedHashMap<String, FacetDefinition> facets = null;
 
@@ -47,7 +50,7 @@ public class QueryBuilder {
 	public QueryBuilder() {
 	}
 
-	public QueryBuilder(QueryDefinition queryDef) {
+	public QueryBuilder(final QueryDefinition queryDef) {
 		start = queryDef.start;
 		rows = queryDef.rows;
 		query_debug = queryDef.query_debug;
@@ -66,7 +69,7 @@ public class QueryBuilder {
 		query = queryDef.query;
 	}
 
-	public QueryBuilder setQuery_debug(Boolean query_debug) {
+	public QueryBuilder setQuery_debug(final Boolean query_debug) {
 		this.query_debug = query_debug;
 		return this;
 	}
@@ -75,7 +78,7 @@ public class QueryBuilder {
 		return start;
 	}
 
-	public QueryBuilder setStart(Integer start) {
+	public QueryBuilder setStart(final Integer start) {
 		this.start = start;
 		return this;
 	}
@@ -84,7 +87,7 @@ public class QueryBuilder {
 		return rows;
 	}
 
-	public QueryBuilder setRows(Integer rows) {
+	public QueryBuilder setRows(final Integer rows) {
 		this.rows = rows;
 		return this;
 	}
@@ -93,7 +96,7 @@ public class QueryBuilder {
 		return query_string;
 	}
 
-	public QueryBuilder setQuery_string(String query_string) {
+	public QueryBuilder setQuery_string(final String query_string) {
 		this.query_string = query_string;
 		return this;
 	}
@@ -102,7 +105,7 @@ public class QueryBuilder {
 		return escape_query;
 	}
 
-	public QueryBuilder setEscape_query(Boolean escape_query) {
+	public QueryBuilder setEscape_query(final Boolean escape_query) {
 		this.escape_query = escape_query;
 		return this;
 	}
@@ -111,7 +114,7 @@ public class QueryBuilder {
 		return escaped_chars;
 	}
 
-	public QueryBuilder setEscaped_chars(char[] escaped_chars) {
+	public QueryBuilder setEscaped_chars(final char[] escaped_chars) {
 		this.escaped_chars = escaped_chars;
 		return this;
 	}
@@ -120,34 +123,33 @@ public class QueryBuilder {
 		return returned_fields;
 	}
 
-	public QueryBuilder setReturned_fields(LinkedHashSet<String> returned_fields) {
+	public QueryBuilder setReturned_fields(final LinkedHashSet<String> returned_fields) {
 		this.returned_fields = returned_fields;
 		return this;
 	}
 
-	public QueryBuilder addReturned_field(String... returned_fields) {
+	public QueryBuilder addReturned_field(final String... returned_fields) {
 		if (this.returned_fields == null)
-			this.returned_fields = new LinkedHashSet<String>();
+			this.returned_fields = new LinkedHashSet<>();
 		for (String returned_field : returned_fields)
 			this.returned_fields.add(returned_field);
 		return this;
 	}
 
-	public QueryBuilder addReturned_field(Enum<?>... returned_fields) {
+	public QueryBuilder addReturned_field(final Enum<?>... returned_fields) {
 		if (this.returned_fields == null)
-			this.returned_fields = new LinkedHashSet<String>();
+			this.returned_fields = new LinkedHashSet<>();
 		for (Enum<?> returned_field : returned_fields)
 			this.returned_fields.add(returned_field.name());
 		return this;
 	}
 
-	public QueryBuilder addReturned_field(Collection<String> returned_fields) {
+	public QueryBuilder addReturned_field(final Collection<String> returned_fields) {
 		if (returned_fields == null)
 			return this;
 		if (this.returned_fields == null)
-			this.returned_fields = new LinkedHashSet<String>();
-		for (String returned_field : returned_fields)
-			this.returned_fields.add(returned_field);
+			this.returned_fields = new LinkedHashSet<>();
+		this.returned_fields.addAll(returned_fields);
 		return this;
 	}
 
@@ -155,47 +157,53 @@ public class QueryBuilder {
 		return facets;
 	}
 
-	public QueryBuilder setFacets(LinkedHashMap<String, FacetDefinition> facets) {
+	public QueryBuilder setFacets(final LinkedHashMap<String, FacetDefinition> facets) {
 		this.facets = facets;
 		return this;
 	}
 
-	public QueryBuilder addFacet(String facetName, FacetDefinition facetDefinition) {
+	public QueryBuilder addFacet(final String facetName, final FacetDefinition facetDefinition) {
 		if (facets == null)
-			facets = new LinkedHashMap<String, FacetDefinition>();
+			facets = new LinkedHashMap<>();
 		facets.put(facetName, facetDefinition);
 		return this;
 	}
 
-	public QueryBuilder addFacet(Enum<?> facetName, FacetDefinition facetDefinition) {
+	public QueryBuilder addFacet(final Enum<?> facetName, final FacetDefinition facetDefinition) {
 		if (facetName == null)
 			return this;
 		return addFacet(facetName.name(), facetDefinition);
+	}
+
+	public QueryBuilder setSimilarity(Similarity similarity) {
+		this.similarity = similarity;
+		return this;
 	}
 
 	public LinkedHashMap<String, QueryDefinition.SortEnum> getSorts() {
 		return sorts;
 	}
 
-	public QueryBuilder setSorts(LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
+	public QueryBuilder setSorts(final LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
 		this.sorts = sorts;
 		return this;
 	}
 
-	public QueryBuilder addSort(String fieldName, QueryDefinition.SortEnum sortEnum) {
+	public QueryBuilder addSort(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		if (sorts == null)
-			sorts = new LinkedHashMap<String, QueryDefinition.SortEnum>();
+			sorts = new LinkedHashMap<>();
 		sorts.put(fieldName, sortEnum);
 		return this;
 	}
 
-	public QueryBuilder addSort(Enum<?> fieldName, QueryDefinition.SortEnum sortEnum) {
+	public QueryBuilder addSort(final Enum<?> fieldName, QueryDefinition.SortEnum sortEnum) {
 		if (fieldName == null)
 			return this;
 		return addSort(fieldName.name(), sortEnum);
 	}
 
-	public QueryBuilder addCollector(String name, Class<? extends Collector> collectorClass, Object... arguments) {
+	public QueryBuilder addCollector(final String name, final Class<? extends Collector> collectorClass,
+			final Object... arguments) {
 		if (collectorClass == null)
 			return this;
 		if (collectors == null)
@@ -212,19 +220,19 @@ public class QueryBuilder {
 		return highlighters;
 	}
 
-	public QueryBuilder setHighlighters(LinkedHashMap<String, HighlighterDefinition> highlighters) {
+	public QueryBuilder setHighlighters(final LinkedHashMap<String, HighlighterDefinition> highlighters) {
 		this.highlighters = highlighters;
 		return this;
 	}
 
-	public QueryBuilder addHighlighter(String name, HighlighterDefinition highlighter) {
+	public QueryBuilder addHighlighter(final String name, final HighlighterDefinition highlighter) {
 		if (highlighters == null)
 			highlighters = new LinkedHashMap<>();
 		highlighters.put(name, highlighter);
 		return this;
 	}
 
-	public QueryBuilder setQuery(AbstractQuery query) {
+	public QueryBuilder setQuery(final AbstractQuery query) {
 		this.query = query;
 		return this;
 	}

@@ -60,6 +60,7 @@ public abstract class JsonAbstractTest {
 	public static final QueryDefinition QUERY_SORTFIELD_PRICE = getQuery("query_sortfield_price.json");
 	public static final QueryDefinition QUERY_SORTFIELDS = getQuery("query_sortfields.json");
 	public static final QueryDefinition QUERY_HIGHLIGHT = getQuery("query_highlight.json");
+	public static final QueryDefinition QUERY_PAYLOAD_FILTER = getQuery("query_payload_filter.json");
 	public static final QueryDefinition QUERY_CHECK_RETURNED = getQuery("query_check_returned.json");
 	public static final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
@@ -635,6 +636,15 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
+	public void test460SearchPayload() throws URISyntaxException, IOException {
+		final IndexServiceInterface client = getClient();
+		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_PAYLOAD_FILTER, 1);
+		Assert.assertNotNull(result);
+		final ResultDocumentMap document = result.getDocuments().get(0);
+		Assert.assertNotNull(document);
+	}
+
+	@Test
 	public void test500SecondBackup() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
 		BackupStatus status = doBackup(client);
@@ -654,7 +664,7 @@ public abstract class JsonAbstractTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
+		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(
 				() -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),

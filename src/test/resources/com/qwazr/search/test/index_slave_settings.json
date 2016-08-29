@@ -1,5 +1,5 @@
 {
-  "similarity_class": "ClassicSimilarity",
+  "similarity_class": "com.qwazr.search.test.PayloadSimilarity",
   "master": [
     {
       "host": "localhost",

@@ -15,19 +15,17 @@
  */
 package com.qwazr.search.index;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
+import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
 public class QueryDefinition extends BaseQueryDefinition {
@@ -92,7 +90,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		query = null;
 	}
 
-	QueryDefinition(QueryBuilder builder) {
+	QueryDefinition(final QueryBuilder builder) {
 		super(builder);
 		query_string = builder.query_string;
 		escape_query = builder.escape_query;
@@ -105,7 +103,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		query = builder.query;
 	}
 
-	public static QueryDefinition newQuery(String jsonString) throws IOException {
+	public static QueryDefinition newQuery(final String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
 		return JsonMapper.MAPPER.readValue(jsonString, QueryDefinition.class);

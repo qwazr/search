@@ -1,0 +1,20 @@
+{
+  "query_string": "",
+  "query": {
+    "query": "PayloadScoreQuery",
+    "payload_function": "MinPayloadFunction",
+    "wrapped_query": {
+      "query": "SpanQueryWrapper",
+      "wrapped_query": {
+        "query": "TermQuery",
+        "field": "integer_payload",
+        "term": "3"
+      }
+    }
+  },
+  "returned_fields": [
+    "$id$"
+  ],
+  "start": 0,
+  "rows": 10
+}

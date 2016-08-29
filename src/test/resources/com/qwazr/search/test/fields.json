@@ -38,5 +38,10 @@
   "dynamic_multi_facet_*": {
     "template": "MultiFacetField",
     "stored": true
+  },
+  "integer_payload": {
+    "analyzer": "com.qwazr.search.test.IntegerPayloadAnalyzer",
+    "tokenized": true,
+    "index_options": "DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS"
   }
 }

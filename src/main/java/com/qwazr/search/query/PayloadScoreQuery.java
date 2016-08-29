@@ -17,7 +17,9 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.classloader.ClassLoaderManager;
+import com.qwazr.library.LibraryManager;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.ClassLoaderUtils;
 import org.apache.lucene.queries.payloads.AveragePayloadFunction;
 import org.apache.lucene.queries.payloads.MaxPayloadFunction;
 import org.apache.lucene.queries.payloads.MinPayloadFunction;
@@ -31,11 +33,11 @@ import java.util.Objects;
 
 public class PayloadScoreQuery extends AbstractQuery {
 
-	public final AbstractSpanQuery query;
+	public final AbstractSpanQuery wrapped_query;
 	public final Boolean include_span_score;
 
 	@JsonIgnore
-	private final PayloadFunction payloadFunction;
+	private PayloadFunction payloadFunction;
 
 	public final String payload_function;
 
@@ -44,33 +46,31 @@ public class PayloadScoreQuery extends AbstractQuery {
 	}
 
 	public PayloadScoreQuery() {
-		query = null;
+		wrapped_query = null;
 		payloadFunction = null;
 		payload_function = null;
 		include_span_score = null;
 	}
 
-	public PayloadScoreQuery(final AbstractSpanQuery query, final PayloadFunction payloadFunction,
+	public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final PayloadFunction payloadFunction,
 			final Boolean includeSpanScore) {
-		this.query = query;
+		this.wrapped_query = wrappedQuery;
 		this.payloadFunction = payloadFunction;
-		this.payload_function = payloadFunction == null ? null : payloadFunction.getClass().getName();
-		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
-	}
-
-	public PayloadScoreQuery(final AbstractSpanQuery query, final String payloadFunction,
-			final Boolean includeSpanScore)
-			throws ReflectiveOperationException {
-		this.query = query;
 		this.payload_function = null;
-		this.payloadFunction =
-				payloadFunction == null ? null :
-						(PayloadFunction) ClassLoaderManager.findClass(payloadFunction).newInstance();
 		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
 	}
 
-	public PayloadScoreQuery(final AbstractSpanQuery query, final FunctionType type, final Boolean includeSpanScore) {
-		this.query = query;
+	public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final String payloadFunction,
+			final Boolean includeSpanScore) throws ReflectiveOperationException {
+		this.wrapped_query = wrappedQuery;
+		this.payload_function = payloadFunction;
+		this.payloadFunction = null;
+		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
+	}
+
+	public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final FunctionType type,
+			final Boolean includeSpanScore) {
+		this.wrapped_query = wrappedQuery;
 		if (type != null) {
 			switch (type) {
 				case AVERAGE:
@@ -86,7 +86,7 @@ public class PayloadScoreQuery extends AbstractQuery {
 					payloadFunction = null;
 					break;
 			}
-			payload_function = payloadFunction == null ? null : payloadFunction.getClass().getName();
+			payload_function = null;
 		} else {
 			payloadFunction = null;
 			payload_function = null;
@@ -94,12 +94,24 @@ public class PayloadScoreQuery extends AbstractQuery {
 		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
 	}
 
+	final static String[] payloadFunctionClassPrefixes = {"", "org.apache.lucene.queries.payloads."};
+
+	private static PayloadFunction getPayloadFunction(final String payloadFunction)
+			throws ReflectiveOperationException, IOException {
+		return LibraryManager.newInstance(ClassLoaderUtils
+				.findClass(ClassLoaderManager.classLoader, payloadFunction, payloadFunctionClassPrefixes));
+	}
+
 	@Override
-	final public Query getQuery(QueryContext queryContext)
+	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
-		Objects.requireNonNull(query, "The wrapped span query is missing");
+		Objects.requireNonNull(wrapped_query, "The wrapped span query is missing");
+		if (payloadFunction == null) {
+			Objects.requireNonNull(payload_function, "The payload function is missing");
+			payloadFunction = getPayloadFunction(payload_function);
+		}
 		Objects.requireNonNull(payloadFunction, "The payload function is missing");
-		return new org.apache.lucene.queries.payloads.PayloadScoreQuery(query.getQuery(queryContext), payloadFunction,
-				include_span_score);
+		return new org.apache.lucene.queries.payloads.PayloadScoreQuery(wrapped_query.getQuery(queryContext),
+				payloadFunction, include_span_score == null ? false : include_span_score);
 	}
 }

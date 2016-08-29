@@ -13,7 +13,8 @@
     "size": 100,
     "price": 1.10,
     "stock": 0,
-    "alpha_rank": "a"
+    "alpha_rank": "a",
+    "integer_payload": "1|1001"
   },
   {
     "$id$": "2",
@@ -31,7 +32,8 @@
     "size": 200,
     "price": 2.20,
     "stock": 0,
-    "alpha_rank": "b"
+    "alpha_rank": "b",
+    "integer_payload": "2|2002"
   },
   {
     "$id$": "3",
@@ -51,7 +53,12 @@
     "size": 300,
     "price": 3.30,
     "stock": 0,
-    "alpha_rank": "c"
+    "alpha_rank": "c",
+    "integer_payload": [
+      "3|3003",
+      "3|3033",
+      "3|3333"
+    ]
   },
   {
     "$id$": "4",
@@ -72,6 +79,7 @@
     "size": 400,
     "price": 4.40,
     "stock": 0,
-    "alpha_rank": "d"
+    "alpha_rank": "d",
+    "integer_payload": "4|4004"
   }
 ]

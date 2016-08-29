@@ -83,7 +83,7 @@ import java.io.IOException;
 public abstract class AbstractQuery {
 
 	@JsonIgnore
-	public abstract Query getQuery(QueryContext queryContext)
+	public abstract Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException;
 
 }

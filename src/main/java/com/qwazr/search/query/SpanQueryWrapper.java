@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -26,20 +27,21 @@ import java.io.IOException;
 
 public class SpanQueryWrapper extends AbstractSpanQuery {
 
-	final public AbstractQuery query;
+	final public AbstractQuery wrapped_query;
 
 	public SpanQueryWrapper() {
-		query = null;
+		wrapped_query = null;
 	}
 
-	public SpanQueryWrapper(final AbstractQuery query) {
-		this.query = query;
+	public SpanQueryWrapper(final AbstractQuery wrappedQuery) {
+		this.wrapped_query = wrappedQuery;
 	}
 
 	@Override
+	@JsonIgnore
 	final public SpanQuery getQuery(final QueryContext queryContext)
 			throws IOException, InterruptedException, ReflectiveOperationException, ParseException, QueryNodeException {
-		final Query subQuery = query.getQuery(queryContext);
+		final Query subQuery = wrapped_query.getQuery(queryContext);
 		if (subQuery instanceof SpanQuery)
 			return (SpanQuery) subQuery;
 		else if (subQuery instanceof MultiTermQuery)
