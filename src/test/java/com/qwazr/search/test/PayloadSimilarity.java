@@ -23,6 +23,7 @@ public class PayloadSimilarity extends BM25Similarity {
 
 	@Override
 	public float scorePayload(final int doc, final int start, final int end, final BytesRef payload) {
-		return PayloadHelper.decodeFloat(payload.bytes);
+		final int sc = PayloadHelper.decodeInt(payload.bytes, start * 4);
+		return sc;
 	}
 }

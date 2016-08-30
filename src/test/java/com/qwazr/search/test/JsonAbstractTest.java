@@ -641,7 +641,7 @@ public abstract class JsonAbstractTest {
 		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_PAYLOAD_FILTER, 1);
 		Assert.assertNotNull(result);
 		final ResultDocumentMap document = result.getDocuments().get(0);
-		Assert.assertNotNull(document);
+		Assert.assertEquals(Float.valueOf(3123), document.score);
 	}
 
 	@Test

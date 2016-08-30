@@ -2,7 +2,7 @@
   "query_string": "",
   "query": {
     "query": "PayloadScoreQuery",
-    "payload_function": "MinPayloadFunction",
+    "payload_function": "AveragePayloadFunction",
     "wrapped_query": {
       "query": "SpanQueryWrapper",
       "wrapped_query": {

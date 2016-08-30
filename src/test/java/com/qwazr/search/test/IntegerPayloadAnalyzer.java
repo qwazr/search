@@ -18,7 +18,7 @@ package com.qwazr.search.test;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.core.KeywordTokenizer;
+import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.payloads.DelimitedPayloadTokenFilter;
 import org.apache.lucene.analysis.payloads.IntegerEncoder;
 
@@ -28,7 +28,7 @@ public class IntegerPayloadAnalyzer extends Analyzer {
 
 	@Override
 	protected TokenStreamComponents createComponents(String fieldName) {
-		final Tokenizer tokenizer = new KeywordTokenizer();
+		final Tokenizer tokenizer = new WhitespaceTokenizer();
 		final TokenStream stream = new DelimitedPayloadTokenFilter(tokenizer, '|', new IntegerEncoder());
 
 		return new TokenStreamComponents(tokenizer, stream) {
