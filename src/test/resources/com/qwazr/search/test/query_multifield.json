@@ -1,0 +1,18 @@
+{
+  "query_string": "fifth search",
+  "query": {
+    "query": "MultiFieldQuery",
+    "tokenizer": {
+      "class": "core.WhitespaceTokenizer"
+    },
+    "fields_boosts": {
+      "name": 10,
+      "description": 1
+    }
+  },
+  "start": 0,
+  "rows": 5,
+  "returned_fields": [
+    "description"
+  ]
+}

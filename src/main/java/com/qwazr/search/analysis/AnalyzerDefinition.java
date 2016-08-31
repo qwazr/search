@@ -35,8 +35,15 @@ public class AnalyzerDefinition {
 		filters = null;
 	}
 
-	public final static TypeReference<LinkedHashMap<String, AnalyzerDefinition>> MapStringAnalyzerTypeRef = new TypeReference<LinkedHashMap<String, AnalyzerDefinition>>() {
-	};
+	public AnalyzerDefinition(final LinkedHashMap<String, String> tokenizer,
+			List<LinkedHashMap<String, String>> filters) {
+		this.tokenizer = tokenizer;
+		this.filters = filters;
+	}
+
+	public final static TypeReference<LinkedHashMap<String, AnalyzerDefinition>> MapStringAnalyzerTypeRef =
+			new TypeReference<LinkedHashMap<String, AnalyzerDefinition>>() {
+			};
 
 	public final static LinkedHashMap<String, AnalyzerDefinition> newAnalyzerMap(String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))

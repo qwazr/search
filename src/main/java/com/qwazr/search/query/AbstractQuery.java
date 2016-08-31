@@ -61,6 +61,7 @@ import java.io.IOException;
 		@JsonSubTypes.Type(value = MatchAllDocsQuery.class),
 		@JsonSubTypes.Type(value = MatchNoDocsQuery.class),
 		@JsonSubTypes.Type(value = MoreLikeThisQuery.class),
+		@JsonSubTypes.Type(value = MultiFieldQuery.class),
 		@JsonSubTypes.Type(value = MultiFieldQueryParser.class),
 		@JsonSubTypes.Type(value = PayloadScoreQuery.class),
 		@JsonSubTypes.Type(value = PhraseQuery.class),

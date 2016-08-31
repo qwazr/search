@@ -31,7 +31,7 @@ final public class CustomAnalyzer extends Analyzer {
 	private final TokenizerFactory tokenizerFactory;
 	private final List<TokenFilterFactory> tokenFilterFactories;
 
-	public CustomAnalyzer(AnalyzerDefinition analyzerDefinition) throws ReflectiveOperationException {
+	public CustomAnalyzer(final AnalyzerDefinition analyzerDefinition) throws ReflectiveOperationException {
 		super(GLOBAL_REUSE_STRATEGY);
 		tokenizerFactory = getFactory(analyzerDefinition.tokenizer, KeywordTokenizerFactory.class);
 		if (analyzerDefinition.filters != null && !analyzerDefinition.filters.isEmpty()) {
@@ -43,7 +43,7 @@ final public class CustomAnalyzer extends Analyzer {
 	}
 
 	@Override
-	protected TokenStreamComponents createComponents(String fieldName) {
+	protected TokenStreamComponents createComponents(final String fieldName) {
 		final Tokenizer source = tokenizerFactory.create();
 		if (tokenFilterFactories == null)
 			return new TokenStreamComponents(source);

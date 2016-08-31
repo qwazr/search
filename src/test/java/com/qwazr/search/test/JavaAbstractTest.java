@@ -33,15 +33,13 @@ import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class JavaAbstractTest {
 
 	public static final String[] RETURNED_FIELDS =
-			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue" };
+			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue"};
 
 	protected abstract IndexServiceInterface getIndexService() throws URISyntaxException;
 
@@ -142,11 +140,11 @@ public abstract class JavaAbstractTest {
 	}
 
 	private final static AnnotatedIndex record1 =
-			new AnnotatedIndex(1, "First article", "Content of the first article", 0d, 10L, true, false, "news",
+			new AnnotatedIndex(1, "First article title", "Content of the first article", 0d, 10L, true, false, "news",
 					"economy").multiFacet("cat", "news", "economy");
 
 	private final static AnnotatedIndex record2 =
-			new AnnotatedIndex(2, "Second article", "Content of the second article", 0d, 20L, true, false, "news",
+			new AnnotatedIndex(2, "Second article title", "Content of the second article", 0d, 20L, true, false, "news",
 					"science").multiFacet("cat", "news", "science");
 
 	private AnnotatedIndex checkRecord(AnnotatedIndex refRecord)
@@ -338,6 +336,21 @@ public abstract class JavaAbstractTest {
 	}
 
 	@Test
+	public void test700() throws IOException, ReflectiveOperationException, URISyntaxException {
+		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		Map<String, Float> fields = new HashMap<>();
+		fields.put("title", 10.0F);
+		fields.put("content", 1.0F);
+		final QueryBuilder builder = new QueryBuilder();
+		final MultiFieldQuery query =
+				new MultiFieldQuery(fields, QueryParserOperator.AND, null, "title second");
+		builder.setQuery(query).setQuery_debug(true);
+		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		Assert.assertEquals("+(title:titl content:titl) +(title:second content:second)", result.getQuery());
+		Assert.assertEquals(1, result.documents.size());
+	}
+
+	@Test
 	public void test800replicationCheck() throws URISyntaxException {
 		final AnnotatedIndexService master = getMaster();
 		final IndexStatus masterStatus = master.getIndexStatus();
@@ -429,5 +442,6 @@ public abstract class JavaAbstractTest {
 		Assert.assertEquals(0, stats.getPending());
 		Assert.assertTrue(stats.getAvailable() > 0);
 	}
+
 
 }

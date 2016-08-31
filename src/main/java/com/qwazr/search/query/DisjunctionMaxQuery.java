@@ -36,18 +36,18 @@ public class DisjunctionMaxQuery extends AbstractQuery {
 		tie_breaker_multiplier = null;
 	}
 
-	public DisjunctionMaxQuery(List<AbstractQuery> queries, Float tie_breaker_multiplier) {
+	public DisjunctionMaxQuery(final List<AbstractQuery> queries, final Float tie_breaker_multiplier) {
 		this.queries = queries;
 		this.tie_breaker_multiplier = tie_breaker_multiplier;
 	}
 
-	public DisjunctionMaxQuery(Float tie_breaker_multiplier, AbstractQuery... queries) {
+	public DisjunctionMaxQuery(final Float tie_breaker_multiplier, final AbstractQuery... queries) {
 		this.queries = Arrays.asList(queries);
 		this.tie_breaker_multiplier = tie_breaker_multiplier;
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext)
+	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(queries, "The queries are missing");
 		final List<Query> queryList = new ArrayList<>(queries.size());

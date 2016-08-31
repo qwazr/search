@@ -63,6 +63,7 @@ public abstract class JsonAbstractTest {
 	public static final QueryDefinition QUERY_PAYLOAD_FILTER = getQuery("query_payload_filter.json");
 	public static final QueryDefinition QUERY_CHECK_RETURNED = getQuery("query_check_returned.json");
 	public static final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
+	public static final QueryDefinition QUERY_MULTIFIELD = getQuery("query_multifield.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
 	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
 	public static final Collection<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
@@ -617,6 +618,14 @@ public abstract class JsonAbstractTest {
 		Assert.assertNotNull(snippet);
 		Assert.assertTrue(snippet.contains("<b>search</b>"));
 		Assert.assertTrue(snippet.contains("<b>engine</b>"));
+	}
+
+	@Test
+	public void test450MultiFieldQuery() throws URISyntaxException, IOException {
+		final IndexServiceInterface client = getClient();
+		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_MULTIFIELD, 1);
+		final ResultDocumentMap document = result.getDocuments().get(0);
+		Assert.assertTrue(((List<String>) document.fields.get("description")).get(0).startsWith("A web search engine"));
 	}
 
 	@Test
