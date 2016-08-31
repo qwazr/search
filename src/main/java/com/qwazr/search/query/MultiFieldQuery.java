@@ -32,6 +32,7 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MultiFieldQuery extends AbstractQuery {
 
@@ -76,62 +77,104 @@ public class MultiFieldQuery extends AbstractQuery {
 		final Analyzer tokenAnalyzer = tokenizerDefinition != null ?
 				new CustomAnalyzer(new AnalyzerDefinition(tokenizerDefinition, null)) : DEFAULT_TOKEN_ANALYZER;
 
-		// Determine the top level occur operator
-		final BooleanClause.Occur topLevelOccur =
-				defaultOperator == null || defaultOperator.queryParseroperator == QueryParser.Operator.AND ?
-						BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD;
-
-		final org.apache.lucene.search.BooleanQuery.Builder topLevelQuery =
-				new org.apache.lucene.search.BooleanQuery.Builder();
-
-		// Iterate over terms using the given tokenizer
-		try (final TokenStream stream = tokenAnalyzer.tokenStream(StringUtils.EMPTY, queryString)) {
-			final CharTermAttribute charTermAttribute = stream.addAttribute(CharTermAttribute.class);
-			stream.reset();
-			while (stream.incrementToken()) {
-				// For each term we build a top level boolean clause
-				final List<Query> termQueries = new ArrayList<>();
-				final String term = charTermAttribute.toString();
-				fieldsBoosts.forEach((field, boost) -> {
-					try (final TokenStream tokenStream = queryContext.queryAnalyzer.tokenStream(field, term)) {
-						tokenStream.reset();
-						addTermQueries(field, boost, tokenStream, termQueries);
-					} catch (IOException e) {
-						throw new RuntimeException(e.getMessage(), e);
-					}
-				});
-				final int size = termQueries.size();
-				switch (size) {
-					case 0:
-						break;
-					case 1:
-						topLevelQuery.add(termQueries.get(0), topLevelOccur);
-						break;
-					default:
-						final org.apache.lucene.search.BooleanQuery.Builder bb =
-								new org.apache.lucene.search.BooleanQuery.Builder();
-						termQueries.forEach(query -> bb.add(query, BooleanClause.Occur.SHOULD));
-						topLevelQuery.add(bb.build(), topLevelOccur);
-						break;
-				}
-			}
-		}
-		return topLevelQuery.build();
+		final BuildQueryParser buildQueryParser = new BuildQueryParser();
+		buildQueryParser.parse(tokenAnalyzer, queryString, queryContext.queryAnalyzer, fieldsBoosts);
+		return buildQueryParser.buildQuery();
 	}
-
-	protected void addTermQuery(final String field, final float boost, final String term,
-			final Collection<Query> queries) {
+	
+	protected void addTermQuery(final String field, final float boost, final String term, final int topLevelPos,
+			final int fieldLevelPos, final Collection<Query> queries) {
 		Query query = new org.apache.lucene.search.TermQuery(new Term(field, term));
 		if (boost != 1F)
 			query = new BoostQuery(query, boost);
 		queries.add(query);
 	}
 
-	private void addTermQueries(final String field, final float boost, final TokenStream tokenStream,
-			final Collection<Query> queries)
-			throws IOException {
-		final CharTermAttribute charTermAttribute = tokenStream.addAttribute(CharTermAttribute.class);
-		while (tokenStream.incrementToken())
-			addTermQuery(field, boost, charTermAttribute.toString(), queries);
+	public static abstract class ParserAbstract<T> {
+
+		protected abstract T startTerm();
+
+		protected abstract void fieldTerm(final String field, final float boost, final String term,
+				final int topLevelPos, final int fieldLevelPos, final T custom);
+
+		protected abstract void endTerm(final T custom);
+
+		final void parse(final Analyzer tokenAnalyzer, final String queryString, final Analyzer queryAnalyzer,
+				final Map<String, Float> fieldsBoosts)
+				throws IOException {
+			// Iterate over terms using the given tokenizer
+			final AtomicInteger topLevelPos = new AtomicInteger();
+			try (final TokenStream stream = tokenAnalyzer.tokenStream(StringUtils.EMPTY, queryString)) {
+				final CharTermAttribute charTermAttributeTopLevel = stream.addAttribute(CharTermAttribute.class);
+				stream.reset();
+				while (stream.incrementToken()) {
+					// For each term we build a top level boolean clause
+					final T custom = startTerm();
+					final String term = charTermAttributeTopLevel.toString();
+
+					fieldsBoosts.forEach((field, boost) -> {
+						try (final TokenStream tokenStream = queryAnalyzer.tokenStream(field, term)) {
+							tokenStream.reset();
+							int fieldLevelPos = 0;
+							final CharTermAttribute charTermAttribute =
+									tokenStream.addAttribute(CharTermAttribute.class);
+							while (tokenStream.incrementToken())
+								fieldTerm(field, boost, charTermAttribute.toString(), topLevelPos.get(),
+										fieldLevelPos++, custom);
+						} catch (IOException e) {
+							throw new RuntimeException(e.getMessage(), e);
+						}
+					});
+					endTerm(custom);
+				}
+				topLevelPos.incrementAndGet();
+			}
+		}
+	}
+
+	private class BuildQueryParser extends ParserAbstract<List<Query>> {
+
+		private final org.apache.lucene.search.BooleanQuery.Builder topLevelQuery;
+		private final BooleanClause.Occur topLevelOccur;
+
+		private BuildQueryParser() {
+			topLevelQuery = new org.apache.lucene.search.BooleanQuery.Builder();
+			// Determine the top level occur operator
+			topLevelOccur = defaultOperator == null || defaultOperator.queryParseroperator == QueryParser.Operator.AND ?
+					BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD;
+		}
+
+		@Override
+		final protected List<Query> startTerm() {
+			return new ArrayList<>();
+		}
+
+		@Override
+		final protected void fieldTerm(final String field, final float boost, final String term, final int topLevelPos,
+				final int fieldLevelPos, final List<Query> queries) {
+			addTermQuery(field, boost, term, topLevelPos, fieldLevelPos, queries);
+		}
+
+		@Override
+		final protected void endTerm(final List<Query> termQueries) {
+			final int size = termQueries.size();
+			switch (size) {
+				case 0:
+					return;
+				case 1:
+					topLevelQuery.add(termQueries.get(0), topLevelOccur);
+					break;
+				default:
+					final org.apache.lucene.search.BooleanQuery.Builder bb =
+							new org.apache.lucene.search.BooleanQuery.Builder();
+					termQueries.forEach(query -> bb.add(query, BooleanClause.Occur.SHOULD));
+					topLevelQuery.add(bb.build(), topLevelOccur);
+					break;
+			}
+		}
+
+		private Query buildQuery() {
+			return topLevelQuery.build();
+		}
 	}
 }

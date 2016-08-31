@@ -564,7 +564,7 @@ final public class IndexInstance implements Closeable {
 				FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldMapItem);
 				Terms terms = MultiFields.getTerms(indexSearcher.getIndexReader(), fieldName);
 				if (terms == null)
-					throw new ServerException(Response.Status.NOT_FOUND, "No terms for this field: " + fieldName);
+					return Collections.emptyList();
 				return TermEnumDefinition.buildTermList(fieldType, terms.iterator(), prefix, start == null ? 0 : start,
 						rows == null ? 20 : rows);
 			} finally {
