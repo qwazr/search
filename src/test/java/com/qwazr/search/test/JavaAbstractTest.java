@@ -346,7 +346,8 @@ public abstract class JavaAbstractTest {
 				new MultiFieldQuery(fields, QueryParserOperator.AND, null, "title second");
 		builder.setQuery(query).setQuery_debug(true);
 		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
-		Assert.assertEquals("+(title:titl content:titl) +(title:second content:second)", result.getQuery());
+		Assert.assertEquals("+((title:titl)^10.0 content:titl) +((title:second)^10.0 content:second)",
+				result.getQuery());
 		Assert.assertEquals(1, result.documents.size());
 	}
 

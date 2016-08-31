@@ -18,7 +18,6 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.CustomAnalyzer;
-import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -28,6 +27,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
@@ -95,7 +95,7 @@ public class MultiFieldQuery extends AbstractQuery {
 				fieldsBoosts.forEach((field, boost) -> {
 					try (final TokenStream tokenStream = queryContext.queryAnalyzer.tokenStream(field, term)) {
 						tokenStream.reset();
-						addTermQueries(field, tokenStream, termQueries);
+						addTermQueries(field, boost, tokenStream, termQueries);
 					} catch (IOException e) {
 						throw new RuntimeException(e.getMessage(), e);
 					}
@@ -119,14 +119,19 @@ public class MultiFieldQuery extends AbstractQuery {
 		return topLevelQuery.build();
 	}
 
-	protected void addTermQuery(final String field, final String term, final Collection<Query> queries) {
-		queries.add(new org.apache.lucene.search.TermQuery(new Term(field, BytesRefUtils.fromAny(term))));
+	protected void addTermQuery(final String field, final float boost, final String term,
+			final Collection<Query> queries) {
+		Query query = new org.apache.lucene.search.TermQuery(new Term(field, term));
+		if (boost != 1F)
+			query = new BoostQuery(query, boost);
+		queries.add(query);
 	}
 
-	private void addTermQueries(final String field, final TokenStream tokenStream, final Collection<Query> queries)
+	private void addTermQueries(final String field, final float boost, final TokenStream tokenStream,
+			final Collection<Query> queries)
 			throws IOException {
 		final CharTermAttribute charTermAttribute = tokenStream.addAttribute(CharTermAttribute.class);
 		while (tokenStream.incrementToken())
-			addTermQuery(field, charTermAttribute.toString(), queries);
+			addTermQuery(field, boost, charTermAttribute.toString(), queries);
 	}
 }
