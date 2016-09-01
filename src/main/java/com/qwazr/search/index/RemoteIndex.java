@@ -59,15 +59,16 @@ public class RemoteIndex extends RemoteService {
 		int i = 0;
 		for (RemoteService.Builder builder : builders) {
 
+			final String path = builder.getPathSegment(0);
 			final String schema = builder.getPathSegment(1);
 			final String index = builder.getPathSegment(2);
 
-			if (schema == null || index == null)
+			if (schema == null || index == null || !IndexServiceInterface.PATH.equals(path))
 				throw new URISyntaxException(remoteIndexUrl[i],
 						"The URL form should be: /" + IndexServiceInterface.PATH + "/{shema}/{index}?"
 								+ TIMEOUT_PARAMETER + "={timeout}");
 
-			builder.setPath(IndexServiceInterface.PATH);
+			builder.setPath(null);
 			remotes[i++] = new RemoteIndex(builder, schema, index);
 
 		}
