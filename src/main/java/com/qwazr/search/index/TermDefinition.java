@@ -17,7 +17,7 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.qwazr.search.analysis.AnalyzerUtils;
+import com.qwazr.search.analysis.TermConsumer;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.tokenattributes.*;
 
@@ -48,9 +48,10 @@ public class TermDefinition {
 		is_keyword = null;
 	}
 
-	TermDefinition(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr, OffsetAttribute offsetAttr,
-			PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr,
-			TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
+	TermDefinition(final CharTermAttribute charTermAttr, final FlagsAttribute flagsAttr,
+			final OffsetAttribute offsetAttr,
+			final PositionIncrementAttribute posIncAttr, final PositionLengthAttribute posLengthAttr,
+			final TypeAttribute typeAttr, final KeywordAttribute keywordAttr) {
 		char_term = charTermAttr == null ? null : charTermAttr.toString();
 		if (offsetAttr != null) {
 			start_offset = offsetAttr.startOffset();
@@ -66,18 +67,15 @@ public class TermDefinition {
 		is_keyword = keywordAttr == null ? null : keywordAttr.isKeyword();
 	}
 
-	final static List<TermDefinition> buildTermList(Analyzer analyzer, String field, String text) throws IOException {
-		final List<TermDefinition> termList = new ArrayList<TermDefinition>();
-		AnalyzerUtils.forEachTerm(analyzer, field, text, new AnalyzerUtils.TermConsumer() {
-			@Override
-			public boolean apply(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr, OffsetAttribute offsetAttr,
-					PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr,
-					TypeAttribute typeAttr, KeywordAttribute keywordAttr) {
-				termList.add(new TermDefinition(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr,
-						typeAttr, keywordAttr));
-				return true;
-			}
-		});
+	final static List<TermDefinition> buildTermList(final Analyzer analyzer, final String field, final String text)
+			throws IOException {
+		final List<TermDefinition> termList = new ArrayList<>();
+		TermConsumer.forEachTerm(analyzer, field, text,
+				(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr, typeAttr, keywordAttr) -> {
+					termList.add(new TermDefinition(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr,
+							typeAttr, keywordAttr));
+					return true;
+				});
 		return termList;
 	}
 

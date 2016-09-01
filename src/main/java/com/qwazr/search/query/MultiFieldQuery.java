@@ -100,8 +100,7 @@ public class MultiFieldQuery extends AbstractQuery {
 		protected abstract void endTerm(final T custom);
 
 		final void parse(final Analyzer tokenAnalyzer, final String queryString, final Analyzer queryAnalyzer,
-				final Map<String, Float> fieldsBoosts)
-				throws IOException {
+				final Map<String, Float> fieldsBoosts) throws IOException {
 			// Iterate over terms using the given tokenizer
 			final AtomicInteger topLevelPos = new AtomicInteger();
 			try (final TokenStream stream = tokenAnalyzer.tokenStream(StringUtils.EMPTY, queryString)) {
