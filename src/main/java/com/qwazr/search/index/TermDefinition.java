@@ -19,11 +19,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.analysis.TermConsumer;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TermDefinition {
@@ -69,13 +71,21 @@ public class TermDefinition {
 
 	final static List<TermDefinition> buildTermList(final Analyzer analyzer, final String field, final String text)
 			throws IOException {
+		Objects.requireNonNull(analyzer, "The analyzer cannot be null");
+		Objects.requireNonNull(field, "The field cannot be null");
+		Objects.requireNonNull(text, "The text cannot be null");
 		final List<TermDefinition> termList = new ArrayList<>();
-		TermConsumer.forEachTerm(analyzer, field, text,
-				(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr, typeAttr, keywordAttr) -> {
+		try (final TokenStream tokenStream = analyzer.tokenStream(field, text)) {
+			final TermConsumer.AllAttributes consumer = new TermConsumer.AllAttributes(tokenStream) {
+				@Override
+				public boolean token() {
 					termList.add(new TermDefinition(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr,
 							typeAttr, keywordAttr));
 					return true;
-				});
+				}
+			};
+			consumer.forEachToken();
+		}
 		return termList;
 	}
 

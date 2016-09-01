@@ -23,9 +23,7 @@ import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexSingleClient;
 import com.qwazr.utils.server.RemoteService;
 
-import javax.servlet.ServletException;
 import java.io.File;
-import java.io.IOException;
 import java.net.URISyntaxException;
 
 public class TestServer {

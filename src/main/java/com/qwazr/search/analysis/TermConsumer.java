@@ -15,52 +15,66 @@
  */
 package com.qwazr.search.analysis;
 
-import com.qwazr.utils.FunctionUtils;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.*;
 import org.apache.lucene.util.Attribute;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public interface TermConsumer {
 
-	boolean apply(CharTermAttribute charTermAttr, FlagsAttribute flagsAttr, OffsetAttribute offsetAttr,
-			PositionIncrementAttribute posIncAttr, PositionLengthAttribute posLengthAttr,
-			TypeAttribute typeAttr, KeywordAttribute keywordAttr);
+	boolean token() throws IOException;
+
+	void forEachToken() throws IOException;
 
 	static <T extends Attribute> T getAttribute(final TokenStream tokenStream, final Class<T> attributeClass) {
 		return tokenStream.hasAttribute(attributeClass) ? tokenStream.getAttribute(attributeClass) : null;
 	}
 
-	static void forEachTerm(final TokenStream tokenStream,
-			final FunctionUtils.CallableEx<Boolean, IOException> callable) throws IOException {
-		tokenStream.reset();
-		while (tokenStream.incrementToken())
-			if (!callable.call())
-				return;
-	}
+	abstract class TermConsumerAbstract implements TermConsumer {
 
-	static void forEachTerm(final Analyzer analyzer, final String field, final String text, final TermConsumer consumer)
-			throws IOException {
-		Objects.requireNonNull(analyzer, "The analyzer cannot be null");
-		Objects.requireNonNull(field, "The field cannot be null");
-		Objects.requireNonNull(text, "The text cannot be null");
-		try (final TokenStream tokenStream = analyzer.tokenStream(field, text)) {
-			final CharTermAttribute charTermAttr = getAttribute(tokenStream, CharTermAttribute.class);
-			final FlagsAttribute flagsAttr = getAttribute(tokenStream, FlagsAttribute.class);
-			final OffsetAttribute offsetAttr = getAttribute(tokenStream, OffsetAttribute.class);
-			final PositionIncrementAttribute posIncAttr =
-					getAttribute(tokenStream, PositionIncrementAttribute.class);
-			final PositionLengthAttribute posLengthAttr = getAttribute(tokenStream, PositionLengthAttribute.class);
-			final TypeAttribute typeAttr = getAttribute(tokenStream, TypeAttribute.class);
-			final KeywordAttribute keywordAttr = getAttribute(tokenStream, KeywordAttribute.class);
+		protected final TokenStream tokenStream;
+
+		public TermConsumerAbstract(final TokenStream tokenStream) {
+			this.tokenStream = tokenStream;
+		}
+
+		@Override
+		public void forEachToken() throws IOException {
 			tokenStream.reset();
 			while (tokenStream.incrementToken())
-				if (!consumer.apply(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr, typeAttr,
-						keywordAttr))
+				if (!token())
 					break;
+		}
+	}
+
+	abstract class WithChar extends TermConsumerAbstract {
+
+		protected final CharTermAttribute charTermAttr;
+
+		public WithChar(final TokenStream tokenStream) {
+			super(tokenStream);
+			charTermAttr = getAttribute(tokenStream, CharTermAttribute.class);
+		}
+	}
+
+	abstract class AllAttributes extends WithChar {
+
+		protected final FlagsAttribute flagsAttr;
+		protected final OffsetAttribute offsetAttr;
+		protected final PositionIncrementAttribute posIncAttr;
+		protected final PositionLengthAttribute posLengthAttr;
+		protected final TypeAttribute typeAttr;
+		protected final KeywordAttribute keywordAttr;
+
+		public AllAttributes(final TokenStream tokenStream) {
+			super(tokenStream);
+			flagsAttr = getAttribute(tokenStream, FlagsAttribute.class);
+			offsetAttr = getAttribute(tokenStream, OffsetAttribute.class);
+			posIncAttr = getAttribute(tokenStream, PositionIncrementAttribute.class);
+			posLengthAttr = getAttribute(tokenStream, PositionLengthAttribute.class);
+			typeAttr = getAttribute(tokenStream, TypeAttribute.class);
+			keywordAttr = getAttribute(tokenStream, KeywordAttribute.class);
 		}
 	}
 }

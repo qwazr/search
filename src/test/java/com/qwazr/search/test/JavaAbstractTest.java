@@ -336,7 +336,7 @@ public abstract class JavaAbstractTest {
 	}
 
 	@Test
-	public void test700() throws IOException, ReflectiveOperationException, URISyntaxException {
+	public void test700MultiField() throws IOException, ReflectiveOperationException, URISyntaxException {
 		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
 		Map<String, Float> fields = new HashMap<>();
 		fields.put("title", 10.0F);
@@ -346,7 +346,7 @@ public abstract class JavaAbstractTest {
 				new MultiFieldQuery(fields, QueryParserOperator.AND, null, "title second");
 		builder.setQuery(query).setQuery_debug(true);
 		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
-		Assert.assertEquals("+((title:titl)^10.0 content:titl) +((title:second)^10.0 content:second)",
+		Assert.assertEquals("+((title:titl)^10.0 content:titl~2) +((title:second)^10.0 content:second)",
 				result.getQuery());
 		Assert.assertEquals(1, result.documents.size());
 	}

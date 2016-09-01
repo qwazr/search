@@ -18,16 +18,18 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.CustomAnalyzer;
+import com.qwazr.search.analysis.TermConsumer;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.UnicodeWhitespaceAnalyzer;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BoostQuery;
+import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
@@ -77,89 +79,39 @@ public class MultiFieldQuery extends AbstractQuery {
 		final Analyzer tokenAnalyzer = tokenizerDefinition != null ?
 				new CustomAnalyzer(new AnalyzerDefinition(tokenizerDefinition, null)) : DEFAULT_TOKEN_ANALYZER;
 
-		final BuildQueryParser buildQueryParser = new BuildQueryParser();
-		buildQueryParser.parse(tokenAnalyzer, queryString, queryContext.queryAnalyzer, fieldsBoosts);
-		return buildQueryParser.buildQuery();
-	}
-	
-	protected void addTermQuery(final String field, final float boost, final String term, final int topLevelPos,
-			final int fieldLevelPos, final Collection<Query> queries) {
-		Query query = new org.apache.lucene.search.TermQuery(new Term(field, term));
-		if (boost != 1F)
-			query = new BoostQuery(query, boost);
-		queries.add(query);
-	}
-
-	public static abstract class ParserAbstract<T> {
-
-		protected abstract T startTerm();
-
-		protected abstract void fieldTerm(final String field, final float boost, final String term,
-				final int topLevelPos, final int fieldLevelPos, final T custom);
-
-		protected abstract void endTerm(final T custom);
-
-		final void parse(final Analyzer tokenAnalyzer, final String queryString, final Analyzer queryAnalyzer,
-				final Map<String, Float> fieldsBoosts) throws IOException {
-			// Iterate over terms using the given tokenizer
-			final AtomicInteger topLevelPos = new AtomicInteger();
-			try (final TokenStream stream = tokenAnalyzer.tokenStream(StringUtils.EMPTY, queryString)) {
-				final CharTermAttribute charTermAttributeTopLevel = stream.addAttribute(CharTermAttribute.class);
-				stream.reset();
-				while (stream.incrementToken()) {
-					// For each term we build a top level boolean clause
-					final T custom = startTerm();
-					final String term = charTermAttributeTopLevel.toString();
-
-					fieldsBoosts.forEach((field, boost) -> {
-						try (final TokenStream tokenStream = queryAnalyzer.tokenStream(field, term)) {
-							tokenStream.reset();
-							int fieldLevelPos = 0;
-							final CharTermAttribute charTermAttribute =
-									tokenStream.addAttribute(CharTermAttribute.class);
-							while (tokenStream.incrementToken())
-								fieldTerm(field, boost, charTermAttribute.toString(), topLevelPos.get(),
-										fieldLevelPos++, custom);
-						} catch (IOException e) {
-							throw new RuntimeException(e.getMessage(), e);
-						}
-					});
-					endTerm(custom);
-				}
-				topLevelPos.incrementAndGet();
-			}
-		}
-	}
-
-	private class BuildQueryParser extends ParserAbstract<List<Query>> {
-
-		private final org.apache.lucene.search.BooleanQuery.Builder topLevelQuery;
-		private final BooleanClause.Occur topLevelOccur;
-
-		private BuildQueryParser() {
-			topLevelQuery = new org.apache.lucene.search.BooleanQuery.Builder();
-			// Determine the top level occur operator
-			topLevelOccur = defaultOperator == null || defaultOperator.queryParseroperator == QueryParser.Operator.AND ?
-					BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD;
+		final TopLevelTerms topLevelTerms;
+		// Parse the queryString and extract terms and frequencies
+		try (final TokenStream tokenStream = tokenAnalyzer.tokenStream(StringUtils.EMPTY, queryString)) {
+			topLevelTerms =
+					new TopLevelTerms(queryContext.indexSearcher.getIndexReader(), tokenStream, fieldsBoosts.keySet(),
+							queryContext.queryAnalyzer);
+			topLevelTerms.forEachToken();
 		}
 
-		@Override
-		final protected List<Query> startTerm() {
-			return new ArrayList<>();
-		}
+		//////
+		// Build the final query
+		/////
+		org.apache.lucene.search.BooleanQuery.Builder topLevelQuery =
+				new org.apache.lucene.search.BooleanQuery.Builder();
+		// Determine the top level occur operator
+		BooleanClause.Occur topLevelOccur =
+				defaultOperator == null || defaultOperator.queryParseroperator == QueryParser.Operator.AND ?
+						BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD;
 
-		@Override
-		final protected void fieldTerm(final String field, final float boost, final String term, final int topLevelPos,
-				final int fieldLevelPos, final List<Query> queries) {
-			addTermQuery(field, boost, term, topLevelPos, fieldLevelPos, queries);
-		}
+		// Iterator over terms
+		AtomicInteger currentPos = new AtomicInteger(0);
+		topLevelTerms.termsByPosByField.forEach(termsByField -> {
 
-		@Override
-		final protected void endTerm(final List<Query> termQueries) {
-			final int size = termQueries.size();
-			switch (size) {
+			// The query list for each term
+			final List<Query> termQueries = new ArrayList<>();
+			termsByField.forEach((field, termsFreqs) -> {
+				addTermQuery(termsFreqs, fieldsBoosts.get(field), termQueries);
+			});
+
+			// add the top level boolean clause
+			switch (termQueries.size()) {
 				case 0:
-					return;
+					break;
 				case 1:
 					topLevelQuery.add(termQueries.get(0), topLevelOccur);
 					break;
@@ -170,10 +122,101 @@ public class MultiFieldQuery extends AbstractQuery {
 					topLevelQuery.add(bb.build(), topLevelOccur);
 					break;
 			}
+
+			currentPos.incrementAndGet();
+		});
+
+		return topLevelQuery.build();
+	}
+
+	protected void addTermQuery(final List<TermFreq> termFreqs, final float boost, final Collection<Query> queries) {
+		if (termFreqs.isEmpty())
+			return;
+		Query query;
+		final TermFreq termFreq = termFreqs.get(0);
+		if (termFreqs.size() > 1) {
+			final StringBuilder sb = new StringBuilder();
+			termFreqs.forEach(tf -> {
+				sb.append(tf.term.text());
+				sb.append(' ');
+			});
+			query = new org.apache.lucene.search.PhraseQuery(termFreq.term.field(), sb.toString().trim());
+		} else {
+			query = termFreq.freq == 0 ? new FuzzyQuery(termFreq.term) :
+					new org.apache.lucene.search.TermQuery(termFreq.term);
+		}
+		if (boost != 1F)
+			query = new BoostQuery(query, boost);
+		queries.add(query);
+	}
+
+	public static class TopLevelTerms extends TermConsumer.WithChar {
+
+		private final Collection<String> fields;
+		private final Analyzer queryAnalyzer;
+		private final IndexReader indexReader;
+		private final List<Map<String, List<TermFreq>>> termsByPosByField;
+
+		private TopLevelTerms(final IndexReader indexReader, final TokenStream tokenStream,
+				final Collection<String> fields, final Analyzer queryAnalyzer) {
+			super(tokenStream);
+			this.indexReader = indexReader;
+			this.fields = fields;
+			this.queryAnalyzer = queryAnalyzer;
+			this.termsByPosByField = new ArrayList<>();
 		}
 
-		private Query buildQuery() {
-			return topLevelQuery.build();
+		@Override
+		public boolean token() {
+			final String text = charTermAttr.toString();
+			final Map<String, List<TermFreq>> termsByField = new LinkedHashMap<>();
+			// The text is submitted to each field/analyzer
+			fields.forEach(field -> {
+				try (final TokenStream tokenStream = queryAnalyzer.tokenStream(field, text)) {
+					final FieldLevelTerms fieldLevelTerms = new FieldLevelTerms(tokenStream, field, indexReader);
+					fieldLevelTerms.forEachToken();
+					termsByField.put(field, fieldLevelTerms.termsFreqs);
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			});
+			termsByPosByField.add(termsByField);
+			return true;
+		}
+
+	}
+
+	public static class FieldLevelTerms extends TermConsumer.WithChar {
+
+		private final List<TermFreq> termsFreqs;
+		private final String field;
+		private final IndexReader indexReader;
+
+		private FieldLevelTerms(final TokenStream tokenStream, final String field, final IndexReader indexReader) {
+			super(tokenStream);
+			this.termsFreqs = new ArrayList<>();
+			this.field = field;
+			this.indexReader = indexReader;
+		}
+
+		@Override
+		public boolean token() throws IOException {
+			final Term term = new Term(field, charTermAttr.toString());
+			final int freq = indexReader.docFreq(term);
+			termsFreqs.add(new TermFreq(term, freq));
+			return true;
 		}
 	}
+
+	private static class TermFreq {
+
+		private final Term term;
+		private final int freq;
+
+		private TermFreq(final Term term, final int freq) {
+			this.term = term;
+			this.freq = freq;
+		}
+	}
+
 }
