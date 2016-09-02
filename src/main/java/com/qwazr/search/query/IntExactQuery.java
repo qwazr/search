@@ -28,13 +28,13 @@ public class IntExactQuery extends AbstractFieldQuery {
 	public IntExactQuery() {
 	}
 
-	public IntExactQuery(String field, int value) {
+	public IntExactQuery(final String field, final int value) {
 		super(field);
 		this.value = value;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return IntPoint.newExactQuery(field, value);
 	}
 }

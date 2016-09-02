@@ -34,14 +34,14 @@ public class FloatMultiRangeQuery extends AbstractMultiRangeQuery<Float> {
 		upper_values = null;
 	}
 
-	public FloatMultiRangeQuery(String field, float[] lowerValues, float[] upperValues) {
+	public FloatMultiRangeQuery(final String field, final float[] lowerValues, final float[] upperValues) {
 		super(field);
 		this.lower_values = lowerValues;
 		this.upper_values = upperValues;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return FloatPoint.newRangeQuery(field, lower_values, upper_values);
 	}
 
@@ -52,8 +52,8 @@ public class FloatMultiRangeQuery extends AbstractMultiRangeQuery<Float> {
 		}
 
 		@Override
-		protected FloatMultiRangeQuery build(String field, Collection<Float> lowerValues,
-		                                     Collection<Float> upperValues) {
+		protected FloatMultiRangeQuery build(final String field, final Collection<Float> lowerValues,
+				final Collection<Float> upperValues) {
 			return new FloatMultiRangeQuery(field, ArrayUtils.toPrimitiveFloat(lowerValues),
 					ArrayUtils.toPrimitiveFloat(upperValues));
 		}

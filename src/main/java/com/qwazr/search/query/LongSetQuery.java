@@ -28,13 +28,13 @@ public class LongSetQuery extends AbstractFieldQuery {
 	public LongSetQuery() {
 	}
 
-	public LongSetQuery(String field, long... values) {
+	public LongSetQuery(final String field, final long... values) {
 		super(field);
 		this.values = values;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return LongPoint.newSetQuery(field, values);
 	}
 }

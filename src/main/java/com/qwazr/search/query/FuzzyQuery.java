@@ -49,7 +49,7 @@ public class FuzzyQuery extends AbstractMultiTermQuery {
 	}
 
 	@Override
-	final public MultiTermQuery getQuery(QueryContext queryContext) throws IOException {
+	final public MultiTermQuery getQuery(final QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.FuzzyQuery(new Term(field, text),
 				max_edits == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxEdits : max_edits,
 				prefix_length == null ? org.apache.lucene.search.FuzzyQuery.defaultPrefixLength : prefix_length,

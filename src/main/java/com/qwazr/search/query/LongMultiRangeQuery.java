@@ -34,14 +34,14 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery<Long> {
 		upper_values = null;
 	}
 
-	public LongMultiRangeQuery(String field, long[] lowerValues, long[] upperValues) {
+	public LongMultiRangeQuery(final String field, final long[] lowerValues, final long[] upperValues) {
 		super(field);
 		this.lower_values = lowerValues;
 		this.upper_values = upperValues;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return LongPoint.newRangeQuery(field, lower_values, upper_values);
 	}
 
@@ -52,8 +52,8 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery<Long> {
 		}
 
 		@Override
-		protected LongMultiRangeQuery build(String field, Collection<Long> lowerValues,
-		                                    Collection<Long> upperValues) {
+		protected LongMultiRangeQuery build(final String field, final Collection<Long> lowerValues,
+				final Collection<Long> upperValues) {
 			return new LongMultiRangeQuery(field, ArrayUtils.toPrimitiveLong(lowerValues),
 					ArrayUtils.toPrimitiveLong(upperValues));
 		}

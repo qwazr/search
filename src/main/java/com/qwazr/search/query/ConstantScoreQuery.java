@@ -30,12 +30,12 @@ public class ConstantScoreQuery extends AbstractQuery {
 		query = null;
 	}
 
-	public ConstantScoreQuery(AbstractQuery query) {
+	public ConstantScoreQuery(final AbstractQuery query) {
 		this.query = query;
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext)
+	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		if (query == null)
 			throw new IOException("No embedded query");

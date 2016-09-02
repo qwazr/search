@@ -34,14 +34,14 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<Double> {
 		upper_values = null;
 	}
 
-	public DoubleMultiRangeQuery(String field, double[] lowerValues, double[] upperValues) {
+	public DoubleMultiRangeQuery(final String field, final double[] lowerValues, final double[] upperValues) {
 		super(field);
 		this.lower_values = lowerValues;
 		this.upper_values = upperValues;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return DoublePoint.newRangeQuery(field, lower_values, upper_values);
 	}
 
@@ -52,8 +52,8 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<Double> {
 		}
 
 		@Override
-		protected DoubleMultiRangeQuery build(String field, Collection<Double> lowerValues,
-		                                      Collection<Double> upperValues) {
+		protected DoubleMultiRangeQuery build(final String field, final Collection<Double> lowerValues,
+				final Collection<Double> upperValues) {
 			return new DoubleMultiRangeQuery(field, ArrayUtils.toPrimitiveDouble(lowerValues),
 					ArrayUtils.toPrimitiveDouble(upperValues));
 		}

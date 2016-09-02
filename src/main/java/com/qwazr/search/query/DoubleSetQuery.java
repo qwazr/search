@@ -28,13 +28,13 @@ public class DoubleSetQuery extends AbstractFieldQuery {
 	public DoubleSetQuery() {
 	}
 
-	public DoubleSetQuery(String field, double... values) {
+	public DoubleSetQuery(final String field, final double... values) {
 		super(field);
 		this.values = values;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return DoublePoint.newSetQuery(field, values);
 	}
 }

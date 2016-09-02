@@ -15,29 +15,35 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class PrefixQuery extends AbstractQuery {
+public class NGramPhraseQuery extends AbstractQuery {
 
-	final public String field;
-	final public String text;
+	@JsonProperty("phrase_query")
+	final public PhraseQuery phraseQuery;
 
-	public PrefixQuery() {
-		field = null;
-		text = null;
+	@JsonProperty("ngram_size")
+	final public Integer nGramSize;
+
+	public NGramPhraseQuery() {
+		phraseQuery = null;
+		nGramSize = null;
 	}
 
-	public PrefixQuery(final String field, final String text) {
-		this.field = field;
-		this.text = text;
+	public NGramPhraseQuery(final PhraseQuery phraseQuery, final Integer ngramSize) {
+		this.phraseQuery = phraseQuery;
+		this.nGramSize = ngramSize;
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.search.PrefixQuery(new Term(field, text));
+		Objects.requireNonNull(phraseQuery, "The phrase_query should not be null");
+		Objects.requireNonNull(phraseQuery, "The ngram_size should not be null");
+		return new org.apache.lucene.search.NGramPhraseQuery(nGramSize, phraseQuery.getQuery(queryContext));
 	}
 }

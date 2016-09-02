@@ -26,7 +26,7 @@ public class MatchAllDocsQuery extends AbstractQuery {
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.MatchAllDocsQuery();
 	}
 }

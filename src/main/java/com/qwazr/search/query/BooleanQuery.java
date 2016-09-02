@@ -57,13 +57,13 @@ public class BooleanQuery extends AbstractQuery {
 			query = null;
 		}
 
-		public BooleanClause(Occur occur, AbstractQuery query) {
+		public BooleanClause(final Occur occur, final AbstractQuery query) {
 			this.occur = occur;
 			this.query = query;
 		}
 
 		@JsonIgnore
-		final private org.apache.lucene.search.BooleanClause getNewClause(QueryContext queryContext)
+		final private org.apache.lucene.search.BooleanClause getNewClause(final QueryContext queryContext)
 				throws IOException, ParseException, QueryNodeException, ReflectiveOperationException,
 				InterruptedException {
 			Objects.requireNonNull(occur, "Occur must not be null");
@@ -77,50 +77,52 @@ public class BooleanQuery extends AbstractQuery {
 		minimum_number_should_match = null;
 	}
 
-	public BooleanQuery(List<BooleanClause> clauses) {
+	public BooleanQuery(final List<BooleanClause> clauses) {
 		this.disable_coord = null;
 		this.minimum_number_should_match = null;
 		this.clauses = clauses;
 	}
 
-	public BooleanQuery(BooleanClause... clauses) {
+	public BooleanQuery(final BooleanClause... clauses) {
 		this.disable_coord = null;
 		this.minimum_number_should_match = null;
 		this.clauses = Arrays.asList(clauses);
 	}
 
-	public BooleanQuery(Boolean disable_coord, List<BooleanClause> clauses) {
+	public BooleanQuery(final Boolean disable_coord, final List<BooleanClause> clauses) {
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = null;
 		this.clauses = clauses;
 	}
 
-	public BooleanQuery(Boolean disable_coord, BooleanClause... clauses) {
+	public BooleanQuery(final Boolean disable_coord, final BooleanClause... clauses) {
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = null;
 		this.clauses = Arrays.asList(clauses);
 	}
 
-	public BooleanQuery(Boolean disable_coord, Integer minimum_number_should_match, List<BooleanClause> clauses) {
+	public BooleanQuery(final Boolean disable_coord, final Integer minimum_number_should_match,
+			final List<BooleanClause> clauses) {
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = minimum_number_should_match;
 		this.clauses = clauses;
 	}
 
-	public BooleanQuery(Boolean disable_coord, Integer minimum_number_should_match, BooleanClause... clauses) {
+	public BooleanQuery(final Boolean disable_coord, final Integer minimum_number_should_match,
+			final BooleanClause... clauses) {
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = minimum_number_should_match;
 		this.clauses = Arrays.asList(clauses);
 	}
 
-	private BooleanQuery(Builder builder) {
+	private BooleanQuery(final Builder builder) {
 		this.disable_coord = builder.disableCoord;
 		this.minimum_number_should_match = builder.minimumNumberShouldMatch;
 		this.clauses = new ArrayList<>(builder.clauses);
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext)
+	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		final org.apache.lucene.search.BooleanQuery.Builder builder =
 				new org.apache.lucene.search.BooleanQuery.Builder();

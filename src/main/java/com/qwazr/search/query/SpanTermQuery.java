@@ -31,13 +31,13 @@ public class SpanTermQuery extends AbstractSpanQuery {
 		text = null;
 	}
 
-	public SpanTermQuery(String field, String text) {
+	public SpanTermQuery(final String field, final String text) {
 		this.field = field;
 		this.text = text;
 	}
 
 	@Override
-	final public SpanQuery getQuery(QueryContext queryContext) throws IOException {
+	final public SpanQuery getQuery(final QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.spans.SpanTermQuery(new Term(field, text));
 	}
 }

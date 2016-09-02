@@ -39,7 +39,7 @@ public class SpanNotQuery extends AbstractSpanQuery {
 		post = null;
 	}
 
-	public SpanNotQuery(AbstractSpanQuery include, AbstractSpanQuery exclude) {
+	public SpanNotQuery(final AbstractSpanQuery include, final AbstractSpanQuery exclude) {
 		this.include = include;
 		this.exclude = exclude;
 		this.dist = null;
@@ -47,7 +47,7 @@ public class SpanNotQuery extends AbstractSpanQuery {
 		this.post = null;
 	}
 
-	public SpanNotQuery(AbstractSpanQuery include, AbstractSpanQuery exclude, Integer dist) {
+	public SpanNotQuery(final AbstractSpanQuery include, final AbstractSpanQuery exclude, final Integer dist) {
 		this.include = include;
 		this.exclude = exclude;
 		this.dist = dist;
@@ -55,7 +55,8 @@ public class SpanNotQuery extends AbstractSpanQuery {
 		this.post = null;
 	}
 
-	public SpanNotQuery(AbstractSpanQuery include, AbstractSpanQuery exclude, Integer pre, Integer post) {
+	public SpanNotQuery(final AbstractSpanQuery include, final AbstractSpanQuery exclude, final Integer pre,
+			final Integer post) {
 		this.include = include;
 		this.exclude = exclude;
 		this.dist = null;
@@ -64,12 +65,12 @@ public class SpanNotQuery extends AbstractSpanQuery {
 	}
 
 	@Override
-	final public SpanQuery getQuery(QueryContext queryContext)
+	final public SpanQuery getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(include);
 		Objects.requireNonNull(exclude);
-		final SpanQuery includeQuery = (SpanQuery) include.getQuery(queryContext);
-		final SpanQuery excludeQuery = (SpanQuery) exclude.getQuery(queryContext);
+		final SpanQuery includeQuery = include.getQuery(queryContext);
+		final SpanQuery excludeQuery = exclude.getQuery(queryContext);
 		if (dist != null)
 			return new org.apache.lucene.search.spans.SpanNotQuery(includeQuery, excludeQuery, dist);
 		else if (pre != null || post != null)

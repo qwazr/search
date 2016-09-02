@@ -40,13 +40,13 @@ public class SpanPositionsQuery extends AbstractQuery {
 		distance = null;
 	}
 
-	public SpanPositionsQuery(String field, Integer distance) {
+	public SpanPositionsQuery(final String field, final Integer distance) {
 		this.field = field;
 		this.distance = distance;
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) throws IOException {
 
 		BooleanQuery.Builder builder = new BooleanQuery.Builder();
 		TokenStream tokenStream = queryContext.queryAnalyzer.tokenStream(field, queryContext.queryString);

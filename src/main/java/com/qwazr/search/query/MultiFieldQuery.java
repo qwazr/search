@@ -29,7 +29,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BoostQuery;
-import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
@@ -100,12 +99,12 @@ public class MultiFieldQuery extends AbstractQuery {
 
 		// Iterator over terms
 		AtomicInteger currentPos = new AtomicInteger(0);
-		topLevelTerms.termsByPosByField.forEach(termsByField -> {
+		topLevelTerms.terms.forEach(topLevelTerm -> {
 
 			// The query list for each term
 			final List<Query> termQueries = new ArrayList<>();
-			termsByField.forEach((field, termsFreqs) -> {
-				addTermQuery(termsFreqs, fieldsBoosts.get(field), termQueries);
+			topLevelTerm.termsByField.forEach((field, termsFreqs) -> {
+				addTermQuery(topLevelTerm.allFieldFreq.get(), termsFreqs, fieldsBoosts.get(field), termQueries);
 			});
 
 			// add the top level boolean clause
@@ -129,9 +128,24 @@ public class MultiFieldQuery extends AbstractQuery {
 		return topLevelQuery.build();
 	}
 
-	protected void addTermQuery(final List<TermFreq> termFreqs, final float boost, final Collection<Query> queries) {
+	protected Query getMultiTermQuery(final String field, final String queryText) {
+		return new org.apache.lucene.search.PhraseQuery(field, queryText);
+	}
+
+	protected Query getTermQuery(final Term term) {
+		return new org.apache.lucene.search.TermQuery(term);
+	}
+
+	protected Query getFuzzyQuery(final Term term) {
+		return new org.apache.lucene.search.FuzzyQuery(term);
+	}
+
+	private void addTermQuery(final int minTermFreq, final List<TermFreq> termFreqs, final float boost,
+			final Collection<Query> queries) {
+
 		if (termFreqs.isEmpty())
-			return;
+			return;  // We don't have terms
+
 		Query query;
 		final TermFreq termFreq = termFreqs.get(0);
 		if (termFreqs.size() > 1) {
@@ -140,22 +154,24 @@ public class MultiFieldQuery extends AbstractQuery {
 				sb.append(tf.term.text());
 				sb.append(' ');
 			});
-			query = new org.apache.lucene.search.PhraseQuery(termFreq.term.field(), sb.toString().trim());
+			query = getMultiTermQuery(termFreq.term.field(), sb.toString().trim());
 		} else {
-			query = termFreq.freq == 0 ? new FuzzyQuery(termFreq.term) :
-					new org.apache.lucene.search.TermQuery(termFreq.term);
+			query = (termFreq.freq == 0 && minTermFreq == 0) ? getFuzzyQuery(termFreq.term) :
+					getTermQuery(termFreq.term);
 		}
+
+		// Add the optional boost
 		if (boost != 1F)
 			query = new BoostQuery(query, boost);
 		queries.add(query);
 	}
 
-	public static class TopLevelTerms extends TermConsumer.WithChar {
+	private static class TopLevelTerms extends TermConsumer.WithChar {
 
 		private final Collection<String> fields;
 		private final Analyzer queryAnalyzer;
 		private final IndexReader indexReader;
-		private final List<Map<String, List<TermFreq>>> termsByPosByField;
+		private final List<TopLevelTerm> terms;
 
 		private TopLevelTerms(final IndexReader indexReader, final TokenStream tokenStream,
 				final Collection<String> fields, final Analyzer queryAnalyzer) {
@@ -163,46 +179,61 @@ public class MultiFieldQuery extends AbstractQuery {
 			this.indexReader = indexReader;
 			this.fields = fields;
 			this.queryAnalyzer = queryAnalyzer;
-			this.termsByPosByField = new ArrayList<>();
+			this.terms = new ArrayList<>();
 		}
 
 		@Override
 		public boolean token() {
 			final String text = charTermAttr.toString();
-			final Map<String, List<TermFreq>> termsByField = new LinkedHashMap<>();
+			final TopLevelTerm topLevelTerm = new TopLevelTerm();
 			// The text is submitted to each field/analyzer
 			fields.forEach(field -> {
 				try (final TokenStream tokenStream = queryAnalyzer.tokenStream(field, text)) {
 					final FieldLevelTerms fieldLevelTerms = new FieldLevelTerms(tokenStream, field, indexReader);
 					fieldLevelTerms.forEachToken();
-					termsByField.put(field, fieldLevelTerms.termsFreqs);
+					topLevelTerm.allFieldFreq.addAndGet(fieldLevelTerms.minTermFreq);
+					topLevelTerm.termsByField.put(field, fieldLevelTerms.termsFreqs);
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
 			});
-			termsByPosByField.add(termsByField);
+			terms.add(topLevelTerm);
 			return true;
 		}
 
 	}
 
-	public static class FieldLevelTerms extends TermConsumer.WithChar {
+	private static class TopLevelTerm {
+
+		private final Map<String, List<TermFreq>> termsByField;
+		private final AtomicInteger allFieldFreq;
+
+		private TopLevelTerm() {
+			this.termsByField = new LinkedHashMap<>();
+			this.allFieldFreq = new AtomicInteger();
+		}
+	}
+
+	private static class FieldLevelTerms extends TermConsumer.WithChar {
 
 		private final List<TermFreq> termsFreqs;
 		private final String field;
 		private final IndexReader indexReader;
+		private int minTermFreq;
 
 		private FieldLevelTerms(final TokenStream tokenStream, final String field, final IndexReader indexReader) {
 			super(tokenStream);
 			this.termsFreqs = new ArrayList<>();
 			this.field = field;
 			this.indexReader = indexReader;
+			this.minTermFreq = Integer.MAX_VALUE;
 		}
 
 		@Override
 		public boolean token() throws IOException {
 			final Term term = new Term(field, charTermAttr.toString());
 			final int freq = indexReader.docFreq(term);
+			minTermFreq = Math.min(freq, minTermFreq);
 			termsFreqs.add(new TermFreq(term, freq));
 			return true;
 		}

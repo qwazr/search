@@ -51,7 +51,8 @@ public class SpanNearQuery extends AbstractSpanQuery {
 		this.slop = null;
 	}
 
-	public SpanNearQuery(List<AbstractSpanQuery> clauses, String field, Boolean in_order, Integer slop) {
+	public SpanNearQuery(final List<AbstractSpanQuery> clauses, final String field, final Boolean in_order,
+			final Integer slop) {
 		this.clauses = clauses;
 		this.field = field;
 		this.in_order = in_order;
@@ -59,7 +60,7 @@ public class SpanNearQuery extends AbstractSpanQuery {
 	}
 
 	@Override
-	final public SpanQuery getQuery(QueryContext queryContext)
+	final public SpanQuery getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		final org.apache.lucene.search.spans.SpanNearQuery.Builder builder =
 				new org.apache.lucene.search.spans.SpanNearQuery.Builder(

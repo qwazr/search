@@ -33,13 +33,13 @@ public class BoostQuery extends AbstractQuery {
 		boost = null;
 	}
 
-	public BoostQuery(AbstractQuery query, Float boost) {
+	public BoostQuery(final AbstractQuery query, final Float boost) {
 		this.query = query;
 		this.boost = boost;
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext)
+	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(query, "The query property is missing");
 		Objects.requireNonNull(boost, "The boost property is missing");

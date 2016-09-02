@@ -28,13 +28,13 @@ public class DoubleExactQuery extends AbstractFieldQuery {
 	public DoubleExactQuery() {
 	}
 
-	public DoubleExactQuery(String field, double value) {
+	public DoubleExactQuery(final String field, final double value) {
 		super(field);
 		this.value = value;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return DoublePoint.newExactQuery(field, value);
 	}
 }

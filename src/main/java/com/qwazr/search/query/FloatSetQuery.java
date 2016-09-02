@@ -28,13 +28,13 @@ public class FloatSetQuery extends AbstractFieldQuery {
 	public FloatSetQuery() {
 	}
 
-	public FloatSetQuery(String field, float... values) {
+	public FloatSetQuery(final String field, final float... values) {
 		super(field);
 		this.values = values;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return FloatPoint.newSetQuery(field, values);
 	}
 }

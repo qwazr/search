@@ -26,13 +26,13 @@ public class DoubleRangeQuery extends AbstractRangeQuery<Double> {
 	public DoubleRangeQuery() {
 	}
 
-	public DoubleRangeQuery(String field, Double lower_value, Double upper_value) {
+	public DoubleRangeQuery(final String field, final Double lower_value, final Double upper_value) {
 		super(field, lower_value == null ? Double.MIN_VALUE : lower_value,
 				upper_value == null ? Double.MAX_VALUE : upper_value);
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return DoublePoint.newRangeQuery(field, lower_value, upper_value);
 	}
 }

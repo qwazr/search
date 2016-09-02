@@ -52,7 +52,7 @@ public class GeoPointBBoxQuery extends AbstractQuery {
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.spatial.geopoint.search.GeoPointInBBoxQuery(field, min_lat, max_lat,
 				min_lon, max_lon);
 	}

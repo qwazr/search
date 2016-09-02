@@ -35,14 +35,14 @@ public class IntMultiRangeQuery extends AbstractMultiRangeQuery<Integer> {
 		upper_values = null;
 	}
 
-	public IntMultiRangeQuery(String field, int[] lowerValues, int[] upperValues) {
+	public IntMultiRangeQuery(final String field, final int[] lowerValues, final int[] upperValues) {
 		super(field);
 		this.lower_values = lowerValues;
 		this.upper_values = upperValues;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return IntPoint.newRangeQuery(field, lower_values, upper_values);
 	}
 
@@ -53,8 +53,8 @@ public class IntMultiRangeQuery extends AbstractMultiRangeQuery<Integer> {
 		}
 
 		@Override
-		protected IntMultiRangeQuery build(String field, Collection<Integer> lowerValues,
-		                                   Collection<Integer> upperValues) {
+		protected IntMultiRangeQuery build(final String field, final Collection<Integer> lowerValues,
+				final Collection<Integer> upperValues) {
 			return new IntMultiRangeQuery(field, ArrayUtils.toPrimitiveInt(lowerValues),
 					ArrayUtils.toPrimitiveInt(upperValues));
 		}

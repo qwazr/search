@@ -26,13 +26,13 @@ public class IntRangeQuery extends AbstractRangeQuery<Integer> {
 	public IntRangeQuery() {
 	}
 
-	public IntRangeQuery(String field, Integer lower_value, Integer upper_value) {
+	public IntRangeQuery(final String field, final Integer lower_value, final Integer upper_value) {
 		super(field, lower_value == null ? Integer.MIN_VALUE : lower_value,
 				upper_value == null ? Integer.MAX_VALUE : upper_value);
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return IntPoint.newRangeQuery(field, lower_value, upper_value);
 	}
 }

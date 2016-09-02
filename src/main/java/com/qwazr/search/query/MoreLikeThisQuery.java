@@ -76,7 +76,7 @@ public class MoreLikeThisQuery extends AbstractQuery {
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException, ParseException {
+	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
 		Objects.requireNonNull(doc_num, "The doc_num field is missing");
 		final MoreLikeThis mlt = new MoreLikeThis(queryContext.indexSearcher.getIndexReader());
 		if (is_boost != null)

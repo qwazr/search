@@ -75,13 +75,14 @@ public class CustomScoreQuery extends AbstractQuery {
 		this(subQuery, null, customScoreProviderClass, scoringQueries);
 	}
 
-	public CustomScoreQuery(AbstractQuery subQuery, Class<? extends CustomScoreProvider> customScoreProviderClass,
-			FunctionQuery... scoringQueries) {
+	public CustomScoreQuery(final AbstractQuery subQuery,
+			final Class<? extends CustomScoreProvider> customScoreProviderClass,
+			final FunctionQuery... scoringQueries) {
 		this(subQuery, customScoreProviderClass, null, scoringQueries);
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext)
+	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(subQuery, "Missing subQuery property");
 		final Query query = subQuery.getQuery(queryContext);
@@ -116,8 +117,8 @@ public class CustomScoreQuery extends AbstractQuery {
 		return customScoreProviderClass;
 	}
 
-	private final org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQueryProvider(Query query,
-			QueryContext queryContext, Class<? extends CustomScoreProvider> customScoreProviderClass)
+	private final org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQueryProvider(final Query query,
+			final QueryContext queryContext, final Class<? extends CustomScoreProvider> customScoreProviderClass)
 			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 
 		Constructor<? extends CustomScoreProvider> customScoreProviderConstructor = customScoreProviderClass
@@ -133,8 +134,8 @@ public class CustomScoreQuery extends AbstractQuery {
 			return new CustomScoreQueryWithProvider(customScoreProviderConstructor, query);
 	}
 
-	private final org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQueryWithProviderInstance(Query query,
-			QueryContext queryContext)
+	private final org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQueryWithProviderInstance(
+			final Query query, final QueryContext queryContext)
 			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 
 		if (scoringQueries != null)
@@ -150,27 +151,30 @@ public class CustomScoreQuery extends AbstractQuery {
 
 		private final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor;
 
-		private CustomScoreQueryWithProvider(Constructor<? extends CustomScoreProvider> customScoreProviderConstructor,
-				Query subQuery) throws NoSuchMethodException {
+		private CustomScoreQueryWithProvider(
+				final  Constructor<? extends CustomScoreProvider> customScoreProviderConstructor,
+				final  Query subQuery) throws NoSuchMethodException {
 			super(subQuery);
 			this.customScoreProviderConstructor = customScoreProviderConstructor;
 		}
 
-		private CustomScoreQueryWithProvider(Constructor<? extends CustomScoreProvider> customScoreProviderConstructor,
-				Query subQuery, org.apache.lucene.queries.function.FunctionQuery scoringQuery)
+		private CustomScoreQueryWithProvider(
+				final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor,
+				final Query subQuery, final org.apache.lucene.queries.function.FunctionQuery scoringQuery)
 				throws NoSuchMethodException {
 			super(subQuery, scoringQuery);
 			this.customScoreProviderConstructor = customScoreProviderConstructor;
 		}
 
-		private CustomScoreQueryWithProvider(Constructor<? extends CustomScoreProvider> customScoreProviderConstructor,
-				Query subQuery, org.apache.lucene.queries.function.FunctionQuery[] scoringQueries)
+		private CustomScoreQueryWithProvider(
+				final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor,
+				final Query subQuery, final org.apache.lucene.queries.function.FunctionQuery[] scoringQueries)
 				throws NoSuchMethodException {
 			super(subQuery, scoringQueries);
 			this.customScoreProviderConstructor = customScoreProviderConstructor;
 		}
 
-		protected CustomScoreProvider getCustomScoreProvider(LeafReaderContext context) throws IOException {
+		protected CustomScoreProvider getCustomScoreProvider(final LeafReaderContext context) throws IOException {
 			try {
 				return customScoreProviderConstructor.newInstance(context);
 			} catch (ReflectiveOperationException e) {

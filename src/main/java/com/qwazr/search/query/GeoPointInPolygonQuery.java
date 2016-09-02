@@ -16,6 +16,8 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
+import org.apache.htrace.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.lucene.geo.Polygon;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
@@ -23,29 +25,65 @@ import java.util.Objects;
 
 public class GeoPointInPolygonQuery extends AbstractQuery {
 
+	public final class GeoPolygon {
+
+		public final double[] polyLats;
+		public final double[] polyLons;
+		public final GeoPolygon[] holes;
+
+		public GeoPolygon() {
+			polyLats = null;
+			polyLons = null;
+			holes = null;
+		}
+
+		public GeoPolygon(final double[] polyLats, final double[] polyLons, final GeoPolygon[] holes) {
+			this.polyLats = polyLats;
+			this.polyLons = polyLons;
+			this.holes = holes;
+		}
+
+		@JsonIgnore
+		public Polygon toPolygon() {
+			return new Polygon(polyLats, polyLons, toPolygons(holes));
+		}
+
+	}
+
 	final public String field;
+	final public GeoPolygon[] polygons;
 
-	final public double[] poly_lats;
-
-	final public double[] poly_lons;
+	@JsonIgnore
+	private Polygon[] lucenePolygons;
 
 	public GeoPointInPolygonQuery() {
 		field = null;
-		poly_lats = null;
-		poly_lons = null;
+		polygons = null;
+		lucenePolygons = null;
 	}
 
-	public GeoPointInPolygonQuery(final String field, final double[] polyLats, final double[] polyLons) {
+	public GeoPointInPolygonQuery(final String field, final GeoPolygon... poligons) {
 		Objects.requireNonNull(field, "The field is null");
-		Objects.requireNonNull(polyLats, "The poly_lats parameter is null");
-		Objects.requireNonNull(polyLons, "The poly_lons parameter is null");
+		Objects.requireNonNull(poligons, "The poligons parameter is null");
 		this.field = field;
-		this.poly_lats = polyLats;
-		this.poly_lons = polyLons;
+		this.polygons = poligons;
+		this.lucenePolygons = toPolygons(poligons);
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.spatial.geopoint.search.GeoPointInPolygonQuery(field, poly_lats, poly_lons);
+	final public Query getQuery(final QueryContext queryContext) throws IOException {
+		if (lucenePolygons == null)
+			lucenePolygons = toPolygons(polygons);
+		return new org.apache.lucene.spatial.geopoint.search.GeoPointInPolygonQuery(field, lucenePolygons);
+	}
+
+	public static Polygon[] toPolygons(GeoPolygon... geoPolygons) {
+		if (geoPolygons == null)
+			return null;
+		final Polygon[] polygons = new Polygon[geoPolygons.length];
+		int i = 0;
+		for (GeoPolygon geoPolygon : geoPolygons)
+			polygons[i++] = geoPolygon == null ? null : geoPolygon.toPolygon();
+		return polygons;
 	}
 }

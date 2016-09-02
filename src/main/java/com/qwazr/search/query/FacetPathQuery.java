@@ -33,13 +33,13 @@ public class FacetPathQuery extends AbstractQuery {
 		path = null;
 	}
 
-	public FacetPathQuery(String dimension, String... path) {
+	public FacetPathQuery(final String dimension, final String... path) {
 		this.dimension = dimension;
 		this.path = path;
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		Objects.requireNonNull(dimension, "The dimension is missing");
 		final String indexFieldName =
 				queryContext.fieldMap.getNewFacetsConfig(dimension).getDimConfig(dimension).indexFieldName;

@@ -32,18 +32,18 @@ public class SpanFirstQuery extends AbstractQuery {
 		end = null;
 	}
 
-	public SpanFirstQuery(AbstractSpanQuery spanQuery) {
+	public SpanFirstQuery(final AbstractSpanQuery spanQuery) {
 		this.spanQuery = spanQuery;
 		this.end = null;
 	}
 
-	public SpanFirstQuery(AbstractSpanQuery spanQuery, Integer end) {
+	public SpanFirstQuery(final AbstractSpanQuery spanQuery, final Integer end) {
 		this.spanQuery = spanQuery;
 		this.end = end;
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext)
+	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		return new org.apache.lucene.search.spans.SpanFirstQuery(spanQuery.getQuery(queryContext),
 				end == null ? 0 : end);

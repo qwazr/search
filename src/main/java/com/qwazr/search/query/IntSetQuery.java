@@ -28,13 +28,13 @@ public class IntSetQuery extends AbstractFieldQuery {
 	public IntSetQuery() {
 	}
 
-	public IntSetQuery(String field, int... values) {
+	public IntSetQuery(final String field, final int... values) {
 		super(field);
 		this.values = values;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return IntPoint.newSetQuery(field, values);
 	}
 }

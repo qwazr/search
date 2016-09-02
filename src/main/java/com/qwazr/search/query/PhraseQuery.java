@@ -17,7 +17,6 @@ package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,14 +34,14 @@ public class PhraseQuery extends AbstractQuery {
 		slop = null;
 	}
 
-	public PhraseQuery(String field, Integer slop, List<String> terms) {
+	public PhraseQuery(final String field, final Integer slop, final List<String> terms) {
 		this.field = field;
 		this.slop = slop;
 		this.terms = terms;
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException {
+	final public org.apache.lucene.search.PhraseQuery getQuery(final QueryContext queryContext) throws IOException {
 		Objects.requireNonNull(field, "The field property should not be null");
 		org.apache.lucene.search.PhraseQuery.Builder builder = new org.apache.lucene.search.PhraseQuery.Builder();
 		if (slop != null)

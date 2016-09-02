@@ -37,14 +37,14 @@ public class TermsQuery extends AbstractQuery {
 		terms = null;
 	}
 
-	public TermsQuery(String field, Collection<Object> terms) {
+	public TermsQuery(final String field, final Collection<Object> terms) {
 		Objects.requireNonNull(field, "The field is null");
 		Objects.requireNonNull(terms, "The term list is null");
 		this.field = field;
 		this.terms = terms;
 	}
 
-	public TermsQuery(String field, Object... terms) {
+	public TermsQuery(final String field, final Object... terms) {
 		Objects.requireNonNull(field, "The field is null");
 		Objects.requireNonNull(terms, "The term list is null");
 		this.field = field;
@@ -54,7 +54,7 @@ public class TermsQuery extends AbstractQuery {
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		final Collection<BytesRef> bytesRefs = new ArrayList<>();
 		terms.forEach(term -> bytesRefs.add(BytesRefUtils.fromAny(term)));
 		return new org.apache.lucene.queries.TermsQuery(field, bytesRefs);
@@ -74,7 +74,7 @@ public class TermsQuery extends AbstractQuery {
 			terms = new ArrayList<>();
 		}
 
-		final public Builder setField(String field) {
+		final public Builder setField(final String field) {
 			this.field = field;
 			return this;
 		}

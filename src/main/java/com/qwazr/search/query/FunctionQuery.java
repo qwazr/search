@@ -31,19 +31,19 @@ public class FunctionQuery extends AbstractQuery {
 		source = null;
 	}
 
-	public FunctionQuery(AbstractValueSource source) {
+	public FunctionQuery(final AbstractValueSource source) {
 		this.source = source;
 	}
 
 	@Override
-	final public org.apache.lucene.queries.function.FunctionQuery getQuery(QueryContext queryContext)
+	final public org.apache.lucene.queries.function.FunctionQuery getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(source, "The source property is missing");
 		return new org.apache.lucene.queries.function.FunctionQuery(source.getValueSource(queryContext));
 	}
 
-	final public static org.apache.lucene.queries.function.FunctionQuery[] getQueries(FunctionQuery[] scoringQueries,
-			QueryContext queryContext)
+	final public static org.apache.lucene.queries.function.FunctionQuery[] getQueries(
+			final FunctionQuery[] scoringQueries, final QueryContext queryContext)
 			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		if (scoringQueries == null)
 			return null;

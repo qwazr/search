@@ -26,13 +26,13 @@ public class FloatRangeQuery extends AbstractRangeQuery<Float> {
 	public FloatRangeQuery() {
 	}
 
-	public FloatRangeQuery(String field, Float lower_value, Float upper_value) {
+	public FloatRangeQuery(final String field, final Float lower_value, final Float upper_value) {
 		super(field, lower_value == null ? Float.MIN_VALUE : lower_value,
 				upper_value == null ? Float.MAX_VALUE : upper_value);
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return FloatPoint.newRangeQuery(field, lower_value, upper_value);
 	}
 }

@@ -28,13 +28,13 @@ public class FloatExactQuery extends AbstractFieldQuery {
 	public FloatExactQuery() {
 	}
 
-	public FloatExactQuery(String field, float value) {
+	public FloatExactQuery(final String field, final float value) {
 		super(field);
 		this.value = value;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return FloatPoint.newExactQuery(field, value);
 	}
 }

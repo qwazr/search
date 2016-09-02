@@ -77,7 +77,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException, ParseException {
+	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
 		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser =
 				new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(fields,
 						analyzer == null ? queryContext.queryAnalyzer : analyzer, boosts);

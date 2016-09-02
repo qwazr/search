@@ -28,13 +28,13 @@ public class LongExactQuery extends AbstractFieldQuery {
 	public LongExactQuery() {
 	}
 
-	public LongExactQuery(String field, long value) {
+	public LongExactQuery(final String field, final long value) {
 		super(field);
 		this.value = value;
 	}
 
 	@Override
-	public Query getQuery(QueryContext queryContext) throws IOException {
+	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return LongPoint.newExactQuery(field, value);
 	}
 }

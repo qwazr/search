@@ -336,17 +336,17 @@ public abstract class JavaAbstractTest {
 	}
 
 	@Test
-	public void test700MultiField() throws IOException, ReflectiveOperationException, URISyntaxException {
+	public void test700MultiFieldWithFuzzy() throws IOException, ReflectiveOperationException, URISyntaxException {
 		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
 		Map<String, Float> fields = new HashMap<>();
 		fields.put("title", 10.0F);
 		fields.put("content", 1.0F);
 		final QueryBuilder builder = new QueryBuilder();
 		final MultiFieldQuery query =
-				new MultiFieldQuery(fields, QueryParserOperator.AND, null, "title second");
+				new MultiFieldQuery(fields, QueryParserOperator.AND, null, "title sekond");
 		builder.setQuery(query).setQuery_debug(true);
 		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
-		Assert.assertEquals("+((title:titl)^10.0 content:titl~2) +((title:second)^10.0 content:second)",
+		Assert.assertEquals("+((title:titl)^10.0 content:titl) +((title:sekond~2)^10.0 content:sekond~2)",
 				result.getQuery());
 		Assert.assertEquals(1, result.documents.size());
 	}

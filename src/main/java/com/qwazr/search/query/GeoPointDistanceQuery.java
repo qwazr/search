@@ -48,7 +48,7 @@ public class GeoPointDistanceQuery extends AbstractQuery {
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.spatial.geopoint.search.GeoPointDistanceQuery(field, center_lat, center_lon,
 				radius_meter);
 	}

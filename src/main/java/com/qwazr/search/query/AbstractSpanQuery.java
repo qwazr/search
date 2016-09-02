@@ -27,6 +27,6 @@ import java.io.IOException;
 public abstract class AbstractSpanQuery extends AbstractQuery {
 
 	@JsonIgnore
-	public abstract SpanQuery getQuery(QueryContext queryContext)
+	public abstract SpanQuery getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException;
 }

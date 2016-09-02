@@ -34,13 +34,13 @@ public class BoostedQuery extends AbstractQuery {
 		value_source = null;
 	}
 
-	public BoostedQuery(AbstractQuery sub_query, AbstractValueSource value_source) {
+	public BoostedQuery(final AbstractQuery sub_query, final AbstractValueSource value_source) {
 		this.sub_query = sub_query;
 		this.value_source = value_source;
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext)
+	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
 		Objects.requireNonNull(sub_query, "The sub_query property is missing");
 		Objects.requireNonNull(value_source, "The value_source property is missing");

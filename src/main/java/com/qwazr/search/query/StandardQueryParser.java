@@ -86,7 +86,7 @@ public class StandardQueryParser extends AbstractQuery {
 		this.query_string = query_string;
 	}
 
-	private StandardQueryParser(Builder builder) {
+	private StandardQueryParser(final Builder builder) {
 		this.analyzer = builder.analyzer;
 		this.multi_fields = builder.multi_fields == null ? null : ArrayUtils.toArray(builder.multi_fields);
 		this.default_field = builder.default_field;
@@ -104,7 +104,7 @@ public class StandardQueryParser extends AbstractQuery {
 	}
 
 	@Override
-	final public Query getQuery(QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
+	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
 
 		final org.apache.lucene.queryparser.flexible.standard.StandardQueryParser parser =
 				new org.apache.lucene.queryparser.flexible.standard.StandardQueryParser(
@@ -147,12 +147,12 @@ public class StandardQueryParser extends AbstractQuery {
 		private Boolean lowercase_expanded_terms = null;
 		private String query_string = null;
 
-		public Builder setAnalyzerClass(Analyzer analyzer) {
+		public Builder setAnalyzerClass(final Analyzer analyzer) {
 			this.analyzer = analyzer;
 			return this;
 		}
 
-		public Builder addMultiField(String... fields) {
+		public Builder addMultiField(final String... fields) {
 			if (multi_fields == null)
 				multi_fields = new LinkedHashSet<>();
 			for (String field : fields)
@@ -160,64 +160,64 @@ public class StandardQueryParser extends AbstractQuery {
 			return this;
 		}
 
-		public Builder setDefaultField(String default_field) {
+		public Builder setDefaultField(final String default_field) {
 			this.default_field = default_field;
 			return this;
 		}
 
-		public Builder addFieldBoost(String field, Float boost) {
+		public Builder addFieldBoost(final String field, final Float boost) {
 			if (fields_boost == null)
 				fields_boost = new LinkedHashMap<>();
 			fields_boost.put(field, boost);
 			return this;
 		}
 
-		public Builder setAllowLeadingWildcard(Boolean allow_leading_wildcard) {
+		public Builder setAllowLeadingWildcard(final Boolean allow_leading_wildcard) {
 			this.allow_leading_wildcard = allow_leading_wildcard;
 			return this;
 		}
 
-		public Builder setQueryParserOperator(QueryParserOperator default_operator) {
+		public Builder setQueryParserOperator(final QueryParserOperator default_operator) {
 			this.default_operator = default_operator;
 			return this;
 		}
 
-		public Builder setPhraseSlop(Integer phrase_slop) {
+		public Builder setPhraseSlop(final Integer phrase_slop) {
 			this.phrase_slop = phrase_slop;
 			return this;
 		}
 
-		public Builder setEnablePositionIncrements(Boolean enable_position_increments) {
+		public Builder setEnablePositionIncrements(final Boolean enable_position_increments) {
 			this.enable_position_increments = enable_position_increments;
 			return this;
 		}
 
-		public Builder setAnalyzerRangeTerms(Boolean analyzer_range_terms) {
+		public Builder setAnalyzerRangeTerms(final Boolean analyzer_range_terms) {
 			this.analyzer_range_terms = analyzer_range_terms;
 			return this;
 		}
 
-		public Builder setFuzzyMinSim(Float fuzzy_min_sim) {
+		public Builder setFuzzyMinSim(final Float fuzzy_min_sim) {
 			this.fuzzy_min_sim = fuzzy_min_sim;
 			return this;
 		}
 
-		public Builder setFuzzyPrefixLength(Integer fuzzy_prefix_length) {
+		public Builder setFuzzyPrefixLength(final Integer fuzzy_prefix_length) {
 			this.fuzzy_prefix_length = fuzzy_prefix_length;
 			return this;
 		}
 
-		public Builder setMaxDeterminizedStates(Integer max_determinized_states) {
+		public Builder setMaxDeterminizedStates(final Integer max_determinized_states) {
 			this.max_determinized_states = max_determinized_states;
 			return this;
 		}
 
-		public Builder setLowercaseExpandedTerms(Boolean lowercase_expanded_terms) {
+		public Builder setLowercaseExpandedTerms(final Boolean lowercase_expanded_terms) {
 			this.lowercase_expanded_terms = lowercase_expanded_terms;
 			return this;
 		}
 
-		public Builder setQueryString(String query_string) {
+		public Builder setQueryString(final String query_string) {
 			this.query_string = query_string;
 			return this;
 		}
