@@ -89,4 +89,8 @@ class IndexReplicator implements Replicator {
 	final LinkedHashMap<String, FieldDefinition> getMasterFields() {
 		return indexService.getFields(schemaName, indexName);
 	}
+
+	final IndexStatus getMasterStatus() {
+		return indexService.getIndex(schemaName, indexName);
+	}
 }

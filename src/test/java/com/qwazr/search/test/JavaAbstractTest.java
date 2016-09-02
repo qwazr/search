@@ -366,6 +366,11 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(indexStatus);
 		// Second call to check setting comparison
 		Assert.assertNotNull(slave.createUpdateIndex());
+
+		// First replication call
+		slave.replicationCheck();
+
+		// Second replication call (nothing to do)
 		slave.replicationCheck();
 
 		final IndexStatus slaveStatus = slave.getIndexStatus();

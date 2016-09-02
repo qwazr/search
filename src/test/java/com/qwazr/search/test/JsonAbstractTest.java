@@ -734,6 +734,10 @@ public abstract class JsonAbstractTest {
 		IndexStatus slaveStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_SLAVE_NAME, INDEX_SLAVE_SETTINGS);
 		Assert.assertNotNull(slaveStatus);
 
+		// First replication
+		client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
+
+		// Second one (nothing to do)
 		client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
 
 		slaveStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);

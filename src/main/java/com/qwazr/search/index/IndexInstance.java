@@ -356,6 +356,14 @@ final public class IndexInstance implements Closeable {
 		try {
 			setAnalyzers(indexReplicator.getMasterAnalyzers());
 			setFields(indexReplicator.getMasterFields());
+			long masterVersion = indexReplicator.getMasterStatus().version;
+			long slaveVersion = getIndexStatus().version;
+			if (masterVersion == slaveVersion)
+				return;
+			if (slaveVersion > masterVersion)
+				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+						"The slave version is greater than the master version: " + slaveVersion + " / " +
+								masterVersion);
 			replicationClient.updateNow();
 		} finally {
 			if (sem != null)
