@@ -488,7 +488,8 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 					.getReplicator()
 					.checkForUpdate(currentVersion);
 			if (token == null)
-				throw new ServerException(Response.Status.NOT_FOUND, "The version is not valid: " + currentVersion);
+				throw new ServerException(Response.Status.NOT_FOUND,
+						"The version is not valid: " + Long.parseLong(currentVersion, 16));
 			try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 				try (final DataOutputStream dataOutput = new DataOutputStream(outputStream)) {
 					token.serialize(dataOutput);
