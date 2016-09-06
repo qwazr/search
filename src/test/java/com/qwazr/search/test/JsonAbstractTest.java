@@ -735,10 +735,10 @@ public abstract class JsonAbstractTest {
 		Assert.assertNotNull(slaveStatus);
 
 		// First replication
-		client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		Assert.assertEquals(200, client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME).getStatus());
 
 		// Second one (nothing to do)
-		client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		Assert.assertEquals(200, client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME).getStatus());
 
 		slaveStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);
 		Assert.assertNotNull(slaveStatus);
