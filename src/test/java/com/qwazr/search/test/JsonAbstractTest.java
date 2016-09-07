@@ -50,6 +50,7 @@ public abstract class JsonAbstractTest {
 	public static final String DUMMY_ANALYZER_NAME = "sflkjsdlksjdlkj";
 	public static final LinkedHashMap<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
 	public static final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
+	public static final FieldDefinition FIELD_UPDATE_JSON = getField("field_update.json");
 	public static final LinkedHashMap<String, AnalyzerDefinition> ANALYZERS_JSON = getAnalyzerMap("analyzers.json");
 	public static final AnalyzerDefinition ANALYZER_FRENCH_JSON = getAnalyzer("analyzer_french.json");
 	public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
@@ -66,6 +67,7 @@ public abstract class JsonAbstractTest {
 	public static final QueryDefinition QUERY_MULTIFIELD = getQuery("query_multifield.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
 	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
+	public static final Map<String, Object> UPDATE_DOC_ERROR = getDoc("update_doc_error.json");
 	public static final Collection<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
 	public static final Map<String, Object> UPDATE_DOC_VALUE = getDoc("update_doc_value.json");
 	public static final Collection<Map<String, Object>> UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
@@ -754,6 +756,17 @@ public abstract class JsonAbstractTest {
 
 		Assert.assertArrayEquals(slaveFields.keySet().toArray(), masterFields.keySet().toArray());
 		Assert.assertArrayEquals(slaveAnalyzers.keySet().toArray(), masterAnalyzers.keySet().toArray());
+	}
+
+	@Test
+	public void test880errorRecoveryOnFieldUpdate() throws URISyntaxException {
+		final IndexServiceInterface client = getClient();
+		Assert.assertEquals(Integer.valueOf(1), client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC));
+		final FieldDefinition newDef = client.setField(SCHEMA_NAME, INDEX_MASTER_NAME, "alpha_rank", FIELD_UPDATE_JSON);
+		Assert.assertEquals(newDef, FIELD_UPDATE_JSON);
+		checkErrorStatusCode(() ->
+				client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_ERROR), 500);
+		Assert.assertNotNull(client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME));
 	}
 
 	private Response checkDelete(String indexName, int expectedCode) throws URISyntaxException {

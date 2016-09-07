@@ -28,6 +28,7 @@ import org.apache.lucene.index.IndexOptions;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class FieldDefinition {
@@ -139,6 +140,43 @@ public class FieldDefinition {
 		template = indexField.template();
 	}
 
+	public boolean equals(final Object o) {
+		if (o == null || !(o instanceof FieldDefinition))
+			return false;
+		final FieldDefinition f = (FieldDefinition) o;
+		if (!Objects.equals(template, f.template))
+			return false;
+		if (!Objects.equals(analyzer, f.analyzer))
+			return false;
+		if (!Objects.equals(query_analyzer, f.query_analyzer))
+			return false;
+		if (!Objects.equals(tokenized, f.tokenized))
+			return false;
+		if (!Objects.equals(stored, f.stored))
+			return false;
+		if (!Objects.equals(store_termvectors, f.store_termvectors))
+			return false;
+		if (!Objects.equals(store_termvector_offsets, f.store_termvector_offsets))
+			return false;
+		if (!Objects.equals(store_termvector_positions, f.store_termvector_positions))
+			return false;
+		if (!Objects.equals(store_termvector_payloads, f.store_termvector_payloads))
+			return false;
+		if (!Objects.equals(omit_norms, f.omit_norms))
+			return false;
+		if (!Objects.equals(numeric_type, f.numeric_type))
+			return false;
+		if (!Objects.equals(index_options, f.index_options))
+			return false;
+		if (!Objects.equals(docvalues_type, f.docvalues_type))
+			return false;
+		if (!Objects.equals(dimension_count, f.dimension_count))
+			return false;
+		if (!Objects.equals(dimension_num_bytes, f.dimension_num_bytes))
+			return false;
+		return true;
+	}
+
 	public final static TypeReference<LinkedHashMap<String, FieldDefinition>> MapStringFieldTypeRef =
 			new TypeReference<LinkedHashMap<String, FieldDefinition>>() {
 			};
@@ -161,7 +199,7 @@ public class FieldDefinition {
 
 	public final static String DOC_FIELD = "$doc";
 
-	public static final String[] RESERVED_NAMES = { ID_FIELD, FACET_FIELD, SCORE_FIELD, DOC_FIELD };
+	public static final String[] RESERVED_NAMES = {ID_FIELD, FACET_FIELD, SCORE_FIELD, DOC_FIELD};
 
 	public final static Builder builder() {
 		return new Builder();
