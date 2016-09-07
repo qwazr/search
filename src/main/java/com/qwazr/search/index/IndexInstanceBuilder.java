@@ -101,7 +101,8 @@ class IndexInstanceBuilder {
 		if (!indexDirectory.exists())
 			indexDirectory.mkdir();
 		if (!indexDirectory.isDirectory())
-			throw new IOException("This name is not valid. No directory exists for this location: " + indexDirectory);
+			throw new IOException("This name is not valid. No directory exists for this location: " +
+					indexDirectory.getAbsolutePath());
 
 		//Loading the settings
 		if (settings == null)
