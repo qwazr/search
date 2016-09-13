@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.query;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
+import org.apache.htrace.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.spans.SpanQuery;
 
@@ -24,20 +26,49 @@ import java.io.IOException;
 public class SpanTermQuery extends AbstractSpanQuery {
 
 	final public String field;
-	final public String text;
+	final public Object value;
+
+	@JsonIgnore
+	private final Term term;
 
 	public SpanTermQuery() {
 		field = null;
-		text = null;
+		value = null;
+		term = null;
 	}
 
-	public SpanTermQuery(final String field, final String text) {
+	private SpanTermQuery(final String field, final Object value, final Term term) {
 		this.field = field;
-		this.text = text;
+		this.value = value;
+		this.term = term;
+	}
+
+	public SpanTermQuery(final Term term) {
+		this(null, null, term);
+	}
+
+	public SpanTermQuery(final String field, final String value) {
+		this(field, value, new Term(field, value));
+	}
+
+	public SpanTermQuery(final String field, final Long value) {
+		this(field, value, new Term(field, BytesRefUtils.from(value)));
+	}
+
+	public SpanTermQuery(final String field, final Double value) {
+		this(field, value, new Term(field, BytesRefUtils.from(value)));
+	}
+
+	public SpanTermQuery(final String field, final Integer value) {
+		this(field, value, new Term(field, BytesRefUtils.from(value)));
+	}
+
+	public SpanTermQuery(final String field, final Float value) {
+		this(field, value, new Term(field, BytesRefUtils.from(value)));
 	}
 
 	@Override
 	final public SpanQuery getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.search.spans.SpanTermQuery(new Term(field, text));
+		return new org.apache.lucene.search.spans.SpanTermQuery(term);
 	}
 }
