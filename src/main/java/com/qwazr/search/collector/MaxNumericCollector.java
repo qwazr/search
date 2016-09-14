@@ -27,7 +27,6 @@ public abstract class MaxNumericCollector<R> extends DocValuesCollector.Numeric<
 
 	public volatile R max;
 	private Long current;
-	private ValueConverter<?, R> converter;
 
 	public MaxNumericCollector(final String collectorName, final String fieldName) {
 		super(collectorName, fieldName);
