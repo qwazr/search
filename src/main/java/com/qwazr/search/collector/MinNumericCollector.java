@@ -27,7 +27,6 @@ public abstract class MinNumericCollector<R> extends DocValuesCollector.Numeric<
 
 	public volatile R min;
 	private Long current;
-	private ValueConverter<?, R> converter;
 
 	public MinNumericCollector(final String collectorName, final String fieldName) {
 		super(collectorName, fieldName);

@@ -401,15 +401,21 @@ public abstract class JavaAbstractTest {
 		Assert.assertEquals(new Long(2), result.total_hits);
 	}
 
-	static void checkCollector(ResultDefinition result, String name, Object value) {
+	static void checkCollector(ResultDefinition result, String name, Object... possibleValues) {
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.collectors);
 		Object collectorResult = result.getCollector(name);
-		if (value == null) {
+		if (possibleValues == null || possibleValues.length == 0) {
 			Assert.assertNull(collectorResult);
 		} else {
 			Assert.assertNotNull(collectorResult);
-			Assert.assertEquals(value, collectorResult);
+			for (Object value : possibleValues) {
+				if (value.equals(collectorResult)) {
+					Assert.assertEquals(value, collectorResult);
+					return;
+				}
+			}
+			Assert.fail("Right value not found. Got: " + collectorResult);
 		}
 	}
 
@@ -419,10 +425,14 @@ public abstract class JavaAbstractTest {
 		final QueryBuilder builder = new QueryBuilder();
 		builder.addCollector("minPrice", MinNumericCollector.MinDouble.class, "price");
 		builder.addCollector("maxPrice", MaxNumericCollector.MaxDouble.class, "price");
+		builder.addCollector("minQuantity", MinNumericCollector.MinLong.class, AnnotatedIndex.DV_QUANTITY_FIELD);
+		builder.addCollector("maxQuantity", MaxNumericCollector.MaxLong.class, AnnotatedIndex.DV_QUANTITY_FIELD);
 		builder.setQuery(new MatchAllDocsQuery());
 		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
 		checkCollector(result, "minPrice", 1.11d);
 		checkCollector(result, "maxPrice", 2.22d);
+		checkCollector(result, "minQuantity", 10L, 10);
+		checkCollector(result, "maxQuantity", 20L, 20);
 	}
 
 	@Test

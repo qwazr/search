@@ -62,6 +62,10 @@ public class AnnotatedIndex {
 	@IndexField(name = QUANTITY_FIELD, template = FieldDefinition.Template.LongField)
 	final public Long quantity;
 
+	final static String DV_QUANTITY_FIELD = "dvQty";
+	@IndexField(name = DV_QUANTITY_FIELD, template = FieldDefinition.Template.LongDocValuesField)
+	final public Long dvQty;
+
 	@IndexField(template = StringField, stored = true)
 	final public Collection<String> storedCategory;
 
@@ -87,6 +91,7 @@ public class AnnotatedIndex {
 		category = null;
 		price = null;
 		quantity = null;
+		dvQty = null;
 		storedCategory = docValuesCategory = new LinkedHashSet<>();
 		simpleFacets = null;
 		multiFacets = null;
@@ -102,6 +107,7 @@ public class AnnotatedIndex {
 		this.category = categories;
 		this.price = price;
 		this.quantity = quantity;
+		this.dvQty = quantity;
 		if (categories == null) {
 			this.storedCategory = null;
 			this.docValuesCategory = null;

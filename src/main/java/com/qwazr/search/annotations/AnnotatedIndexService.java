@@ -463,6 +463,18 @@ public class AnnotatedIndexService<T> {
 					field.set(record, fieldValue);
 					return;
 				}
+				if (fieldValue instanceof Number) {
+					final Number finalValueNumber = (Number) fieldValue;
+					if (fieldType.isAssignableFrom(Long.class))
+						field.set(record, finalValueNumber.longValue());
+					else if (fieldType.isAssignableFrom(Integer.class))
+						field.set(record, finalValueNumber.intValue());
+					else if (fieldType.isAssignableFrom(Float.class))
+						field.set(record, finalValueNumber.floatValue());
+					else if (fieldType.isAssignableFrom(Double.class))
+						field.set(record, finalValueNumber.doubleValue());
+					return;
+				}
 				if (fieldValue instanceof Collection) {
 					Collection<?> fieldValues = (Collection<?>) fieldValue;
 					if (fieldValues.isEmpty())
