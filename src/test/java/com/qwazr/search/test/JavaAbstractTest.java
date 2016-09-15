@@ -34,6 +34,7 @@ import org.junit.runners.MethodSorters;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.function.BiFunction;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class JavaAbstractTest {
@@ -319,6 +320,89 @@ public abstract class JavaAbstractTest {
 		checkEqualsReturnedFields(records.get(0), record1, docValue1);
 		checkEqualsReturnedFields(records.get(1), record2, docValue2);
 	}
+
+	private void testSort(QueryBuilder queryBuilder, int resultCount,
+			BiFunction<AnnotatedIndex, AnnotatedIndex, Boolean> checker)
+			throws URISyntaxException {
+		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(queryBuilder.build());
+		Assert.assertNotNull(result);
+		Assert.assertEquals(Long.valueOf(resultCount), result.total_hits);
+		AnnotatedIndex current = null;
+		for (ResultDocumentObject<AnnotatedIndex> resultDoc : result.documents) {
+			final AnnotatedIndex next = resultDoc.getRecord();
+			if (current != null)
+				Assert.assertTrue(checker.apply(current, next));
+			current = next;
+		}
+	}
+
+	@Test
+	public void test500sortByTitleDescAndScore() throws URISyntaxException {
+		final QueryBuilder builder = new QueryBuilder();
+		builder.setQuery(new MatchAllDocsQuery())
+				.addSort("titleSort", QueryDefinition.SortEnum.descending_missing_first)
+				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.addReturned_field("title")
+				.setStart(0).setRows(100);
+		testSort(builder, 2, (doc1, doc2) -> doc1.title.compareTo(doc2.title) > 0);
+	}
+
+	@Test
+	public void test500sortByTitleAscAndScore() throws URISyntaxException {
+		final QueryBuilder builder = new QueryBuilder();
+		builder.setQuery(new MatchAllDocsQuery())
+				.addSort("titleSort", QueryDefinition.SortEnum.ascending_missing_last)
+				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.addReturned_field("title")
+				.setStart(0).setRows(100);
+		testSort(builder, 2, (doc1, doc2) -> doc1.title.compareTo(doc2.title) < 0);
+	}
+
+	@Test
+	public void test500sortByLongAsc() throws URISyntaxException {
+		final QueryBuilder builder = new QueryBuilder();
+		builder.setQuery(new MatchAllDocsQuery())
+				.addSort("dvQty", QueryDefinition.SortEnum.ascending_missing_last)
+				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
+				.addReturned_field("dvQty")
+				.setStart(0).setRows(100);
+		testSort(builder, 2, (doc1, doc2) -> doc1.dvQty.compareTo(doc2.dvQty) < 0);
+	}
+
+	@Test
+	public void test500sortByLongDesc() throws URISyntaxException {
+		final QueryBuilder builder = new QueryBuilder();
+		builder.setQuery(new MatchAllDocsQuery())
+				.addSort("dvQty", QueryDefinition.SortEnum.descending_missing_last)
+				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.addReturned_field("dvQty")
+				.setStart(0).setRows(100);
+		testSort(builder, 2, (doc1, doc2) -> doc1.dvQty.compareTo(doc2.dvQty) > 0);
+	}
+
+	@Test
+	public void test500sortByDoubleAsc() throws URISyntaxException {
+		final QueryBuilder builder = new QueryBuilder();
+		builder.setQuery(new MatchAllDocsQuery())
+				.addSort("price", QueryDefinition.SortEnum.ascending_missing_last)
+				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
+				.addReturned_field("price")
+				.setStart(0).setRows(100);
+		testSort(builder, 2, (doc1, doc2) -> doc1.price.compareTo(doc2.price) < 0);
+	}
+
+	@Test
+	public void test500sortByDoubleDesc() throws URISyntaxException {
+		final QueryBuilder builder = new QueryBuilder();
+		builder.setQuery(new MatchAllDocsQuery())
+				.addSort("price", QueryDefinition.SortEnum.descending_missing_last)
+				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.addReturned_field("price")
+				.setStart(0).setRows(100);
+		testSort(builder, 2, (doc1, doc2) -> doc1.price.compareTo(doc2.price) > 0);
+	}
+
 
 	public static List<TermEnumDefinition> checkTermList(List<TermEnumDefinition> terms) {
 		Assert.assertNotNull(terms);

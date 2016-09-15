@@ -45,6 +45,9 @@ public class AnnotatedIndex {
 			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 	final public String title;
 
+	@IndexField(template = SortedDocValuesField)
+	final public String titleSort;
+
 	@IndexField(analyzerClass = EnglishAnalyzer.class,
 			queryAnalyzerClass = EnglishAnalyzer.class,
 			tokenized = true,
@@ -87,6 +90,7 @@ public class AnnotatedIndex {
 	public AnnotatedIndex() {
 		id = null;
 		title = null;
+		titleSort = null;
 		content = null;
 		category = null;
 		price = null;
@@ -103,6 +107,7 @@ public class AnnotatedIndex {
 			boolean updateDVOnly, String... categories) {
 		this.id = id.toString();
 		this.title = title;
+		this.titleSort = title;
 		this.content = content;
 		this.category = categories;
 		this.price = price;
