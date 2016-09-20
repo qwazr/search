@@ -85,9 +85,10 @@ public class FieldMap {
 	}
 
 	private void setFacetConfig(final String fieldName, final FacetsConfig facetsConfig) {
-		FieldMap.Item fieldMapItem = find(fieldName);
-		if (fieldMapItem.definition.template != null) {
-			switch (fieldMapItem.definition.template) {
+		final FieldMap.Item fieldMapItem = find(fieldName);
+		if (fieldMapItem.definition.template == null)
+			return;
+		switch (fieldMapItem.definition.template) {
 			case FacetField:
 			case SortedSetDocValuesFacetField:
 				facetsConfig.setMultiValued(fieldName, false);
@@ -98,7 +99,6 @@ public class FieldMap {
 				facetsConfig.setMultiValued(fieldName, true);
 				facetsConfig.setHierarchical(fieldName, false);
 				break;
-			}
 		}
 	}
 
@@ -108,7 +108,7 @@ public class FieldMap {
 		return facetsConfig;
 	}
 
-	final public FacetsConfig getNewFacetsConfig(String fieldName) {
+	final public FacetsConfig getNewFacetsConfig(final String fieldName) {
 		final FacetsConfig facetsConfig = new FacetsConfig();
 		setFacetConfig(fieldName, facetsConfig);
 		return facetsConfig;

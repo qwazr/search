@@ -25,19 +25,29 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.*;
 
-public class DrillDrownQuery extends AbstractQuery {
+public class DrillDownQuery extends AbstractQuery {
 
 	final public AbstractQuery baseQuery;
 	final public List<LinkedHashMap<String, String[]>> dimPath;
+	final public Boolean useDrillSideways;
 
-	public DrillDrownQuery() {
+	public DrillDownQuery() {
 		baseQuery = null;
+		useDrillSideways = null;
 		dimPath = null;
 	}
 
-	public DrillDrownQuery(final AbstractQuery baseQuery, final List<LinkedHashMap<String, String[]>> dimPath) {
+	public DrillDownQuery(final AbstractQuery baseQuery, final boolean useDrillSideways,
+			final List<LinkedHashMap<String, String[]>> dimPath) {
 		this.baseQuery = baseQuery;
+		this.useDrillSideways = useDrillSideways;
 		this.dimPath = dimPath;
+	}
+
+	public void add(final String dim, final String... path) {
+		final LinkedHashMap<String, String[]> map = new LinkedHashMap<>();
+		map.put(dim, path);
+		dimPath.add(map);
 	}
 
 	@Override
@@ -57,19 +67,20 @@ public class DrillDrownQuery extends AbstractQuery {
 		return drillDownQuery;
 	}
 
-	final static Term facetTerm(String indexedField, String dim, String... path) {
+	final static Term facetTerm(final String indexedField, final String dim, final String... path) {
 		return new Term(indexedField, FacetsConfig.pathToString(dim, path));
 	}
 
-	final static List<Term> facetTerms(String indexedField, String dim, Collection<String> terms) {
-		List<Term> termList = new ArrayList<>(terms.size());
+	final static List<Term> facetTerms(final String indexedField, final String dim, final Collection<String> terms) {
+		final List<Term> termList = new ArrayList<>(terms.size());
 		for (String term : terms)
 			termList.add(facetTerm(indexedField, dim, term));
 		return termList;
 	}
 
-	final static Query facetTermQuery(FacetsConfig facetsConfig, String dim, Set<String> filter_terms) {
-		String indexedField = facetsConfig.getDimConfig(dim).indexFieldName;
+	final static Query facetTermQuery(final FacetsConfig facetsConfig, final String dim,
+			final Set<String> filter_terms) {
+		final String indexedField = facetsConfig.getDimConfig(dim).indexFieldName;
 		if (filter_terms.size() == 1)
 			return new org.apache.lucene.search.TermQuery(facetTerm(indexedField, dim, filter_terms.iterator().next()));
 		return new org.apache.lucene.queries.TermsQuery(facetTerms(indexedField, dim, filter_terms));

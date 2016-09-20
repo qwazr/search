@@ -58,6 +58,7 @@ public abstract class JsonAbstractTest {
 	public static final IndexSettingsDefinition INDEX_SLAVE_SETTINGS = getIndexSettings("index_slave_settings.json");
 	public static final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
 	public static final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
+	public static final QueryDefinition FACETS_DRILLDOWN_QUERY = getQuery("query_facets_drilldown.json");
 	public static final QueryDefinition QUERY_SORTFIELD_PRICE = getQuery("query_sortfield_price.json");
 	public static final QueryDefinition QUERY_SORTFIELDS = getQuery("query_sortfields.json");
 	public static final QueryDefinition QUERY_HIGHLIGHT = getQuery("query_highlight.json");
@@ -534,7 +535,7 @@ public abstract class JsonAbstractTest {
 		Assert.assertTrue(Objects.deepEquals(object, values));
 	}
 
-	private void checkFacetFiltersResult(ResultDefinition.WithMap result) {
+	private void checkFacetFiltersResult(ResultDefinition.WithMap result, int simpleFacetExpectCount) {
 		Assert.assertNotNull(result.documents);
 		Assert.assertEquals(2, result.documents.size());
 		Assert.assertNotNull(result.documents.get(0).fields);
@@ -549,13 +550,21 @@ public abstract class JsonAbstractTest {
 		checkFacetSize(result, "category", 5);
 		checkFacetSize(result, "dynamic_multi_facet_cat", 5);
 		checkFacetSize(result, "format", 2);
+		checkFacetSize(result, "dynamic_simple_facet_type", simpleFacetExpectCount);
 	}
 
 	@Test
 	public void test410QueryFacetFilterDoc() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
-		checkFacetFiltersResult(checkQueryIndex(client, FACETS_FILTERS_QUERY, 2));
-		checkFacetFiltersResult(checkQuerySchema(client, FACETS_FILTERS_QUERY, 2));
+		checkFacetFiltersResult(checkQueryIndex(client, FACETS_FILTERS_QUERY, 2), 2);
+		checkFacetFiltersResult(checkQuerySchema(client, FACETS_FILTERS_QUERY, 2), 2);
+	}
+
+	@Test
+	public void test411QueryFacetDrillDown() throws IOException, URISyntaxException {
+		final IndexServiceInterface client = getClient();
+		checkFacetFiltersResult(checkQueryIndex(client, FACETS_DRILLDOWN_QUERY, 2), 5);
+		checkFacetFiltersResult(checkQuerySchema(client, FACETS_DRILLDOWN_QUERY, 2), 5);
 	}
 
 	private <T extends Comparable> void checkDescending(T startValue, String field,

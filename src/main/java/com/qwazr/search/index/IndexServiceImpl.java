@@ -503,6 +503,10 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		}
 	}
 
+	public static void main(String[] args) {
+		System.out.println(Long.parseLong("78", 16));
+	}
+
 	@Override
 	final public Response replicationCheck(final String schemaName, final String indexName) {
 		try {

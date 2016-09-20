@@ -60,6 +60,7 @@
   "facets": {
     "category": {},
     "dynamic_multi_facet_cat": {},
-    "format": {}
+    "format": {},
+    "dynamic_simple_facet_type": {}
   }
 }

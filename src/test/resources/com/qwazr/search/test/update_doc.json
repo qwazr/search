@@ -15,6 +15,7 @@
     "dyn_cat4",
     "dyn_cat5"
   ],
+  "dynamic_simple_facet_type": "dyn_type5",
   "format": "odd",
   "size": 500,
   "price": 10.50,

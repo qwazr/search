@@ -16,8 +16,10 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.SortUtils;
+import com.qwazr.search.query.DrillDownQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
+import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -32,7 +34,7 @@ import java.util.Map;
 
 class QueryUtils {
 
-	final static String getFinalQueryString(QueryDefinition queryDef) {
+	final static String getFinalQueryString(final QueryDefinition queryDef) {
 		// Deal wih query string
 		final String qs;
 		// Check if we have to escape some characters
@@ -62,19 +64,35 @@ class QueryUtils {
 
 		final int numHits = queryDef.getEnd();
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
+		final boolean useDrillSideways = queryContext.queryDefinition.query instanceof DrillDownQuery &&
+				((DrillDownQuery) queryContext.queryDefinition.query).useDrillSideways;
 
 		final QueryCollectors queryCollectors =
-				new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets, queryDef.collectors);
+				new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets, useDrillSideways, queryDef.collectors);
 
-		queryContext.indexSearcher.search(query, queryCollectors.finalCollector);
+		final DrillSideways.DrillSidewaysResult drillSidewaysResult;
+		if (useDrillSideways) {
+			drillSidewaysResult =
+					new DrillSideways(queryContext.indexSearcher,
+							queryContext.fieldMap.getNewFacetsConfig(queryDef.facets.keySet()), queryContext.state)
+							.search((org.apache.lucene.facet.DrillDownQuery) query, queryCollectors.finalCollector);
+		} else {
+			queryContext.indexSearcher.search(query, queryCollectors.finalCollector);
+			drillSidewaysResult = null;
+		}
 		final TopDocs topDocs = queryCollectors.getTopDocs();
 		final Integer totalHits = queryCollectors.getTotalHits();
 
 		timeTracker.next("search_query");
 
-		final FacetsBuilder facetsBuilder = queryCollectors.facetsCollector == null ?
-				null :
-				new FacetsBuilder(queryContext, queryDef.facets, query, queryCollectors.facetsCollector, timeTracker);
+		final FacetsBuilder facetsBuilder;
+		if (queryCollectors.facetsCollector != null)
+			facetsBuilder = new FacetsBuilder.WithCollectors(queryContext, queryDef.facets, query, timeTracker,
+					queryCollectors.facetsCollector).build();
+		else if (drillSidewaysResult != null)
+			facetsBuilder = new FacetsBuilder.WithSideways(queryContext, queryDef.facets, query, timeTracker,
+					drillSidewaysResult).build();
+		else facetsBuilder = null;
 
 		final Map<String, HighlighterImpl> highlighters;
 		if (queryDef.highlighters != null && topDocs != null) {

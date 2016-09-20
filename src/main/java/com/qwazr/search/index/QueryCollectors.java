@@ -18,13 +18,10 @@ package com.qwazr.search.index;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.collector.BaseCollector;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.FunctionUtils;
-import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.search.*;
 
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.*;
@@ -43,11 +40,12 @@ class QueryCollectors {
 
 	final Collector finalCollector;
 
-	QueryCollectors(boolean bNeedScore, Sort sort, int numHits, final LinkedHashMap<String, FacetDefinition> facets,
+	QueryCollectors(final boolean bNeedScore, final Sort sort, final int numHits,
+			final LinkedHashMap<String, FacetDefinition> facets, final boolean useDrillSideways,
 			final LinkedHashMap<String, QueryDefinition.CollectorDefinition> extCollectors)
 			throws ReflectiveOperationException, IOException {
 		collectors = new ArrayList<>();
-		facetsCollector = buildFacetsCollector(facets);
+		facetsCollector = useDrillSideways ? null : buildFacetsCollector(facets);
 		totalHitCountCollector = buildTotalHitsCollector(numHits);
 		topDocsCollector = buildTopDocCollector(sort, numHits, bNeedScore);
 		externalCollectors = buildExternalCollectors(extCollectors);
@@ -70,7 +68,7 @@ class QueryCollectors {
 		}
 	}
 
-	private final FacetsCollector buildFacetsCollector(LinkedHashMap<String, FacetDefinition> facets) {
+	private final FacetsCollector buildFacetsCollector(final LinkedHashMap<String, FacetDefinition> facets) {
 		if (facets == null || facets.isEmpty())
 			return null;
 		for (FacetDefinition facet : facets.values())

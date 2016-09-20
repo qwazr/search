@@ -1,0 +1,39 @@
+{
+  "query_string": "name",
+  "query": {
+    "query": "DrillDownQuery",
+    "baseQuery": {
+      "query": "StandardQueryParser",
+      "default_field": "name"
+    },
+    "useDrillSideways": true,
+    "dimPath": [
+      {
+        "dynamic_simple_facet_type": [
+          "dyn_type4"
+        ]
+      },
+      {
+        "dynamic_simple_facet_type": [
+          "dyn_type5"
+        ]
+      }
+    ]
+  },
+  "returned_fields": [
+    "name",
+    "price",
+    "dynamic_multi_facet_cat"
+  ],
+  "start": 0,
+  "rows": 10,
+  "facets": {
+    "category": {
+    },
+    "dynamic_multi_facet_cat": {
+    },
+    "format": {
+    },
+    "dynamic_simple_facet_type": {}
+  }
+}

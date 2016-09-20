@@ -8,6 +8,7 @@
     "dynamic_multi_facet_cat": [
       "dyn_cat1"
     ],
+    "dynamic_simple_facet_type": "dyn_type1",
     "format": "odd",
     "single_date": "20160101",
     "size": 100,
@@ -27,6 +28,7 @@
       "dyn_cat1",
       "dyn_cat2"
     ],
+    "dynamic_simple_facet_type": "dyn_type2",
     "format": "even",
     "single_date": "20160202",
     "size": 200,
@@ -48,6 +50,7 @@
       "dyn_cat2",
       "dyn_cat3"
     ],
+    "dynamic_simple_facet_type": "dyn_type3",
     "format": "odd",
     "single_date": "20160103",
     "size": 300,
@@ -74,6 +77,7 @@
       "dyn_cat3",
       "dyn_cat4"
     ],
+    "dynamic_simple_facet_type": "dyn_type4",
     "format": "even",
     "size": 400,
     "price": 4.40,
