@@ -22,6 +22,7 @@ import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.json.JsonMapper;
+import com.qwazr.utils.server.ServerException;
 import org.apache.http.pool.PoolStats;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -43,6 +44,8 @@ public abstract class JsonAbstractTest {
 	public static final String SCHEMA_NAME = "schema-test-json";
 	public static final String SCHEMA_DUMMY_NAME = "schema-dummy";
 	public static final String INDEX_DUMMY_NAME = "index-dummy";
+	public static final String SCHEMA_ERROR_NAME = "test_error_schema";
+	public static final String INDEX_ERROR_NAME = "test_error_index";
 	public static final String INDEX_MASTER_NAME = "index-test-master-json";
 	public static final String INDEX_SLAVE_NAME = "index-test-slave-json";
 	public static final String DUMMY_DOC_ID = "sflkjsdlksjdlkj";
@@ -82,6 +85,16 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
+	public void test020CheckErrorIndex() throws URISyntaxException {
+		IndexServiceInterface client = getClient();
+		Assert.assertNotNull(client.getIndex(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME));
+		FieldDefinition fieldDef = client.getField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description");
+		Assert.assertNotNull(fieldDef);
+		checkErrorStatusCode(() -> client.setField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description", fieldDef), 406);
+		Assert.assertNotNull(client.getIndex(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME));
+	}
+
+	@Test
 	public void test050CreateSchema() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
 		SchemaSettingsDefinition settings = client.createUpdateSchema(SCHEMA_NAME, null);
@@ -106,7 +119,7 @@ public abstract class JsonAbstractTest {
 		IndexServiceInterface client = getClient();
 		Set<String> schemas = client.getSchemas();
 		Assert.assertNotNull(schemas);
-		Assert.assertEquals(schemas.size(), 1);
+		Assert.assertEquals(2, schemas.size());
 		Assert.assertTrue(schemas.contains(SCHEMA_NAME));
 	}
 
@@ -116,6 +129,10 @@ public abstract class JsonAbstractTest {
 			Assert.fail("WebApplicationException was not thrown");
 		} catch (WebApplicationException e) {
 			Assert.assertEquals(expectedStatusCode, e.getResponse().getStatus());
+		} catch (ServerException e) {
+			Assert.assertEquals(expectedStatusCode, e.getStatusCode());
+		} catch (IllegalArgumentException e) {
+			// Thats ok
 		}
 	}
 
@@ -770,12 +787,16 @@ public abstract class JsonAbstractTest {
 	@Test
 	public void test880errorRecoveryOnFieldUpdate() throws URISyntaxException {
 		final IndexServiceInterface client = getClient();
+
+		// Change the field type
 		Assert.assertEquals(Integer.valueOf(1), client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC));
 		final FieldDefinition newDef = client.setField(SCHEMA_NAME, INDEX_MASTER_NAME, "alpha_rank", FIELD_UPDATE_JSON);
 		Assert.assertEquals(newDef, FIELD_UPDATE_JSON);
 		checkErrorStatusCode(() ->
 				client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_ERROR), 500);
 		Assert.assertNotNull(client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME));
+		final Map<String, Object> result = client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, "5");
+		Assert.assertNotNull(result);
 	}
 
 	private Response checkDelete(String indexName, int expectedCode) throws URISyntaxException {

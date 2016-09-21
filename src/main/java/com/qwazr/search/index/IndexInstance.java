@@ -153,7 +153,7 @@ final public class IndexInstance implements Closeable {
 
 	private void refreshFieldsAnalyzers(LinkedHashMap<String, AnalyzerDefinition> analyzers,
 			LinkedHashMap<String, FieldDefinition> fields) throws IOException {
-		AnalyzerContext analyzerContext = new AnalyzerContext(analyzers, fields);
+		final AnalyzerContext analyzerContext = new AnalyzerContext(analyzers, fields, true);
 		indexAnalyzer.update(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext.queryAnalyzerMap);
 	}
@@ -162,18 +162,18 @@ final public class IndexInstance implements Closeable {
 		JsonMapper.MAPPER.writeValue(fileSet.fieldMapFile, fields);
 		fieldMap = new FieldMap(fields);
 		refreshFieldsAnalyzers(analyzerMap, fields);
-		schema.mayBeRefresh();
+		schema.mayBeRefresh(true);
 	}
 
 	void setField(String field_name, FieldDefinition field) throws IOException, ServerException {
-		LinkedHashMap<String, FieldDefinition> fields =
+		final LinkedHashMap<String, FieldDefinition> fields =
 				(LinkedHashMap<String, FieldDefinition>) fieldMap.getFieldDefinitionMap().clone();
 		fields.put(field_name, field);
 		setFields(fields);
 	}
 
 	void deleteField(String field_name) throws IOException, ServerException {
-		LinkedHashMap<String, FieldDefinition> fields =
+		final LinkedHashMap<String, FieldDefinition> fields =
 				(LinkedHashMap<String, FieldDefinition>) fieldMap.getFieldDefinitionMap().clone();
 		if (fields.remove(field_name) == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + field_name);
@@ -189,11 +189,11 @@ final public class IndexInstance implements Closeable {
 		refreshFieldsAnalyzers(analyzerMap, fieldMap.getFieldDefinitionMap());
 		JsonMapper.MAPPER.writeValue(fileSet.analyzerMapFile, analyzers);
 		analyzerMap = analyzers;
-		schema.mayBeRefresh();
+		schema.mayBeRefresh(true);
 	}
 
 	void setAnalyzer(String analyzerName, AnalyzerDefinition analyzer) throws IOException, ServerException {
-		LinkedHashMap<String, AnalyzerDefinition> analyzers =
+		final LinkedHashMap<String, AnalyzerDefinition> analyzers =
 				(LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone();
 		analyzers.put(analyzerName, analyzer);
 		setAnalyzers(analyzers);
@@ -253,7 +253,7 @@ final public class IndexInstance implements Closeable {
 		indexWriter.commit();
 		replicator.publish(new IndexRevision(indexWriter));
 		searcherManager.maybeRefresh();
-		schema.mayBeRefresh();
+		schema.mayBeRefresh(true);
 	}
 
 	final synchronized BackupStatus backup(Integer keepLastCount) throws IOException, InterruptedException {

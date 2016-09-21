@@ -113,18 +113,18 @@ class IndexInstanceBuilder {
 			JsonMapper.MAPPER.writeValue(fileSet.settingsFile, settings);
 
 		//Loading the fields
-		File fieldMapFile = new File(indexDirectory, FIELDS_FILE);
+		final File fieldMapFile = new File(indexDirectory, FIELDS_FILE);
 		fieldMap = fieldMapFile.exists() ?
 				JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
 				new LinkedHashMap<>();
 
 		//Loading the fields
-		File analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
+		final File analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
 		analyzerMap = analyzerMapFile.exists() ?
 				JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
 				new LinkedHashMap<>();
 
-		AnalyzerContext context = new AnalyzerContext(analyzerMap, fieldMap);
+		final AnalyzerContext context = new AnalyzerContext(analyzerMap, fieldMap, false);
 		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
 
@@ -156,7 +156,7 @@ class IndexInstanceBuilder {
 
 		Callable<Boolean> callback = () -> {
 			searcherManager.maybeRefresh();
-			schema.mayBeRefresh();
+			schema.mayBeRefresh(false);
 			return true;
 		};
 		ReplicationClient.ReplicationHandler handler = new IndexReplicationHandler(dataDirectory, callback);

@@ -22,6 +22,7 @@ import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexSingleClient;
 import com.qwazr.utils.server.RemoteService;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -37,6 +38,7 @@ public class TestServer {
 		if (serverStarted)
 			return;
 		final File dataDir = Files.createTempDir();
+		FileUtils.copyDirectory(new File("src/test/data"), dataDir);
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");

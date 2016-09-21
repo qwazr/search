@@ -24,7 +24,8 @@ import com.qwazr.utils.server.ServerConfiguration;
 public class SearchServer {
 
 	public static GenericServer start() throws Exception {
-		final ServerBuilder builder = new ServerBuilder(new ServerConfiguration());
+		final ServerBuilder builder =
+				new ServerBuilder(new ServerConfiguration(System.getProperties(), System.getenv()));
 		ClusterManager.load(builder, null, null);
 		IndexManager.load(builder);
 		return builder.build().start(true);

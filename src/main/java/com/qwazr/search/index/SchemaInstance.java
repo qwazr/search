@@ -73,7 +73,7 @@ public class SchemaInstance implements Closeable {
 		private final UpdatableAnalyzer queryAnalyzer;
 		private final AtomicInteger ref = new AtomicInteger(1);
 
-		private SearchContext() throws IOException, ServerException {
+		private SearchContext(boolean failOnException) throws IOException, ServerException {
 			if (indexMap.isEmpty()) {
 				indexSearcher = null;
 				multiReader = null;
@@ -86,7 +86,7 @@ public class SchemaInstance implements Closeable {
 			IndexReader[] indexReaders = new IndexReader[indexMap.size()];
 			int i = 0;
 			analyzerMap = new HashMap<>();
-			LinkedHashMap<String, FieldDefinition> fieldDefinitionMap = new LinkedHashMap<>();
+			final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap = new LinkedHashMap<>();
 			for (IndexInstance indexInstance : indexMap.values()) {
 				indexReaders[i++] = DirectoryReader.open(indexInstance.getDataDirectory());
 				indexInstance.fillFields(fieldDefinitionMap);
@@ -95,7 +95,8 @@ public class SchemaInstance implements Closeable {
 			fieldMap = new FieldMap(fieldDefinitionMap);
 			multiReader = new MultiReader(indexReaders);
 			indexSearcher = new IndexSearcher(multiReader);
-			AnalyzerContext analyzerContext = new AnalyzerContext(analyzerMap, fieldDefinitionMap);
+			final AnalyzerContext analyzerContext =
+					new AnalyzerContext(analyzerMap, fieldDefinitionMap, failOnException);
 			indexAnalyzer = new UpdatableAnalyzer(analyzerContext.indexAnalyzerMap);
 			queryAnalyzer = new UpdatableAnalyzer(analyzerContext.queryAnalyzerMap);
 		}
@@ -171,7 +172,7 @@ public class SchemaInstance implements Closeable {
 			return;
 		for (File indexDirectory : directories)
 			indexMap.put(indexDirectory.getName(), IndexInstanceBuilder.build(this, indexDirectory, null));
-		mayBeRefresh();
+		mayBeRefresh(false);
 	}
 
 	@Override
@@ -199,7 +200,7 @@ public class SchemaInstance implements Closeable {
 				indexInstance = IndexInstanceBuilder.build(this, new File(schemaDirectory, indexName), settings);
 				indexMap.put(indexName, indexInstance);
 			}
-			mayBeRefresh();
+			mayBeRefresh(true);
 			return indexInstance;
 		}
 	}
@@ -243,7 +244,7 @@ public class SchemaInstance implements Closeable {
 			IndexInstance indexInstance = get(indexName, false);
 			indexInstance.delete();
 			indexMap.remove(indexName);
-			mayBeRefresh();
+			mayBeRefresh(false);
 		}
 	}
 
@@ -268,10 +269,10 @@ public class SchemaInstance implements Closeable {
 		checkSettings();
 	}
 
-	synchronized void mayBeRefresh() throws IOException, ServerException {
+	synchronized void mayBeRefresh(final boolean failOnException) throws IOException, ServerException {
 		if (searchContext != null)
 			searchContext.close();
-		searchContext = new SearchContext();
+		searchContext = new SearchContext(failOnException);
 	}
 
 	SchemaSettingsDefinition getSettings() {

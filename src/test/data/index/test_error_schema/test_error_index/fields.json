@@ -1,0 +1,12 @@
+{
+  "$id$": {
+    "template": "StringField"
+  },
+  "name": {
+    "template": "TextField"
+  },
+  "description": {
+    "analyzer": "dummy.DummyAnalyzer",
+    "template": "TextField"
+  }
+}

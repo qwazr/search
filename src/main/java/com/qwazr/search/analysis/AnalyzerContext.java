@@ -22,6 +22,8 @@ import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -31,11 +33,13 @@ import java.util.Map;
 
 public class AnalyzerContext {
 
+	private final static Logger LOGGER = LoggerFactory.getLogger(AnalyzerContext.class);
+
 	public final Map<String, Analyzer> indexAnalyzerMap;
 	public final Map<String, Analyzer> queryAnalyzerMap;
 
-	public AnalyzerContext(final Map<String, AnalyzerDefinition> analyzerMap, final Map<String, FieldDefinition> fields)
-			throws ServerException {
+	public AnalyzerContext(final Map<String, AnalyzerDefinition> analyzerMap, final Map<String, FieldDefinition> fields,
+			final boolean failOnException) throws ServerException {
 
 		if (fields == null || fields.size() == 0) {
 			this.indexAnalyzerMap = Collections.emptyMap();
@@ -61,8 +65,11 @@ public class AnalyzerContext {
 					queryAnalyzerMap.put(fieldName, queryAnalyzer);
 
 			} catch (ReflectiveOperationException | InterruptedException | IOException e) {
-				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-						"Class " + fieldDef.analyzer + " not known for the field " + fieldName, e);
+				final String msg = "Analyzer class " + fieldDef.analyzer + " not known for the field " + fieldName;
+				if (failOnException)
+					throw new ServerException(Response.Status.NOT_ACCEPTABLE, msg, e);
+				else if (LOGGER.isWarnEnabled())
+					LOGGER.warn(msg);
 			}
 		});
 	}
