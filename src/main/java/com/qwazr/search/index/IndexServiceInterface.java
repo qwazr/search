@@ -26,6 +26,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.*;
 
@@ -264,6 +265,26 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/{schema_name}/{index_name}/replication")
 	Response replicationCheck(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
+
+	@GET
+	@Path("/{schema_name}/{index_name}/resources")
+	String[] getResources(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
+
+	@GET
+	@Path("/{schema_name}/{index_name}/resources/{resource_name}")
+	AbstractStreamingOutput getResource(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name,
+			@PathParam("resource_name") String resourceName);
+
+	@POST
+	@Path("/{schema_name}/{index_name}/resources/{resource_name}")
+	Response postResource(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			@PathParam("resource_name") String resourceName, InputStream inputStream);
+
+	@DELETE
+	@Path("/{schema_name}/{index_name}/resources/{resource_name}")
+	Response deleteResource(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			@PathParam("resource_name") String resourceName);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/search")

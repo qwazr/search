@@ -519,6 +519,54 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	}
 
 	@Override
+	public String[] getResources(final String schemaName, final String indexName) {
+		try {
+			checkRight(null);
+			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getResources();
+		} catch (Exception e) {
+			throw ServerException.getJsonException(logger, e);
+		}
+	}
+
+	@Override
+	public AbstractStreamingOutput getResource(final String schemaName, final String indexName,
+			final String resourceName) {
+		try {
+			checkRight(null);
+			final InputStream input =
+					IndexManager.INSTANCE.get(schemaName).get(indexName, false).getResource(resourceName);
+			if (input == null)
+				throw new ServerException(Response.Status.NOT_FOUND, "Resource not found: " + resourceName);
+			return AbstractStreamingOutput.with(input);
+		} catch (Exception e) {
+			throw ServerException.getJsonException(logger, e);
+		}
+	}
+
+	@Override
+	public Response postResource(final String schemaName, final String indexName, final String resourceName,
+			final InputStream inputStream) {
+		try {
+			checkRight(null);
+			IndexManager.INSTANCE.get(schemaName).get(indexName, false).postResource(resourceName, inputStream);
+			return Response.ok().build();
+		} catch (Exception e) {
+			throw ServerException.getJsonException(logger, e);
+		}
+	}
+
+	@Override
+	public Response deleteResource(final String schemaName, final String indexName, final String resourceName) {
+		try {
+			checkRight(null);
+			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteResource(resourceName);
+			return Response.ok().build();
+		} catch (Exception e) {
+			throw ServerException.getJsonException(logger, e);
+		}
+	}
+
+	@Override
 	final public Response deleteAll(final String schemaName, final String indexName) {
 		try {
 			checkRight(schemaName);

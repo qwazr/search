@@ -45,6 +45,7 @@ class IndexInstanceBuilder {
 	final static String SETTINGS_FILE = "settings.json";
 	final static String FIELDS_FILE = "fields.json";
 	final static String ANALYZERS_FILE = "analyzers.json";
+	final static String RESOURCES_DIR = "resources";
 
 	static class FileSet {
 
@@ -53,6 +54,7 @@ class IndexInstanceBuilder {
 		final File backupDirectory;
 		final File dataDirectory;
 		final File analyzerMapFile;
+		final File resourcesDirectory;
 		final File fieldMapFile;
 		final Path replWorkPath;
 
@@ -61,6 +63,7 @@ class IndexInstanceBuilder {
 			this.backupDirectory = new File(indexDirectory, INDEX_BACKUP);
 			this.dataDirectory = new File(indexDirectory, INDEX_DATA);
 			this.analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
+			this.resourcesDirectory = new File(indexDirectory, RESOURCES_DIR);
 			this.fieldMapFile = new File(indexDirectory, FIELDS_FILE);
 			this.settingsFile = new File(indexDirectory, SETTINGS_FILE);
 			this.replWorkPath = indexDirectory.toPath().resolve(REPL_WORK);
@@ -82,6 +85,8 @@ class IndexInstanceBuilder {
 	SearcherManager searcherManager = null;
 	UpdatableAnalyzer indexAnalyzer = null;
 	UpdatableAnalyzer queryAnalyzer = null;
+
+	FileResourceLoader fileResourceLoader = null;
 
 	LocalReplicator replicator = null;
 	ReplicationClient replicationClient = null;
@@ -124,7 +129,10 @@ class IndexInstanceBuilder {
 				JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
 				new LinkedHashMap<>();
 
-		final AnalyzerContext context = new AnalyzerContext(analyzerMap, fieldMap, false);
+		// Set the resource loader
+		fileResourceLoader = new FileResourceLoader(null, fileSet.resourcesDirectory);
+
+		final AnalyzerContext context = new AnalyzerContext(fileResourceLoader, analyzerMap, fieldMap, false);
 		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
 

@@ -25,6 +25,7 @@ import com.qwazr.utils.json.client.JsonClientAbstract;
 import com.qwazr.utils.server.RemoteService;
 
 import javax.ws.rs.core.Response;
+import java.io.InputStream;
 import java.util.*;
 
 public class IndexSingleClient extends JsonClientAbstract implements IndexServiceInterface {
@@ -296,6 +297,40 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication");
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
+		return Response.status(executeStatusCode(request, null, null, valid200)).build();
+	}
+
+	@Override
+	public String[] getResources(final String schema_name, final String index_name) {
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources");
+		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
+		return executeJson(request, null, null, String[].class, valid200Json);
+	}
+
+	@Override
+	public AbstractStreamingOutput getResource(final String schema_name, final String index_name,
+			final String resourceName) {
+		final UBuilder uriBuilder = RemoteService
+				.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/", resourceName);
+		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
+		return executeStream(request, null, null, valid200);
+	}
+
+	@Override
+	public Response postResource(final String schema_name, final String index_name, final String resourceName,
+			final InputStream inputStream) {
+		final UBuilder uriBuilder = RemoteService
+				.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/", resourceName);
+		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
+		return Response.status(executeStatusCode(request, inputStream, null, valid200)).build();
+	}
+
+	@Override
+	public Response deleteResource(final String schema_name, final String index_name, final String resourceName) {
+		final UBuilder uriBuilder = RemoteService
+				.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/", resourceName);
+		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, null, null, valid200)).build();
 	}
 

@@ -22,6 +22,7 @@ import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.RemoteService;
 
 import javax.ws.rs.core.Response;
+import java.io.InputStream;
 import java.util.*;
 
 public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient> implements IndexServiceInterface {
@@ -196,6 +197,26 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 
 	@Override
 	public Response replicationCheck(String schema_name, String index_name) {
+		return null;
+	}
+
+	@Override
+	public String[] getResources(String schema_name, String index_name) {
+		return new String[0];
+	}
+
+	@Override
+	public AbstractStreamingOutput getResource(String schema_name, String index_name, String resourceName) {
+		return null;
+	}
+
+	@Override
+	public Response postResource(String schema_name, String index_name, String resourceName, InputStream input) {
+		return null;
+	}
+
+	@Override
+	public Response deleteResource(String schema_name, String index_name, String resourceName) {
 		return null;
 	}
 

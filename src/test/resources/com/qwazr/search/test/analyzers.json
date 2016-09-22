@@ -22,6 +22,13 @@
         "class": "en.EnglishPossessiveFilter"
       },
       {
+        "class": "synonym.SynonymFilter",
+        "dedup": false,
+        "ignoreCase": true,
+        "tokenizerFactory": "core.WhitespaceTokenizerFactory",
+        "synonyms": "synonyms.txt"
+      },
+      {
         "class": "en.EnglishMinimalStemFilter"
       },
       {
@@ -47,6 +54,5 @@
     ]
   },
   "PayloadAnalyzer": {
-
   }
 }

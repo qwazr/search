@@ -22,6 +22,7 @@ import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
+import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
@@ -47,10 +48,7 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.apache.lucene.store.Directory;
 
 import javax.ws.rs.core.Response;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.Semaphore;
@@ -66,6 +64,7 @@ final public class IndexInstance implements Closeable {
 	private final IndexWriter indexWriter;
 	private final SearcherManager searcherManager;
 	private final IndexSettingsDefinition settings;
+	private final FileResourceLoader fileResourceLoader;
 
 	private final LocalReplicator replicator;
 	private final ReplicationClient replicationClient;
@@ -78,7 +77,7 @@ final public class IndexInstance implements Closeable {
 
 	private volatile Pair<IndexReader, SortedSetDocValuesReaderState> facetsReaderStateCache;
 
-	IndexInstance(IndexInstanceBuilder builder) {
+	IndexInstance(final IndexInstanceBuilder builder) {
 		this.schema = builder.schema;
 		this.fileSet = builder.fileSet;
 		this.dataDirectory = builder.dataDirectory;
@@ -96,6 +95,7 @@ final public class IndexInstance implements Closeable {
 		this.queryAnalyzer = builder.queryAnalyzer;
 		this.settings = builder.settings;
 		this.searcherManager = builder.searcherManager;
+		this.fileResourceLoader = builder.fileResourceLoader;
 		this.replicator = builder.replicator;
 		this.replicationClient = builder.replicationClient;
 		this.indexReplicator = builder.indexReplicator;
@@ -151,9 +151,9 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	private void refreshFieldsAnalyzers(LinkedHashMap<String, AnalyzerDefinition> analyzers,
-			LinkedHashMap<String, FieldDefinition> fields) throws IOException {
-		final AnalyzerContext analyzerContext = new AnalyzerContext(analyzers, fields, true);
+	private void refreshFieldsAnalyzers(final LinkedHashMap<String, AnalyzerDefinition> analyzers,
+			final LinkedHashMap<String, FieldDefinition> fields) throws IOException {
+		final AnalyzerContext analyzerContext = new AnalyzerContext(fileResourceLoader, analyzers, fields, true);
 		indexAnalyzer.update(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext.queryAnalyzerMap);
 	}
@@ -184,7 +184,7 @@ final public class IndexInstance implements Closeable {
 		return analyzerMap;
 	}
 
-	synchronized void setAnalyzers(LinkedHashMap<String, AnalyzerDefinition> analyzers)
+	synchronized void setAnalyzers(final LinkedHashMap<String, AnalyzerDefinition> analyzers)
 			throws ServerException, IOException {
 		refreshFieldsAnalyzers(analyzerMap, fieldMap.getFieldDefinitionMap());
 		JsonMapper.MAPPER.writeValue(fileSet.analyzerMapFile, analyzers);
@@ -199,16 +199,13 @@ final public class IndexInstance implements Closeable {
 		setAnalyzers(analyzers);
 	}
 
-	List<TermDefinition> testAnalyzer(String analyzerName, String text)
+	List<TermDefinition> testAnalyzer(final String analyzerName, final String text)
 			throws ServerException, InterruptedException, ReflectiveOperationException, IOException {
-		AnalyzerDefinition analyzerDefinition = analyzerMap.get(analyzerName);
+		final AnalyzerDefinition analyzerDefinition = analyzerMap.get(analyzerName);
 		if (analyzerDefinition == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
-		Analyzer analyzer = new CustomAnalyzer(analyzerDefinition);
-		try {
+		try (final Analyzer analyzer = new CustomAnalyzer(fileResourceLoader, analyzerDefinition)) {
 			return TermDefinition.buildTermList(analyzer, StringUtils.EMPTY, text);
-		} finally {
-			analyzer.close();
 		}
 	}
 
@@ -546,7 +543,8 @@ final public class IndexInstance implements Closeable {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			final QueryContext queryContext =
-					new QueryContext(schema, null, indexAnalyzer, queryAnalyzer, fieldMap, null, queryDefinition);
+					new QueryContext(schema, fileResourceLoader, null, indexAnalyzer, queryAnalyzer, fieldMap, null,
+							queryDefinition);
 			final Query query = queryDefinition.query.getQuery(queryContext);
 			int docs = indexWriter.numDocs();
 			indexWriter.deleteDocuments(query);
@@ -599,8 +597,8 @@ final public class IndexInstance implements Closeable {
 		if (indexWriterConfig != null)
 			indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
 		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
-		return new QueryContext(schema, indexSearcher, indexAnalyzer, queryAnalyzer, fieldMap, facetsState,
-				queryDefinition);
+		return new QueryContext(schema, fileResourceLoader, indexSearcher, indexAnalyzer, queryAnalyzer, fieldMap,
+				facetsState, queryDefinition);
 	}
 
 	final ResultDefinition search(final QueryDefinition queryDefinition,
@@ -640,6 +638,41 @@ final public class IndexInstance implements Closeable {
 			if (!analyzers.containsKey(name))
 				analyzers.put(name, analyzerDef);
 		});
+	}
+
+	final void postResource(final String resourceName, final InputStream inputStream) throws IOException {
+		if (!fileSet.resourcesDirectory.exists())
+			fileSet.resourcesDirectory.mkdir();
+		final File resourceFile = fileResourceLoader.checkResourceName(resourceName);
+		IOUtils.copy(inputStream, resourceFile);
+		refreshFieldsAnalyzers((LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone(),
+				fieldMap.getFieldDefinitionMap());
+		schema.mayBeRefresh(true);
+	}
+
+	final String[] getResources() {
+		if (!fileSet.resourcesDirectory.exists())
+			return ArrayUtils.EMPTY_STRING_ARRAY;
+		return fileSet.resourcesDirectory.list();
+	}
+
+	final InputStream getResource(final String resourceName) throws IOException {
+		if (!fileSet.resourcesDirectory.exists())
+			throw new ServerException(Response.Status.NOT_FOUND, "Resource not found : " + resourceName);
+		return fileResourceLoader.openResource(resourceName);
+	}
+
+	final void deleteResource(final String resourceName) {
+		if (!fileSet.resourcesDirectory.exists())
+			throw new ServerException(Response.Status.NOT_FOUND, "Resource not found : " + resourceName);
+		final File resourceFile = fileResourceLoader.checkResourceName(resourceName);
+		if (!resourceFile.exists())
+			throw new ServerException(Response.Status.NOT_FOUND, "Resource not found : " + resourceName);
+		resourceFile.delete();
+	}
+
+	final FileResourceLoader newResourceLoader(final FileResourceLoader resourceLoader) {
+		return new FileResourceLoader(resourceLoader, fileSet.resourcesDirectory);
 	}
 
 }

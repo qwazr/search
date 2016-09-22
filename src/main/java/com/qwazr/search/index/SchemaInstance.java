@@ -86,17 +86,19 @@ public class SchemaInstance implements Closeable {
 			IndexReader[] indexReaders = new IndexReader[indexMap.size()];
 			int i = 0;
 			analyzerMap = new HashMap<>();
+			FileResourceLoader resourceLoader = null;
 			final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap = new LinkedHashMap<>();
 			for (IndexInstance indexInstance : indexMap.values()) {
 				indexReaders[i++] = DirectoryReader.open(indexInstance.getDataDirectory());
 				indexInstance.fillFields(fieldDefinitionMap);
 				indexInstance.fillAnalyzers(analyzerMap);
+				resourceLoader = indexInstance.newResourceLoader(resourceLoader);
 			}
 			fieldMap = new FieldMap(fieldDefinitionMap);
 			multiReader = new MultiReader(indexReaders);
 			indexSearcher = new IndexSearcher(multiReader);
 			final AnalyzerContext analyzerContext =
-					new AnalyzerContext(analyzerMap, fieldDefinitionMap, failOnException);
+					new AnalyzerContext(resourceLoader, analyzerMap, fieldDefinitionMap, failOnException);
 			indexAnalyzer = new UpdatableAnalyzer(analyzerContext.indexAnalyzerMap);
 			queryAnalyzer = new UpdatableAnalyzer(analyzerContext.queryAnalyzerMap);
 		}
@@ -140,8 +142,8 @@ public class SchemaInstance implements Closeable {
 			try {
 				SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader());
 				final QueryContext queryContext =
-						new QueryContext(SchemaInstance.this, indexSearcher, indexAnalyzer, queryAnalyzer, fieldMap,
-								state, queryDef);
+						new QueryContext(SchemaInstance.this, null, indexSearcher, indexAnalyzer, queryAnalyzer,
+								fieldMap, state, queryDef);
 				return QueryUtils.search(queryContext, documentBuilderFactory);
 			} finally {
 				decRef();
