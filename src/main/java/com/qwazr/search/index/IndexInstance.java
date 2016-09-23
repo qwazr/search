@@ -22,7 +22,6 @@ import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
-import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
@@ -349,10 +348,27 @@ final public class IndexInstance implements Closeable {
 	void replicationCheck() throws IOException, InterruptedException {
 		if (replicationClient == null)
 			throw new UnsupportedOperationException("No replication master has been setup.");
+
 		final Semaphore sem = schema.acquireWriteSemaphore();
+
 		try {
+			//Sync resources
+			final Map<String, ResourceInfo> localResources = getResources();
+			indexReplicator.getMasterResources().forEach((remoteName, remoteInfo) -> {
+				final ResourceInfo localInfo = localResources.remove(remoteName);
+				if (localInfo != null && localInfo.equals(remoteInfo))
+					return;
+				try (final InputStream input = indexReplicator.getResource(remoteName)) {
+					postResource(remoteName, remoteInfo.lastModified, input);
+				} catch (IOException e) {
+					throw new ServerException("Cannot replicate the resource " + remoteName, e);
+				}
+			});
+			localResources.forEach((resourceName, resourceInfo) -> deleteResource(resourceName));
+
 			setAnalyzers(indexReplicator.getMasterAnalyzers());
 			setFields(indexReplicator.getMasterFields());
+
 			long masterVersion = indexReplicator.getMasterStatus().version;
 			long slaveVersion = getIndexStatus().version;
 			if (masterVersion == slaveVersion)
@@ -640,20 +656,52 @@ final public class IndexInstance implements Closeable {
 		});
 	}
 
-	final void postResource(final String resourceName, final InputStream inputStream) throws IOException {
+	public static class ResourceInfo {
+
+		public final long lastModified;
+		public final long length;
+
+		public ResourceInfo() {
+			lastModified = 0;
+			length = 0;
+		}
+
+		private ResourceInfo(final File file) {
+			lastModified = file.lastModified();
+			length = file.length();
+		}
+
+		@Override
+		public boolean equals(final Object o) {
+			if (o == null || !(o instanceof ResourceInfo))
+				return false;
+			final ResourceInfo info = (ResourceInfo) o;
+			return lastModified == info.lastModified && length == info.length;
+		}
+	}
+
+	final void postResource(final String resourceName, final long lastModified, final InputStream inputStream)
+			throws IOException {
 		if (!fileSet.resourcesDirectory.exists())
 			fileSet.resourcesDirectory.mkdir();
 		final File resourceFile = fileResourceLoader.checkResourceName(resourceName);
 		IOUtils.copy(inputStream, resourceFile);
+		resourceFile.setLastModified(lastModified);
 		refreshFieldsAnalyzers((LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone(),
 				fieldMap.getFieldDefinitionMap());
 		schema.mayBeRefresh(true);
 	}
 
-	final String[] getResources() {
+	final LinkedHashMap<String, ResourceInfo> getResources() {
+		final LinkedHashMap<String, ResourceInfo> map = new LinkedHashMap<>();
 		if (!fileSet.resourcesDirectory.exists())
-			return ArrayUtils.EMPTY_STRING_ARRAY;
-		return fileSet.resourcesDirectory.list();
+			return map;
+		final File[] files = fileSet.resourcesDirectory.listFiles();
+		if (files == null)
+			return map;
+		for (File file : files)
+			map.put(file.getName(), new ResourceInfo(file));
+		return map;
 	}
 
 	final InputStream getResource(final String resourceName) throws IOException {

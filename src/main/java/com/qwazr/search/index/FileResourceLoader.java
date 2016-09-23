@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.lucene.analysis.util.ResourceLoader;
@@ -58,12 +59,20 @@ class FileResourceLoader implements ResourceLoader {
 	}
 
 	@Override
-	public <T> Class<? extends T> findClass(String cname, Class<T> expectedType) {
-		return null;
+	public <T> Class<? extends T> findClass(final String cname, final Class<T> expectedType) {
+		try {
+			return ClassLoaderManager.findClass(cname);
+		} catch (ClassNotFoundException e) {
+			throw new ServerException("Cannot find class " + cname, e);
+		}
 	}
 
 	@Override
-	public <T> T newInstance(String cname, Class<T> expectedType) {
-		return null;
+	public <T> T newInstance(final String cname, final Class<T> expectedType) {
+		try {
+			return findClass(cname, expectedType).newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new ServerException("Cannot create an instance of class " + cname, e);
+		}
 	}
 }

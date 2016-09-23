@@ -23,9 +23,8 @@
       },
       {
         "class": "synonym.SynonymFilter",
-        "dedup": false,
         "ignoreCase": true,
-        "tokenizerFactory": "core.WhitespaceTokenizerFactory",
+        "expand": true,
         "synonyms": "synonyms.txt"
       },
       {

@@ -23,6 +23,7 @@ import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
+import org.apache.commons.io.output.NullOutputStream;
 import org.apache.http.pool.PoolStats;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -51,6 +52,9 @@ public abstract class JsonAbstractTest {
 	public static final String DUMMY_DOC_ID = "sflkjsdlksjdlkj";
 	public static final String DUMMY_FIELD_NAME = "sflkjsdlksjdlkj";
 	public static final String DUMMY_ANALYZER_NAME = "sflkjsdlksjdlkj";
+	public static final String SYNONYMS_TXT = "synonyms.txt";
+	public static final String SYNONYMS2_TXT = "synonyms2.txt";
+	public static final long SYNONYM_LAST_MODIFIED = System.currentTimeMillis();
 	public static final LinkedHashMap<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
 	public static final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
 	public static final FieldDefinition FIELD_UPDATE_JSON = getField("field_update.json");
@@ -206,13 +210,58 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
-	public void test110CreateIndexWithSettings() throws URISyntaxException, IOException {
+	public void test105CreateIndexWithSettings() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
 		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_MASTER_SETTINGS);
 		Assert.assertNotNull(indexStatus);
 		Assert.assertNotNull(indexStatus.settings);
 		Assert.assertNotNull(indexStatus.settings.similarity_class);
 		checkAllSizes(client, 0);
+	}
+
+	private Response checkResponse(Response response, int... codes) {
+		Assert.assertNotNull(response);
+		final int returnedCode = response.getStatus();
+		for (int code : codes)
+			if (code == returnedCode)
+				return response;
+		Assert.fail("Wrong returned code: " + returnedCode);
+		return null;
+	}
+
+	@Test
+	public void test110putResource() throws IOException, URISyntaxException {
+		IndexServiceInterface client = getClient();
+		Map<String, IndexInstance.ResourceInfo> resources = client.getResources(SCHEMA_NAME, INDEX_MASTER_NAME);
+		Assert.assertNotNull(resources);
+		Assert.assertEquals(0, resources.size());
+		try (final InputStream input = JsonAbstractTest.class.getResourceAsStream(SYNONYMS_TXT)) {
+			checkResponse(
+					client.postResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS_TXT, SYNONYM_LAST_MODIFIED, input),
+					200);
+		}
+		try (final InputStream input = client.getResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS_TXT)
+				.getInputStream()) {
+			Assert.assertNotNull(input);
+			IOUtils.copy(input, new NullOutputStream());
+		}
+	}
+
+	@Test
+	public void test115deleteResource() throws IOException, URISyntaxException {
+		IndexServiceInterface client = getClient();
+		try (final InputStream input = JsonAbstractTest.class.getResourceAsStream(SYNONYMS_TXT)) {
+			checkResponse(
+					client.postResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS2_TXT, SYNONYM_LAST_MODIFIED, input),
+					200);
+		}
+		Map<String, IndexInstance.ResourceInfo> resources = client.getResources(SCHEMA_NAME, INDEX_MASTER_NAME);
+		Assert.assertNotNull(resources);
+		Assert.assertEquals(2, resources.size());
+		checkResponse(client.deleteResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS2_TXT), 200);
+		resources = client.getResources(SCHEMA_NAME, INDEX_MASTER_NAME);
+		Assert.assertNotNull(resources);
+		Assert.assertEquals(1, resources.size());
 	}
 
 	@Test

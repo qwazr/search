@@ -201,8 +201,8 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	}
 
 	@Override
-	public String[] getResources(String schema_name, String index_name) {
-		return new String[0];
+	public LinkedHashMap<String, IndexInstance.ResourceInfo> getResources(String schema_name, String index_name) {
+		return null;
 	}
 
 	@Override
@@ -211,7 +211,8 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	}
 
 	@Override
-	public Response postResource(String schema_name, String index_name, String resourceName, InputStream input) {
+	public Response postResource(String schema_name, String index_name, String resourceName, long lastModified,
+			InputStream input) {
 		return null;
 	}
 

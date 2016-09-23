@@ -19,8 +19,10 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.TermQuery;
+import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.AbstractStreamingOutput;
 import com.qwazr.utils.server.ServerException;
+import org.apache.http.client.utils.DateUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -503,10 +505,6 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		}
 	}
 
-	public static void main(String[] args) {
-		System.out.println(Long.parseLong("78", 16));
-	}
-
 	@Override
 	final public Response replicationCheck(final String schemaName, final String indexName) {
 		try {
@@ -519,7 +517,8 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	}
 
 	@Override
-	public String[] getResources(final String schemaName, final String indexName) {
+	public LinkedHashMap<String, IndexInstance.ResourceInfo> getResources(final String schemaName,
+			final String indexName) {
 		try {
 			checkRight(null);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getResources();
@@ -545,10 +544,11 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 
 	@Override
 	public Response postResource(final String schemaName, final String indexName, final String resourceName,
-			final InputStream inputStream) {
+			final long lastModified, final InputStream inputStream) {
 		try {
 			checkRight(null);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).postResource(resourceName, inputStream);
+			IndexManager.INSTANCE.get(schemaName).get(indexName, false)
+					.postResource(resourceName, lastModified, inputStream);
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(logger, e);

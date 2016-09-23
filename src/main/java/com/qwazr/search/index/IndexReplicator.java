@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 class IndexReplicator implements Replicator {
@@ -90,7 +91,15 @@ class IndexReplicator implements Replicator {
 		return indexService.getFields(schemaName, indexName);
 	}
 
+	final LinkedHashMap<String, IndexInstance.ResourceInfo> getMasterResources() {
+		return indexService.getResources(schemaName, indexName);
+	}
+
 	final IndexStatus getMasterStatus() {
 		return indexService.getIndex(schemaName, indexName);
+	}
+
+	final InputStream getResource(final String resourceName) throws IOException {
+		return indexService.getResource(schemaName, indexName, resourceName).getInputStream();
 	}
 }

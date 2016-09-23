@@ -40,6 +40,10 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public final static TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
 	};
 
+	public final static TypeReference<LinkedHashMap<String, IndexInstance.ResourceInfo>> MapStringResourceInfoTypeRef =
+			new TypeReference<LinkedHashMap<String, IndexInstance.ResourceInfo>>() {
+			};
+
 	@Override
 	public SchemaSettingsDefinition createUpdateSchema(final String schema_name) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name);
@@ -301,11 +305,12 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public String[] getResources(final String schema_name, final String index_name) {
+	public LinkedHashMap<String, IndexInstance.ResourceInfo> getResources(final String schema_name,
+			final String index_name) {
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources");
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, String[].class, valid200Json);
+		return executeJson(request, null, null, MapStringResourceInfoTypeRef, valid200Json);
 	}
 
 	@Override
@@ -319,9 +324,10 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public Response postResource(final String schema_name, final String index_name, final String resourceName,
-			final InputStream inputStream) {
+			final long lastModified, final InputStream inputStream) {
 		final UBuilder uriBuilder = RemoteService
-				.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/", resourceName);
+				.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/", resourceName)
+				.setParameter("lastModified", lastModified);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, inputStream, null, valid200)).build();
 	}
