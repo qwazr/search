@@ -169,6 +169,13 @@ public class AnnotatedIndexService<T> {
 		checkHttpResponse(indexService.deleteIndex(schemaName, indexName), 200);
 	}
 
+	private LinkedHashMap<String, FieldDefinition> getAnnotatedFields() {
+		final LinkedHashMap<String, FieldDefinition> indexFields = new LinkedHashMap<>();
+		if (indexFieldMap != null)
+			indexFieldMap.forEach((name, propertyField) -> indexFields.put(name, new FieldDefinition(propertyField)));
+		return indexFields;
+	}
+
 	/**
 	 * Set a collection of fields by reading the annotated fields.
 	 *
@@ -176,10 +183,40 @@ public class AnnotatedIndexService<T> {
 	 */
 	public LinkedHashMap<String, FieldDefinition> createUpdateFields() {
 		checkParameters();
-		final LinkedHashMap<String, FieldDefinition> indexFields = new LinkedHashMap<>();
-		if (indexFieldMap != null)
-			indexFieldMap.forEach((name, indexField) -> indexFields.put(name, new FieldDefinition(indexField)));
-		return indexService.setFields(schemaName, indexName, indexFields);
+		return indexService.setFields(schemaName, indexName, getAnnotatedFields());
+	}
+
+	public enum FieldStatus {
+		NOT_IDENTICAL,
+		EXISTS_ONLY_IN_INDEX,
+		EXISTS_ONLY_IN_ANNOTATION
+	}
+
+	/**
+	 * Check if the there is differences between the annotated fields and the fields already declared
+	 */
+	public Map<String, FieldStatus> getFieldChanges() {
+		checkParameters();
+		final LinkedHashMap<String, FieldDefinition> annotatedFields = getAnnotatedFields();
+		final LinkedHashMap<String, FieldDefinition> indexFields = indexService.getFields(schemaName, indexName);
+		final HashMap<String, FieldStatus> fieldChanges = new HashMap<>();
+		if (indexFieldMap != null) {
+			indexFieldMap.forEach((name, propertyField) -> {
+				final FieldDefinition annotatedField = annotatedFields.get(name);
+				final FieldDefinition indexField = indexFields == null ? null : indexFields.get(name);
+				if (indexField == null)
+					fieldChanges.put(name, FieldStatus.EXISTS_ONLY_IN_ANNOTATION);
+				else if (!indexField.equals(annotatedField))
+					fieldChanges.put(name, FieldStatus.NOT_IDENTICAL);
+			});
+		}
+		if (indexFields != null) {
+			indexFields.forEach((name, indexField) -> {
+				if (!annotatedFields.containsKey(name))
+					fieldChanges.put(name, FieldStatus.EXISTS_ONLY_IN_INDEX);
+			});
+		}
+		return fieldChanges;
 	}
 
 	/**

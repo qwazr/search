@@ -85,8 +85,19 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(indexStatus);
 	}
 
+
 	@Test
-	public void test070CreateUpdateFields() throws URISyntaxException {
+	public void test070FieldChangesNoFields() throws URISyntaxException {
+		final AnnotatedIndexService service = getMaster();
+		final Map<String, AnnotatedIndexService.FieldStatus> fieldChanges = service.getFieldChanges();
+		Assert.assertNotNull(fieldChanges);
+		Assert.assertEquals(14, fieldChanges.size());
+		fieldChanges.forEach((s, fieldStatus) -> Assert.assertEquals(
+				AnnotatedIndexService.FieldStatus.EXISTS_ONLY_IN_ANNOTATION, fieldStatus));
+	}
+
+	@Test
+	public void test072CreateUpdateFields() throws URISyntaxException {
 		final AnnotatedIndexService service = getMaster();
 		LinkedHashMap<String, FieldDefinition> fields = service.createUpdateFields();
 		Assert.assertNotNull(fields);
@@ -102,7 +113,7 @@ public abstract class JavaAbstractTest {
 	}
 
 	@Test
-	public void test075GetFields() throws URISyntaxException {
+	public void test074GetFields() throws URISyntaxException {
 		final AnnotatedIndexService service = getMaster();
 		LinkedHashMap<String, FieldDefinition> fields = service.getFields();
 		Assert.assertNotNull(fields);
@@ -113,6 +124,14 @@ public abstract class JavaAbstractTest {
 			Assert.assertEquals(fieldDef.template, fieldDefinition.template);
 			Assert.assertEquals(fieldDef.analyzer, fieldDefinition.analyzer);
 		});
+	}
+
+	@Test
+	public void test076FieldNoChanges() throws URISyntaxException {
+		final AnnotatedIndexService service = getMaster();
+		final Map<String, AnnotatedIndexService.FieldStatus> fieldChanges = service.getFieldChanges();
+		Assert.assertNotNull(fieldChanges);
+		Assert.assertEquals(0, fieldChanges.size());
 	}
 
 	private void checkTermDef(List<TermDefinition> terms, int expectedSize) {
