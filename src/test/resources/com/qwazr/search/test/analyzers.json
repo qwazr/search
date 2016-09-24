@@ -22,6 +22,22 @@
         "class": "en.EnglishPossessiveFilter"
       },
       {
+        "class": "en.EnglishMinimalStemFilter"
+      },
+      {
+        "class": "core.LowerCaseFilter"
+      }
+    ]
+  },
+  "EnglishSynonymAnalyzer": {
+    "tokenizer": {
+      "class": "standard.StandardTokenizer"
+    },
+    "filters": [
+      {
+        "class": "en.EnglishPossessiveFilter"
+      },
+      {
         "class": "synonym.SynonymFilter",
         "ignoreCase": true,
         "expand": true,

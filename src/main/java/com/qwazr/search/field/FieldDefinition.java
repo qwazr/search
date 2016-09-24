@@ -118,13 +118,13 @@ public class FieldDefinition {
 		template = builder.template;
 	}
 
-	public FieldDefinition(IndexField indexField) {
+	public FieldDefinition(final IndexField indexField) {
 		analyzer = indexField.analyzerClass() != Analyzer.class ?
 				indexField.analyzerClass().getName() :
-				indexField.analyzer();
+				StringUtils.isEmpty(indexField.analyzer()) ? null : indexField.analyzer();
 		query_analyzer = indexField.queryAnalyzerClass() != Analyzer.class ?
 				indexField.queryAnalyzerClass().getName() :
-				indexField.queryAnalyzer();
+				StringUtils.isEmpty(indexField.queryAnalyzer()) ? null : indexField.queryAnalyzer();
 		tokenized = indexField.tokenized();
 		stored = indexField.stored();
 		store_termvectors = indexField.storeTermVectors();
@@ -199,7 +199,7 @@ public class FieldDefinition {
 
 	public final static String DOC_FIELD = "$doc";
 
-	public static final String[] RESERVED_NAMES = {ID_FIELD, FACET_FIELD, SCORE_FIELD, DOC_FIELD};
+	public static final String[] RESERVED_NAMES = { ID_FIELD, FACET_FIELD, SCORE_FIELD, DOC_FIELD };
 
 	public final static Builder builder() {
 		return new Builder();

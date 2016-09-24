@@ -682,19 +682,46 @@ public abstract class JsonAbstractTest {
 		checkCollector(result, "maxPrice", 10.5D);
 	}
 
+	private void checkSnippets(ResultDocumentMap document, String snippetName, String... patterns) {
+		Assert.assertNotNull(document);
+		final Map<String, String> highlights = document.getHighlights();
+		Assert.assertNotNull(highlights);
+		final String snippet = highlights.get(snippetName);
+		Assert.assertNotNull(snippet);
+		for (String pattern : patterns)
+			Assert.assertTrue(snippet.contains(pattern));
+	}
+
 	@Test
 	public void test440QueryHighlight() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
 		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_HIGHLIGHT, 1);
 		final ResultDocumentMap document = result.getDocuments().get(0);
-		String snippet = document.getHighlights().get("my_custom_snippet");
-		Assert.assertNotNull(snippet);
-		Assert.assertTrue(snippet.contains("<strong>search</strong>"));
-		Assert.assertTrue(snippet.contains("<strong>engine</strong>"));
-		snippet = document.getHighlights().get("my_default_snippet");
-		Assert.assertNotNull(snippet);
-		Assert.assertTrue(snippet.contains("<b>search</b>"));
-		Assert.assertTrue(snippet.contains("<b>engine</b>"));
+		checkSnippets(document, "my_custom_snippet", "<strong>search</strong>", "<strong>engine</strong>");
+		checkSnippets(document, "my_default_snippet", "<b>search</b>", "<b>engine</b>");
+	}
+
+	private void checkSynonyms(final IndexServiceInterface client, final String queryString,
+			final String... multiWordsHighlights) throws IOException {
+		final QueryBuilder builder = new QueryBuilder(QUERY_HIGHLIGHT);
+		builder.setQuery_string(queryString);
+		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, builder.build(), 2);
+		ResultDocumentMap document = result.getDocuments().get(0);
+		for (String multiWordHighlight : multiWordsHighlights) {
+			checkSnippets(document, "my_custom_snippet", "<strong>" + multiWordHighlight + "</strong>");
+			checkSnippets(document, "my_default_snippet", "<b>" + multiWordHighlight + "</b>");
+		}
+		document = result.getDocuments().get(1);
+		checkSnippets(document, "my_custom_snippet", "<strong>USA</strong>");
+		checkSnippets(document, "my_default_snippet", "<b>USA</b>");
+	}
+
+	@Test
+	public void test442QuerySynonyms() throws URISyntaxException, IOException {
+		final IndexServiceInterface client = getClient();
+		checkSynonyms(client, "usa", "United States");
+		checkSynonyms(client, "united states", "United", "States");
+		checkSynonyms(client, "united states of america", "United", "States");
 	}
 
 	@Test
@@ -750,7 +777,7 @@ public abstract class JsonAbstractTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
+		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(
 				() -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),
@@ -841,8 +868,7 @@ public abstract class JsonAbstractTest {
 		Assert.assertEquals(Integer.valueOf(1), client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC));
 		final FieldDefinition newDef = client.setField(SCHEMA_NAME, INDEX_MASTER_NAME, "alpha_rank", FIELD_UPDATE_JSON);
 		Assert.assertEquals(newDef, FIELD_UPDATE_JSON);
-		checkErrorStatusCode(() ->
-				client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_ERROR), 500);
+		checkErrorStatusCode(() -> client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_ERROR), 500);
 		Assert.assertNotNull(client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME));
 		final Map<String, Object> result = client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, "5");
 		Assert.assertNotNull(result);

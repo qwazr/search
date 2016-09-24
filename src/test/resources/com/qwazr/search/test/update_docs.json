@@ -15,7 +15,8 @@
     "price": 1.10,
     "stock": 0,
     "alpha_rank": "a",
-    "integer_payload": "1|1001"
+    "integer_payload": "1|1001",
+    "description": "The United States is wealthy."
   },
   {
     "$id$": "2",
@@ -35,7 +36,8 @@
     "price": 2.20,
     "stock": 0,
     "alpha_rank": "b",
-    "integer_payload": "2|2002"
+    "integer_payload": "2|2002",
+    "description": "The USA is wealthy."
   },
   {
     "$id$": "3",
