@@ -325,8 +325,8 @@ public abstract class JsonAbstractTest {
 		final String dot = client.testAnalyzerDot(SCHEMA_NAME, INDEX_MASTER_NAME, "EnglishSynonymAnalyzer",
 				"The United States is wealthy!");
 		Assert.assertNotNull(dot);
-		Assert.assertTrue(dot.contains("United"));
-		Assert.assertTrue(dot.contains("States"));
+		Assert.assertTrue(dot.contains("united"));
+		Assert.assertTrue(dot.contains("states"));
 		Assert.assertTrue(dot.contains("wealthy"));
 	}
 
