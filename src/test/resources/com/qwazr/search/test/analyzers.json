@@ -35,16 +35,10 @@
     },
     "filters": [
       {
-        "class": "en.EnglishPossessiveFilter"
-      },
-      {
         "class": "synonym.SynonymFilter",
         "ignoreCase": true,
         "expand": true,
         "synonyms": "synonyms.txt"
-      },
-      {
-        "class": "en.EnglishMinimalStemFilter"
       },
       {
         "class": "core.LowerCaseFilter"

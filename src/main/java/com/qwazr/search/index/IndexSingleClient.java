@@ -233,6 +233,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
+	public String testAnalyzerDot(final String schema_name, final String index_name, final String analyzer_name,
+			final String text) {
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers/",
+						analyzer_name + "/dot").setParameter("text", text);
+		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
+		return executeString(request, null, null, valid200TextPlain);
+	}
+
+	@Override
 	public IndexStatus getIndex(final String schema_name, final String index_name) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
@@ -316,8 +326,9 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public AbstractStreamingOutput getResource(final String schema_name, final String index_name,
 			final String resourceName) {
-		final UBuilder uriBuilder = RemoteService
-				.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/", resourceName);
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/",
+						resourceName);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeStream(request, null, null, valid200);
 	}
@@ -325,17 +336,18 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Response postResource(final String schema_name, final String index_name, final String resourceName,
 			final long lastModified, final InputStream inputStream) {
-		final UBuilder uriBuilder = RemoteService
-				.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/", resourceName)
-				.setParameter("lastModified", lastModified);
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/",
+						resourceName).setParameter("lastModified", lastModified);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, inputStream, null, valid200)).build();
 	}
 
 	@Override
 	public Response deleteResource(final String schema_name, final String index_name, final String resourceName) {
-		final UBuilder uriBuilder = RemoteService
-				.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/", resourceName);
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/",
+						resourceName);
 		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, null, null, valid200)).build();
 	}

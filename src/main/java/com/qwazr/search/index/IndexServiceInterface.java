@@ -177,6 +177,12 @@ public interface IndexServiceInterface extends ServiceInterface {
 			@PathParam("index_name") String index_name, @PathParam("analyzer_name") String analyzer_name, String text);
 
 	@GET
+	@Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}/dot")
+	@Produces(MediaType.TEXT_PLAIN)
+	String testAnalyzerDot(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			@PathParam("analyzer_name") String analyzer_name, @QueryParam("text") String text);
+
+	@GET
 	@Path("/{schema_name}/{index_name}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	IndexStatus getIndex(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
@@ -274,8 +280,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/{schema_name}/{index_name}/resources/{resource_name}")
 	AbstractStreamingOutput getResource(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name,
-			@PathParam("resource_name") String resourceName);
+			@PathParam("index_name") String index_name, @PathParam("resource_name") String resourceName);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/resources/{resource_name}")

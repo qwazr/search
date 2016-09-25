@@ -320,6 +320,17 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
+	public void test128TestAnalyzerDot() throws URISyntaxException {
+		final IndexServiceInterface client = getClient();
+		final String dot = client.testAnalyzerDot(SCHEMA_NAME, INDEX_MASTER_NAME, "EnglishSynonymAnalyzer",
+				"The United States is wealthy!");
+		Assert.assertNotNull(dot);
+		Assert.assertTrue(dot.contains("United"));
+		Assert.assertTrue(dot.contains("States"));
+		Assert.assertTrue(dot.contains("wealthy"));
+	}
+
+	@Test
 	public void test130SetFields() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(() -> client.setFields(SCHEMA_NAME, INDEX_DUMMY_NAME, null), 404);

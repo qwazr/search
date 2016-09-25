@@ -198,13 +198,13 @@ final public class IndexInstance implements Closeable {
 		setAnalyzers(analyzers);
 	}
 
-	List<TermDefinition> testAnalyzer(final String analyzerName, final String text)
+	List<TermDefinition> testAnalyzer(final String analyzerName, final String inputText)
 			throws ServerException, InterruptedException, ReflectiveOperationException, IOException {
 		final AnalyzerDefinition analyzerDefinition = analyzerMap.get(analyzerName);
 		if (analyzerDefinition == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
 		try (final Analyzer analyzer = new CustomAnalyzer(fileResourceLoader, analyzerDefinition)) {
-			return TermDefinition.buildTermList(analyzer, StringUtils.EMPTY, text);
+			return TermDefinition.buildTermList(analyzer, StringUtils.EMPTY, inputText);
 		}
 	}
 
@@ -375,8 +375,8 @@ final public class IndexInstance implements Closeable {
 				return;
 			if (slaveVersion > masterVersion)
 				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-						"The slave version is greater than the master version: " + slaveVersion + " / " +
-								masterVersion);
+						"The slave version is greater than the master version: " + slaveVersion + " / "
+								+ masterVersion);
 			replicationClient.updateNow();
 		} finally {
 			if (sem != null)

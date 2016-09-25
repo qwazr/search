@@ -19,10 +19,8 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.TermQuery;
-import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.AbstractStreamingOutput;
 import com.qwazr.utils.server.ServerException;
-import org.apache.http.client.utils.DateUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -337,6 +335,51 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		}
 	}
 
+	private final static String[] DOT_PREFIX = { "digraph G {",
+			"rankdir = LR;",
+			"label = \"\";",
+			"center = 1;",
+			"ranksep = \"0.4\";",
+			"nodesep = \"0.25\";" };
+
+	private final static String[] DOT_SUFFIX = { "}" };
+
+	@Override
+	public String testAnalyzerDot(final String schemaName, final String indexName, final String analyzerName,
+			final String text) {
+		try {
+
+			checkRight(schemaName);
+			List<TermDefinition> terms =
+					IndexManager.INSTANCE.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text);
+
+			try (final StringWriter sw = new StringWriter()) {
+				try (final PrintWriter pw = new PrintWriter(sw)) {
+					for (String t : DOT_PREFIX)
+						pw.println(t);
+
+					// Build graph
+					for (TermDefinition term : terms) {
+						pw.print(term.start_offset);
+						pw.print(" -> ");
+						pw.print(term.end_offset + 1);
+						pw.print(" [label = \"");
+						pw.print(term.char_term);
+						pw.println("\"];");
+					}
+
+					for (String t : DOT_SUFFIX)
+						pw.println(t);
+					pw.close();
+					sw.close();
+					return sw.toString();
+				}
+			}
+		} catch (Exception e) {
+			throw ServerException.getJsonException(logger, e);
+		}
+	}
+
 	@Override
 	final public IndexStatus getIndex(final String schemaName, final String indexName) {
 		try {
@@ -547,7 +590,8 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final long lastModified, final InputStream inputStream) {
 		try {
 			checkRight(null);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false)
+			IndexManager.INSTANCE.get(schemaName)
+					.get(indexName, false)
 					.postResource(resourceName, lastModified, inputStream);
 			return Response.ok().build();
 		} catch (Exception e) {
