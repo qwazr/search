@@ -76,7 +76,8 @@ public class MultiFieldQuery extends AbstractQuery {
 
 		// Build the analyzer used to tokenize the query string
 		final Analyzer tokenAnalyzer = tokenizerDefinition != null ?
-				new CustomAnalyzer(queryContext.resourceLoader, new AnalyzerDefinition(tokenizerDefinition, null)) :
+				new CustomAnalyzer(queryContext.resourceLoader,
+						new AnalyzerDefinition(null, null, tokenizerDefinition, null)) :
 				DEFAULT_TOKEN_ANALYZER;
 
 		final TopLevelTerms topLevelTerms;

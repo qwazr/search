@@ -27,6 +27,8 @@ import java.util.*;
 
 final public class CustomAnalyzer extends Analyzer {
 
+	private final Map<String, Integer> positionIncrementGap;
+	private final Map<String, Integer> offsetGap;
 	private final TokenizerFactory tokenizerFactory;
 	private final List<TokenFilterFactory> tokenFilterFactories;
 
@@ -34,6 +36,10 @@ final public class CustomAnalyzer extends Analyzer {
 			throws ReflectiveOperationException,
 			IOException {
 		super(GLOBAL_REUSE_STRATEGY);
+		positionIncrementGap = analyzerDefinition.position_increment_gap == null ? null :
+				new HashMap<>(analyzerDefinition.position_increment_gap);
+		offsetGap = analyzerDefinition.offset_gap == null ? null :
+				new HashMap<>(analyzerDefinition.offset_gap);
 		tokenizerFactory = getFactory(resourceLoader, analyzerDefinition.tokenizer, KeywordTokenizerFactory.class);
 		if (analyzerDefinition.filters != null && !analyzerDefinition.filters.isEmpty()) {
 			tokenFilterFactories = new ArrayList<>(analyzerDefinition.filters.size());
@@ -41,6 +47,20 @@ final public class CustomAnalyzer extends Analyzer {
 				tokenFilterFactories.add(getFactory(resourceLoader, filterDef, null));
 		} else
 			tokenFilterFactories = null;
+	}
+
+	@Override
+	public int getPositionIncrementGap(final String fieldName) {
+		if (positionIncrementGap == null)
+			return 0;
+		return positionIncrementGap.getOrDefault(fieldName, 0);
+	}
+
+	@Override
+	public int getOffsetGap(final String fieldName) {
+		if (offsetGap == null)
+			return 1;
+		return offsetGap.getOrDefault(fieldName, 1);
 	}
 
 	@Override

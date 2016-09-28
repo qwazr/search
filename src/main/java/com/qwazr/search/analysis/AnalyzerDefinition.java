@@ -27,16 +27,24 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AnalyzerDefinition {
 
+	public final LinkedHashMap<String, Integer> position_increment_gap;
+	public final LinkedHashMap<String, Integer> offset_gap;
 	public final LinkedHashMap<String, String> tokenizer;
 	public final List<LinkedHashMap<String, String>> filters;
 
 	public AnalyzerDefinition() {
 		tokenizer = null;
 		filters = null;
+		position_increment_gap = null;
+		offset_gap = null;
 	}
 
-	public AnalyzerDefinition(final LinkedHashMap<String, String> tokenizer,
-			List<LinkedHashMap<String, String>> filters) {
+	public AnalyzerDefinition(final LinkedHashMap<String, Integer> positionIncrementGaps,
+			final LinkedHashMap<String, Integer> offsetGaps,
+			final LinkedHashMap<String, String> tokenizer,
+			final List<LinkedHashMap<String, String>> filters) {
+		this.position_increment_gap = positionIncrementGaps;
+		this.offset_gap = offsetGaps;
 		this.tokenizer = tokenizer;
 		this.filters = filters;
 	}
