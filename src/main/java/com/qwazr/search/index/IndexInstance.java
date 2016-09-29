@@ -51,6 +51,7 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
 
 final public class IndexInstance implements Closeable {
 
@@ -68,6 +69,7 @@ final public class IndexInstance implements Closeable {
 	private final LocalReplicator replicator;
 	private final ReplicationClient replicationClient;
 	private final IndexReplicator indexReplicator;
+	private final ReentrantLock replicationLock;
 
 	private final UpdatableAnalyzer indexAnalyzer;
 	private final UpdatableAnalyzer queryAnalyzer;
@@ -98,6 +100,7 @@ final public class IndexInstance implements Closeable {
 		this.replicator = builder.replicator;
 		this.replicationClient = builder.replicationClient;
 		this.indexReplicator = builder.indexReplicator;
+		this.replicationLock = new ReentrantLock(true);
 		this.facetsReaderStateCache = null;
 	}
 
@@ -310,7 +313,7 @@ final public class IndexInstance implements Closeable {
 
 	private List<BackupStatus> backups() {
 		checkIsMaster();
-		List<BackupStatus> list = new ArrayList<BackupStatus>();
+		List<BackupStatus> list = new ArrayList<>();
 		if (!fileSet.backupDirectory.exists())
 			return list;
 		File[] dirs = fileSet.backupDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -352,32 +355,43 @@ final public class IndexInstance implements Closeable {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 
 		try {
-			//Sync resources
-			final Map<String, ResourceInfo> localResources = getResources();
-			indexReplicator.getMasterResources().forEach((remoteName, remoteInfo) -> {
-				final ResourceInfo localInfo = localResources.remove(remoteName);
-				if (localInfo != null && localInfo.equals(remoteInfo))
+
+			// We only want one replication at a time
+			replicationLock.lock();
+			try {
+
+				//Sync resources
+				final Map<String, ResourceInfo> localResources = getResources();
+				indexReplicator.getMasterResources().forEach((remoteName, remoteInfo) -> {
+					final ResourceInfo localInfo = localResources.remove(remoteName);
+					if (localInfo != null && localInfo.equals(remoteInfo))
+						return;
+					try (final InputStream input = indexReplicator.getResource(remoteName)) {
+						postResource(remoteName, remoteInfo.lastModified, input);
+					} catch (IOException e) {
+						throw new ServerException("Cannot replicate the resource " + remoteName, e);
+					}
+				});
+				localResources.forEach((resourceName, resourceInfo) -> deleteResource(resourceName));
+
+				//Sync analyzer and fields
+				setAnalyzers(indexReplicator.getMasterAnalyzers());
+				setFields(indexReplicator.getMasterFields());
+
+				// Lucene index replication
+				long masterVersion = indexReplicator.getMasterStatus().version;
+				long slaveVersion = getIndexStatus().version;
+				if (masterVersion == slaveVersion) // same version, nothing to do
 					return;
-				try (final InputStream input = indexReplicator.getResource(remoteName)) {
-					postResource(remoteName, remoteInfo.lastModified, input);
-				} catch (IOException e) {
-					throw new ServerException("Cannot replicate the resource " + remoteName, e);
-				}
-			});
-			localResources.forEach((resourceName, resourceInfo) -> deleteResource(resourceName));
+				if (slaveVersion > masterVersion)
+					throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+							"The slave version is greater than the master version: " + slaveVersion + " / "
+									+ masterVersion);
+				replicationClient.updateNow();
 
-			setAnalyzers(indexReplicator.getMasterAnalyzers());
-			setFields(indexReplicator.getMasterFields());
-
-			long masterVersion = indexReplicator.getMasterStatus().version;
-			long slaveVersion = getIndexStatus().version;
-			if (masterVersion == slaveVersion)
-				return;
-			if (slaveVersion > masterVersion)
-				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-						"The slave version is greater than the master version: " + slaveVersion + " / "
-								+ masterVersion);
-			replicationClient.updateNow();
+			} finally {
+				replicationLock.unlock();
+			}
 		} finally {
 			if (sem != null)
 				sem.release();
