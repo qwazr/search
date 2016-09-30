@@ -1,10 +1,9 @@
 QWAZR SEARCH
 ============
 
-A Search Engine service for [QWAZR](https://www.qwazr.com).
+A Search Engine microservice with indexing and
+search features based on [Lucene](https://lucene.apache.org/core/).
 
-The Search Engine service provides indexing and searching features based on [Lucene](https://lucene.apache.org/core/).
-
-It is mainly a REST/JSON web service and it can also be used using Javascript or Java from a QWAZR application:
+It is basically a set of REST/JSON API which are described here:
 
 - [API documentation](src/doc/api)
