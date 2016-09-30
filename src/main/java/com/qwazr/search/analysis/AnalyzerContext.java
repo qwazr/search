@@ -16,8 +16,8 @@
 package com.qwazr.search.analysis;
 
 import com.qwazr.classloader.ClassLoaderManager;
-import com.qwazr.library.LibraryManager;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.utils.ClassUtils;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
@@ -40,8 +40,7 @@ public class AnalyzerContext {
 	public final Map<String, Analyzer> queryAnalyzerMap;
 
 	public AnalyzerContext(final ResourceLoader resourceLoader, final Map<String, AnalyzerDefinition> analyzerMap,
-			final Map<String, FieldDefinition> fields,
-			final boolean failOnException) throws ServerException {
+			final Map<String, FieldDefinition> fields, final boolean failOnException) throws ServerException {
 
 		if (fields == null || fields.size() == 0) {
 			this.indexAnalyzerMap = Collections.emptyMap();
@@ -55,9 +54,9 @@ public class AnalyzerContext {
 		fields.forEach((fieldName, fieldDef) -> {
 			try {
 
-				final Analyzer indexAnalyzer =
-						StringUtils.isEmpty(fieldDef.analyzer) ? null :
-								findAnalyzer(resourceLoader, analyzerMap, fieldDef.analyzer);
+				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ?
+						null :
+						findAnalyzer(resourceLoader, analyzerMap, fieldDef.analyzer);
 				if (indexAnalyzer != null)
 					indexAnalyzerMap.put(fieldName, indexAnalyzer);
 
@@ -77,7 +76,7 @@ public class AnalyzerContext {
 		});
 	}
 
-	final static String[] analyzerClassPrefixes = {"", "org.apache.lucene.analysis."};
+	final static String[] analyzerClassPrefixes = { "", "org.apache.lucene.analysis." };
 
 	private static Analyzer findAnalyzer(final ResourceLoader resourceLoader,
 			final Map<String, AnalyzerDefinition> analyzerMap, final String analyzerName)
@@ -87,8 +86,7 @@ public class AnalyzerContext {
 			if (analyzerDef != null)
 				return new CustomAnalyzer(resourceLoader, analyzerDef);
 		}
-		return LibraryManager.newInstance(
-				ClassLoaderUtils.findClass(ClassLoaderManager.classLoader, analyzerName, analyzerClassPrefixes));
+		return ClassUtils.newInstance(analyzerName, analyzerClassPrefixes);
 	}
 
 }

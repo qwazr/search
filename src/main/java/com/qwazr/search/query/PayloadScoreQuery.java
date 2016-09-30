@@ -16,10 +16,8 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.qwazr.classloader.ClassLoaderManager;
-import com.qwazr.library.LibraryManager;
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.utils.ClassLoaderUtils;
+import com.qwazr.search.utils.ClassUtils;
 import org.apache.lucene.queries.payloads.AveragePayloadFunction;
 import org.apache.lucene.queries.payloads.MaxPayloadFunction;
 import org.apache.lucene.queries.payloads.MinPayloadFunction;
@@ -73,18 +71,18 @@ public class PayloadScoreQuery extends AbstractQuery {
 		this.wrapped_query = wrappedQuery;
 		if (type != null) {
 			switch (type) {
-				case AVERAGE:
-					payloadFunction = new AveragePayloadFunction();
-					break;
-				case MAX:
-					payloadFunction = new MaxPayloadFunction();
-					break;
-				case MIN:
-					payloadFunction = new MinPayloadFunction();
-					break;
-				default:
-					payloadFunction = null;
-					break;
+			case AVERAGE:
+				payloadFunction = new AveragePayloadFunction();
+				break;
+			case MAX:
+				payloadFunction = new MaxPayloadFunction();
+				break;
+			case MIN:
+				payloadFunction = new MinPayloadFunction();
+				break;
+			default:
+				payloadFunction = null;
+				break;
 			}
 			payload_function = null;
 		} else {
@@ -94,12 +92,11 @@ public class PayloadScoreQuery extends AbstractQuery {
 		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
 	}
 
-	final static String[] payloadFunctionClassPrefixes = {"", "org.apache.lucene.queries.payloads."};
+	final static String[] payloadFunctionClassPrefixes = { "", "org.apache.lucene.queries.payloads." };
 
 	private static PayloadFunction getPayloadFunction(final String payloadFunction)
 			throws ReflectiveOperationException, IOException {
-		return LibraryManager.newInstance(ClassLoaderUtils
-				.findClass(ClassLoaderManager.classLoader, payloadFunction, payloadFunctionClassPrefixes));
+		return ClassUtils.newInstance(payloadFunction, payloadFunctionClassPrefixes);
 	}
 
 	@Override
