@@ -1,7 +1,8 @@
 FROM java:openjdk-8-jdk-alpine
 
-RUN mkdir /usr/share/qwazr
-RUN wget -O /usr/share/qwazr/qwazr-search.jar http://download.qwazr.com/latest/qwazr-search-1.0.1-SNAPSHOT-exec.jar
+MAINTAINER Emmanuel Keller
+
+ADD http://download.qwazr.com/latest/qwazr-search-1.0.1-SNAPSHOT-exec.jar /usr/share/qwazr/qwazr-search.jar
 
 VOLUME /var/lib/qwazr
 
