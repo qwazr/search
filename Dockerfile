@@ -5,7 +5,7 @@ RUN wget -O /usr/share/qwazr/qwazr-search.jar http://download.qwazr.com/latest/q
 
 VOLUME /var/lib/qwazr
 
-EXPOSE 9090 9091
+EXPOSE 9091
 
 WORKDIR /var/lib/qwazr/
 

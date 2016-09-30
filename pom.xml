@@ -30,6 +30,7 @@
         <dependency>
             <groupId>com.qwazr</groupId>
             <artifactId>qwazr-library</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
@@ -38,6 +39,7 @@
         <dependency>
             <groupId>com.qwazr</groupId>
             <artifactId>qwazr-compiler</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.datastax.cassandra</groupId>
@@ -162,7 +164,6 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>exec</shadedClassifierName>
-                            <minimizeJar>true</minimizeJar>
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -188,18 +189,11 @@
                             </transformers>
                             <filters>
                                 <filter>
-                                    <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>org.apache.logging.log4j:*</artifact>
-                                    <includes>
-                                        <include>**</include>
-                                    </includes>
                                 </filter>
                             </filters>
                         </configuration>
