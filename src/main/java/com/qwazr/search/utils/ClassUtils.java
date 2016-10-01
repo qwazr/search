@@ -30,7 +30,7 @@ public class ClassUtils {
 		try {
 			Class.forName(LibraryManager.class.getName());
 			f = true;
-		} catch (Exception e) {
+		} catch (ClassNotFoundException e) {
 			f = false;
 		}
 		LIBRARY_AVAILABLE = f;
