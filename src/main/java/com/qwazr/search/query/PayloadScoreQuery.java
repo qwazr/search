@@ -16,8 +16,8 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.search.utils.ClassUtils;
 import org.apache.lucene.queries.payloads.AveragePayloadFunction;
 import org.apache.lucene.queries.payloads.MaxPayloadFunction;
 import org.apache.lucene.queries.payloads.MinPayloadFunction;
@@ -96,7 +96,7 @@ public class PayloadScoreQuery extends AbstractQuery {
 
 	private static PayloadFunction getPayloadFunction(final String payloadFunction)
 			throws ReflectiveOperationException, IOException {
-		return ClassUtils.newInstance(payloadFunction, payloadFunctionClassPrefixes);
+		return ClassLoaderManager.getInstance().newInstance(payloadFunction, payloadFunctionClassPrefixes);
 	}
 
 	@Override

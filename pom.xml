@@ -29,8 +29,7 @@
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-library</artifactId>
-            <scope>provided</scope>
+            <artifactId>qwazr-compiler</artifactId>
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>

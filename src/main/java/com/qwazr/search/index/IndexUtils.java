@@ -15,8 +15,8 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.utils.ClassUtils;
 import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.IndexReader;
@@ -33,7 +33,7 @@ class IndexUtils {
 
 	final static Similarity findSimilarity(final String similarityClassname)
 			throws InterruptedException, ReflectiveOperationException, IOException {
-		return ClassUtils.newInstance(similarityClassname, similarityClassPrefixes);
+		return ClassLoaderManager.getInstance().newInstance(similarityClassname, similarityClassPrefixes);
 	}
 
 	final static SortedSetDocValuesReaderState getNewFacetsState(IndexReader indexReader) throws IOException {

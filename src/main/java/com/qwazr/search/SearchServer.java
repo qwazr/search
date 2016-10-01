@@ -15,6 +15,7 @@
  */
 package com.qwazr.search;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.utils.server.GenericServer;
@@ -24,8 +25,9 @@ import com.qwazr.utils.server.ServerConfiguration;
 public class SearchServer {
 
 	public static GenericServer start() throws Exception {
-		final ServerBuilder builder =
-				new ServerBuilder(new ServerConfiguration(System.getProperties(), System.getenv()));
+		final ServerConfiguration config = new ServerConfiguration(System.getProperties(), System.getenv());
+		final ServerBuilder builder = new ServerBuilder(config);
+		ClassLoaderManager.load(config.dataDirectory, null);
 		ClusterManager.load(builder, null, null);
 		IndexManager.load(builder);
 		return builder.build().start(true);

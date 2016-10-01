@@ -17,8 +17,6 @@ package com.qwazr.search.analysis;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.utils.ClassUtils;
-import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
@@ -86,7 +84,7 @@ public class AnalyzerContext {
 			if (analyzerDef != null)
 				return new CustomAnalyzer(resourceLoader, analyzerDef);
 		}
-		return ClassUtils.newInstance(analyzerName, analyzerClassPrefixes);
+		return ClassLoaderManager.getInstance().newInstance(analyzerName, analyzerClassPrefixes);
 	}
 
 }

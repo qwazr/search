@@ -15,8 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.QueryContext;
-import org.apache.htrace.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.lucene.geo.Polygon;
 import org.apache.lucene.search.Query;
 
