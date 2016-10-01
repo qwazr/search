@@ -1,19 +1,19 @@
 QWAZR SEARCH
 ============
 
-A Search Engine microservice with indexing and search features based on [Lucene](https://lucene.apache.org/core/).
+A Search Engine microservice with indexing and search features based on
+[Apache Lucene](https://lucene.apache.org/core/)
 
-Run using Docker
-----------------
+## Run using Docker
 
-    docker run qwazr/search
+    docker run -p 9091:9091 qwazr/search
     
 
-### Create a schema
+## Create a schema
 
     curl -XPOST  "http://localhost:9091/indexes/my_schema"
 
-### Create an index
+## Create an index
 
      curl -XPOST  "http://localhost:9091/indexes/my_schema/my_index"
   
@@ -22,12 +22,13 @@ It returns:
 ```json
 {
   "num_docs": 0,
+  "version": "2",
   "num_deleted_docs": 0,
   "settings": {}
 }
 ```
 
-### Define some fields
+## Define some fields
 
 Define some fields in a json file: **my_fields.json**
  
@@ -56,12 +57,164 @@ Here is the content:
 }
 ```
 
-Create the fields by posting the json file:
+Upload the fields definition by posting the json file:
 
     curl -XPOST -H 'Content-Type: application/json' -d @my_fields.json \
-        "http://localhost:9091/indexes/my_uuid/my_index/fields"
+        "http://localhost:9091/indexes/my_schema/my_index/fields"
+        
+## Index documents
 
+Define the documents in a json file: **my_docs.json**
 
-It is basically a set of REST/JSON API which are described here:
+```json
+[
+  {
+    "$id$": "1",
+    "name": "First article",
+    "description": "This is the description of the first article.",
+    "category": [
+      "news",
+      "economy"
+    ]
+  },
+  {
+    "$id$": "2",
+    "name": "Second article",
+    "description": "This is the description of the second article.",
+    "category": [
+      "news",
+      "science"
+    ]
+  }
+]
+```
 
-- [API documentation](src/doc/api)
+Index the documents by posting the json file:
+
+    curl -XPOST -H 'Content-Type: application/json' -d @my_docs.json \
+        "http://localhost:9091/indexes/my_schema/my_index/docs"
+        
+## Search request
+
+Define your search query in a json file: **my_search.json**
+
+Here an example of search request:
+
+```json
+{
+  "start": 0,
+  "rows": 10,
+  "query_string": "Article",
+  "query": {
+    "query": "BooleanQuery",
+    "clauses": [
+      {
+        "occur": "must",
+        "query": {
+          "query": "MultiFieldQueryParser",
+          "fields": [
+            "name",
+            "description"
+          ],
+          "boosts": {
+            "name": 10,
+            "description": 1
+          }
+        }
+      },
+      {
+        "occur": "filter",
+        "query": {
+          "query": "BooleanQuery",
+          "clauses": [
+            {
+              "occur": "must",
+              "query": {
+                "query": "FacetPathQuery",
+                "dimension": "category",
+                "path": [
+                  "news"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "facets": {
+    "category": {
+      "top": 10
+    }
+  },
+  "returned_fields": [
+    "name"
+  ],
+  "highlighters": {
+    "my_description": {
+      "field": "description"
+    }
+  }
+}
+```
+
+Execute the search request by posting the json file:
+
+    curl -XPOST -H 'Content-Type: application/json' -d @my_search.json \
+        "http://localhost:9091/indexes/my_schema/my_index/search"
+    
+And here is the result:
+
+```json
+{
+  "timer" : {
+    "start_time" : "2016-10-01T12:19:25.311+0000",
+    "total_time" : 104,
+    "unknown_time" : 0,
+    "durations" : {
+      "search_query" : 59,
+      "facet_count" : 5,
+      "storedFields" : 19,
+      "docValuesFields" : 6,
+      "highlighting" : 15
+    }
+  },
+  "total_hits" : 2,
+  "max_score" : 1.7962807,
+  "documents" : [ {
+    "score" : 1.7962807,
+    "percent_score" : 1.0,
+    "doc" : 0,
+    "shard_index" : -1,
+    "highlights" : {
+      "my_description" : "This is the description of the first <b>article</b>."
+    },
+    "fields" : {
+      "name" : "First article"
+    }
+  }, {
+    "score" : 1.7962807,
+    "percent_score" : 1.0,
+    "doc" : 1,
+    "shard_index" : -1,
+    "highlights" : {
+      "my_description" : "This is the description of the second <b>article</b>."
+    },
+    "fields" : {
+      "name" : "Second article"
+    }
+  } ],
+  "facets" : {
+    "category" : {
+      "news" : 2,
+      "economy" : 1,
+      "science" : 1
+    }
+  }
+}
+```
+
+# The full API set
+
+The full set of REST/JSON API is described here:
+[API documentation](https://www.qwazr.com/documentation/QWAZR/qwazr-search/src/doc/api/)
