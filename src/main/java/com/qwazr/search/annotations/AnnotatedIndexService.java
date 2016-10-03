@@ -119,6 +119,17 @@ public class AnnotatedIndexService<T> {
 	}
 
 	/**
+	 * Create a new schema or update an existing one
+	 *
+	 * @param settings
+	 * @return the schema settings
+	 */
+	public SchemaSettingsDefinition createUpdateSchema(final SchemaSettingsDefinition settings) {
+		checkParameters();
+		return indexService.createUpdateSchema(schemaName, settings);
+	}
+
+	/**
 	 * Check if the HTTP response returned a valid code. If not a WebApplicationException is thrown
 	 *
 	 * @param response   The HTTP   response

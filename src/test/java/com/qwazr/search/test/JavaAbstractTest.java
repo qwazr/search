@@ -74,8 +74,11 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test050CreateSchema() throws URISyntaxException {
 		final AnnotatedIndexService service = getMaster();
-		final SchemaSettingsDefinition settings = service.createUpdateSchema();
-		Assert.assertNotNull(settings);
+		final SchemaSettingsDefinition settings1 = service.createUpdateSchema();
+		Assert.assertNotNull(settings1);
+		final SchemaSettingsDefinition settings2 = service.createUpdateSchema(settings1);
+		Assert.assertNotNull(settings2);
+		Assert.assertEquals(settings1, settings2);
 	}
 
 	@Test
