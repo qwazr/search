@@ -40,7 +40,6 @@ import java.util.concurrent.Callable;
 class IndexInstanceBuilder {
 
 	final static String INDEX_DATA = "data";
-	final static String INDEX_BACKUP = "backup";
 	final static String REPL_WORK = "repl_work";
 	final static String SETTINGS_FILE = "settings.json";
 	final static String FIELDS_FILE = "fields.json";
@@ -51,7 +50,6 @@ class IndexInstanceBuilder {
 
 		final File settingsFile;
 		final File indexDirectory;
-		final File backupDirectory;
 		final File dataDirectory;
 		final File analyzerMapFile;
 		final File resourcesDirectory;
@@ -60,7 +58,6 @@ class IndexInstanceBuilder {
 
 		private FileSet(File indexDirectory) {
 			this.indexDirectory = indexDirectory;
-			this.backupDirectory = new File(indexDirectory, INDEX_BACKUP);
 			this.dataDirectory = new File(indexDirectory, INDEX_DATA);
 			this.analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
 			this.resourcesDirectory = new File(indexDirectory, RESOURCES_DIR);

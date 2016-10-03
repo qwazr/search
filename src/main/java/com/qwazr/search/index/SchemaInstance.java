@@ -19,7 +19,9 @@ import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
@@ -31,6 +33,8 @@ import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.IndexSearcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
@@ -38,16 +42,15 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchemaInstance implements Closeable {
+
+	private final static Logger LOGGER = LoggerFactory.getLogger(SchemaInstance.class);
 
 	private final static String SETTINGS_FILE = "settings.json";
 
@@ -57,6 +60,7 @@ public class SchemaInstance implements Closeable {
 	private final File schemaDirectory;
 	private final File settingsFile;
 	private volatile SchemaSettingsDefinition settingsDefinition;
+	private volatile File backupRootDirectory;
 
 	private volatile Semaphore readSemaphore;
 	private volatile Semaphore writeSemaphore;
@@ -254,11 +258,39 @@ public class SchemaInstance implements Closeable {
 		return indexMap.keySet();
 	}
 
-	void backups(Integer keepLastCount) throws IOException, InterruptedException {
+	private void checkBackupRootDirectory() throws IOException {
+		if (backupRootDirectory == null)
+			throw new IOException("The backup root directory is not set for the schema: " + schemaDirectory.getName());
+		if (!backupRootDirectory.exists() || !backupRootDirectory.isDirectory())
+			throw new IOException(
+					"The backup root directory does not exists: " + backupRootDirectory.getAbsolutePath());
+	}
+
+	BackupStatus backup(final String indexName, final Integer keepLastCount) throws IOException, InterruptedException {
+		checkBackupRootDirectory();
+		return get(indexName, false).backup(keepLastCount, new File(backupRootDirectory, indexName));
+	}
+
+	void backups(final Integer keepLastCount)
+			throws IOException, InterruptedException {
+		checkBackupRootDirectory();
+		final ExceptionUtils.Holder exceptionHolder = new ExceptionUtils.Holder(LOGGER);
 		synchronized (indexMap) {
-			for (IndexInstance instance : indexMap.values())
-				instance.backup(keepLastCount);
+			indexMap.entrySet().parallelStream().forEach((entry) -> {
+				try {
+					final File backupIndexDirectory = new File(backupRootDirectory, entry.getKey());
+					entry.getValue().backup(keepLastCount, backupIndexDirectory);
+				} catch (IOException | InterruptedException e) {
+					exceptionHolder.switchAndWarn(e);
+				}
+			});
 		}
+		exceptionHolder.thrownIfAny();
+	}
+
+	List<BackupStatus> getBackups(final String indexName) throws IOException, InterruptedException {
+		checkBackupRootDirectory();
+		return get(indexName, false).getBackups(new File(backupRootDirectory, indexName));
 	}
 
 	synchronized void setSettings(SchemaSettingsDefinition settings) throws IOException, URISyntaxException {
@@ -295,6 +327,10 @@ public class SchemaInstance implements Closeable {
 			writeSemaphore = new Semaphore(settingsDefinition.max_simultaneous_write);
 		else
 			writeSemaphore = null;
+		if (!StringUtils.isEmpty(settingsDefinition.backup_directory_path))
+			backupRootDirectory = new File(settingsDefinition.backup_directory_path);
+		else
+			backupRootDirectory = null;
 	}
 
 	private static <T extends ResultDocumentAbstract> ResultDefinition<T> atomicSearch(SearchContext searchContext,

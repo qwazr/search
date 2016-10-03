@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
@@ -104,16 +105,16 @@ public class IndexManager {
 	 * @return the indexSchema
 	 * @throws ServerException if any error occurs
 	 */
-	SchemaInstance get(String schemaName) throws ServerException {
-		SchemaInstance schemaInstance = schemaMap.get(schemaName);
+	SchemaInstance get(final String schemaName) throws ServerException {
+		final SchemaInstance schemaInstance = schemaMap.get(schemaName);
 		if (schemaInstance == null)
 			throw new ServerException(Status.NOT_FOUND, "Schema not found: " + schemaName);
 		return schemaInstance;
 	}
 
-	void delete(String schemaName) throws ServerException {
+	void delete(final String schemaName) throws ServerException {
 		synchronized (schemaMap) {
-			SchemaInstance schemaInstance = get(schemaName);
+			final SchemaInstance schemaInstance = get(schemaName);
 			schemaInstance.delete();
 			schemaMap.remove(schemaName);
 		}
@@ -123,10 +124,12 @@ public class IndexManager {
 		return schemaMap.keySet();
 	}
 
-	void backups(Integer keepLastCount) throws IOException, InterruptedException {
+	void backups(final Integer keepLastCount) throws IOException, InterruptedException {
 		synchronized (schemaMap) {
-			for (SchemaInstance instance : schemaMap.values())
-				instance.backups(keepLastCount);
+			for (SchemaInstance instance : schemaMap.values()) {
+				if (!StringUtils.isEmpty(instance.getSettings().backup_directory_path))
+					instance.backups(keepLastCount);
+			}
 		}
 	}
 }

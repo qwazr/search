@@ -417,7 +417,7 @@ public class AnnotatedIndexService<T> {
 	}
 
 	public void replicationCheck() {
-		Response response = indexService.replicationCheck(schemaName, indexName);
+		final Response response = indexService.replicationCheck(schemaName, indexName);
 		Objects.requireNonNull(response, "The response is null");
 		if (response.getStatus() != 200)
 			throw new WebApplicationException(response);

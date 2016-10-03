@@ -335,14 +335,14 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		}
 	}
 
-	private final static String[] DOT_PREFIX = { "digraph G {",
+	private final static String[] DOT_PREFIX = {"digraph G {",
 			"rankdir = LR;",
 			"label = \"\";",
 			"center = 1;",
 			"ranksep = \"0.4\";",
-			"nodesep = \"0.25\";" };
+			"nodesep = \"0.25\";"};
 
-	private final static String[] DOT_SUFFIX = { "}" };
+	private final static String[] DOT_SUFFIX = {"}"};
 
 	@Override
 	public String testAnalyzerDot(final String schemaName, final String indexName, final String analyzerName,
@@ -480,8 +480,10 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			if ("*".equals(schemaName) && "*".equals(indexName)) {
 				IndexManager.INSTANCE.backups(keep_last_count);
 				return new BackupStatus();
-			} else
-				return IndexManager.INSTANCE.get(schemaName).get(indexName, false).backup(keep_last_count);
+			} else {
+				final SchemaInstance schema = IndexManager.INSTANCE.get(schemaName);
+				return schema.backup(indexName, keep_last_count);
+			}
 		} catch (Exception e) {
 			throw ServerException.getJsonException(logger, e);
 		}
@@ -491,7 +493,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public List<BackupStatus> getBackups(final String schemaName, final String indexName) {
 		try {
 			checkRight(null);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getBackups();
+			return IndexManager.INSTANCE.get(schemaName).getBackups(indexName);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(logger, e);
 		}

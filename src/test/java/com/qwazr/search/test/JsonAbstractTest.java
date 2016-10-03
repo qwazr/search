@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.test;
 
+import com.google.common.io.Files;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
@@ -32,6 +33,7 @@ import org.junit.runners.MethodSorters;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -101,8 +103,12 @@ public abstract class JsonAbstractTest {
 	@Test
 	public void test050CreateSchema() throws URISyntaxException {
 		IndexServiceInterface client = getClient();
-		SchemaSettingsDefinition settings = client.createUpdateSchema(SCHEMA_NAME, null);
-		Assert.assertNotNull(settings);
+		final File schemaBackupDir = Files.createTempDir();
+		final SchemaSettingsDefinition settings1 =
+				new SchemaSettingsDefinition(null, null, null, schemaBackupDir.getPath());
+		SchemaSettingsDefinition settings2 = client.createUpdateSchema(SCHEMA_NAME, settings1);
+		Assert.assertNotNull(settings2);
+		Assert.assertEquals(settings1, settings2);
 	}
 
 	@Test
@@ -788,7 +794,7 @@ public abstract class JsonAbstractTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
+		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(
 				() -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),

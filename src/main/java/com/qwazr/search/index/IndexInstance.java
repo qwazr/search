@@ -255,25 +255,29 @@ final public class IndexInstance implements Closeable {
 		schema.mayBeRefresh(true);
 	}
 
-	final synchronized BackupStatus backup(Integer keepLastCount) throws IOException, InterruptedException {
+	final synchronized BackupStatus backup(final Integer keepLastCount, final File backupIndexRootDirectory)
+			throws IOException, InterruptedException {
 		checkIsMaster();
-		Semaphore sem = schema.acquireReadSemaphore();
+		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
-			File backupdir = null;
+			if (!backupIndexRootDirectory.exists())
+				backupIndexRootDirectory.mkdir();
+			if (!backupIndexRootDirectory.exists() || !backupIndexRootDirectory.isDirectory())
+				throw new IOException(
+						"Cannot create the root backup directory: " + backupIndexRootDirectory.getAbsolutePath());
+			File backupDir = null;
 			final IndexCommit commit = snapshotDeletionPolicy.snapshot();
 			try {
 				int files_count = 0;
 				long bytes_size = 0;
-				if (!fileSet.backupDirectory.exists())
-					fileSet.backupDirectory.mkdir();
-				backupdir = new File(fileSet.backupDirectory, Long.toString(commit.getGeneration()));
-				if (!backupdir.exists())
-					backupdir.mkdir();
-				if (!backupdir.exists())
-					throw new IOException("Cannot create the backup directory: " + backupdir);
+				backupDir = new File(backupIndexRootDirectory, Long.toString(commit.getGeneration()));
+				if (!backupDir.exists())
+					backupDir.mkdir();
+				if (!backupDir.exists() || !backupDir.isDirectory())
+					throw new IOException("Cannot create the backup directory: " + backupDir.getAbsolutePath());
 				for (String fileName : commit.getFileNames()) {
-					File sourceFile = new File(fileSet.dataDirectory, fileName);
-					File targetFile = new File(backupdir, fileName);
+					final File sourceFile = new File(fileSet.dataDirectory, fileName);
+					final File targetFile = new File(backupDir, fileName);
 					files_count++;
 					bytes_size += sourceFile.length();
 					if (targetFile.exists() && targetFile.length() == sourceFile.length()
@@ -281,11 +285,11 @@ final public class IndexInstance implements Closeable {
 						continue;
 					FileUtils.copyFile(sourceFile, targetFile, true);
 				}
-				purgeBackups(keepLastCount);
-				return new BackupStatus(commit.getGeneration(), backupdir.lastModified(), bytes_size, files_count);
+				purgeBackups(keepLastCount, backupIndexRootDirectory);
+				return new BackupStatus(commit.getGeneration(), backupDir.lastModified(), bytes_size, files_count);
 			} catch (IOException e) {
-				if (backupdir != null)
-					FileUtils.deleteQuietly(backupdir);
+				if (backupDir != null)
+					FileUtils.deleteQuietly(backupDir);
 				throw e;
 			} finally {
 				snapshotDeletionPolicy.release(commit);
@@ -296,27 +300,27 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	private void purgeBackups(Integer keepLastCount) {
+	private void purgeBackups(final Integer keepLastCount, final File backupIndexDirectory) {
 		checkIsMaster();
 		if (keepLastCount == null)
 			return;
 		if (keepLastCount == 0)
 			return;
-		List<BackupStatus> backups = backups();
+		final List<BackupStatus> backups = backups(backupIndexDirectory);
 		if (backups.size() <= keepLastCount)
 			return;
 		for (int i = keepLastCount; i < backups.size(); i++) {
-			File backupDir = new File(fileSet.backupDirectory, Long.toString(backups.get(i).generation));
+			final File backupDir = new File(backupIndexDirectory, Long.toString(backups.get(i).generation));
 			FileUtils.deleteQuietly(backupDir);
 		}
 	}
 
-	private List<BackupStatus> backups() {
+	private List<BackupStatus> backups(final File backupIndexDirectory) {
 		checkIsMaster();
-		List<BackupStatus> list = new ArrayList<>();
-		if (!fileSet.backupDirectory.exists())
+		final List<BackupStatus> list = new ArrayList<>();
+		if (!backupIndexDirectory.exists())
 			return list;
-		File[] dirs = fileSet.backupDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
+		final File[] dirs = backupIndexDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
 		if (dirs == null)
 			return list;
 		for (File dir : dirs) {
@@ -328,11 +332,11 @@ final public class IndexInstance implements Closeable {
 		return list;
 	}
 
-	final List<BackupStatus> getBackups() throws InterruptedException {
+	final List<BackupStatus> getBackups(final File backupIndexDirectory) throws InterruptedException {
 		checkIsMaster();
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
-			return backups();
+			return backups(backupIndexDirectory);
 		} finally {
 			if (sem != null)
 				sem.release();
