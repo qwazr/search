@@ -240,16 +240,17 @@ public interface IndexServiceInterface extends ServiceInterface {
 			@PathParam("index_name") String index_name, Collection<Map<String, Object>> documents);
 
 	@POST
-	@Path("/{schema_name}/{index_name}/backup")
+	@Path("/{schema_name}/{index_name}/backup/{backup_name}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	BackupStatus doBackup(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-			@QueryParam("keep_last") Integer keep_last_count);
+	SortedMap<String, SortedMap<String, BackupStatus>> doBackup(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, @PathParam("backup_name") String backup_name);
 
 	@GET
-	@Path("/{schema_name}/{index_name}/backup")
+	@Path("/{schema_name}/{index_name}/backup/{backup_name}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	List<BackupStatus> getBackups(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name);
+	SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(
+			@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			@PathParam("backup_name") String backup_name);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/replication/{session_id}/{source}/{filename}")

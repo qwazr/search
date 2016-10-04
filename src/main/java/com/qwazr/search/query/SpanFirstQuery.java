@@ -44,7 +44,7 @@ public class SpanFirstQuery extends AbstractQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		return new org.apache.lucene.search.spans.SpanFirstQuery(spanQuery.getQuery(queryContext),
 				end == null ? 0 : end);
 	}

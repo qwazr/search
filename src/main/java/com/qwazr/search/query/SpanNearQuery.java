@@ -61,7 +61,7 @@ public class SpanNearQuery extends AbstractSpanQuery {
 
 	@Override
 	final public SpanQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		final org.apache.lucene.search.spans.SpanNearQuery.Builder builder =
 				new org.apache.lucene.search.spans.SpanNearQuery.Builder(
 						field, in_order == null ? false : in_order);

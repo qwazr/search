@@ -52,7 +52,7 @@ public class DrillDownQuery extends AbstractQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException, InterruptedException {
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 		final org.apache.lucene.facet.DrillDownQuery drillDownQuery;
 		final Set<String> fieldSet = new HashSet<>();
 		dimPath.forEach(map -> fieldSet.addAll(map.keySet()));

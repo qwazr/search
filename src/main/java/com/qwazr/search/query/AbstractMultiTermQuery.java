@@ -35,6 +35,6 @@ public abstract class AbstractMultiTermQuery extends AbstractFieldQuery {
 	@JsonIgnore
 	@Override
 	public abstract MultiTermQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException;
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException;
 
 }

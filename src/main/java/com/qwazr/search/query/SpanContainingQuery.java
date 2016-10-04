@@ -39,7 +39,7 @@ public class SpanContainingQuery extends AbstractSpanQuery {
 
 	@Override
 	final public SpanQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException, InterruptedException {
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 		return new org.apache.lucene.search.spans.SpanContainingQuery(big.getQuery(queryContext),
 				little.getQuery(queryContext));
 	}

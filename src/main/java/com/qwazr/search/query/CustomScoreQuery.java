@@ -83,7 +83,7 @@ public class CustomScoreQuery extends AbstractQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(subQuery, "Missing subQuery property");
 		final Query query = subQuery.getQuery(queryContext);
 		final org.apache.lucene.queries.CustomScoreQuery customScoreQuery;
@@ -99,7 +99,7 @@ public class CustomScoreQuery extends AbstractQuery {
 
 	private final org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQuery(Query query,
 			QueryContext queryContext)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
+			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		if (scoringQueries != null)
 			return new org.apache.lucene.queries.CustomScoreQuery(query,
 					FunctionQuery.getQueries(scoringQueries, queryContext));
@@ -119,7 +119,7 @@ public class CustomScoreQuery extends AbstractQuery {
 
 	private final org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQueryProvider(final Query query,
 			final QueryContext queryContext, final Class<? extends CustomScoreProvider> customScoreProviderClass)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
+			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 
 		Constructor<? extends CustomScoreProvider> customScoreProviderConstructor = customScoreProviderClass
 				.getConstructor(LeafReaderContext.class);
@@ -152,8 +152,8 @@ public class CustomScoreQuery extends AbstractQuery {
 		private final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor;
 
 		private CustomScoreQueryWithProvider(
-				final  Constructor<? extends CustomScoreProvider> customScoreProviderConstructor,
-				final  Query subQuery) throws NoSuchMethodException {
+				final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor,
+				final Query subQuery) throws NoSuchMethodException {
 			super(subQuery);
 			this.customScoreProviderConstructor = customScoreProviderConstructor;
 		}

@@ -377,14 +377,14 @@ public class AnnotatedIndexService<T> {
 		return indexService.doAnalyzeQuery(schemaName, indexName, fieldName, text);
 	}
 
-	public List<BackupStatus> getBackups() {
+	public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String backupName) {
 		checkParameters();
-		return indexService.getBackups(schemaName, indexName);
+		return indexService.getBackups(schemaName, indexName, backupName);
 	}
 
-	public BackupStatus doBackup(final Integer keepLastCount) {
+	public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(final String backupName) {
 		checkParameters();
-		return indexService.doBackup(schemaName, indexName, keepLastCount);
+		return indexService.doBackup(schemaName, indexName, backupName);
 	}
 
 	/**

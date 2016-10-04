@@ -48,7 +48,7 @@ public class DisjunctionMaxQuery extends AbstractQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(queries, "The queries are missing");
 		final List<Query> queryList = new ArrayList<>(queries.size());
 		for (AbstractQuery query : queries)

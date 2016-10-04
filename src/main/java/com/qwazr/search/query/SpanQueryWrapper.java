@@ -40,7 +40,7 @@ public class SpanQueryWrapper extends AbstractSpanQuery {
 	@Override
 	@JsonIgnore
 	final public SpanQuery getQuery(final QueryContext queryContext)
-			throws IOException, InterruptedException, ReflectiveOperationException, ParseException, QueryNodeException {
+			throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
 		final Query subQuery = wrapped_query.getQuery(queryContext);
 		if (subQuery instanceof SpanQuery)
 			return (SpanQuery) subQuery;

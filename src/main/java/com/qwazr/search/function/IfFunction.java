@@ -43,7 +43,7 @@ public class IfFunction extends AbstractValueSource {
 
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException, InterruptedException {
+			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(ifSource, "ifSource value source is missing");
 		Objects.requireNonNull(trueSource, "trueSource value source is missing");
 		Objects.requireNonNull(falseSource, "falseSource value source is missing");

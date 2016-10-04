@@ -38,7 +38,7 @@ public class SpanOrQuery extends AbstractSpanQuery {
 
 	@Override
 	final public SpanQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException {
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		Objects.requireNonNull(clauses);
 		final SpanQuery[] spanQueries = new SpanQuery[clauses.size()];
 		int i = 0;

@@ -40,6 +40,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public final static TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
 	};
 
+	public final static TypeReference<SortedMap<String, SortedMap<String, BackupStatus>>>
+			MapStringMapStringBackupStatusTypeRef =
+			new TypeReference<SortedMap<String, SortedMap<String, BackupStatus>>>() {
+			};
+
+	public final static TypeReference<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>
+			MapStringMapStringMapStringBackupStatusTypeRef =
+			new TypeReference<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>() {
+			};
+
 	public final static TypeReference<LinkedHashMap<String, IndexInstance.ResourceInfo>> MapStringResourceInfoTypeRef =
 			new TypeReference<LinkedHashMap<String, IndexInstance.ResourceInfo>>() {
 			};
@@ -258,24 +268,21 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public BackupStatus doBackup(final String schema_name, final String index_name, final Integer keep_last_count) {
+	public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(final String schema_name,
+			final String index_name, final String backup_name) {
 		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/backup")
-						.setParameterObject("keep_last", keep_last_count);
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/backup/", backup_name);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, BackupStatus.class, valid200Json);
+		return executeJson(request, null, null, MapStringMapStringBackupStatusTypeRef, valid200Json);
 	}
 
-	public final static TypeReference<List<BackupStatus>> ListBackupStatusTypeRef =
-			new TypeReference<List<BackupStatus>>() {
-			};
-
 	@Override
-	public List<BackupStatus> getBackups(final String schema_name, final String index_name) {
+	public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schema_name,
+			final String index_name, final String backup_name) {
 		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/backup");
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/backup/", backup_name);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, ListBackupStatusTypeRef, valid200);
+		return executeJson(request, null, null, MapStringMapStringMapStringBackupStatusTypeRef, valid200Json);
 	}
 
 	@Override

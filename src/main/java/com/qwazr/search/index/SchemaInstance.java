@@ -19,8 +19,9 @@ import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.utils.ExceptionUtils;
+import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
@@ -47,6 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 public class SchemaInstance implements Closeable {
 
@@ -61,6 +63,8 @@ public class SchemaInstance implements Closeable {
 	private final File settingsFile;
 	private volatile SchemaSettingsDefinition settingsDefinition;
 	private volatile File backupRootDirectory;
+
+	private final LockUtils.ReadWriteLock backupLock = new LockUtils.ReadWriteLock();
 
 	private volatile Semaphore readSemaphore;
 	private volatile Semaphore writeSemaphore;
@@ -157,8 +161,7 @@ public class SchemaInstance implements Closeable {
 	}
 
 	SchemaInstance(ExecutorService executorService, File schemaDirectory)
-			throws IOException, ServerException, InterruptedException, ReflectiveOperationException,
-			URISyntaxException {
+			throws IOException, ReflectiveOperationException, URISyntaxException {
 		this.executorService = executorService;
 		this.schemaDirectory = schemaDirectory;
 		if (!schemaDirectory.exists())
@@ -221,7 +224,7 @@ public class SchemaInstance implements Closeable {
 	 * @throws ServerException if any error occurs
 	 * @throws IOException     if any I/O error occurs
 	 */
-	public IndexInstance get(String indexName, boolean ensureWriterOpen) throws ServerException, IOException {
+	public IndexInstance get(String indexName, boolean ensureWriterOpen) throws IOException {
 		IndexInstance indexInstance = indexMap.get(indexName);
 		if (indexInstance == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);
@@ -258,39 +261,86 @@ public class SchemaInstance implements Closeable {
 		return indexMap.keySet();
 	}
 
-	private void checkBackupRootDirectory() throws IOException {
+	final private static Pattern backupNameMatcher = Pattern.compile("[^a-zA-Z0-9-_]");
+
+
+	private File getBackupDirectory(final String backupName, boolean createIfNotExists) throws IOException {
 		if (backupRootDirectory == null)
 			throw new IOException("The backup root directory is not set for the schema: " + schemaDirectory.getName());
 		if (!backupRootDirectory.exists() || !backupRootDirectory.isDirectory())
 			throw new IOException(
 					"The backup root directory does not exists: " + backupRootDirectory.getAbsolutePath());
+		if (StringUtils.isEmpty(backupName))
+			throw new IOException("The backup name is empty");
+		if (backupNameMatcher.matcher(backupName).find())
+			throw new IOException(
+					"The backup name should only contains alphanumeric characters, dash, or underscore : " +
+							backupName);
+		final File backupDirectory = new File(backupRootDirectory, backupName);
+		if (createIfNotExists)
+			backupDirectory.mkdir();
+		if (!backupRootDirectory.exists() && !backupRootDirectory.isDirectory())
+			throw new IOException(
+					"The backup directory does not exists: " + backupName);
+		return backupDirectory;
 	}
 
-	BackupStatus backup(final String indexName, final Integer keepLastCount) throws IOException, InterruptedException {
-		checkBackupRootDirectory();
-		return get(indexName, false).backup(keepLastCount, new File(backupRootDirectory, indexName));
+	BackupStatus backup(final String indexName, final String backupName) throws IOException {
+		return backupLock.writeEx(() -> {
+			final File backupIndexDirectory = new File(getBackupDirectory(backupName, true), indexName);
+			return get(indexName, false).backup(backupIndexDirectory);
+		});
 	}
 
-	void backups(final Integer keepLastCount)
-			throws IOException, InterruptedException {
-		checkBackupRootDirectory();
-		final ExceptionUtils.Holder exceptionHolder = new ExceptionUtils.Holder(LOGGER);
+	private void indexIterator(final String indexName,
+			final FunctionUtils.BiConsumerEx<String, IndexInstance, IOException> consumer) throws IOException {
 		synchronized (indexMap) {
-			indexMap.entrySet().parallelStream().forEach((entry) -> {
-				try {
-					final File backupIndexDirectory = new File(backupRootDirectory, entry.getKey());
-					entry.getValue().backup(keepLastCount, backupIndexDirectory);
-				} catch (IOException | InterruptedException e) {
-					exceptionHolder.switchAndWarn(e);
-				}
-			});
+			if ("*".equals(indexName)) {
+				for (Map.Entry<String, IndexInstance> entry : indexMap.entrySet())
+					consumer.accept(entry.getKey(), entry.getValue());
+			} else
+				consumer.accept(indexName, get(indexName, false));
 		}
-		exceptionHolder.thrownIfAny();
 	}
 
-	List<BackupStatus> getBackups(final String indexName) throws IOException, InterruptedException {
-		checkBackupRootDirectory();
-		return get(indexName, false).getBackups(new File(backupRootDirectory, indexName));
+	SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) throws IOException {
+		return backupLock.writeEx(() -> {
+			final File backupDirectory = getBackupDirectory(backupName, true);
+			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
+				return null;
+			final SortedMap<String, BackupStatus> results = new TreeMap<>();
+			indexIterator(indexName, (idxName, indexInstance) -> {
+				results.put(idxName, indexInstance.backup(new File(backupDirectory, idxName)));
+			});
+			return results;
+		});
+	}
+
+	private void backupIterator(final String backupName, final FunctionUtils.ConsumerEx<File, IOException> consumer)
+			throws IOException {
+		if ("*".equals(backupName)) {
+			for (File bkpDir : backupRootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE))
+				consumer.accept(bkpDir);
+		} else
+			consumer.accept(getBackupDirectory(backupName, false));
+	}
+
+	SortedMap<String, SortedMap<String, BackupStatus>> getBackups(final String indexName, final String backupName)
+			throws IOException {
+		return backupLock.readEx(() -> {
+			final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
+			backupIterator(backupName, backupDirectory -> {
+				final SortedMap<String, BackupStatus> backupResults = new TreeMap<>();
+				indexIterator(indexName, (idxName, indexInstance) -> {
+					final File backupIndexDirectory = new File(backupDirectory, indexName);
+					if (backupIndexDirectory.exists() && backupIndexDirectory.isDirectory())
+						backupResults.put(idxName, indexInstance.getBackup(backupIndexDirectory));
+				});
+				if (!backupResults.isEmpty())
+					results.put(backupDirectory.getName(), backupResults);
+			});
+			return results;
+		});
 	}
 
 	synchronized void setSettings(SchemaSettingsDefinition settings) throws IOException, URISyntaxException {
@@ -355,23 +405,27 @@ public class SchemaInstance implements Closeable {
 		}
 	}
 
-	private static Semaphore atomicAquire(Semaphore semaphore) throws InterruptedException {
+	private static Semaphore atomicAquire(final Semaphore semaphore) {
 		if (semaphore == null)
 			return null;
-		semaphore.acquire();
-		return semaphore;
+		try {
+			semaphore.acquire();
+			return semaphore;
+		} catch (InterruptedException e) {
+			throw new ServerException(e);
+		}
 	}
 
-	Semaphore acquireReadSemaphore() throws InterruptedException {
+	Semaphore acquireReadSemaphore() {
 		return atomicAquire(readSemaphore);
 	}
 
-	Semaphore acquireWriteSemaphore() throws InterruptedException {
+	Semaphore acquireWriteSemaphore() {
 		return atomicAquire(writeSemaphore);
 	}
 
 	private static void atomicCheckSize(SchemaSettingsDefinition settingsDefinition, SearchContext searchContext,
-			int addSize) throws ServerException {
+			int addSize) {
 		if (settingsDefinition == null)
 			return;
 		if (settingsDefinition.max_size == null)

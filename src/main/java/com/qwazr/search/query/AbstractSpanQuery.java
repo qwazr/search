@@ -28,5 +28,5 @@ public abstract class AbstractSpanQuery extends AbstractQuery {
 
 	@JsonIgnore
 	public abstract SpanQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException, InterruptedException;
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException;
 }

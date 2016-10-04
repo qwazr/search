@@ -29,10 +29,10 @@ import java.io.IOException;
 class IndexUtils {
 
 	final static String[] similarityClassPrefixes =
-			{ "", "com.qwazr.search.similarity.", "org.apache.lucene.search.similarities." };
+			{"", "com.qwazr.search.similarity.", "org.apache.lucene.search.similarities."};
 
 	final static Similarity findSimilarity(final String similarityClassname)
-			throws InterruptedException, ReflectiveOperationException, IOException {
+			throws ReflectiveOperationException, IOException {
 		return ClassLoaderManager.getInstance().newInstance(similarityClassname, similarityClassPrefixes);
 	}
 

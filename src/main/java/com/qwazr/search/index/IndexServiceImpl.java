@@ -40,7 +40,7 @@ import java.util.*;
 
 final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterface {
 
-	private static final Logger logger = LoggerFactory.getLogger(IndexServiceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(IndexServiceImpl.class);
 
 	private static final String QWAZR_INDEX_ROOT_USER;
 
@@ -54,7 +54,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			v = System.getenv("QWAZR_ROOT_USER");
 		QWAZR_INDEX_ROOT_USER = v;
 		if (QWAZR_INDEX_ROOT_USER != null)
-			logger.info("QWAZR_ROOT_USER: " + QWAZR_INDEX_ROOT_USER);
+			LOGGER.info("QWAZR_ROOT_USER: " + QWAZR_INDEX_ROOT_USER);
 	}
 
 	@Context
@@ -91,7 +91,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).nameSet();
 		} catch (ServerException e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -102,7 +102,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.createUpdate(schemaName, null);
 			return IndexManager.INSTANCE.get(schemaName).getSettings();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -113,7 +113,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(null);
 			return IndexManager.INSTANCE.createUpdate(schemaName, settings);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -123,7 +123,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(null);
 			return IndexManager.INSTANCE.nameSet();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -134,7 +134,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.delete(schemaName);
 			return Response.ok().build();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -145,7 +145,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).createUpdate(indexName, settings).getStatus();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -160,7 +160,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getFields();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -175,7 +175,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + fieldName);
 			return fieldDef;
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -186,7 +186,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setFields(fields);
 			return fields;
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -207,7 +207,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		try {
 			return doAnalyzer(schemaName, indexName, fieldName, text, true);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -226,7 +226,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 					.get(indexName, false)
 					.getTermsEnum(fieldName, prefix, start, rows);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -236,7 +236,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		try {
 			return doAnalyzer(schemaName, indexName, fieldName, text, false);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -248,7 +248,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setField(fieldName, field);
 			return field;
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -259,7 +259,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteField(fieldName);
 			return Response.ok().build();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -270,7 +270,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getAnalyzers();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -286,7 +286,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
 			return analyzerDef;
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -298,7 +298,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setAnalyzer(analyzerName, analyzer);
 			return analyzer;
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -309,7 +309,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setAnalyzers(analyzers);
 			return analyzers;
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -320,7 +320,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteAnalyzer(analyzerName);
 			return Response.ok().build();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -331,7 +331,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -376,7 +376,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				}
 			}
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -386,7 +386,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getStatus();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -397,7 +397,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).delete(indexName);
 			return Response.ok().build();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -408,7 +408,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).postMappedDocument(document);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -419,7 +419,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).postMappedDocuments(documents);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -444,7 +444,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateMappedDocValues(document);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -455,7 +455,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(schemaName);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateMappedDocsValues(documents);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -474,28 +474,24 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	}
 
 	@Override
-	final public BackupStatus doBackup(final String schemaName, final String indexName, final Integer keep_last_count) {
+	final public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(final String schemaName,
+			final String indexName, final String backupName) {
 		try {
 			checkRight(null);
-			if ("*".equals(schemaName) && "*".equals(indexName)) {
-				IndexManager.INSTANCE.backups(keep_last_count);
-				return new BackupStatus();
-			} else {
-				final SchemaInstance schema = IndexManager.INSTANCE.get(schemaName);
-				return schema.backup(indexName, keep_last_count);
-			}
+			return IndexManager.INSTANCE.backups(schemaName, indexName, backupName);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
 	@Override
-	final public List<BackupStatus> getBackups(final String schemaName, final String indexName) {
+	public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
+			final String indexName, final String backupName) {
 		try {
 			checkRight(null);
-			return IndexManager.INSTANCE.get(schemaName).getBackups(indexName);
+			return IndexManager.INSTANCE.getBackups(schemaName, indexName, backupName);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -510,7 +506,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				throw new ServerException(Response.Status.NOT_FOUND, "File not found: " + fileName);
 			return AbstractStreamingOutput.with(input);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -521,7 +517,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator().release(sessionID);
 			return Response.ok().build();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -546,7 +542,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				return AbstractStreamingOutput.with(new ByteArrayInputStream(outputStream.toByteArray()));
 			}
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -557,7 +553,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).replicationCheck();
 			return Response.ok().build();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -568,7 +564,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			checkRight(null);
 			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getResources();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -583,7 +579,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				throw new ServerException(Response.Status.NOT_FOUND, "Resource not found: " + resourceName);
 			return AbstractStreamingOutput.with(input);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -597,7 +593,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 					.postResource(resourceName, lastModified, inputStream);
 			return Response.ok().build();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -608,7 +604,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteResource(resourceName);
 			return Response.ok().build();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -619,7 +615,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteAll();
 			return Response.ok().build();
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -670,7 +666,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			throw new ServerException(Response.Status.NOT_FOUND, "Document not found: " + id);
 
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -687,7 +683,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				docs.forEach(resultDocument -> documents.add(resultDocument.fields));
 			return documents;
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -704,7 +700,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				return null;
 			return docs.get(0).record;
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -723,7 +719,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 				docs.forEach(resultDocument -> documents.add(resultDocument.record));
 			return documents;
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -741,7 +737,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			else
 				return (ResultDefinition.WithMap) index.search(query, ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
@@ -758,7 +754,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName, false);
 			return (ResultDefinition.WithObject<T>) index.search(query, documentBuilerFactory);
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 }

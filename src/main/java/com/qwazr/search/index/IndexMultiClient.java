@@ -175,16 +175,6 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	}
 
 	@Override
-	public BackupStatus doBackup(String schema_name, String index_name, Integer keep_last_count) {
-		return null;
-	}
-
-	@Override
-	public List<BackupStatus> getBackups(String schema_name, String index_name) {
-		return null;
-	}
-
-	@Override
 	public AbstractStreamingOutput replicationObtain(String schema_name, String index_name, String sessionID,
 			String source, String fileName) {
 		return null;
@@ -247,6 +237,19 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	@Override
 	public Integer updateMappedDocsValues(String schema_name, String index_name,
 			Collection<Map<String, Object>> documents) {
+		return null;
+	}
+
+	@Override
+	public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(String schema_name, String index_name,
+			String backup_name) {
+		return null;
+	}
+
+	@Override
+	public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(String schema_name,
+			String index_name,
+			String backup_name) {
 		return null;
 	}
 

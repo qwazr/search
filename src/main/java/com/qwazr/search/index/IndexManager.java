@@ -15,8 +15,8 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
@@ -28,7 +28,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
@@ -70,7 +70,7 @@ public class IndexManager {
 		for (File schemaDirectory : directories) {
 			try {
 				schemaMap.put(schemaDirectory.getName(), new SchemaInstance(executorService, schemaDirectory));
-			} catch (ServerException | IOException | ReflectiveOperationException | InterruptedException | URISyntaxException e) {
+			} catch (ServerException | IOException | ReflectiveOperationException | URISyntaxException e) {
 				logger.error(e.getMessage(), e);
 			}
 		}
@@ -83,8 +83,7 @@ public class IndexManager {
 	}
 
 	SchemaSettingsDefinition createUpdate(String schemaName, SchemaSettingsDefinition settings)
-			throws ServerException, IOException, InterruptedException, ReflectiveOperationException,
-			URISyntaxException {
+			throws IOException, ReflectiveOperationException, URISyntaxException {
 		synchronized (schemaMap) {
 			SchemaInstance schemaInstance = schemaMap.get(schemaName);
 			if (schemaInstance == null) {
@@ -105,14 +104,14 @@ public class IndexManager {
 	 * @return the indexSchema
 	 * @throws ServerException if any error occurs
 	 */
-	SchemaInstance get(final String schemaName) throws ServerException {
+	SchemaInstance get(final String schemaName) {
 		final SchemaInstance schemaInstance = schemaMap.get(schemaName);
 		if (schemaInstance == null)
 			throw new ServerException(Status.NOT_FOUND, "Schema not found: " + schemaName);
 		return schemaInstance;
 	}
 
-	void delete(final String schemaName) throws ServerException {
+	void delete(final String schemaName) {
 		synchronized (schemaMap) {
 			final SchemaInstance schemaInstance = get(schemaName);
 			schemaInstance.delete();
@@ -121,15 +120,46 @@ public class IndexManager {
 	}
 
 	Set<String> nameSet() {
-		return schemaMap.keySet();
+		synchronized (schemaMap) {
+			return new TreeSet<>(schemaMap.keySet());
+		}
 	}
 
-	void backups(final Integer keepLastCount) throws IOException, InterruptedException {
+	private void schemaIterator(final String schemaName,
+			final FunctionUtils.BiConsumerEx<String, SchemaInstance, IOException> consumer) throws IOException {
 		synchronized (schemaMap) {
-			for (SchemaInstance instance : schemaMap.values()) {
-				if (!StringUtils.isEmpty(instance.getSettings().backup_directory_path))
-					instance.backups(keepLastCount);
-			}
+			if ("*".equals(schemaName)) {
+				for (Map.Entry<String, SchemaInstance> entry : schemaMap.entrySet())
+					consumer.accept(entry.getKey(), entry.getValue());
+			} else
+				consumer.accept(schemaName, get(schemaName));
 		}
+	}
+
+	SortedMap<String, SortedMap<String, BackupStatus>> backups(final String schemaName, final String indexName,
+			final String backupName) throws IOException {
+		final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
+		schemaIterator(schemaName, (schName, schemaInstance) -> {
+			synchronized (results) {
+				final SortedMap<String, BackupStatus> schemaResults = schemaInstance.backups(indexName, backupName);
+				if (schemaResults != null && !schemaResults.isEmpty())
+					results.put(schName, schemaResults);
+			}
+		});
+		return results;
+	}
+
+	SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
+			final String indexName, final String backupName) throws IOException {
+		final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> results = new TreeMap<>();
+		schemaIterator(schemaName, (schName, schemaInstance) -> {
+			synchronized (results) {
+				final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults =
+						schemaInstance.getBackups(indexName, backupName);
+				if (!schemaResults.isEmpty())
+					results.put(schName, schemaResults);
+			}
+		});
+		return results;
 	}
 }

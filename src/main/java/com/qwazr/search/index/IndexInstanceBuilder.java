@@ -98,7 +98,7 @@ class IndexInstanceBuilder {
 	}
 
 	private void buildCommon()
-			throws IOException, ReflectiveOperationException, InterruptedException, URISyntaxException {
+			throws IOException, ReflectiveOperationException, URISyntaxException {
 
 		if (!indexDirectory.exists())
 			indexDirectory.mkdir();
@@ -138,7 +138,7 @@ class IndexInstanceBuilder {
 
 	}
 
-	private void openOrCreateIndex() throws InterruptedException, ReflectiveOperationException, IOException {
+	private void openOrCreateIndex() throws ReflectiveOperationException, IOException {
 		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
 		if (settings != null && settings.similarity_class != null && !settings.similarity_class.isEmpty())
 			indexWriterConfig.setSimilarity(IndexUtils.findSimilarity(settings.similarity_class));
@@ -152,7 +152,7 @@ class IndexInstanceBuilder {
 	}
 
 	private void buildSlave()
-			throws IOException, URISyntaxException, ReflectiveOperationException, InterruptedException {
+			throws IOException, URISyntaxException, ReflectiveOperationException {
 
 		// We just want to be sure the index exists.
 		openOrCreateIndex();
@@ -173,7 +173,7 @@ class IndexInstanceBuilder {
 		searcherManager = new SearcherManager(dataDirectory, null);
 	}
 
-	private void buildMaster() throws IOException, ReflectiveOperationException, InterruptedException {
+	private void buildMaster() throws IOException, ReflectiveOperationException {
 
 		openOrCreateIndex();
 
@@ -186,7 +186,7 @@ class IndexInstanceBuilder {
 	}
 
 	private IndexInstance build()
-			throws InterruptedException, ReflectiveOperationException, URISyntaxException, IOException {
+			throws ReflectiveOperationException, URISyntaxException, IOException {
 		buildCommon();
 		if (settings.master != null && settings.master.length > 0)
 			buildSlave();
@@ -204,11 +204,11 @@ class IndexInstanceBuilder {
 
 	static IndexInstance build(final SchemaInstance schema, final File indexDirectory,
 			final IndexSettingsDefinition settings)
-			throws InterruptedException, ReflectiveOperationException, IOException, URISyntaxException {
+			throws ReflectiveOperationException, IOException, URISyntaxException {
 		final IndexInstanceBuilder builder = new IndexInstanceBuilder(schema, indexDirectory, settings);
 		try {
 			return builder.build();
-		} catch (IOException | ReflectiveOperationException | InterruptedException | URISyntaxException e) {
+		} catch (IOException | ReflectiveOperationException | URISyntaxException e) {
 			builder.abort();
 			throw e;
 		} catch (Exception e) {
