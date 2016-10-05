@@ -1,0 +1,20 @@
+{
+  "$id$": {
+    "template": "StringField"
+  },
+  "name": {
+    "tokenized": true,
+    "analyzer": "en.EnglishAnalyzer",
+    "stored": true,
+    "index_options": "DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS"
+  },
+  "description": {
+    "tokenized": true,
+    "analyzer": "en.EnglishAnalyzer",
+    "stored": true,
+    "index_options": "DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS"
+  },
+  "category": {
+    "template": "SortedSetMultiDocValuesFacetField"
+  }
+}

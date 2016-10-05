@@ -1,0 +1,55 @@
+{
+  "start": 0,
+  "rows": 10,
+  "query_string": "Article",
+  "query": {
+    "query": "BooleanQuery",
+    "clauses": [
+      {
+        "occur": "must",
+        "query": {
+          "query": "MultiFieldQueryParser",
+          "fields": [
+            "name",
+            "description"
+          ],
+          "boosts": {
+            "name": 10,
+            "description": 1
+          }
+        }
+      },
+      {
+        "occur": "filter",
+        "query": {
+          "query": "BooleanQuery",
+          "clauses": [
+            {
+              "occur": "must",
+              "query": {
+                "query": "FacetPathQuery",
+                "dimension": "category",
+                "path": [
+                  "news"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "facets": {
+    "category": {
+      "top": 10
+    }
+  },
+  "returned_fields": [
+    "name"
+  ],
+  "highlighters": {
+    "my_description": {
+      "field": "description"
+    }
+  }
+}

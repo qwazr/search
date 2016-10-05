@@ -149,7 +149,7 @@ public abstract class JsonAbstractTest {
 		}
 	}
 
-	private static LinkedHashMap<String, FieldDefinition> getFieldMap(String res) {
+	public static LinkedHashMap<String, FieldDefinition> getFieldMap(String res) {
 		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
 		try {
 			return FieldDefinition.newFieldMap(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
@@ -384,7 +384,7 @@ public abstract class JsonAbstractTest {
 		Assert.assertNotNull(fields.get("name"));
 	}
 
-	private static QueryDefinition getQuery(String res) {
+	public static QueryDefinition getQuery(String res) {
 		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
 		try {
 			return QueryDefinition.newQuery(IOUtils.toString(is, CharsetUtils.CharsetUTF8));
@@ -429,7 +429,7 @@ public abstract class JsonAbstractTest {
 		checkIndexSize(client, expectedSize);
 	}
 
-	private static Collection<Map<String, Object>> getDocs(String res) {
+	public static Collection<Map<String, Object>> getDocs(String res) {
 		try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
 			return JsonMapper.MAPPER.readValue(is, IndexSingleClient.CollectionMapStringObjectTypeRef);
 		} catch (Exception e) {
@@ -815,7 +815,7 @@ public abstract class JsonAbstractTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
+		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(
 				() -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),
