@@ -286,6 +286,14 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
+	public Integer deleteBackups(String schema_name, String index_name, String backup_name) {
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/backup/", backup_name);
+		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
+		return executeJson(request, null, null, Integer.class, valid200Json);
+	}
+
+	@Override
 	public AbstractStreamingOutput replicationObtain(final String schema_name, final String index_name,
 			final String sessionID, final String source, final String fileName) {
 		final UBuilder uriBuilder =

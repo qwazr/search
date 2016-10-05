@@ -252,6 +252,12 @@ public interface IndexServiceInterface extends ServiceInterface {
 			@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
 			@PathParam("backup_name") String backup_name);
 
+	@DELETE
+	@Path("/{schema_name}/{index_name}/backup/{backup_name}")
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+	Integer deleteBackups(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			@PathParam("backup_name") String backup_name);
+
 	@GET
 	@Path("/{schema_name}/{index_name}/replication/{session_id}/{source}/{filename}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)

@@ -27,6 +27,7 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
@@ -46,10 +47,7 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.apache.lucene.store.Directory;
 
 import javax.ws.rs.core.Response;
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.Semaphore;
@@ -267,9 +265,14 @@ final public class IndexInstance implements Closeable {
 			if (!backupIndexDirectory.exists() || !backupIndexDirectory.isDirectory())
 				throw new IOException(
 						"Cannot create the backup directory: " + backupIndexDirectory.getAbsolutePath());
+			// Get the existing files
+			final Map<String, File> fileMap = new HashMap<>();
+			for (File file : backupIndexDirectory.listFiles((FileFilter) FileFileFilter.FILE))
+				fileMap.put(file.getName(), file);
 			final IndexCommit commit = snapshotDeletionPolicy.snapshot();
 			try {
 				for (String fileName : commit.getFileNames()) {
+					fileMap.remove(fileName);
 					final File sourceFile = new File(fileSet.dataDirectory, fileName);
 					final File targetFile = new File(backupIndexDirectory, fileName);
 					if (targetFile.exists() && targetFile.length() == sourceFile.length()
@@ -277,6 +280,8 @@ final public class IndexInstance implements Closeable {
 						continue;
 					FileUtils.copyFile(sourceFile, targetFile, true);
 				}
+				// Delete files from previous backup
+				fileMap.forEach((name, file) -> file.delete());
 				return BackupStatus.newBackupStatus(backupIndexDirectory);
 			} catch (IOException e) {
 				FileUtils.deleteQuietly(backupIndexDirectory);

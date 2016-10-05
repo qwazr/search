@@ -31,6 +31,7 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class IndexManager {
 
@@ -161,5 +162,12 @@ public class IndexManager {
 			}
 		});
 		return results;
+	}
+
+	int deleteBackups(final String schemaName, final String indexName, final String backupName) throws IOException {
+		final AtomicInteger counter = new AtomicInteger();
+		schemaIterator(schemaName,
+				(schName, schemaInstance) -> counter.addAndGet(schemaInstance.deleteBackups(indexName, backupName)));
+		return counter.get();
 	}
 }

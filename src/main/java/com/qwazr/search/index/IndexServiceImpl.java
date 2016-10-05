@@ -496,6 +496,16 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	}
 
 	@Override
+	public Integer deleteBackups(final String schemaName, final String indexName, final String backupName) {
+		try {
+			checkRight(null);
+			return IndexManager.INSTANCE.deleteBackups(schemaName, indexName, backupName);
+		} catch (Exception e) {
+			throw ServerException.getJsonException(LOGGER, e);
+		}
+	}
+
+	@Override
 	final public AbstractStreamingOutput replicationObtain(final String schemaName, final String indexName,
 			final String sessionID, final String source, String fileName) {
 		try {

@@ -52,7 +52,7 @@ abstract class FacetsBuilder {
 	}
 
 	final FacetsBuilder build()
-			throws IOException, InterruptedException, ReflectiveOperationException, ParseException, QueryNodeException {
+			throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
 		for (Map.Entry<String, FacetDefinition> entry : facetsDef.entrySet()) {
 			final String dim = entry.getKey();
 			final FacetDefinition facet = entry.getValue();
@@ -86,7 +86,7 @@ abstract class FacetsBuilder {
 	protected abstract FacetResult getFacetResult(final int top, final String dim) throws IOException;
 
 	private Map<String, Number> buildFacetQueries(final FacetDefinition facet)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException, InterruptedException {
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 		final LinkedHashMap<String, Number> facetMap = new LinkedHashMap<>();
 		for (Map.Entry<String, AbstractQuery> entry : facet.queries.entrySet()) {
 			final BooleanQuery.Builder builder = new BooleanQuery.Builder();
@@ -103,8 +103,7 @@ abstract class FacetsBuilder {
 
 		WithCollectors(final QueryContext queryContext, final LinkedHashMap<String, FacetDefinition> facetsDef,
 				final Query searchQuery, final TimeTracker timeTracker, final FacetsCollector facetsCollector)
-				throws IOException, ParseException, ReflectiveOperationException, QueryNodeException,
-				InterruptedException {
+				throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 			super(queryContext, facetsDef, searchQuery, timeTracker);
 			this.counts = queryContext.state == null ?
 					null :
@@ -124,8 +123,7 @@ abstract class FacetsBuilder {
 		WithSideways(final QueryContext queryContext, final LinkedHashMap<String, FacetDefinition> facetsDef,
 				final Query searchQuery, final TimeTracker timeTracker,
 				final DrillSideways.DrillSidewaysResult results)
-				throws IOException, ParseException, ReflectiveOperationException, QueryNodeException,
-				InterruptedException {
+				throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 			super(queryContext, facetsDef, searchQuery, timeTracker);
 			this.results = results;
 		}

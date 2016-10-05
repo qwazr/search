@@ -254,6 +254,11 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	}
 
 	@Override
+	public Integer deleteBackups(String schema_name, String index_name, String backup_name) {
+		return null;
+	}
+
+	@Override
 	public Response deleteAll(String schema_name, String index_name) {
 		// TODO Auto-generated method stub
 		return null;

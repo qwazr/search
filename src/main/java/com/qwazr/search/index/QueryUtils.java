@@ -50,7 +50,7 @@ class QueryUtils {
 
 	final static ResultDefinition search(final QueryContext queryContext,
 			final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException, InterruptedException {
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 
 		final QueryDefinition queryDef = queryContext.queryDefinition;
 

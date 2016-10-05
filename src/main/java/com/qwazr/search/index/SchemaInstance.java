@@ -141,8 +141,9 @@ public class SchemaInstance implements Closeable {
 			doClose();
 		}
 
-		ResultDefinition search(QueryDefinition queryDef, ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
-				throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
+		ResultDefinition search(final QueryDefinition queryDef,
+				final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
+				throws ServerException, IOException, QueryNodeException, ParseException,
 				ReflectiveOperationException {
 			if (indexSearcher == null)
 				return null;
@@ -305,9 +306,9 @@ public class SchemaInstance implements Closeable {
 
 	SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) throws IOException {
 		return backupLock.writeEx(() -> {
-			final File backupDirectory = getBackupDirectory(backupName, true);
 			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
 				return null;
+			final File backupDirectory = getBackupDirectory(backupName, true);
 			final SortedMap<String, BackupStatus> results = new TreeMap<>();
 			indexIterator(indexName, (idxName, indexInstance) -> {
 				results.put(idxName, indexInstance.backup(new File(backupDirectory, idxName)));
@@ -328,11 +329,13 @@ public class SchemaInstance implements Closeable {
 	SortedMap<String, SortedMap<String, BackupStatus>> getBackups(final String indexName, final String backupName)
 			throws IOException {
 		return backupLock.readEx(() -> {
+			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
+				return null;
 			final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
 			backupIterator(backupName, backupDirectory -> {
 				final SortedMap<String, BackupStatus> backupResults = new TreeMap<>();
 				indexIterator(indexName, (idxName, indexInstance) -> {
-					final File backupIndexDirectory = new File(backupDirectory, indexName);
+					final File backupIndexDirectory = new File(backupDirectory, idxName);
 					if (backupIndexDirectory.exists() && backupIndexDirectory.isDirectory())
 						backupResults.put(idxName, indexInstance.getBackup(backupIndexDirectory));
 				});
@@ -340,6 +343,24 @@ public class SchemaInstance implements Closeable {
 					results.put(backupDirectory.getName(), backupResults);
 			});
 			return results;
+		});
+	}
+
+	int deleteBackups(final String indexName, final String backupName) throws IOException {
+		return backupLock.writeEx(() -> {
+			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
+				return 0;
+			final AtomicInteger counter = new AtomicInteger();
+			backupIterator(backupName, backupDirectory -> {
+				indexIterator(indexName, (idxName, indexInstance) -> {
+					final File backupIndexDirectory = new File(backupDirectory, idxName);
+					if (backupIndexDirectory.exists() && backupIndexDirectory.isDirectory()) {
+						FileUtils.deleteDirectory(backupIndexDirectory);
+						counter.incrementAndGet();
+					}
+				});
+			});
+			return counter.get();
 		});
 	}
 
@@ -383,18 +404,19 @@ public class SchemaInstance implements Closeable {
 			backupRootDirectory = null;
 	}
 
-	private static <T extends ResultDocumentAbstract> ResultDefinition<T> atomicSearch(SearchContext searchContext,
-			QueryDefinition queryDef, ResultDocumentBuilder.BuilderFactory<T> documentBuilderFactory)
-			throws InterruptedException, IOException, QueryNodeException, ParseException, ServerException,
+	private static <T extends ResultDocumentAbstract> ResultDefinition<T> atomicSearch(
+			final SearchContext searchContext,
+			final QueryDefinition queryDef, final ResultDocumentBuilder.BuilderFactory<T> documentBuilderFactory)
+			throws IOException, QueryNodeException, ParseException, ServerException,
 			ReflectiveOperationException {
 		if (searchContext == null)
 			return null;
 		return searchContext.search(queryDef, documentBuilderFactory);
 	}
 
-	public <T extends ResultDocumentAbstract> ResultDefinition<T> search(QueryDefinition queryDef,
-			ResultDocumentBuilder.BuilderFactory<T> documentBuilderFactory)
-			throws ServerException, IOException, QueryNodeException, InterruptedException, ParseException,
+	public <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDef,
+			final ResultDocumentBuilder.BuilderFactory<T> documentBuilderFactory)
+			throws ServerException, IOException, QueryNodeException, ParseException,
 			ReflectiveOperationException {
 		final Semaphore sem = acquireReadSemaphore();
 		try {
