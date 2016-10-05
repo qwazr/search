@@ -359,6 +359,8 @@ public class SchemaInstance implements Closeable {
 						counter.incrementAndGet();
 					}
 				});
+				if (backupDirectory.list().length == 0)
+					FileUtils.deleteDirectory(backupDirectory);
 			});
 			return counter.get();
 		});
