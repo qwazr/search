@@ -22,7 +22,7 @@ import org.junit.runners.Suite;
 import java.net.URISyntaxException;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({JsonTest.JsonLocalTest.class, JsonTest.JsonRemoteTest.class})
+@Suite.SuiteClasses({ JsonTest.JsonLocalTest.class, JsonTest.JsonRemoteTest.class, GettingStartedTest.class })
 public class JsonTest {
 
 	public static class JsonLocalTest extends JsonAbstractTest {
