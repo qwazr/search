@@ -21,12 +21,14 @@ import com.qwazr.search.index.IndexManager;
 import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerConfiguration;
+import com.qwazr.utils.server.WelcomeService;
 
 public class SearchServer {
 
 	public static GenericServer start() throws Exception {
 		final ServerConfiguration config = new ServerConfiguration(System.getProperties(), System.getenv());
 		final ServerBuilder builder = new ServerBuilder(config);
+		builder.registerWebService(WelcomeService.class);
 		ClassLoaderManager.load(config.dataDirectory, null);
 		ClusterManager.load(builder, null, null);
 		IndexManager.load(builder);
