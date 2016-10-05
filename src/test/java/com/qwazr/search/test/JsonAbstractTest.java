@@ -132,7 +132,7 @@ public abstract class JsonAbstractTest {
 		IndexServiceInterface client = getClient();
 		Set<String> schemas = client.getSchemas();
 		Assert.assertNotNull(schemas);
-		Assert.assertEquals(2, schemas.size());
+		Assert.assertTrue(schemas.size() >= 2);
 		Assert.assertTrue(schemas.contains(SCHEMA_NAME));
 	}
 
