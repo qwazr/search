@@ -143,8 +143,7 @@ public class SchemaInstance implements Closeable {
 
 		ResultDefinition search(final QueryDefinition queryDef,
 				final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
-				throws ServerException, IOException, QueryNodeException, ParseException,
-				ReflectiveOperationException {
+				throws ServerException, IOException, QueryNodeException, ParseException, ReflectiveOperationException {
 			if (indexSearcher == null)
 				return null;
 			incRef();
@@ -264,25 +263,28 @@ public class SchemaInstance implements Closeable {
 
 	final private static Pattern backupNameMatcher = Pattern.compile("[^a-zA-Z0-9-_]");
 
-
 	private File getBackupDirectory(final String backupName, boolean createIfNotExists) throws IOException {
 		if (backupRootDirectory == null)
 			throw new IOException("The backup root directory is not set for the schema: " + schemaDirectory.getName());
 		if (!backupRootDirectory.exists() || !backupRootDirectory.isDirectory())
 			throw new IOException(
 					"The backup root directory does not exists: " + backupRootDirectory.getAbsolutePath());
+		final File backupSchemaDirectory = new File(backupRootDirectory, schemaDirectory.getName());
+		if (createIfNotExists)
+			backupSchemaDirectory.mkdir();
+		if (!backupSchemaDirectory.exists() && !backupSchemaDirectory.isDirectory())
+			throw new IOException(
+					"The backup schema directory does not exists: " + backupSchemaDirectory.getAbsolutePath());
 		if (StringUtils.isEmpty(backupName))
 			throw new IOException("The backup name is empty");
 		if (backupNameMatcher.matcher(backupName).find())
-			throw new IOException(
-					"The backup name should only contains alphanumeric characters, dash, or underscore : " +
-							backupName);
-		final File backupDirectory = new File(backupRootDirectory, backupName);
+			throw new IOException("The backup name should only contains alphanumeric characters, dash, or underscore : "
+					+ backupName);
+		final File backupDirectory = new File(backupSchemaDirectory, backupName);
 		if (createIfNotExists)
 			backupDirectory.mkdir();
-		if (!backupRootDirectory.exists() && !backupRootDirectory.isDirectory())
-			throw new IOException(
-					"The backup directory does not exists: " + backupName);
+		if (!backupDirectory.exists() && !backupDirectory.isDirectory())
+			throw new IOException("The backup directory does not exists: " + backupName);
 		return backupDirectory;
 	}
 
@@ -319,8 +321,11 @@ public class SchemaInstance implements Closeable {
 
 	private void backupIterator(final String backupName, final FunctionUtils.ConsumerEx<File, IOException> consumer)
 			throws IOException {
+		final File backupSchemaDirectory = new File(backupRootDirectory, schemaDirectory.getName());
+		if (!backupSchemaDirectory.exists() || !backupSchemaDirectory.isDirectory())
+			return;
 		if ("*".equals(backupName)) {
-			for (File bkpDir : backupRootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE))
+			for (File bkpDir : backupSchemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE))
 				consumer.accept(bkpDir);
 		} else
 			consumer.accept(getBackupDirectory(backupName, false));
@@ -407,10 +412,9 @@ public class SchemaInstance implements Closeable {
 	}
 
 	private static <T extends ResultDocumentAbstract> ResultDefinition<T> atomicSearch(
-			final SearchContext searchContext,
-			final QueryDefinition queryDef, final ResultDocumentBuilder.BuilderFactory<T> documentBuilderFactory)
-			throws IOException, QueryNodeException, ParseException, ServerException,
-			ReflectiveOperationException {
+			final SearchContext searchContext, final QueryDefinition queryDef,
+			final ResultDocumentBuilder.BuilderFactory<T> documentBuilderFactory)
+			throws IOException, QueryNodeException, ParseException, ServerException, ReflectiveOperationException {
 		if (searchContext == null)
 			return null;
 		return searchContext.search(queryDef, documentBuilderFactory);
@@ -418,8 +422,7 @@ public class SchemaInstance implements Closeable {
 
 	public <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDef,
 			final ResultDocumentBuilder.BuilderFactory<T> documentBuilderFactory)
-			throws ServerException, IOException, QueryNodeException, ParseException,
-			ReflectiveOperationException {
+			throws ServerException, IOException, QueryNodeException, ParseException, ReflectiveOperationException {
 		final Semaphore sem = acquireReadSemaphore();
 		try {
 			return atomicSearch(searchContext, queryDef, documentBuilderFactory);

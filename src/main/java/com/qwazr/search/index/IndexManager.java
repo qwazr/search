@@ -157,7 +157,7 @@ public class IndexManager {
 			synchronized (results) {
 				final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults =
 						schemaInstance.getBackups(indexName, backupName);
-				if (!schemaResults.isEmpty())
+				if (schemaResults != null && !schemaResults.isEmpty())
 					results.put(schName, schemaResults);
 			}
 		});
