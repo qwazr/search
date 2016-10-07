@@ -65,7 +65,7 @@ class QueryUtils {
 		final int numHits = queryDef.getEnd();
 		final boolean bNeedScore = sort != null ? sort.needsScores() : true;
 		final boolean useDrillSideways = queryContext.queryDefinition.query instanceof DrillDownQuery &&
-				((DrillDownQuery) queryContext.queryDefinition.query).useDrillSideways;
+				((DrillDownQuery) queryContext.queryDefinition.query).useDrillSideways && queryDef.facets != null;
 
 		final QueryCollectors queryCollectors =
 				new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets, useDrillSideways, queryDef.collectors);
