@@ -516,7 +516,7 @@ public abstract class JsonAbstractTest {
 	@Test
 	public void test250FirstBackup() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
-		checkErrorStatusCode(() -> client.getBackups(SCHEMA_NAME, INDEX_DUMMY_NAME, INDEX_BACKUP_NAME1), 404);
+		Assert.assertTrue(client.getBackups(SCHEMA_NAME, INDEX_DUMMY_NAME, INDEX_BACKUP_NAME1).isEmpty());
 		final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> results =
 				client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1);
 		Assert.assertNotNull(results);
