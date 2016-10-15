@@ -155,7 +155,8 @@ public class AnnotatedIndex {
 
 	public static class ExternalTest implements Externalizable {
 
-		final private static Externalizer<ExternalTest> externalizer = Externalizer.of(ExternalTest.class);
+		final private static Externalizer<ExternalTest, ExternalTest> externalizer =
+				Externalizer.of(ExternalTest.class);
 
 		public int id;
 		public String title;
