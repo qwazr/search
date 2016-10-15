@@ -18,7 +18,6 @@ package com.qwazr.search.test;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.utils.externalizer.Externalizer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.IndexOptions;
 
@@ -153,11 +152,10 @@ public class AnnotatedIndex {
 		return true;
 	}
 
-	public static class ExternalTest implements Externalizable {
+	public static class ExternalTest implements Serializable {
 
-		final private static Externalizer<ExternalTest, ExternalTest> externalizer =
-				Externalizer.of(ExternalTest.class);
-
+		private static final long serialVersionUID = 7475266508025830265L;
+		
 		public int id;
 		public String title;
 
@@ -167,16 +165,6 @@ public class AnnotatedIndex {
 		ExternalTest(int id, String title) {
 			this.id = id;
 			this.title = title;
-		}
-
-		@Override
-		final public void writeExternal(final ObjectOutput out) throws IOException {
-			externalizer.writeExternal(this, out);
-		}
-
-		@Override
-		final public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-			externalizer.readExternal(this, in);
 		}
 
 		@Override
