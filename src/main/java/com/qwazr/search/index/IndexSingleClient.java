@@ -318,7 +318,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/",
 						current_version);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeStream(request, null, null, valid200);
+		return executeStream(request, null, null, valid200204);
 	}
 
 	@Override

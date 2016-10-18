@@ -38,6 +38,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.qwazr.search.test.JavaAbstractTest.checkCollector;
 
@@ -815,7 +817,7 @@ public abstract class JsonAbstractTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
+		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(
 				() -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),
@@ -874,13 +876,42 @@ public abstract class JsonAbstractTest {
 		Assert.assertEquals(Integer.valueOf(2), client.deleteBackups("*", "*", "*"));
 	}
 
-	@Test
-	public void test850replicationCheck() throws URISyntaxException {
-		final IndexServiceInterface client = getClient();
+	private void checkReplication(final IndexServiceInterface client) {
 
+		// Get the status of the master
 		final IndexStatus masterStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertNotNull(masterStatus);
 		Assert.assertNotNull(masterStatus.version);
+
+		// Get the fields and analyzers of the master
+		final LinkedHashMap<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
+		final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers =
+				client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
+		Assert.assertNotNull(masterFields);
+		Assert.assertNotNull(masterAnalyzers);
+
+		// Get the status of the slave
+		IndexStatus slaveStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		Assert.assertNotNull(slaveStatus);
+		Assert.assertNotNull(slaveStatus.version);
+
+		// Get the fields and analyzers of the slave
+		final LinkedHashMap<String, FieldDefinition> slaveFields = client.getFields(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		final LinkedHashMap<String, AnalyzerDefinition> slaveAnalyzers =
+				client.getAnalyzers(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		Assert.assertNotNull(slaveFields);
+		Assert.assertNotNull(slaveAnalyzers);
+
+		// Cbeck equality
+		Assert.assertArrayEquals(slaveFields.keySet().toArray(), masterFields.keySet().toArray());
+		Assert.assertArrayEquals(slaveAnalyzers.keySet().toArray(), masterAnalyzers.keySet().toArray());
+		Assert.assertEquals(masterStatus.version, slaveStatus.version);
+		Assert.assertEquals(masterStatus.num_docs, slaveStatus.num_docs);
+	}
+
+	@Test
+	public void test850replicationCheck() throws URISyntaxException {
+		final IndexServiceInterface client = getClient();
 
 		final LinkedHashMap<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
 		final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers =
@@ -892,25 +923,68 @@ public abstract class JsonAbstractTest {
 		Assert.assertNotNull(slaveStatus);
 
 		// First replication
+		// First replication has something to do
 		Assert.assertEquals(200, client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME).getStatus());
+		checkReplication(client);
 
-		// Second one (nothing to do)
+		// Second one should do nothing
 		Assert.assertEquals(200, client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME).getStatus());
+		checkReplication(client);
+	}
 
-		slaveStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);
-		Assert.assertNotNull(slaveStatus);
-		Assert.assertNotNull(slaveStatus.version);
-		Assert.assertEquals(masterStatus.version, slaveStatus.version);
-		Assert.assertEquals(masterStatus.num_docs, slaveStatus.num_docs);
+	private class UpdateDocThread implements Runnable {
 
-		final LinkedHashMap<String, FieldDefinition> slaveFields = client.getFields(SCHEMA_NAME, INDEX_SLAVE_NAME);
-		final LinkedHashMap<String, AnalyzerDefinition> slaveAnalyzers =
-				client.getAnalyzers(SCHEMA_NAME, INDEX_SLAVE_NAME);
-		Assert.assertNotNull(slaveFields);
-		Assert.assertNotNull(slaveAnalyzers);
+		final IndexServiceInterface client;
+		final AtomicInteger counter;
 
-		Assert.assertArrayEquals(slaveFields.keySet().toArray(), masterFields.keySet().toArray());
-		Assert.assertArrayEquals(slaveAnalyzers.keySet().toArray(), masterAnalyzers.keySet().toArray());
+		UpdateDocThread(final IndexServiceInterface client, final AtomicInteger counter) {
+			this.client = client;
+			this.counter = counter;
+		}
+
+		@Override
+		public void run() {
+			while (counter.incrementAndGet() < 200) {
+				client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC);
+				client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
+			}
+		}
+	}
+
+	private class UpdateDocValueThread extends UpdateDocThread {
+
+		UpdateDocValueThread(final IndexServiceInterface client, final AtomicInteger counter) {
+			super(client, counter);
+		}
+
+		@Override
+		public void run() {
+			while (counter.incrementAndGet() < 200) {
+				client.updateMappedDocValues(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_VALUE);
+				client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
+			}
+		}
+	}
+
+	@Test
+	public void test860stressedReplication() throws URISyntaxException, InterruptedException, ExecutionException {
+
+		final IndexServiceInterface client = getClient();
+		checkReplication(client);
+
+		final ExecutorService executor = Executors.newFixedThreadPool(4);
+		final AtomicInteger counter = new AtomicInteger();
+
+		final List<Future<?>> futures = new ArrayList<>();
+		for (int i = 0; i < 4; i++) {
+			futures.add(executor.submit(new UpdateDocValueThread(client, counter)));
+			futures.add(executor.submit(new UpdateDocThread(client, counter)));
+		}
+		executor.shutdown();
+		executor.awaitTermination(1, TimeUnit.HOURS);
+		for (Future future : futures)
+			future.get();
+		checkReplication(client);
 	}
 
 	@Test

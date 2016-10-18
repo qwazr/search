@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.json.AbstractStreamingOutput;
 import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.replicator.Revision;
 import org.apache.lucene.replicator.SessionToken;
@@ -29,7 +30,6 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
 class IndexReplicator implements Replicator {
@@ -56,9 +56,13 @@ class IndexReplicator implements Replicator {
 
 	@Override
 	public SessionToken checkForUpdate(final String currVersion) throws IOException {
-		try (final InputStream inputStream = indexService
-				.replicationUpdate(schemaName, indexName, currVersion)
-				.getInputStream()) {
+		final AbstractStreamingOutput streamingOutput = indexService
+				.replicationUpdate(schemaName, indexName, currVersion);
+		if (streamingOutput == null)
+			return null;
+		try (final InputStream inputStream = streamingOutput.getInputStream()) {
+			if (inputStream == null)
+				return null;
 			final DataInput input = new DataInputStream(inputStream);
 			return new SessionToken(input);
 		}

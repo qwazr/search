@@ -335,14 +335,14 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		}
 	}
 
-	private final static String[] DOT_PREFIX = { "digraph G {",
+	private final static String[] DOT_PREFIX = {"digraph G {",
 			"rankdir = LR;",
 			"label = \"\";",
 			"center = 1;",
 			"ranksep = \"0.4\";",
-			"nodesep = \"0.25\";" };
+			"nodesep = \"0.25\";"};
 
-	private final static String[] DOT_SUFFIX = { "}" };
+	private final static String[] DOT_SUFFIX = {"}"};
 
 	@Override
 	public String testAnalyzerDot(final String schemaName, final String indexName, final String analyzerName,
@@ -540,9 +540,8 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 					.get(indexName, false)
 					.getReplicator()
 					.checkForUpdate(currentVersion);
-			if (token == null)
-				throw new ServerException(Response.Status.NOT_FOUND,
-						"The version is not valid: " + Long.parseLong(currentVersion, 16));
+			if (token == null) // Returns a 204 (no content)
+				return null;
 			try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 				try (final DataOutputStream dataOutput = new DataOutputStream(outputStream)) {
 					token.serialize(dataOutput);
