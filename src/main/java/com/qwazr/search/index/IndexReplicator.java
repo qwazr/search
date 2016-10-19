@@ -19,33 +19,55 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.AbstractStreamingOutput;
+import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.replicator.Revision;
 import org.apache.lucene.replicator.SessionToken;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.ws.rs.core.Response;
+import java.io.*;
 import java.net.URISyntaxException;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 class IndexReplicator implements Replicator {
 
 	private final IndexServiceInterface indexService;
-	private final String schemaName;
-	private final String indexName;
+	private final RemoteIndex master;
+	private final File masterUuidFile;
+	private volatile String masterUuidString;
+	private volatile UUID masterUuid;
 	private final Set<InputStream> inputStreams;
 
-	IndexReplicator(final RemoteIndex... masters) throws URISyntaxException {
-		this.indexService = masters[0].host == null || "localhost".equals(masters[0]) ?
+	IndexReplicator(final RemoteIndex master, final File masterUuidFile) throws URISyntaxException, IOException {
+		this.master = master;
+		this.masterUuidFile = masterUuidFile;
+		indexService = master.host == null || "localhost".equals(master.host) ?
 				new IndexServiceImpl() :
-				new IndexSingleClient(masters[0]);
-		this.schemaName = masters[0].schema;
-		this.indexName = masters[0].index;
+				new IndexSingleClient(master);
 		this.inputStreams = new LinkedHashSet<>();
+		if (masterUuidFile.exists() && masterUuidFile.length() > 0) {
+			masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
+			masterUuidString = masterUuid.toString();
+		}
+	}
+
+	String checkRemoteMasterUuid() throws IOException {
+		final UUID remoteMasterUuid = UUID.fromString(indexService.getIndex(master.schema, master.index).index_uuid);
+		if (masterUuid == null) {
+			masterUuid = remoteMasterUuid;
+			masterUuidString = masterUuid.toString();
+			IOUtils.writeStringAsFile(masterUuidString, masterUuidFile);
+			return masterUuidString;
+		}
+		if (!Objects.equals(remoteMasterUuid, masterUuid))
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+					"The local master index UUID and the remote index UUID does not match: " + masterUuid + " <> " +
+							remoteMasterUuid);
+		return masterUuidString;
+	}
+
+	UUID getMasterUuid() {
+		return masterUuid;
 	}
 
 	@Override
@@ -57,7 +79,7 @@ class IndexReplicator implements Replicator {
 	@Override
 	public SessionToken checkForUpdate(final String currVersion) throws IOException {
 		final AbstractStreamingOutput streamingOutput = indexService
-				.replicationUpdate(schemaName, indexName, currVersion);
+				.replicationUpdate(master.schema, master.index, masterUuidString, currVersion);
 		if (streamingOutput == null)
 			return null;
 		try (final InputStream inputStream = streamingOutput.getInputStream()) {
@@ -70,14 +92,16 @@ class IndexReplicator implements Replicator {
 
 	@Override
 	public void release(final String sessionID) throws IOException {
-		indexService.replicationRelease(schemaName, indexName, sessionID);
+		indexService.replicationRelease(master.schema, master.index, masterUuidString, sessionID);
 	}
 
 	@Override
 	public InputStream obtainFile(final String sessionID, final String source, final String fileName)
 			throws IOException {
 		final InputStream stream =
-				indexService.replicationObtain(schemaName, indexName, sessionID, source, fileName).getInputStream();
+				indexService
+						.replicationObtain(master.schema, master.index, masterUuidString, sessionID, source, fileName)
+						.getInputStream();
 		inputStreams.add(stream);
 		return stream;
 	}
@@ -88,22 +112,23 @@ class IndexReplicator implements Replicator {
 	}
 
 	final LinkedHashMap<String, AnalyzerDefinition> getMasterAnalyzers() {
-		return indexService.getAnalyzers(schemaName, indexName);
+		return indexService.getAnalyzers(master.schema, master.index);
 	}
 
 	final LinkedHashMap<String, FieldDefinition> getMasterFields() {
-		return indexService.getFields(schemaName, indexName);
+		return indexService.getFields(master.schema, master.index);
 	}
 
 	final LinkedHashMap<String, IndexInstance.ResourceInfo> getMasterResources() {
-		return indexService.getResources(schemaName, indexName);
+		return indexService.getResources(master.schema, master.index);
 	}
 
 	final IndexStatus getMasterStatus() {
-		return indexService.getIndex(schemaName, indexName);
+		return indexService.getIndex(master.schema, master.index);
 	}
 
 	final InputStream getResource(final String resourceName) throws IOException {
-		return indexService.getResource(schemaName, indexName, resourceName).getInputStream();
+		return indexService.getResource(master.schema, master.index, resourceName).getInputStream();
 	}
+
 }

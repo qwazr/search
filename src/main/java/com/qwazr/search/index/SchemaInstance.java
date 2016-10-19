@@ -180,7 +180,7 @@ public class SchemaInstance implements Closeable {
 		if (directories == null)
 			return;
 		for (File indexDirectory : directories)
-			indexMap.put(indexDirectory.getName(), IndexInstanceBuilder.build(this, indexDirectory, null));
+			indexMap.put(indexDirectory.getName(), new IndexInstanceBuilder(this, indexDirectory, null).build());
 		mayBeRefresh(false);
 	}
 
@@ -195,20 +195,26 @@ public class SchemaInstance implements Closeable {
 		}
 	}
 
-	IndexInstance createUpdate(String indexName, IndexSettingsDefinition settings)
+	IndexInstance createUpdate(final String indexName, final IndexSettingsDefinition settings)
 			throws ServerException, IOException, InterruptedException, ReflectiveOperationException,
 			URISyntaxException {
 		synchronized (indexMap) {
+
+			final IndexInstanceBuilder builder =
+					new IndexInstanceBuilder(this, new File(schemaDirectory, indexName), settings);
+
 			IndexInstance indexInstance = indexMap.get(indexName);
-			if (indexInstance != null && !IndexSettingsDefinition.equals(indexInstance.getSettings(), settings)) {
+
+			if (indexInstance != null && !Objects.equals(indexInstance.getSettings(), settings)) {
 				IOUtils.closeQuietly(indexInstance);
 				indexMap.remove(indexName);
 				indexInstance = null;
 			}
 			if (indexInstance == null) {
-				indexInstance = IndexInstanceBuilder.build(this, new File(schemaDirectory, indexName), settings);
+				indexInstance = builder.build();
 				indexMap.put(indexName, indexInstance);
 			}
+
 			mayBeRefresh(true);
 			return indexInstance;
 		}

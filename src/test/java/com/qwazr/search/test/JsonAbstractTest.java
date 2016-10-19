@@ -894,6 +894,8 @@ public abstract class JsonAbstractTest {
 		IndexStatus slaveStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);
 		Assert.assertNotNull(slaveStatus);
 		Assert.assertNotNull(slaveStatus.version);
+		Assert.assertEquals(slaveStatus.version, masterStatus.version);
+		Assert.assertEquals(slaveStatus.master_uuid, masterStatus.index_uuid);
 
 		// Get the fields and analyzers of the slave
 		final LinkedHashMap<String, FieldDefinition> slaveFields = client.getFields(SCHEMA_NAME, INDEX_SLAVE_NAME);
@@ -1038,7 +1040,7 @@ public abstract class JsonAbstractTest {
 		final PoolStats stats = HttpClients.CNX_MANAGER.getTotalStats();
 		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
 		Assert.assertEquals(0, stats.getPending());
-		Assert.assertTrue(stats.getAvailable() > 0);
+		Assert.assertTrue(stats.getLeased() == 0 || stats.getAvailable() > 0);
 	}
 
 }

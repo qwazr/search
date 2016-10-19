@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.datastax.driver.core.utils.UUIDs;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
@@ -35,12 +36,15 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 class IndexInstanceBuilder {
 
 	final static String INDEX_DATA = "data";
 	final static String REPL_WORK = "repl_work";
+	final static String UUID_FILE = "uuid";
+	final static String UUID_MASTER_FILE = "uuid.master";
 	final static String SETTINGS_FILE = "settings.json";
 	final static String FIELDS_FILE = "fields.json";
 	final static String ANALYZERS_FILE = "analyzers.json";
@@ -48,6 +52,8 @@ class IndexInstanceBuilder {
 
 	static class FileSet {
 
+		final File uuidFile;
+		final File uuidMasterFile;
 		final File settingsFile;
 		final File indexDirectory;
 		final File dataDirectory;
@@ -57,6 +63,8 @@ class IndexInstanceBuilder {
 		final Path replWorkPath;
 
 		private FileSet(File indexDirectory) {
+			this.uuidFile = new File(indexDirectory, UUID_FILE);
+			this.uuidMasterFile = new File(indexDirectory, UUID_MASTER_FILE);
 			this.indexDirectory = indexDirectory;
 			this.dataDirectory = new File(indexDirectory, INDEX_DATA);
 			this.analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
@@ -89,7 +97,9 @@ class IndexInstanceBuilder {
 	ReplicationClient replicationClient = null;
 	IndexReplicator indexReplicator = null;
 
-	private IndexInstanceBuilder(final SchemaInstance schema, final File indexDirectory,
+	UUID indexUuid = null;
+
+	IndexInstanceBuilder(final SchemaInstance schema, final File indexDirectory,
 			final IndexSettingsDefinition settings) {
 		this.schema = schema;
 		this.indexDirectory = indexDirectory;
@@ -105,6 +115,16 @@ class IndexInstanceBuilder {
 		if (!indexDirectory.isDirectory())
 			throw new IOException("This name is not valid. No directory exists for this location: " +
 					indexDirectory.getAbsolutePath());
+
+		// Manage the index UUID
+		if (fileSet.uuidFile.exists()) {
+			if (!fileSet.uuidFile.isFile())
+				throw new IOException("The UUID path is not a file: " + fileSet.uuidFile);
+			indexUuid = UUID.fromString(IOUtils.readFileAsString(fileSet.uuidFile));
+		} else {
+			indexUuid = UUIDs.timeBased();
+			IOUtils.writeStringAsFile(indexUuid.toString(), fileSet.uuidFile);
+		}
 
 		//Loading the settings
 		if (settings == null)
@@ -139,11 +159,11 @@ class IndexInstanceBuilder {
 	}
 
 	private void openOrCreateIndex() throws ReflectiveOperationException, IOException {
-		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
+		final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
 		if (settings != null && settings.similarity_class != null && !settings.similarity_class.isEmpty())
 			indexWriterConfig.setSimilarity(IndexUtils.findSimilarity(settings.similarity_class));
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
-		SnapshotDeletionPolicy snapshotDeletionPolicy =
+		final SnapshotDeletionPolicy snapshotDeletionPolicy =
 				new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
 		indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
 		indexWriter = new IndexWriter(dataDirectory, indexWriterConfig);
@@ -166,10 +186,10 @@ class IndexInstanceBuilder {
 		};
 		ReplicationClient.ReplicationHandler handler = new IndexReplicationHandler(dataDirectory, callback);
 		ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(fileSet.replWorkPath);
-		indexReplicator = new IndexReplicator(settings.master);
+		indexReplicator = new IndexReplicator(settings.master, fileSet.uuidMasterFile);
 		replicationClient = new ReplicationClient(indexReplicator, handler, factory);
 
-		// Finally we build the SearcherManager
+		// we build the SearcherManager
 		searcherManager = new SearcherManager(dataDirectory, null);
 	}
 
@@ -185,16 +205,6 @@ class IndexInstanceBuilder {
 		searcherManager = new SearcherManager(indexWriter, null);
 	}
 
-	private IndexInstance build()
-			throws ReflectiveOperationException, URISyntaxException, IOException {
-		buildCommon();
-		if (settings.master != null && settings.master.length > 0)
-			buildSlave();
-		else
-			buildMaster();
-		return new IndexInstance(this);
-	}
-
 	private void abort() {
 		IOUtils.closeQuietly(replicationClient, searcherManager, indexAnalyzer, queryAnalyzer, replicator);
 		if (indexWriter != null && indexWriter.isOpen())
@@ -202,17 +212,19 @@ class IndexInstanceBuilder {
 		IOUtils.closeQuietly(dataDirectory);
 	}
 
-	static IndexInstance build(final SchemaInstance schema, final File indexDirectory,
-			final IndexSettingsDefinition settings)
-			throws ReflectiveOperationException, IOException, URISyntaxException {
-		final IndexInstanceBuilder builder = new IndexInstanceBuilder(schema, indexDirectory, settings);
+	IndexInstance build() throws ReflectiveOperationException, IOException, URISyntaxException {
 		try {
-			return builder.build();
+			buildCommon();
+			if (fileSet.uuidMasterFile.exists() || settings.master != null)
+				buildSlave();
+			else
+				buildMaster();
+			return new IndexInstance(this);
 		} catch (IOException | ReflectiveOperationException | URISyntaxException e) {
-			builder.abort();
+			abort();
 			throw e;
 		} catch (Exception e) {
-			builder.abort();
+			abort();
 			throw new ServerException(e);
 		}
 	}

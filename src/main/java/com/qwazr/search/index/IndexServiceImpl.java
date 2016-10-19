@@ -507,10 +507,11 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 
 	@Override
 	final public AbstractStreamingOutput replicationObtain(final String schemaName, final String indexName,
-			final String sessionID, final String source, String fileName) {
+			final String masterUuid, final String sessionID, final String source, final String fileName) {
 		try {
 			checkRight(null);
-			final Replicator replicator = IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator();
+			final Replicator replicator =
+					IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator(masterUuid);
 			final InputStream input = replicator.obtainFile(sessionID, source, fileName);
 			if (input == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "File not found: " + fileName);
@@ -521,10 +522,11 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	}
 
 	@Override
-	final public Response replicationRelease(final String schemaName, final String indexName, final String sessionID) {
+	final public Response replicationRelease(final String schemaName, final String indexName, final String masterUuid,
+			final String sessionID) {
 		try {
 			checkRight(null);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator().release(sessionID);
+			IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator(masterUuid).release(sessionID);
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -533,12 +535,12 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 
 	@Override
 	final public AbstractStreamingOutput replicationUpdate(final String schemaName, final String indexName,
-			final String currentVersion) {
+			final String masterUuid, final String currentVersion) {
 		try {
 			checkRight(null);
 			final SessionToken token = IndexManager.INSTANCE.get(schemaName)
 					.get(indexName, false)
-					.getReplicator()
+					.getReplicator(masterUuid)
 					.checkForUpdate(currentVersion);
 			if (token == null) // Returns a 204 (no content)
 				return null;

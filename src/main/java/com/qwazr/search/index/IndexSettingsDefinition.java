@@ -22,27 +22,28 @@ import com.qwazr.utils.json.JsonMapper;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Arrays;
+import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexSettingsDefinition {
 
 	final public String similarity_class;
-	final public RemoteIndex[] master;
+	final public RemoteIndex master;
 
 	public IndexSettingsDefinition() {
 		similarity_class = null;
 		master = null;
 	}
 
-	public IndexSettingsDefinition(final String similarity_class, final RemoteIndex... masters) {
-		this.similarity_class = similarity_class;
-		this.master = masters;
+	public IndexSettingsDefinition(final String similaritySlass, final RemoteIndex master) {
+		this.similarity_class = similaritySlass;
+		this.master = master;
 	}
 
-	public IndexSettingsDefinition(final String similarity_class, final String... masters) throws URISyntaxException {
-		this.similarity_class = similarity_class;
-		this.master = RemoteIndex.build(masters);
+	public IndexSettingsDefinition(final String similaritySlass, final String master)
+			throws URISyntaxException {
+		this.similarity_class = similaritySlass;
+		this.master = RemoteIndex.build(master);
 	}
 
 	public IndexSettingsDefinition(final Index annotatedIndex) throws URISyntaxException {
@@ -57,18 +58,15 @@ public class IndexSettingsDefinition {
 		return JsonMapper.MAPPER.readValue(jsonString, IndexSettingsDefinition.class);
 	}
 
-	public final static boolean equals(final IndexSettingsDefinition settings1,
-			final IndexSettingsDefinition settings2) {
-		if (settings1 == null && settings2 == null)
-			return true;
-		if (settings1 == null || settings2 == null)
+	@Override
+	public final boolean equals(final Object o) {
+		if (o == null || !(o instanceof IndexSettingsDefinition))
 			return false;
-		if (StringUtils.compareNullString(settings1.similarity_class, settings2.similarity_class) != 0)
+		final IndexSettingsDefinition s = (IndexSettingsDefinition) o;
+		if (!Objects.equals(similarity_class, s.similarity_class))
 			return false;
-		if (settings1.master == null && settings2.master == null)
-			return true;
-		if (settings1.master == null || settings2.master == null)
+		if (!Objects.deepEquals(master, s.master))
 			return false;
-		return Arrays.equals(settings1.master, settings2.master);
+		return true;
 	}
 }

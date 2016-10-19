@@ -295,28 +295,32 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public AbstractStreamingOutput replicationObtain(final String schema_name, final String index_name,
-			final String sessionID, final String source, final String fileName) {
+			final String masterUuid, final String sessionID, final String source, final String fileName) {
 		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/",
-						sessionID, "/", source, "/", fileName);
+				RemoteService
+						.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/", masterUuid,
+								"/", sessionID, "/", source, "/", fileName);
 		return executeStream(HttpRequest.Get(uriBuilder.buildNoEx()), null, null, valid200Stream);
 	}
 
 	@Override
-	public Response replicationRelease(final String schema_name, final String index_name, final String sessionID) {
+	public Response replicationRelease(final String schema_name, final String index_name, final String masterUuid,
+			final String sessionID) {
 		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/",
-						sessionID);
+				RemoteService
+						.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/", masterUuid,
+								"/", sessionID);
 		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, null, null, valid200)).build();
 	}
 
 	@Override
 	public AbstractStreamingOutput replicationUpdate(final String schema_name, final String index_name,
-			final String current_version) {
+			final String masterUuid, final String current_version) {
 		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/",
-						current_version);
+				RemoteService
+						.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/", masterUuid,
+								"/", current_version);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeStream(request, null, null, valid200204);
 	}

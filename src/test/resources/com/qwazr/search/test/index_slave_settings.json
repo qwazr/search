@@ -1,11 +1,9 @@
 {
   "similarity_class": "com.qwazr.search.test.PayloadSimilarity",
-  "master": [
-    {
-      "host": "localhost",
-      "port": 9091,
-      "schema": "schema-test-json",
-      "index": "index-test-master-json"
-    }
-  ]
+  "master": {
+    "host": "localhost",
+    "port": 9091,
+    "schema": "schema-test-json",
+    "index": "index-test-master-json"
+  }
 }

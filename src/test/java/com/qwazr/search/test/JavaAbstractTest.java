@@ -49,8 +49,9 @@ public abstract class JavaAbstractTest {
 	}
 
 	private AnnotatedIndexService<AnnotatedIndex> getSlave() throws URISyntaxException {
-		IndexSettingsDefinition settings =
-				new IndexSettingsDefinition(null, "http://localhost:9091/indexes/testSchema/testIndexMaster");
+		final IndexSettingsDefinition settings =
+				new IndexSettingsDefinition(null,
+						"http://localhost:9091/indexes/testSchema/testIndexMaster");
 		return TestServer.getService(getIndexService(), AnnotatedIndex.class, AnnotatedIndex.INDEX_NAME_SLAVE,
 				settings);
 	}
@@ -62,13 +63,10 @@ public abstract class JavaAbstractTest {
 	}
 
 	@Test
-	public void test010CheckClient() throws URISyntaxException {
+	public void test010CheckMasterClient() throws URISyntaxException {
 		final AnnotatedIndexService master = getMaster();
 		Assert.assertEquals(AnnotatedIndex.SCHEMA_NAME, master.getSchemaName());
 		Assert.assertEquals(AnnotatedIndex.INDEX_NAME_MASTER, master.getIndexName());
-		final AnnotatedIndexService slave = getSlave();
-		Assert.assertEquals(AnnotatedIndex.SCHEMA_NAME, slave.getSchemaName());
-		Assert.assertEquals(AnnotatedIndex.INDEX_NAME_SLAVE, slave.getIndexName());
 	}
 
 	@Test
@@ -82,12 +80,14 @@ public abstract class JavaAbstractTest {
 	}
 
 	@Test
-	public void test060CreateIndex() throws URISyntaxException {
+	public void test060CreateMasterIndex() throws URISyntaxException {
 		final AnnotatedIndexService service = getMaster();
-		IndexStatus indexStatus = service.createUpdateIndex();
-		Assert.assertNotNull(indexStatus);
+		final IndexStatus indexStatus1 = service.createUpdateIndex();
+		Assert.assertNotNull(indexStatus1);
+		Assert.assertNotNull(indexStatus1.index_uuid);
+		final IndexStatus indexStatus2 = service.getIndexStatus();
+		Assert.assertEquals(indexStatus1, indexStatus2);
 	}
-
 
 	@Test
 	public void test070FieldChangesNoFields() throws URISyntaxException {
@@ -462,6 +462,7 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService master = getMaster();
 		final IndexStatus masterStatus = master.getIndexStatus();
 		Assert.assertNotNull(masterStatus);
+		Assert.assertNotNull(masterStatus.index_uuid);
 		Assert.assertNotNull(masterStatus.version);
 
 		final LinkedHashMap<String, FieldDefinition> masterFields = master.getFields();
@@ -470,6 +471,9 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService slave = getSlave();
 		final IndexStatus indexStatus = slave.createUpdateIndex();
 		Assert.assertNotNull(indexStatus);
+		Assert.assertNotNull(indexStatus.index_uuid);
+		Assert.assertNull(indexStatus.master_uuid);
+
 		// Second call to check setting comparison
 		Assert.assertNotNull(slave.createUpdateIndex());
 
@@ -482,6 +486,7 @@ public abstract class JavaAbstractTest {
 		final IndexStatus slaveStatus = slave.getIndexStatus();
 		Assert.assertNotNull(slaveStatus);
 		Assert.assertNotNull(slaveStatus.version);
+		Assert.assertEquals(slaveStatus.master_uuid, masterStatus.index_uuid);
 
 		Assert.assertEquals(masterStatus.version, slaveStatus.version);
 		Assert.assertEquals(masterStatus.num_docs, slaveStatus.num_docs);
@@ -548,8 +553,8 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test980DeleteIndex() throws URISyntaxException {
-		getMaster().deleteIndex();
 		getSlave().deleteIndex();
+		getMaster().deleteIndex();
 	}
 
 	@Test
@@ -562,7 +567,7 @@ public abstract class JavaAbstractTest {
 		final PoolStats stats = HttpClients.CNX_MANAGER.getTotalStats();
 		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
 		Assert.assertEquals(0, stats.getPending());
-		Assert.assertTrue(stats.getAvailable() > 0);
+		Assert.assertTrue(stats.getLeased() == 0 || stats.getAvailable() > 0);
 	}
 
 

@@ -16,10 +16,10 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.RemoteService;
 
 import java.net.URISyntaxException;
-import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class RemoteIndex extends RemoteService {
@@ -39,40 +39,32 @@ public class RemoteIndex extends RemoteService {
 	}
 
 	/**
-	 * Build an array of RemoteIndex using an array of URL.
+	 * Build a RemoteIndex using the given URL.
 	 * The form of the URL should be:
 	 * {protocol}://{username:password@}{host}:{port}/indexes/{schema}/{index}?timeout={timeout}
 	 *
 	 * @param remoteIndexUrl
 	 * @return an array of RemoteIndex
 	 */
-	public static RemoteIndex[] build(String... remoteIndexUrl) throws URISyntaxException {
+	public static RemoteIndex build(final String remoteIndexUrl) throws URISyntaxException {
 
-		if (remoteIndexUrl == null || remoteIndexUrl.length == 0)
+		if (StringUtils.isEmpty(remoteIndexUrl))
 			return null;
 
-		List<RemoteService.Builder> builders = RemoteService.builders(remoteIndexUrl);
-		if (builders == null)
-			return null;
+		final RemoteService.Builder builder = new RemoteService.Builder(remoteIndexUrl);
 
-		final RemoteIndex[] remotes = new RemoteIndex[builders.size()];
-		int i = 0;
-		for (RemoteService.Builder builder : builders) {
 
-			final String path = builder.getPathSegment(0);
-			final String schema = builder.getPathSegment(1);
-			final String index = builder.getPathSegment(2);
+		final String path = builder.getPathSegment(0);
+		final String schema = builder.getPathSegment(1);
+		final String index = builder.getPathSegment(2);
 
-			if (schema == null || index == null || !IndexServiceInterface.PATH.equals(path))
-				throw new URISyntaxException(remoteIndexUrl[i],
-						"The URL form should be: /" + IndexServiceInterface.PATH + "/{shema}/{index}?"
-								+ TIMEOUT_PARAMETER + "={timeout}");
+		if (schema == null || index == null || !IndexServiceInterface.PATH.equals(path))
+			throw new URISyntaxException(builder.getInitialURI().toString(),
+					"The URL form should be: /" + IndexServiceInterface.PATH + "/{schema}/{index}?" +
+							TIMEOUT_PARAMETER + "={timeout}");
 
-			builder.setPath(null);
-			remotes[i++] = new RemoteIndex(builder, schema, index);
-
-		}
-		return remotes;
+		builder.setPath(null);
+		return new RemoteIndex(builder, schema, index);
 	}
 
 }

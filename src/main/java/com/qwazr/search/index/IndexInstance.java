@@ -56,6 +56,7 @@ import java.util.concurrent.locks.ReentrantLock;
 final public class IndexInstance implements Closeable {
 
 	private final IndexInstanceBuilder.FileSet fileSet;
+	private final UUID indexUuid;
 
 	private final SchemaInstance schema;
 	private final Directory dataDirectory;
@@ -81,6 +82,7 @@ final public class IndexInstance implements Closeable {
 	IndexInstance(final IndexInstanceBuilder builder) {
 		this.schema = builder.schema;
 		this.fileSet = builder.fileSet;
+		this.indexUuid = builder.indexUuid;
 		this.dataDirectory = builder.dataDirectory;
 		this.analyzerMap = builder.analyzerMap;
 		this.fieldMap = builder.fieldMap == null ? null : new FieldMap(builder.fieldMap);
@@ -132,7 +134,8 @@ final public class IndexInstance implements Closeable {
 	private IndexStatus getIndexStatus() throws IOException {
 		final IndexSearcher indexSearcher = searcherManager.acquire();
 		try {
-			return new IndexStatus(indexSearcher.getIndexReader(), settings, analyzerMap.keySet(),
+			return new IndexStatus(indexUuid, indexReplicator != null ? indexReplicator.getMasterUuid() : null,
+					indexSearcher.getIndexReader(), settings, analyzerMap.keySet(),
 					fieldMap.getFieldDefinitionMap().keySet());
 		} finally {
 			searcherManager.release(indexSearcher);
@@ -311,13 +314,23 @@ final public class IndexInstance implements Closeable {
 			throw new UnsupportedOperationException("Writing in a read only index (slave) is not allowed.");
 	}
 
-	final Replicator getReplicator() {
+	final UUID checkRemoteMasterUUID(final String remoteMasterUuid, final UUID localUuid) {
+		final UUID uuid = UUID.fromString(remoteMasterUuid);
+		if (!Objects.equals(uuid, localUuid))
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+					"The UUID of the local index and the remote index does not match: " + localUuid + " <> " +
+							remoteMasterUuid);
+		return uuid;
+	}
+
+	final Replicator getReplicator(final String remoteMasterUuid) {
+		checkRemoteMasterUUID(remoteMasterUuid, indexUuid);
 		return replicator;
 	}
 
 	void replicationCheck() throws IOException {
 		if (replicationClient == null)
-			throw new UnsupportedOperationException("No replication master has been setup.");
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE, "No replication master has been setup.");
 
 		final Semaphore sem = schema.acquireWriteSemaphore();
 
@@ -326,6 +339,9 @@ final public class IndexInstance implements Closeable {
 			// We only want one replication at a time
 			replicationLock.lock();
 			try {
+
+				// Check that the master is the right one
+				indexReplicator.checkRemoteMasterUuid();
 
 				//Sync resources
 				final Map<String, ResourceInfo> localResources = getResources();
@@ -659,6 +675,7 @@ final public class IndexInstance implements Closeable {
 			final ResourceInfo info = (ResourceInfo) o;
 			return lastModified == info.lastModified && length == info.length;
 		}
+
 	}
 
 	final void postResource(final String resourceName, final long lastModified, final InputStream inputStream)

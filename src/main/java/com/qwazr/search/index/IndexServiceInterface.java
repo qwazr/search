@@ -259,21 +259,24 @@ public interface IndexServiceInterface extends ServiceInterface {
 			@PathParam("backup_name") String backup_name);
 
 	@GET
-	@Path("/{schema_name}/{index_name}/replication/{session_id}/{source}/{filename}")
+	@Path("/{schema_name}/{index_name}/replication/{master_uuid}/{session_id}/{source}/{filename}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	AbstractStreamingOutput replicationObtain(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, @PathParam("session_id") String sessionID,
-			@PathParam("source") String source, @PathParam("filename") String fileName);
+			@PathParam("index_name") String index_name, @PathParam("master_uuid") String masterUuid,
+			@PathParam("session_id") String sessionID, @PathParam("source") String source,
+			@PathParam("filename") String fileName);
 
 	@DELETE
-	@Path("/{schema_name}/{index_name}/replication/{session_id}")
+	@Path("/{schema_name}/{index_name}/replication/{master_uuid}/{session_id}")
 	Response replicationRelease(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, @PathParam("session_id") String sessionID);
+			@PathParam("index_name") String index_name, @PathParam("master_uuid") String masterUuid,
+			@PathParam("session_id") String sessionID);
 
 	@GET
-	@Path("/{schema_name}/{index_name}/replication/{current_version}")
+	@Path("/{schema_name}/{index_name}/replication/{master_uuid}/{current_version}")
 	AbstractStreamingOutput replicationUpdate(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, @PathParam("current_version") String current_version);
+			@PathParam("index_name") String index_name, @PathParam("master_uuid") String masterUuid,
+			@PathParam("current_version") String current_version);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/replication")
@@ -310,7 +313,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	static IndexServiceInterface getClient(final RemoteService... remotes) throws URISyntaxException {
 		return remotes == null || remotes.length == 0 ?
 				IndexServiceImpl.INSTANCE :
-				remotes.length == 1 ? new IndexSingleClient(remotes[0]) : new IndexMultiClient(remotes);
+				remotes.length == 1 ? new IndexSingleClient(remotes[0]) : null;
 	}
 
 }
