@@ -41,9 +41,8 @@ class IndexReplicator implements Replicator {
 	IndexReplicator(final RemoteIndex master, final File masterUuidFile) throws URISyntaxException, IOException {
 		this.master = master;
 		this.masterUuidFile = masterUuidFile;
-		indexService = master.host == null || "localhost".equals(master.host) ?
-				new IndexServiceImpl() :
-				new IndexSingleClient(master);
+		indexService = master == null ? null : master.host == null || "localhost".equals(master.host) ?
+				new IndexServiceImpl() : new IndexSingleClient(master);
 		this.inputStreams = new LinkedHashSet<>();
 		if (masterUuidFile.exists() && masterUuidFile.length() > 0) {
 			masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
@@ -51,8 +50,14 @@ class IndexReplicator implements Replicator {
 		}
 	}
 
+	private IndexServiceInterface checkService() {
+		if (indexService == null)
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE, "The remote master has not been set");
+		return indexService;
+	}
+
 	String checkRemoteMasterUuid() throws IOException {
-		final UUID remoteMasterUuid = UUID.fromString(indexService.getIndex(master.schema, master.index).index_uuid);
+		final UUID remoteMasterUuid = UUID.fromString(checkService().getIndex(master.schema, master.index).index_uuid);
 		if (masterUuid == null) {
 			masterUuid = remoteMasterUuid;
 			masterUuidString = masterUuid.toString();
@@ -78,7 +83,7 @@ class IndexReplicator implements Replicator {
 
 	@Override
 	public SessionToken checkForUpdate(final String currVersion) throws IOException {
-		final AbstractStreamingOutput streamingOutput = indexService
+		final AbstractStreamingOutput streamingOutput = checkService()
 				.replicationUpdate(master.schema, master.index, masterUuidString, currVersion);
 		if (streamingOutput == null)
 			return null;
@@ -92,16 +97,15 @@ class IndexReplicator implements Replicator {
 
 	@Override
 	public void release(final String sessionID) throws IOException {
-		indexService.replicationRelease(master.schema, master.index, masterUuidString, sessionID);
+		checkService().replicationRelease(master.schema, master.index, masterUuidString, sessionID);
 	}
 
 	@Override
 	public InputStream obtainFile(final String sessionID, final String source, final String fileName)
 			throws IOException {
-		final InputStream stream =
-				indexService
-						.replicationObtain(master.schema, master.index, masterUuidString, sessionID, source, fileName)
-						.getInputStream();
+		final InputStream stream = checkService()
+				.replicationObtain(master.schema, master.index, masterUuidString, sessionID, source, fileName)
+				.getInputStream();
 		inputStreams.add(stream);
 		return stream;
 	}
@@ -112,23 +116,23 @@ class IndexReplicator implements Replicator {
 	}
 
 	final LinkedHashMap<String, AnalyzerDefinition> getMasterAnalyzers() {
-		return indexService.getAnalyzers(master.schema, master.index);
+		return checkService().getAnalyzers(master.schema, master.index);
 	}
 
 	final LinkedHashMap<String, FieldDefinition> getMasterFields() {
-		return indexService.getFields(master.schema, master.index);
+		return checkService().getFields(master.schema, master.index);
 	}
 
 	final LinkedHashMap<String, IndexInstance.ResourceInfo> getMasterResources() {
-		return indexService.getResources(master.schema, master.index);
+		return checkService().getResources(master.schema, master.index);
 	}
 
 	final IndexStatus getMasterStatus() {
-		return indexService.getIndex(master.schema, master.index);
+		return checkService().getIndex(master.schema, master.index);
 	}
 
 	final InputStream getResource(final String resourceName) throws IOException {
-		return indexService.getResource(master.schema, master.index, resourceName).getInputStream();
+		return checkService().getResource(master.schema, master.index, resourceName).getInputStream();
 	}
 
 }
