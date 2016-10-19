@@ -21,7 +21,6 @@ import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.util.BytesRef;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -113,12 +112,6 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 				}
 				if (fieldValue instanceof BytesRef) {
 					final BytesRef br = (BytesRef) fieldValue;
-					if (Externalizable.class.isAssignableFrom(fieldType)) {
-						final Externalizable ext = (Externalizable) (value == null ? fieldType.newInstance() : value);
-						SerializationUtils.deserialize(br.bytes, ext);
-						field.set(record, ext);
-						return;
-					}
 					if (Serializable.class.isAssignableFrom(fieldType)) {
 						field.set(record, SerializationUtils.deserialize(br.bytes));
 						return;

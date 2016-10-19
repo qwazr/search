@@ -468,11 +468,11 @@ public class AnnotatedIndexService<T> {
 					return;
 				}
 				if (value instanceof Externalizable) {
-					map.put(name, SerializationUtils.getBytes((Externalizable) value, 64));
+					map.put(name, SerializationUtils.serialize((Externalizable) value, 64));
 					return;
 				}
 				if (value instanceof Serializable) {
-					map.put(name, SerializationUtils.getBytes((Serializable) value, 64));
+					map.put(name, SerializationUtils.serialize((Serializable) value, 64));
 					return;
 				}
 			} catch (IllegalAccessException | IOException e) {
@@ -528,14 +528,6 @@ public class AnnotatedIndexService<T> {
 					if (fieldValues.isEmpty())
 						return;
 					field.set(record, fieldValues.iterator().next());
-					return;
-				}
-				if (Externalizable.class.isAssignableFrom(fieldType)) {
-					final Object recordValue = field.get(record);
-					final Externalizable ext =
-							(Externalizable) (recordValue == null ? fieldType.newInstance() : recordValue);
-					SerializationUtils.deserialize(Base64.getDecoder().decode((String) fieldValue), ext);
-					field.set(record, ext);
 					return;
 				}
 				if (Serializable.class.isAssignableFrom(fieldType)) {
