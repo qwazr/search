@@ -85,8 +85,8 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 	protected void fillDynamic(final Object value, final FieldConsumer fieldConsumer) {
 		if (!(value instanceof Map))
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Wrong value type for the field: " + fieldMapItem.name + ". A map was expected. We got a: " + value
-							.getClass());
+					"Wrong value type for the field: " + fieldMapItem.name + ". A map was expected. We got a: "
+							+ value.getClass());
 		((Map<String, Object>) value).forEach((fieldName, valueObject) -> {
 			if (!fieldMapItem.match(fieldName))
 				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
@@ -142,7 +142,7 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 
 	final protected byte[] toBytes(final String fieldName, final Serializable value) {
 		try {
-			return SerializationUtils.serialize(value, 64);
+			return SerializationUtils.toCompressedBytes(value, 64);
 		} catch (IOException e) {
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"Cannot serialize the value of the field " + fieldName, e);
@@ -151,7 +151,7 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 
 	final protected byte[] toBytes(final String fieldName, final Externalizable value) {
 		try {
-			return SerializationUtils.serialize(value, 64);
+			return SerializationUtils.toCompressedBytes(value, 64);
 		} catch (IOException e) {
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"Cannot serialize the value of the field " + fieldName, e);

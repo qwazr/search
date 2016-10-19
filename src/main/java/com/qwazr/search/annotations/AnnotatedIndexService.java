@@ -198,9 +198,7 @@ public class AnnotatedIndexService<T> {
 	}
 
 	public enum FieldStatus {
-		NOT_IDENTICAL,
-		EXISTS_ONLY_IN_INDEX,
-		EXISTS_ONLY_IN_ANNOTATION
+		NOT_IDENTICAL, EXISTS_ONLY_IN_INDEX, EXISTS_ONLY_IN_ANNOTATION
 	}
 
 	/**
@@ -468,11 +466,11 @@ public class AnnotatedIndexService<T> {
 					return;
 				}
 				if (value instanceof Externalizable) {
-					map.put(name, SerializationUtils.serialize((Externalizable) value, 64));
+					map.put(name, SerializationUtils.toCompressedBytes((Externalizable) value, 64));
 					return;
 				}
 				if (value instanceof Serializable) {
-					map.put(name, SerializationUtils.serialize((Serializable) value, 64));
+					map.put(name, SerializationUtils.toCompressedBytes((Serializable) value, 64));
 					return;
 				}
 			} catch (IllegalAccessException | IOException e) {
@@ -531,7 +529,8 @@ public class AnnotatedIndexService<T> {
 					return;
 				}
 				if (Serializable.class.isAssignableFrom(fieldType)) {
-					field.set(record, SerializationUtils.deserialize(Base64.getDecoder().decode((String) fieldValue)));
+					field.set(record,
+							SerializationUtils.fromCompressedBytes(Base64.getDecoder().decode((String) fieldValue)));
 					return;
 				}
 				throw new UnsupportedOperationException(

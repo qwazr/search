@@ -113,7 +113,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 				if (fieldValue instanceof BytesRef) {
 					final BytesRef br = (BytesRef) fieldValue;
 					if (Serializable.class.isAssignableFrom(fieldType)) {
-						field.set(record, SerializationUtils.deserialize(br.bytes));
+						field.set(record, SerializationUtils.fromCompressedBytes(br.bytes));
 						return;
 					}
 				}
