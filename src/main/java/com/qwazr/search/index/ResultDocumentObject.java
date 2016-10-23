@@ -113,13 +113,14 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 				if (fieldValue instanceof BytesRef) {
 					final BytesRef br = (BytesRef) fieldValue;
 					if (Serializable.class.isAssignableFrom(fieldType)) {
-						field.set(record, SerializationUtils.fromCompressedBytes(br.bytes));
+						field.set(record, SerializationUtils.fromExternalizorBytes(br.bytes,
+								(Class<? extends Serializable>) fieldType));
 						return;
 					}
 				}
 				throw new UnsupportedOperationException(
 						"The field " + fieldName + " does not support this type: " + fieldValueClass.getSimpleName());
-			} catch (IllegalAccessException | IOException | ClassNotFoundException | InstantiationException e) {
+			} catch (ReflectiveOperationException | IOException e) {
 				throw new ServerException(e);
 			}
 		}

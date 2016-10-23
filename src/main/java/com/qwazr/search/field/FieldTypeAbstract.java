@@ -142,8 +142,8 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 
 	final protected byte[] toBytes(final String fieldName, final Serializable value) {
 		try {
-			return SerializationUtils.toCompressedBytes(value, 64);
-		} catch (IOException e) {
+			return SerializationUtils.toExternalizorBytes(value);
+		} catch (IOException | ReflectiveOperationException e) {
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"Cannot serialize the value of the field " + fieldName, e);
 		}
@@ -151,8 +151,8 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 
 	final protected byte[] toBytes(final String fieldName, final Externalizable value) {
 		try {
-			return SerializationUtils.toCompressedBytes(value, 64);
-		} catch (IOException e) {
+			return SerializationUtils.toExternalizorBytes(value);
+		} catch (IOException | ReflectiveOperationException e) {
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"Cannot serialize the value of the field " + fieldName, e);
 		}

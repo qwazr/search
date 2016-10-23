@@ -25,7 +25,6 @@ import org.apache.http.util.EntityUtils;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -465,15 +464,11 @@ public class AnnotatedIndexService<T> {
 					map.put(name, value);
 					return;
 				}
-				if (value instanceof Externalizable) {
-					map.put(name, SerializationUtils.toCompressedBytes((Externalizable) value, 64));
-					return;
-				}
 				if (value instanceof Serializable) {
-					map.put(name, SerializationUtils.toCompressedBytes((Serializable) value, 64));
+					map.put(name, SerializationUtils.toExternalizorBytes((Serializable) value));
 					return;
 				}
-			} catch (IllegalAccessException | IOException e) {
+			} catch (IOException | ReflectiveOperationException e) {
 				throw new ServerException("Cannot convert the field " + name, e);
 			}
 		});
@@ -530,7 +525,8 @@ public class AnnotatedIndexService<T> {
 				}
 				if (Serializable.class.isAssignableFrom(fieldType)) {
 					field.set(record,
-							SerializationUtils.fromCompressedBytes(Base64.getDecoder().decode((String) fieldValue)));
+							SerializationUtils.fromExternalizorBytes(Base64.getDecoder().decode((String) fieldValue),
+									(Class<? extends Serializable>) fieldType));
 					return;
 				}
 				throw new UnsupportedOperationException(
