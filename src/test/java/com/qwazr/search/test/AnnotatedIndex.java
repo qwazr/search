@@ -19,6 +19,7 @@ import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexOptions;
 
 import java.io.*;
@@ -44,6 +45,11 @@ public class AnnotatedIndex {
 			stored = true,
 			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 	final public String title;
+
+	@IndexField(analyzerClass = StandardAnalyzer.class,
+			tokenized = true,
+			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
+	final public String titleStd;
 
 	@IndexField(template = SortedDocValuesField)
 	final public String titleSort;
@@ -90,6 +96,7 @@ public class AnnotatedIndex {
 	public AnnotatedIndex() {
 		id = null;
 		title = null;
+		titleStd = null;
 		titleSort = null;
 		content = null;
 		category = null;
@@ -107,6 +114,7 @@ public class AnnotatedIndex {
 			boolean updateDVOnly, String... categories) {
 		this.id = id.toString();
 		this.title = title;
+		this.titleStd = title;
 		this.titleSort = title;
 		this.content = content;
 		this.category = categories;
@@ -155,7 +163,7 @@ public class AnnotatedIndex {
 	public static class ExternalTest implements Serializable {
 
 		private static final long serialVersionUID = 7475266508025830265L;
-		
+
 		public int id;
 		public String title;
 

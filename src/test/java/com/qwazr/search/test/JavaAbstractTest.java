@@ -40,7 +40,7 @@ import java.util.function.BiFunction;
 public abstract class JavaAbstractTest {
 
 	public static final String[] RETURNED_FIELDS =
-			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue"};
+			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue" };
 
 	protected abstract IndexServiceInterface getIndexService() throws URISyntaxException;
 
@@ -50,8 +50,7 @@ public abstract class JavaAbstractTest {
 
 	private AnnotatedIndexService<AnnotatedIndex> getSlave() throws URISyntaxException {
 		final IndexSettingsDefinition settings =
-				new IndexSettingsDefinition(null,
-						"http://localhost:9091/indexes/testSchema/testIndexMaster");
+				new IndexSettingsDefinition(null, "http://localhost:9091/indexes/testSchema/testIndexMaster");
 		return TestServer.getService(getIndexService(), AnnotatedIndex.class, AnnotatedIndex.INDEX_NAME_SLAVE,
 				settings);
 	}
@@ -94,9 +93,10 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService service = getMaster();
 		final Map<String, AnnotatedIndexService.FieldStatus> fieldChanges = service.getFieldChanges();
 		Assert.assertNotNull(fieldChanges);
-		Assert.assertEquals(14, fieldChanges.size());
-		fieldChanges.forEach((s, fieldStatus) -> Assert.assertEquals(
-				AnnotatedIndexService.FieldStatus.EXISTS_ONLY_IN_ANNOTATION, fieldStatus));
+		Assert.assertEquals(15, fieldChanges.size());
+		fieldChanges.forEach(
+				(s, fieldStatus) -> Assert.assertEquals(AnnotatedIndexService.FieldStatus.EXISTS_ONLY_IN_ANNOTATION,
+						fieldStatus));
 	}
 
 	@Test
@@ -344,8 +344,7 @@ public abstract class JavaAbstractTest {
 	}
 
 	private void testSort(QueryBuilder queryBuilder, int resultCount,
-			BiFunction<AnnotatedIndex, AnnotatedIndex, Boolean> checker)
-			throws URISyntaxException {
+			BiFunction<AnnotatedIndex, AnnotatedIndex, Boolean> checker) throws URISyntaxException {
 		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
 		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(queryBuilder.build());
 		Assert.assertNotNull(result);
@@ -366,7 +365,8 @@ public abstract class JavaAbstractTest {
 				.addSort("titleSort", QueryDefinition.SortEnum.descending_missing_first)
 				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
 				.addReturned_field("title")
-				.setStart(0).setRows(100);
+				.setStart(0)
+				.setRows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.title.compareTo(doc2.title) > 0);
 	}
 
@@ -377,7 +377,8 @@ public abstract class JavaAbstractTest {
 				.addSort("titleSort", QueryDefinition.SortEnum.ascending_missing_last)
 				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
 				.addReturned_field("title")
-				.setStart(0).setRows(100);
+				.setStart(0)
+				.setRows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.title.compareTo(doc2.title) < 0);
 	}
 
@@ -388,7 +389,8 @@ public abstract class JavaAbstractTest {
 				.addSort("dvQty", QueryDefinition.SortEnum.ascending_missing_last)
 				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
 				.addReturned_field("dvQty")
-				.setStart(0).setRows(100);
+				.setStart(0)
+				.setRows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.dvQty.compareTo(doc2.dvQty) < 0);
 	}
 
@@ -399,7 +401,8 @@ public abstract class JavaAbstractTest {
 				.addSort("dvQty", QueryDefinition.SortEnum.descending_missing_last)
 				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
 				.addReturned_field("dvQty")
-				.setStart(0).setRows(100);
+				.setStart(0)
+				.setRows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.dvQty.compareTo(doc2.dvQty) > 0);
 	}
 
@@ -410,7 +413,8 @@ public abstract class JavaAbstractTest {
 				.addSort("price", QueryDefinition.SortEnum.ascending_missing_last)
 				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
 				.addReturned_field("price")
-				.setStart(0).setRows(100);
+				.setStart(0)
+				.setRows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.price.compareTo(doc2.price) < 0);
 	}
 
@@ -421,10 +425,10 @@ public abstract class JavaAbstractTest {
 				.addSort("price", QueryDefinition.SortEnum.descending_missing_last)
 				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
 				.addReturned_field("price")
-				.setStart(0).setRows(100);
+				.setStart(0)
+				.setRows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.price.compareTo(doc2.price) > 0);
 	}
-
 
 	public static List<TermEnumDefinition> checkTermList(List<TermEnumDefinition> terms) {
 		Assert.assertNotNull(terms);
@@ -441,20 +445,34 @@ public abstract class JavaAbstractTest {
 		checkTermList(master.doExtractTerms("content", "a", null, null));
 	}
 
-	@Test
-	public void test700MultiFieldWithFuzzy() throws IOException, ReflectiveOperationException, URISyntaxException {
+	private void checkMultiField(final MultiFieldQuery query, final String check, final int size)
+			throws URISyntaxException {
 		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
-		Map<String, Float> fields = new HashMap<>();
-		fields.put("title", 10.0F);
-		fields.put("content", 1.0F);
 		final QueryBuilder builder = new QueryBuilder();
-		final MultiFieldQuery query =
-				new MultiFieldQuery(fields, QueryParserOperator.AND, null, "title sekond");
 		builder.setQuery(query).setQuery_debug(true);
 		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
-		Assert.assertEquals("+((title:titl)^10.0 content:titl) +((title:sekond~2)^10.0 content:sekond~2)",
-				result.getQuery());
-		Assert.assertEquals(1, result.documents.size());
+		Assert.assertEquals(check, result.getQuery());
+		Assert.assertEquals(size, result.documents.size());
+	}
+
+	@Test
+	public void test700MultiFieldWithFuzzy() throws IOException, ReflectiveOperationException, URISyntaxException {
+		Map<String, Float> fields = new HashMap<>();
+		fields.put("title", 10.0F);
+		fields.put("titleStd", 5.0F);
+		fields.put("content", 1.0F);
+		MultiFieldQuery query = new MultiFieldQuery(fields, QueryParserOperator.AND, null, "title sekond", null);
+		checkMultiField(query,
+				"+((titleStd:title)^5.0 (title:titl)^10.0 content:titl) +((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2)",
+				1);
+		query = new MultiFieldQuery(fields, QueryParserOperator.OR, null, "title sekond", 2);
+		checkMultiField(query,
+				"(((titleStd:title)^5.0 (title:titl)^10.0 content:titl) ((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2))~2",
+				1);
+		query = new MultiFieldQuery(fields, QueryParserOperator.OR, null, "title sekond", 1);
+		checkMultiField(query,
+				"(((titleStd:title)^5.0 (title:titl)^10.0 content:titl) ((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2))~1",
+				2);
 	}
 
 	@Test
@@ -569,6 +587,5 @@ public abstract class JavaAbstractTest {
 		Assert.assertEquals(0, stats.getPending());
 		Assert.assertTrue(stats.getLeased() == 0 || stats.getAvailable() > 0);
 	}
-
 
 }

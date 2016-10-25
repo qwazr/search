@@ -49,19 +49,25 @@ public class MultiFieldQuery extends AbstractQuery {
 	@JsonProperty("tokenizer")
 	final public LinkedHashMap<String, String> tokenizerDefinition;
 
+	@JsonProperty("min_number_should_match")
+	final public Integer minNumberShouldMath;
+
 	public MultiFieldQuery() {
 		fieldsBoosts = null;
 		defaultOperator = null;
 		tokenizerDefinition = null;
 		queryString = null;
+		minNumberShouldMath = null;
 	}
 
 	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final QueryParserOperator defaultOperator,
-			final LinkedHashMap<String, String> tokenizerDefinition, final String queryString) {
+			final LinkedHashMap<String, String> tokenizerDefinition, final String queryString,
+			final Integer minNumberShouldMath) {
 		this.fieldsBoosts = fieldsBoosts;
 		this.defaultOperator = defaultOperator;
 		this.tokenizerDefinition = tokenizerDefinition;
 		this.queryString = queryString;
+		this.minNumberShouldMath = minNumberShouldMath;
 	}
 
 	final static Analyzer DEFAULT_TOKEN_ANALYZER = new UnicodeWhitespaceAnalyzer();
@@ -92,15 +98,17 @@ public class MultiFieldQuery extends AbstractQuery {
 		//////
 		// Build the final query
 		/////
-		org.apache.lucene.search.BooleanQuery.Builder topLevelQuery =
+		final org.apache.lucene.search.BooleanQuery.Builder topLevelQuery =
 				new org.apache.lucene.search.BooleanQuery.Builder();
+
 		// Determine the top level occur operator
-		BooleanClause.Occur topLevelOccur =
+		final BooleanClause.Occur topLevelOccur =
 				defaultOperator == null || defaultOperator.queryParseroperator == QueryParser.Operator.AND ?
-						BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD;
+						BooleanClause.Occur.MUST :
+						BooleanClause.Occur.SHOULD;
 
 		// Iterator over terms
-		AtomicInteger currentPos = new AtomicInteger(0);
+		final AtomicInteger currentPos = new AtomicInteger(0);
 		topLevelTerms.terms.forEach(topLevelTerm -> {
 
 			// The query list for each term
@@ -111,22 +119,24 @@ public class MultiFieldQuery extends AbstractQuery {
 
 			// add the top level boolean clause
 			switch (termQueries.size()) {
-				case 0:
-					break;
-				case 1:
-					topLevelQuery.add(termQueries.get(0), topLevelOccur);
-					break;
-				default:
-					final org.apache.lucene.search.BooleanQuery.Builder bb =
-							new org.apache.lucene.search.BooleanQuery.Builder();
-					termQueries.forEach(query -> bb.add(query, BooleanClause.Occur.SHOULD));
-					topLevelQuery.add(bb.build(), topLevelOccur);
-					break;
+			case 0:
+				break;
+			case 1:
+				topLevelQuery.add(termQueries.get(0), topLevelOccur);
+				break;
+			default:
+				final org.apache.lucene.search.BooleanQuery.Builder bb =
+						new org.apache.lucene.search.BooleanQuery.Builder();
+				termQueries.forEach(query -> bb.add(query, BooleanClause.Occur.SHOULD));
+				topLevelQuery.add(bb.build(), topLevelOccur);
+				break;
 			}
 
 			currentPos.incrementAndGet();
 		});
 
+		if (minNumberShouldMath != null)
+			topLevelQuery.setMinimumNumberShouldMatch(minNumberShouldMath);
 		return topLevelQuery.build();
 	}
 
@@ -158,7 +168,8 @@ public class MultiFieldQuery extends AbstractQuery {
 			});
 			query = getMultiTermQuery(termFreq.term.field(), sb.toString().trim());
 		} else {
-			query = (termFreq.freq == 0 && minTermFreq == 0) ? getFuzzyQuery(termFreq.term) :
+			query = (termFreq.freq == 0 && minTermFreq == 0) ?
+					getFuzzyQuery(termFreq.term) :
 					getTermQuery(termFreq.term);
 		}
 
@@ -205,7 +216,7 @@ public class MultiFieldQuery extends AbstractQuery {
 
 	}
 
-	private static class TopLevelTerm {
+	public static class TopLevelTerm {
 
 		private final Map<String, List<TermFreq>> termsByField;
 		private final AtomicInteger allFieldFreq;
@@ -213,6 +224,14 @@ public class MultiFieldQuery extends AbstractQuery {
 		private TopLevelTerm() {
 			this.termsByField = new LinkedHashMap<>();
 			this.allFieldFreq = new AtomicInteger();
+		}
+
+		public List<TermFreq> getTermsByFied(final String field) {
+			return termsByField.get(field);
+		}
+
+		public int getAllFieldFreq() {
+			return allFieldFreq.get();
 		}
 	}
 
