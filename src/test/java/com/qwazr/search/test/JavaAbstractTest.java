@@ -40,7 +40,7 @@ import java.util.function.BiFunction;
 public abstract class JavaAbstractTest {
 
 	public static final String[] RETURNED_FIELDS =
-			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue" };
+			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue"};
 
 	protected abstract IndexServiceInterface getIndexService() throws URISyntaxException;
 
@@ -463,15 +463,15 @@ public abstract class JavaAbstractTest {
 		fields.put("content", 1.0F);
 		MultiFieldQuery query = new MultiFieldQuery(fields, QueryParserOperator.AND, null, "title sekond", null);
 		checkMultiField(query,
-				"+((titleStd:title)^5.0 (title:titl)^10.0 content:titl) +((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2)",
+				"+((titleStd:title)^5.0 (title:titl)^10.0 content:titl~2) +((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2)",
 				1);
 		query = new MultiFieldQuery(fields, QueryParserOperator.OR, null, "title sekond", 2);
 		checkMultiField(query,
-				"(((titleStd:title)^5.0 (title:titl)^10.0 content:titl) ((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2))~2",
+				"(((titleStd:title)^5.0 (title:titl)^10.0 content:titl~2) ((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2))~2",
 				1);
 		query = new MultiFieldQuery(fields, QueryParserOperator.OR, null, "title sekond", 1);
 		checkMultiField(query,
-				"(((titleStd:title)^5.0 (title:titl)^10.0 content:titl) ((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2))~1",
+				"(((titleStd:title)^5.0 (title:titl)^10.0 content:titl~2) ((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2))~1",
 				2);
 	}
 

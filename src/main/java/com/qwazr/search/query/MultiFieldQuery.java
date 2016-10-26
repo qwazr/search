@@ -95,8 +95,6 @@ public class MultiFieldQuery extends AbstractQuery {
 			topLevelTerms.forEachToken();
 		}
 
-		checkTerms(topLevelTerms.terms);
-
 		//////
 		// Build the final query
 		/////
@@ -113,10 +111,15 @@ public class MultiFieldQuery extends AbstractQuery {
 		final AtomicInteger currentPos = new AtomicInteger(0);
 		topLevelTerms.terms.forEach(topLevelTerm -> {
 
+			final int minTermFreq = topLevelTerm.allFieldFreq.get();
+
+			if (!acceptTopLevelTerm(minTermFreq, topLevelTerm.userTerm))
+				return;
+
 			// The query list for each term
 			final List<Query> termQueries = new ArrayList<>();
 			topLevelTerm.termsByField.forEach((field, termsFreqs) ->
-					addTermQuery(topLevelTerm.allFieldFreq.get(), termsFreqs, fieldsBoosts.get(field), termQueries));
+					addTermQuery(minTermFreq, topLevelTerm.userTerm, termsFreqs, fieldsBoosts.get(field), termQueries));
 
 			// add the top level boolean clause
 			switch (termQueries.size()) {
@@ -141,22 +144,25 @@ public class MultiFieldQuery extends AbstractQuery {
 		return topLevelQuery.build();
 	}
 
-	protected void checkTerms(final Collection<TopLevelTerm> terms) {
+	protected boolean acceptTopLevelTerm(final int minTermFreq, final String userTerm) {
+		return true;
 	}
 
-	protected Query getMultiTermQuery(final String field, final String queryText) {
+	protected Query getMultiTermQuery(final int globalMinTermFreq, final String userTerm, final String field,
+			final String queryText) {
 		return new org.apache.lucene.search.PhraseQuery(field, queryText);
 	}
 
-	protected Query getTermQuery(final Term term) {
-		return new org.apache.lucene.search.TermQuery(term);
+	protected Query getTermQuery(final int globalMinTermFreq, final String userTerm, final Term term,
+			final int termFreqInField) {
+		if (termFreqInField == 0 || globalMinTermFreq == 0)
+			return new org.apache.lucene.search.FuzzyQuery(term);
+		else
+			return new org.apache.lucene.search.TermQuery(term);
 	}
 
-	protected Query getFuzzyQuery(final Term term) {
-		return new org.apache.lucene.search.FuzzyQuery(term);
-	}
-
-	private void addTermQuery(final int minTermFreq, final List<TermFreq> termFreqs, final float boost,
+	private void addTermQuery(final int minTermFreq, final String userTerm, final List<TermFreq> termFreqs,
+			final float boost,
 			final Collection<Query> queries) {
 
 		if (termFreqs.isEmpty())
@@ -171,12 +177,12 @@ public class MultiFieldQuery extends AbstractQuery {
 				sb.append(' ');
 			});
 			final String term = sb.toString().trim();
-			query = getMultiTermQuery(termFreq.term.field(), term);
-		} else {
-			query = (termFreq.freq == 0 && minTermFreq == 0) ?
-					getFuzzyQuery(termFreq.term) :
-					getTermQuery(termFreq.term);
-		}
+			query = getMultiTermQuery(minTermFreq, userTerm, termFreq.term.field(), term);
+		} else
+			query = getTermQuery(minTermFreq, userTerm, termFreq.term, termFreq.freq);
+
+		if (query == null)
+			return;
 
 		// Add the optional boost
 		if (boost != 1F)
@@ -203,7 +209,7 @@ public class MultiFieldQuery extends AbstractQuery {
 		@Override
 		public boolean token() {
 			final String text = charTermAttr.toString();
-			final TopLevelTerm topLevelTerm = new TopLevelTerm();
+			final TopLevelTerm topLevelTerm = new TopLevelTerm(text);
 			// The text is submitted to each field/analyzer
 			fields.forEach(field -> {
 				try (final TokenStream tokenStream = queryAnalyzer.tokenStream(field, text)) {
@@ -223,10 +229,12 @@ public class MultiFieldQuery extends AbstractQuery {
 
 	public static class TopLevelTerm {
 
+		private final String userTerm;
 		private final Map<String, List<TermFreq>> termsByField;
 		private final AtomicInteger allFieldFreq;
 
-		private TopLevelTerm() {
+		private TopLevelTerm(final String userTerm) {
+			this.userTerm = userTerm;
 			this.termsByField = new LinkedHashMap<>();
 			this.allFieldFreq = new AtomicInteger();
 		}
