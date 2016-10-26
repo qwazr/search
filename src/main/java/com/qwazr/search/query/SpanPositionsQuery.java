@@ -16,15 +16,14 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.utils.IOUtils;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BoostQuery;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.spans.SpanPositionRangeQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 
@@ -48,9 +47,8 @@ public class SpanPositionsQuery extends AbstractQuery {
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
 
-		BooleanQuery.Builder builder = new BooleanQuery.Builder();
-		TokenStream tokenStream = queryContext.queryAnalyzer.tokenStream(field, queryContext.queryString);
-		try {
+		final BooleanQuery.Builder builder = new BooleanQuery.Builder();
+		try (final TokenStream tokenStream = queryContext.queryAnalyzer.tokenStream(field, queryContext.queryString)) {
 			CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
 			PositionIncrementAttribute pocincrAttribute = tokenStream.getAttribute(PositionIncrementAttribute.class);
 			tokenStream.reset();
@@ -71,8 +69,6 @@ public class SpanPositionsQuery extends AbstractQuery {
 				pos += pocincrAttribute.getPositionIncrement();
 			}
 			return builder.build();
-		} finally {
-			IOUtils.closeQuietly(tokenStream);
 		}
 	}
 
