@@ -817,7 +817,7 @@ public abstract class JsonAbstractTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
+		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(
 				() -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),
@@ -946,7 +946,7 @@ public abstract class JsonAbstractTest {
 
 		@Override
 		public void run() {
-			while (counter.incrementAndGet() < 200) {
+			while (counter.incrementAndGet() < 50) {
 				client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC);
 				client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
 			}
@@ -961,7 +961,7 @@ public abstract class JsonAbstractTest {
 
 		@Override
 		public void run() {
-			while (counter.incrementAndGet() < 200) {
+			while (counter.incrementAndGet() < 50) {
 				client.updateMappedDocValues(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_VALUE);
 				client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
 			}
@@ -974,7 +974,7 @@ public abstract class JsonAbstractTest {
 		final IndexServiceInterface client = getClient();
 		checkReplication(client);
 
-		final ExecutorService executor = Executors.newFixedThreadPool(4);
+		final ExecutorService executor = Executors.newFixedThreadPool(2);
 		final AtomicInteger counter = new AtomicInteger();
 
 		final List<Future<?>> futures = new ArrayList<>();
