@@ -50,24 +50,24 @@ public class MultiFieldQuery extends AbstractQuery {
 	final public LinkedHashMap<String, String> tokenizerDefinition;
 
 	@JsonProperty("min_number_should_match")
-	final public Integer minNumberShouldMath;
+	final public Integer minNumberShouldMatch;
 
 	public MultiFieldQuery() {
 		fieldsBoosts = null;
 		defaultOperator = null;
 		tokenizerDefinition = null;
 		queryString = null;
-		minNumberShouldMath = null;
+		minNumberShouldMatch = null;
 	}
 
 	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final QueryParserOperator defaultOperator,
 			final LinkedHashMap<String, String> tokenizerDefinition, final String queryString,
-			final Integer minNumberShouldMath) {
+			final Integer minNumberShouldMatch) {
 		this.fieldsBoosts = fieldsBoosts;
 		this.defaultOperator = defaultOperator;
 		this.tokenizerDefinition = tokenizerDefinition;
 		this.queryString = queryString;
-		this.minNumberShouldMath = minNumberShouldMath;
+		this.minNumberShouldMatch = minNumberShouldMatch;
 	}
 
 	final static Analyzer DEFAULT_TOKEN_ANALYZER = new UnicodeWhitespaceAnalyzer();
@@ -95,6 +95,8 @@ public class MultiFieldQuery extends AbstractQuery {
 			topLevelTerms.forEachToken();
 		}
 
+		checkTerms(topLevelTerms.terms);
+
 		//////
 		// Build the final query
 		/////
@@ -113,31 +115,33 @@ public class MultiFieldQuery extends AbstractQuery {
 
 			// The query list for each term
 			final List<Query> termQueries = new ArrayList<>();
-			topLevelTerm.termsByField.forEach((field, termsFreqs) -> {
-				addTermQuery(topLevelTerm.allFieldFreq.get(), termsFreqs, fieldsBoosts.get(field), termQueries);
-			});
+			topLevelTerm.termsByField.forEach((field, termsFreqs) ->
+					addTermQuery(topLevelTerm.allFieldFreq.get(), termsFreqs, fieldsBoosts.get(field), termQueries));
 
 			// add the top level boolean clause
 			switch (termQueries.size()) {
-			case 0:
-				break;
-			case 1:
-				topLevelQuery.add(termQueries.get(0), topLevelOccur);
-				break;
-			default:
-				final org.apache.lucene.search.BooleanQuery.Builder bb =
-						new org.apache.lucene.search.BooleanQuery.Builder();
-				termQueries.forEach(query -> bb.add(query, BooleanClause.Occur.SHOULD));
-				topLevelQuery.add(bb.build(), topLevelOccur);
-				break;
+				case 0:
+					break;
+				case 1:
+					topLevelQuery.add(termQueries.get(0), topLevelOccur);
+					break;
+				default:
+					final org.apache.lucene.search.BooleanQuery.Builder bb =
+							new org.apache.lucene.search.BooleanQuery.Builder();
+					termQueries.forEach(query -> bb.add(query, BooleanClause.Occur.SHOULD));
+					topLevelQuery.add(bb.build(), topLevelOccur);
+					break;
 			}
 
 			currentPos.incrementAndGet();
 		});
 
-		if (minNumberShouldMath != null)
-			topLevelQuery.setMinimumNumberShouldMatch(minNumberShouldMath);
+		if (minNumberShouldMatch != null)
+			topLevelQuery.setMinimumNumberShouldMatch(minNumberShouldMatch);
 		return topLevelQuery.build();
+	}
+
+	protected void checkTerms(final Collection<TopLevelTerm> terms) {
 	}
 
 	protected Query getMultiTermQuery(final String field, final String queryText) {
@@ -166,7 +170,8 @@ public class MultiFieldQuery extends AbstractQuery {
 				sb.append(tf.term.text());
 				sb.append(' ');
 			});
-			query = getMultiTermQuery(termFreq.term.field(), sb.toString().trim());
+			final String term = sb.toString().trim();
+			query = getMultiTermQuery(termFreq.term.field(), term);
 		} else {
 			query = (termFreq.freq == 0 && minTermFreq == 0) ?
 					getFuzzyQuery(termFreq.term) :
