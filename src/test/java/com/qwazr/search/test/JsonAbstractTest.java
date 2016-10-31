@@ -817,7 +817,7 @@ public abstract class JsonAbstractTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
+		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(
 				() -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),

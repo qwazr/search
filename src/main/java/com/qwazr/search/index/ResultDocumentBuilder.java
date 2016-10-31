@@ -30,7 +30,7 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 
 	final int pos;
 	final ScoreDoc scoreDoc;
-	final Float percent_score;
+	final Float percentScore;
 
 	Map<String, String> highlights;
 
@@ -38,9 +38,9 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 		this.pos = pos;
 		this.scoreDoc = scoreDoc;
 		if (maxScore > 0)
-			this.percent_score = scoreDoc.score == 0 ? 0 : scoreDoc.score / maxScore;
+			this.percentScore = scoreDoc.score == 0 ? 0 : scoreDoc.score / maxScore;
 		else
-			this.percent_score = null;
+			this.percentScore = null;
 	}
 
 	final void setHighlight(final String name, final String snippet) {

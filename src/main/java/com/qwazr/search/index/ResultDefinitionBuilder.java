@@ -110,7 +110,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		if (size <= 0)
 			return new ResultDocumentBuilder[0];
 		final float maxScore = topDocs.getMaxScore();
-		ResultDocumentBuilder<T>[] resultDocuments = documentBuilderFactory.createArray(size);
+		final ResultDocumentBuilder<T>[] resultDocuments = documentBuilderFactory.createArray(size);
 		for (int i = 0; i < size; i++)
 			resultDocuments[i] = documentBuilderFactory.createBuilder(pos, topDocs.scoreDocs[pos++], maxScore);
 		return resultDocuments;
@@ -121,7 +121,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		if (highlighters == null)
 			return;
 
-		int[] docIDs = new int[resultDocumentBuilders.length];
+		final int[] docIDs = new int[resultDocumentBuilders.length];
 		int pos = 0;
 		for (ResultDocumentBuilder resultDocumentBuilder : resultDocumentBuilders)
 			docIDs[pos++] = resultDocumentBuilder.scoreDoc.doc;
@@ -141,9 +141,9 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 	}
 
 	final private void buildStoredFields(final Set<String> returnedFields) throws IOException {
-		for (ResultDocumentBuilder resultDocumentBuider : resultDocumentBuilders) {
-			resultDocumentBuider.setStoredFields(indexSearcher.doc(resultDocumentBuider.scoreDoc.doc, returnedFields));
-		}
+		for (final ResultDocumentBuilder resultDocumentBuilder : resultDocumentBuilders)
+			resultDocumentBuilder
+					.setStoredFields(indexSearcher.doc(resultDocumentBuilder.scoreDoc.doc, returnedFields));
 		if (timeTracker != null)
 			timeTracker.next("storedFields");
 	}

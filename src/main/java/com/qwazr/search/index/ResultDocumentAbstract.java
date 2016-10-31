@@ -37,7 +37,7 @@ public abstract class ResultDocumentAbstract {
 
 	protected ResultDocumentAbstract(final ResultDocumentBuilder builder) {
 		this.score = builder.scoreDoc.score;
-		this.percent_score = builder.percent_score;
+		this.percent_score = builder.percentScore;
 		highlights = builder.highlights;
 		this.doc = builder.scoreDoc.doc;
 		this.shard_index = builder.scoreDoc.shardIndex;
