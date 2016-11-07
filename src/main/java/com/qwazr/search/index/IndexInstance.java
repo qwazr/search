@@ -57,6 +57,7 @@ final public class IndexInstance implements Closeable {
 
 	private final IndexInstanceBuilder.FileSet fileSet;
 	private final UUID indexUuid;
+	private final String indexName;
 
 	private final SchemaInstance schema;
 	private final Directory dataDirectory;
@@ -82,6 +83,7 @@ final public class IndexInstance implements Closeable {
 	IndexInstance(final IndexInstanceBuilder builder) {
 		this.schema = builder.schema;
 		this.fileSet = builder.fileSet;
+		this.indexName = builder.fileSet.indexDirectory.getName();
 		this.indexUuid = builder.indexUuid;
 		this.dataDirectory = builder.dataDirectory;
 		this.analyzerMap = builder.analyzerMap;
@@ -181,7 +183,8 @@ final public class IndexInstance implements Closeable {
 		final LinkedHashMap<String, FieldDefinition> fields =
 				(LinkedHashMap<String, FieldDefinition>) fieldMap.getFieldDefinitionMap().clone();
 		if (fields.remove(field_name) == null)
-			throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + field_name);
+			throw new ServerException(Response.Status.NOT_FOUND,
+					"Field not found: " + field_name + " - Index: " + indexName);
 		setFields(fields);
 	}
 
@@ -208,7 +211,8 @@ final public class IndexInstance implements Closeable {
 			throws ServerException, InterruptedException, ReflectiveOperationException, IOException {
 		final AnalyzerDefinition analyzerDefinition = analyzerMap.get(analyzerName);
 		if (analyzerDefinition == null)
-			throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
+			throw new ServerException(Response.Status.NOT_FOUND,
+					"Analyzer not found: " + analyzerName + " - Index: " + indexName);
 		try (final Analyzer analyzer = new CustomAnalyzer(fileResourceLoader, analyzerDefinition)) {
 			return TermDefinition.buildTermList(analyzer, StringUtils.EMPTY, inputText);
 		}
@@ -218,7 +222,8 @@ final public class IndexInstance implements Closeable {
 		LinkedHashMap<String, AnalyzerDefinition> analyzers =
 				(LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone();
 		if (analyzers.remove(analyzerName) == null)
-			throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
+			throw new ServerException(Response.Status.NOT_FOUND,
+					"Analyzer not found: " + analyzerName + " - Index: " + indexName);
 		setAnalyzers(analyzers);
 	}
 
@@ -267,7 +272,8 @@ final public class IndexInstance implements Closeable {
 				backupIndexDirectory.mkdir();
 			if (!backupIndexDirectory.exists() || !backupIndexDirectory.isDirectory())
 				throw new IOException(
-						"Cannot create the backup directory: " + backupIndexDirectory.getAbsolutePath());
+						"Cannot create the backup directory: " + backupIndexDirectory.getAbsolutePath() + " - Index: " +
+								indexName);
 			// Get the existing files
 			final Map<String, File> fileMap = new HashMap<>();
 			for (File file : backupIndexDirectory.listFiles((FileFilter) FileFileFilter.FILE))
@@ -311,7 +317,8 @@ final public class IndexInstance implements Closeable {
 
 	final void checkIsMaster() {
 		if (indexWriter == null)
-			throw new UnsupportedOperationException("Writing in a read only index (slave) is not allowed.");
+			throw new UnsupportedOperationException(
+					"Writing in a read only index (slave) is not allowed: " + indexName);
 	}
 
 	final UUID checkRemoteMasterUUID(final String remoteMasterUuid, final UUID localUuid) {
@@ -319,7 +326,7 @@ final public class IndexInstance implements Closeable {
 		if (!Objects.equals(uuid, localUuid))
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"The UUID of the local index and the remote index does not match: " + localUuid + " <> " +
-							remoteMasterUuid);
+							remoteMasterUuid + " - " + indexName);
 		return uuid;
 	}
 
@@ -330,7 +337,8 @@ final public class IndexInstance implements Closeable {
 
 	void replicationCheck() throws IOException {
 		if (replicationClient == null)
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE, "No replication master has been setup.");
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+					"No replication master has been setup - Index: " + indexName);
 
 		final Semaphore sem = schema.acquireWriteSemaphore();
 
@@ -352,7 +360,8 @@ final public class IndexInstance implements Closeable {
 					try (final InputStream input = indexReplicator.getResource(remoteName)) {
 						postResource(remoteName, remoteInfo.lastModified, input);
 					} catch (IOException e) {
-						throw new ServerException("Cannot replicate the resource " + remoteName, e);
+						throw new ServerException("Cannot replicate the resource " + remoteName + " - Index: " +
+								indexName, e);
 					}
 				});
 				localResources.forEach((resourceName, resourceInfo) -> deleteResource(resourceName));
@@ -369,7 +378,7 @@ final public class IndexInstance implements Closeable {
 				if (slaveVersion > masterVersion)
 					throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 							"The slave version is greater than the master version: " + slaveVersion + " / "
-									+ masterVersion);
+									+ masterVersion + " - Index: " + indexName);
 				replicationClient.updateNow();
 
 			} finally {
@@ -551,8 +560,8 @@ final public class IndexInstance implements Closeable {
 			throws IOException, InterruptedException, QueryNodeException, ParseException, ServerException,
 			ReflectiveOperationException {
 		checkIsMaster();
-		Objects.requireNonNull(queryDefinition, "The queryDefinition is missing");
-		Objects.requireNonNull(queryDefinition.query, "The query is missing");
+		Objects.requireNonNull(queryDefinition, "The queryDefinition is missing - Index: " + indexName);
+		Objects.requireNonNull(queryDefinition.query, "The query is missing - Index: " + indexName);
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			final QueryContext queryContext =
@@ -572,14 +581,15 @@ final public class IndexInstance implements Closeable {
 
 	final List<TermEnumDefinition> getTermsEnum(final String fieldName, final String prefix, final Integer start,
 			final Integer rows) throws InterruptedException, IOException {
-		Objects.requireNonNull(fieldName, "The field name is missing");
+		Objects.requireNonNull(fieldName, "The field name is missing - Index: " + indexName);
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
 				FieldMap.Item fieldMapItem = fieldMap.find(fieldName);
 				if (fieldMapItem == null)
-					throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + fieldName);
+					throw new ServerException(Response.Status.NOT_FOUND,
+							"Field not found: " + fieldName + " - Index: " + indexName);
 				FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldMapItem);
 				Terms terms = MultiFields.getTerms(indexSearcher.getIndexReader(), fieldName);
 				if (terms == null)
@@ -704,16 +714,19 @@ final public class IndexInstance implements Closeable {
 
 	final InputStream getResource(final String resourceName) throws IOException {
 		if (!fileSet.resourcesDirectory.exists())
-			throw new ServerException(Response.Status.NOT_FOUND, "Resource not found : " + resourceName);
+			throw new ServerException(Response.Status.NOT_FOUND,
+					"Resource not found : " + resourceName + " - Index: " + indexName);
 		return fileResourceLoader.openResource(resourceName);
 	}
 
 	final void deleteResource(final String resourceName) {
 		if (!fileSet.resourcesDirectory.exists())
-			throw new ServerException(Response.Status.NOT_FOUND, "Resource not found : " + resourceName);
+			throw new ServerException(Response.Status.NOT_FOUND,
+					"Resource not found : " + resourceName + " - Index: " + indexName);
 		final File resourceFile = fileResourceLoader.checkResourceName(resourceName);
 		if (!resourceFile.exists())
-			throw new ServerException(Response.Status.NOT_FOUND, "Resource not found : " + resourceName);
+			throw new ServerException(Response.Status.NOT_FOUND,
+					"Resource not found : " + resourceName + " - Index: " + indexName);
 		resourceFile.delete();
 	}
 
