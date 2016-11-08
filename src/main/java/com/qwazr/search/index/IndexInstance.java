@@ -137,7 +137,7 @@ final public class IndexInstance implements Closeable {
 		final IndexSearcher indexSearcher = searcherManager.acquire();
 		try {
 			return new IndexStatus(indexUuid, indexReplicator != null ? indexReplicator.getMasterUuid() : null,
-					indexSearcher.getIndexReader(), settings, analyzerMap.keySet(),
+					indexSearcher.getIndexReader(), indexWriter, settings, analyzerMap.keySet(),
 					fieldMap.getFieldDefinitionMap().keySet());
 		} finally {
 			searcherManager.release(indexSearcher);

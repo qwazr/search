@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
 
 import java.util.Objects;
 import java.util.Set;
@@ -29,6 +30,9 @@ public class IndexStatus {
 
 	final public Long num_docs;
 	final public Long num_deleted_docs;
+	final public Boolean has_pending_merges;
+	final public Boolean has_uncommitted_changes;
+	final public Boolean has_deletions;
 	final public String index_uuid;
 	final public String master_uuid;
 	final public Long version;
@@ -39,6 +43,9 @@ public class IndexStatus {
 	public IndexStatus() {
 		num_docs = null;
 		num_deleted_docs = null;
+		has_pending_merges = null;
+		has_uncommitted_changes = null;
+		has_deletions = null;
 		index_uuid = null;
 		master_uuid = null;
 		version = null;
@@ -48,10 +55,20 @@ public class IndexStatus {
 	}
 
 	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final IndexReader indexReader,
-			final IndexSettingsDefinition settings,
-			final Set<String> analyzers, final Set<String> fields) {
+			final IndexWriter indexWriter, final IndexSettingsDefinition settings, final Set<String> analyzers,
+			final Set<String> fields) {
 		num_docs = (long) indexReader.numDocs();
 		num_deleted_docs = (long) indexReader.numDeletedDocs();
+		if (indexWriter == null) {
+			has_pending_merges = null;
+			has_uncommitted_changes = null;
+			has_deletions = null;
+		} else {
+			has_pending_merges = indexWriter.hasPendingMerges();
+			has_uncommitted_changes = indexWriter.hasUncommittedChanges();
+			has_deletions = indexWriter.hasDeletions();
+		}
+		indexWriter.hasUncommittedChanges();
 		this.index_uuid = indexUuid == null ? null : indexUuid.toString();
 		this.master_uuid = masterUuid == null ? null : masterUuid.toString();
 		version = indexReader instanceof DirectoryReader ? ((DirectoryReader) indexReader).getVersion() : null;
