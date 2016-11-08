@@ -68,7 +68,6 @@ public class IndexStatus {
 			has_uncommitted_changes = indexWriter.hasUncommittedChanges();
 			has_deletions = indexWriter.hasDeletions();
 		}
-		indexWriter.hasUncommittedChanges();
 		this.index_uuid = indexUuid == null ? null : indexUuid.toString();
 		this.master_uuid = masterUuid == null ? null : masterUuid.toString();
 		version = indexReader instanceof DirectoryReader ? ((DirectoryReader) indexReader).getVersion() : null;
