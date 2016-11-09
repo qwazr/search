@@ -257,6 +257,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private void nrtCommit() throws IOException {
+		indexWriter.flush();
 		indexWriter.commit();
 		replicator.publish(new IndexRevision(indexWriter));
 		searcherManager.maybeRefresh();

@@ -25,6 +25,7 @@ import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.replicator.*;
 import org.apache.lucene.search.SearcherManager;
@@ -163,6 +164,8 @@ class IndexInstanceBuilder {
 		if (settings != null && settings.similarity_class != null && !settings.similarity_class.isEmpty())
 			indexWriterConfig.setSimilarity(IndexUtils.findSimilarity(settings.similarity_class));
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+		final SerialMergeScheduler serialMergeScheduler = new SerialMergeScheduler();
+		indexWriterConfig.setMergeScheduler(serialMergeScheduler);
 		final SnapshotDeletionPolicy snapshotDeletionPolicy =
 				new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
 		indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
