@@ -335,14 +335,14 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		}
 	}
 
-	private final static String[] DOT_PREFIX = {"digraph G {",
+	private final static String[] DOT_PREFIX = { "digraph G {",
 			"rankdir = LR;",
 			"label = \"\";",
 			"center = 1;",
 			"ranksep = \"0.4\";",
-			"nodesep = \"0.25\";"};
+			"nodesep = \"0.25\";" };
 
-	private final static String[] DOT_SUFFIX = {"}"};
+	private final static String[] DOT_SUFFIX = { "}" };
 
 	@Override
 	public String testAnalyzerDot(final String schemaName, final String indexName, final String analyzerName,
