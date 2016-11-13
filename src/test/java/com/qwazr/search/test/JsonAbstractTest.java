@@ -617,7 +617,7 @@ public abstract class JsonAbstractTest {
 		IndexServiceInterface client = getClient();
 		checkErrorStatusCode(() -> client.getDocument(SCHEMA_NAME, INDEX_DUMMY_NAME, id), 404);
 		checkErrorStatusCode(() -> client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, DUMMY_DOC_ID), 404);
-		final LinkedHashMap<String, Object> doc = client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, id);
+		final Map<String, Object> doc = client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, id);
 		Assert.assertNotNull(doc);
 	}
 
@@ -625,7 +625,7 @@ public abstract class JsonAbstractTest {
 	public void test412GetDocuments() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(() -> client.getDocuments(SCHEMA_NAME, INDEX_DUMMY_NAME, 0, 10), 404);
-		final List<LinkedHashMap<String, Object>> docs = client.getDocuments(SCHEMA_NAME, INDEX_MASTER_NAME, 0, 10);
+		final List<Map<String, Object>> docs = client.getDocuments(SCHEMA_NAME, INDEX_MASTER_NAME, 0, 10);
 		Assert.assertNotNull(docs);
 		Assert.assertEquals(5L, docs.size());
 	}
@@ -817,7 +817,7 @@ public abstract class JsonAbstractTest {
 
 	@Test
 	public void test600FieldAnalyzer() throws URISyntaxException {
-		final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
+		final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(
 				() -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),

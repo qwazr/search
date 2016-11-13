@@ -682,13 +682,13 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	}
 
 	@Override
-	final public List<LinkedHashMap<String, Object>> getDocuments(final String schemaName, final String indexName,
+	final public List<Map<String, Object>> getDocuments(final String schemaName, final String indexName,
 			final Integer start, final Integer rows) {
 		try {
 			ResultDefinition result = doSearchMap(schemaName, indexName, getMatchAllDocQuery(start, rows));
 			if (result == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "No document found");
-			List<LinkedHashMap<String, Object>> documents = new ArrayList<>();
+			List<Map<String, Object>> documents = new ArrayList<>();
 			List<ResultDocumentMap> docs = result.getDocuments();
 			if (docs != null)
 				docs.forEach(resultDocument -> documents.add(resultDocument.fields));
