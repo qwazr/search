@@ -33,13 +33,12 @@ final public class CustomAnalyzer extends Analyzer {
 	private final List<TokenFilterFactory> tokenFilterFactories;
 
 	public CustomAnalyzer(final ResourceLoader resourceLoader, final AnalyzerDefinition analyzerDefinition)
-			throws ReflectiveOperationException,
-			IOException {
+			throws ReflectiveOperationException, IOException {
 		super(GLOBAL_REUSE_STRATEGY);
-		positionIncrementGap = analyzerDefinition.position_increment_gap == null ? null :
+		positionIncrementGap = analyzerDefinition.position_increment_gap == null ?
+				null :
 				new HashMap<>(analyzerDefinition.position_increment_gap);
-		offsetGap = analyzerDefinition.offset_gap == null ? null :
-				new HashMap<>(analyzerDefinition.offset_gap);
+		offsetGap = analyzerDefinition.offset_gap == null ? null : new HashMap<>(analyzerDefinition.offset_gap);
 		tokenizerFactory = getFactory(resourceLoader, analyzerDefinition.tokenizer, KeywordTokenizerFactory.class);
 		if (analyzerDefinition.filters != null && !analyzerDefinition.filters.isEmpty()) {
 			tokenFilterFactories = new ArrayList<>(analyzerDefinition.filters.size());
@@ -76,8 +75,8 @@ final public class CustomAnalyzer extends Analyzer {
 	}
 
 	private final static <T extends AbstractAnalysisFactory> T getFactory(final ResourceLoader resourceLoader,
-			LinkedHashMap<String, String> args,
-			final Class<T> defaultClass) throws ReflectiveOperationException, IOException {
+			LinkedHashMap<String, String> args, final Class<T> defaultClass)
+			throws ReflectiveOperationException, IOException {
 		final String clazz;
 		if (args != null) {
 			args = (LinkedHashMap<String, String>) args.clone();

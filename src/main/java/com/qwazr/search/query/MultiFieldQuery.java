@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.CustomAnalyzer;
@@ -52,12 +53,16 @@ public class MultiFieldQuery extends AbstractQuery {
 	@JsonProperty("min_number_should_match")
 	final public Integer minNumberShouldMatch;
 
+	@JsonIgnore
+	final private Analyzer tokenizerAnalyzer;
+
 	public MultiFieldQuery() {
 		fieldsBoosts = null;
 		defaultOperator = null;
 		tokenizerDefinition = null;
 		queryString = null;
 		minNumberShouldMatch = null;
+		tokenizerAnalyzer = null;
 	}
 
 	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final QueryParserOperator defaultOperator,
@@ -68,6 +73,17 @@ public class MultiFieldQuery extends AbstractQuery {
 		this.tokenizerDefinition = tokenizerDefinition;
 		this.queryString = queryString;
 		this.minNumberShouldMatch = minNumberShouldMatch;
+		this.tokenizerAnalyzer = null;
+	}
+
+	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final QueryParserOperator defaultOperator,
+			final Analyzer tokenizerAnalyzer, final String queryString, final Integer minNumberShouldMatch) {
+		this.fieldsBoosts = fieldsBoosts;
+		this.defaultOperator = defaultOperator;
+		this.tokenizerDefinition = null;
+		this.queryString = queryString;
+		this.minNumberShouldMatch = minNumberShouldMatch;
+		this.tokenizerAnalyzer = tokenizerAnalyzer;
 	}
 
 	final static Analyzer DEFAULT_TOKEN_ANALYZER = new UnicodeWhitespaceAnalyzer();
@@ -81,10 +97,12 @@ public class MultiFieldQuery extends AbstractQuery {
 			return new org.apache.lucene.search.MatchNoDocsQuery();
 
 		// Build the analyzer used to tokenize the query string
-		final Analyzer tokenAnalyzer = tokenizerDefinition != null ?
-				new CustomAnalyzer(queryContext.resourceLoader,
-						new AnalyzerDefinition(null, null, tokenizerDefinition, null)) :
-				DEFAULT_TOKEN_ANALYZER;
+		final Analyzer tokenAnalyzer = tokenizerAnalyzer != null ?
+				tokenizerAnalyzer :
+				tokenizerDefinition != null ?
+						new CustomAnalyzer(queryContext.resourceLoader,
+								new AnalyzerDefinition(null, null, tokenizerDefinition, null)) :
+						DEFAULT_TOKEN_ANALYZER;
 
 		final TopLevelTerms topLevelTerms;
 		// Parse the queryString and extract terms and frequencies
@@ -118,22 +136,23 @@ public class MultiFieldQuery extends AbstractQuery {
 
 			// The query list for each term
 			final List<Query> termQueries = new ArrayList<>();
-			topLevelTerm.termsByField.forEach((field, termsFreqs) ->
-					addTermQuery(minTermFreq, topLevelTerm.userTerm, termsFreqs, fieldsBoosts.get(field), termQueries));
+			topLevelTerm.termsByField.forEach(
+					(field, termsFreqs) -> addTermQuery(minTermFreq, topLevelTerm.userTerm, termsFreqs,
+							fieldsBoosts.get(field), termQueries));
 
 			// add the top level boolean clause
 			switch (termQueries.size()) {
-				case 0:
-					break;
-				case 1:
-					topLevelQuery.add(termQueries.get(0), topLevelOccur);
-					break;
-				default:
-					final org.apache.lucene.search.BooleanQuery.Builder bb =
-							new org.apache.lucene.search.BooleanQuery.Builder();
-					termQueries.forEach(query -> bb.add(query, BooleanClause.Occur.SHOULD));
-					topLevelQuery.add(bb.build(), topLevelOccur);
-					break;
+			case 0:
+				break;
+			case 1:
+				topLevelQuery.add(termQueries.get(0), topLevelOccur);
+				break;
+			default:
+				final org.apache.lucene.search.BooleanQuery.Builder bb =
+						new org.apache.lucene.search.BooleanQuery.Builder();
+				termQueries.forEach(query -> bb.add(query, BooleanClause.Occur.SHOULD));
+				topLevelQuery.add(bb.build(), topLevelOccur);
+				break;
 			}
 
 			currentPos.incrementAndGet();
@@ -162,8 +181,7 @@ public class MultiFieldQuery extends AbstractQuery {
 	}
 
 	private void addTermQuery(final int minTermFreq, final String userTerm, final List<TermFreq> termFreqs,
-			final float boost,
-			final Collection<Query> queries) {
+			final float boost, final Collection<Query> queries) {
 
 		if (termFreqs.isEmpty())
 			return;  // We don't have terms
