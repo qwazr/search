@@ -24,7 +24,7 @@ import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.core.UnicodeWhitespaceAnalyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -33,6 +33,7 @@ import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -86,7 +87,15 @@ public class MultiFieldQuery extends AbstractQuery {
 		this.tokenizerAnalyzer = tokenizerAnalyzer;
 	}
 
-	final static Analyzer DEFAULT_TOKEN_ANALYZER = new UnicodeWhitespaceAnalyzer();
+	final static Analyzer DEFAULT_TOKEN_ANALYZER;
+
+	static {
+		try {
+			DEFAULT_TOKEN_ANALYZER = new StandardAnalyzer(new StringReader(""));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ReflectiveOperationException {

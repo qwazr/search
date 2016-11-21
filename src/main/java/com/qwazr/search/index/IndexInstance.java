@@ -75,6 +75,7 @@ final public class IndexInstance implements Closeable {
 
 	private final UpdatableAnalyzer indexAnalyzer;
 	private final UpdatableAnalyzer queryAnalyzer;
+
 	private volatile FieldMap fieldMap;
 	private volatile LinkedHashMap<String, AnalyzerDefinition> analyzerMap;
 
@@ -264,8 +265,7 @@ final public class IndexInstance implements Closeable {
 		schema.mayBeRefresh(true);
 	}
 
-	final synchronized BackupStatus backup(final File backupIndexDirectory)
-			throws IOException {
+	final synchronized BackupStatus backup(final File backupIndexDirectory) throws IOException {
 		checkIsMaster();
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
@@ -273,8 +273,8 @@ final public class IndexInstance implements Closeable {
 				backupIndexDirectory.mkdir();
 			if (!backupIndexDirectory.exists() || !backupIndexDirectory.isDirectory())
 				throw new IOException(
-						"Cannot create the backup directory: " + backupIndexDirectory.getAbsolutePath() + " - Index: " +
-								indexName);
+						"Cannot create the backup directory: " + backupIndexDirectory.getAbsolutePath() + " - Index: "
+								+ indexName);
 			// Get the existing files
 			final Map<String, File> fileMap = new HashMap<>();
 			for (File file : backupIndexDirectory.listFiles((FileFilter) FileFileFilter.FILE))
@@ -326,8 +326,8 @@ final public class IndexInstance implements Closeable {
 		final UUID uuid = UUID.fromString(remoteMasterUuid);
 		if (!Objects.equals(uuid, localUuid))
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"The UUID of the local index and the remote index does not match: " + localUuid + " <> " +
-							remoteMasterUuid + " - " + indexName);
+					"The UUID of the local index and the remote index does not match: " + localUuid + " <> "
+							+ remoteMasterUuid + " - " + indexName);
 		return uuid;
 	}
 
@@ -361,8 +361,8 @@ final public class IndexInstance implements Closeable {
 					try (final InputStream input = indexReplicator.getResource(remoteName)) {
 						postResource(remoteName, remoteInfo.lastModified, input);
 					} catch (IOException e) {
-						throw new ServerException("Cannot replicate the resource " + remoteName + " - Index: " +
-								indexName, e);
+						throw new ServerException(
+								"Cannot replicate the resource " + remoteName + " - Index: " + indexName, e);
 					}
 				});
 				localResources.forEach((resourceName, resourceInfo) -> deleteResource(resourceName));

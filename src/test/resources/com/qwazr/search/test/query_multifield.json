@@ -3,7 +3,7 @@
   "query": {
     "query": "MultiFieldQuery",
     "tokenizer": {
-      "class": "core.WhitespaceTokenizer"
+      "class": "standard.StandardTokenizer"
     },
     "fields_boosts": {
       "name": 10,

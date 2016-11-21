@@ -29,18 +29,18 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 
 	private volatile Map<String, Analyzer> analyzerMap;
 
-	public UpdatableAnalyzer(Map<String, Analyzer> analyzerMap) throws ServerException {
+	public UpdatableAnalyzer(final Map<String, Analyzer> analyzerMap) throws ServerException {
 		super(PER_FIELD_REUSE_STRATEGY);
 		update(analyzerMap);
 	}
 
-	final public synchronized void update(Map<String, Analyzer> analyzerMap) throws ServerException {
-		Map<String, Analyzer> oldAnalyzerMap = this.analyzerMap;
+	final public synchronized void update(final Map<String, Analyzer> analyzerMap) throws ServerException {
+		final Map<String, Analyzer> oldAnalyzerMap = this.analyzerMap;
 		this.analyzerMap = analyzerMap;
 		close(oldAnalyzerMap);
 	}
 
-	private static void close(Map<String, Analyzer> analyzerMap) {
+	private static void close(final Map<String, Analyzer> analyzerMap) {
 		if (analyzerMap == null)
 			return;
 		analyzerMap.forEach((s, analyzer) -> IOUtils.closeQuietly(analyzer));
@@ -53,8 +53,8 @@ final public class UpdatableAnalyzer extends DelegatingAnalyzerWrapper {
 	}
 
 	@Override
-	final public Analyzer getWrappedAnalyzer(String fieldName) {
-		Analyzer analyzer = analyzerMap.get(fieldName);
+	final public Analyzer getWrappedAnalyzer(final String name) {
+		final Analyzer analyzer = analyzerMap.get(name);
 		return analyzer == null ? defaultAnalyzer : analyzer;
 	}
 

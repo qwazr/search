@@ -91,6 +91,7 @@ class IndexInstanceBuilder {
 	SearcherManager searcherManager = null;
 	UpdatableAnalyzer indexAnalyzer = null;
 	UpdatableAnalyzer queryAnalyzer = null;
+	UpdatableAnalyzer namedAnalyzer = null;
 
 	FileResourceLoader fileResourceLoader = null;
 
