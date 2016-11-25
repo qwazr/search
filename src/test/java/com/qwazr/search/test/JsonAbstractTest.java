@@ -80,6 +80,10 @@ public abstract class JsonAbstractTest {
 	public static final QueryDefinition QUERY_CHECK_RETURNED = getQuery("query_check_returned.json");
 	public static final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
 	public static final QueryDefinition QUERY_MULTIFIELD = getQuery("query_multifield.json");
+	public static final QueryDefinition QUERY_GEO2D_BOX = getQuery("query_geo2d_box.json");
+	public static final QueryDefinition QUERY_GEO3D_BOX = getQuery("query_geo3d_box.json");
+	public static final QueryDefinition QUERY_GEO2D_DISTANCE = getQuery("query_geo2d_distance.json");
+	public static final QueryDefinition QUERY_GEO3D_DISTANCE = getQuery("query_geo3d_distance.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
 	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
 	public static final Map<String, Object> UPDATE_DOC_ERROR = getDoc("update_doc_error.json");
@@ -793,6 +797,26 @@ public abstract class JsonAbstractTest {
 		Assert.assertNotNull(result);
 		final ResultDocumentMap document = result.getDocuments().get(0);
 		Assert.assertEquals(Float.valueOf(3123), document.score);
+	}
+
+	private void checkGeo(final QueryDefinition queryDef, final String name) throws URISyntaxException, IOException {
+		final IndexServiceInterface client = getClient();
+		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, queryDef, 1);
+		Assert.assertNotNull(result);
+		final ResultDocumentMap document = result.getDocuments().get(0);
+		Assert.assertEquals(name, document.getFields().get("name"));
+	}
+
+	@Test
+	public void test470QueryGeoBox() throws URISyntaxException, IOException {
+		checkGeo(QUERY_GEO2D_BOX, "Second name");
+		checkGeo(QUERY_GEO3D_BOX, "Second name");
+	}
+
+	@Test
+	public void test471QueryGeoDistance() throws URISyntaxException, IOException {
+		checkGeo(QUERY_GEO2D_DISTANCE, "First name");
+		checkGeo(QUERY_GEO3D_DISTANCE, "First name");
 	}
 
 	@Test

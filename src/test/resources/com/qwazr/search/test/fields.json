@@ -30,6 +30,12 @@
   "size": {
     "template": "LongField"
   },
+  "geo2d": {
+    "template": "GeoPoint"
+  },
+  "geo3d": {
+    "template": "Geo3DPoint"
+  },
   "stock": {
     "template": "IntDocValuesField"
   },

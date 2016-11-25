@@ -19,13 +19,13 @@ import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.spatial.geopoint.document.GeoPointField;
+import org.apache.lucene.spatial3d.Geo3DPoint;
 
 import java.util.Map;
 
-class GeoPointType extends StorableFieldType {
+class Geo3DPointType extends FieldTypeAbstract {
 
-	GeoPointType(final FieldMap.Item fieldMapItem) {
+	Geo3DPointType(final FieldMap.Item fieldMapItem) {
 		super(fieldMapItem);
 	}
 
@@ -34,7 +34,7 @@ class GeoPointType extends StorableFieldType {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even double values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new GeoPointField(fieldName, values[i++], values[i++], store));
+			consumer.accept(fieldName, new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
 	}
 
 	@Override
@@ -42,7 +42,7 @@ class GeoPointType extends StorableFieldType {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even float values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new GeoPointField(fieldName, values[i++], values[i++], store));
+			consumer.accept(fieldName, new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
 	}
 
 	@Override
@@ -50,18 +50,26 @@ class GeoPointType extends StorableFieldType {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even number values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new GeoPointField(fieldName, ((Number) values[i++]).doubleValue(),
-					((Number) values[i++]).doubleValue(), store));
+			consumer.accept(fieldName, new Geo3DPoint(fieldName, ((Number) values[i++]).doubleValue(),
+					((Number) values[i++]).doubleValue(), ((Number) values[i++]).doubleValue()));
 	}
 
 	@Override
 	protected void fillMap(final String fieldName, final Map<Object, Object> values, final FieldConsumer consumer) {
-		final Number latitude = (Number) values.get("lat");
-		notNull(latitude, fieldName, "The latitude parameter (lat) is missing");
-		final Number longitude = (Number) values.get("lon");
-		notNull(longitude, fieldName, "The longitude parameter (lon) is missing");
-		consumer.accept(fieldName,
-				new GeoPointField(fieldName, latitude.doubleValue(), longitude.doubleValue(), store));
+		final Number lat = (Number) values.get("lat");
+		if (lat != null) {
+			final Number lon = (Number) values.get("lon");
+			notNull(lon, fieldName, "The longitude (lon) parameter is missing");
+			consumer.accept(fieldName, new Geo3DPoint(fieldName, lat.doubleValue(), lon.doubleValue()));
+			return;
+		}
+		final Number x = (Number) values.get("x");
+		notNull(x, fieldName, "The x parameter is missing");
+		final Number y = (Number) values.get("y");
+		notNull(y, fieldName, "The y parameter is missing");
+		final Number z = (Number) values.get("z");
+		notNull(z, fieldName, "The z parameter is missing");
+		consumer.accept(fieldName, new Geo3DPoint(fieldName, x.doubleValue(), y.doubleValue(), z.doubleValue()));
 	}
 
 	@Override

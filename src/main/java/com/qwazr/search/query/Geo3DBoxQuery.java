@@ -17,39 +17,22 @@ package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.spatial3d.Geo3DPoint;
 
 import java.io.IOException;
-import java.util.Objects;
 
-public class GeoPointDistanceQuery extends AbstractQuery {
+public class Geo3DBoxQuery extends AbstractGeoBoxQuery {
 
-	final public String field;
-
-	final public double center_latitude;
-
-	final public double center_longitude;
-
-	final public double radius_meters;
-
-	public GeoPointDistanceQuery() {
-		field = null;
-		center_latitude = 0;
-		center_longitude = 0;
-		radius_meters = 0;
+	public Geo3DBoxQuery() {
 	}
 
-	public GeoPointDistanceQuery(final String field, final double centerLatitude, final double centerLongitude,
-			final double radiusMeters) {
-		Objects.requireNonNull(field, "The field is null");
-		this.field = field;
-		this.center_latitude = centerLatitude;
-		this.center_longitude = centerLongitude;
-		this.radius_meters = radiusMeters;
+	public Geo3DBoxQuery(final String field, final double minLat, final double maxLat, final double minLon,
+			final double maxLon) {
+		super(field, minLat, maxLat, minLon, maxLon);
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.spatial.geopoint.search.GeoPointDistanceQuery(field, center_latitude,
-				center_longitude, radius_meters);
+		return Geo3DPoint.newBoxQuery(field, min_latitude, max_latitude, min_longitude, max_longitude);
 	}
 }

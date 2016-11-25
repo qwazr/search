@@ -1,0 +1,15 @@
+{
+  "query": {
+    "query": "Geo3DBoxQuery",
+    "field": "geo3d",
+    "min_latitude": 36.783333,
+    "max_latitude": 38.783333,
+    "min_longitude": -123.416667,
+    "max_longitude": -121.416667
+  },
+  "start": 0,
+  "rows": 5,
+  "returned_fields": [
+    "name"
+  ]
+}

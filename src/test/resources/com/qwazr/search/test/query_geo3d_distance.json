@@ -1,0 +1,14 @@
+{
+  "query": {
+    "query": "Geo3DDistanceQuery",
+    "field": "geo3d",
+    "latitude": 48.8568,
+    "longitude": 2.3509,
+    "radius_meters": 1000
+  },
+  "start": 0,
+  "rows": 5,
+  "returned_fields": [
+    "name"
+  ]
+}

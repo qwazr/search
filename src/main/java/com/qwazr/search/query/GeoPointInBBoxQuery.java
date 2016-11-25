@@ -19,41 +19,20 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
-import java.util.Objects;
 
-public class GeoPointBBoxQuery extends AbstractQuery {
+public class GeoPointInBBoxQuery extends AbstractGeoBoxQuery {
 
-	final public String field;
-
-	final public double min_lat;
-
-	final public double max_lat;
-
-	final public double min_lon;
-
-	final public double max_lon;
-
-	public GeoPointBBoxQuery() {
-		field = null;
-		min_lat = 0;
-		max_lat = 0;
-		min_lon = 0;
-		max_lon = 0;
+	public GeoPointInBBoxQuery() {
 	}
 
-	public GeoPointBBoxQuery(final String field, final double minLat, final double maxLat,
-			final double minLon, final double maxLon) {
-		Objects.requireNonNull(field, "The field is null");
-		this.field = field;
-		min_lat = minLat;
-		max_lat = maxLat;
-		min_lon = minLon;
-		max_lon = maxLon;
+	public GeoPointInBBoxQuery(final String field, final double minLatitude, final double maxLatitude,
+			final double minLongitude, final double maxLongitude) {
+		super(field, minLatitude, maxLatitude, minLongitude, maxLongitude);
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.spatial.geopoint.search.GeoPointInBBoxQuery(field, min_lat, max_lat,
-				min_lon, max_lon);
+		return new org.apache.lucene.spatial.geopoint.search.GeoPointInBBoxQuery(field, min_latitude, max_latitude,
+				min_longitude, max_longitude);
 	}
 }

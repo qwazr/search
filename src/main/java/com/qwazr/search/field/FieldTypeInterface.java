@@ -51,8 +51,10 @@ public interface FieldTypeInterface {
 		case FloatField:
 		case FloatPoint:
 			return new FloatPointType(fieldMapItem);
-		case GeoPointField:
+		case GeoPoint:
 			return new GeoPointType(fieldMapItem);
+		case Geo3DPoint:
+			return new Geo3DPointType(fieldMapItem);
 		case IntDocValuesField:
 			return new IntDocValuesType(fieldMapItem);
 		case IntField:

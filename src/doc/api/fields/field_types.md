@@ -24,6 +24,8 @@ DoublePoint                       | Yes   | No      | No   | No  | No  | Yes
 FloatPoint                        | Yes   | No      | No   | No  | No  | Yes
 IntPoint                          | Yes   | No      | No   | No  | No  | Yes
 LongPoint                         | Yes   | No      | No   | No  | No  | Yes
+GeoPoint                          | Yes   | No      | No   | No  | No  | Yes
+Geo3DPoint                        | Yes   | No      | No   | No  | No  | Yes
 
 ### DocValues fields
 
@@ -75,8 +77,7 @@ StoredField                       | No    | No      | Yes  | No  | No  | No
 ### Legacy numeric fields
 
 Field that indexes double values for efficient range filtering and sorting.
-**They are deprecated now**.
-One should use PointValues for filtering and DocValues for sorting.
+**They are deprecated now**, and not supported in Qwazr.
 
 Name                              |Indexed|Tokenized|Stored|Facet|Sort |Filter
 ----------------------------------|:-----:|:-------:|:----:|:---:|:---:|:----:

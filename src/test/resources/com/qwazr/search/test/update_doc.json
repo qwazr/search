@@ -26,5 +26,9 @@
     "The information may be a mix of web pages, images, and other types of files.",
     "Some search engines also mine data available in databases or open directories."
   ],
-  "alpha_rank": "e"
+  "alpha_rank": "e",
+  "geo3d": {
+    "lat": -31.952222,
+    "lon": 115.858889
+  }
 }

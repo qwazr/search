@@ -13,30 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.qwazr.search.query;
 
-import java.util.Objects;
+public abstract class AbstractGeoBoxQuery extends AbstractFieldQuery {
 
-public abstract class AbstractFieldQuery extends AbstractQuery {
+	final public double min_latitude;
 
-	final public String field;
+	final public double max_latitude;
 
-	protected AbstractFieldQuery() {
-		this.field = null;
+	final public double min_longitude;
+
+	final public double max_longitude;
+
+	public AbstractGeoBoxQuery() {
+		min_latitude = 0;
+		max_latitude = 0;
+		min_longitude = 0;
+		max_longitude = 0;
 	}
 
-	protected AbstractFieldQuery(final String field) {
-		this.field = field;
-		Objects.requireNonNull(field, "The field is null");
+	public AbstractGeoBoxQuery(final String field, final double minLatitude, final double maxLatitude,
+			final double minLongitude, final double maxLongitude) {
+		super(field);
+		this.min_latitude = minLatitude;
+		this.max_latitude = maxLatitude;
+		this.min_longitude = minLongitude;
+		this.max_longitude = maxLongitude;
 	}
 
-	public abstract class AbstractFieldBuilder {
-
-		final public String field;
-
-		protected AbstractFieldBuilder(final String field) {
-			this.field = field;
-		}
-	}
 }

@@ -20,6 +20,7 @@ import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.utils.SerializationUtils;
+import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.index.IndexReader;
@@ -78,6 +79,11 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 		});
 	}
 
+	protected void fillMap(final String fieldName, final Map<Object, Object> values, final FieldConsumer consumer) {
+		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+				"Map is not asupported type for the field: " + fieldName);
+	}
+
 	protected void fillJSObject(final String fieldName, final JSObject values, final FieldConsumer consumer) {
 		fillCollection(fieldName, values.values(), consumer);
 	}
@@ -114,6 +120,8 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 			fillCollection(fieldName, (Collection) value, fieldConsumer);
 		else if (value instanceof JSObject)
 			fillJSObject(fieldName, (JSObject) value, fieldConsumer);
+		else if (value instanceof Map)
+			fillMap(fieldName, (Map) value, fieldConsumer);
 		else
 			fillValue(fieldName, value, fieldConsumer);
 	}
@@ -156,5 +164,11 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"Cannot serialize the value of the field " + fieldName, e);
 		}
+	}
+
+	final protected <T> T notNull(final T value, final String fieldName, final String msg) {
+		if (value != null)
+			return value;
+		throw new RuntimeException("Error on field: " + fieldName + " - " + msg == null ? StringUtils.EMPTY : msg);
 	}
 }
