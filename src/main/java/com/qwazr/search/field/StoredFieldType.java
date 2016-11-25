@@ -17,9 +17,7 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
-import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.search.SortField;
 
 import java.io.Externalizable;
 import java.io.Serializable;
@@ -48,11 +46,6 @@ class StoredFieldType extends FieldTypeAbstract {
 					new StoredField(fieldName, toBytes(fieldName, (Serializable) value)));
 		else
 			consumer.accept(fieldName, new StoredField(fieldName, value.toString()));
-	}
-
-	@Override
-	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		return null;
 	}
 
 }

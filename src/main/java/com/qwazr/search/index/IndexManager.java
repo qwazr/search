@@ -24,23 +24,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response.Status;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class IndexManager {
+public class IndexManager implements Closeable {
 
 	public final static String SERVICE_NAME_SEARCH = "search";
 	public final static String INDEXES_DIRECTORY = "index";
 
 	private static final Logger logger = LoggerFactory.getLogger(IndexManager.class);
 
-	static IndexManager INSTANCE = null;
+	static volatile IndexManager INSTANCE = null;
 
 	public synchronized static void load(final ServerBuilder builder) throws IOException {
 		if (INSTANCE != null)
@@ -54,30 +56,46 @@ public class IndexManager {
 
 	private final File rootDirectory;
 
+	private final IndexServiceInterface service;
+
 	private IndexManager(final ServerBuilder builder) throws IOException {
-		this.executorService = builder.getExecutorService();
-		rootDirectory = new File(builder.getServerConfiguration().dataDirectory, INDEXES_DIRECTORY);
+		this(builder.getExecutorService(), new File(builder.getServerConfiguration().dataDirectory, INDEXES_DIRECTORY));
+		builder.registerWebService(IndexServiceImpl.class);
+		builder.registerShutdownListener(server -> close());
+	}
+
+	public IndexManager(final ExecutorService executorService, final Path workDirectory) throws IOException {
+		this(executorService, workDirectory.toFile());
+	}
+
+	public IndexManager(final ExecutorService executorService, final File workDirectory) throws IOException {
+		this.executorService = executorService;
+		this.rootDirectory = workDirectory;
 		if (!rootDirectory.exists())
 			rootDirectory.mkdir();
 		if (!rootDirectory.isDirectory())
 			throw new IOException(
 					"This name is not valid. No directory exists for this location: " + rootDirectory.getName());
-		builder.registerWebService(IndexServiceImpl.class);
-		builder.registerShutdownListener(server -> shutdown());
+		service = new IndexServiceImpl(this);
 		schemaMap = new ConcurrentHashMap<>();
 		File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
 		if (directories == null)
 			return;
 		for (File schemaDirectory : directories) {
 			try {
-				schemaMap.put(schemaDirectory.getName(), new SchemaInstance(executorService, schemaDirectory));
+				schemaMap.put(schemaDirectory.getName(), new SchemaInstance(service, schemaDirectory));
 			} catch (ServerException | IOException | ReflectiveOperationException | URISyntaxException e) {
 				logger.error(e.getMessage(), e);
 			}
 		}
 	}
 
-	private void shutdown() {
+	final public IndexServiceInterface getService() {
+		return service;
+	}
+
+	@Override
+	public void close() {
 		synchronized (schemaMap) {
 			schemaMap.values().forEach(IOUtils::closeQuietly);
 		}
@@ -88,7 +106,7 @@ public class IndexManager {
 		synchronized (schemaMap) {
 			SchemaInstance schemaInstance = schemaMap.get(schemaName);
 			if (schemaInstance == null) {
-				schemaInstance = new SchemaInstance(executorService, new File(rootDirectory, schemaName));
+				schemaInstance = new SchemaInstance(service, new File(rootDirectory, schemaName));
 				schemaMap.put(schemaName, schemaInstance);
 			}
 			if (settings != null)
@@ -170,4 +188,5 @@ public class IndexManager {
 				(schName, schemaInstance) -> counter.addAndGet(schemaInstance.deleteBackups(indexName, backupName)));
 		return counter.get();
 	}
+
 }

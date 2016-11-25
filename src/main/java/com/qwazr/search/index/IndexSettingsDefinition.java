@@ -40,10 +40,14 @@ public class IndexSettingsDefinition {
 		this.master = master;
 	}
 
-	public IndexSettingsDefinition(final String similaritySlass, final String master)
-			throws URISyntaxException {
+	public IndexSettingsDefinition(final String similaritySlass, final String masterUrl) throws URISyntaxException {
 		this.similarity_class = similaritySlass;
-		this.master = RemoteIndex.build(master);
+		this.master = RemoteIndex.build(masterUrl);
+	}
+
+	public IndexSettingsDefinition(final String similaritySlass, final String schema, final String index) {
+		this.similarity_class = similaritySlass;
+		this.master = new RemoteIndex(schema, index);
 	}
 
 	public IndexSettingsDefinition(final Index annotatedIndex) throws URISyntaxException {

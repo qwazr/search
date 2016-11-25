@@ -44,7 +44,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 
 	private static final String QWAZR_INDEX_ROOT_USER;
 
-	public final static IndexServiceImpl INSTANCE = new IndexServiceImpl();
+	private final IndexManager indexManager;
 
 	static {
 		String v = System.getProperty("QWAZR_INDEX_ROOT_USER");
@@ -62,6 +62,14 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 
 	@Context
 	private HttpServletResponse response;
+
+	public IndexServiceImpl() {
+		indexManager = IndexManager.INSTANCE;
+	}
+
+	IndexServiceImpl(final IndexManager indexManager) {
+		this.indexManager = indexManager;
+	}
 
 	/**
 	 * Check the right permissions
@@ -89,7 +97,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public Set<String> getIndexes(final String schemaName) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).nameSet();
+			return indexManager.get(schemaName).nameSet();
 		} catch (ServerException e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -99,8 +107,8 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public SchemaSettingsDefinition createUpdateSchema(final String schemaName) {
 		try {
 			checkRight(null);
-			IndexManager.INSTANCE.createUpdate(schemaName, null);
-			return IndexManager.INSTANCE.get(schemaName).getSettings();
+			indexManager.createUpdate(schemaName, null);
+			return indexManager.get(schemaName).getSettings();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -111,7 +119,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final SchemaSettingsDefinition settings) {
 		try {
 			checkRight(null);
-			return IndexManager.INSTANCE.createUpdate(schemaName, settings);
+			return indexManager.createUpdate(schemaName, settings);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -121,7 +129,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public Set<String> getSchemas() {
 		try {
 			checkRight(null);
-			return IndexManager.INSTANCE.nameSet();
+			return indexManager.nameSet();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -131,7 +139,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public Response deleteSchema(final String schemaName) {
 		try {
 			checkRight(null);
-			IndexManager.INSTANCE.delete(schemaName);
+			indexManager.delete(schemaName);
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -143,7 +151,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final IndexSettingsDefinition settings) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).createUpdate(indexName, settings).getStatus();
+			return indexManager.get(schemaName).createUpdate(indexName, settings).getStatus();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -158,7 +166,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public LinkedHashMap<String, FieldDefinition> getFields(final String schemaName, final String indexName) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getFields();
+			return indexManager.get(schemaName).get(indexName, false).getFields();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -168,8 +176,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public FieldDefinition getField(final String schemaName, final String indexName, final String fieldName) {
 		try {
 			checkRight(schemaName);
-			Map<String, FieldDefinition> fieldMap =
-					IndexManager.INSTANCE.get(schemaName).get(indexName, false).getFields();
+			Map<String, FieldDefinition> fieldMap = indexManager.get(schemaName).get(indexName, false).getFields();
 			FieldDefinition fieldDef = (fieldMap != null) ? fieldMap.get(fieldName) : null;
 			if (fieldDef == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + fieldName);
@@ -183,7 +190,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final LinkedHashMap<String, FieldDefinition> fields) {
 		try {
 			checkRight(schemaName);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setFields(fields);
+			indexManager.get(schemaName).get(indexName, false).setFields(fields);
 			return fields;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -193,7 +200,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	private List<TermDefinition> doAnalyzer(final String schemaName, final String indexName, final String fieldName,
 			final String text, final boolean index) throws ServerException, IOException {
 		checkRight(schemaName);
-		IndexInstance indexInstance = IndexManager.INSTANCE.get(schemaName).get(indexName, false);
+		IndexInstance indexInstance = indexManager.get(schemaName).get(indexName, false);
 		final Analyzer analyzer =
 				index ? indexInstance.getIndexAnalyzer(fieldName) : indexInstance.getQueryAnalyzer(fieldName);
 		if (analyzer == null)
@@ -222,9 +229,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String fieldName, final String prefix, final Integer start, final Integer rows) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName)
-					.get(indexName, false)
-					.getTermsEnum(fieldName, prefix, start, rows);
+			return indexManager.get(schemaName).get(indexName, false).getTermsEnum(fieldName, prefix, start, rows);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -245,7 +250,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final FieldDefinition field) {
 		try {
 			checkRight(schemaName);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setField(fieldName, field);
+			indexManager.get(schemaName).get(indexName, false).setField(fieldName, field);
 			return field;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -256,7 +261,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public Response deleteField(final String schemaName, final String indexName, final String fieldName) {
 		try {
 			checkRight(schemaName);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteField(fieldName);
+			indexManager.get(schemaName).get(indexName, false).deleteField(fieldName);
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -268,7 +273,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String indexName) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getAnalyzers();
+			return indexManager.get(schemaName).get(indexName, false).getAnalyzers();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -280,7 +285,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		try {
 			checkRight(schemaName);
 			final Map<String, AnalyzerDefinition> analyzerMap =
-					IndexManager.INSTANCE.get(schemaName).get(indexName, false).getAnalyzers();
+					indexManager.get(schemaName).get(indexName, false).getAnalyzers();
 			final AnalyzerDefinition analyzerDef = (analyzerMap != null) ? analyzerMap.get(analyzerName) : null;
 			if (analyzerDef == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
@@ -295,7 +300,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String analyzerName, final AnalyzerDefinition analyzer) {
 		try {
 			checkRight(schemaName);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setAnalyzer(analyzerName, analyzer);
+			indexManager.get(schemaName).get(indexName, false).setAnalyzer(analyzerName, analyzer);
 			return analyzer;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -306,7 +311,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
 		try {
 			checkRight(schemaName);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).setAnalyzers(analyzers);
+			indexManager.get(schemaName).get(indexName, false).setAnalyzers(analyzers);
 			return analyzers;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -317,7 +322,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public Response deleteAnalyzer(final String schemaName, final String indexName, final String analyzerName) {
 		try {
 			checkRight(schemaName);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteAnalyzer(analyzerName);
+			indexManager.get(schemaName).get(indexName, false).deleteAnalyzer(analyzerName);
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -329,7 +334,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String analyzerName, final String text) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text);
+			return indexManager.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -351,7 +356,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 
 			checkRight(schemaName);
 			List<TermDefinition> terms =
-					IndexManager.INSTANCE.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text);
+					indexManager.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text);
 
 			try (final StringWriter sw = new StringWriter()) {
 				try (final PrintWriter pw = new PrintWriter(sw)) {
@@ -384,7 +389,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public IndexStatus getIndex(final String schemaName, final String indexName) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getStatus();
+			return indexManager.get(schemaName).get(indexName, false).getStatus();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -394,7 +399,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public Response deleteIndex(final String schemaName, final String indexName) {
 		try {
 			checkRight(schemaName);
-			IndexManager.INSTANCE.get(schemaName).delete(indexName);
+			indexManager.get(schemaName).delete(indexName);
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -406,7 +411,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final Map<String, Object> document) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).postMappedDocument(document);
+			return indexManager.get(schemaName).get(indexName, true).postMappedDocument(document);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -417,7 +422,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final Collection<Map<String, Object>> documents) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).postMappedDocuments(documents);
+			return indexManager.get(schemaName).get(indexName, true).postMappedDocuments(documents);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -427,14 +432,14 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public <T> int postDocument(final String schemaName, final String indexName, final Map<String, Field> fields,
 			final T document) throws IOException, InterruptedException {
 		checkRight(schemaName);
-		return IndexManager.INSTANCE.get(schemaName).get(indexName, true).postDocument(fields, document);
+		return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document);
 	}
 
 	@Override
 	final public <T> int postDocuments(final String schemaName, final String indexName, final Map<String, Field> fields,
 			final Collection<T> documents) throws IOException, InterruptedException {
 		checkRight(schemaName);
-		return IndexManager.INSTANCE.get(schemaName).get(indexName, true).postDocuments(fields, documents);
+		return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents);
 	}
 
 	@Override
@@ -442,7 +447,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final Map<String, Object> document) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateMappedDocValues(document);
+			return indexManager.get(schemaName).get(indexName, true).updateMappedDocValues(document);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -453,7 +458,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final Collection<Map<String, Object>> documents) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateMappedDocsValues(documents);
+			return indexManager.get(schemaName).get(indexName, true).updateMappedDocsValues(documents);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -463,14 +468,14 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public <T> int updateDocValues(final String schemaName, final String indexName,
 			final Map<String, Field> fields, final T document) throws IOException, InterruptedException {
 		checkRight(schemaName);
-		return IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateDocValues(fields, document);
+		return indexManager.get(schemaName).get(indexName, true).updateDocValues(fields, document);
 	}
 
 	@Override
 	final public <T> int updateDocsValues(final String schemaName, final String indexName,
 			final Map<String, Field> fields, final Collection<T> documents) throws IOException, InterruptedException {
 		checkRight(schemaName);
-		return IndexManager.INSTANCE.get(schemaName).get(indexName, true).updateDocsValues(fields, documents);
+		return indexManager.get(schemaName).get(indexName, true).updateDocsValues(fields, documents);
 	}
 
 	@Override
@@ -478,7 +483,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String indexName, final String backupName) {
 		try {
 			checkRight(null);
-			return IndexManager.INSTANCE.backups(schemaName, indexName, backupName);
+			return indexManager.backups(schemaName, indexName, backupName);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -489,7 +494,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String indexName, final String backupName) {
 		try {
 			checkRight(null);
-			return IndexManager.INSTANCE.getBackups(schemaName, indexName, backupName);
+			return indexManager.getBackups(schemaName, indexName, backupName);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -499,7 +504,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	public Integer deleteBackups(final String schemaName, final String indexName, final String backupName) {
 		try {
 			checkRight(null);
-			return IndexManager.INSTANCE.deleteBackups(schemaName, indexName, backupName);
+			return indexManager.deleteBackups(schemaName, indexName, backupName);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -510,8 +515,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String masterUuid, final String sessionID, final String source, final String fileName) {
 		try {
 			checkRight(null);
-			final Replicator replicator =
-					IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator(masterUuid);
+			final Replicator replicator = indexManager.get(schemaName).get(indexName, false).getReplicator(masterUuid);
 			final InputStream input = replicator.obtainFile(sessionID, source, fileName);
 			if (input == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "File not found: " + fileName);
@@ -526,7 +530,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String sessionID) {
 		try {
 			checkRight(null);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator(masterUuid).release(sessionID);
+			indexManager.get(schemaName).get(indexName, false).getReplicator(masterUuid).release(sessionID);
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -538,7 +542,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String masterUuid, final String currentVersion) {
 		try {
 			checkRight(null);
-			final SessionToken token = IndexManager.INSTANCE.get(schemaName)
+			final SessionToken token = indexManager.get(schemaName)
 					.get(indexName, false)
 					.getReplicator(masterUuid)
 					.checkForUpdate(currentVersion);
@@ -561,7 +565,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public Response replicationCheck(final String schemaName, final String indexName) {
 		try {
 			checkRight(null);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).replicationCheck();
+			indexManager.get(schemaName).get(indexName, false).replicationCheck();
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -573,7 +577,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String indexName) {
 		try {
 			checkRight(null);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, false).getResources();
+			return indexManager.get(schemaName).get(indexName, false).getResources();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -584,8 +588,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String resourceName) {
 		try {
 			checkRight(null);
-			final InputStream input =
-					IndexManager.INSTANCE.get(schemaName).get(indexName, false).getResource(resourceName);
+			final InputStream input = indexManager.get(schemaName).get(indexName, false).getResource(resourceName);
 			if (input == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "Resource not found: " + resourceName);
 			return AbstractStreamingOutput.with(input);
@@ -599,9 +602,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final long lastModified, final InputStream inputStream) {
 		try {
 			checkRight(null);
-			IndexManager.INSTANCE.get(schemaName)
-					.get(indexName, false)
-					.postResource(resourceName, lastModified, inputStream);
+			indexManager.get(schemaName).get(indexName, false).postResource(resourceName, lastModified, inputStream);
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -612,7 +613,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	public Response deleteResource(final String schemaName, final String indexName, final String resourceName) {
 		try {
 			checkRight(null);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteResource(resourceName);
+			indexManager.get(schemaName).get(indexName, false).deleteResource(resourceName);
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -623,7 +624,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	final public Response deleteAll(final String schemaName, final String indexName) {
 		try {
 			checkRight(schemaName);
-			IndexManager.INSTANCE.get(schemaName).get(indexName, false).deleteAll();
+			indexManager.get(schemaName).get(indexName, false).deleteAll();
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -649,7 +650,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	private ResultDefinition doSearchMap(final String schemaName, final String indexName, final QueryDefinition query)
 			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
 		checkRight(schemaName);
-		IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName, false);
+		IndexInstance index = indexManager.get(schemaName).get(indexName, false);
 		return index.search(query, ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
 	}
 
@@ -657,7 +658,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final QueryDefinition query, final Map<String, Field> fields, final Class<?> indexDefinitionClass)
 			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
 		checkRight(schemaName);
-		final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName, false);
+		final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
 		return index.search(query,
 				ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass));
 	}
@@ -740,9 +741,9 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 		try {
 			checkRight(schemaName);
 			if ("*".equals(indexName))
-				return (ResultDefinition.WithMap) IndexManager.INSTANCE.get(schemaName)
+				return (ResultDefinition.WithMap) indexManager.get(schemaName)
 						.search(query, ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
-			final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName, delete != null && delete);
+			final IndexInstance index = indexManager.get(schemaName).get(indexName, delete != null && delete);
 			if (delete != null && delete)
 				return index.deleteByQuery(query);
 			else
@@ -760,9 +761,9 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilerFactory =
 					ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass);
 			if ("*".equals(indexName))
-				return (ResultDefinition.WithObject<T>) IndexManager.INSTANCE.get(schemaName)
+				return (ResultDefinition.WithObject<T>) indexManager.get(schemaName)
 						.search(query, documentBuilerFactory);
-			final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName, false);
+			final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
 			return (ResultDefinition.WithObject<T>) index.search(query, documentBuilerFactory);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);

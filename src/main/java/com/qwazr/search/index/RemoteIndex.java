@@ -32,6 +32,11 @@ public class RemoteIndex extends RemoteService {
 		index = null;
 	}
 
+	public RemoteIndex(final String schema, final String index) {
+		this.schema = schema;
+		this.index = index;
+	}
+
 	public RemoteIndex(final RemoteService.Builder builder, final String schema, final String index) {
 		super(builder);
 		this.schema = schema;
@@ -53,15 +58,14 @@ public class RemoteIndex extends RemoteService {
 
 		final RemoteService.Builder builder = new RemoteService.Builder(remoteIndexUrl);
 
-
 		final String path = builder.getPathSegment(0);
 		final String schema = builder.getPathSegment(1);
 		final String index = builder.getPathSegment(2);
 
 		if (schema == null || index == null || !IndexServiceInterface.PATH.equals(path))
 			throw new URISyntaxException(builder.getInitialURI().toString(),
-					"The URL form should be: /" + IndexServiceInterface.PATH + "/{schema}/{index}?" +
-							TIMEOUT_PARAMETER + "={timeout}");
+					"The URL form should be: /" + IndexServiceInterface.PATH + "/{schema}/{index}?" + TIMEOUT_PARAMETER
+							+ "={timeout}");
 
 		builder.setPath(null);
 		return new RemoteIndex(builder, schema, index);

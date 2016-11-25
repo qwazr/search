@@ -130,7 +130,7 @@ public class SortUtils {
 		FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
 		if (fieldType == null)
 			throw new IllegalArgumentException("Unknown sort field: " + fieldName);
-		SortField sortField = fieldType.getSortField(fieldName, sortEnum);
+		final SortField sortField = fieldType.getSortField(fieldName, sortEnum);
 		if (sortField == null)
 			throw new IllegalArgumentException("The field does not support sorting: " + fieldName);
 		return sortField;

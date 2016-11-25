@@ -1,18 +1,22 @@
 [
   {
     "$id$": "1",
-    "stock": 14
+    "stock": 14,
+    "stock_long": 14
   },
   {
     "$id$": "2",
-    "stock": 13
+    "stock": 13,
+    "stock_long": 13
   },
   {
     "$id$": "3",
-    "stock": 12
+    "stock": 12,
+    "stock_long": 12
   },
   {
     "$id$": "4",
-    "stock": 11
+    "stock": 11,
+    "stock_long": 11
   }
 ]

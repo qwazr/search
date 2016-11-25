@@ -17,8 +17,6 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
-import com.qwazr.search.index.QueryDefinition;
-import org.apache.lucene.search.SortField;
 import org.apache.lucene.spatial3d.Geo3DPoint;
 
 import java.util.Map;
@@ -78,8 +76,4 @@ class Geo3DPointType extends FieldTypeAbstract {
 				"Unsupported value type for GeoPoint: " + value.getClass() + ". An array of numbers is expected.");
 	}
 
-	@Override
-	public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		return null;
-	}
 }

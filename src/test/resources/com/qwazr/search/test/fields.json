@@ -24,11 +24,29 @@
   "price": {
     "template": "DoubleDocValuesField"
   },
+  "price_float": {
+    "template": "FloatDocValuesField"
+  },
+  "price_float_dvs": {
+    "template": "SortedFloatDocValuesField"
+  },
+  "price_double_dvs": {
+    "template": "SortedDoubleDocValuesField"
+  },
+  "price_float_point": {
+    "template": "FloatPoint"
+  },
+  "price_double_point": {
+    "template": "DoublePoint"
+  },
   "alpha_rank": {
     "template": "SortedDocValuesField"
   },
   "size": {
-    "template": "LongField"
+    "template": "LongPoint"
+  },
+  "size_int": {
+    "template": "IntPoint"
   },
   "geo2d": {
     "template": "GeoPoint"
@@ -38,6 +56,15 @@
   },
   "stock": {
     "template": "IntDocValuesField"
+  },
+  "stock_sorted": {
+    "template": "SortedIntDocValuesField"
+  },
+  "stock_long": {
+    "template": "LongDocValuesField"
+  },
+  "stock_long_sorted": {
+    "template": "SortedLongDocValuesField"
   },
   "dynamic_simple_facet_*": {
     "template": "FacetField"

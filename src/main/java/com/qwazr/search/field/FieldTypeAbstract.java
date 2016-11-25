@@ -171,4 +171,5 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 			return value;
 		throw new RuntimeException("Error on field: " + fieldName + " - " + msg == null ? StringUtils.EMPTY : msg);
 	}
+
 }

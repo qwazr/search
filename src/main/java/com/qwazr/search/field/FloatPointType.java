@@ -17,12 +17,10 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
-import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
 class FloatPointType extends StorableFieldType {
@@ -37,13 +35,6 @@ class FloatPointType extends StorableFieldType {
 		consumer.accept(fieldName, new DoublePoint(fieldName, floatValue));
 		if (store == Field.Store.YES)
 			consumer.accept(fieldName, new StoredField(fieldName, floatValue));
-	}
-
-	@Override
-	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.FLOAT, SortUtils.sortReverse(sortEnum));
-		SortUtils.sortFloatMissingValue(sortEnum, sortField);
-		return sortField;
 	}
 
 	@Override

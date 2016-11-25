@@ -91,7 +91,6 @@ class IndexInstanceBuilder {
 	SearcherManager searcherManager = null;
 	UpdatableAnalyzer indexAnalyzer = null;
 	UpdatableAnalyzer queryAnalyzer = null;
-	UpdatableAnalyzer namedAnalyzer = null;
 
 	FileResourceLoader fileResourceLoader = null;
 
@@ -109,14 +108,13 @@ class IndexInstanceBuilder {
 		this.fileSet = new FileSet(indexDirectory);
 	}
 
-	private void buildCommon()
-			throws IOException, ReflectiveOperationException, URISyntaxException {
+	private void buildCommon() throws IOException, ReflectiveOperationException, URISyntaxException {
 
 		if (!indexDirectory.exists())
 			indexDirectory.mkdir();
 		if (!indexDirectory.isDirectory())
-			throw new IOException("This name is not valid. No directory exists for this location: " +
-					indexDirectory.getAbsolutePath());
+			throw new IOException("This name is not valid. No directory exists for this location: "
+					+ indexDirectory.getAbsolutePath());
 
 		// Manage the index UUID
 		if (fileSet.uuidFile.exists()) {
@@ -175,8 +173,7 @@ class IndexInstanceBuilder {
 			indexWriter.commit();
 	}
 
-	private void buildSlave()
-			throws IOException, URISyntaxException, ReflectiveOperationException {
+	private void buildSlave() throws IOException, URISyntaxException, ReflectiveOperationException {
 
 		// We just want to be sure the index exists.
 		openOrCreateIndex();
@@ -190,7 +187,7 @@ class IndexInstanceBuilder {
 		};
 		ReplicationClient.ReplicationHandler handler = new IndexReplicationHandler(dataDirectory, callback);
 		ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(fileSet.replWorkPath);
-		indexReplicator = new IndexReplicator(settings.master, fileSet.uuidMasterFile);
+		indexReplicator = new IndexReplicator(schema.getService(), settings.master, fileSet.uuidMasterFile);
 		replicationClient = new ReplicationClient(indexReplicator, handler, factory);
 
 		// we build the SearcherManager

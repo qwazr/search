@@ -34,8 +34,6 @@ import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.IndexSearcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
@@ -45,20 +43,17 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 public class SchemaInstance implements Closeable {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(SchemaInstance.class);
-
 	private final static String SETTINGS_FILE = "settings.json";
 
 	private final ConcurrentHashMap<String, IndexInstance> indexMap;
 
-	private final ExecutorService executorService;
+	private final IndexServiceInterface service;
 	private final File schemaDirectory;
 	private final File settingsFile;
 	private volatile SchemaSettingsDefinition settingsDefinition;
@@ -160,9 +155,9 @@ public class SchemaInstance implements Closeable {
 
 	}
 
-	SchemaInstance(ExecutorService executorService, File schemaDirectory)
+	SchemaInstance(final IndexServiceInterface service, final File schemaDirectory)
 			throws IOException, ReflectiveOperationException, URISyntaxException {
-		this.executorService = executorService;
+		this.service = service;
 		this.schemaDirectory = schemaDirectory;
 		if (!schemaDirectory.exists())
 			schemaDirectory.mkdir();
@@ -182,6 +177,10 @@ public class SchemaInstance implements Closeable {
 		for (File indexDirectory : directories)
 			indexMap.put(indexDirectory.getName(), new IndexInstanceBuilder(this, indexDirectory, null).build());
 		mayBeRefresh(false);
+	}
+
+	final public IndexServiceInterface getService() {
+		return service;
 	}
 
 	@Override

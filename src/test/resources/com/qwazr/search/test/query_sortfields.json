@@ -12,6 +12,12 @@
   "rows": 10,
   "sorts": {
     "$score": "descending",
-    "price": "ascending"
+    "price_float": "ascending",
+    "price_float_dvs": "ascending",
+    "price_double_dvs": "ascending",
+    "stock": "descending",
+    "stock_long": "descending",
+    "stock_sorted": "descending",
+    "stock_long_sorted": "descending"
   }
 }

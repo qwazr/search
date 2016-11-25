@@ -30,6 +30,7 @@ Geo3DPoint                        | Yes   | No      | No   | No  | No  | Yes
 ### DocValues fields
 
 Field that stores a per-document value for scoring, sorting or value retrieval.
+Those fields can be updated without having to index again all the document.
 
 Name                              |Indexed|Tokenized|Stored|Facet|Sort |Filter
 ----------------------------------|:-----:|:-------:|:----:|:---:|:---:|:----:

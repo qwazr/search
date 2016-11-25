@@ -17,11 +17,9 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
-import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
 class IntPointType extends StorableFieldType {
@@ -36,13 +34,6 @@ class IntPointType extends StorableFieldType {
 		consumer.accept(fieldName, new IntPoint(fieldName, intValue));
 		if (store == Field.Store.YES)
 			consumer.accept(fieldName, new StoredField(fieldName, intValue));
-	}
-
-	@Override
-	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.INT, SortUtils.sortReverse(sortEnum));
-		SortUtils.sortIntMissingValue(sortEnum, sortField);
-		return sortField;
 	}
 
 	@Override

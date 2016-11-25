@@ -37,7 +37,7 @@ public class JsonTest {
 
 		@Override
 		protected IndexServiceInterface getClient() throws URISyntaxException {
-			return TestServer.getSingleClient();
+			return TestServer.getRemoteClient();
 		}
 	}
 

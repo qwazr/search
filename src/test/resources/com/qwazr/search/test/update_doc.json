@@ -18,7 +18,11 @@
   "dynamic_simple_facet_type": "dyn_type5",
   "format": "odd",
   "size": 500,
+  "size_int": 500,
   "price": 10.50,
+  "price_float": 10.50,
+  "price_float_point": 10.50,
+  "price_double_point": 10.50,
   "stock": 0,
   "description": [
     "A web search engine is a software system that is designed to search for information on the World Wide Web.",

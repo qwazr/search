@@ -29,7 +29,9 @@ public interface FieldTypeInterface {
 
 	void dispatch(final String fieldName, final Object value, final FieldConsumer fieldConsumer);
 
-	SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
+	default SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+		return null;
+	}
 
 	ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException;
 

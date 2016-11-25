@@ -38,11 +38,17 @@ class IndexReplicator implements Replicator {
 	private volatile UUID masterUuid;
 	private final Set<InputStream> inputStreams;
 
-	IndexReplicator(final RemoteIndex master, final File masterUuidFile) throws URISyntaxException, IOException {
+	IndexReplicator(final IndexServiceInterface service, final RemoteIndex master, final File masterUuidFile)
+			throws URISyntaxException, IOException {
 		this.master = master;
 		this.masterUuidFile = masterUuidFile;
-		indexService = master == null ? null : master.host == null || "localhost".equals(master.host) ?
-				new IndexServiceImpl() : new IndexSingleClient(master);
+		indexService = master == null ?
+				null :
+				master.host == null ?
+						service :
+						"localhost".equals(master.host) ?
+								IndexManager.INSTANCE.getService() :
+								new IndexSingleClient(master);
 		this.inputStreams = new LinkedHashSet<>();
 		if (masterUuidFile.exists() && masterUuidFile.length() > 0) {
 			masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
@@ -66,8 +72,8 @@ class IndexReplicator implements Replicator {
 		}
 		if (!Objects.equals(remoteMasterUuid, masterUuid))
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"The local master index UUID and the remote index UUID does not match: " + masterUuid + " <> " +
-							remoteMasterUuid);
+					"The local master index UUID and the remote index UUID does not match: " + masterUuid + " <> "
+							+ remoteMasterUuid);
 		return masterUuidString;
 	}
 
@@ -83,8 +89,8 @@ class IndexReplicator implements Replicator {
 
 	@Override
 	public SessionToken checkForUpdate(final String currVersion) throws IOException {
-		final AbstractStreamingOutput streamingOutput = checkService()
-				.replicationUpdate(master.schema, master.index, masterUuidString, currVersion);
+		final AbstractStreamingOutput streamingOutput =
+				checkService().replicationUpdate(master.schema, master.index, masterUuidString, currVersion);
 		if (streamingOutput == null)
 			return null;
 		try (final InputStream inputStream = streamingOutput.getInputStream()) {
@@ -103,9 +109,9 @@ class IndexReplicator implements Replicator {
 	@Override
 	public InputStream obtainFile(final String sessionID, final String source, final String fileName)
 			throws IOException {
-		final InputStream stream = checkService()
-				.replicationObtain(master.schema, master.index, masterUuidString, sessionID, source, fileName)
-				.getInputStream();
+		final InputStream stream =
+				checkService().replicationObtain(master.schema, master.index, masterUuidString, sessionID, source,
+						fileName).getInputStream();
 		inputStreams.add(stream);
 		return stream;
 	}

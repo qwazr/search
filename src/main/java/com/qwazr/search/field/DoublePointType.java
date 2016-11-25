@@ -17,11 +17,9 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
-import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
 class DoublePointType extends StorableFieldType {
@@ -37,13 +35,6 @@ class DoublePointType extends StorableFieldType {
 		consumer.accept(fieldName, new DoublePoint(fieldName, doubleValue));
 		if (store == Field.Store.YES)
 			consumer.accept(fieldName, new StoredField(fieldName, doubleValue));
-	}
-
-	@Override
-	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.DOUBLE, SortUtils.sortReverse(sortEnum));
-		SortUtils.sortDoubleMissingValue(sortEnum, sortField);
-		return sortField;
 	}
 
 	@Override
