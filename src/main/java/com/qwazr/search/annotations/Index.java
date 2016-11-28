@@ -16,6 +16,7 @@
 package com.qwazr.search.annotations;
 
 import com.qwazr.utils.StringUtils;
+import org.apache.lucene.index.IndexWriterConfig;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -34,4 +35,5 @@ public @interface Index {
 
 	String replicationMaster() default StringUtils.EMPTY;
 
+	double ramBufferSize() default IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
 }

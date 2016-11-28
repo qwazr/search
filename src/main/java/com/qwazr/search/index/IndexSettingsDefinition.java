@@ -29,29 +29,36 @@ public class IndexSettingsDefinition {
 
 	final public String similarity_class;
 	final public RemoteIndex master;
+	final public Double ram_buffer_size;
 
 	public IndexSettingsDefinition() {
 		similarity_class = null;
 		master = null;
+		ram_buffer_size = null;
 	}
 
-	public IndexSettingsDefinition(final String similaritySlass, final RemoteIndex master) {
+	public IndexSettingsDefinition(final String similaritySlass, final RemoteIndex master, final Double ramBufferSize) {
 		this.similarity_class = similaritySlass;
 		this.master = master;
+		this.ram_buffer_size = ramBufferSize;
 	}
 
-	public IndexSettingsDefinition(final String similaritySlass, final String masterUrl) throws URISyntaxException {
+	public IndexSettingsDefinition(final String similaritySlass, final String masterUrl, final Double ramBufferSize)
+			throws URISyntaxException {
 		this.similarity_class = similaritySlass;
 		this.master = RemoteIndex.build(masterUrl);
+		this.ram_buffer_size = ramBufferSize;
 	}
 
-	public IndexSettingsDefinition(final String similaritySlass, final String schema, final String index) {
+	public IndexSettingsDefinition(final String similaritySlass, final String schema, final String index,
+			final Double ramBufferSize) {
 		this.similarity_class = similaritySlass;
 		this.master = new RemoteIndex(schema, index);
+		this.ram_buffer_size = ramBufferSize;
 	}
 
 	public IndexSettingsDefinition(final Index annotatedIndex) throws URISyntaxException {
-		this(annotatedIndex.similarityClass(), annotatedIndex.replicationMaster());
+		this(annotatedIndex.similarityClass(), annotatedIndex.replicationMaster(), annotatedIndex.ramBufferSize());
 	}
 
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
@@ -70,6 +77,8 @@ public class IndexSettingsDefinition {
 		if (!Objects.equals(similarity_class, s.similarity_class))
 			return false;
 		if (!Objects.deepEquals(master, s.master))
+			return false;
+		if (!Objects.equals(ram_buffer_size, s.ram_buffer_size))
 			return false;
 		return true;
 	}

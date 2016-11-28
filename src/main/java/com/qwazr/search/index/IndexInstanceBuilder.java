@@ -160,9 +160,13 @@ class IndexInstanceBuilder {
 
 	private void openOrCreateIndex() throws ReflectiveOperationException, IOException {
 		final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
-		if (settings != null && settings.similarity_class != null && !settings.similarity_class.isEmpty())
-			indexWriterConfig.setSimilarity(IndexUtils.findSimilarity(settings.similarity_class));
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+		if (settings != null) {
+			if (settings.similarity_class != null && !settings.similarity_class.isEmpty())
+				indexWriterConfig.setSimilarity(IndexUtils.findSimilarity(settings.similarity_class));
+			if (settings.ram_buffer_size != null)
+				indexWriterConfig.setRAMBufferSizeMB(settings.ram_buffer_size);
+		}
 		final SerialMergeScheduler serialMergeScheduler = new SerialMergeScheduler();
 		indexWriterConfig.setMergeScheduler(serialMergeScheduler);
 		final SnapshotDeletionPolicy snapshotDeletionPolicy =

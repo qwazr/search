@@ -39,7 +39,7 @@ public class JavaTest {
 		private static IndexManager indexManager = null;
 
 		public JavaLibraryTest() {
-			super(new IndexSettingsDefinition(null, "testSchema", "testIndexMaster"));
+			super(new IndexSettingsDefinition(null, "testSchema", "testIndexMaster", 32d));
 		}
 
 		@BeforeClass
@@ -64,7 +64,8 @@ public class JavaTest {
 	static {
 		try {
 			remoteSlaveSettings =
-					new IndexSettingsDefinition(null, TestServer.BASE_URL + "/indexes/testSchema/testIndexMaster");
+					new IndexSettingsDefinition(null, TestServer.BASE_URL + "/indexes/testSchema/testIndexMaster",
+							null);
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
