@@ -36,11 +36,6 @@
             <artifactId>qwazr-utils</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-compiler</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>com.datastax.cassandra</groupId>
             <artifactId>cassandra-driver-core</artifactId>
         </dependency>
