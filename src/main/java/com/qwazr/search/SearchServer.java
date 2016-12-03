@@ -23,20 +23,21 @@ import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerConfiguration;
 import com.qwazr.utils.server.WelcomeService;
 
-public class SearchServer {
+import java.io.IOException;
 
-	public static GenericServer start() throws Exception {
-		final ServerConfiguration config = new ServerConfiguration(System.getProperties(), System.getenv());
-		final ServerBuilder builder = new ServerBuilder(config);
+public class SearchServer extends GenericServer {
+
+	private SearchServer(final ServerConfiguration serverConfiguration) throws IOException {
+		super(serverConfiguration);
+		final ServerBuilder builder = getBuilder();
 		builder.registerWebService(WelcomeService.class);
-		ClassLoaderManager.load(config.dataDirectory, null);
-		ClusterManager.load(builder, null, null);
+		ClassLoaderManager.load(serverConfiguration.dataDirectory, null);
+		ClusterManager.load(builder);
 		IndexManager.load(builder);
-		return builder.build().start(true);
 	}
 
-	public static void main(String[] args) throws Exception {
-		SearchServer.start();
+	public static void main(final String... args) throws Exception {
+		new SearchServer(new ServerConfiguration(args)).start(true);
 	}
 
 }
