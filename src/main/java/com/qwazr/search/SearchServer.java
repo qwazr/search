@@ -24,16 +24,21 @@ import com.qwazr.utils.server.ServerConfiguration;
 import com.qwazr.utils.server.WelcomeService;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
 
 public class SearchServer extends GenericServer {
 
 	private SearchServer(final ServerConfiguration serverConfiguration) throws IOException {
 		super(serverConfiguration);
-		final ServerBuilder builder = getBuilder();
+	}
+
+	@Override
+	protected void build(final ExecutorService executorService, final ServerBuilder builder,
+			final ServerConfiguration configuration) throws IOException {
 		builder.registerWebService(WelcomeService.class);
-		ClassLoaderManager.load(serverConfiguration.dataDirectory, null);
-		ClusterManager.load(builder);
-		IndexManager.load(builder);
+		ClassLoaderManager.load(configuration.dataDirectory, null);
+		ClusterManager.load(builder, configuration);
+		IndexManager.load(builder, configuration);
 	}
 
 	public static void main(final String... args) throws Exception {

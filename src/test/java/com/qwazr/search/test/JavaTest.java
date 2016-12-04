@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.Executors;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ JavaTest.JavaLibraryTest.class, JavaTest.JavaLocalTest.class, JavaTest.JavaRemoteTest.class })
@@ -45,7 +44,7 @@ public class JavaTest {
 		@BeforeClass
 		public static void beforeClass() throws IOException {
 			final Path rootDirectory = Files.createTempDirectory("qwazr_index_test");
-			indexManager = new IndexManager(Executors.newCachedThreadPool(), rootDirectory);
+			indexManager = new IndexManager(rootDirectory);
 		}
 
 		@Override

@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.server.ServerBuilder;
+import com.qwazr.utils.server.ServerConfiguration;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.slf4j.Logger;
@@ -32,7 +33,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class IndexManager implements Closeable {
@@ -44,13 +44,12 @@ public class IndexManager implements Closeable {
 
 	static volatile IndexManager INSTANCE = null;
 
-	public synchronized static void load(final ServerBuilder builder) throws IOException {
+	public synchronized static void load(final ServerBuilder builder, final ServerConfiguration configuration)
+			throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
-		INSTANCE = new IndexManager(builder);
+		INSTANCE = new IndexManager(builder, configuration);
 	}
-
-	private final ExecutorService executorService;
 
 	private final ConcurrentHashMap<String, SchemaInstance> schemaMap;
 
@@ -58,18 +57,17 @@ public class IndexManager implements Closeable {
 
 	private final IndexServiceInterface service;
 
-	private IndexManager(final ServerBuilder builder) throws IOException {
-		this(builder.getExecutorService(), new File(builder.getServerConfiguration().dataDirectory, INDEXES_DIRECTORY));
+	private IndexManager(final ServerBuilder builder, final ServerConfiguration configuration) throws IOException {
+		this(new File(configuration.dataDirectory, INDEXES_DIRECTORY));
 		builder.registerWebService(IndexServiceImpl.class);
 		builder.registerShutdownListener(server -> close());
 	}
 
-	public IndexManager(final ExecutorService executorService, final Path workDirectory) throws IOException {
-		this(executorService, workDirectory.toFile());
+	public IndexManager(final Path workDirectory) throws IOException {
+		this(workDirectory.toFile());
 	}
 
-	public IndexManager(final ExecutorService executorService, final File workDirectory) throws IOException {
-		this.executorService = executorService;
+	public IndexManager(final File workDirectory) throws IOException {
 		this.rootDirectory = workDirectory;
 		if (!rootDirectory.exists())
 			rootDirectory.mkdir();
