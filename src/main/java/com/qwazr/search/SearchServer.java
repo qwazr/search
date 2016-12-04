@@ -23,7 +23,9 @@ import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerConfiguration;
 import com.qwazr.utils.server.WelcomeService;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
 public class SearchServer extends GenericServer {
@@ -34,7 +36,7 @@ public class SearchServer extends GenericServer {
 
 	@Override
 	protected void build(final ExecutorService executorService, final ServerBuilder builder,
-			final ServerConfiguration configuration) throws IOException {
+			final ServerConfiguration configuration, final Collection<File> etcFiles) throws IOException {
 		builder.registerWebService(WelcomeService.class);
 		ClassLoaderManager.load(configuration.dataDirectory, null);
 		ClusterManager.load(builder, configuration);
