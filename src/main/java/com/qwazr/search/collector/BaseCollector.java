@@ -21,7 +21,7 @@ import org.apache.lucene.search.LeafCollector;
 
 import java.io.IOException;
 
-public class BaseCollector<R> implements Collector {
+public class BaseCollector<T> implements Collector {
 
 	public final String name;
 
@@ -29,7 +29,7 @@ public class BaseCollector<R> implements Collector {
 		this.name = name;
 	}
 
-	public R getResult() {
+	public T getResult() {
 		return null;
 	}
 

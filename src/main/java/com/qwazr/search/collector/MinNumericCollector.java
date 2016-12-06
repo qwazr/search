@@ -15,108 +15,168 @@
  */
 package com.qwazr.search.collector;
 
-import com.qwazr.search.field.Converters.SingleDVConverter;
-import com.qwazr.search.field.Converters.ValueConverter;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.search.LeafCollector;
-import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
 
 public abstract class MinNumericCollector<R> extends DocValuesCollector.Numeric<R> {
 
-	public volatile R min;
-	private Long current;
-
 	public MinNumericCollector(final String collectorName, final String fieldName) {
 		super(collectorName, fieldName);
-		min = null;
 	}
 
-	public final R getResult() {
-		return min;
-	}
+	public abstract R getResult();
 
 	@Override
 	public boolean needsScores() {
 		return false;
 	}
 
-	protected class MinNumericLeafCollector extends DocValuesLeafCollector.Numeric<ValueConverter<?, R>> {
-
-		protected MinNumericLeafCollector(final ValueConverter<?, R> converter) throws IOException {
-			super(converter);
-		}
-
-		@Override
-		final public void collect(final int doc) throws IOException {
-			long value = docValues.get(doc);
-			if (current == null || current > value) {
-				current = value;
-				min = converter.convert(doc);
-			}
-		}
-	}
-
 	public static class MinLong extends MinNumericCollector<Long> {
+
+		private long result;
 
 		public MinLong(final String collectorName, final String fieldName) {
 			super(collectorName, fieldName);
+			result = Long.MAX_VALUE;
+		}
+
+		@Override
+		public Long getResult() {
+			return count == 0 ? null : result;
 		}
 
 		@Override
 		protected LeafCollector newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues)
 				throws IOException {
-			return docValues == null ? DoNothingCollector.INSTANCE :
-					new MinNumericLeafCollector(
-							new SingleDVConverter.LongDVConverter(docValues));
+			return new Leaf(docValues);
+		}
+
+		private class Leaf extends DocValuesLeafCollector.Numeric {
+
+			private Leaf(NumericDocValues docValues) throws IOException {
+				super(docValues);
+			}
+
+			@Override
+			final public void collect(final int doc) throws IOException {
+				count++;
+				final long value = docValues.get(doc);
+				if (value < result)
+					result = value;
+			}
 		}
 	}
 
 	public static class MinInteger extends MinNumericCollector<Integer> {
 
+		private int result;
+
 		public MinInteger(final String collectorName, final String fieldName) {
 			super(collectorName, fieldName);
+			result = Integer.MAX_VALUE;
+		}
+
+		@Override
+		public Integer getResult() {
+			return count == 0 ? null : result;
 		}
 
 		@Override
 		protected LeafCollector newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues)
 				throws IOException {
-			return docValues == null ? DoNothingCollector.INSTANCE :
-					new MinNumericLeafCollector(
-							new SingleDVConverter.IntegerDVConverter(docValues));
-		}
-	}
-
-	public static class MinFloat extends MinNumericCollector<Float> {
-
-		public MinFloat(final String collectorName, final String fieldName) {
-			super(collectorName, fieldName);
+			return new Leaf(docValues);
 		}
 
-		@Override
-		protected LeafCollector newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues)
-				throws IOException {
-			return docValues == null ? DoNothingCollector.INSTANCE :
-					new MinNumericLeafCollector(
-							new SingleDVConverter.FloatDVConverter(docValues));
+		private class Leaf extends DocValuesLeafCollector.Numeric {
+
+			private Leaf(NumericDocValues docValues) throws IOException {
+				super(docValues);
+			}
+
+			@Override
+			final public void collect(final int doc) throws IOException {
+				count++;
+				final int value = (int) docValues.get(doc);
+				if (value < result)
+					result = value;
+			}
 		}
 	}
 
 	public static class MinDouble extends MinNumericCollector<Double> {
 
+		private double result;
+
 		public MinDouble(final String collectorName, final String fieldName) {
 			super(collectorName, fieldName);
+			result = Double.MAX_VALUE;
+		}
+
+		@Override
+		public Double getResult() {
+			return count == 0 ? null : result;
 		}
 
 		@Override
 		protected LeafCollector newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues)
 				throws IOException {
-			return docValues == null ? DoNothingCollector.INSTANCE :
-					new MinNumericLeafCollector(
-							new SingleDVConverter.DoubleDVConverter(docValues));
+			return new Leaf(docValues);
+		}
+
+		private class Leaf extends DocValuesLeafCollector.Numeric {
+
+			private Leaf(NumericDocValues docValues) throws IOException {
+				super(docValues);
+			}
+
+			@Override
+			final public void collect(final int doc) throws IOException {
+				count++;
+				final double value = NumericUtils.sortableLongToDouble(docValues.get(doc));
+				if (value < result)
+					result = value;
+			}
 		}
 	}
 
+	public static class MinFloat extends MinNumericCollector<Float> {
+
+		private float result;
+
+		public MinFloat(final String collectorName, final String fieldName) {
+			super(collectorName, fieldName);
+			result = Float.MAX_VALUE;
+		}
+
+		@Override
+		public Float getResult() {
+			return count == 0 ? null : result;
+		}
+
+		@Override
+		protected LeafCollector newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues)
+				throws IOException {
+			return new Leaf(docValues);
+		}
+
+		private class Leaf extends DocValuesLeafCollector.Numeric {
+
+			private Leaf(NumericDocValues docValues) throws IOException {
+				super(docValues);
+			}
+
+			@Override
+			final public void collect(final int doc) throws IOException {
+				count++;
+				final float value = NumericUtils.sortableIntToFloat((int) docValues.get(doc));
+				if (value < result)
+					result = value;
+			}
+		}
+	}
 
 }

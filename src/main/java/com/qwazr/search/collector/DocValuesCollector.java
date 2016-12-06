@@ -23,10 +23,12 @@ import java.io.IOException;
 public abstract class DocValuesCollector<R, D> extends BaseCollector<R> {
 
 	protected final String fieldName;
+	protected int count;
 
-	protected DocValuesCollector(final String collectorName, final String fieldName) {
+	private DocValuesCollector(final String collectorName, final String fieldName) {
 		super(collectorName);
 		this.fieldName = fieldName;
+		this.count = 0;
 	}
 
 	protected abstract LeafCollector newLeafCollector(final LeafReader leafReader, final D docValues)
@@ -37,13 +39,16 @@ public abstract class DocValuesCollector<R, D> extends BaseCollector<R> {
 	@Override
 	final public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
 		final LeafReader leafReader = context.reader();
-		FieldInfo fieldInfo = leafReader.getFieldInfos().fieldInfo(fieldName);
+		final FieldInfo fieldInfo = leafReader.getFieldInfos().fieldInfo(fieldName);
 		if (fieldInfo == null)
 			return DoNothingCollector.INSTANCE;
 		final DocValuesType type = fieldInfo.getDocValuesType();
 		if (type == null)
 			return DoNothingCollector.INSTANCE;
-		return newLeafCollector(leafReader, getDocValues(leafReader));
+		final D docValues = getDocValues(leafReader);
+		if (docValues == null)
+			return DoNothingCollector.INSTANCE;
+		return newLeafCollector(leafReader, docValues);
 	}
 
 	public static abstract class Binary<R> extends DocValuesCollector<R, BinaryDocValues> {
@@ -55,7 +60,28 @@ public abstract class DocValuesCollector<R, D> extends BaseCollector<R> {
 		final protected BinaryDocValues getDocValues(final LeafReader leafReader) throws IOException {
 			return leafReader.getBinaryDocValues(fieldName);
 		}
+	}
 
+	public static abstract class Sorted<R> extends DocValuesCollector<R, SortedDocValues> {
+
+		protected Sorted(String collectorName, String fieldName) {
+			super(collectorName, fieldName);
+		}
+
+		final protected SortedDocValues getDocValues(final LeafReader leafReader) throws IOException {
+			return leafReader.getSortedDocValues(fieldName);
+		}
+	}
+
+	public static abstract class SortedSet<R> extends DocValuesCollector<R, SortedSetDocValues> {
+
+		protected SortedSet(String collectorName, String fieldName) {
+			super(collectorName, fieldName);
+		}
+
+		final protected SortedSetDocValues getDocValues(final LeafReader leafReader) throws IOException {
+			return leafReader.getSortedSetDocValues(fieldName);
+		}
 	}
 
 	public static abstract class Numeric<R> extends DocValuesCollector<R, NumericDocValues> {
@@ -67,6 +93,16 @@ public abstract class DocValuesCollector<R, D> extends BaseCollector<R> {
 		final protected NumericDocValues getDocValues(final LeafReader leafReader) throws IOException {
 			return leafReader.getNumericDocValues(fieldName);
 		}
+	}
 
+	public static abstract class SortedNumeric<R> extends DocValuesCollector<R, SortedNumericDocValues> {
+
+		protected SortedNumeric(String collectorName, String fieldName) {
+			super(collectorName, fieldName);
+		}
+
+		final protected SortedNumericDocValues getDocValues(final LeafReader leafReader) throws IOException {
+			return leafReader.getSortedNumericDocValues(fieldName);
+		}
 	}
 }

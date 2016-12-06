@@ -626,7 +626,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final ResultDefinition search(final QueryDefinition queryDefinition,
-			ResultDocumentBuilder.BuilderFactory<?> documentBuilderFactory)
+			final ResultDocumentBuilder.BuilderFactory<?> documentBuilderFactory)
 			throws IOException, InterruptedException, ParseException, ReflectiveOperationException, QueryNodeException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {

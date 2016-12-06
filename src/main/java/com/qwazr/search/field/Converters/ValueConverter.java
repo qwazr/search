@@ -106,7 +106,7 @@ public abstract class ValueConverter<T, V> {
 		return null;
 	}
 
-	final public static ValueConverter newConverter(String fieldName, final FieldDefinition fieldDef,
+	public static ValueConverter newConverter(String fieldName, final FieldDefinition fieldDef,
 			final IndexReader reader) throws IOException {
 		if (fieldDef == null)
 			return null;
@@ -116,11 +116,11 @@ public abstract class ValueConverter<T, V> {
 		return null;
 	}
 
-	final static ValueConverter newDocValueConverter(final IndexReader reader, final String fieldName,
+	static ValueConverter newDocValueConverter(final IndexReader reader, final String fieldName,
 			final FieldDefinition fieldDef, final DocValuesType type) throws IOException {
 		switch (type) {
 		case BINARY:
-			BinaryDocValues binaryDocValue = MultiDocValues.getBinaryValues(reader, fieldName);
+			final BinaryDocValues binaryDocValue = MultiDocValues.getBinaryValues(reader, fieldName);
 			if (binaryDocValue == null)
 				return null;
 			return new SingleDVConverter.BinaryDVConverter(binaryDocValue);
@@ -132,17 +132,18 @@ public abstract class ValueConverter<T, V> {
 		case NONE:
 			break;
 		case NUMERIC:
-			NumericDocValues numericDocValues = MultiDocValues.getNumericValues(reader, fieldName);
+			final NumericDocValues numericDocValues = MultiDocValues.getNumericValues(reader, fieldName);
 			if (numericDocValues == null)
 				return null;
 			return newNumericConverter(fieldDef, numericDocValues);
 		case SORTED_NUMERIC:
-			SortedNumericDocValues sortedNumericDocValues = MultiDocValues.getSortedNumericValues(reader, fieldName);
+			final SortedNumericDocValues sortedNumericDocValues =
+					MultiDocValues.getSortedNumericValues(reader, fieldName);
 			if (sortedNumericDocValues == null)
 				return null;
 			return newSortedNumericConverter(fieldDef, sortedNumericDocValues);
 		case SORTED_SET:
-			SortedSetDocValues sortedSetDocValues = MultiDocValues.getSortedSetValues(reader, fieldName);
+			final SortedSetDocValues sortedSetDocValues = MultiDocValues.getSortedSetValues(reader, fieldName);
 			if (sortedSetDocValues == null)
 				return null;
 			return null;

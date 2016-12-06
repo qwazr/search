@@ -15,49 +15,60 @@
  */
 package com.qwazr.search.collector;
 
-import com.qwazr.search.field.Converters.SingleDVConverter;
-import com.qwazr.search.field.Converters.ValueConverter;
-import org.apache.lucene.index.BinaryDocValues;
-import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.*;
 import org.apache.lucene.search.LeafCollector;
 import org.apache.lucene.search.Scorer;
 
 import java.io.IOException;
 
-public class DocValuesLeafCollector {
+public abstract class DocValuesLeafCollector implements LeafCollector {
 
-	public static abstract class ConverterLeafCollector<T extends ValueConverter> implements LeafCollector {
-
-		protected final T converter;
-
-		protected ConverterLeafCollector(final T converter) throws IOException {
-			this.converter = converter;
-		}
-
-		@Override
-		public void setScorer(Scorer scorer) throws IOException {
-		}
-
+	@Override
+	public void setScorer(Scorer scorer) throws IOException {
 	}
 
-	public static abstract class Numeric<T extends ValueConverter> extends ConverterLeafCollector<T> {
+	public static abstract class Numeric extends DocValuesLeafCollector {
 
 		protected final NumericDocValues docValues;
 
-		protected Numeric(T converter) throws IOException {
-			super(converter);
-			docValues = (NumericDocValues) converter.source;
+		protected Numeric(NumericDocValues docValues) throws IOException {
+			this.docValues = docValues;
 		}
 	}
 
-	public static abstract class Binary extends ConverterLeafCollector<SingleDVConverter.BinaryDVConverter> {
+	public static abstract class SortedNumeric extends DocValuesLeafCollector {
+
+		protected final SortedNumericDocValues docValues;
+
+		protected SortedNumeric(SortedNumericDocValues docValues) throws IOException {
+			this.docValues = docValues;
+		}
+	}
+
+	public static abstract class Binary extends DocValuesLeafCollector {
 
 		protected final BinaryDocValues docValues;
 
-		protected Binary(SingleDVConverter.BinaryDVConverter converter) throws IOException {
-			super(converter);
-			docValues = converter.source;
+		protected Binary(BinaryDocValues docValues) throws IOException {
+			this.docValues = docValues;
+		}
+	}
+
+	public static abstract class Sorted extends DocValuesLeafCollector {
+
+		protected final SortedDocValues docValues;
+
+		protected Sorted(SortedDocValues docValues) throws IOException {
+			this.docValues = docValues;
+		}
+	}
+
+	public static abstract class SortedSet extends DocValuesLeafCollector {
+
+		protected final SortedSetDocValues docValues;
+
+		protected SortedSet(SortedSetDocValues docValues) throws IOException {
+			this.docValues = docValues;
 		}
 	}
 }
