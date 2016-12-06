@@ -15,7 +15,6 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.collector.BaseCollector;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.StringUtils;
@@ -35,7 +34,6 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 	private final IndexSearcher indexSearcher;
 	private final Query luceneQuery;
 	private final Map<String, HighlighterImpl> highlighters;
-	private final Collection<BaseCollector> externalCollectors;
 	private final FieldMap fieldMap;
 	private final TimeTracker timeTracker;
 	private final ResultDocumentBuilder.BuilderFactory documentBuilderFactory;
@@ -52,7 +50,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
 	ResultDefinitionBuilder(final QueryDefinition queryDefinition, final TopDocs topDocs,
 			final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
-			final Collection<BaseCollector> externalCollectors,
+			final Map<String, Object> externalCollectorsResults,
 			final FieldMap fieldMap, final TimeTracker timeTracker,
 			final ResultDocumentBuilder.BuilderFactory documentBuilderFactory, final FacetsBuilder facetsBuilder,
 			Integer totalHits) throws ReflectiveOperationException, IOException {
@@ -62,7 +60,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		this.indexSearcher = indexSearcher;
 		this.luceneQuery = luceneQuery;
 		this.highlighters = highlighters;
-		this.externalCollectors = externalCollectors;
+		this.collectors = externalCollectorsResults;
 		this.fieldMap = fieldMap;
 		this.timeTracker = timeTracker;
 		this.documentBuilderFactory = documentBuilderFactory;
@@ -91,7 +89,6 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 			this.documents = null;
 
 		this.facets = facetsBuilder == null ? null : facetsBuilder.results;
-		this.collectors = buildCollectors();
 		this.queryDebug = buildQueryDebug();
 
 		this.timeTrackerStatus = timeTracker == null ? null : timeTracker.getStatus();
@@ -177,14 +174,6 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		if (!queryDefinition.query_debug)
 			return null;
 		return luceneQuery.toString(StringUtils.EMPTY);
-	}
-
-	final private Map<String, Object> buildCollectors() {
-		if (externalCollectors == null || externalCollectors.isEmpty())
-			return null;
-		final Map<String, Object> collectors = new LinkedHashMap<>();
-		externalCollectors.forEach(collector -> collectors.put(collector.name, collector.getResult()));
-		return collectors;
 	}
 
 }

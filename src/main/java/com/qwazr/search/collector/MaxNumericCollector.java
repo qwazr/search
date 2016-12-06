@@ -21,14 +21,32 @@ import org.apache.lucene.search.LeafCollector;
 import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
+import java.util.Collection;
 
-public abstract class MaxNumericCollector<R> extends DocValuesCollector.Numeric<R> {
+public abstract class MaxNumericCollector<R extends Comparable<R>> extends DocValuesCollector.Numeric<R> {
 
 	public MaxNumericCollector(final String collectorName, final String fieldName) {
 		super(collectorName, fieldName);
 	}
 
-	public abstract R getResult();
+	@Override
+	public R getReducedResult(final Collection<BaseCollector<R>> collectorCollection) {
+		R value = null;
+		for (BaseCollector<R> collector : collectorCollection) {
+			if (collector == null)
+				continue;
+			final R newValue = collector.getResult();
+			if (newValue == null)
+				continue;
+			if (value == null) {
+				value = newValue;
+				continue;
+			}
+			if (newValue.compareTo(value) > 0)
+				value = newValue;
+		}
+		return value;
+	}
 
 	@Override
 	public boolean needsScores() {

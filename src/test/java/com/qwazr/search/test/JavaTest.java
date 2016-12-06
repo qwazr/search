@@ -28,9 +28,10 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.Executors;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ JavaTest.JavaLibraryTest.class, JavaTest.JavaLocalTest.class, JavaTest.JavaRemoteTest.class })
+@Suite.SuiteClasses({JavaTest.JavaLibraryTest.class, JavaTest.JavaLocalTest.class, JavaTest.JavaRemoteTest.class})
 public class JavaTest {
 
 	public static class JavaLibraryTest extends JavaAbstractTest {
@@ -44,7 +45,7 @@ public class JavaTest {
 		@BeforeClass
 		public static void beforeClass() throws IOException {
 			final Path rootDirectory = Files.createTempDirectory("qwazr_index_test");
-			indexManager = new IndexManager(rootDirectory);
+			indexManager = new IndexManager(rootDirectory, Executors.newCachedThreadPool());
 		}
 
 		@Override

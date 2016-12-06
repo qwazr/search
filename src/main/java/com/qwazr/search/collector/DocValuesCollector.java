@@ -86,7 +86,7 @@ public abstract class DocValuesCollector<R, D> extends BaseCollector<R> {
 
 	public static abstract class Numeric<R> extends DocValuesCollector<R, NumericDocValues> {
 
-		protected Numeric(String collectorName, String fieldName) {
+		protected Numeric(final String collectorName, final String fieldName) {
 			super(collectorName, fieldName);
 		}
 
@@ -97,7 +97,7 @@ public abstract class DocValuesCollector<R, D> extends BaseCollector<R> {
 
 	public static abstract class SortedNumeric<R> extends DocValuesCollector<R, SortedNumericDocValues> {
 
-		protected SortedNumeric(String collectorName, String fieldName) {
+		protected SortedNumeric(final String collectorName, final String fieldName) {
 			super(collectorName, fieldName);
 		}
 

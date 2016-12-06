@@ -28,36 +28,34 @@ import java.util.*;
 
 class QueryCollectors {
 
-	final List<Collector> collectors;
+	private final List<Collector> collectors;
 
-	final FacetsCollector facetsCollector;
+	private final FacetsCollector facetsCollector;
 
-	final Collection<BaseCollector> externalCollectors;
+	private final List<BaseCollector> externalCollectors;
 
-	final TotalHitCountCollector totalHitCountCollector;
+	private final TotalHitCountCollector totalHitCountCollector;
 
-	final TopDocsCollector topDocsCollector;
+	private final TopDocsCollector topDocsCollector;
 
 	final Collector finalCollector;
 
-	QueryCollectors(final boolean bNeedScore, final Sort sort, final int numHits,
-			final LinkedHashMap<String, FacetDefinition> facets, final boolean useDrillSideways,
-			final LinkedHashMap<String, QueryDefinition.CollectorDefinition> extCollectors)
-			throws ReflectiveOperationException, IOException {
+	QueryCollectors(final QueryCollectorManager manager)
+			throws IOException, ReflectiveOperationException {
 		collectors = new ArrayList<>();
-		facetsCollector = useDrillSideways ? null : buildFacetsCollector(facets);
-		totalHitCountCollector = buildTotalHitsCollector(numHits);
-		topDocsCollector = buildTopDocCollector(sort, numHits, bNeedScore);
-		externalCollectors = buildExternalCollectors(extCollectors);
+		facetsCollector = manager.useDrillSideways ? null : buildFacetsCollector(manager.facets);
+		totalHitCountCollector = buildTotalHitsCollector(manager.numHits);
+		topDocsCollector = buildTopDocCollector(manager.sort, manager.numHits, manager.bNeedScore);
+		externalCollectors = buildExternalCollectors(manager.extCollectors);
 		finalCollector = getFinalCollector();
 	}
 
-	private final <T extends Collector> T add(T collector) {
+	private <T extends Collector> T add(final T collector) {
 		collectors.add(collector);
 		return collector;
 	}
 
-	private final Collector getFinalCollector() {
+	private Collector getFinalCollector() {
 		switch (collectors.size()) {
 			case 0:
 				return null;
@@ -68,7 +66,7 @@ class QueryCollectors {
 		}
 	}
 
-	private final FacetsCollector buildFacetsCollector(final LinkedHashMap<String, FacetDefinition> facets) {
+	private FacetsCollector buildFacetsCollector(final LinkedHashMap<String, FacetDefinition> facets) {
 		if (facets == null || facets.isEmpty())
 			return null;
 		for (FacetDefinition facet : facets.values())
@@ -77,12 +75,12 @@ class QueryCollectors {
 		return null;
 	}
 
-	final private Collection<BaseCollector> buildExternalCollectors(
+	private List<BaseCollector> buildExternalCollectors(
 			final Map<String, QueryDefinition.CollectorDefinition> collectors)
 			throws ReflectiveOperationException {
 		if (collectors == null || collectors.isEmpty())
 			return null;
-		final Collection<BaseCollector> externalCollectors = new ArrayList<>();
+		final List<BaseCollector> externalCollectors = new ArrayList<>();
 		FunctionUtils.forEach(collectors, (name, collector) -> {
 			final Class<? extends Collector> collectorClass = ClassLoaderManager.findClass(collector.classname);
 			Constructor<?>[] constructors = collectorClass.getConstructors();
@@ -102,7 +100,8 @@ class QueryCollectors {
 		return externalCollectors;
 	}
 
-	private final TopDocsCollector buildTopDocCollector(Sort sort, int numHits, boolean bNeedScore) throws IOException {
+	private TopDocsCollector buildTopDocCollector(final Sort sort, final int numHits, final boolean bNeedScore)
+			throws IOException {
 		if (numHits == 0)
 			return null;
 		final TopDocsCollector topDocsCollector;
@@ -113,22 +112,77 @@ class QueryCollectors {
 		return add(topDocsCollector);
 	}
 
-	private final TotalHitCountCollector buildTotalHitsCollector(int numHits) {
+	private TotalHitCountCollector buildTotalHitsCollector(final int numHits) {
 		if (numHits > 0)
 			return null;
 		return add(new TotalHitCountCollector());
 	}
 
-	final Integer getTotalHits() {
-		if (totalHitCountCollector != null)
-			return totalHitCountCollector.getTotalHits();
-		if (topDocsCollector != null)
-			return topDocsCollector.getTotalHits();
-		return null;
-	}
+	static class Result {
 
-	final TopDocs getTopDocs() {
-		return topDocsCollector == null ? null : topDocsCollector.topDocs();
-	}
+		private final QueryCollectorManager manager;
+		private final Collection<QueryCollectors> list;
 
+		Result(final QueryCollectorManager manager, final Collection<QueryCollectors> list) {
+			this.manager = manager;
+			this.list = list;
+		}
+
+		final Integer getTotalHits() {
+			if (list == null || list.isEmpty())
+				return 0;
+			int totalHits = 0;
+			for (QueryCollectors queryCollectors : list) {
+				if (queryCollectors.totalHitCountCollector != null)
+					totalHits += queryCollectors.totalHitCountCollector.getTotalHits();
+				else if (queryCollectors.topDocsCollector != null)
+					totalHits += queryCollectors.topDocsCollector.getTotalHits();
+			}
+			return totalHits;
+		}
+
+		final TopDocs getTopDocs() throws IOException {
+			if (list == null || list.isEmpty())
+				return null;
+			if (manager.sort != null)
+				return getTopFieldDocs();
+			final List<TopDocs> topDocsList = new ArrayList<>(list.size());
+			for (QueryCollectors queryCollectors : list)
+				if (queryCollectors.topDocsCollector != null)
+					topDocsList.add(queryCollectors.topDocsCollector.topDocs());
+			return TopDocs.merge(manager.numHits, topDocsList.toArray(new TopDocs[topDocsList.size()]));
+		}
+
+		private TopDocs getTopFieldDocs() throws IOException {
+			final List<TopFieldDocs> topFieldDocsList = new ArrayList<>(list.size());
+			for (QueryCollectors queryCollectors : list)
+				if (queryCollectors.topDocsCollector == null)
+					topFieldDocsList.add(((TopFieldCollector) queryCollectors.topDocsCollector).topDocs());
+			return TopFieldDocs.merge(manager.sort, manager.numHits,
+					topFieldDocsList.toArray(new TopFieldDocs[topFieldDocsList.size()]));
+		}
+
+		final FacetsCollector getFacetsCollector() {
+			return null; //EK TOTO Reduce FacetCollectors
+		}
+
+		final Map<String, Object> getExternalResults() {
+			if (list == null || list.isEmpty())
+				return null;
+			if (manager.extCollectors == null)
+				return null;
+			final Map<String, Object> results = new HashMap<>();
+			int i = 0;
+			for (String name : manager.extCollectors.keySet()) {
+				final List<BaseCollector> externalCollectors = new ArrayList<>();
+				for (QueryCollectors queryCollectors : list)
+					if (queryCollectors.externalCollectors != null)
+						externalCollectors.add(queryCollectors.externalCollectors.get(i));
+				if (!externalCollectors.isEmpty())
+					results.put(name, externalCollectors.get(0).getReducedResult(externalCollectors));
+				i++;
+			}
+			return results;
+		}
+	}
 }

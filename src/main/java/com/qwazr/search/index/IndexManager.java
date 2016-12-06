@@ -33,6 +33,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class IndexManager implements Closeable {
@@ -44,11 +45,12 @@ public class IndexManager implements Closeable {
 
 	static volatile IndexManager INSTANCE = null;
 
-	public synchronized static void load(final ServerBuilder builder, final ServerConfiguration configuration)
+	public synchronized static void load(final ServerBuilder builder, final ServerConfiguration configuration,
+			final ExecutorService executorService)
 			throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
-		INSTANCE = new IndexManager(builder, configuration);
+		INSTANCE = new IndexManager(builder, configuration, executorService);
 	}
 
 	private final ConcurrentHashMap<String, SchemaInstance> schemaMap;
@@ -57,18 +59,22 @@ public class IndexManager implements Closeable {
 
 	private final IndexServiceInterface service;
 
-	private IndexManager(final ServerBuilder builder, final ServerConfiguration configuration) throws IOException {
-		this(new File(configuration.dataDirectory, INDEXES_DIRECTORY));
+	private final ExecutorService executorService;
+
+	private IndexManager(final ServerBuilder builder, final ServerConfiguration configuration,
+			final ExecutorService executorService) throws IOException {
+		this(new File(configuration.dataDirectory, INDEXES_DIRECTORY), executorService);
 		builder.registerWebService(IndexServiceImpl.class);
 		builder.registerShutdownListener(server -> close());
 	}
 
-	public IndexManager(final Path workDirectory) throws IOException {
-		this(workDirectory.toFile());
+	public IndexManager(final Path workDirectory, final ExecutorService executorService) throws IOException {
+		this(workDirectory.toFile(), executorService);
 	}
 
-	public IndexManager(final File workDirectory) throws IOException {
+	public IndexManager(final File workDirectory, final ExecutorService executorService) throws IOException {
 		this.rootDirectory = workDirectory;
+		this.executorService = executorService;
 		if (!rootDirectory.exists())
 			rootDirectory.mkdir();
 		if (!rootDirectory.isDirectory())
@@ -81,7 +87,7 @@ public class IndexManager implements Closeable {
 			return;
 		for (File schemaDirectory : directories) {
 			try {
-				schemaMap.put(schemaDirectory.getName(), new SchemaInstance(service, schemaDirectory));
+				schemaMap.put(schemaDirectory.getName(), new SchemaInstance(service, schemaDirectory, executorService));
 			} catch (ServerException | IOException | ReflectiveOperationException | URISyntaxException e) {
 				logger.error(e.getMessage(), e);
 			}
@@ -104,7 +110,7 @@ public class IndexManager implements Closeable {
 		synchronized (schemaMap) {
 			SchemaInstance schemaInstance = schemaMap.get(schemaName);
 			if (schemaInstance == null) {
-				schemaInstance = new SchemaInstance(service, new File(rootDirectory, schemaName));
+				schemaInstance = new SchemaInstance(service, new File(rootDirectory, schemaName), executorService);
 				schemaMap.put(schemaName, schemaInstance);
 			}
 			if (settings != null)

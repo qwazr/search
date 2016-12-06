@@ -20,8 +20,9 @@ import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.LeafCollector;
 
 import java.io.IOException;
+import java.util.Collection;
 
-public class BaseCollector<T> implements Collector {
+public abstract class BaseCollector<T> implements Collector {
 
 	public final String name;
 
@@ -29,9 +30,9 @@ public class BaseCollector<T> implements Collector {
 		this.name = name;
 	}
 
-	public T getResult() {
-		return null;
-	}
+	public abstract T getResult();
+
+	public abstract T getReducedResult(Collection<BaseCollector<T>> collectors);
 
 	@Override
 	public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {

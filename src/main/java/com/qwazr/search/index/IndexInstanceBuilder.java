@@ -23,11 +23,10 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.SerialMergeScheduler;
-import org.apache.lucene.index.SnapshotDeletionPolicy;
+import org.apache.lucene.index.*;
 import org.apache.lucene.replicator.*;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -39,6 +38,7 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 
 class IndexInstanceBuilder {
 
@@ -79,6 +79,7 @@ class IndexInstanceBuilder {
 	final SchemaInstance schema;
 	final File indexDirectory;
 	final FileSet fileSet;
+	final SearcherFactory searcherFactory;
 
 	IndexSettingsDefinition settings;
 
@@ -101,11 +102,25 @@ class IndexInstanceBuilder {
 	UUID indexUuid = null;
 
 	IndexInstanceBuilder(final SchemaInstance schema, final File indexDirectory,
-			final IndexSettingsDefinition settings) {
+			final IndexSettingsDefinition settings, final ExecutorService executorService) {
 		this.schema = schema;
 		this.indexDirectory = indexDirectory;
 		this.settings = settings;
 		this.fileSet = new FileSet(indexDirectory);
+		this.searcherFactory = new MultiThreadSearcherFactory(executorService);
+	}
+
+	private static class MultiThreadSearcherFactory extends SearcherFactory {
+
+		private final ExecutorService executorService;
+
+		private MultiThreadSearcherFactory(final ExecutorService executorService) {
+			this.executorService = executorService;
+		}
+
+		public IndexSearcher newSearcher(IndexReader reader, IndexReader previousReader) throws IOException {
+			return new IndexSearcher(reader, executorService);
+		}
 	}
 
 	private void buildCommon() throws IOException, ReflectiveOperationException, URISyntaxException {
@@ -195,7 +210,7 @@ class IndexInstanceBuilder {
 		replicationClient = new ReplicationClient(indexReplicator, handler, factory);
 
 		// we build the SearcherManager
-		searcherManager = new SearcherManager(dataDirectory, null);
+		searcherManager = new SearcherManager(dataDirectory, searcherFactory);
 	}
 
 	private void buildMaster() throws IOException, ReflectiveOperationException {
@@ -207,7 +222,7 @@ class IndexInstanceBuilder {
 		replicator.publish(new IndexRevision(indexWriter));
 
 		// Finally we build the SearcherManager
-		searcherManager = new SearcherManager(indexWriter, null);
+		searcherManager = new SearcherManager(indexWriter, searcherFactory);
 	}
 
 	private void abort() {

@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -54,6 +55,7 @@ public class SchemaInstance implements Closeable {
 	private final ConcurrentHashMap<String, IndexInstance> indexMap;
 
 	private final IndexServiceInterface service;
+	private final ExecutorService executorService;
 	private final File schemaDirectory;
 	private final File settingsFile;
 	private volatile SchemaSettingsDefinition settingsDefinition;
@@ -155,15 +157,17 @@ public class SchemaInstance implements Closeable {
 
 	}
 
-	SchemaInstance(final IndexServiceInterface service, final File schemaDirectory)
+	SchemaInstance(final IndexServiceInterface service, final File schemaDirectory,
+			final ExecutorService executorService)
 			throws IOException, ReflectiveOperationException, URISyntaxException {
+		this.executorService = executorService;
 		this.service = service;
 		this.schemaDirectory = schemaDirectory;
 		if (!schemaDirectory.exists())
 			schemaDirectory.mkdir();
 		if (!schemaDirectory.exists())
 			throw new IOException("The directory does not exist: " + schemaDirectory.getName());
-		indexMap = new ConcurrentHashMap<String, IndexInstance>();
+		indexMap = new ConcurrentHashMap<>();
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
 		settingsDefinition = settingsFile.exists() ?
@@ -175,7 +179,8 @@ public class SchemaInstance implements Closeable {
 		if (directories == null)
 			return;
 		for (File indexDirectory : directories)
-			indexMap.put(indexDirectory.getName(), new IndexInstanceBuilder(this, indexDirectory, null).build());
+			indexMap.put(indexDirectory.getName(),
+					new IndexInstanceBuilder(this, indexDirectory, null, executorService).build());
 		mayBeRefresh(false);
 	}
 
@@ -200,7 +205,7 @@ public class SchemaInstance implements Closeable {
 		synchronized (indexMap) {
 
 			final IndexInstanceBuilder builder =
-					new IndexInstanceBuilder(this, new File(schemaDirectory, indexName), settings);
+					new IndexInstanceBuilder(this, new File(schemaDirectory, indexName), settings, executorService);
 
 			IndexInstance indexInstance = indexMap.get(indexName);
 

@@ -40,7 +40,7 @@ public class SearchServer extends GenericServer {
 		builder.registerWebService(WelcomeService.class);
 		ClassLoaderManager.load(configuration.dataDirectory, null);
 		ClusterManager.load(builder, configuration);
-		IndexManager.load(builder, configuration);
+		IndexManager.load(builder, configuration, executorService);
 	}
 
 	public static void main(final String... args) throws Exception {

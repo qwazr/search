@@ -20,6 +20,7 @@ import com.qwazr.search.query.DrillDownQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.facet.DrillSideways;
+import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.ParallelDrillSideways;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -68,27 +69,30 @@ class QueryUtils {
 		final boolean useDrillSideways = queryContext.queryDefinition.query instanceof DrillDownQuery
 				&& ((DrillDownQuery) queryContext.queryDefinition.query).useDrillSideways && queryDef.facets != null;
 
-		final QueryCollectors queryCollectors =
-				new QueryCollectors(bNeedScore, sort, numHits, queryDef.facets, useDrillSideways, queryDef.collectors);
+		final QueryCollectorManager queryCollectorManager =
+				new QueryCollectorManager(bNeedScore, sort, numHits, queryDef.facets, useDrillSideways,
+						queryDef.collectors);
 
 		final DrillSideways.DrillSidewaysResult drillSidewaysResult;
 		if (useDrillSideways) {
 			drillSidewaysResult = new ParallelDrillSideways(queryContext.indexSearcher,
 					queryContext.fieldMap.getNewFacetsConfig(queryDef.facets.keySet()), queryContext.state).search(
-					(org.apache.lucene.facet.DrillDownQuery) query, queryCollectors.finalCollector);
+					(org.apache.lucene.facet.DrillDownQuery) query, queryCollectorManager);
 		} else {
-			queryContext.indexSearcher.search(query, queryCollectors.finalCollector);
+			queryContext.indexSearcher.search(query, queryCollectorManager);
 			drillSidewaysResult = null;
 		}
-		final TopDocs topDocs = queryCollectors.getTopDocs();
-		final Integer totalHits = queryCollectors.getTotalHits();
+		final QueryCollectors.Result queryCollectorResult = queryCollectorManager.getResult();
+		final TopDocs topDocs = queryCollectorResult.getTopDocs();
+		final Integer totalHits = queryCollectorResult.getTotalHits();
 
 		timeTracker.next("search_query");
 
 		final FacetsBuilder facetsBuilder;
-		if (queryCollectors.facetsCollector != null)
+		final FacetsCollector facetsCollector = queryCollectorResult.getFacetsCollector();
+		if (facetsCollector != null)
 			facetsBuilder = new FacetsBuilder.WithCollectors(queryContext, queryDef.facets, query, timeTracker,
-					queryCollectors.facetsCollector).build();
+					facetsCollector).build();
 		else if (drillSidewaysResult != null)
 			facetsBuilder = new FacetsBuilder.WithSideways(queryContext, queryDef.facets, query, timeTracker,
 					drillSidewaysResult).build();
@@ -104,9 +108,10 @@ class QueryUtils {
 		} else
 			highlighters = null;
 
-		ResultDefinitionBuilder resultBuilder =
+		final ResultDefinitionBuilder resultBuilder =
 				new ResultDefinitionBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
-						queryCollectors.externalCollectors, queryContext.fieldMap, timeTracker, documentBuilderFactory,
+						queryCollectorResult.getExternalResults(), queryContext.fieldMap, timeTracker,
+						documentBuilderFactory,
 						facetsBuilder, totalHits);
 		return documentBuilderFactory.build(resultBuilder);
 	}
