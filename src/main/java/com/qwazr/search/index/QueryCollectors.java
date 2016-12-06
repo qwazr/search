@@ -162,7 +162,16 @@ class QueryCollectors {
 					topFieldDocsList.toArray(new TopFieldDocs[topFieldDocsList.size()]));
 		}
 
+		private final static FacetsCollector EMPTY = new FacetsCollector();
+
 		final FacetsCollector getFacetsCollector() {
+			if (manager.facets == null || manager.facets.isEmpty())
+				return null;
+			if (list == null || list.isEmpty())
+				return EMPTY;
+			for (QueryCollectors queryCollectors : list)
+				if (queryCollectors.facetsCollector != null)
+					return queryCollectors.facetsCollector;
 			return null; //EK TOTO Reduce FacetCollectors
 		}
 
