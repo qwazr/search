@@ -72,32 +72,41 @@ class QueryUtils {
 		final QueryCollectorManager queryCollectorManager =
 				new QueryCollectorManager(bNeedScore, sort, numHits, queryDef.facets, useDrillSideways,
 						queryDef.collectors);
-
-		final DrillSideways.DrillSidewaysResult drillSidewaysResult;
-		if (useDrillSideways) {
-			drillSidewaysResult = new ParallelDrillSideways(queryContext.indexSearcher,
-					queryContext.fieldMap.getNewFacetsConfig(queryDef.facets.keySet()), queryContext.state).search(
-					(org.apache.lucene.facet.DrillDownQuery) query, queryCollectorManager);
-		} else {
-			queryContext.indexSearcher.search(query, queryCollectorManager);
-			drillSidewaysResult = null;
-		}
-		final QueryCollectors.Result queryCollectorResult = queryCollectorManager.getResult();
-		final TopDocs topDocs = queryCollectorResult.getTopDocs();
-		final Integer totalHits = queryCollectorResult.getTotalHits();
-
-		timeTracker.next("search_query");
+		final QueryCollectors.Result queryCollectorResult;
 
 		final FacetsBuilder facetsBuilder;
-		final FacetsCollector facetsCollector = queryCollectorResult.getFacetsCollector();
-		if (facetsCollector != null)
-			facetsBuilder = new FacetsBuilder.WithCollectors(queryContext, queryDef.facets, query, timeTracker,
-					facetsCollector).build();
-		else if (drillSidewaysResult != null)
+		if (useDrillSideways) {
+			final DrillSideways.DrillSidewaysResult drillSidewaysResult;
+			// Temp for test
+			if (false) {
+				drillSidewaysResult =
+						new DrillSideways(queryContext.indexSearcher,
+								queryContext.fieldMap.getNewFacetsConfig(queryDef.facets.keySet()), queryContext.state)
+								.search((org.apache.lucene.facet.DrillDownQuery) query,
+										queryCollectorManager.newCollector());
+				queryCollectorResult = queryCollectorManager.reduce(null);
+			} else {
+				drillSidewaysResult =
+						new ParallelDrillSideways(queryContext.indexSearcher,
+								queryContext.fieldMap.getNewFacetsConfig(queryDef.facets.keySet()), queryContext.state)
+								.search(
+										(org.apache.lucene.facet.DrillDownQuery) query, queryCollectorManager);
+				queryCollectorResult = null;
+			}
 			facetsBuilder = new FacetsBuilder.WithSideways(queryContext, queryDef.facets, query, timeTracker,
 					drillSidewaysResult).build();
-		else
-			facetsBuilder = null;
+		} else {
+			queryCollectorResult = queryContext.indexSearcher.search(query, queryCollectorManager);
+			final FacetsCollector facetsCollector = queryCollectorResult.getFacetsCollector();
+			if (facetsCollector != null)
+				facetsBuilder = new FacetsBuilder.WithCollectors(queryContext, queryDef.facets, query, timeTracker,
+						facetsCollector).build();
+			else
+				facetsBuilder = null;
+		}
+
+		final TopDocs topDocs = queryCollectorResult.getTopDocs();
+		final Integer totalHits = queryCollectorResult.getTotalHits();
 
 		final Map<String, HighlighterImpl> highlighters;
 		if (queryDef.highlighters != null && topDocs != null) {
@@ -108,11 +117,15 @@ class QueryUtils {
 		} else
 			highlighters = null;
 
+		timeTracker.next("search_query");
+
 		final ResultDefinitionBuilder resultBuilder =
 				new ResultDefinitionBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
-						queryCollectorResult.getExternalResults(), queryContext.fieldMap, timeTracker,
+						queryCollectorResult.getExternalResults(),
+						queryContext.fieldMap, timeTracker,
 						documentBuilderFactory,
 						facetsBuilder, totalHits);
+
 		return documentBuilderFactory.build(resultBuilder);
 	}
 

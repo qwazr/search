@@ -34,7 +34,6 @@ class QueryCollectorManager implements CollectorManager<Collector, QueryCollecto
 	final LinkedHashMap<String, QueryDefinition.CollectorDefinition> extCollectors;
 
 	private final Collection<QueryCollectors> queryCollectorsList;
-	private QueryCollectors.Result result;
 
 	QueryCollectorManager(final boolean bNeedScore, final Sort sort, final int numHits,
 			final LinkedHashMap<String, FacetDefinition> facets, final boolean useDrillSideways,
@@ -62,12 +61,7 @@ class QueryCollectorManager implements CollectorManager<Collector, QueryCollecto
 
 	@Override
 	final public QueryCollectors.Result reduce(final Collection collectors) throws IOException {
-		result = new QueryCollectors.Result(this, queryCollectorsList);
-		return result;
-	}
-
-	final QueryCollectors.Result getResult() {
-		return result;
+		return new QueryCollectors.Result(this, queryCollectorsList);
 	}
 
 }

@@ -162,17 +162,17 @@ class QueryCollectors {
 					topFieldDocsList.toArray(new TopFieldDocs[topFieldDocsList.size()]));
 		}
 
-		private final static FacetsCollector EMPTY = new FacetsCollector();
-
-		final FacetsCollector getFacetsCollector() {
+		final FacetsCollector getFacetsCollector() throws IOException {
 			if (manager.facets == null || manager.facets.isEmpty())
 				return null;
 			if (list == null || list.isEmpty())
-				return EMPTY;
+				return FacetsCollectorManager.EMPTY;
+			final FacetsCollectorManager manager = new FacetsCollectorManager();
+			final List<FacetsCollector> facetCollectors = new ArrayList<>();
 			for (QueryCollectors queryCollectors : list)
 				if (queryCollectors.facetsCollector != null)
-					return queryCollectors.facetsCollector;
-			return null; //EK TOTO Reduce FacetCollectors
+					facetCollectors.add(queryCollectors.facetsCollector);
+			return manager.reduce(facetCollectors);
 		}
 
 		final Map<String, Object> getExternalResults() {
