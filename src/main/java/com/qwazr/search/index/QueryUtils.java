@@ -19,7 +19,7 @@ import com.qwazr.search.field.SortUtils;
 import com.qwazr.search.query.DrillDownQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
-import org.apache.lucene.facet.DrillSideways;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.ParallelDrillSideways;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -31,8 +31,7 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TopDocs;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 class QueryUtils {
 
@@ -48,6 +47,14 @@ class QueryUtils {
 		} else
 			qs = queryDef.query_string;
 		return qs;
+	}
+
+	private static List<Pair<String, String[]>> getDimPathPairs(final DrillDownQuery drillDownQuery) {
+		final List<Pair<String, String[]>> dimPaths = new ArrayList<>();
+		drillDownQuery.dimPath.forEach(map -> map.forEach((dim, paths) -> {
+			dimPaths.add(Pair.of(dim, paths));
+		}));
+		return dimPaths;
 	}
 
 	final static ResultDefinition search(final QueryContext queryContext,
@@ -76,23 +83,14 @@ class QueryUtils {
 
 		final FacetsBuilder facetsBuilder;
 		if (useDrillSideways) {
-			final DrillSideways.DrillSidewaysResult drillSidewaysResult;
-			// Temp for test
-			if (false) {
-				drillSidewaysResult =
-						new DrillSideways(queryContext.indexSearcher,
-								queryContext.fieldMap.getNewFacetsConfig(queryDef.facets.keySet()), queryContext.state)
-								.search((org.apache.lucene.facet.DrillDownQuery) query,
-										queryCollectorManager.newCollector());
-				queryCollectorResult = queryCollectorManager.reduce(null);
-			} else {
-				drillSidewaysResult =
-						new ParallelDrillSideways(queryContext.indexSearcher,
-								queryContext.fieldMap.getNewFacetsConfig(queryDef.facets.keySet()), queryContext.state)
-								.search(
-										(org.apache.lucene.facet.DrillDownQuery) query, queryCollectorManager);
-				queryCollectorResult = null;
-			}
+			final Set<String> facetKeys = queryDef.facets.keySet();
+			final ParallelDrillSideways.Result<QueryCollectors.Result> drillSidewaysResult =
+					new ParallelDrillSideways(queryContext.executorService, queryContext.indexSearcher,
+							queryContext.fieldMap.getNewFacetsConfig(facetKeys), queryContext.state).search(
+							(org.apache.lucene.facet.DrillDownQuery) query, facetKeys,
+							getDimPathPairs((DrillDownQuery) queryContext.queryDefinition.query),
+							queryCollectorManager);
+			queryCollectorResult = drillSidewaysResult.collectorResult;
 			facetsBuilder = new FacetsBuilder.WithSideways(queryContext, queryDef.facets, query, timeTracker,
 					drillSidewaysResult).build();
 		} else {
@@ -121,10 +119,8 @@ class QueryUtils {
 
 		final ResultDefinitionBuilder resultBuilder =
 				new ResultDefinitionBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
-						queryCollectorResult.getExternalResults(),
-						queryContext.fieldMap, timeTracker,
-						documentBuilderFactory,
-						facetsBuilder, totalHits);
+						queryCollectorResult.getExternalResults(), queryContext.fieldMap, timeTracker,
+						documentBuilderFactory, facetsBuilder, totalHits);
 
 		return documentBuilderFactory.build(resultBuilder);
 	}

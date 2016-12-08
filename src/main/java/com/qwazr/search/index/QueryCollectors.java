@@ -20,6 +20,7 @@ import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.collector.BaseCollector;
 import com.qwazr.utils.FunctionUtils;
 import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.facet.FacetsCollectorManager;
 import org.apache.lucene.search.*;
 
 import java.io.IOException;
@@ -40,8 +41,7 @@ class QueryCollectors {
 
 	final Collector finalCollector;
 
-	QueryCollectors(final QueryCollectorManager manager)
-			throws IOException, ReflectiveOperationException {
+	QueryCollectors(final QueryCollectorManager manager) throws IOException, ReflectiveOperationException {
 		collectors = new ArrayList<>();
 		facetsCollector = manager.useDrillSideways ? null : buildFacetsCollector(manager.facets);
 		totalHitCountCollector = buildTotalHitsCollector(manager.numHits);
@@ -57,12 +57,12 @@ class QueryCollectors {
 
 	private Collector getFinalCollector() {
 		switch (collectors.size()) {
-			case 0:
-				return null;
-			case 1:
-				return collectors.get(0);
-			default:
-				return MultiCollector.wrap(collectors);
+		case 0:
+			return null;
+		case 1:
+			return collectors.get(0);
+		default:
+			return MultiCollector.wrap(collectors);
 		}
 	}
 
@@ -76,8 +76,7 @@ class QueryCollectors {
 	}
 
 	private List<BaseCollector> buildExternalCollectors(
-			final Map<String, QueryDefinition.CollectorDefinition> collectors)
-			throws ReflectiveOperationException {
+			final Map<String, QueryDefinition.CollectorDefinition> collectors) throws ReflectiveOperationException {
 		if (collectors == null || collectors.isEmpty())
 			return null;
 		final List<BaseCollector> externalCollectors = new ArrayList<>();

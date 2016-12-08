@@ -20,9 +20,12 @@ import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.search.IndexSearcher;
 
+import java.util.concurrent.ExecutorService;
+
 final public class QueryContext {
 
 	final public IndexSearcher indexSearcher;
+	final public ExecutorService executorService;
 	final public SortedSetDocValuesReaderState state;
 	final public UpdatableAnalyzer indexAnalyzer;
 	final public UpdatableAnalyzer queryAnalyzer;
@@ -33,12 +36,13 @@ final public class QueryContext {
 	final public SchemaInstance schemaInstance;
 
 	QueryContext(final SchemaInstance schemaInstance, final ResourceLoader resourceLoader,
-			final IndexSearcher indexSearcher, final UpdatableAnalyzer indexAnalyzer,
-			final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap, final SortedSetDocValuesReaderState state,
-			final QueryDefinition queryDefinition) {
+			final IndexSearcher indexSearcher, final ExecutorService executorService,
+			final UpdatableAnalyzer indexAnalyzer, final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
+			final SortedSetDocValuesReaderState state, final QueryDefinition queryDefinition) {
 		this.schemaInstance = schemaInstance;
 		this.resourceLoader = resourceLoader;
 		this.indexSearcher = indexSearcher;
+		this.executorService = executorService;
 		this.state = state;
 		this.indexAnalyzer = indexAnalyzer;
 		this.queryAnalyzer = queryAnalyzer;

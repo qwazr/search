@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-class FacetsCollectorManager implements CollectorManager<FacetsCollector, FacetsCollector> {
+public class FacetsCollectorManager implements CollectorManager<FacetsCollector, FacetsCollector> {
 
 	public final static FacetsCollector EMPTY = new FacetsCollector();
 
@@ -41,7 +41,7 @@ class FacetsCollectorManager implements CollectorManager<FacetsCollector, Facets
 
 	private static class ReducedFacetsCollector extends FacetsCollector {
 
-		public ReducedFacetsCollector(Collection<FacetsCollector> facetsCollectors) {
+		public ReducedFacetsCollector(final Collection<FacetsCollector> facetsCollectors) {
 			final List<MatchingDocs> matchingDocs = this.getMatchingDocs();
 			facetsCollectors.forEach(facetsCollector -> matchingDocs.addAll(facetsCollector.getMatchingDocs()));
 		}

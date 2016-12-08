@@ -80,6 +80,7 @@ class IndexInstanceBuilder {
 	final File indexDirectory;
 	final FileSet fileSet;
 	final SearcherFactory searcherFactory;
+	final ExecutorService executorService;
 
 	IndexSettingsDefinition settings;
 
@@ -101,13 +102,14 @@ class IndexInstanceBuilder {
 
 	UUID indexUuid = null;
 
-	IndexInstanceBuilder(final SchemaInstance schema, final File indexDirectory,
-			final IndexSettingsDefinition settings, final ExecutorService executorService) {
+	IndexInstanceBuilder(final SchemaInstance schema, final File indexDirectory, final IndexSettingsDefinition settings,
+			final ExecutorService executorService) {
 		this.schema = schema;
 		this.indexDirectory = indexDirectory;
 		this.settings = settings;
 		this.fileSet = new FileSet(indexDirectory);
 		this.searcherFactory = new MultiThreadSearcherFactory(executorService);
+		this.executorService = executorService;
 	}
 
 	private static class MultiThreadSearcherFactory extends SearcherFactory {

@@ -50,6 +50,7 @@ import javax.ws.rs.core.Response;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -64,7 +65,9 @@ final public class IndexInstance implements Closeable {
 	private final LiveIndexWriterConfig indexWriterConfig;
 	private final SnapshotDeletionPolicy snapshotDeletionPolicy;
 	private final IndexWriter indexWriter;
+
 	private final SearcherManager searcherManager;
+	private final ExecutorService executorService;
 	private final IndexSettingsDefinition settings;
 	private final FileResourceLoader fileResourceLoader;
 
@@ -101,6 +104,7 @@ final public class IndexInstance implements Closeable {
 		this.queryAnalyzer = builder.queryAnalyzer;
 		this.settings = builder.settings;
 		this.searcherManager = builder.searcherManager;
+		this.executorService = builder.executorService;
 		this.fileResourceLoader = builder.fileResourceLoader;
 		this.replicator = builder.replicator;
 		this.replicationClient = builder.replicationClient;
@@ -566,8 +570,8 @@ final public class IndexInstance implements Closeable {
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
 			final QueryContext queryContext =
-					new QueryContext(schema, fileResourceLoader, null, indexAnalyzer, queryAnalyzer, fieldMap, null,
-							queryDefinition);
+					new QueryContext(schema, fileResourceLoader, null, executorService, indexAnalyzer, queryAnalyzer,
+							fieldMap, null, queryDefinition);
 			final Query query = queryDefinition.query.getQuery(queryContext);
 			int docs = indexWriter.numDocs();
 			indexWriter.deleteDocuments(query);
@@ -621,8 +625,8 @@ final public class IndexInstance implements Closeable {
 		if (indexWriterConfig != null)
 			indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
 		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
-		return new QueryContext(schema, fileResourceLoader, indexSearcher, indexAnalyzer, queryAnalyzer, fieldMap,
-				facetsState, queryDefinition);
+		return new QueryContext(schema, fileResourceLoader, indexSearcher, executorService, indexAnalyzer,
+				queryAnalyzer, fieldMap, facetsState, queryDefinition);
 	}
 
 	final ResultDefinition search(final QueryDefinition queryDefinition,

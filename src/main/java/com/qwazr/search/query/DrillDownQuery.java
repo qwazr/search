@@ -44,25 +44,6 @@ public class DrillDownQuery extends AbstractQuery {
 		this.dimPath = dimPath;
 	}
 
-	private DrillDownQuery getDrillSideways(final String excludedDimension) {
-		if (dimPath == null)
-			return null;
-		final List<LinkedHashMap<String, String[]>> newDimPath = new ArrayList<>();
-		dimPath.forEach(map -> {
-			if (!map.containsKey(excludedDimension)) newDimPath.add(map);
-		});
-		return newDimPath.isEmpty() ? null : new DrillDownQuery(baseQuery, false, newDimPath);
-	}
-
-	public final Collection<DrillDownQuery> getDrillSidewaysQueries(final Collection<String> dimensions) {
-		if (dimPath == null || dimPath.isEmpty() || dimensions == null || dimensions.isEmpty())
-			return null;
-		final List<DrillDownQuery> queries = new ArrayList<>(dimensions.size());
-		for (String dimension : dimensions)
-			queries.add(getDrillSideways(dimension));
-		return queries;
-	}
-
 	public void add(final String dim, final String... path) {
 		final LinkedHashMap<String, String[]> map = new LinkedHashMap<>();
 		map.put(dim, path);
@@ -82,7 +63,7 @@ public class DrillDownQuery extends AbstractQuery {
 		else
 			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig, baseQuery.getQuery(queryContext));
 		if (dimPath != null)
-			dimPath.forEach(dimPath -> dimPath.forEach((dim, path) -> drillDownQuery.add(dim, path)));
+			dimPath.forEach(dimPath -> dimPath.forEach(drillDownQuery::add));
 		return drillDownQuery;
 	}
 
@@ -104,4 +85,5 @@ public class DrillDownQuery extends AbstractQuery {
 			return new org.apache.lucene.search.TermQuery(facetTerm(indexedField, dim, filter_terms.iterator().next()));
 		return new org.apache.lucene.queries.TermsQuery(facetTerms(indexedField, dim, filter_terms));
 	}
+
 }

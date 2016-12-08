@@ -147,8 +147,8 @@ public class SchemaInstance implements Closeable {
 			try {
 				SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader());
 				final QueryContext queryContext =
-						new QueryContext(SchemaInstance.this, null, indexSearcher, indexAnalyzer, queryAnalyzer,
-								fieldMap, state, queryDef);
+						new QueryContext(SchemaInstance.this, null, indexSearcher, executorService, indexAnalyzer,
+								queryAnalyzer, fieldMap, state, queryDef);
 				return QueryUtils.search(queryContext, documentBuilderFactory);
 			} finally {
 				decRef();
