@@ -366,6 +366,8 @@ public abstract class JavaAbstractTest {
 		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(queryBuilder.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(resultCount), result.total_hits);
+		Assert.assertNotNull(result.documents);
+		Assert.assertEquals(resultCount, result.documents.size());
 		AnnotatedIndex current = null;
 		for (ResultDocumentObject<AnnotatedIndex> resultDoc : result.documents) {
 			final AnnotatedIndex next = resultDoc.getRecord();

@@ -155,7 +155,7 @@ class QueryCollectors {
 		private TopDocs getTopFieldDocs() throws IOException {
 			final List<TopFieldDocs> topFieldDocsList = new ArrayList<>(list.size());
 			for (QueryCollectors queryCollectors : list)
-				if (queryCollectors.topDocsCollector == null)
+				if (queryCollectors.topDocsCollector != null)
 					topFieldDocsList.add(((TopFieldCollector) queryCollectors.topDocsCollector).topDocs());
 			return TopFieldDocs.merge(manager.sort, manager.numHits,
 					topFieldDocsList.toArray(new TopFieldDocs[topFieldDocsList.size()]));
