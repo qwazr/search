@@ -1,0 +1,11 @@
+language: java
+jdk:
+  - oraclejdk8
+sudo: false
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+install: mvn install -DskipTests=true -Dgpg.skip=true -Dmaven.javadoc.skip=true -B -V
+after_success:
+  - mvn clean test jacoco:report coveralls:report

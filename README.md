@@ -1,6 +1,10 @@
 QWAZR SEARCH
 ============
 
+[![Build Status](https://travis-ci.org/qwazr/search.svg?branch=master)](https://travis-ci.org/qwazr/search)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr-search/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr-search)
+[![Coverage Status](https://coveralls.io/repos/github/qwazr/search/badge.svg?branch=master)](https://coveralls.io/github/qwazr/search?branch=master)
+
 A Search Engine microservice with indexing and search features based on
 [Apache Lucene](https://lucene.apache.org/core/)
 

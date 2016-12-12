@@ -15,8 +15,8 @@
  **/
 package com.qwazr.search.index;
 
-import com.datastax.driver.core.utils.UUIDs;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetsConfig;
@@ -45,7 +45,7 @@ abstract class RecordsPoster {
 
 	final protected void updateDocument(Object id, final FieldConsumer.ForDocument fields) {
 		if (id == null)
-			id = UUIDs.timeBased().toString();
+			id = HashUtils.newTimeBasedUUID().toString();
 		final Term termId = new Term(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id));
 		final FacetsConfig facetsConfig = fieldMap.getNewFacetsConfig(fields.fieldNameSet);
 		try {
