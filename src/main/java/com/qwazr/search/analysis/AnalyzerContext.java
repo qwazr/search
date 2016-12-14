@@ -18,7 +18,7 @@ package com.qwazr.search.analysis;
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.slf4j.Logger;

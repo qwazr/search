@@ -30,10 +30,6 @@
             <artifactId>qwazr-compiler</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-utils</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
             <version>${lucene.version}</version>
@@ -112,7 +108,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.4.3</version>
                 <executions>
                     <execution>
                         <phase>package</phase>

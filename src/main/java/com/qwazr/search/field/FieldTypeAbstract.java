@@ -21,7 +21,7 @@ import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.utils.SerializationUtils;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerException;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.BytesRef;

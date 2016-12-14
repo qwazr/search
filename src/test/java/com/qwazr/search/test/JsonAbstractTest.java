@@ -23,7 +23,7 @@ import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.json.JsonMapper;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerException;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.http.pool.PoolStats;
 import org.junit.Assert;

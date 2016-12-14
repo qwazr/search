@@ -16,7 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.classloader.ClassLoaderManager;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.lucene.analysis.util.ResourceLoader;
 

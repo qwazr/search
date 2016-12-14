@@ -17,7 +17,7 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.server.RemoteService;
+import com.qwazr.server.RemoteService;
 
 import java.net.URISyntaxException;
 

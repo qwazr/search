@@ -17,7 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.HashUtils;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerException;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.IndexWriter;

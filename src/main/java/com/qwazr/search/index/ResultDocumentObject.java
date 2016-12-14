@@ -17,7 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.utils.SerializationUtils;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerException;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.util.BytesRef;
 

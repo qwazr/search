@@ -20,9 +20,9 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpRequest;
-import com.qwazr.utils.json.AbstractStreamingOutput;
-import com.qwazr.utils.json.client.JsonClientAbstract;
-import com.qwazr.utils.server.RemoteService;
+import com.qwazr.server.AbstractStreamingOutput;
+import com.qwazr.server.client.JsonClientAbstract;
+import com.qwazr.server.RemoteService;
 
 import javax.ws.rs.core.Response;
 import java.io.InputStream;

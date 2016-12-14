@@ -17,9 +17,9 @@ package com.qwazr.search.index;
 
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.server.ServerBuilder;
-import com.qwazr.utils.server.ServerConfiguration;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerBuilder;
+import com.qwazr.server.configuration.ServerConfiguration;
+import com.qwazr.server.ServerException;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +46,7 @@ public class IndexManager implements Closeable {
 	static volatile IndexManager INSTANCE = null;
 
 	public synchronized static void load(final ServerBuilder builder, final ServerConfiguration configuration,
-			final ExecutorService executorService)
-			throws IOException {
+			final ExecutorService executorService) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		INSTANCE = new IndexManager(builder, configuration, executorService);

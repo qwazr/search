@@ -22,7 +22,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerException;
 import org.apache.lucene.index.*;
 import org.apache.lucene.replicator.*;
 import org.apache.lucene.search.IndexSearcher;

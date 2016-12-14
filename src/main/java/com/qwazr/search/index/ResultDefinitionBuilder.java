@@ -19,7 +19,7 @@ import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -50,8 +50,7 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
 	ResultDefinitionBuilder(final QueryDefinition queryDefinition, final TopDocs topDocs,
 			final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
-			final Map<String, Object> externalCollectorsResults,
-			final FieldMap fieldMap, final TimeTracker timeTracker,
+			final Map<String, Object> externalCollectorsResults, final FieldMap fieldMap, final TimeTracker timeTracker,
 			final ResultDocumentBuilder.BuilderFactory documentBuilderFactory, final FacetsBuilder facetsBuilder,
 			Integer totalHits) throws ReflectiveOperationException, IOException {
 
@@ -139,8 +138,8 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 
 	final private void buildStoredFields(final Set<String> returnedFields) throws IOException {
 		for (final ResultDocumentBuilder resultDocumentBuilder : resultDocumentBuilders)
-			resultDocumentBuilder
-					.setStoredFields(indexSearcher.doc(resultDocumentBuilder.scoreDoc.doc, returnedFields));
+			resultDocumentBuilder.setStoredFields(
+					indexSearcher.doc(resultDocumentBuilder.scoreDoc.doc, returnedFields));
 		if (timeTracker != null)
 			timeTracker.next("storedFields");
 	}

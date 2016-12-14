@@ -19,7 +19,7 @@ import com.google.common.io.Files;
 import com.qwazr.search.SearchServer;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSingleClient;
-import com.qwazr.utils.server.RemoteService;
+import com.qwazr.server.RemoteService;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;

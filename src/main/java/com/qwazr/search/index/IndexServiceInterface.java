@@ -17,10 +17,10 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.utils.json.AbstractStreamingOutput;
-import com.qwazr.utils.server.RemoteService;
-import com.qwazr.utils.server.ServiceInterface;
-import com.qwazr.utils.server.ServiceName;
+import com.qwazr.server.AbstractStreamingOutput;
+import com.qwazr.server.RemoteService;
+import com.qwazr.server.ServiceInterface;
+import com.qwazr.server.ServiceName;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
