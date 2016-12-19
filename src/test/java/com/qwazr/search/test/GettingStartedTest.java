@@ -47,7 +47,7 @@ public class GettingStartedTest {
 	@Test
 	public void test000startServer() throws Exception {
 		TestServer.startServer();
-		Assert.assertTrue(TestServer.serverStarted);
+		Assert.assertNotNull(TestServer.service);
 	}
 
 	@Test

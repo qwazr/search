@@ -29,10 +29,13 @@ import java.util.Objects;
 
 class FileResourceLoader implements ResourceLoader {
 
+	private final ClassLoaderManager classLoaderManager;
 	private final ResourceLoader delegate;
 	private final File directory;
 
-	FileResourceLoader(final ResourceLoader delegate, final File directory) {
+	FileResourceLoader(final ClassLoaderManager classLoaderManager, final ResourceLoader delegate,
+			final File directory) {
+		this.classLoaderManager = classLoaderManager;
 		this.delegate = delegate;
 		this.directory = directory;
 	}
@@ -61,7 +64,7 @@ class FileResourceLoader implements ResourceLoader {
 	@Override
 	public <T> Class<? extends T> findClass(final String cname, final Class<T> expectedType) {
 		try {
-			return ClassLoaderManager.findClass(cname);
+			return classLoaderManager.findClass(cname);
 		} catch (ClassNotFoundException e) {
 			throw new ServerException("Cannot find class " + cname, e);
 		}

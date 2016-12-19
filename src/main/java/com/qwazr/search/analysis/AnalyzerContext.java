@@ -37,8 +37,9 @@ public class AnalyzerContext {
 	public final Map<String, Analyzer> indexAnalyzerMap;
 	public final Map<String, Analyzer> queryAnalyzerMap;
 
-	public AnalyzerContext(final ResourceLoader resourceLoader, final Map<String, AnalyzerDefinition> analyzerMap,
-			final Map<String, FieldDefinition> fields, final boolean failOnException) throws ServerException {
+	public AnalyzerContext(final ClassLoaderManager classLoaderManager, final ResourceLoader resourceLoader,
+			final Map<String, AnalyzerDefinition> analyzerMap, final Map<String, FieldDefinition> fields,
+			final boolean failOnException) throws ServerException {
 
 		if (fields == null || fields.size() == 0) {
 			this.indexAnalyzerMap = Collections.emptyMap();
@@ -54,13 +55,13 @@ public class AnalyzerContext {
 
 				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ?
 						null :
-						findAnalyzer(resourceLoader, analyzerMap, fieldDef.analyzer);
+						findAnalyzer(classLoaderManager, resourceLoader, analyzerMap, fieldDef.analyzer);
 				if (indexAnalyzer != null)
 					indexAnalyzerMap.put(fieldName, indexAnalyzer);
 
 				final Analyzer queryAnalyzer = StringUtils.isEmpty(fieldDef.query_analyzer) ?
 						indexAnalyzer :
-						findAnalyzer(resourceLoader, analyzerMap, fieldDef.query_analyzer);
+						findAnalyzer(classLoaderManager, resourceLoader, analyzerMap, fieldDef.query_analyzer);
 				if (queryAnalyzer != null)
 					queryAnalyzerMap.put(fieldName, queryAnalyzer);
 
@@ -76,15 +77,15 @@ public class AnalyzerContext {
 
 	final static String[] analyzerClassPrefixes = { "", "org.apache.lucene.analysis." };
 
-	private static Analyzer findAnalyzer(final ResourceLoader resourceLoader,
-			final Map<String, AnalyzerDefinition> analyzerMap, final String analyzerName)
-			throws InterruptedException, ReflectiveOperationException, IOException {
+	private static Analyzer findAnalyzer(final ClassLoaderManager classLoaderManager,
+			final ResourceLoader resourceLoader, final Map<String, AnalyzerDefinition> analyzerMap,
+			final String analyzerName) throws InterruptedException, ReflectiveOperationException, IOException {
 		if (analyzerMap != null) {
 			AnalyzerDefinition analyzerDef = analyzerMap.get(analyzerName);
 			if (analyzerDef != null)
-				return new CustomAnalyzer(resourceLoader, analyzerDef);
+				return new CustomAnalyzer(classLoaderManager, resourceLoader, analyzerDef);
 		}
-		return ClassLoaderManager.getInstance().newInstance(analyzerName, analyzerClassPrefixes);
+		return classLoaderManager.newInstance(analyzerName, analyzerClassPrefixes);
 	}
 
 }

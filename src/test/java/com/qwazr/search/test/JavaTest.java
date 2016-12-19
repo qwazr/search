@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.test;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
@@ -31,7 +32,7 @@ import java.nio.file.Path;
 import java.util.concurrent.Executors;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({JavaTest.JavaLibraryTest.class, JavaTest.JavaLocalTest.class, JavaTest.JavaRemoteTest.class})
+@Suite.SuiteClasses({ JavaTest.JavaLibraryTest.class, JavaTest.JavaLocalTest.class, JavaTest.JavaRemoteTest.class })
 public class JavaTest {
 
 	public static class JavaLibraryTest extends JavaAbstractTest {
@@ -44,8 +45,11 @@ public class JavaTest {
 
 		@BeforeClass
 		public static void beforeClass() throws IOException {
+			final Path srcDirectory = Files.createTempDirectory("qwazr_src_test");
 			final Path rootDirectory = Files.createTempDirectory("qwazr_index_test");
-			indexManager = new IndexManager(rootDirectory, Executors.newCachedThreadPool());
+			ClassLoaderManager classLoaderManager =
+					new ClassLoaderManager(srcDirectory.toFile(), Thread.currentThread());
+			indexManager = new IndexManager(classLoaderManager, rootDirectory, Executors.newCachedThreadPool());
 		}
 
 		@Override
@@ -79,7 +83,7 @@ public class JavaTest {
 
 		@Override
 		protected IndexServiceInterface getIndexService() throws URISyntaxException {
-			return IndexServiceInterface.getClient();
+			return TestServer.service;
 		}
 	}
 

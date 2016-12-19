@@ -46,9 +46,7 @@ class IndexReplicator implements Replicator {
 				null :
 				master.host == null ?
 						service :
-						"localhost".equals(master.host) ?
-								IndexManager.INSTANCE.getService() :
-								new IndexSingleClient(master);
+						"localhost".equals(master.host) ? service : new IndexSingleClient(master);
 		this.inputStreams = new LinkedHashSet<>();
 		if (masterUuidFile.exists() && masterUuidFile.length() > 0) {
 			masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));

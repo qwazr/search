@@ -18,17 +18,27 @@ package com.qwazr.search.index;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.AbstractStreamingOutput;
-import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServiceInterface;
 import com.qwazr.server.ServiceName;
 
 import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
 
 @RolesAllowed(IndexManager.SERVICE_NAME_SEARCH)
 @Path("/" + IndexServiceInterface.PATH)
@@ -309,11 +319,5 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	ResultDefinition.WithMap searchQuery(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, QueryDefinition query, @QueryParam("delete") Boolean delete);
-
-	static IndexServiceInterface getClient(final RemoteService... remotes) throws URISyntaxException {
-		return remotes == null || remotes.length == 0 ?
-				IndexManager.INSTANCE.getService() :
-				remotes.length == 1 ? new IndexSingleClient(remotes[0]) : null;
-	}
 
 }

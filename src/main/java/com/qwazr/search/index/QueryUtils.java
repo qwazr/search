@@ -77,8 +77,8 @@ class QueryUtils {
 				&& ((DrillDownQuery) queryContext.queryDefinition.query).useDrillSideways && queryDef.facets != null;
 
 		final QueryCollectorManager queryCollectorManager =
-				new QueryCollectorManager(bNeedScore, sort, numHits, queryDef.facets, useDrillSideways,
-						queryDef.collectors);
+				new QueryCollectorManager(queryContext.classLoaderManager, bNeedScore, sort, numHits, queryDef.facets,
+						useDrillSideways, queryDef.collectors);
 		final QueryCollectors.Result queryCollectorResult;
 
 		final FacetsBuilder facetsBuilder;

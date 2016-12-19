@@ -18,33 +18,59 @@ package com.qwazr.search;
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.search.index.IndexManager;
+import com.qwazr.search.index.IndexServiceInterface;
+import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
-import com.qwazr.server.ServerBuilder;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class SearchServer extends GenericServer {
+public class SearchServer implements BaseServer {
 
-	private SearchServer(final ServerConfiguration serverConfiguration) throws IOException {
-		super(serverConfiguration);
+	private final GenericServer server;
+	private final IndexManager indexManager;
+
+	private SearchServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
+		final ExecutorService executorService = Executors.newCachedThreadPool();
+		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
+		builder.webService(WelcomeShutdownService.class);
+		final ClassLoaderManager classLoaderManager =
+				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread());
+		new ClusterManager(builder);
+		indexManager = new IndexManager(classLoaderManager, builder, executorService);
+		server = builder.build();
 	}
 
 	@Override
-	protected void build(final ExecutorService executorService, final ServerBuilder builder,
-			final ServerConfiguration configuration, final Collection<File> etcFiles) throws IOException {
-		builder.registerWebService(WelcomeShutdownService.class);
-		ClassLoaderManager.load(configuration.dataDirectory, null);
-		ClusterManager.load(builder, configuration);
-		IndexManager.load(builder, configuration, executorService);
+	public GenericServer getServer() {
+		return server;
 	}
 
-	public static void main(final String... args) throws Exception {
-		new SearchServer(new ServerConfiguration(args)).start(true);
+	private static volatile SearchServer INSTANCE;
+
+	public static SearchServer getInstance() {
+		return INSTANCE;
+	}
+
+	public IndexServiceInterface getService() {
+		return indexManager.getService();
+	}
+
+	public static synchronized void main(final String... args) throws Exception {
+		shutdown();
+		INSTANCE = new SearchServer(new ServerConfiguration(args));
+		INSTANCE.start();
+	}
+
+	public static synchronized void shutdown() {
+		if (INSTANCE == null)
+			return;
+		INSTANCE.stop();
+		INSTANCE = null;
 	}
 
 }

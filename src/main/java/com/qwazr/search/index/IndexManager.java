@@ -15,11 +15,11 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.classloader.ClassLoaderManager;
+import com.qwazr.server.GenericServer;
+import com.qwazr.server.ServerException;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.server.ServerBuilder;
-import com.qwazr.server.configuration.ServerConfiguration;
-import com.qwazr.server.ServerException;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,11 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -41,37 +45,34 @@ public class IndexManager implements Closeable {
 	public final static String SERVICE_NAME_SEARCH = "search";
 	public final static String INDEXES_DIRECTORY = "index";
 
-	private static final Logger logger = LoggerFactory.getLogger(IndexManager.class);
-
-	static volatile IndexManager INSTANCE = null;
-
-	public synchronized static void load(final ServerBuilder builder, final ServerConfiguration configuration,
-			final ExecutorService executorService) throws IOException {
-		if (INSTANCE != null)
-			throw new IOException("Already loaded");
-		INSTANCE = new IndexManager(builder, configuration, executorService);
-	}
+	private static final Logger LOGGER = LoggerFactory.getLogger(IndexManager.class);
 
 	private final ConcurrentHashMap<String, SchemaInstance> schemaMap;
 
 	private final File rootDirectory;
 
+	private final ClassLoaderManager classLoaderManager;
+
 	private final IndexServiceInterface service;
 
 	private final ExecutorService executorService;
 
-	private IndexManager(final ServerBuilder builder, final ServerConfiguration configuration,
+	public IndexManager(final ClassLoaderManager classLoaderManager, final GenericServer.Builder builder,
 			final ExecutorService executorService) throws IOException {
-		this(new File(configuration.dataDirectory, INDEXES_DIRECTORY), executorService);
-		builder.registerWebService(IndexServiceImpl.class);
-		builder.registerShutdownListener(server -> close());
+		this(classLoaderManager, new File(builder.getConfiguration().dataDirectory, INDEXES_DIRECTORY),
+				executorService);
+		builder.webService(IndexServiceImpl.class);
+		builder.shutdownListener(server -> close());
+		builder.contextAttribute(this);
 	}
 
-	public IndexManager(final Path workDirectory, final ExecutorService executorService) throws IOException {
-		this(workDirectory.toFile(), executorService);
+	public IndexManager(final ClassLoaderManager classLoaderManager, final Path workDirectory,
+			final ExecutorService executorService) throws IOException {
+		this(classLoaderManager, workDirectory.toFile(), executorService);
 	}
 
-	public IndexManager(final File workDirectory, final ExecutorService executorService) throws IOException {
+	public IndexManager(final ClassLoaderManager classLoaderManager, final File workDirectory,
+			final ExecutorService executorService) throws IOException {
 		this.rootDirectory = workDirectory;
 		this.executorService = executorService;
 		if (!rootDirectory.exists())
@@ -79,6 +80,7 @@ public class IndexManager implements Closeable {
 		if (!rootDirectory.isDirectory())
 			throw new IOException(
 					"This name is not valid. No directory exists for this location: " + rootDirectory.getName());
+		this.classLoaderManager = classLoaderManager;
 		service = new IndexServiceImpl(this);
 		schemaMap = new ConcurrentHashMap<>();
 		File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -86,9 +88,10 @@ public class IndexManager implements Closeable {
 			return;
 		for (File schemaDirectory : directories) {
 			try {
-				schemaMap.put(schemaDirectory.getName(), new SchemaInstance(service, schemaDirectory, executorService));
+				schemaMap.put(schemaDirectory.getName(),
+						new SchemaInstance(classLoaderManager, service, schemaDirectory, executorService));
 			} catch (ServerException | IOException | ReflectiveOperationException | URISyntaxException e) {
-				logger.error(e.getMessage(), e);
+				LOGGER.error(e.getMessage(), e);
 			}
 		}
 	}
@@ -109,7 +112,8 @@ public class IndexManager implements Closeable {
 		synchronized (schemaMap) {
 			SchemaInstance schemaInstance = schemaMap.get(schemaName);
 			if (schemaInstance == null) {
-				schemaInstance = new SchemaInstance(service, new File(rootDirectory, schemaName), executorService);
+				schemaInstance = new SchemaInstance(classLoaderManager, service, new File(rootDirectory, schemaName),
+						executorService);
 				schemaMap.put(schemaName, schemaInstance);
 			}
 			if (settings != null)

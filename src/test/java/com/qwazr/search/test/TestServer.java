@@ -27,20 +27,20 @@ import java.net.URISyntaxException;
 
 public class TestServer {
 
-	static boolean serverStarted = false;
+	static IndexServiceInterface service;
 
 	static final String BASE_URL = "http://localhost:9091";
 
 	public static synchronized void startServer() throws Exception {
-		if (serverStarted)
+		if (service != null)
 			return;
 		final File dataDir = Files.createTempDir();
 		FileUtils.copyDirectory(new File("src/test/data"), dataDir);
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
-		SearchServer.main(new String[] {});
-		serverStarted = true;
+		SearchServer.main();
+		service = SearchServer.getInstance().getService();
 	}
 
 	public static IndexSingleClient singleClient = null;

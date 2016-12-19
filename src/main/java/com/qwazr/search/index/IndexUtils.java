@@ -29,14 +29,14 @@ import java.io.IOException;
 class IndexUtils {
 
 	final static String[] similarityClassPrefixes =
-			{"", "com.qwazr.search.similarity.", "org.apache.lucene.search.similarities."};
+			{ "", "com.qwazr.search.similarity.", "org.apache.lucene.search.similarities." };
 
-	final static Similarity findSimilarity(final String similarityClassname)
-			throws ReflectiveOperationException, IOException {
-		return ClassLoaderManager.getInstance().newInstance(similarityClassname, similarityClassPrefixes);
+	final static Similarity findSimilarity(final ClassLoaderManager classLoaderManager,
+			final String similarityClassname) throws ReflectiveOperationException, IOException {
+		return classLoaderManager.newInstance(similarityClassname, similarityClassPrefixes);
 	}
 
-	final static SortedSetDocValuesReaderState getNewFacetsState(IndexReader indexReader) throws IOException {
+	final static SortedSetDocValuesReaderState getNewFacetsState(final IndexReader indexReader) throws IOException {
 		SortedSetDocValues dv = MultiDocValues.getSortedSetValues(indexReader, FieldDefinition.FACET_FIELD);
 		if (dv == null)
 			return null;

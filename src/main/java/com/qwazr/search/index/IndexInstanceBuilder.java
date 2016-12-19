@@ -164,9 +164,10 @@ class IndexInstanceBuilder {
 				new LinkedHashMap<>();
 
 		// Set the resource loader
-		fileResourceLoader = new FileResourceLoader(null, fileSet.resourcesDirectory);
+		fileResourceLoader = new FileResourceLoader(schema.getClassLoaderManager(), null, fileSet.resourcesDirectory);
 
-		final AnalyzerContext context = new AnalyzerContext(fileResourceLoader, analyzerMap, fieldMap, false);
+		final AnalyzerContext context =
+				new AnalyzerContext(schema.getClassLoaderManager(), fileResourceLoader, analyzerMap, fieldMap, false);
 		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
 
@@ -180,7 +181,8 @@ class IndexInstanceBuilder {
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 		if (settings != null) {
 			if (settings.similarity_class != null && !settings.similarity_class.isEmpty())
-				indexWriterConfig.setSimilarity(IndexUtils.findSimilarity(settings.similarity_class));
+				indexWriterConfig.setSimilarity(
+						IndexUtils.findSimilarity(schema.getClassLoaderManager(), settings.similarity_class));
 			if (settings.ram_buffer_size != null)
 				indexWriterConfig.setRAMBufferSizeMB(settings.ram_buffer_size);
 		}
@@ -241,7 +243,7 @@ class IndexInstanceBuilder {
 				buildSlave();
 			else
 				buildMaster();
-			return new IndexInstance(this);
+			return new IndexInstance(schema.getClassLoaderManager(), this);
 		} catch (IOException | ReflectiveOperationException | URISyntaxException e) {
 			abort();
 			throw e;

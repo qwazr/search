@@ -109,7 +109,7 @@ public class MultiFieldQuery extends AbstractQuery {
 		final Analyzer tokenAnalyzer = tokenizerAnalyzer != null ?
 				tokenizerAnalyzer :
 				tokenizerDefinition != null ?
-						new CustomAnalyzer(queryContext.resourceLoader,
+						new CustomAnalyzer(queryContext.classLoaderManager, queryContext.resourceLoader,
 								new AnalyzerDefinition(null, null, tokenizerDefinition, null)) :
 						DEFAULT_TOKEN_ANALYZER;
 

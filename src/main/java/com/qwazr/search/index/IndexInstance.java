@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.CustomAnalyzer;
@@ -22,16 +23,22 @@ import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
+import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
-import com.qwazr.server.ServerException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.IndexCommit;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.LiveIndexWriterConfig;
+import org.apache.lucene.index.MultiFields;
+import org.apache.lucene.index.SnapshotDeletionPolicy;
+import org.apache.lucene.index.Terms;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.replicator.IndexRevision;
@@ -47,9 +54,20 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.apache.lucene.store.Directory;
 
 import javax.ws.rs.core.Response;
-import java.io.*;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
@@ -70,6 +88,7 @@ final public class IndexInstance implements Closeable {
 	private final ExecutorService executorService;
 	private final IndexSettingsDefinition settings;
 	private final FileResourceLoader fileResourceLoader;
+	private final ClassLoaderManager classLoaderManager;
 
 	private final LocalReplicator replicator;
 	private final ReplicationClient replicationClient;
@@ -84,7 +103,8 @@ final public class IndexInstance implements Closeable {
 
 	private volatile Pair<IndexReader, SortedSetDocValuesReaderState> facetsReaderStateCache;
 
-	IndexInstance(final IndexInstanceBuilder builder) {
+	IndexInstance(final ClassLoaderManager classLoaderManager, final IndexInstanceBuilder builder) {
+		this.classLoaderManager = classLoaderManager;
 		this.schema = builder.schema;
 		this.fileSet = builder.fileSet;
 		this.indexName = builder.fileSet.indexDirectory.getName();
@@ -165,26 +185,28 @@ final public class IndexInstance implements Closeable {
 
 	private void refreshFieldsAnalyzers(final LinkedHashMap<String, AnalyzerDefinition> analyzers,
 			final LinkedHashMap<String, FieldDefinition> fields) throws IOException {
-		final AnalyzerContext analyzerContext = new AnalyzerContext(fileResourceLoader, analyzers, fields, true);
+		final AnalyzerContext analyzerContext =
+				new AnalyzerContext(classLoaderManager, fileResourceLoader, analyzers, fields, true);
 		indexAnalyzer.update(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext.queryAnalyzerMap);
 	}
 
-	synchronized void setFields(LinkedHashMap<String, FieldDefinition> fields) throws ServerException, IOException {
+	synchronized void setFields(final LinkedHashMap<String, FieldDefinition> fields)
+			throws ServerException, IOException {
 		JsonMapper.MAPPER.writeValue(fileSet.fieldMapFile, fields);
 		fieldMap = new FieldMap(fields);
 		refreshFieldsAnalyzers(analyzerMap, fields);
 		schema.mayBeRefresh(true);
 	}
 
-	void setField(String field_name, FieldDefinition field) throws IOException, ServerException {
+	void setField(final String field_name, final FieldDefinition field) throws IOException, ServerException {
 		final LinkedHashMap<String, FieldDefinition> fields =
 				(LinkedHashMap<String, FieldDefinition>) fieldMap.getFieldDefinitionMap().clone();
 		fields.put(field_name, field);
 		setFields(fields);
 	}
 
-	void deleteField(String field_name) throws IOException, ServerException {
+	void deleteField(final String field_name) throws IOException, ServerException {
 		final LinkedHashMap<String, FieldDefinition> fields =
 				(LinkedHashMap<String, FieldDefinition>) fieldMap.getFieldDefinitionMap().clone();
 		if (fields.remove(field_name) == null)
@@ -205,7 +227,7 @@ final public class IndexInstance implements Closeable {
 		schema.mayBeRefresh(true);
 	}
 
-	void setAnalyzer(String analyzerName, AnalyzerDefinition analyzer) throws IOException, ServerException {
+	void setAnalyzer(final String analyzerName, final AnalyzerDefinition analyzer) throws IOException, ServerException {
 		final LinkedHashMap<String, AnalyzerDefinition> analyzers =
 				(LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone();
 		analyzers.put(analyzerName, analyzer);
@@ -218,13 +240,13 @@ final public class IndexInstance implements Closeable {
 		if (analyzerDefinition == null)
 			throw new ServerException(Response.Status.NOT_FOUND,
 					"Analyzer not found: " + analyzerName + " - Index: " + indexName);
-		try (final Analyzer analyzer = new CustomAnalyzer(fileResourceLoader, analyzerDefinition)) {
+		try (final Analyzer analyzer = new CustomAnalyzer(classLoaderManager, fileResourceLoader, analyzerDefinition)) {
 			return TermDefinition.buildTermList(analyzer, StringUtils.EMPTY, inputText);
 		}
 	}
 
-	void deleteAnalyzer(String analyzerName) throws IOException, ServerException {
-		LinkedHashMap<String, AnalyzerDefinition> analyzers =
+	void deleteAnalyzer(final String analyzerName) throws IOException, ServerException {
+		final LinkedHashMap<String, AnalyzerDefinition> analyzers =
 				(LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone();
 		if (analyzers.remove(analyzerName) == null)
 			throw new ServerException(Response.Status.NOT_FOUND,
@@ -232,15 +254,15 @@ final public class IndexInstance implements Closeable {
 		setAnalyzers(analyzers);
 	}
 
-	Analyzer getIndexAnalyzer(String field) throws ServerException, IOException {
+	Analyzer getIndexAnalyzer(final String field) throws ServerException, IOException {
 		return indexAnalyzer.getWrappedAnalyzer(field);
 	}
 
-	Analyzer getQueryAnalyzer(String field) throws ServerException, IOException {
+	Analyzer getQueryAnalyzer(final String field) throws ServerException, IOException {
 		return queryAnalyzer.getWrappedAnalyzer(field);
 	}
 
-	public Query createJoinQuery(JoinQuery joinQuery)
+	public Query createJoinQuery(final JoinQuery joinQuery)
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
@@ -736,7 +758,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final FileResourceLoader newResourceLoader(final FileResourceLoader resourceLoader) {
-		return new FileResourceLoader(resourceLoader, fileSet.resourcesDirectory);
+		return new FileResourceLoader(classLoaderManager, resourceLoader, fileSet.resourcesDirectory);
 	}
 
 }

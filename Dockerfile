@@ -2,7 +2,7 @@ FROM openjdk:8-jdk-alpine
 
 MAINTAINER Emmanuel Keller
 
-ADD target/qwazr-search-1.1-SNAPSHOT-exec.jar /usr/share/qwazr/qwazr-search.jar
+ADD target/qwazr-search-1.1.0-SNAPSHOT-exec.jar /usr/share/qwazr/qwazr-search.jar
 
 VOLUME /var/lib/qwazr
 

@@ -19,6 +19,7 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.TermQuery;
+import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
@@ -29,22 +30,35 @@ import org.apache.lucene.replicator.SessionToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
 
-final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterface {
+final class IndexServiceImpl extends AbstractServiceImpl implements IndexServiceInterface, AnnotatedServiceInterface {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IndexServiceImpl.class);
 
 	private static final String QWAZR_INDEX_ROOT_USER;
 
-	private final IndexManager indexManager;
+	private IndexManager indexManager;
 
 	static {
 		String v = System.getProperty("QWAZR_INDEX_ROOT_USER");
@@ -64,11 +78,15 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	private HttpServletResponse response;
 
 	public IndexServiceImpl() {
-		indexManager = IndexManager.INSTANCE;
 	}
 
 	IndexServiceImpl(final IndexManager indexManager) {
 		this.indexManager = indexManager;
+	}
+
+	@PostConstruct
+	public void init() {
+		indexManager = getContextAttribute(IndexManager.class);
 	}
 
 	/**

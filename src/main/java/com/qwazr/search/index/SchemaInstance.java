@@ -15,16 +15,17 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.server.ServerException;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
-import com.qwazr.server.ServerException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
@@ -41,7 +42,13 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
@@ -54,6 +61,7 @@ public class SchemaInstance implements Closeable {
 
 	private final ConcurrentHashMap<String, IndexInstance> indexMap;
 
+	private final ClassLoaderManager classLoaderManager;
 	private final IndexServiceInterface service;
 	private final ExecutorService executorService;
 	private final File schemaDirectory;
@@ -103,7 +111,8 @@ public class SchemaInstance implements Closeable {
 			multiReader = new MultiReader(indexReaders);
 			indexSearcher = new IndexSearcher(multiReader);
 			final AnalyzerContext analyzerContext =
-					new AnalyzerContext(resourceLoader, analyzerMap, fieldDefinitionMap, failOnException);
+					new AnalyzerContext(classLoaderManager, resourceLoader, analyzerMap, fieldDefinitionMap,
+							failOnException);
 			indexAnalyzer = new UpdatableAnalyzer(analyzerContext.indexAnalyzerMap);
 			queryAnalyzer = new UpdatableAnalyzer(analyzerContext.queryAnalyzerMap);
 		}
@@ -157,10 +166,11 @@ public class SchemaInstance implements Closeable {
 
 	}
 
-	SchemaInstance(final IndexServiceInterface service, final File schemaDirectory,
-			final ExecutorService executorService)
+	SchemaInstance(final ClassLoaderManager classLoaderManager, final IndexServiceInterface service,
+			final File schemaDirectory, final ExecutorService executorService)
 			throws IOException, ReflectiveOperationException, URISyntaxException {
 		this.executorService = executorService;
+		this.classLoaderManager = classLoaderManager;
 		this.service = service;
 		this.schemaDirectory = schemaDirectory;
 		if (!schemaDirectory.exists())
@@ -184,8 +194,12 @@ public class SchemaInstance implements Closeable {
 		mayBeRefresh(false);
 	}
 
-	final public IndexServiceInterface getService() {
+	final IndexServiceInterface getService() {
 		return service;
+	}
+
+	final ClassLoaderManager getClassLoaderManager() {
+		return classLoaderManager;
 	}
 
 	@Override

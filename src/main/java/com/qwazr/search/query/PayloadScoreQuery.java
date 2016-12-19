@@ -71,18 +71,18 @@ public class PayloadScoreQuery extends AbstractQuery {
 		this.wrapped_query = wrappedQuery;
 		if (type != null) {
 			switch (type) {
-				case AVERAGE:
-					payloadFunction = new AveragePayloadFunction();
-					break;
-				case MAX:
-					payloadFunction = new MaxPayloadFunction();
-					break;
-				case MIN:
-					payloadFunction = new MinPayloadFunction();
-					break;
-				default:
-					payloadFunction = null;
-					break;
+			case AVERAGE:
+				payloadFunction = new AveragePayloadFunction();
+				break;
+			case MAX:
+				payloadFunction = new MaxPayloadFunction();
+				break;
+			case MIN:
+				payloadFunction = new MinPayloadFunction();
+				break;
+			default:
+				payloadFunction = null;
+				break;
 			}
 			payload_function = null;
 		} else {
@@ -92,11 +92,11 @@ public class PayloadScoreQuery extends AbstractQuery {
 		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
 	}
 
-	final static String[] payloadFunctionClassPrefixes = {"", "org.apache.lucene.queries.payloads."};
+	final static String[] payloadFunctionClassPrefixes = { "", "org.apache.lucene.queries.payloads." };
 
-	private static PayloadFunction getPayloadFunction(final String payloadFunction)
-			throws ReflectiveOperationException, IOException {
-		return ClassLoaderManager.getInstance().newInstance(payloadFunction, payloadFunctionClassPrefixes);
+	private static PayloadFunction getPayloadFunction(final ClassLoaderManager classLoaderManager,
+			final String payloadFunction) throws ReflectiveOperationException, IOException {
+		return classLoaderManager.newInstance(payloadFunction, payloadFunctionClassPrefixes);
 	}
 
 	@Override
@@ -105,7 +105,7 @@ public class PayloadScoreQuery extends AbstractQuery {
 		Objects.requireNonNull(wrapped_query, "The wrapped span query is missing");
 		if (payloadFunction == null) {
 			Objects.requireNonNull(payload_function, "The payload function is missing");
-			payloadFunction = getPayloadFunction(payload_function);
+			payloadFunction = getPayloadFunction(queryContext.classLoaderManager, payload_function);
 		}
 		Objects.requireNonNull(payloadFunction, "The payload function is missing");
 		return new org.apache.lucene.queries.payloads.PayloadScoreQuery(wrapped_query.getQuery(queryContext),

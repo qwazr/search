@@ -15,6 +15,7 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.CollectorManager;
 import org.apache.lucene.search.Sort;
@@ -26,6 +27,7 @@ import java.util.LinkedHashMap;
 
 class QueryCollectorManager implements CollectorManager<Collector, QueryCollectors.Result> {
 
+	final ClassLoaderManager classLoaderManager;
 	final boolean bNeedScore;
 	final Sort sort;
 	final int numHits;
@@ -35,9 +37,10 @@ class QueryCollectorManager implements CollectorManager<Collector, QueryCollecto
 
 	private final Collection<QueryCollectors> queryCollectorsList;
 
-	QueryCollectorManager(final boolean bNeedScore, final Sort sort, final int numHits,
-			final LinkedHashMap<String, FacetDefinition> facets, final boolean useDrillSideways,
+	QueryCollectorManager(final ClassLoaderManager classLoaderManager, final boolean bNeedScore, final Sort sort,
+			final int numHits, final LinkedHashMap<String, FacetDefinition> facets, final boolean useDrillSideways,
 			final LinkedHashMap<String, QueryDefinition.CollectorDefinition> extCollectors) {
+		this.classLoaderManager = classLoaderManager;
 		this.bNeedScore = bNeedScore;
 		this.sort = sort;
 		this.numHits = numHits;
@@ -51,7 +54,7 @@ class QueryCollectorManager implements CollectorManager<Collector, QueryCollecto
 	final public Collector newCollector() throws IOException {
 		final QueryCollectors queryCollectors;
 		try {
-			queryCollectors = new QueryCollectors(this);
+			queryCollectors = new QueryCollectors(classLoaderManager, this);
 		} catch (ReflectiveOperationException e) {
 			throw new IOException(e);
 		}

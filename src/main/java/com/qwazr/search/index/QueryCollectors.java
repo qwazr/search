@@ -29,6 +29,8 @@ import java.util.*;
 
 class QueryCollectors {
 
+	private final ClassLoaderManager classLoaderManager;
+
 	private final List<Collector> collectors;
 
 	private final FacetsCollector facetsCollector;
@@ -41,7 +43,9 @@ class QueryCollectors {
 
 	final Collector finalCollector;
 
-	QueryCollectors(final QueryCollectorManager manager) throws IOException, ReflectiveOperationException {
+	QueryCollectors(final ClassLoaderManager classLoaderManager, final QueryCollectorManager manager)
+			throws IOException, ReflectiveOperationException {
+		this.classLoaderManager = classLoaderManager;
 		collectors = new ArrayList<>();
 		facetsCollector = manager.useDrillSideways ? null : buildFacetsCollector(manager.facets);
 		totalHitCountCollector = buildTotalHitsCollector(manager.numHits);
@@ -81,7 +85,7 @@ class QueryCollectors {
 			return null;
 		final List<BaseCollector> externalCollectors = new ArrayList<>();
 		FunctionUtils.forEach(collectors, (name, collector) -> {
-			final Class<? extends Collector> collectorClass = ClassLoaderManager.findClass(collector.classname);
+			final Class<? extends Collector> collectorClass = classLoaderManager.findClass(collector.classname);
 			Constructor<?>[] constructors = collectorClass.getConstructors();
 			if (constructors.length == 0)
 				throw new ReflectiveOperationException("No constructor for class: " + collectorClass);

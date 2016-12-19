@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
@@ -33,6 +34,7 @@ final public class QueryContext {
 	final public QueryDefinition queryDefinition;
 	final public String queryString;
 	final public ResourceLoader resourceLoader;
+	final public ClassLoaderManager classLoaderManager;
 	final public SchemaInstance schemaInstance;
 
 	QueryContext(final SchemaInstance schemaInstance, final ResourceLoader resourceLoader,
@@ -40,6 +42,7 @@ final public class QueryContext {
 			final UpdatableAnalyzer indexAnalyzer, final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
 			final SortedSetDocValuesReaderState state, final QueryDefinition queryDefinition) {
 		this.schemaInstance = schemaInstance;
+		this.classLoaderManager = schemaInstance.getClassLoaderManager();
 		this.resourceLoader = resourceLoader;
 		this.indexSearcher = indexSearcher;
 		this.executorService = executorService;
