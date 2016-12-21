@@ -24,6 +24,7 @@ import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.Response.Status;
 import java.io.Closeable;
 import java.io.File;
@@ -94,6 +95,10 @@ public class IndexManager implements Closeable {
 				LOGGER.error(e.getMessage(), e);
 			}
 		}
+	}
+
+	static public IndexManager getInstance(final ServletContext context) {
+		return GenericServer.getContextAttribute(context, IndexManager.class);
 	}
 
 	final public IndexServiceInterface getService() {
