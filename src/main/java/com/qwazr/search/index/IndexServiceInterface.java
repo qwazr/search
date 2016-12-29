@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.AbstractStreamingOutput;
@@ -33,6 +34,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -319,5 +321,33 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	ResultDefinition.WithMap searchQuery(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, QueryDefinition query, @QueryParam("delete") Boolean delete);
+
+	TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
+	};
+
+	TypeReference<SortedMap<String, SortedMap<String, BackupStatus>>> MapStringMapStringBackupStatusTypeRef =
+			new TypeReference<SortedMap<String, SortedMap<String, BackupStatus>>>() {
+			};
+
+	TypeReference<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>
+			MapStringMapStringMapStringBackupStatusTypeRef =
+			new TypeReference<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>() {
+			};
+
+	TypeReference<LinkedHashMap<String, IndexInstance.ResourceInfo>> MapStringResourceInfoTypeRef =
+			new TypeReference<LinkedHashMap<String, IndexInstance.ResourceInfo>>() {
+			};
+
+	TypeReference<ArrayList<Map<String, Object>>> ListMapStringObjectTypeRef =
+			new TypeReference<ArrayList<Map<String, Object>>>() {
+			};
+
+	TypeReference<LinkedHashMap<String, Object>> MapStringObjectTypeRef =
+			new TypeReference<LinkedHashMap<String, Object>>() {
+			};
+
+	TypeReference<Collection<Map<String, Object>>> CollectionMapStringObjectTypeRef =
+			new TypeReference<Collection<Map<String, Object>>>() {
+			};
 
 }

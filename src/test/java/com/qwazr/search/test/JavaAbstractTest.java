@@ -237,7 +237,7 @@ public abstract class JavaAbstractTest {
 	private ResultDefinition.WithObject<AnnotatedIndex> checkQueryResult(QueryBuilder builder, Long expectedHits)
 			throws URISyntaxException, IOException {
 		final AnnotatedIndexService service = getMaster();
-		builder.addReturned_field(RETURNED_FIELDS);
+		builder.returnedFields(RETURNED_FIELDS);
 		ResultDefinition.WithObject<AnnotatedIndex> result = service.searchQuery(builder.build());
 		Assert.assertNotNull(result);
 		if (expectedHits != null)
@@ -247,47 +247,41 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test300SimpleTermQuery() throws URISyntaxException, IOException {
-		QueryBuilder builder = new QueryBuilder();
-		builder.query = new TermQuery(FieldDefinition.ID_FIELD, "1");
+		QueryBuilder builder = new QueryBuilder(new TermQuery(FieldDefinition.ID_FIELD, "1"));
 		checkQueryResult(builder, 1L);
 	}
 
 	@Test
 	public void test301MultiTermQuery() throws URISyntaxException, IOException {
-		QueryBuilder builder = new QueryBuilder();
-		builder.query = new TermsQuery(FieldDefinition.ID_FIELD, "1", "2");
+		QueryBuilder builder = new QueryBuilder(new TermsQuery(FieldDefinition.ID_FIELD, "1", "2"));
 		checkQueryResult(builder, 2L);
 	}
 
 	@Test
 	public void test302WildcardQuery() throws URISyntaxException, IOException {
-		QueryBuilder builder = new QueryBuilder();
-		builder.query = new WildcardQuery("title", "art*");
+		QueryBuilder builder = new QueryBuilder(new WildcardQuery("title", "art*"));
 		checkQueryResult(builder, 2L);
-		builder.query = new WildcardQuery("title", "*econ?");
+		builder.query(new WildcardQuery("title", "*econ?"));
 		checkQueryResult(builder, 1L);
 	}
 
 	@Test
 	public void test320PointExactQuery() throws URISyntaxException, IOException {
-		QueryBuilder builder = new QueryBuilder();
-		builder.query = new LongExactQuery(AnnotatedIndex.QUANTITY_FIELD, 10);
+		QueryBuilder builder = new QueryBuilder(new LongExactQuery(AnnotatedIndex.QUANTITY_FIELD, 10));
 		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("1", result.documents.get(0).record.id);
 	}
 
 	@Test
 	public void test320PointSetQuery() throws URISyntaxException, IOException {
-		QueryBuilder builder = new QueryBuilder();
-		builder.query = new LongSetQuery(AnnotatedIndex.QUANTITY_FIELD, 20, 25);
+		QueryBuilder builder = new QueryBuilder(new LongSetQuery(AnnotatedIndex.QUANTITY_FIELD, 20, 25));
 		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("2", result.documents.get(0).record.id);
 	}
 
 	@Test
 	public void test320PointRangeQuery() throws URISyntaxException, IOException {
-		QueryBuilder builder = new QueryBuilder();
-		builder.query = new LongRangeQuery(AnnotatedIndex.QUANTITY_FIELD, 15L, 25L);
+		QueryBuilder builder = new QueryBuilder(new LongRangeQuery(AnnotatedIndex.QUANTITY_FIELD, 15L, 25L));
 		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("2", result.documents.get(0).record.id);
 	}
@@ -323,9 +317,8 @@ public abstract class JavaAbstractTest {
 
 	private final void testReturnedFieldQuery(String... returnedFields) throws URISyntaxException, IOException {
 		final AnnotatedIndexService service = getMaster();
-		QueryBuilder builder = new QueryBuilder();
-		builder.query = new TermQuery(FieldDefinition.ID_FIELD, record2.id.toString());
-		builder.addReturned_field(returnedFields);
+		QueryBuilder builder = new QueryBuilder(new TermQuery(FieldDefinition.ID_FIELD, record2.id.toString()));
+		builder.returnedField(returnedFields);
 		ResultDefinition.WithObject<AnnotatedIndex> result = service.searchQuery(builder.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(new Long(1), result.total_hits);
@@ -379,73 +372,72 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test500sortByTitleDescAndScore() throws URISyntaxException, IOException {
-		final QueryBuilder builder = new QueryBuilder();
-		builder.setQuery(new MatchAllDocsQuery())
-				.addSort("titleSort", QueryDefinition.SortEnum.descending_missing_first)
-				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
-				.addReturned_field("title")
-				.setStart(0)
-				.setRows(100);
+		final QueryBuilder builder = new QueryBuilder(new MatchAllDocsQuery());
+		builder.sort("titleSort", QueryDefinition.SortEnum.descending_missing_first)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.returnedField("title")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.title.compareTo(doc2.title) > 0);
 	}
 
 	@Test
 	public void test500sortByTitleAscAndScore() throws URISyntaxException, IOException {
 		final QueryBuilder builder = new QueryBuilder();
-		builder.setQuery(new MatchAllDocsQuery())
-				.addSort("titleSort", QueryDefinition.SortEnum.ascending_missing_last)
-				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
-				.addReturned_field("title")
-				.setStart(0)
-				.setRows(100);
+		builder.query(new MatchAllDocsQuery())
+				.sort("titleSort", QueryDefinition.SortEnum.ascending_missing_last)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.returnedField("title")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.title.compareTo(doc2.title) < 0);
 	}
 
 	@Test
 	public void test500sortByLongAsc() throws URISyntaxException, IOException {
 		final QueryBuilder builder = new QueryBuilder();
-		builder.setQuery(new MatchAllDocsQuery())
-				.addSort("dvQty", QueryDefinition.SortEnum.ascending_missing_last)
-				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
-				.addReturned_field("dvQty")
-				.setStart(0)
-				.setRows(100);
+		builder.query(new MatchAllDocsQuery())
+				.sort("dvQty", QueryDefinition.SortEnum.ascending_missing_last)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
+				.returnedField("dvQty")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.dvQty.compareTo(doc2.dvQty) < 0);
 	}
 
 	@Test
 	public void test500sortByLongDesc() throws URISyntaxException, IOException {
 		final QueryBuilder builder = new QueryBuilder();
-		builder.setQuery(new MatchAllDocsQuery())
-				.addSort("dvQty", QueryDefinition.SortEnum.descending_missing_last)
-				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
-				.addReturned_field("dvQty")
-				.setStart(0)
-				.setRows(100);
+		builder.query(new MatchAllDocsQuery())
+				.sort("dvQty", QueryDefinition.SortEnum.descending_missing_last)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.returnedField("dvQty")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.dvQty.compareTo(doc2.dvQty) > 0);
 	}
 
 	@Test
 	public void test500sortByDoubleAsc() throws URISyntaxException, IOException {
 		final QueryBuilder builder = new QueryBuilder();
-		builder.setQuery(new MatchAllDocsQuery())
-				.addSort("price", QueryDefinition.SortEnum.ascending_missing_last)
-				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
-				.addReturned_field("price")
-				.setStart(0)
-				.setRows(100);
+		builder.query(new MatchAllDocsQuery())
+				.sort("price", QueryDefinition.SortEnum.ascending_missing_last)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
+				.returnedField("price")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.price.compareTo(doc2.price) < 0);
 	}
 
 	@Test
 	public void test500sortByDoubleDesc() throws URISyntaxException, IOException {
 		final QueryBuilder builder = new QueryBuilder();
-		builder.setQuery(new MatchAllDocsQuery())
-				.addSort("price", QueryDefinition.SortEnum.descending_missing_last)
-				.addSort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
-				.addReturned_field("price")
-				.setStart(0)
-				.setRows(100);
+		builder.query(new MatchAllDocsQuery())
+				.sort("price", QueryDefinition.SortEnum.descending_missing_last)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.returnedField("price")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.price.compareTo(doc2.price) > 0);
 	}
 
@@ -468,7 +460,7 @@ public abstract class JavaAbstractTest {
 			throws URISyntaxException, IOException {
 		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
 		final QueryBuilder builder = new QueryBuilder();
-		builder.setQuery(query).setQuery_debug(true);
+		builder.query(query).queryDebug(true);
 		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
 		Assert.assertEquals(check, result.getQuery());
 		Assert.assertEquals(size, result.documents.size());
@@ -543,7 +535,7 @@ public abstract class JavaAbstractTest {
 	public void test900join() throws URISyntaxException, IOException {
 		final AnnotatedIndexService master = getMaster();
 		final QueryBuilder builder = new QueryBuilder();
-		builder.setQuery(new JoinQuery(AnnotatedIndex.INDEX_NAME_SLAVE, "docValuesCategory", "storedCategory", true,
+		builder.query(new JoinQuery(AnnotatedIndex.INDEX_NAME_SLAVE, "docValuesCategory", "storedCategory", true,
 				ScoreMode.Max, new MatchAllDocsQuery()));
 		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
 		Assert.assertNotNull(result);
@@ -573,11 +565,11 @@ public abstract class JavaAbstractTest {
 	public void test910collector() throws URISyntaxException, IOException {
 		final AnnotatedIndexService master = getMaster();
 		final QueryBuilder builder = new QueryBuilder();
-		builder.addCollector("minPrice", MinNumericCollector.MinDouble.class, "price");
-		builder.addCollector("maxPrice", MaxNumericCollector.MaxDouble.class, "price");
-		builder.addCollector("minQuantity", MinNumericCollector.MinLong.class, AnnotatedIndex.DV_QUANTITY_FIELD);
-		builder.addCollector("maxQuantity", MaxNumericCollector.MaxLong.class, AnnotatedIndex.DV_QUANTITY_FIELD);
-		builder.setQuery(new MatchAllDocsQuery());
+		builder.collector("minPrice", MinNumericCollector.MinDouble.class, "price");
+		builder.collector("maxPrice", MaxNumericCollector.MaxDouble.class, "price");
+		builder.collector("minQuantity", MinNumericCollector.MinLong.class, AnnotatedIndex.DV_QUANTITY_FIELD);
+		builder.collector("maxQuantity", MaxNumericCollector.MaxLong.class, AnnotatedIndex.DV_QUANTITY_FIELD);
+		builder.query(new MatchAllDocsQuery());
 		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
 		checkCollector(result, "minPrice", 1.11d);
 		checkCollector(result, "maxPrice", 2.22d);

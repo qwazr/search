@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
-import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -92,10 +91,10 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	QueryDefinition(final QueryBuilder builder) {
 		super(builder);
-		query_string = builder.query_string;
-		escape_query = builder.escape_query;
-		escaped_chars = builder.escaped_chars;
-		returned_fields = builder.returned_fields;
+		query_string = builder.queryString;
+		escape_query = builder.escapeQuery;
+		escaped_chars = builder.escapedChars;
+		returned_fields = builder.returnedFields;
 		facets = builder.facets;
 		sorts = builder.sorts;
 		collectors = builder.collectors;

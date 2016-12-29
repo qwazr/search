@@ -36,11 +36,11 @@ public class BaseQueryDefinition {
 		query_debug = null;
 	}
 
-	public BaseQueryDefinition(QueryBuilder builder) {
+	public BaseQueryDefinition(final QueryBuilder builder) {
 		start = builder.start;
 		rows = builder.rows;
-		returned_fields = builder.returned_fields;
-		query_debug = builder.query_debug;
+		returned_fields = builder.returnedFields;
+		query_debug = builder.queryDebug;
 	}
 
 	@JsonIgnore

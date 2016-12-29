@@ -52,27 +52,26 @@ public class GettingStartedTest {
 
 	@Test
 	public void test0100CreateSchema() throws URISyntaxException {
-		IndexServiceInterface client = TestServer.getRemoteClient();
-		Assert.assertNotNull(client.createUpdateSchema(MY_SCHEMA));
+		Assert.assertNotNull(TestServer.remote.createUpdateSchema(MY_SCHEMA));
 	}
 
 	@Test
 	public void test0110CreateIndex() throws URISyntaxException, IOException {
-		IndexServiceInterface client = TestServer.getRemoteClient();
+		IndexServiceInterface client = TestServer.remote;
 		IndexStatus indexStatus = client.createUpdateIndex(MY_SCHEMA, MY_INDEX, null);
 		Assert.assertNotNull(indexStatus);
 	}
 
 	@Test
 	public void test130SetFields() throws URISyntaxException, IOException {
-		IndexServiceInterface client = TestServer.getRemoteClient();
+		IndexServiceInterface client = TestServer.remote;
 		final LinkedHashMap<String, FieldDefinition> fields = client.setFields(MY_SCHEMA, MY_INDEX, MY_FIELDS_JSON);
 		Assert.assertEquals(fields.size(), MY_FIELDS_JSON.size());
 	}
 
 	@Test
 	public void test200UpdateDocs() throws URISyntaxException, IOException {
-		IndexServiceInterface client = TestServer.getRemoteClient();
+		IndexServiceInterface client = TestServer.remote;
 		final Integer result = client.postMappedDocuments(MY_SCHEMA, MY_INDEX, MY_DOCS_JSON);
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Integer.valueOf(MY_DOCS_JSON.size()), result);
@@ -80,7 +79,7 @@ public class GettingStartedTest {
 
 	@Test
 	public void test300Query() throws URISyntaxException, IOException {
-		IndexServiceInterface client = TestServer.getRemoteClient();
+		IndexServiceInterface client = TestServer.remote;
 		final ResultDefinition.WithMap result = client.searchQuery(MY_SCHEMA, MY_INDEX, MY_SEARCH_JSON, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);

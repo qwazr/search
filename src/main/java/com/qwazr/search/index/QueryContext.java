@@ -37,12 +37,12 @@ final public class QueryContext {
 	final public ClassLoaderManager classLoaderManager;
 	final public SchemaInstance schemaInstance;
 
-	QueryContext(final SchemaInstance schemaInstance, final ResourceLoader resourceLoader,
+	public QueryContext(final SchemaInstance schemaInstance, final ResourceLoader resourceLoader,
 			final IndexSearcher indexSearcher, final ExecutorService executorService,
 			final UpdatableAnalyzer indexAnalyzer, final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
 			final SortedSetDocValuesReaderState state, final QueryDefinition queryDefinition) {
 		this.schemaInstance = schemaInstance;
-		this.classLoaderManager = schemaInstance.getClassLoaderManager();
+		this.classLoaderManager = schemaInstance == null ? null : schemaInstance.getClassLoaderManager();
 		this.resourceLoader = resourceLoader;
 		this.indexSearcher = indexSearcher;
 		this.executorService = executorService;

@@ -16,9 +16,9 @@
 package com.qwazr.search;
 
 import com.qwazr.classloader.ClassLoaderManager;
-import com.qwazr.cluster.manager.ClusterManager;
+import com.qwazr.cluster.ClusterManager;
 import com.qwazr.search.index.IndexManager;
-import com.qwazr.search.index.IndexServiceInterface;
+import com.qwazr.search.index.IndexServiceBuilder;
 import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.WelcomeShutdownService;
@@ -56,8 +56,8 @@ public class SearchServer implements BaseServer {
 		return INSTANCE;
 	}
 
-	public IndexServiceInterface getService() {
-		return indexManager.getService();
+	public IndexServiceBuilder getServiceBuilder() {
+		return indexManager.getServiceBuilder();
 	}
 
 	public static synchronized void main(final String... args) throws Exception {

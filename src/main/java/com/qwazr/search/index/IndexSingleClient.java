@@ -28,31 +28,14 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.*;
 
-public class IndexSingleClient extends JsonClientAbstract implements IndexServiceInterface {
+class IndexSingleClient extends JsonClientAbstract implements IndexServiceInterface {
 
-	public IndexSingleClient(final RemoteService remote) {
+	IndexSingleClient(final RemoteService remote) {
 		super(remote);
 	}
 
 	private final static String PATH = "/" + IndexServiceInterface.PATH;
 	private final static String PATH_SLASH = PATH + "/";
-
-	public final static TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
-	};
-
-	public final static TypeReference<SortedMap<String, SortedMap<String, BackupStatus>>>
-			MapStringMapStringBackupStatusTypeRef =
-			new TypeReference<SortedMap<String, SortedMap<String, BackupStatus>>>() {
-			};
-
-	public final static TypeReference<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>
-			MapStringMapStringMapStringBackupStatusTypeRef =
-			new TypeReference<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>() {
-			};
-
-	public final static TypeReference<LinkedHashMap<String, IndexInstance.ResourceInfo>> MapStringResourceInfoTypeRef =
-			new TypeReference<LinkedHashMap<String, IndexInstance.ResourceInfo>>() {
-			};
 
 	@Override
 	public SchemaSettingsDefinition createUpdateSchema(final String schema_name) {
@@ -368,10 +351,6 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		return Response.status(executeStatusCode(request, null, null, valid200)).build();
 	}
 
-	public final static TypeReference<Collection<Map<String, Object>>> CollectionMapStringObjectTypeRef =
-			new TypeReference<Collection<Map<String, Object>>>() {
-			};
-
 	@Override
 	public Integer postMappedDocument(final String schema_name, final String index_name,
 			final Map<String, Object> document) {
@@ -416,10 +395,6 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		return Response.status(executeStatusCode(request, null, null, valid200)).build();
 	}
 
-	public final static TypeReference<LinkedHashMap<String, Object>> MapStringObjectTypeRef =
-			new TypeReference<LinkedHashMap<String, Object>>() {
-			};
-
 	@Override
 	public LinkedHashMap<String, Object> getDocument(final String schema_name, final String index_name,
 			final String doc_id) {
@@ -429,10 +404,6 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, MapStringObjectTypeRef, valid200Json);
 	}
-
-	public final static TypeReference<ArrayList<Map<String, Object>>> ListMapStringObjectTypeRef =
-			new TypeReference<ArrayList<Map<String, Object>>>() {
-			};
 
 	@Override
 	public List<Map<String, Object>> getDocuments(final String schema_name, final String index_name,

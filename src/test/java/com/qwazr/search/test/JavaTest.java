@@ -95,7 +95,7 @@ public class JavaTest {
 
 		@Override
 		protected IndexServiceInterface getIndexService() throws URISyntaxException {
-			return TestServer.getRemoteClient();
+			return TestServer.remote;
 		}
 	}
 

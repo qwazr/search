@@ -248,6 +248,20 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	}
 
 	/**
+	 * Post an array of document to the index
+	 *
+	 * @param rows an array of document to index
+	 */
+	public void postDocuments(final T... rows) throws IOException, InterruptedException {
+		checkParameters();
+		Objects.requireNonNull(rows, "The documents array (rows) cannot be null");
+		if (annotatedService != null)
+			annotatedService.postDocuments(schemaName, indexName, fieldMap, rows);
+		else
+			indexService.postMappedDocuments(schemaName, indexName, newMapArray(rows));
+	}
+
+	/**
 	 * Update the DocValues of one document
 	 *
 	 * @param row a collection of DocValues to update
@@ -273,6 +287,20 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 			annotatedService.updateDocsValues(schemaName, indexName, fieldMap, rows);
 		else
 			indexService.updateMappedDocsValues(schemaName, indexName, newMapCollection(rows));
+	}
+
+	/**
+	 * Update the DocValues of an array of document
+	 *
+	 * @param rows an array of document with a collection of DocValues to update
+	 */
+	public void updateDocumentsValues(final T... rows) throws IOException, InterruptedException {
+		checkParameters();
+		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
+		if (annotatedService != null)
+			annotatedService.updateDocsValues(schemaName, indexName, fieldMap, rows);
+		else
+			indexService.updateMappedDocsValues(schemaName, indexName, newMapArray(rows));
 	}
 
 	/**

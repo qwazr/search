@@ -29,10 +29,16 @@ public interface AnnotatedServiceInterface {
 	<T> int postDocuments(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents)
 			throws IOException, InterruptedException;
 
+	<T> int postDocuments(String schemaName, String indexName, Map<String, Field> fields, T... documents)
+			throws IOException, InterruptedException;
+
 	<T> int updateDocValues(String schemaName, String indexName, Map<String, Field> fields, T document)
 			throws IOException, InterruptedException;
 
 	<T> int updateDocsValues(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents)
+			throws IOException, InterruptedException;
+
+	<T> int updateDocsValues(String schemaName, String indexName, Map<String, Field> fields, T... documents)
 			throws IOException, InterruptedException;
 
 	<T> T getDocument(String schemaName, String indexName, Object id, Map<String, Field> fields,

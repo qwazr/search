@@ -461,6 +461,13 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
+	final public <T> int postDocuments(final String schemaName, final String indexName, final Map<String, Field> fields,
+			final T... documents) throws IOException, InterruptedException {
+		checkRight(schemaName);
+		return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents);
+	}
+
+	@Override
 	final public Integer updateMappedDocValues(final String schemaName, final String indexName,
 			final Map<String, Object> document) {
 		try {
@@ -492,6 +499,13 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	@Override
 	final public <T> int updateDocsValues(final String schemaName, final String indexName,
 			final Map<String, Field> fields, final Collection<T> documents) throws IOException, InterruptedException {
+		checkRight(schemaName);
+		return indexManager.get(schemaName).get(indexName, true).updateDocsValues(fields, documents);
+	}
+
+	@Override
+	final public <T> int updateDocsValues(final String schemaName, final String indexName,
+			final Map<String, Field> fields, final T... documents) throws IOException, InterruptedException {
 		checkRight(schemaName);
 		return indexManager.get(schemaName).get(indexName, true).updateDocsValues(fields, documents);
 	}
@@ -651,17 +665,17 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	private QueryDefinition getDocumentQuery(final Object id) {
 		final QueryBuilder builder = new QueryBuilder();
-		builder.setQuery(new TermQuery(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id)));
-		builder.setRows(1);
-		builder.addReturned_field("*");
+		builder.query(new TermQuery(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id)));
+		builder.rows(1);
+		builder.returnedField("*");
 		return builder.build();
 	}
 
 	private QueryDefinition getMatchAllDocQuery(final Integer start, final Integer rows) {
 		final QueryBuilder builder = new QueryBuilder();
-		builder.setQuery(new MatchAllDocsQuery());
-		builder.setStart(start).setRows(rows);
-		builder.addReturned_field("*");
+		builder.query(new MatchAllDocsQuery());
+		builder.start(start).rows(rows);
+		builder.returnedField("*");
 		return builder.build();
 	}
 

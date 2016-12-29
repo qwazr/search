@@ -516,6 +516,25 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
+	final <T> int postDocuments(final Map<String, Field> fields, final T... documents)
+			throws IOException, InterruptedException {
+		if (documents == null || documents.length == 0)
+			return 0;
+		checkIsMaster();
+		final Semaphore sem = schema.acquireWriteSemaphore();
+		try {
+			schema.checkSize(documents.length);
+			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
+			for (T document : documents)
+				poster.accept(document);
+			nrtCommit();
+			return poster.counter;
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
 	final <T> int updateDocValues(final Map<String, Field> fields, final T document)
 			throws InterruptedException, IOException {
 		if (document == null)
@@ -558,6 +577,24 @@ final public class IndexInstance implements Closeable {
 		try {
 			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			documents.forEach(poster);
+			nrtCommit();
+			return poster.counter;
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
+	final <T> int updateDocsValues(final Map<String, Field> fields, final T... documents)
+			throws IOException, InterruptedException {
+		if (documents == null || documents.length == 0)
+			return 0;
+		checkIsMaster();
+		final Semaphore sem = schema.acquireWriteSemaphore();
+		try {
+			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
+			for (T document : documents)
+				poster.accept(document);
 			nrtCommit();
 			return poster.counter;
 		} finally {

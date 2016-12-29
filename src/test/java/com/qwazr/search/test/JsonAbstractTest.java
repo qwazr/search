@@ -437,7 +437,7 @@ public abstract class JsonAbstractTest {
 
 	public static Collection<Map<String, Object>> getDocs(String res) {
 		try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-			return JsonMapper.MAPPER.readValue(is, IndexSingleClient.CollectionMapStringObjectTypeRef);
+			return JsonMapper.MAPPER.readValue(is, IndexServiceInterface.CollectionMapStringObjectTypeRef);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -445,7 +445,7 @@ public abstract class JsonAbstractTest {
 
 	private static HashMap<String, Object> getDoc(String res) {
 		try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-			return JsonMapper.MAPPER.readValue(is, IndexSingleClient.MapStringObjectTypeRef);
+			return JsonMapper.MAPPER.readValue(is, IndexServiceInterface.MapStringObjectTypeRef);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -746,7 +746,7 @@ public abstract class JsonAbstractTest {
 	private void checkSynonyms(final IndexServiceInterface client, final String queryString,
 			final String... multiWordsHighlights) throws IOException {
 		final QueryBuilder builder = new QueryBuilder(QUERY_HIGHLIGHT);
-		builder.setQuery_string(queryString);
+		builder.queryString(queryString);
 		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, builder.build(), 2);
 		ResultDocumentMap document = result.getDocuments().get(0);
 		for (String multiWordHighlight : multiWordsHighlights) {

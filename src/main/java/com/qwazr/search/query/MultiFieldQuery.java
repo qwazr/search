@@ -29,12 +29,18 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MultiFieldQuery extends AbstractQuery {
@@ -120,6 +126,7 @@ public class MultiFieldQuery extends AbstractQuery {
 					new TopLevelTerms(queryContext.indexSearcher.getIndexReader(), tokenStream, fieldsBoosts.keySet(),
 							queryContext.queryAnalyzer);
 			topLevelTerms.forEachToken();
+			tokenStream.end();
 		}
 
 		//////
@@ -135,7 +142,6 @@ public class MultiFieldQuery extends AbstractQuery {
 						BooleanClause.Occur.SHOULD;
 
 		// Iterator over terms
-		final AtomicInteger currentPos = new AtomicInteger(0);
 		topLevelTerms.terms.forEach(topLevelTerm -> {
 
 			final int minTermFreq = topLevelTerm.allFieldFreq.get();
@@ -150,26 +156,22 @@ public class MultiFieldQuery extends AbstractQuery {
 							fieldsBoosts.get(field), termQueries));
 
 			// add the top level boolean clause
-			switch (termQueries.size()) {
-			case 0:
-				break;
-			case 1:
-				topLevelQuery.add(termQueries.get(0), topLevelOccur);
-				break;
-			default:
-				final org.apache.lucene.search.BooleanQuery.Builder bb =
-						new org.apache.lucene.search.BooleanQuery.Builder();
-				termQueries.forEach(query -> bb.add(query, BooleanClause.Occur.SHOULD));
-				topLevelQuery.add(bb.build(), topLevelOccur);
-				break;
-			}
+			if (!termQueries.isEmpty())
+				topLevelQuery.add(getTopLevelQuery(termQueries), topLevelOccur);
 
-			currentPos.incrementAndGet();
 		});
 
 		if (minNumberShouldMatch != null)
 			topLevelQuery.setMinimumNumberShouldMatch(minNumberShouldMatch);
 		return topLevelQuery.build();
+	}
+
+	protected Query getTopLevelQuery(final List<Query> termQueries) {
+		if (termQueries.size() == 1)
+			return termQueries.get(0);
+		final BooleanQuery.Builder builder = new org.apache.lucene.search.BooleanQuery.Builder();
+		termQueries.forEach(query -> builder.add(query, BooleanClause.Occur.SHOULD));
+		return builder.build();
 	}
 
 	protected boolean acceptTopLevelTerm(final int minTermFreq, final String userTerm) {
@@ -244,6 +246,7 @@ public class MultiFieldQuery extends AbstractQuery {
 					fieldLevelTerms.forEachToken();
 					topLevelTerm.allFieldFreq.addAndGet(fieldLevelTerms.minTermFreq);
 					topLevelTerm.termsByField.put(field, fieldLevelTerms.termsFreqs);
+					tokenStream.end();
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}

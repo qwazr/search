@@ -17,17 +17,17 @@ package com.qwazr.search.test;
 
 import com.google.common.io.Files;
 import com.qwazr.search.SearchServer;
+import com.qwazr.search.index.IndexServiceBuilder;
 import com.qwazr.search.index.IndexServiceInterface;
-import com.qwazr.search.index.IndexSingleClient;
 import com.qwazr.server.RemoteService;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.net.URISyntaxException;
 
 public class TestServer {
 
 	static IndexServiceInterface service;
+	static IndexServiceInterface remote;
 
 	static final String BASE_URL = "http://localhost:9091";
 
@@ -40,16 +40,9 @@ public class TestServer {
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
 		SearchServer.main();
-		service = SearchServer.getInstance().getService();
-	}
-
-	public static IndexSingleClient singleClient = null;
-
-	public static synchronized IndexServiceInterface getRemoteClient() throws URISyntaxException {
-		if (singleClient != null)
-			return singleClient;
-		singleClient = new IndexSingleClient(new RemoteService(BASE_URL));
-		return singleClient;
+		IndexServiceBuilder indexServiceBuilder = SearchServer.getInstance().getServiceBuilder();
+		service = indexServiceBuilder.local();
+		remote = indexServiceBuilder.remote(new RemoteService(BASE_URL));
 	}
 
 }
