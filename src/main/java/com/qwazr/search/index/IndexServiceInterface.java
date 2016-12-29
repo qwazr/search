@@ -42,11 +42,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 
-@RolesAllowed(IndexManager.SERVICE_NAME_SEARCH)
+@RolesAllowed(IndexServiceInterface.SERVICE_NAME)
 @Path("/" + IndexServiceInterface.PATH)
-@ServiceName(IndexManager.SERVICE_NAME_SEARCH)
+@ServiceName(IndexServiceInterface.SERVICE_NAME)
 public interface IndexServiceInterface extends ServiceInterface {
 
+	String SERVICE_NAME = "search";
 	String PATH = "indexes";
 
 	@POST

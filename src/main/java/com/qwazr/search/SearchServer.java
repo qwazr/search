@@ -32,7 +32,7 @@ import java.util.concurrent.Executors;
 public class SearchServer implements BaseServer {
 
 	private final GenericServer server;
-	private final IndexManager indexManager;
+	private final IndexServiceBuilder serviceBuilder;
 
 	private SearchServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
@@ -40,8 +40,9 @@ public class SearchServer implements BaseServer {
 		builder.webService(WelcomeShutdownService.class);
 		final ClassLoaderManager classLoaderManager =
 				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread());
-		new ClusterManager(builder);
-		indexManager = new IndexManager(classLoaderManager, builder, executorService);
+		final ClusterManager clusterManager = new ClusterManager(builder);
+		final IndexManager indexManager = new IndexManager(classLoaderManager, builder, executorService);
+		serviceBuilder = new IndexServiceBuilder(clusterManager, indexManager);
 		server = builder.build();
 	}
 
@@ -57,7 +58,7 @@ public class SearchServer implements BaseServer {
 	}
 
 	public IndexServiceBuilder getServiceBuilder() {
-		return indexManager.getServiceBuilder();
+		return serviceBuilder;
 	}
 
 	public static synchronized void main(final String... args) throws Exception {

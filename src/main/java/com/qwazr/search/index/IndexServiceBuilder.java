@@ -15,20 +15,15 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.cluster.ServiceBuilderInterface;
+import com.qwazr.cluster.ClusterManager;
+import com.qwazr.cluster.ServiceBuilderAbstract;
 import com.qwazr.server.RemoteService;
 
-public class IndexServiceBuilder implements ServiceBuilderInterface<IndexServiceInterface> {
+public class IndexServiceBuilder extends ServiceBuilderAbstract<IndexServiceInterface> {
 
-	final IndexServiceImpl local;
-
-	IndexServiceBuilder(IndexServiceImpl local) {
-		this.local = local;
-	}
-
-	@Override
-	public IndexServiceInterface local() {
-		return local;
+	public IndexServiceBuilder(final ClusterManager clusterManager, final IndexManager indexManager) {
+		super(clusterManager, IndexServiceInterface.SERVICE_NAME,
+				indexManager == null ? null : indexManager.getService());
 	}
 
 	@Override

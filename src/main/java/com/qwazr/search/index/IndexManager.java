@@ -43,7 +43,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class IndexManager implements Closeable {
 
-	public final static String SERVICE_NAME_SEARCH = "search";
 	public final static String INDEXES_DIRECTORY = "index";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IndexManager.class);
@@ -54,7 +53,7 @@ public class IndexManager implements Closeable {
 
 	private final ClassLoaderManager classLoaderManager;
 
-	private final IndexServiceBuilder serviceBuilder;
+	private final IndexServiceInterface service;
 
 	private final ExecutorService executorService;
 
@@ -83,7 +82,7 @@ public class IndexManager implements Closeable {
 					"This name is not valid. No directory exists for this location: " + rootDirectory.getName());
 		this.classLoaderManager =
 				classLoaderManager == null ? new ClassLoaderManager((File) null, null) : classLoaderManager;
-		serviceBuilder = new IndexServiceBuilder(new IndexServiceImpl(this));
+		service = new IndexServiceImpl(this);
 		schemaMap = new ConcurrentHashMap<>();
 		File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
 		if (directories == null)
@@ -91,7 +90,7 @@ public class IndexManager implements Closeable {
 		for (File schemaDirectory : directories) {
 			try {
 				schemaMap.put(schemaDirectory.getName(),
-						new SchemaInstance(classLoaderManager, serviceBuilder.local, schemaDirectory, executorService));
+						new SchemaInstance(classLoaderManager, service, schemaDirectory, executorService));
 			} catch (ServerException | IOException | ReflectiveOperationException | URISyntaxException e) {
 				LOGGER.error(e.getMessage(), e);
 			}
@@ -99,15 +98,11 @@ public class IndexManager implements Closeable {
 	}
 
 	final public IndexServiceInterface getService() {
-		return serviceBuilder.local;
-	}
-
-	final public IndexServiceBuilder getServiceBuilder() {
-		return serviceBuilder;
+		return service;
 	}
 
 	final public <T> AnnotatedIndexService<T> getService(Class<T> indexClass) throws URISyntaxException {
-		return new AnnotatedIndexService<T>(serviceBuilder.local, indexClass);
+		return new AnnotatedIndexService<>(service, indexClass);
 	}
 
 	@Override
@@ -122,8 +117,8 @@ public class IndexManager implements Closeable {
 		synchronized (schemaMap) {
 			SchemaInstance schemaInstance = schemaMap.get(schemaName);
 			if (schemaInstance == null) {
-				schemaInstance = new SchemaInstance(classLoaderManager, serviceBuilder.local,
-						new File(rootDirectory, schemaName), executorService);
+				schemaInstance = new SchemaInstance(classLoaderManager, service, new File(rootDirectory, schemaName),
+						executorService);
 				schemaMap.put(schemaName, schemaInstance);
 			}
 			if (settings != null)
