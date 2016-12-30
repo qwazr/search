@@ -17,6 +17,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.collector.BaseCollector;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.MultiCollector;
@@ -28,6 +29,7 @@ import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.search.TotalHitCountCollector;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -54,9 +56,12 @@ class QueryCollectorsClassic extends QueryCollectors {
 		facetsCollector = queryExecution.useDrillSideways ? null : buildFacetsCollector(queryExecution.queryDef.facets);
 		totalHitCountCollector = buildTotalHitsCollector(queryExecution.numHits);
 		topDocsCollector = buildTopDocCollector(queryExecution.sort, queryExecution.numHits, queryExecution.bNeedScore);
-		userCollectors = queryExecution.userCollectors;
-		if (userCollectors != null)
-			collectors.addAll(userCollectors);
+		if (queryExecution.collectorConstructors != null) {
+			userCollectors = new ArrayList<>();
+			for (Pair<Constructor, Object[]> item : queryExecution.collectorConstructors)
+				userCollectors.add(add((BaseCollector) item.getLeft().newInstance(item.getRight())));
+		} else
+			userCollectors = null;
 		finalCollector = getFinalCollector();
 	}
 

@@ -25,7 +25,7 @@ public abstract class BaseCollector<T> implements Collector {
 
 	public final String name;
 
-	public BaseCollector(String name) {
+	protected BaseCollector(String name) {
 		this.name = name;
 	}
 
