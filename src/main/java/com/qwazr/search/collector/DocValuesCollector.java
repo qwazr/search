@@ -20,7 +20,7 @@ import org.apache.lucene.search.LeafCollector;
 
 import java.io.IOException;
 
-public abstract class DocValuesCollector<R, D> extends BaseCollector<R> {
+public abstract class DocValuesCollector<R, D> extends BaseCollector<R> implements ConcurrentCollector<R> {
 
 	protected final String fieldName;
 	protected int count;

@@ -15,30 +15,10 @@
  */
 package com.qwazr.search.collector;
 
-import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.search.Collector;
-import org.apache.lucene.search.LeafCollector;
+import java.util.Collection;
 
-import java.io.IOException;
+public interface ConcurrentCollector<T> {
 
-public abstract class BaseCollector<T> implements Collector {
-
-	public final String name;
-
-	public BaseCollector(String name) {
-		this.name = name;
-	}
-
-	public abstract T getResult();
-
-	@Override
-	public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
-		return DoNothingCollector.INSTANCE;
-	}
-
-	@Override
-	public boolean needsScores() {
-		return false;
-	}
+	T getReducedResult(Collection<BaseCollector<T>> collectors);
 
 }

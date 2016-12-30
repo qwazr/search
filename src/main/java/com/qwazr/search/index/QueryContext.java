@@ -17,8 +17,10 @@ package com.qwazr.search.index;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 
 import java.util.concurrent.ExecutorService;
@@ -51,7 +53,21 @@ final public class QueryContext {
 		this.queryAnalyzer = queryAnalyzer;
 		this.fieldMap = fieldMap;
 		this.queryDefinition = queryDefinition;
-		this.queryString = queryDefinition == null ? null : QueryUtils.getFinalQueryString(queryDefinition);
+		this.queryString = queryDefinition == null ? null : getFinalQueryString(queryDefinition);
+	}
+
+	private static String getFinalQueryString(final QueryDefinition queryDef) {
+		// Deal wih query string
+		final String qs;
+		// Check if we have to escape some characters
+		if (queryDef.escape_query != null && queryDef.escape_query) {
+			if (queryDef.escaped_chars != null && queryDef.escaped_chars.length > 0)
+				qs = StringUtils.escape_chars(queryDef.query_string, queryDef.escaped_chars);
+			else
+				qs = QueryParser.escape(queryDef.query_string);
+		} else
+			qs = queryDef.query_string;
+		return qs;
 	}
 
 }

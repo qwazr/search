@@ -695,7 +695,8 @@ final public class IndexInstance implements Closeable {
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
 			try {
-				return QueryUtils.search(buildQueryContext(indexSearcher, queryDefinition), documentBuilderFactory);
+				return new QueryExecution(buildQueryContext(indexSearcher, queryDefinition)).execute(
+						documentBuilderFactory);
 			} finally {
 				searcherManager.release(indexSearcher);
 			}

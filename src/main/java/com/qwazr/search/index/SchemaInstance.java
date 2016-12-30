@@ -158,12 +158,11 @@ public class SchemaInstance implements Closeable {
 				final QueryContext queryContext =
 						new QueryContext(SchemaInstance.this, null, indexSearcher, executorService, indexAnalyzer,
 								queryAnalyzer, fieldMap, state, queryDef);
-				return QueryUtils.search(queryContext, documentBuilderFactory);
+				return new QueryExecution(queryContext).execute(documentBuilderFactory);
 			} finally {
 				decRef();
 			}
 		}
-
 	}
 
 	SchemaInstance(final ClassLoaderManager classLoaderManager, final IndexServiceInterface service,

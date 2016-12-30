@@ -22,7 +22,7 @@ import java.io.IOException;
 
 public class DoNothingCollector implements LeafCollector {
 
-	public static final DoNothingCollector INSTANCE = new DoNothingCollector();
+	static final DoNothingCollector INSTANCE = new DoNothingCollector();
 
 	@Override
 	final public void setScorer(final Scorer scorer) throws IOException {
