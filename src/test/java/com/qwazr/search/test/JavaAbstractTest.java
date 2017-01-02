@@ -578,6 +578,16 @@ public abstract class JavaAbstractTest {
 	}
 
 	@Test
+	public void test920ClassicCollector() throws URISyntaxException, IOException {
+		final AnnotatedIndexService master = getMaster();
+		final QueryBuilder builder = new QueryBuilder();
+		builder.collector("maxQuantity", ClassicMaxCollector.class);
+		builder.query(new MatchAllDocsQuery());
+		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		checkCollector(result, "maxQuantity", 20L, 20);
+	}
+
+	@Test
 	public void test950DeleteAll() throws URISyntaxException, IOException {
 		getMaster().deleteAll();
 	}

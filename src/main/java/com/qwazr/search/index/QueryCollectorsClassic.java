@@ -18,7 +18,10 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.collector.BaseCollector;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.MultiCollector;
 import org.apache.lucene.search.Sort;
@@ -109,8 +112,32 @@ class QueryCollectorsClassic extends QueryCollectors {
 	}
 
 	@Override
-	public final FacetsBuilder execute() {
-		return null;
+	public final FacetsBuilder execute()
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+
+		final FacetsBuilder facetsBuilder;
+
+		if (queryExecution.useDrillSideways) {
+
+			final DrillSideways.DrillSidewaysResult drillSidewaysResult =
+					new DrillSideways(queryExecution.queryContext.indexSearcher,
+							queryExecution.queryContext.fieldMap.getNewFacetsConfig(
+									queryExecution.queryDef.facets.keySet()), queryExecution.queryContext.state).search(
+							(org.apache.lucene.facet.DrillDownQuery) queryExecution.query, finalCollector);
+			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.queryDef.facets,
+					queryExecution.query, queryExecution.timeTracker, drillSidewaysResult).build();
+
+		} else {
+
+			queryExecution.queryContext.indexSearcher.search(queryExecution.query, finalCollector);
+			facetsBuilder = facetsCollector == null ?
+					null :
+					new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.queryDef.facets,
+							queryExecution.query, queryExecution.timeTracker, facetsCollector).build();
+
+		}
+
+		return facetsBuilder;
 	}
 
 	@Override
@@ -128,9 +155,7 @@ class QueryCollectorsClassic extends QueryCollectors {
 	}
 
 	@Override
-	public final FacetsCollector getFacetsCollector() throws IOException {
-		if (queryExecution.queryDef.facets == null || queryExecution.queryDef.facets.isEmpty())
-			return null;
+	public final FacetsCollector getFacetsCollector() {
 		return facetsCollector;
 	}
 

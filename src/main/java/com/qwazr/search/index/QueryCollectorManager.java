@@ -70,12 +70,10 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 
 			queryExecution.queryContext.indexSearcher.search(queryExecution.query, this);
 			facetsCollector = getFacetsCollector();
-			if (facetsCollector != null)
-				facetsBuilder =
-						new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.queryDef.facets,
-								queryExecution.query, queryExecution.timeTracker, facetsCollector).build();
-			else
-				facetsBuilder = null;
+			facetsBuilder = facetsCollector == null ?
+					null :
+					new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.queryDef.facets,
+							queryExecution.query, queryExecution.timeTracker, facetsCollector).build();
 		}
 
 		return facetsBuilder;
