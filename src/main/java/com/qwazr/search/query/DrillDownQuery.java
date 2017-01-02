@@ -41,13 +41,18 @@ public class DrillDownQuery extends AbstractQuery {
 			final List<LinkedHashMap<String, String[]>> dimPath) {
 		this.baseQuery = baseQuery;
 		this.useDrillSideways = useDrillSideways;
-		this.dimPath = dimPath;
+		this.dimPath = dimPath == null ? new ArrayList<>() : null;
 	}
 
-	public void add(final String dim, final String... path) {
+	public DrillDownQuery(final AbstractQuery baseQuery, final boolean useDrillSideways) {
+		this(baseQuery, useDrillSideways, null);
+	}
+
+	public DrillDownQuery add(final String dim, final String... path) {
 		final LinkedHashMap<String, String[]> map = new LinkedHashMap<>();
 		map.put(dim, path);
 		dimPath.add(map);
+		return this;
 	}
 
 	@Override

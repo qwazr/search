@@ -587,6 +587,37 @@ public abstract class JavaAbstractTest {
 		checkCollector(result, "maxQuantity", 20L, 20);
 	}
 
+	private void checkFacets(ResultDefinition.WithObject<AnnotatedIndex> result, String facetName, String facetDim) {
+		Assert.assertNotNull(result.facets);
+		Map<String, Number> facets = result.facets.get(facetName);
+		Assert.assertNotNull(facets);
+		Assert.assertTrue(facets.containsKey(facetDim));
+	}
+
+	@Test
+	public void test930ClassicCollectorWithDrillSideways() throws URISyntaxException, IOException {
+		final AnnotatedIndexService master = getMaster();
+		final QueryBuilder builder = new QueryBuilder();
+		builder.collector("maxQuantity", ClassicMaxCollector.class);
+		builder.query(new DrillDownQuery(new MatchAllDocsQuery(), true).add("dynamic_multi_facet_cat", "news"));
+		builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10, null));
+		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		checkCollector(result, "maxQuantity", 20L, 20);
+		checkFacets(result, "dynamic_multi_facet_cat", "news");
+	}
+
+	@Test
+	public void test935ClassicCollectorWithFacets() throws URISyntaxException, IOException {
+		final AnnotatedIndexService master = getMaster();
+		final QueryBuilder builder = new QueryBuilder();
+		builder.collector("maxQuantity", ClassicMaxCollector.class);
+		builder.query(new MatchAllDocsQuery());
+		builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10, null));
+		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		checkCollector(result, "maxQuantity", 20L, 20);
+		checkFacets(result, "dynamic_multi_facet_cat", "news");
+	}
+
 	@Test
 	public void test950DeleteAll() throws URISyntaxException, IOException {
 		getMaster().deleteAll();
