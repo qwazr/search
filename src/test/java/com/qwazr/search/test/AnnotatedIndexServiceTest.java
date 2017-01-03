@@ -19,13 +19,16 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.index.ExplainDefinition;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryBuilder;
+import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
+import com.qwazr.search.query.TermQuery;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.TokenStream;
@@ -122,7 +125,17 @@ public class AnnotatedIndexServiceTest {
 
 		QueryBuilder builder = new QueryBuilder(multiFieldQuery);
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
+		//TODO Restore assertion
 		//Assert.assertEquals(Long.valueOf(1), results.total_hits);
+	}
+
+	@Test
+	public void test510explain() {
+		QueryDefinition query = new QueryBuilder(new TermQuery("title", "this")).build();
+		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);
+		Assert.assertNotNull(results);
+		ExplainDefinition explain = service.explainQuery(query, results.documents.get(0).getDoc());
+		Assert.assertNotNull(explain);
 	}
 
 	@Test

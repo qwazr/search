@@ -431,4 +431,14 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		return executeJson(request, query, null, ResultDefinition.WithMap.class, valid200Json);
 	}
 
+	@Override
+	public ExplainDefinition explainQuery(final String schema_name, final String index_name,
+			final QueryDefinition query, int docId) {
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search/",
+						Integer.toString(docId));
+		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
+		return executeJson(request, query, null, ExplainDefinition.class, valid200Json);
+	}
+
 }

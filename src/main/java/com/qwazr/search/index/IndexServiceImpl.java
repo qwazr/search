@@ -801,4 +801,16 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
+
+	@Override
+	public ExplainDefinition explainQuery(final String schemaName, final String indexName, final QueryDefinition query,
+			int docId) {
+		try {
+			checkRight(schemaName);
+			final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
+			return new ExplainDefinition(index.explain(query, docId));
+		} catch (Exception e) {
+			throw ServerException.getJsonException(LOGGER, e);
+		}
+	}
 }

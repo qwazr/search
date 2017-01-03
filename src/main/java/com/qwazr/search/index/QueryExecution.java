@@ -25,6 +25,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
@@ -38,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-class QueryExecution {
+final class QueryExecution {
 
 	final QueryContext queryContext;
 	final QueryDefinition queryDef;
@@ -117,7 +118,7 @@ class QueryExecution {
 		return concurrentCollectors.get() > 0 || classicCollectors.get() == 0;
 	}
 
-	ResultDefinition execute(final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
+	final ResultDefinition execute(final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
 			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
 
 		final QueryCollectors queryCollectors =
@@ -129,9 +130,7 @@ class QueryExecution {
 		final Integer totalHits = queryCollectors.getTotalHits();
 
 		final Map<String, HighlighterImpl> highlighters;
-		if (queryDef.highlighters != null && topDocs != null)
-
-		{
+		if (queryDef.highlighters != null && topDocs != null) {
 			highlighters = new LinkedHashMap<>();
 			queryDef.highlighters.forEach((name, highlighterDefinition) -> highlighters.put(name,
 					new HighlighterImpl(highlighterDefinition,
@@ -149,4 +148,7 @@ class QueryExecution {
 		return documentBuilderFactory.build(resultBuilder);
 	}
 
+	final Explanation explain(final int docId) throws IOException {
+		return queryContext.indexSearcher.explain(query, docId);
+	}
 }

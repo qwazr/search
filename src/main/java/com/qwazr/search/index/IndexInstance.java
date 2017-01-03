@@ -45,6 +45,7 @@ import org.apache.lucene.replicator.IndexRevision;
 import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.replicator.Replicator;
+import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
@@ -697,6 +698,22 @@ final public class IndexInstance implements Closeable {
 			try {
 				return new QueryExecution(buildQueryContext(indexSearcher, queryDefinition)).execute(
 						documentBuilderFactory);
+			} finally {
+				searcherManager.release(indexSearcher);
+			}
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
+	final Explanation explain(final QueryDefinition queryDefinition, final int docId)
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+		final Semaphore sem = schema.acquireReadSemaphore();
+		try {
+			final IndexSearcher indexSearcher = searcherManager.acquire();
+			try {
+				return new QueryExecution(buildQueryContext(indexSearcher, queryDefinition)).explain(docId);
 			} finally {
 				searcherManager.release(indexSearcher);
 			}

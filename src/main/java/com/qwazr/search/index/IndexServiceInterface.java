@@ -323,6 +323,13 @@ public interface IndexServiceInterface extends ServiceInterface {
 	ResultDefinition.WithMap searchQuery(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, QueryDefinition query, @QueryParam("delete") Boolean delete);
 
+	@POST
+	@Path("/{schema_name}/{index_name}/search/{doc}")
+	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+	ExplainDefinition explainQuery(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, QueryDefinition query, @PathParam("doc") int docId);
+
 	TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
 	};
 

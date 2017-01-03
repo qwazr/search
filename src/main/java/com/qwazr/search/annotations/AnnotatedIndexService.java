@@ -417,6 +417,18 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 		return toRecords(indexService.searchQuery(schemaName, indexName, query, false));
 	}
 
+	/**
+	 * Explain a query applied to a given DocId
+	 *
+	 * @param query
+	 * @param docId
+	 * @return the score computation for document and query
+	 */
+	public ExplainDefinition explainQuery(final QueryDefinition query, final int docId) {
+		checkParameters();
+		return indexService.explainQuery(schemaName, indexName, query, docId);
+	}
+
 	public ResultDefinition.WithMap searchQueryWithMap(final QueryDefinition query) {
 		checkParameters();
 		return indexService.searchQuery(schemaName, indexName, query, false);
