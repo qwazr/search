@@ -15,22 +15,27 @@
  */
 package com.qwazr.search.index;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.server.AbstractStreamingOutput;
+import com.qwazr.server.RemoteService;
+import com.qwazr.server.client.JsonClientAbstract;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpRequest;
-import com.qwazr.server.AbstractStreamingOutput;
-import com.qwazr.server.client.JsonClientAbstract;
-import com.qwazr.server.RemoteService;
 
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.SortedMap;
 
-class IndexSingleClient extends JsonClientAbstract implements IndexServiceInterface {
+public class IndexSingleClient extends JsonClientAbstract implements IndexServiceInterface {
 
-	IndexSingleClient(final RemoteService remote) {
+	public IndexSingleClient(final RemoteService remote) {
 		super(remote);
 	}
 
