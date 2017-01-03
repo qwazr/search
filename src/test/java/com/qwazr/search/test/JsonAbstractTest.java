@@ -820,6 +820,16 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
+	public void test480explainQuery() throws URISyntaxException, IOException {
+		final IndexServiceInterface client = getClient();
+		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_GEO2D_BOX, 1);
+		Assert.assertNotNull(result);
+		final ExplainDefinition explain =
+				client.explainQuery(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, result.documents.get(0).getDoc());
+		Assert.assertNotNull(explain);
+	}
+
+	@Test
 	public void test500SecondBackup() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
 		BackupStatus status = doBackup(client, INDEX_BACKUP_NAME2);
