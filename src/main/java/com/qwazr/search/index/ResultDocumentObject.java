@@ -51,7 +51,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		private final Map<String, Field> fieldMap;
 
 		Builder(final int pos, final ScoreDoc scoreDoc, final float maxScore, final Class<T> objectClass,
-				Map<String, Field> fieldMap) {
+				final Map<String, Field> fieldMap) {
 			super(pos, scoreDoc, maxScore);
 			try {
 				this.record = objectClass.newInstance();
