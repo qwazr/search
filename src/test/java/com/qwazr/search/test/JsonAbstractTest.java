@@ -827,6 +827,9 @@ public abstract class JsonAbstractTest {
 		final ExplainDefinition explain =
 				client.explainQuery(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, result.documents.get(0).getDoc());
 		Assert.assertNotNull(explain);
+		String explainText = client.explainQueryText(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX,
+				result.documents.get(0).getDoc());
+		Assert.assertNotNull(explainText);
 	}
 
 	@Test

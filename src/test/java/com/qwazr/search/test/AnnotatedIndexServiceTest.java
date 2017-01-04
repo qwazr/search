@@ -136,6 +136,8 @@ public class AnnotatedIndexServiceTest {
 		Assert.assertNotNull(results);
 		ExplainDefinition explain = service.explainQuery(query, results.documents.get(0).getDoc());
 		Assert.assertNotNull(explain);
+		String explainText = service.explainQueryText(query, results.documents.get(0).getDoc());
+		Assert.assertNotNull(explainText);
 	}
 
 	@Test

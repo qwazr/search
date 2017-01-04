@@ -17,7 +17,6 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.qwazr.search.collector.BaseCollector;
 import com.qwazr.utils.TimeTracker;
 
 import java.util.Collections;

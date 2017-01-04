@@ -23,6 +23,7 @@ import com.qwazr.server.client.JsonClientAbstract;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpRequest;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.Collection;
@@ -439,6 +440,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 						Integer.toString(docId));
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, query, null, ExplainDefinition.class, valid200Json);
+	}
+
+	@Override
+	public String explainQueryText(String schema_name, String index_name, QueryDefinition query, int docId) {
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search/",
+						Integer.toString(docId));
+		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
+		request.addHeader("Accept", MediaType.TEXT_PLAIN);
+		return executeString(request, query, null, valid200TextPlain);
 	}
 
 }
