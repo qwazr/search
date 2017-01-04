@@ -121,12 +121,11 @@ public class AnnotatedIndexServiceTest {
 		fieldBoosts.put("content", 1F);
 
 		MultiFieldQuery multiFieldQuery =
-				new MultiFieldQuery(fieldBoosts, QueryParserOperator.AND, (Analyzer) null, "Title terms", null);
+				new MultiFieldQuery(fieldBoosts, QueryParserOperator.AND, "Title terms", null);
 
 		QueryBuilder builder = new QueryBuilder(multiFieldQuery);
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
-		//TODO Restore assertion
-		//Assert.assertEquals(Long.valueOf(1), results.total_hits);
+		Assert.assertEquals(Long.valueOf(1), results.total_hits);
 	}
 
 	@Test

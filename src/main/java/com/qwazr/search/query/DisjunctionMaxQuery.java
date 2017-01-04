@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -29,21 +30,22 @@ import java.util.Objects;
 public class DisjunctionMaxQuery extends AbstractQuery {
 
 	final public List<AbstractQuery> queries;
-	final public Float tie_breaker_multiplier;
+
+	@JsonProperty("tie_breaker_multiplier")
+	final public Float tieBreakerMultiplier;
 
 	public DisjunctionMaxQuery() {
 		queries = null;
-		tie_breaker_multiplier = null;
+		tieBreakerMultiplier = null;
 	}
 
-	public DisjunctionMaxQuery(final List<AbstractQuery> queries, final Float tie_breaker_multiplier) {
+	public DisjunctionMaxQuery(final List<AbstractQuery> queries, final Float tieBreakerMultiplier) {
 		this.queries = queries;
-		this.tie_breaker_multiplier = tie_breaker_multiplier;
+		this.tieBreakerMultiplier = tieBreakerMultiplier;
 	}
 
-	public DisjunctionMaxQuery(final Float tie_breaker_multiplier, final AbstractQuery... queries) {
-		this.queries = Arrays.asList(queries);
-		this.tie_breaker_multiplier = tie_breaker_multiplier;
+	public DisjunctionMaxQuery(final Float tieBreakerMultiplier, final AbstractQuery... queries) {
+		this(Arrays.asList(queries), tieBreakerMultiplier);
 	}
 
 	@Override
@@ -54,6 +56,6 @@ public class DisjunctionMaxQuery extends AbstractQuery {
 		for (AbstractQuery query : queries)
 			queryList.add(query.getQuery(queryContext));
 		return new org.apache.lucene.search.DisjunctionMaxQuery(queryList,
-				tie_breaker_multiplier == null ? 0 : tie_breaker_multiplier);
+				tieBreakerMultiplier == null ? 0 : tieBreakerMultiplier);
 	}
 }

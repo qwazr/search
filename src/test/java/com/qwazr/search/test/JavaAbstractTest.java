@@ -20,13 +20,32 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.collector.MaxNumericCollector;
 import com.qwazr.search.collector.MinNumericCollector;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.index.*;
-import com.qwazr.search.query.*;
+import com.qwazr.search.index.FacetDefinition;
+import com.qwazr.search.index.IndexServiceInterface;
+import com.qwazr.search.index.IndexSettingsDefinition;
+import com.qwazr.search.index.IndexStatus;
+import com.qwazr.search.index.QueryBuilder;
+import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.ResultDefinition;
+import com.qwazr.search.index.ResultDocumentObject;
+import com.qwazr.search.index.SchemaSettingsDefinition;
+import com.qwazr.search.index.TermDefinition;
+import com.qwazr.search.index.TermEnumDefinition;
+import com.qwazr.search.query.DrillDownQuery;
+import com.qwazr.search.query.JoinQuery;
+import com.qwazr.search.query.LongExactQuery;
+import com.qwazr.search.query.LongMultiRangeQuery;
+import com.qwazr.search.query.LongRangeQuery;
+import com.qwazr.search.query.LongSetQuery;
+import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MultiFieldQuery;
+import com.qwazr.search.query.QueryParserOperator;
+import com.qwazr.search.query.TermQuery;
+import com.qwazr.search.query.TermsQuery;
+import com.qwazr.search.query.WildcardQuery;
 import com.qwazr.utils.http.HttpClients;
 import org.apache.http.pool.PoolStats;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
-import org.apache.lucene.analysis.standard.ClassicAnalyzer;
 import org.apache.lucene.search.join.ScoreMode;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -35,7 +54,10 @@ import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -468,23 +490,23 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test700MultiFieldWithFuzzy() throws IOException, ReflectiveOperationException, URISyntaxException {
-		Map<String, Float> fields = new HashMap<>();
+		Map<String, Float> fields = new LinkedHashMap<>();
 		fields.put("title", 10.0F);
 		fields.put("titleStd", 5.0F);
 		fields.put("content", 1.0F);
-		Analyzer tokenizerAnalyzer = new ClassicAnalyzer();
-		MultiFieldQuery query =
-				new MultiFieldQuery(fields, QueryParserOperator.AND, tokenizerAnalyzer, "title sekond", null);
+		MultiFieldQuery query = new MultiFieldQuery(fields, QueryParserOperator.AND, "title sekond", null);
 		checkMultiField(query,
-				"+((titleStd:title)^5.0 (title:titl)^10.0 content:titl~2) +((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2)",
+				"+((title:titl)^10.0 (titleStd:title)^5.0 content:titl~2) +((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2)",
 				1);
-		query = new MultiFieldQuery(fields, QueryParserOperator.OR, tokenizerAnalyzer, "title sekond", 2);
+		query = new MultiFieldQuery(fields, QueryParserOperator.OR, "title sekond", 2);
 		checkMultiField(query,
-				"(((titleStd:title)^5.0 (title:titl)^10.0 content:titl~2) ((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2))~2",
+				"(((title:titl)^10.0 (titleStd:title)^5.0 content:titl~2) ((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2))~2",
 				1);
-		query = new MultiFieldQuery(fields, QueryParserOperator.OR, tokenizerAnalyzer, "title sekond", 1);
+		query = new MultiFieldQuery(QueryParserOperator.OR, "title sekond", 1).boost("title", 10.0F)
+				.boost("titleStd", 5.0F)
+				.boost("content", 1.0F);
 		checkMultiField(query,
-				"(((titleStd:title)^5.0 (title:titl)^10.0 content:titl~2) ((titleStd:sekond~2)^5.0 (title:sekond~2)^10.0 content:sekond~2))~1",
+				"(((title:titl)^10.0 (titleStd:title)^5.0 content:titl~2) ((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2))~1",
 				2);
 	}
 
