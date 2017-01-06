@@ -28,7 +28,6 @@ import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
-import com.qwazr.search.query.TermQuery;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.TokenStream;
@@ -130,13 +129,18 @@ public class AnnotatedIndexServiceTest {
 
 	@Test
 	public void test510explain() {
-		QueryDefinition query = new QueryBuilder(new TermQuery("title", "this")).build();
+		MultiFieldQuery mfq = new MultiFieldQuery(QueryParserOperator.AND, "Title terms", null).boost("title", 10F)
+				.boost("content", 1.0F);
+		QueryDefinition query = new QueryBuilder(mfq).build();
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);
 		Assert.assertNotNull(results);
-		ExplainDefinition explain = service.explainQuery(query, results.documents.get(0).getDoc());
+		int docId = results.getDocuments().get(0).getDoc();
+		ExplainDefinition explain = service.explainQuery(query, docId);
 		Assert.assertNotNull(explain);
-		String explainText = service.explainQueryText(query, results.documents.get(0).getDoc());
+		String explainText = service.explainQueryText(query, docId);
 		Assert.assertNotNull(explainText);
+		String explainDot = service.explainQueryDot(query, docId);
+		Assert.assertNotNull(explainDot);
 	}
 
 	@Test

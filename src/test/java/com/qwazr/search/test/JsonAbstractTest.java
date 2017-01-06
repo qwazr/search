@@ -824,12 +824,13 @@ public abstract class JsonAbstractTest {
 		final IndexServiceInterface client = getClient();
 		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_GEO2D_BOX, 1);
 		Assert.assertNotNull(result);
-		final ExplainDefinition explain =
-				client.explainQuery(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, result.documents.get(0).getDoc());
+		int docId = result.getDocuments().get(0).getDoc();
+		final ExplainDefinition explain = client.explainQuery(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId);
 		Assert.assertNotNull(explain);
-		String explainText = client.explainQueryText(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX,
-				result.documents.get(0).getDoc());
+		String explainText = client.explainQueryText(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId);
 		Assert.assertNotNull(explainText);
+		String explainDot = client.explainQueryDot(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId);
+		Assert.assertNotNull(explainDot);
 	}
 
 	@Test

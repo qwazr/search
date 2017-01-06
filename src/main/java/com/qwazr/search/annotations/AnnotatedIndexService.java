@@ -430,7 +430,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	}
 
 	/**
-	 * Explain a query applied to a given DocId
+	 * Explain a query applied to a given DocId using plain text
 	 *
 	 * @param query
 	 * @param docId
@@ -439,6 +439,18 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	public String explainQueryText(final QueryDefinition query, final int docId) {
 		checkParameters();
 		return indexService.explainQueryText(schemaName, indexName, query, docId);
+	}
+
+	/**
+	 * Explain a query applied to a given DocId using dot format
+	 *
+	 * @param query
+	 * @param docId
+	 * @return the score computation for document and query
+	 */
+	public String explainQueryDot(final QueryDefinition query, final int docId) {
+		checkParameters();
+		return indexService.explainQueryDot(schemaName, indexName, query, docId);
 	}
 
 	public ResultDefinition.WithMap searchQueryWithMap(final QueryDefinition query) {

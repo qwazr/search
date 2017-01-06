@@ -57,6 +57,7 @@ public class ExplainDefinition {
 
 	private final static String[] DOT_PREFIX = { "digraph G {",
 			"rankdir = LR;",
+			"node[shape=record];",
 			"label = \"\";",
 			"center = 1;",
 			"ranksep = \"0.4\";",
@@ -71,14 +72,16 @@ public class ExplainDefinition {
 		pw.print(parentNodeId);
 		pw.print(" [label=");
 		pw.print('"');
-		pw.print(description);
+		pw.print(value);
+		pw.print('|');
+		pw.print(description.replace("\"", "\\\"").replace("\n", "\\n"));
 		pw.println("\"]");
 		if (details != null) {
 			for (ExplainDefinition exp : details) {
 				final int childNodeId = nextNodeId++;
-				exp.writeDot(childNodeId, pw);
+				nextNodeId = exp.writeDot(childNodeId, pw);
 				pw.print(parentNodeId);
-				pw.print(" -> ");
+				pw.print(" -> n");
 				pw.println(childNodeId);
 			}
 		}
