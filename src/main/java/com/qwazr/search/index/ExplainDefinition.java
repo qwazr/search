@@ -19,6 +19,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import org.apache.lucene.search.Explanation;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 @JsonInclude(Include.NON_EMPTY)
 public class ExplainDefinition {
 
@@ -51,4 +55,51 @@ public class ExplainDefinition {
 		return explains;
 	}
 
+	private final static String[] DOT_PREFIX = { "digraph G {",
+			"rankdir = LR;",
+			"label = \"\";",
+			"center = 1;",
+			"ranksep = \"0.4\";",
+			"nodesep = \"0.25\";" };
+
+	private final static String[] DOT_SUFFIX = { "}" };
+
+	private int writeDot(final int id, final PrintWriter pw) {
+
+		final String parentNodeId = "n" + id;
+		int nextNodeId = id + 1;
+		pw.print(parentNodeId);
+		pw.print(" [label=");
+		pw.print('"');
+		pw.print(description);
+		pw.println("\"]");
+		if (details != null) {
+			for (ExplainDefinition exp : details) {
+				final int childNodeId = nextNodeId++;
+				exp.writeDot(childNodeId, pw);
+				pw.print(parentNodeId);
+				pw.print(" -> ");
+				pw.println(childNodeId);
+			}
+		}
+		return nextNodeId;
+	}
+
+	static String toDot(final ExplainDefinition explain) throws IOException {
+		try (final StringWriter sw = new StringWriter()) {
+			try (final PrintWriter pw = new PrintWriter(sw)) {
+
+				for (String t : DOT_PREFIX)
+					pw.println(t);
+
+				explain.writeDot(1, pw);
+
+				for (String t : DOT_SUFFIX)
+					pw.println(t);
+				pw.close();
+				sw.close();
+				return sw.toString();
+			}
+		}
+	}
 }

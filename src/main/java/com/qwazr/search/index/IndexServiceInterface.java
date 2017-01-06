@@ -50,6 +50,8 @@ public interface IndexServiceInterface extends ServiceInterface {
 	String SERVICE_NAME = "search";
 	String PATH = "indexes";
 
+	String MEDIATYPE_TEXT_GRAPHVIZ = "text/vnd.graphviz";
+
 	@POST
 	@Path("/{schema_name}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
@@ -335,6 +337,13 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(MediaType.TEXT_PLAIN)
 	String explainQueryText(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			QueryDefinition query, @PathParam("doc") int docId);
+
+	@POST
+	@Path("/{schema_name}/{index_name}/search/{doc}")
+	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
+	@Produces(MEDIATYPE_TEXT_GRAPHVIZ)
+	String explainQueryDot(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
 			QueryDefinition query, @PathParam("doc") int docId);
 
 	TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {

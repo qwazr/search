@@ -20,12 +20,15 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.JsonClientAbstract;
+import com.qwazr.server.response.ResponseValidator;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpRequest;
+import org.apache.http.entity.ContentType;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,6 +45,12 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	private final static String PATH = "/" + IndexServiceInterface.PATH;
 	private final static String PATH_SLASH = PATH + "/";
+
+	public static final ContentType CONTENTTYPE_TEXT_GRAPHVIZ =
+			ContentType.create(MEDIATYPE_TEXT_GRAPHVIZ, (Charset) null);
+
+	private static final ResponseValidator valid200TextGraphviz =
+			ResponseValidator.create().status(new int[] { 200 }).content(CONTENTTYPE_TEXT_GRAPHVIZ);
 
 	@Override
 	public SchemaSettingsDefinition createUpdateSchema(final String schema_name) {
@@ -450,6 +459,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		request.addHeader("Accept", MediaType.TEXT_PLAIN);
 		return executeString(request, query, null, valid200TextPlain);
+	}
+
+	@Override
+	public String explainQueryDot(String schemaName, String indexName, QueryDefinition query, int docId) {
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", indexName, "/search/",
+						Integer.toString(docId));
+		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
+		request.addHeader("Accept", MEDIATYPE_TEXT_GRAPHVIZ);
+		return executeString(request, query, null, valid200TextGraphviz);
 	}
 
 }

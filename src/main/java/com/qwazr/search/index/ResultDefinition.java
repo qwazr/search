@@ -92,11 +92,11 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 	}
 
 	public List<T> getDocuments() {
-		return documents;
+		return documents == null ? Collections.emptyList() : documents;
 	}
 
 	public Map<String, Map<String, Number>> getFacets() {
-		return facets;
+		return facets == null ? Collections.emptyMap() : facets;
 	}
 
 	public TimeTracker.Status getTimer() {

@@ -23,6 +23,8 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.*;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -51,9 +53,9 @@ public class TermDefinition {
 	}
 
 	TermDefinition(final CharTermAttribute charTermAttr, final FlagsAttribute flagsAttr,
-			final OffsetAttribute offsetAttr,
-			final PositionIncrementAttribute posIncAttr, final PositionLengthAttribute posLengthAttr,
-			final TypeAttribute typeAttr, final KeywordAttribute keywordAttr) {
+			final OffsetAttribute offsetAttr, final PositionIncrementAttribute posIncAttr,
+			final PositionLengthAttribute posLengthAttr, final TypeAttribute typeAttr,
+			final KeywordAttribute keywordAttr) {
 		char_term = charTermAttr == null ? null : charTermAttr.toString();
 		if (offsetAttr != null) {
 			start_offset = offsetAttr.startOffset();
@@ -79,8 +81,9 @@ public class TermDefinition {
 			final TermConsumer.AllAttributes consumer = new TermConsumer.AllAttributes(tokenStream) {
 				@Override
 				public boolean token() {
-					termList.add(new TermDefinition(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr,
-							typeAttr, keywordAttr));
+					termList.add(
+							new TermDefinition(charTermAttr, flagsAttr, offsetAttr, posIncAttr, posLengthAttr, typeAttr,
+									keywordAttr));
 					return true;
 				}
 			};
@@ -92,4 +95,40 @@ public class TermDefinition {
 	public final static TypeReference<List<TermDefinition>> ListTermDefinitionRef =
 			new TypeReference<List<TermDefinition>>() {
 			};
+
+	private final static String[] DOT_PREFIX = { "digraph G {",
+			"rankdir = LR;",
+			"label = \"\";",
+			"center = 1;",
+			"ranksep = \"0.4\";",
+			"nodesep = \"0.25\";" };
+
+	private final static String[] DOT_SUFFIX = { "}" };
+
+	private void writeDot(final PrintWriter pw) {
+		pw.print(start_offset);
+		pw.print(" -> ");
+		pw.print(end_offset + 1);
+		pw.print(" [label = \"");
+		pw.print(char_term);
+		pw.println("\"];");
+	}
+
+	static String toDot(final List<TermDefinition> terms) throws IOException {
+		try (final StringWriter sw = new StringWriter()) {
+			try (final PrintWriter pw = new PrintWriter(sw)) {
+				for (String t : DOT_PREFIX)
+					pw.println(t);
+
+				// Build graph
+				terms.forEach(term -> term.writeDot(pw));
+
+				for (String t : DOT_SUFFIX)
+					pw.println(t);
+				pw.close();
+				sw.close();
+				return sw.toString();
+			}
+		}
+	}
 }

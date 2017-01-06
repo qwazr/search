@@ -40,8 +40,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -358,46 +356,13 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 		}
 	}
 
-	private final static String[] DOT_PREFIX = { "digraph G {",
-			"rankdir = LR;",
-			"label = \"\";",
-			"center = 1;",
-			"ranksep = \"0.4\";",
-			"nodesep = \"0.25\";" };
-
-	private final static String[] DOT_SUFFIX = { "}" };
-
 	@Override
 	public String testAnalyzerDot(final String schemaName, final String indexName, final String analyzerName,
 			final String text) {
 		try {
-
 			checkRight(schemaName);
-			List<TermDefinition> terms =
-					indexManager.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text);
-
-			try (final StringWriter sw = new StringWriter()) {
-				try (final PrintWriter pw = new PrintWriter(sw)) {
-					for (String t : DOT_PREFIX)
-						pw.println(t);
-
-					// Build graph
-					for (TermDefinition term : terms) {
-						pw.print(term.start_offset);
-						pw.print(" -> ");
-						pw.print(term.end_offset + 1);
-						pw.print(" [label = \"");
-						pw.print(term.char_term);
-						pw.println("\"];");
-					}
-
-					for (String t : DOT_SUFFIX)
-						pw.println(t);
-					pw.close();
-					sw.close();
-					return sw.toString();
-				}
-			}
+			return TermDefinition.toDot(
+					indexManager.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text));
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -790,13 +755,13 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final QueryDefinition query, final Map<String, Field> fields, final Class<T> indexDefinitionClass) {
 		try {
 			checkRight(schemaName);
-			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilerFactory =
+			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilderFactory =
 					ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass);
 			if ("*".equals(indexName))
 				return (ResultDefinition.WithObject<T>) indexManager.get(schemaName)
-						.search(query, documentBuilerFactory);
+						.search(query, documentBuilderFactory);
 			final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
-			return (ResultDefinition.WithObject<T>) index.search(query, documentBuilerFactory);
+			return (ResultDefinition.WithObject<T>) index.search(query, documentBuilderFactory);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -823,6 +788,16 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			return index.explain(query, docId).toString();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
+		}
+	}
+
+	@Override
+	public String explainQueryDot(final String schemaName, final String indexName, final QueryDefinition query,
+			final int docId) {
+		try {
+			return ExplainDefinition.toDot(explainQuery(schemaName, indexName, query, docId));
+		} catch (IOException e) {
+			throw ServerException.getTextException(LOGGER, e);
 		}
 	}
 }
