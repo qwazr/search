@@ -511,6 +511,18 @@ public abstract class JavaAbstractTest {
 	}
 
 	@Test
+	public void test710MultiFieldWithDisjunction()
+			throws IOException, ReflectiveOperationException, URISyntaxException {
+		MultiFieldQuery query =
+				new MultiFieldQuery(QueryParserOperator.AND, "title second", null, 0.1F).boost("title", 10.0F)
+						.boost("titleStd", 5.0F)
+						.boost("content", 1.0F);
+		checkMultiField(query,
+				"+((title:titl)^10.0 | (titleStd:title)^5.0 | content:titl~2)~0.1 +((title:second)^10.0 | (titleStd:second)^5.0 | content:second~2)~0.1",
+				1);
+	}
+
+	@Test
 	public void test800replicationCheck() throws URISyntaxException, IOException {
 		final AnnotatedIndexService master = getMaster();
 		final IndexStatus masterStatus = master.getIndexStatus();
