@@ -74,7 +74,7 @@ public class ExplainDefinition {
 		pw.print('"');
 		pw.print(value);
 		pw.print('|');
-		pw.print(description.replace("\"", "\\\"").replace("\n", "\\n"));
+		pw.print(description.replace("\"", "\\\"").replace("\n", "\\n").replace("|", "\\|"));
 		pw.println("\"]");
 		if (details != null) {
 			for (ExplainDefinition exp : details) {
