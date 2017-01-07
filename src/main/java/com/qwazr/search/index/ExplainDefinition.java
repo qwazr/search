@@ -78,7 +78,7 @@ public class ExplainDefinition {
 		pw.println("\"]");
 		if (details != null) {
 			for (ExplainDefinition exp : details) {
-				final int childNodeId = nextNodeId++;
+				final int childNodeId = nextNodeId;
 				nextNodeId = exp.writeDot(childNodeId, pw);
 				pw.print(parentNodeId);
 				pw.print(" -> n");
