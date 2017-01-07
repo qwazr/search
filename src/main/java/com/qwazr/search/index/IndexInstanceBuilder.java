@@ -177,20 +177,33 @@ class IndexInstanceBuilder {
 	}
 
 	private void openOrCreateIndex() throws ReflectiveOperationException, IOException {
+
 		final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 		if (settings != null) {
-			if (settings.similarity_class != null && !settings.similarity_class.isEmpty())
+			if (settings.similarityClass != null && !settings.similarityClass.isEmpty())
 				indexWriterConfig.setSimilarity(
-						IndexUtils.findSimilarity(schema.getClassLoaderManager(), settings.similarity_class));
-			if (settings.ram_buffer_size != null)
-				indexWriterConfig.setRAMBufferSizeMB(settings.ram_buffer_size);
+						IndexUtils.findSimilarity(schema.getClassLoaderManager(), settings.similarityClass));
+			if (settings.ramBufferSize != null)
+				indexWriterConfig.setRAMBufferSizeMB(settings.ramBufferSize);
+
+			final TieredMergePolicy mergePolicy = new TieredMergePolicy();
+			if (settings.maxMergeAtOnce != null)
+				mergePolicy.setMaxMergeAtOnce(settings.maxMergeAtOnce);
+			if (settings.maxMergedSegmentMB != null)
+				mergePolicy.setMaxMergedSegmentMB(settings.maxMergedSegmentMB);
+			if (settings.segmentsPerTier != null)
+				mergePolicy.setSegmentsPerTier(settings.segmentsPerTier);
+			indexWriterConfig.setMergePolicy(mergePolicy);
 		}
+
 		final SerialMergeScheduler serialMergeScheduler = new SerialMergeScheduler();
 		indexWriterConfig.setMergeScheduler(serialMergeScheduler);
+
 		final SnapshotDeletionPolicy snapshotDeletionPolicy =
 				new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
 		indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
+
 		indexWriter = new IndexWriter(dataDirectory, indexWriterConfig);
 		if (indexWriter.hasUncommittedChanges())
 			indexWriter.commit();

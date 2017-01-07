@@ -40,7 +40,7 @@ public class JavaTest {
 		private static IndexManager indexManager = null;
 
 		public JavaLibraryTest() {
-			super(new IndexSettingsDefinition(null, "testSchema", "testIndexMaster", 32d));
+			super(IndexSettingsDefinition.of().master("testSchema", "testIndexMaster").ramBufferSize(32d).build());
 		}
 
 		@BeforeClass
@@ -67,9 +67,9 @@ public class JavaTest {
 
 	static {
 		try {
-			remoteSlaveSettings =
-					new IndexSettingsDefinition(null, TestServer.BASE_URL + "/indexes/testSchema/testIndexMaster",
-							null);
+			remoteSlaveSettings = IndexSettingsDefinition.of()
+					.master(TestServer.BASE_URL + "/indexes/testSchema/testIndexMaster")
+					.build();
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}

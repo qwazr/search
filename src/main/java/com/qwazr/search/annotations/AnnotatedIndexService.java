@@ -65,7 +65,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 
 		this.schemaName = schemaName != null ? schemaName : index.schema();
 		this.indexName = indexName != null ? indexName : index.name();
-		this.settings = settings != null ? settings : new IndexSettingsDefinition(index);
+		this.settings = settings != null ? settings : IndexSettingsDefinition.of(index).build();
 
 		indexFieldMap = new LinkedHashMap<>();
 		AnnotationsUtils.browseFieldsRecursive(indexDefinitionClass, field -> {

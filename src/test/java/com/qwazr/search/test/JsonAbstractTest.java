@@ -230,7 +230,7 @@ public abstract class JsonAbstractTest {
 		IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_MASTER_SETTINGS);
 		Assert.assertNotNull(indexStatus);
 		Assert.assertNotNull(indexStatus.settings);
-		Assert.assertNotNull(indexStatus.settings.similarity_class);
+		Assert.assertNotNull(indexStatus.settings.similarityClass);
 		checkAllSizes(client, 0);
 	}
 

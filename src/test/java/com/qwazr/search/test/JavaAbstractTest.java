@@ -73,7 +73,7 @@ public abstract class JavaAbstractTest {
 	public static synchronized <T> AnnotatedIndexService<T> getService(final IndexServiceInterface indexService,
 			final Class<T> indexClass, final String indexName, final IndexSettingsDefinition settings)
 			throws URISyntaxException {
-		return new AnnotatedIndexService(indexService, indexClass, null, indexName, settings);
+		return new AnnotatedIndexService<>(indexService, indexClass, null, indexName, settings);
 	}
 
 	public static synchronized <T> AnnotatedIndexService<T> getService(final IndexServiceInterface indexService,

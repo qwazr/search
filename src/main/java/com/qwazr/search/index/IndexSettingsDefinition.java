@@ -16,9 +16,11 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
+import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -27,38 +29,43 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexSettingsDefinition {
 
-	final public String similarity_class;
+	public static final int DEFAULT_MAX_MERGE_AT_ONCE = 10;
+	public static final int DEFAULT_SEGMENTS_PER_TIER = 10;
+	public static final double DEFAULT_MAX_MERGED_SEGMENT_MB = 5 * 1024 * 1024;
+
+	@JsonProperty("similarity_class")
+	final public String similarityClass;
+
 	final public RemoteIndex master;
-	final public Double ram_buffer_size;
+
+	@JsonProperty("ram_buffer_size")
+	final public Double ramBufferSize;
+
+	@JsonProperty("max_merge_at_once")
+	final public Integer maxMergeAtOnce;
+
+	@JsonProperty("max_merged_segment_mb")
+	final public Double maxMergedSegmentMB;
+
+	@JsonProperty("segments_per_tier")
+	final public Double segmentsPerTier;
 
 	public IndexSettingsDefinition() {
-		similarity_class = null;
+		similarityClass = null;
 		master = null;
-		ram_buffer_size = null;
+		ramBufferSize = null;
+		maxMergeAtOnce = null;
+		maxMergedSegmentMB = null;
+		segmentsPerTier = null;
 	}
 
-	public IndexSettingsDefinition(final String similaritySlass, final RemoteIndex master, final Double ramBufferSize) {
-		this.similarity_class = similaritySlass;
-		this.master = master;
-		this.ram_buffer_size = ramBufferSize;
-	}
-
-	public IndexSettingsDefinition(final String similaritySlass, final String masterUrl, final Double ramBufferSize)
-			throws URISyntaxException {
-		this.similarity_class = similaritySlass;
-		this.master = RemoteIndex.build(masterUrl);
-		this.ram_buffer_size = ramBufferSize;
-	}
-
-	public IndexSettingsDefinition(final String similaritySlass, final String schema, final String index,
-			final Double ramBufferSize) {
-		this.similarity_class = similaritySlass;
-		this.master = new RemoteIndex(schema, index);
-		this.ram_buffer_size = ramBufferSize;
-	}
-
-	public IndexSettingsDefinition(final Index annotatedIndex) throws URISyntaxException {
-		this(annotatedIndex.similarityClass(), annotatedIndex.replicationMaster(), annotatedIndex.ramBufferSize());
+	private IndexSettingsDefinition(Builder builder) {
+		this.similarityClass = builder.similarityClass;
+		this.master = builder.master;
+		this.ramBufferSize = builder.ramBufferSize;
+		this.maxMergeAtOnce = builder.maxMergeAtOnce;
+		this.maxMergedSegmentMB = builder.maxMergedSegmentMB;
+		this.segmentsPerTier = builder.segmentsPerTier;
 	}
 
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
@@ -74,12 +81,89 @@ public class IndexSettingsDefinition {
 		if (o == null || !(o instanceof IndexSettingsDefinition))
 			return false;
 		final IndexSettingsDefinition s = (IndexSettingsDefinition) o;
-		if (!Objects.equals(similarity_class, s.similarity_class))
+		if (!Objects.equals(similarityClass, s.similarityClass))
 			return false;
 		if (!Objects.deepEquals(master, s.master))
 			return false;
-		if (!Objects.equals(ram_buffer_size, s.ram_buffer_size))
+		if (!Objects.equals(ramBufferSize, s.ramBufferSize))
+			return false;
+		if (!Objects.equals(maxMergeAtOnce, s.maxMergeAtOnce))
 			return false;
 		return true;
+	}
+
+	public static Builder of(Index index) throws URISyntaxException {
+		return new Builder(index);
+	}
+
+	public static Builder of() {
+		return new Builder();
+	}
+
+	public static class Builder {
+
+		private String similarityClass;
+		private RemoteIndex master;
+		private Double ramBufferSize;
+		private Integer maxMergeAtOnce;
+		private Double maxMergedSegmentMB;
+		private Double segmentsPerTier;
+
+		private Builder() {
+		}
+
+		private Builder(final Index annotatedIndex) throws URISyntaxException {
+			similarityClass(annotatedIndex.similarityClass());
+			master(annotatedIndex.replicationMaster());
+			ramBufferSize(annotatedIndex.ramBufferSize());
+			maxMergeAtOnce(annotatedIndex.maxMergeAtOnce());
+			maxMergedSegmentMB(annotatedIndex.maxMergedSegmentMB());
+			segmentsPerTier(annotatedIndex.segmentsPerTier());
+		}
+
+		public Builder similarityClass(Class<? extends Similarity> similarityClass) {
+			this.similarityClass = similarityClass.getName();
+			return this;
+		}
+
+		public Builder master(String master) throws URISyntaxException {
+			if (master != null)
+				master(RemoteIndex.build(master));
+			return this;
+		}
+
+		public Builder master(RemoteIndex master) {
+			this.master = master;
+			return this;
+		}
+
+		public Builder master(String schema, String index) {
+			this.master = new RemoteIndex(schema, index);
+			return this;
+		}
+
+		public Builder ramBufferSize(Double ramBufferSize) {
+			this.ramBufferSize = ramBufferSize;
+			return this;
+		}
+
+		public Builder maxMergeAtOnce(Integer maxMergeAtOnce) {
+			this.maxMergeAtOnce = maxMergeAtOnce;
+			return this;
+		}
+
+		public Builder maxMergedSegmentMB(Double maxMergedSegmentMB) {
+			this.maxMergedSegmentMB = maxMergedSegmentMB;
+			return this;
+		}
+
+		public Builder segmentsPerTier(Double segmentsPerTier) {
+			this.segmentsPerTier = segmentsPerTier;
+			return this;
+		}
+
+		public IndexSettingsDefinition build() {
+			return new IndexSettingsDefinition(this);
+		}
 	}
 }

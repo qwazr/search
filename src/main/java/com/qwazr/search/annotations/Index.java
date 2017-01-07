@@ -15,8 +15,11 @@
  */
 package com.qwazr.search.annotations;
 
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.search.similarities.BM25Similarity;
+import org.apache.lucene.search.similarities.Similarity;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -31,9 +34,15 @@ public @interface Index {
 
 	String schema();
 
-	String similarityClass() default StringUtils.EMPTY;
+	Class<? extends Similarity> similarityClass() default BM25Similarity.class;
 
 	String replicationMaster() default StringUtils.EMPTY;
 
 	double ramBufferSize() default IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
+
+	int maxMergeAtOnce() default IndexSettingsDefinition.DEFAULT_MAX_MERGE_AT_ONCE;
+
+	double maxMergedSegmentMB() default IndexSettingsDefinition.DEFAULT_MAX_MERGED_SEGMENT_MB;
+
+	double segmentsPerTier() default IndexSettingsDefinition.DEFAULT_SEGMENTS_PER_TIER;
 }
