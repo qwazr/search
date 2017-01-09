@@ -75,7 +75,10 @@ public class ExplainDefinition {
 		pw.print('"');
 		pw.print(value);
 		pw.print('|');
-		pw.print(WordUtils.wrap(description, wrapSize).replace("\"", "\\\"").replace("\n", "\\n").replace("|", "\\|"));
+		pw.print(WordUtils.wrap(description, wrapSize)
+				.replace("\"", "\\\"")
+				.replace(System.lineSeparator(), "\\n")
+				.replace("|", "\\|"));
 		pw.println("\"]");
 		if (details != null) {
 			for (ExplainDefinition exp : details) {
