@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import org.apache.commons.lang3.text.WordUtils;
 import org.apache.lucene.search.Explanation;
 
 import java.io.IOException;
@@ -74,7 +75,7 @@ public class ExplainDefinition {
 		pw.print('"');
 		pw.print(value);
 		pw.print('|');
-		pw.print(description.replace("\"", "\\\"").replace("\n", "\\n").replace("|", "\\|"));
+		pw.print(WordUtils.wrap(description, 28).replace("\"", "\\\"").replace("\n", "\\n").replace("|", "\\|"));
 		pw.println("\"]");
 		if (details != null) {
 			for (ExplainDefinition exp : details) {
