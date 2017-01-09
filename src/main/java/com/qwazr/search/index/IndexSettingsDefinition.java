@@ -89,11 +89,19 @@ public class IndexSettingsDefinition {
 			return false;
 		if (!Objects.equals(maxMergeAtOnce, s.maxMergeAtOnce))
 			return false;
+		if (!Objects.equals(maxMergedSegmentMB, s.maxMergedSegmentMB))
+			return false;
+		if (!Objects.equals(segmentsPerTier, s.segmentsPerTier))
+			return false;
 		return true;
 	}
 
-	public static Builder of(Index index) throws URISyntaxException {
+	public static Builder of(final Index index) throws URISyntaxException {
 		return new Builder(index);
+	}
+
+	public static Builder of(final IndexSettingsDefinition indexSettings) {
+		return new Builder(indexSettings);
 	}
 
 	public static Builder of() {
@@ -121,8 +129,17 @@ public class IndexSettingsDefinition {
 			segmentsPerTier(annotatedIndex.segmentsPerTier());
 		}
 
+		private Builder(final IndexSettingsDefinition settings) {
+			this.similarityClass = settings.similarityClass;
+			this.master = settings.master;
+			this.ramBufferSize = settings.ramBufferSize;
+			this.maxMergeAtOnce = settings.maxMergeAtOnce;
+			this.maxMergedSegmentMB = settings.maxMergedSegmentMB;
+			this.segmentsPerTier = settings.segmentsPerTier;
+		}
+
 		public Builder similarityClass(Class<? extends Similarity> similarityClass) {
-			this.similarityClass = similarityClass.getName();
+			this.similarityClass = similarityClass == null ? null : similarityClass.getName();
 			return this;
 		}
 
