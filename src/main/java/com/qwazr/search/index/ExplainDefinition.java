@@ -66,7 +66,7 @@ public class ExplainDefinition {
 
 	private final static String[] DOT_SUFFIX = { "}" };
 
-	private int writeDot(final int id, final PrintWriter pw) {
+	private int writeDot(final int id, final int wrapSize, final PrintWriter pw) {
 
 		final String parentNodeId = "n" + id;
 		int nextNodeId = id + 1;
@@ -75,12 +75,12 @@ public class ExplainDefinition {
 		pw.print('"');
 		pw.print(value);
 		pw.print('|');
-		pw.print(WordUtils.wrap(description, 28).replace("\"", "\\\"").replace("\n", "\\n").replace("|", "\\|"));
+		pw.print(WordUtils.wrap(description, wrapSize).replace("\"", "\\\"").replace("\n", "\\n").replace("|", "\\|"));
 		pw.println("\"]");
 		if (details != null) {
 			for (ExplainDefinition exp : details) {
 				final int childNodeId = nextNodeId;
-				nextNodeId = exp.writeDot(childNodeId, pw);
+				nextNodeId = exp.writeDot(childNodeId, wrapSize, pw);
 				pw.print(parentNodeId);
 				pw.print(" -> n");
 				pw.println(childNodeId);
@@ -89,14 +89,14 @@ public class ExplainDefinition {
 		return nextNodeId;
 	}
 
-	static String toDot(final ExplainDefinition explain) throws IOException {
+	static String toDot(final ExplainDefinition explain, final int wrapSize) throws IOException {
 		try (final StringWriter sw = new StringWriter()) {
 			try (final PrintWriter pw = new PrintWriter(sw)) {
 
 				for (String t : DOT_PREFIX)
 					pw.println(t);
 
-				explain.writeDot(1, pw);
+				explain.writeDot(1, wrapSize, pw);
 
 				for (String t : DOT_SUFFIX)
 					pw.println(t);

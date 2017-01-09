@@ -462,10 +462,11 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public String explainQueryDot(String schemaName, String indexName, QueryDefinition query, int docId) {
+	public String explainQueryDot(String schemaName, String indexName, QueryDefinition query, int docId,
+			Integer descriptionWrapSize) {
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", indexName, "/search/",
-						Integer.toString(docId));
+						Integer.toString(docId)).setParameter("wrap", descriptionWrapSize);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		request.addHeader("Accept", MEDIATYPE_TEXT_GRAPHVIZ);
 		return executeString(request, query, null, valid200TextGraphviz);

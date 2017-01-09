@@ -344,7 +344,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(MEDIATYPE_TEXT_GRAPHVIZ)
 	String explainQueryDot(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-			QueryDefinition query, @PathParam("doc") int docId);
+			QueryDefinition query, @PathParam("doc") int docId, @QueryParam("wrap") final Integer descriptionWrapSize);
 
 	TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
 	};

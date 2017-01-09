@@ -829,7 +829,7 @@ public abstract class JsonAbstractTest {
 		Assert.assertNotNull(explain);
 		String explainText = client.explainQueryText(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId);
 		Assert.assertNotNull(explainText);
-		String explainDot = client.explainQueryDot(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId);
+		String explainDot = client.explainQueryDot(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId, 30);
 		Assert.assertNotNull(explainDot);
 	}
 

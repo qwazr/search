@@ -793,9 +793,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	public String explainQueryDot(final String schemaName, final String indexName, final QueryDefinition query,
-			final int docId) {
+			final int docId, final Integer descriptionWrapSize) {
 		try {
-			return ExplainDefinition.toDot(explainQuery(schemaName, indexName, query, docId));
+			return ExplainDefinition.toDot(explainQuery(schemaName, indexName, query, docId),
+					descriptionWrapSize == null ? 28 : descriptionWrapSize);
 		} catch (IOException e) {
 			throw ServerException.getTextException(LOGGER, e);
 		}

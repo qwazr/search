@@ -448,9 +448,9 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * @param docId
 	 * @return the score computation for document and query
 	 */
-	public String explainQueryDot(final QueryDefinition query, final int docId) {
+	public String explainQueryDot(final QueryDefinition query, final int docId, final Integer descriptionWrapSize) {
 		checkParameters();
-		return indexService.explainQueryDot(schemaName, indexName, query, docId);
+		return indexService.explainQueryDot(schemaName, indexName, query, docId, descriptionWrapSize);
 	}
 
 	public ResultDefinition.WithMap searchQueryWithMap(final QueryDefinition query) {

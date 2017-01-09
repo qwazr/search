@@ -139,7 +139,7 @@ public class AnnotatedIndexServiceTest {
 		Assert.assertNotNull(explain);
 		String explainText = service.explainQueryText(query, docId);
 		Assert.assertNotNull(explainText);
-		String explainDot = service.explainQueryDot(query, docId);
+		String explainDot = service.explainQueryDot(query, docId, 30);
 		Assert.assertNotNull(explainDot);
 	}
 
