@@ -30,6 +30,7 @@ import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.RAMDirectory;
 
 import java.io.File;
 import java.io.IOException;
@@ -172,7 +173,10 @@ class IndexInstanceBuilder {
 		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
 
 		// Open and lock the data directory
-		dataDirectory = FSDirectory.open(fileSet.dataDirectory.toPath());
+		dataDirectory =
+				settings.directoryType == null || settings.directoryType == IndexSettingsDefinition.Type.FSDirectory ?
+						FSDirectory.open(fileSet.dataDirectory.toPath()) :
+						new RAMDirectory();
 
 	}
 
@@ -218,7 +222,6 @@ class IndexInstanceBuilder {
 
 		Callable<Boolean> callback = () -> {
 			searcherManager.maybeRefresh();
-			schema.mayBeRefresh(false);
 			return true;
 		};
 		ReplicationClient.ReplicationHandler handler = new IndexReplicationHandler(dataDirectory, callback);

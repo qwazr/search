@@ -16,10 +16,6 @@
 package com.qwazr.search.index;
 
 import com.qwazr.classloader.ClassLoaderManager;
-import com.qwazr.search.analysis.AnalyzerContext;
-import com.qwazr.search.analysis.AnalyzerDefinition;
-import com.qwazr.search.analysis.UpdatableAnalyzer;
-import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
@@ -28,13 +24,6 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.search.IndexSearcher;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
@@ -42,14 +31,12 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,7 +46,8 @@ public class SchemaInstance implements Closeable {
 
 	private final static String SETTINGS_FILE = "settings.json";
 
-	private final ConcurrentHashMap<String, IndexInstance> indexMap;
+	private final Map<String, IndexInstance> indexMap;
+	private final LockUtils.ReadWriteLock rwlIndexMap;
 
 	private final ClassLoaderManager classLoaderManager;
 	private final IndexServiceInterface service;
@@ -74,100 +62,10 @@ public class SchemaInstance implements Closeable {
 	private volatile Semaphore readSemaphore;
 	private volatile Semaphore writeSemaphore;
 
-	private volatile SearchContext searchContext = null;
-
-	private class SearchContext implements Closeable, AutoCloseable {
-
-		private final MultiReader multiReader;
-		private final IndexSearcher indexSearcher;
-		private final Map<String, AnalyzerDefinition> analyzerMap;
-		private final FieldMap fieldMap;
-		private final UpdatableAnalyzer indexAnalyzer;
-		private final UpdatableAnalyzer queryAnalyzer;
-		private final AtomicInteger ref = new AtomicInteger(1);
-
-		private SearchContext(boolean failOnException) throws IOException, ServerException {
-			if (indexMap.isEmpty()) {
-				indexSearcher = null;
-				multiReader = null;
-				indexAnalyzer = null;
-				queryAnalyzer = null;
-				analyzerMap = null;
-				fieldMap = null;
-				return;
-			}
-			IndexReader[] indexReaders = new IndexReader[indexMap.size()];
-			int i = 0;
-			analyzerMap = new HashMap<>();
-			FileResourceLoader resourceLoader = null;
-			final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap = new LinkedHashMap<>();
-			for (IndexInstance indexInstance : indexMap.values()) {
-				indexReaders[i++] = DirectoryReader.open(indexInstance.getDataDirectory());
-				indexInstance.fillFields(fieldDefinitionMap);
-				indexInstance.fillAnalyzers(analyzerMap);
-				resourceLoader = indexInstance.newResourceLoader(resourceLoader);
-			}
-			fieldMap = new FieldMap(fieldDefinitionMap);
-			multiReader = new MultiReader(indexReaders);
-			indexSearcher = new IndexSearcher(multiReader);
-			final AnalyzerContext analyzerContext =
-					new AnalyzerContext(classLoaderManager, resourceLoader, analyzerMap, fieldDefinitionMap,
-							failOnException);
-			indexAnalyzer = new UpdatableAnalyzer(analyzerContext.indexAnalyzerMap);
-			queryAnalyzer = new UpdatableAnalyzer(analyzerContext.queryAnalyzerMap);
-		}
-
-		int numDocs() {
-			incRef();
-			try {
-				if (multiReader == null)
-					return 0;
-				return multiReader.numDocs();
-			} finally {
-				decRef();
-			}
-		}
-
-		private synchronized void doClose() {
-			IOUtils.close(multiReader);
-		}
-
-		@Override
-		final public void close() {
-			decRef();
-		}
-
-		final void incRef() {
-			ref.incrementAndGet();
-		}
-
-		final void decRef() {
-			if (ref.decrementAndGet() > 0)
-				return;
-			doClose();
-		}
-
-		ResultDefinition search(final QueryDefinition queryDef,
-				final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
-				throws ServerException, IOException, QueryNodeException, ParseException, ReflectiveOperationException {
-			if (indexSearcher == null)
-				return null;
-			incRef();
-			try {
-				SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader());
-				final QueryContext queryContext =
-						new QueryContext(SchemaInstance.this, null, indexSearcher, executorService, indexAnalyzer,
-								queryAnalyzer, fieldMap, state, queryDef);
-				return new QueryExecution(queryContext).execute(documentBuilderFactory);
-			} finally {
-				decRef();
-			}
-		}
-	}
-
 	SchemaInstance(final ClassLoaderManager classLoaderManager, final IndexServiceInterface service,
 			final File schemaDirectory, final ExecutorService executorService)
 			throws IOException, ReflectiveOperationException, URISyntaxException {
+
 		this.executorService = executorService;
 		this.classLoaderManager = classLoaderManager;
 		this.service = service;
@@ -176,7 +74,9 @@ public class SchemaInstance implements Closeable {
 			schemaDirectory.mkdir();
 		if (!schemaDirectory.exists())
 			throw new IOException("The directory does not exist: " + schemaDirectory.getName());
-		indexMap = new ConcurrentHashMap<>();
+
+		indexMap = new HashMap<>();
+		rwlIndexMap = new LockUtils.ReadWriteLock();
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
 		settingsDefinition = settingsFile.exists() ?
@@ -190,7 +90,6 @@ public class SchemaInstance implements Closeable {
 		for (File indexDirectory : directories)
 			indexMap.put(indexDirectory.getName(),
 					new IndexInstanceBuilder(this, indexDirectory, null, executorService).build());
-		mayBeRefresh(false);
 	}
 
 	final IndexServiceInterface getService() {
@@ -203,19 +102,11 @@ public class SchemaInstance implements Closeable {
 
 	@Override
 	public void close() throws IOException {
-		if (searchContext != null) {
-			searchContext.close();
-			searchContext = null;
-		}
-		synchronized (indexMap) {
-			indexMap.values().forEach(IOUtils::closeQuietly);
-		}
+		rwlIndexMap.writeEx(() -> indexMap.values().forEach(IOUtils::closeQuietly));
 	}
 
-	IndexInstance createUpdate(final String indexName, final IndexSettingsDefinition settings)
-			throws ServerException, IOException, InterruptedException, ReflectiveOperationException,
-			URISyntaxException {
-		synchronized (indexMap) {
+	IndexInstance createUpdate(final String indexName, final IndexSettingsDefinition settings) throws Exception {
+		return rwlIndexMap.writeEx(() -> {
 
 			final IndexInstanceBuilder builder =
 					new IndexInstanceBuilder(this, new File(schemaDirectory, indexName), settings, executorService);
@@ -232,9 +123,8 @@ public class SchemaInstance implements Closeable {
 				indexMap.put(indexName, indexInstance);
 			}
 
-			mayBeRefresh(true);
 			return indexInstance;
-		}
+		});
 	}
 
 	/**
@@ -247,41 +137,42 @@ public class SchemaInstance implements Closeable {
 	 * @throws ServerException if any error occurs
 	 * @throws IOException     if any I/O error occurs
 	 */
-	public IndexInstance get(String indexName, boolean ensureWriterOpen) throws IOException {
-		IndexInstance indexInstance = indexMap.get(indexName);
-		if (indexInstance == null)
-			throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);
-		if (!ensureWriterOpen)
-			return indexInstance;
-		try {
-			return indexInstance.isIndexWriterOpen() ? indexInstance : createUpdate(indexName, null);
-		} catch (InterruptedException | ReflectiveOperationException | URISyntaxException e) {
-			throw new ServerException(e);
-		}
+	public IndexInstance get(String indexName, boolean ensureWriterOpen) {
+		return rwlIndexMap.read(() -> {
+			IndexInstance indexInstance = indexMap.get(indexName);
+			if (indexInstance == null)
+				throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);
+			if (!ensureWriterOpen)
+				return indexInstance;
+			try {
+				return indexInstance.isIndexWriterOpen() ? indexInstance : createUpdate(indexName, null);
+			} catch (InterruptedException | ReflectiveOperationException | URISyntaxException e) {
+				throw new ServerException(e);
+			}
+		});
 	}
 
 	void delete() {
-		synchronized (indexMap) {
+		rwlIndexMap.write(() -> {
 			for (IndexInstance instance : indexMap.values()) {
 				instance.close();
 				instance.delete();
 			}
-			if (schemaDirectory.exists())
-				FileUtils.deleteQuietly(schemaDirectory);
-		}
+		});
+		if (schemaDirectory.exists())
+			FileUtils.deleteQuietly(schemaDirectory);
 	}
 
 	void delete(String indexName) throws ServerException, IOException {
-		synchronized (indexMap) {
+		rwlIndexMap.write(() -> {
 			IndexInstance indexInstance = get(indexName, false);
 			indexInstance.delete();
 			indexMap.remove(indexName);
-			mayBeRefresh(false);
-		}
+		});
 	}
 
 	Set<String> nameSet() {
-		return indexMap.keySet();
+		return rwlIndexMap.read(indexMap::keySet);
 	}
 
 	final private static Pattern backupNameMatcher = Pattern.compile("[^a-zA-Z0-9-_]");
@@ -320,13 +211,13 @@ public class SchemaInstance implements Closeable {
 
 	private void indexIterator(final String indexName,
 			final FunctionUtils.BiConsumerEx<String, IndexInstance, IOException> consumer) throws IOException {
-		synchronized (indexMap) {
+		rwlIndexMap.readEx(() -> {
 			if ("*".equals(indexName)) {
 				for (Map.Entry<String, IndexInstance> entry : indexMap.entrySet())
 					consumer.accept(entry.getKey(), entry.getValue());
 			} else
 				consumer.accept(indexName, get(indexName, false));
-		}
+		});
 	}
 
 	SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) throws IOException {
@@ -404,12 +295,6 @@ public class SchemaInstance implements Closeable {
 		checkSettings();
 	}
 
-	synchronized void mayBeRefresh(final boolean failOnException) throws IOException, ServerException {
-		if (searchContext != null)
-			searchContext.close();
-		searchContext = new SearchContext(failOnException);
-	}
-
 	SchemaSettingsDefinition getSettings() {
 		return settingsDefinition;
 	}
@@ -434,27 +319,6 @@ public class SchemaInstance implements Closeable {
 			backupRootDirectory = null;
 	}
 
-	private static <T extends ResultDocumentAbstract> ResultDefinition<T> atomicSearch(
-			final SearchContext searchContext, final QueryDefinition queryDef,
-			final ResultDocumentBuilder.BuilderFactory<T> documentBuilderFactory)
-			throws IOException, QueryNodeException, ParseException, ServerException, ReflectiveOperationException {
-		if (searchContext == null)
-			return null;
-		return searchContext.search(queryDef, documentBuilderFactory);
-	}
-
-	public <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDef,
-			final ResultDocumentBuilder.BuilderFactory<T> documentBuilderFactory)
-			throws ServerException, IOException, QueryNodeException, ParseException, ReflectiveOperationException {
-		final Semaphore sem = acquireReadSemaphore();
-		try {
-			return atomicSearch(searchContext, queryDef, documentBuilderFactory);
-		} finally {
-			if (sem != null)
-				sem.release();
-		}
-	}
-
 	private static Semaphore atomicAquire(final Semaphore semaphore) {
 		if (semaphore == null)
 			return null;
@@ -474,21 +338,23 @@ public class SchemaInstance implements Closeable {
 		return atomicAquire(writeSemaphore);
 	}
 
-	private static void atomicCheckSize(SchemaSettingsDefinition settingsDefinition, SearchContext searchContext,
-			int addSize) {
+	final void checkSize(final int addSize) {
 		if (settingsDefinition == null)
 			return;
 		if (settingsDefinition.max_size == null)
 			return;
-		if (searchContext == null)
-			return;
-		if (searchContext.numDocs() + addSize > settingsDefinition.max_size)
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"This schema is limited to " + settingsDefinition.max_size + " documents");
-	}
-
-	final void checkSize(final int addSize) throws IOException, ServerException {
-		atomicCheckSize(settingsDefinition, searchContext, addSize);
+		rwlIndexMap.read(() -> {
+			try {
+				long size = 0;
+				for (IndexInstance instance : indexMap.values())
+					size += instance.getStatus().num_docs;
+				if (size + addSize > settingsDefinition.max_size)
+					throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+							"This schema is limited to " + settingsDefinition.max_size + " documents");
+			} catch (Exception e) {
+				throw new ServerException(e);
+			}
+		});
 	}
 
 }

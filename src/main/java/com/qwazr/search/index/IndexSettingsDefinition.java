@@ -29,6 +29,10 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexSettingsDefinition {
 
+	public enum Type {
+		FSDirectory, RAMDirectory
+	}
+
 	public static final int DEFAULT_MAX_MERGE_AT_ONCE = 10;
 	public static final int DEFAULT_SEGMENTS_PER_TIER = 10;
 	public static final double DEFAULT_MAX_MERGED_SEGMENT_MB = 5 * 1024 * 1024;
@@ -37,6 +41,9 @@ public class IndexSettingsDefinition {
 	final public String similarityClass;
 
 	final public RemoteIndex master;
+
+	@JsonProperty("directory_type")
+	final public Type directoryType;
 
 	@JsonProperty("ram_buffer_size")
 	final public Double ramBufferSize;
@@ -51,6 +58,7 @@ public class IndexSettingsDefinition {
 	final public Double segmentsPerTier;
 
 	public IndexSettingsDefinition() {
+		directoryType = null;
 		similarityClass = null;
 		master = null;
 		ramBufferSize = null;
@@ -59,7 +67,8 @@ public class IndexSettingsDefinition {
 		segmentsPerTier = null;
 	}
 
-	private IndexSettingsDefinition(Builder builder) {
+	private IndexSettingsDefinition(final Builder builder) {
+		this.directoryType = builder.directoryType;
 		this.similarityClass = builder.similarityClass;
 		this.master = builder.master;
 		this.ramBufferSize = builder.ramBufferSize;
@@ -70,7 +79,7 @@ public class IndexSettingsDefinition {
 
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
 
-	public final static IndexSettingsDefinition newSettings(String jsonString) throws IOException {
+	public static IndexSettingsDefinition newSettings(final String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
 		return JsonMapper.MAPPER.readValue(jsonString, IndexSettingsDefinition.class);
@@ -81,6 +90,8 @@ public class IndexSettingsDefinition {
 		if (o == null || !(o instanceof IndexSettingsDefinition))
 			return false;
 		final IndexSettingsDefinition s = (IndexSettingsDefinition) o;
+		if (!Objects.equals(directoryType, s.directoryType))
+			return false;
 		if (!Objects.equals(similarityClass, s.similarityClass))
 			return false;
 		if (!Objects.deepEquals(master, s.master))
@@ -110,6 +121,7 @@ public class IndexSettingsDefinition {
 
 	public static class Builder {
 
+		private Type directoryType;
 		private String similarityClass;
 		private RemoteIndex master;
 		private Double ramBufferSize;
@@ -121,6 +133,7 @@ public class IndexSettingsDefinition {
 		}
 
 		private Builder(final Index annotatedIndex) throws URISyntaxException {
+			directoryType = annotatedIndex.type();
 			similarityClass(annotatedIndex.similarityClass());
 			master(annotatedIndex.replicationMaster());
 			ramBufferSize(annotatedIndex.ramBufferSize());
@@ -130,6 +143,7 @@ public class IndexSettingsDefinition {
 		}
 
 		private Builder(final IndexSettingsDefinition settings) {
+			this.directoryType = settings.directoryType;
 			this.similarityClass = settings.similarityClass;
 			this.master = settings.master;
 			this.ramBufferSize = settings.ramBufferSize;
@@ -138,43 +152,48 @@ public class IndexSettingsDefinition {
 			this.segmentsPerTier = settings.segmentsPerTier;
 		}
 
-		public Builder similarityClass(Class<? extends Similarity> similarityClass) {
+		public Builder type(final Type directoryType) {
+			this.directoryType = directoryType;
+			return this;
+		}
+
+		public Builder similarityClass(final Class<? extends Similarity> similarityClass) {
 			this.similarityClass = similarityClass == null ? null : similarityClass.getName();
 			return this;
 		}
 
-		public Builder master(String master) throws URISyntaxException {
+		public Builder master(final String master) throws URISyntaxException {
 			if (master != null)
 				master(RemoteIndex.build(master));
 			return this;
 		}
 
-		public Builder master(RemoteIndex master) {
+		public Builder master(final RemoteIndex master) {
 			this.master = master;
 			return this;
 		}
 
-		public Builder master(String schema, String index) {
+		public Builder master(final String schema, final String index) {
 			this.master = new RemoteIndex(schema, index);
 			return this;
 		}
 
-		public Builder ramBufferSize(Double ramBufferSize) {
+		public Builder ramBufferSize(final Double ramBufferSize) {
 			this.ramBufferSize = ramBufferSize;
 			return this;
 		}
 
-		public Builder maxMergeAtOnce(Integer maxMergeAtOnce) {
+		public Builder maxMergeAtOnce(final Integer maxMergeAtOnce) {
 			this.maxMergeAtOnce = maxMergeAtOnce;
 			return this;
 		}
 
-		public Builder maxMergedSegmentMB(Double maxMergedSegmentMB) {
+		public Builder maxMergedSegmentMB(final Double maxMergedSegmentMB) {
 			this.maxMergedSegmentMB = maxMergedSegmentMB;
 			return this;
 		}
 
-		public Builder segmentsPerTier(Double segmentsPerTier) {
+		public Builder segmentsPerTier(final Double segmentsPerTier) {
 			this.segmentsPerTier = segmentsPerTier;
 			return this;
 		}

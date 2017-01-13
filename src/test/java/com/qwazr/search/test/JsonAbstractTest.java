@@ -401,16 +401,6 @@ public abstract class JsonAbstractTest {
 		}
 	}
 
-	private ResultDefinition.WithMap checkQuerySchema(IndexServiceInterface client, QueryDefinition queryDef,
-			int expectedCount) throws IOException {
-		checkErrorStatusCode(() -> client.searchQuery(SCHEMA_DUMMY_NAME, "*", queryDef, null), 404);
-		final ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, "*", queryDef, null);
-		Assert.assertNotNull(result);
-		Assert.assertNotNull(result.total_hits);
-		Assert.assertEquals(expectedCount, result.total_hits.intValue());
-		return result;
-	}
-
 	private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef,
 			int expectedCount) throws IOException {
 		checkErrorStatusCode(() -> client.searchQuery(SCHEMA_NAME, INDEX_DUMMY_NAME, queryDef, null), 404);
@@ -430,7 +420,6 @@ public abstract class JsonAbstractTest {
 	}
 
 	private void checkAllSizes(IndexServiceInterface client, int expectedSize) throws IOException {
-		checkQuerySchema(client, MATCH_ALL_QUERY, expectedSize);
 		checkQueryIndex(client, MATCH_ALL_QUERY, expectedSize);
 		checkIndexSize(client, expectedSize);
 	}
@@ -469,7 +458,6 @@ public abstract class JsonAbstractTest {
 	public void test190EmptyQueryFacetFilterDoc() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
 		checkEmptyFacets(checkQueryIndex(client, FACETS_FILTERS_QUERY, 0));
-		checkEmptyFacets(checkQuerySchema(client, FACETS_FILTERS_QUERY, 0));
 	}
 
 	@Test
@@ -612,7 +600,6 @@ public abstract class JsonAbstractTest {
 	public void test400QueryDoc() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
 		checkFacetRowsQuery(checkQueryIndex(client, FACETS_ROWS_QUERY, 5));
-		checkFacetRowsQuery(checkQuerySchema(client, FACETS_ROWS_QUERY, 5));
 	}
 
 	@Test
@@ -665,14 +652,12 @@ public abstract class JsonAbstractTest {
 	public void test410QueryFacetFilterDoc() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
 		checkFacetFiltersResult(checkQueryIndex(client, FACETS_FILTERS_QUERY, 2), 2);
-		checkFacetFiltersResult(checkQuerySchema(client, FACETS_FILTERS_QUERY, 2), 2);
 	}
 
 	@Test
 	public void test411QueryFacetDrillDown() throws IOException, URISyntaxException {
 		final IndexServiceInterface client = getClient();
 		checkFacetFiltersResult(checkQueryIndex(client, FACETS_DRILLDOWN_QUERY, 2), 5);
-		checkFacetFiltersResult(checkQuerySchema(client, FACETS_DRILLDOWN_QUERY, 2), 5);
 	}
 
 	private <T extends Comparable> void checkDescending(T startValue, String field,

@@ -68,7 +68,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
@@ -86,6 +88,8 @@ final public class IndexInstance implements Closeable {
 	private final IndexWriter indexWriter;
 
 	private final SearcherManager searcherManager;
+	private final Set<MultiSearchInstance> multiSearchInstances;
+
 	private final ExecutorService executorService;
 	private final IndexSettingsDefinition settings;
 	private final FileResourceLoader fileResourceLoader;
@@ -125,6 +129,7 @@ final public class IndexInstance implements Closeable {
 		this.queryAnalyzer = builder.queryAnalyzer;
 		this.settings = builder.settings;
 		this.searcherManager = builder.searcherManager;
+		this.multiSearchInstances = ConcurrentHashMap.newKeySet();
 		this.executorService = builder.executorService;
 		this.fileResourceLoader = builder.fileResourceLoader;
 		this.replicator = builder.replicator;
@@ -157,6 +162,14 @@ final public class IndexInstance implements Closeable {
 		close();
 		if (fileSet.indexDirectory.exists())
 			FileUtils.deleteQuietly(fileSet.indexDirectory);
+	}
+
+	boolean register(final MultiSearchInstance multiSearchInstance) {
+		return multiSearchInstances.add(multiSearchInstance);
+	}
+
+	boolean unregister(final MultiSearchInstance multiSearchInstance) {
+		return multiSearchInstances.remove(multiSearchInstance);
 	}
 
 	private IndexStatus getIndexStatus() throws IOException {
@@ -197,7 +210,7 @@ final public class IndexInstance implements Closeable {
 		JsonMapper.MAPPER.writeValue(fileSet.fieldMapFile, fields);
 		fieldMap = new FieldMap(fields);
 		refreshFieldsAnalyzers(analyzerMap, fields);
-		schema.mayBeRefresh(true);
+		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
 	void setField(final String field_name, final FieldDefinition field) throws IOException, ServerException {
@@ -225,7 +238,7 @@ final public class IndexInstance implements Closeable {
 		refreshFieldsAnalyzers(analyzerMap, fieldMap.getFieldDefinitionMap());
 		JsonMapper.MAPPER.writeValue(fileSet.analyzerMapFile, analyzers);
 		analyzerMap = analyzers;
-		schema.mayBeRefresh(true);
+		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
 	void setAnalyzer(final String analyzerName, final AnalyzerDefinition analyzer) throws IOException, ServerException {
@@ -289,7 +302,7 @@ final public class IndexInstance implements Closeable {
 		indexWriter.commit();
 		replicator.publish(new IndexRevision(indexWriter));
 		searcherManager.maybeRefresh();
-		schema.mayBeRefresh(true);
+		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
 	final synchronized BackupStatus backup(final File backupIndexDirectory) throws IOException {
@@ -398,15 +411,6 @@ final public class IndexInstance implements Closeable {
 				setAnalyzers(indexReplicator.getMasterAnalyzers());
 				setFields(indexReplicator.getMasterFields());
 
-				// Lucene index replication
-				long masterVersion = indexReplicator.getMasterStatus().version;
-				long slaveVersion = getIndexStatus().version;
-				if (masterVersion == slaveVersion) // same version, nothing to do
-					return;
-				if (slaveVersion > masterVersion)
-					throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-							"The slave version is greater than the master version: " + slaveVersion + " / "
-									+ masterVersion + " - Index: " + indexName);
 				replicationClient.updateNow();
 
 			} finally {
@@ -779,7 +783,7 @@ final public class IndexInstance implements Closeable {
 		resourceFile.setLastModified(lastModified);
 		refreshFieldsAnalyzers((LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone(),
 				fieldMap.getFieldDefinitionMap());
-		schema.mayBeRefresh(true);
+		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
 	final LinkedHashMap<String, ResourceInfo> getResources() {

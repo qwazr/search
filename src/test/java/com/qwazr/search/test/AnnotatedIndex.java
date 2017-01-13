@@ -18,6 +18,7 @@ package com.qwazr.search.test;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexOptions;
@@ -30,7 +31,9 @@ import java.util.Objects;
 
 import static com.qwazr.search.field.FieldDefinition.Template.*;
 
-@Index(name = AnnotatedIndex.INDEX_NAME_MASTER, schema = AnnotatedIndex.SCHEMA_NAME)
+@Index(name = AnnotatedIndex.INDEX_NAME_MASTER,
+		schema = AnnotatedIndex.SCHEMA_NAME,
+		type = IndexSettingsDefinition.Type.RAMDirectory)
 public class AnnotatedIndex {
 
 	public final static String SCHEMA_NAME = "testSchema";

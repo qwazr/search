@@ -539,12 +539,14 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final String masterUuid, final String currentVersion) {
 		try {
 			checkRight(null);
+
 			final SessionToken token = indexManager.get(schemaName)
 					.get(indexName, false)
 					.getReplicator(masterUuid)
 					.checkForUpdate(currentVersion);
 			if (token == null) // Returns a 204 (no content)
 				return null;
+
 			try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 				try (final DataOutputStream dataOutput = new DataOutputStream(outputStream)) {
 					token.serialize(dataOutput);
@@ -737,9 +739,6 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final QueryDefinition query, final Boolean delete) {
 		try {
 			checkRight(schemaName);
-			if ("*".equals(indexName))
-				return (ResultDefinition.WithMap) indexManager.get(schemaName)
-						.search(query, ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
 			final IndexInstance index = indexManager.get(schemaName).get(indexName, delete != null && delete);
 			if (delete != null && delete)
 				return index.deleteByQuery(query);
@@ -757,9 +756,6 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			checkRight(schemaName);
 			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilderFactory =
 					ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass);
-			if ("*".equals(indexName))
-				return (ResultDefinition.WithObject<T>) indexManager.get(schemaName)
-						.search(query, documentBuilderFactory);
 			final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
 			return (ResultDefinition.WithObject<T>) index.search(query, documentBuilderFactory);
 		} catch (Exception e) {

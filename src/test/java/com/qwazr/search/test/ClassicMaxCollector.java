@@ -16,7 +16,7 @@ public class ClassicMaxCollector extends BaseCollector<Long> {
 
 	private long max = 0;
 
-	public ClassicMaxCollector(String name) {
+	public ClassicMaxCollector(final String name) {
 		super(name);
 	}
 
@@ -39,12 +39,12 @@ public class ClassicMaxCollector extends BaseCollector<Long> {
 		}
 
 		@Override
-		public void setScorer(Scorer scorer) throws IOException {
+		final public void setScorer(final Scorer scorer) throws IOException {
 
 		}
 
 		@Override
-		public void collect(int doc) throws IOException {
+		final public void collect(final int doc) throws IOException {
 			if (qtyDocValues == null)
 				return;
 			final long m = qtyDocValues.get(doc);
