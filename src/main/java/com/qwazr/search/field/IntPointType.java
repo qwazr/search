@@ -15,17 +15,17 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.util.BytesRef;
 
 class IntPointType extends StorableFieldType {
 
 	IntPointType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, BytesRefUtils.Converter.INT_POINT);
 	}
 
 	@Override
@@ -36,10 +36,4 @@ class IntPointType extends StorableFieldType {
 			consumer.accept(fieldName, new StoredField(fieldName, intValue));
 	}
 
-	@Override
-	public final Object toTerm(final BytesRef bytesRef) {
-		if (bytesRef == null || bytesRef.bytes == null)
-			return null;
-		return IntPoint.decodeDimension(bytesRef.bytes, 0);
-	}
 }

@@ -15,17 +15,17 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.util.BytesRef;
 
 class DoublePointType extends StorableFieldType {
 
 	DoublePointType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, BytesRefUtils.Converter.DOUBLE_POINT);
 	}
 
 	@Override
@@ -35,13 +35,6 @@ class DoublePointType extends StorableFieldType {
 		consumer.accept(fieldName, new DoublePoint(fieldName, doubleValue));
 		if (store == Field.Store.YES)
 			consumer.accept(fieldName, new StoredField(fieldName, doubleValue));
-	}
-
-	@Override
-	public final Object toTerm(final BytesRef bytesRef) {
-		if (bytesRef == null || bytesRef.bytes == null)
-			return null;
-		return DoublePoint.decodeDimension(bytesRef.bytes, 0);
 	}
 
 }

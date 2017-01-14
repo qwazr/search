@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
@@ -26,7 +27,7 @@ import org.apache.lucene.search.SortField;
 class SortedSetDocValuesFacetType extends StorableFieldType {
 
 	SortedSetDocValuesFacetType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, BytesRefUtils.Converter.STRING);
 	}
 
 	@Override

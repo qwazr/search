@@ -17,6 +17,7 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.field.Converters.MultiDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
@@ -32,7 +33,7 @@ import java.io.IOException;
 class SortedLongDocValuesType extends FieldTypeAbstract {
 
 	SortedLongDocValuesType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, BytesRefUtils.Converter.LONG);
 	}
 
 	@Override

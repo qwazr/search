@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import org.apache.lucene.document.TextField;
@@ -22,7 +23,7 @@ import org.apache.lucene.document.TextField;
 class TextFieldType extends StorableFieldType {
 
 	TextFieldType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, BytesRefUtils.Converter.STRING);
 	}
 
 	@Override

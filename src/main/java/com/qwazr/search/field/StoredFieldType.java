@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import org.apache.lucene.document.StoredField;
@@ -25,7 +26,7 @@ import java.io.Serializable;
 class StoredFieldType extends FieldTypeAbstract {
 
 	StoredFieldType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, BytesRefUtils.Converter.STRING);
 	}
 
 	@Override
@@ -39,11 +40,9 @@ class StoredFieldType extends FieldTypeAbstract {
 		else if (value instanceof Float)
 			consumer.accept(fieldName, new StoredField(fieldName, (float) value));
 		else if (value instanceof Externalizable)
-			consumer.accept(fieldName,
-					new StoredField(fieldName, toBytes(fieldName, (Externalizable) value)));
+			consumer.accept(fieldName, new StoredField(fieldName, toBytes(fieldName, (Externalizable) value)));
 		else if (value instanceof Serializable)
-			consumer.accept(fieldName,
-					new StoredField(fieldName, toBytes(fieldName, (Serializable) value)));
+			consumer.accept(fieldName, new StoredField(fieldName, toBytes(fieldName, (Serializable) value)));
 		else
 			consumer.accept(fieldName, new StoredField(fieldName, value.toString()));
 	}

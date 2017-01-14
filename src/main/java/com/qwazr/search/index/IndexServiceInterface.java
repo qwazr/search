@@ -119,6 +119,12 @@ public interface IndexServiceInterface extends ServiceInterface {
 			@QueryParam("text") String text);
 
 	@GET
+	@Path("/{schema_name}/{index_name}/fields/{field_name}/stats")
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+	FieldStats getFieldStats(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			@PathParam("field_name") String field_name);
+
+	@GET
 	@Path("/{schema_name}/{index_name}/fields/{field_name}/terms")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	List<TermEnumDefinition> doExtractTerms(@PathParam("schema_name") String schema_name,

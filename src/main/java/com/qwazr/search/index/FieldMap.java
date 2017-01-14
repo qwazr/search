@@ -44,7 +44,7 @@ public class FieldMap {
 		this.fieldDefinitionMap = fieldDefinitionMap;
 	}
 
-	final public Item find(final String fieldName) {
+	final Item find(final String fieldName) {
 		if (fieldName == null || fieldName.isEmpty())
 			throw new IllegalArgumentException("Empty fieldname is not allowed");
 		final Item item = nameDefMap.get(fieldName);
@@ -89,16 +89,16 @@ public class FieldMap {
 		if (fieldMapItem.definition.template == null)
 			return;
 		switch (fieldMapItem.definition.template) {
-			case FacetField:
-			case SortedSetDocValuesFacetField:
-				facetsConfig.setMultiValued(fieldName, false);
-				facetsConfig.setHierarchical(fieldName, false);
-				break;
-			case MultiFacetField:
-			case SortedSetMultiDocValuesFacetField:
-				facetsConfig.setMultiValued(fieldName, true);
-				facetsConfig.setHierarchical(fieldName, false);
-				break;
+		case FacetField:
+		case SortedSetDocValuesFacetField:
+			facetsConfig.setMultiValued(fieldName, false);
+			facetsConfig.setHierarchical(fieldName, false);
+			break;
+		case MultiFacetField:
+		case SortedSetMultiDocValuesFacetField:
+			facetsConfig.setMultiValued(fieldName, true);
+			facetsConfig.setHierarchical(fieldName, false);
+			break;
 		}
 	}
 

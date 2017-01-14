@@ -17,11 +17,12 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
+import com.qwazr.server.ServerException;
 import com.qwazr.utils.SerializationUtils;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.server.ServerException;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.BytesRef;
@@ -36,9 +37,11 @@ import java.util.Map;
 abstract class FieldTypeAbstract implements FieldTypeInterface {
 
 	final protected FieldMap.Item fieldMapItem;
+	final protected BytesRefUtils.Converter bytesRefConverter;
 
-	protected FieldTypeAbstract(final FieldMap.Item fieldMapItem) {
+	protected FieldTypeAbstract(final FieldMap.Item fieldMapItem, final BytesRefUtils.Converter bytesRefConverter) {
 		this.fieldMapItem = fieldMapItem;
+		this.bytesRefConverter = bytesRefConverter;
 	}
 
 	protected void fillArray(final String fieldName, final int[] values, final FieldConsumer consumer) {
@@ -139,11 +142,6 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 	}
 
 	@Override
-	public Object toTerm(final BytesRef bytesRef) {
-		return bytesRef == null ? null : bytesRef.utf8ToString();
-	}
-
-	@Override
 	public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
 		return ValueConverter.newConverter(fieldName, fieldMapItem.definition, reader);
 	}
@@ -170,6 +168,11 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 		if (value != null)
 			return value;
 		throw new RuntimeException("Error on field: " + fieldName + " - " + msg == null ? StringUtils.EMPTY : msg);
+	}
+
+	@Override
+	final public Object toTerm(final BytesRef bytesRef) {
+		return bytesRef == null ? null : bytesRefConverter == null ? null : bytesRefConverter.to(bytesRef);
 	}
 
 }

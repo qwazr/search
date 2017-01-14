@@ -52,19 +52,19 @@ public class SpanTermQuery extends AbstractSpanQuery {
 	}
 
 	public SpanTermQuery(final String field, final Long value) {
-		this(field, value, new Term(field, BytesRefUtils.from(value)));
+		this(field, value, new Term(field, BytesRefUtils.Converter.LONG.from(value)));
 	}
 
 	public SpanTermQuery(final String field, final Double value) {
-		this(field, value, new Term(field, BytesRefUtils.from(value)));
+		this(field, value, new Term(field, BytesRefUtils.Converter.DOUBLE.from(value)));
 	}
 
 	public SpanTermQuery(final String field, final Integer value) {
-		this(field, value, new Term(field, BytesRefUtils.from(value)));
+		this(field, value, new Term(field, BytesRefUtils.Converter.INT.from(value)));
 	}
 
 	public SpanTermQuery(final String field, final Float value) {
-		this(field, value, new Term(field, BytesRefUtils.from(value)));
+		this(field, value, new Term(field, BytesRefUtils.Converter.FLOAT.from(value)));
 	}
 
 	@Override

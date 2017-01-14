@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldMap;
 import org.apache.lucene.document.Field;
 
@@ -22,8 +23,8 @@ abstract class StorableFieldType extends FieldTypeAbstract {
 
 	protected final Field.Store store;
 
-	StorableFieldType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+	StorableFieldType(final FieldMap.Item fieldMapItem, BytesRefUtils.Converter bytesRefConverter) {
+		super(fieldMapItem, bytesRefConverter);
 		this.store = fieldMapItem.definition == null ?
 				Field.Store.NO :
 				(fieldMapItem.definition.stored != null && fieldMapItem.definition.stored) ?

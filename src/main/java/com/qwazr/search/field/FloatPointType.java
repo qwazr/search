@@ -15,18 +15,17 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.util.BytesRef;
 
 class FloatPointType extends StorableFieldType {
 
 	FloatPointType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, BytesRefUtils.Converter.FLOAT_POINT);
 	}
 
 	@Override
@@ -37,10 +36,4 @@ class FloatPointType extends StorableFieldType {
 			consumer.accept(fieldName, new StoredField(fieldName, floatValue));
 	}
 
-	@Override
-	public final Object toTerm(final BytesRef bytesRef) {
-		if (bytesRef == null || bytesRef.bytes == null)
-			return null;
-		return FloatPoint.decodeDimension(bytesRef.bytes, 0);
-	}
 }

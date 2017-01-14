@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
@@ -24,7 +25,7 @@ import org.apache.lucene.search.SortField;
 class CustomFieldType extends FieldTypeAbstract {
 
 	CustomFieldType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, getConverter(fieldMapItem.definition));
 	}
 
 	@Override
@@ -91,4 +92,23 @@ class CustomFieldType extends FieldTypeAbstract {
 		return sortField;
 	}
 
+	static BytesRefUtils.Converter getConverter(final FieldDefinition definition) {
+		if (definition == null)
+			return null;
+		if (definition.numeric_type == null)
+			return BytesRefUtils.Converter.STRING;
+		switch (definition.numeric_type) {
+		case DOUBLE:
+			return BytesRefUtils.Converter.DOUBLE;
+		case FLOAT:
+			return BytesRefUtils.Converter.FLOAT;
+		case INT:
+			return BytesRefUtils.Converter.INT;
+		case LONG:
+			return BytesRefUtils.Converter.LONG;
+		default:
+			return BytesRefUtils.Converter.STRING;
+		}
+
+	}
 }

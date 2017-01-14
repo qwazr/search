@@ -24,7 +24,7 @@ import java.util.Map;
 class Geo3DPointType extends FieldTypeAbstract {
 
 	Geo3DPointType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, null);
 	}
 
 	@Override

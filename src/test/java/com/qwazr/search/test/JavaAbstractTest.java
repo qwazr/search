@@ -21,6 +21,7 @@ import com.qwazr.search.collector.MaxNumericCollector;
 import com.qwazr.search.collector.MinNumericCollector;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.FacetDefinition;
+import com.qwazr.search.index.FieldStats;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexStatus;
@@ -467,6 +468,21 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(terms);
 		Assert.assertFalse(terms.isEmpty());
 		return terms;
+	}
+
+	static void checkFieldStats(String fieldName, FieldStats fieldStats) {
+		Assert.assertNotNull(fieldStats);
+		if (fieldStats.numberOfTerms == null)
+			return;
+		Assert.assertNotNull(fieldName, fieldStats.docCount);
+		Assert.assertNotNull(fieldName, fieldStats.sumDocFreq);
+		Assert.assertNotNull(fieldName, fieldStats.sumTotalTermFreq);
+	}
+
+	@Test
+	public void test600getFieldStats() throws IOException, URISyntaxException {
+		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		master.getFields().keySet().forEach(fieldName -> checkFieldStats(fieldName, master.getFieldStats(fieldName)));
 	}
 
 	@Test

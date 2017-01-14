@@ -32,7 +32,7 @@ import java.io.IOException;
 class BinaryDocValuesType extends FieldTypeAbstract {
 
 	BinaryDocValuesType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, null);
 	}
 
 	@Override
@@ -52,4 +52,5 @@ class BinaryDocValuesType extends FieldTypeAbstract {
 			return super.getConverter(fieldName, reader);
 		return new SingleDVConverter.BinaryDVConverter(binaryDocValue);
 	}
+
 }

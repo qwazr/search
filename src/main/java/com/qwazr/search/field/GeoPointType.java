@@ -24,7 +24,7 @@ import java.util.Map;
 class GeoPointType extends StorableFieldType {
 
 	GeoPointType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, null);
 	}
 
 	@Override

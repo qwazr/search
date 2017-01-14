@@ -143,6 +143,15 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
+	public FieldStats getFieldStats(String schema_name, String index_name, String field_name) {
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name,
+						"/stats/");
+		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
+		return executeJson(request, null, null, FieldStats.class, valid200Json);
+	}
+
+	@Override
 	public List<TermEnumDefinition> doExtractTerms(final String schema_name, final String index_name,
 			final String field_name, final Integer start, final Integer rows) {
 		return this.doExtractTerms(schema_name, index_name, field_name, null, start, rows);

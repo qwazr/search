@@ -187,6 +187,22 @@ final public class IndexInstance implements Closeable {
 		return fieldMap.getFieldDefinitionMap();
 	}
 
+	FieldStats getFieldStats(String fieldName) throws IOException {
+		final Semaphore sem = schema.acquireReadSemaphore();
+		try {
+			final IndexSearcher indexSearcher = searcherManager.acquire();
+			try {
+				final Terms terms = MultiFields.getFields(indexSearcher.getIndexReader()).terms(fieldName);
+				return terms == null ? new FieldStats() : new FieldStats(terms, fieldMap.getFieldType(fieldName));
+			} finally {
+				searcherManager.release(indexSearcher);
+			}
+		} finally {
+			if (sem != null)
+				sem.release();
+		}
+	}
+
 	IndexStatus getStatus() throws IOException, InterruptedException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {

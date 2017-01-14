@@ -235,6 +235,16 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
+	public FieldStats getFieldStats(String schemaName, String indexName, String fieldName) {
+		checkRight(schemaName);
+		try {
+			return indexManager.get(schemaName).get(indexName, false).getFieldStats(fieldName);
+		} catch (IOException e) {
+			throw ServerException.getJsonException(LOGGER, e);
+		}
+	}
+
+	@Override
 	final public List<TermEnumDefinition> doExtractTerms(final String schemaName, final String indexName,
 			final String fieldName, final Integer start, final Integer rows) {
 		return doExtractTerms(schemaName, indexName, fieldName, null, start, rows);

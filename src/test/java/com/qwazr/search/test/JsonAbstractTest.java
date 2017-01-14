@@ -18,12 +18,23 @@ package com.qwazr.search.test;
 import com.google.common.io.Files;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.index.*;
+import com.qwazr.search.index.BackupStatus;
+import com.qwazr.search.index.ExplainDefinition;
+import com.qwazr.search.index.IndexInstance;
+import com.qwazr.search.index.IndexServiceInterface;
+import com.qwazr.search.index.IndexSettingsDefinition;
+import com.qwazr.search.index.IndexStatus;
+import com.qwazr.search.index.QueryBuilder;
+import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.ResultDefinition;
+import com.qwazr.search.index.ResultDocumentMap;
+import com.qwazr.search.index.SchemaSettingsDefinition;
+import com.qwazr.search.index.TermDefinition;
+import com.qwazr.server.ServerException;
 import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.json.JsonMapper;
-import com.qwazr.server.ServerException;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.http.pool.PoolStats;
 import org.junit.Assert;
@@ -37,8 +48,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.qwazr.search.test.JavaAbstractTest.checkCollector;
@@ -863,6 +886,15 @@ public abstract class JsonAbstractTest {
 				client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, 2, 10000)).size();
 		Assert.assertEquals(firstSize, secondSize + 2);
 		JavaAbstractTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "a", null, null));
+	}
+
+	@Test
+	public void test620getFieldStats() throws IOException, URISyntaxException {
+		final IndexServiceInterface client = getClient();
+		client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME)
+				.keySet()
+				.forEach(fieldName -> JavaAbstractTest.checkFieldStats(fieldName,
+						client.getFieldStats(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName)));
 	}
 
 	@Test

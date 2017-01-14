@@ -343,6 +343,11 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 		return indexService.getField(schemaName, indexName, fieldName);
 	}
 
+	public FieldStats getFieldStats(final String fieldName) {
+		checkParameters();
+		return indexService.getFieldStats(schemaName, indexName, fieldName);
+	}
+
 	public void setField(final String fieldName, final FieldDefinition fieldDefinition) {
 		checkParameters();
 		indexService.setField(schemaName, indexName, fieldName, fieldDefinition);

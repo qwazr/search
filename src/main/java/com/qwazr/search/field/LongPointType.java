@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
@@ -22,12 +23,11 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.util.BytesRef;
 
 class LongPointType extends StorableFieldType {
 
 	LongPointType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem);
+		super(fieldMapItem, BytesRefUtils.Converter.LONG_POINT);
 	}
 
 	@Override
@@ -45,10 +45,4 @@ class LongPointType extends StorableFieldType {
 		return sortField;
 	}
 
-	@Override
-	public final Object toTerm(final BytesRef bytesRef) {
-		if (bytesRef == null || bytesRef.bytes == null)
-			return null;
-		return LongPoint.decodeDimension(bytesRef.bytes, 0);
-	}
 }
