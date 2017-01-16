@@ -32,6 +32,7 @@ import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.index.TermDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.CharsetUtils;
+import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.json.JsonMapper;
@@ -165,7 +166,7 @@ public abstract class JsonAbstractTest {
 		Assert.assertTrue(schemas.contains(SCHEMA_NAME));
 	}
 
-	private void checkErrorStatusCode(Runnable runnable, int expectedStatusCode) {
+	public static void checkErrorStatusCode(FunctionUtils.RunnableEx runnable, int expectedStatusCode) {
 		try {
 			runnable.run();
 			Assert.fail("WebApplicationException was not thrown");
@@ -175,6 +176,8 @@ public abstract class JsonAbstractTest {
 			Assert.assertEquals(expectedStatusCode, e.getStatusCode());
 		} catch (IllegalArgumentException e) {
 			// Thats ok
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 	}
 

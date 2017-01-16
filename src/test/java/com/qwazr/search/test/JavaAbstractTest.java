@@ -62,6 +62,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import static com.qwazr.search.test.JsonAbstractTest.checkErrorStatusCode;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class JavaAbstractTest {
 
@@ -684,7 +686,9 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test980DeleteIndex() throws URISyntaxException, IOException {
 		getSlave().deleteIndex();
+		checkErrorStatusCode(() -> getSlave().getIndexStatus(), 404);
 		getMaster().deleteIndex();
+		checkErrorStatusCode(() -> getMaster().getIndexStatus(), 404);
 	}
 
 	@Test
