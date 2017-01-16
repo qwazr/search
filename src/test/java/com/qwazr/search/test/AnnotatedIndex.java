@@ -18,22 +18,24 @@ package com.qwazr.search.test;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.index.IndexSettingsDefinition;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexOptions;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
-import static com.qwazr.search.field.FieldDefinition.Template.*;
+import static com.qwazr.search.field.FieldDefinition.Template.FacetField;
+import static com.qwazr.search.field.FieldDefinition.Template.MultiFacetField;
+import static com.qwazr.search.field.FieldDefinition.Template.SortedDocValuesField;
+import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValuesField;
+import static com.qwazr.search.field.FieldDefinition.Template.StoredField;
+import static com.qwazr.search.field.FieldDefinition.Template.StringField;
 
-@Index(name = AnnotatedIndex.INDEX_NAME_MASTER,
-		schema = AnnotatedIndex.SCHEMA_NAME,
-		type = IndexSettingsDefinition.Type.RAMDirectory)
+@Index(name = AnnotatedIndex.INDEX_NAME_MASTER, schema = AnnotatedIndex.SCHEMA_NAME)
 public class AnnotatedIndex {
 
 	public final static String SCHEMA_NAME = "testSchema";

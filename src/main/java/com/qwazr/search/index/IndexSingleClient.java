@@ -267,6 +267,14 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
+	public IndexCheckStatus checkIndex(String schema_name, String index_name) {
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/check");
+		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
+		return executeJson(request, null, null, IndexCheckStatus.class, valid200Json);
+	}
+
+	@Override
 	public Response deleteIndex(final String schema_name, final String index_name) {
 
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name);

@@ -17,13 +17,34 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.DocValuesType;
+import org.apache.lucene.index.FieldInfo;
+import org.apache.lucene.index.FieldInfos;
+import org.apache.lucene.index.IndexOptions;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.SegmentCommitInfo;
+import org.apache.lucene.index.SegmentInfos;
+import org.apache.lucene.index.SnapshotDeletionPolicy;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
 
-@JsonInclude(Include.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexStatus {
 
 	final public Long num_docs;
@@ -41,6 +62,7 @@ public class IndexStatus {
 	final public Set<String> fields;
 	final public IndexSettingsDefinition settings;
 	final public Map<String, Set<FieldInfoStatus>> field_infos;
+	final public List<SegmentInfoStatus> segment_infos;
 
 	public IndexStatus() {
 		num_docs = null;
@@ -58,11 +80,13 @@ public class IndexStatus {
 		fields = null;
 		settings = null;
 		field_infos = null;
+		segment_infos = null;
 	}
 
-	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final IndexReader indexReader,
-			final IndexWriter indexWriter, final SnapshotDeletionPolicy snapshotDeletionPolicy,
-			final IndexSettingsDefinition settings, final Set<String> analyzers, final Set<String> fields) {
+	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final Directory directory,
+			final IndexReader indexReader, final IndexWriter indexWriter,
+			final SnapshotDeletionPolicy snapshotDeletionPolicy, final IndexSettingsDefinition settings,
+			final Set<String> analyzers, final Set<String> fields) throws IOException {
 		num_docs = (long) indexReader.numDocs();
 		num_deleted_docs = (long) indexReader.numDeletedDocs();
 		field_infos = new TreeMap<>();
@@ -90,10 +114,18 @@ public class IndexStatus {
 
 		this.index_uuid = indexUuid == null ? null : indexUuid.toString();
 		this.master_uuid = masterUuid == null ? null : masterUuid.toString();
-		version = indexReader instanceof DirectoryReader ? ((DirectoryReader) indexReader).getVersion() : null;
+		this.version = indexReader instanceof DirectoryReader ? ((DirectoryReader) indexReader).getVersion() : null;
 		this.settings = settings;
 		this.analyzers = analyzers;
 		this.fields = fields;
+		final SegmentInfos segmentInfos =
+				directory != null && directory instanceof FSDirectory ? SegmentInfos.readLatestCommit(directory) : null;
+		if (segmentInfos != null) {
+			segment_infos = new ArrayList<>();
+			for (SegmentCommitInfo segmentInfo : segmentInfos)
+				segment_infos.add(new SegmentInfoStatus(segmentInfo));
+		} else
+			segment_infos = null;
 	}
 
 	private void fillFieldInfos(final Map<String, Set<FieldInfoStatus>> field_infos,
@@ -226,6 +258,25 @@ public class IndexStatus {
 			if (!Objects.equals(point_num_bytes, info.point_num_bytes))
 				return false;
 			return true;
+		}
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
+	public static class SegmentInfoStatus {
+
+		@JsonProperty("size_in_bytes")
+		final public Long sizeInBytes;
+
+		final public Collection<String> files;
+
+		public SegmentInfoStatus() {
+			sizeInBytes = null;
+			files = null;
+		}
+
+		SegmentInfoStatus(final SegmentCommitInfo segmentInfo) throws IOException {
+			sizeInBytes = segmentInfo.sizeInBytes();
+			files = segmentInfo.files();
 		}
 	}
 }

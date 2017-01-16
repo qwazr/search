@@ -26,7 +26,6 @@ import com.qwazr.search.query.JoinQuery;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.json.JsonMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.lang3.tuple.Pair;
@@ -77,7 +76,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 final public class IndexInstance implements Closeable {
 
-	private final IndexInstanceBuilder.FileSet fileSet;
+	private final IndexFileSet fileSet;
 	private final UUID indexUuid;
 	private final String indexName;
 
@@ -108,8 +107,8 @@ final public class IndexInstance implements Closeable {
 
 	private volatile Pair<IndexReader, SortedSetDocValuesReaderState> facetsReaderStateCache;
 
-	IndexInstance(final ClassLoaderManager classLoaderManager, final IndexInstanceBuilder builder) {
-		this.classLoaderManager = classLoaderManager;
+	IndexInstance(final IndexInstanceBuilder builder) {
+		this.classLoaderManager = builder.classLoaderManager;
 		this.schema = builder.schema;
 		this.fileSet = builder.fileSet;
 		this.indexName = builder.fileSet.indexDirectory.getName();
@@ -176,8 +175,8 @@ final public class IndexInstance implements Closeable {
 		final IndexSearcher indexSearcher = searcherManager.acquire();
 		try {
 			return new IndexStatus(indexUuid, indexReplicator != null ? indexReplicator.getMasterUuid() : null,
-					indexSearcher.getIndexReader(), indexWriter, snapshotDeletionPolicy, settings, analyzerMap.keySet(),
-					fieldMap.getFieldDefinitionMap().keySet());
+					dataDirectory, indexSearcher.getIndexReader(), indexWriter, snapshotDeletionPolicy, settings,
+					analyzerMap.keySet(), fieldMap.getFieldDefinitionMap().keySet());
 		} finally {
 			searcherManager.release(indexSearcher);
 		}
@@ -223,7 +222,7 @@ final public class IndexInstance implements Closeable {
 
 	synchronized void setFields(final LinkedHashMap<String, FieldDefinition> fields)
 			throws ServerException, IOException {
-		JsonMapper.MAPPER.writeValue(fileSet.fieldMapFile, fields);
+		fileSet.writeFieldMap(fields);
 		fieldMap = new FieldMap(fields);
 		refreshFieldsAnalyzers(analyzerMap, fields);
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
@@ -252,7 +251,7 @@ final public class IndexInstance implements Closeable {
 	synchronized void setAnalyzers(final LinkedHashMap<String, AnalyzerDefinition> analyzers)
 			throws ServerException, IOException {
 		refreshFieldsAnalyzers(analyzerMap, fieldMap.getFieldDefinitionMap());
-		JsonMapper.MAPPER.writeValue(fileSet.analyzerMapFile, analyzers);
+		fileSet.writeAnalyzerMap(analyzers);
 		analyzerMap = analyzers;
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}

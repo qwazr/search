@@ -17,17 +17,43 @@ package com.qwazr.search.annotations;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.index.*;
-import com.qwazr.utils.*;
+import com.qwazr.search.index.AnnotatedServiceInterface;
+import com.qwazr.search.index.BackupStatus;
+import com.qwazr.search.index.ExplainDefinition;
+import com.qwazr.search.index.FieldStats;
+import com.qwazr.search.index.IndexCheckStatus;
+import com.qwazr.search.index.IndexServiceInterface;
+import com.qwazr.search.index.IndexSettingsDefinition;
+import com.qwazr.search.index.IndexStatus;
+import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.ResultDefinition;
+import com.qwazr.search.index.ResultDocumentObject;
+import com.qwazr.search.index.SchemaSettingsDefinition;
+import com.qwazr.search.index.TermDefinition;
+import com.qwazr.search.index.TermEnumDefinition;
+import com.qwazr.utils.AnnotationsUtils;
+import com.qwazr.utils.ArrayUtils;
+import com.qwazr.utils.CharsetUtils;
+import com.qwazr.utils.FieldMapWrapper;
+import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.util.EntityUtils;
+import org.apache.lucene.index.CheckIndex;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.SortedMap;
 
 public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 
@@ -164,6 +190,16 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	public IndexStatus createUpdateIndex() throws URISyntaxException {
 		checkParameters();
 		return indexService.createUpdateIndex(schemaName, indexName, settings);
+	}
+
+	/**
+	 * Check if an index is valid
+	 *
+	 * @return the checked index status
+	 */
+	public IndexCheckStatus checkIndex() {
+		checkParameters();
+		return indexService.checkIndex(schemaName, indexName);
 	}
 
 	public void deleteIndex() {

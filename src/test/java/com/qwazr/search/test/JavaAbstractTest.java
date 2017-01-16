@@ -22,6 +22,7 @@ import com.qwazr.search.collector.MinNumericCollector;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.FacetDefinition;
 import com.qwazr.search.index.FieldStats;
+import com.qwazr.search.index.IndexCheckStatus;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexStatus;
@@ -492,6 +493,13 @@ public abstract class JavaAbstractTest {
 		int secondSize = checkTermList(master.doExtractTerms("content", null, 2, 10000)).size();
 		Assert.assertEquals(firstSize, secondSize + 2);
 		checkTermList(master.doExtractTerms("content", "a", null, null));
+	}
+
+	@Test
+	public void test650checkIndex() throws IOException, URISyntaxException {
+		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		IndexCheckStatus status = master.checkIndex();
+		Assert.assertNotNull(status);
 	}
 
 	private void checkMultiField(final MultiFieldQuery query, final String check, final int size)

@@ -389,6 +389,16 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
+	public IndexCheckStatus checkIndex(String schemaName, String indexName) {
+		try {
+			checkRight(schemaName);
+			return indexManager.get(schemaName).checkIndex(indexName);
+		} catch (Exception e) {
+			throw ServerException.getJsonException(LOGGER, e);
+		}
+	}
+
+	@Override
 	final public Response deleteIndex(final String schemaName, final String indexName) {
 		try {
 			checkRight(schemaName);

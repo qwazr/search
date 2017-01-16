@@ -24,6 +24,7 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.lucene.search.SearcherFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
@@ -31,23 +32,24 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 
 public class SchemaInstance implements Closeable {
 
 	private final static String SETTINGS_FILE = "settings.json";
 
-	private final Map<String, IndexInstance> indexMap;
-	private final LockUtils.ReadWriteLock rwlIndexMap;
+	private final SearcherFactory searcherFactory;
+
+	private final ConcurrentHashMap<String, IndexInstanceManager> indexMap;
 
 	private final ClassLoaderManager classLoaderManager;
 	private final IndexServiceInterface service;
@@ -66,6 +68,7 @@ public class SchemaInstance implements Closeable {
 			final File schemaDirectory, final ExecutorService executorService)
 			throws IOException, ReflectiveOperationException, URISyntaxException {
 
+		this.searcherFactory = new MultiThreadSearcherFactory(executorService);
 		this.executorService = executorService;
 		this.classLoaderManager = classLoaderManager;
 		this.service = service;
@@ -75,8 +78,7 @@ public class SchemaInstance implements Closeable {
 		if (!schemaDirectory.exists())
 			throw new IOException("The directory does not exist: " + schemaDirectory.getName());
 
-		indexMap = new HashMap<>();
-		rwlIndexMap = new LockUtils.ReadWriteLock();
+		indexMap = new ConcurrentHashMap<>();
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
 		settingsDefinition = settingsFile.exists() ?
@@ -88,43 +90,45 @@ public class SchemaInstance implements Closeable {
 		if (directories == null)
 			return;
 		for (File indexDirectory : directories)
-			indexMap.put(indexDirectory.getName(),
-					new IndexInstanceBuilder(this, indexDirectory, null, executorService).build());
+			indexMap.put(indexDirectory.getName(), new IndexInstanceManager(this, indexDirectory));
 	}
 
 	final IndexServiceInterface getService() {
 		return service;
 	}
 
+	final SearcherFactory getSearcherFactory() {
+		return searcherFactory;
+	}
+
 	final ClassLoaderManager getClassLoaderManager() {
 		return classLoaderManager;
 	}
 
+	final ExecutorService getExecutorService() {
+		return executorService;
+	}
+
 	@Override
 	public void close() throws IOException {
-		rwlIndexMap.writeEx(() -> indexMap.values().forEach(IOUtils::closeQuietly));
+		indexMap.forEachValue(1, IOUtils::closeQuietly);
 	}
 
 	IndexInstance createUpdate(final String indexName, final IndexSettingsDefinition settings) throws Exception {
-		return rwlIndexMap.writeEx(() -> {
-
-			final IndexInstanceBuilder builder =
-					new IndexInstanceBuilder(this, new File(schemaDirectory, indexName), settings, executorService);
-
-			IndexInstance indexInstance = indexMap.get(indexName);
-
-			if (indexInstance != null && !Objects.equals(indexInstance.getSettings(), settings)) {
-				IOUtils.closeQuietly(indexInstance);
-				indexMap.remove(indexName);
-				indexInstance = null;
+		return indexMap.computeIfAbsent(indexName, name -> {
+			try {
+				return new IndexInstanceManager(this, new File(schemaDirectory, name));
+			} catch (IOException e) {
+				throw new ServerException(e);
 			}
-			if (indexInstance == null) {
-				indexInstance = builder.build();
-				indexMap.put(indexName, indexInstance);
-			}
+		}).createUpdate(settings);
+	}
 
-			return indexInstance;
-		});
+	private IndexInstanceManager checkIndexExists(final String indexName,
+			final IndexInstanceManager indexInstanceManager) {
+		if (indexInstanceManager == null)
+			throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);
+		return indexInstanceManager;
 	}
 
 	/**
@@ -138,41 +142,29 @@ public class SchemaInstance implements Closeable {
 	 * @throws IOException     if any I/O error occurs
 	 */
 	public IndexInstance get(String indexName, boolean ensureWriterOpen) {
-		return rwlIndexMap.read(() -> {
-			IndexInstance indexInstance = indexMap.get(indexName);
-			if (indexInstance == null)
-				throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);
-			if (!ensureWriterOpen)
-				return indexInstance;
-			try {
-				return indexInstance.isIndexWriterOpen() ? indexInstance : createUpdate(indexName, null);
-			} catch (InterruptedException | ReflectiveOperationException | URISyntaxException e) {
-				throw new ServerException(e);
-			}
-		});
+		final IndexInstanceManager indexInstanceManager = checkIndexExists(indexName, indexMap.get(indexName));
+		try {
+			return ensureWriterOpen ? indexInstanceManager.getIndexInstance() : indexInstanceManager.open();
+		} catch (Exception e) {
+			throw new ServerException(e);
+		}
 	}
 
 	void delete() {
-		rwlIndexMap.write(() -> {
-			for (IndexInstance instance : indexMap.values()) {
-				instance.close();
-				instance.delete();
-			}
-		});
+		indexMap.forEachValue(1, IndexInstanceManager::delete);
 		if (schemaDirectory.exists())
 			FileUtils.deleteQuietly(schemaDirectory);
 	}
 
-	void delete(String indexName) throws ServerException, IOException {
-		rwlIndexMap.write(() -> {
-			IndexInstance indexInstance = get(indexName, false);
-			indexInstance.delete();
-			indexMap.remove(indexName);
+	void delete(final String indexName) throws ServerException, IOException {
+		indexMap.compute(indexName, (name, indexInstanceManager) -> {
+			checkIndexExists(indexName, indexInstanceManager).delete();
+			return null;
 		});
 	}
 
 	Set<String> nameSet() {
-		return rwlIndexMap.read(indexMap::keySet);
+		return indexMap.keySet();
 	}
 
 	final private static Pattern backupNameMatcher = Pattern.compile("[^a-zA-Z0-9-_]");
@@ -209,15 +201,13 @@ public class SchemaInstance implements Closeable {
 		});
 	}
 
-	private void indexIterator(final String indexName,
-			final FunctionUtils.BiConsumerEx<String, IndexInstance, IOException> consumer) throws IOException {
-		rwlIndexMap.readEx(() -> {
-			if ("*".equals(indexName)) {
-				for (Map.Entry<String, IndexInstance> entry : indexMap.entrySet())
-					consumer.accept(entry.getKey(), entry.getValue());
-			} else
-				consumer.accept(indexName, get(indexName, false));
-		});
+	private void indexIterator(final String indexName, final BiConsumer<String, IndexInstance> consumer)
+			throws IOException {
+		if ("*".equals(indexName)) {
+			indexMap.forEach(1,
+					(name, indexInstanceManager) -> consumer.accept(name, indexInstanceManager.getIndexInstance()));
+		} else
+			consumer.accept(indexName, get(indexName, false));
 	}
 
 	SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) throws IOException {
@@ -227,7 +217,11 @@ public class SchemaInstance implements Closeable {
 			final File backupDirectory = getBackupDirectory(backupName, true);
 			final SortedMap<String, BackupStatus> results = new TreeMap<>();
 			indexIterator(indexName, (idxName, indexInstance) -> {
-				results.put(idxName, indexInstance.backup(new File(backupDirectory, idxName)));
+				try {
+					results.put(idxName, indexInstance.backup(new File(backupDirectory, idxName)));
+				} catch (IOException e) {
+					throw new ServerException(e);
+				}
 			});
 			return results;
 		});
@@ -256,7 +250,11 @@ public class SchemaInstance implements Closeable {
 				indexIterator(indexName, (idxName, indexInstance) -> {
 					final File backupIndexDirectory = new File(backupDirectory, idxName);
 					if (backupIndexDirectory.exists() && backupIndexDirectory.isDirectory())
-						backupResults.put(idxName, indexInstance.getBackup(backupIndexDirectory));
+						try {
+							backupResults.put(idxName, indexInstance.getBackup(backupIndexDirectory));
+						} catch (IOException e) {
+							throw new ServerException(e);
+						}
 				});
 				if (!backupResults.isEmpty())
 					results.put(backupDirectory.getName(), backupResults);
@@ -274,7 +272,11 @@ public class SchemaInstance implements Closeable {
 				indexIterator(indexName, (idxName, indexInstance) -> {
 					final File backupIndexDirectory = new File(backupDirectory, idxName);
 					if (backupIndexDirectory.exists() && backupIndexDirectory.isDirectory()) {
-						FileUtils.deleteDirectory(backupIndexDirectory);
+						try {
+							FileUtils.deleteDirectory(backupIndexDirectory);
+						} catch (IOException e) {
+							throw new ServerException(e);
+						}
 						counter.incrementAndGet();
 					}
 				});
@@ -338,23 +340,27 @@ public class SchemaInstance implements Closeable {
 		return atomicAquire(writeSemaphore);
 	}
 
-	final void checkSize(final int addSize) {
+	final void checkSize(final int addSize) throws IOException {
 		if (settingsDefinition == null)
 			return;
 		if (settingsDefinition.max_size == null)
 			return;
-		rwlIndexMap.read(() -> {
+		final AtomicLong totalSize = new AtomicLong();
+		indexIterator("*", (name, indexInstance) -> {
+			final long indexSize;
 			try {
-				long size = 0;
-				for (IndexInstance instance : indexMap.values())
-					size += instance.getStatus().num_docs;
-				if (size + addSize > settingsDefinition.max_size)
-					throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-							"This schema is limited to " + settingsDefinition.max_size + " documents");
-			} catch (Exception e) {
+				indexSize = indexInstance.getStatus().num_docs;
+			} catch (IOException | InterruptedException e) {
 				throw new ServerException(e);
 			}
+			if (totalSize.addAndGet(indexSize) + addSize > settingsDefinition.max_size)
+				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+						"This schema is limited to " + settingsDefinition.max_size + " documents");
 		});
 	}
 
+	IndexCheckStatus checkIndex(String indexName) throws IOException {
+		final IndexInstanceManager indexInstanceManager = indexMap.get(indexName);
+		return indexInstanceManager == null ? null : new IndexCheckStatus(indexInstanceManager.check());
+	}
 }

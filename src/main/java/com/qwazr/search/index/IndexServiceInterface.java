@@ -208,6 +208,12 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	IndexStatus getIndex(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
+	@POST
+	@Path("/{schema_name}/{index_name}/check")
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+	IndexCheckStatus checkIndex(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name);
+
 	@DELETE
 	@Path("/{schema_name}/{index_name}")
 	Response deleteIndex(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);

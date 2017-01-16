@@ -15,17 +15,23 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.utils.HashUtils;
-import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.server.ServerException;
-import org.apache.lucene.index.*;
-import org.apache.lucene.replicator.*;
-import org.apache.lucene.search.IndexSearcher;
+import com.qwazr.utils.IOUtils;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.SerialMergeScheduler;
+import org.apache.lucene.index.SnapshotDeletionPolicy;
+import org.apache.lucene.index.TieredMergePolicy;
+import org.apache.lucene.replicator.IndexReplicationHandler;
+import org.apache.lucene.replicator.IndexRevision;
+import org.apache.lucene.replicator.LocalReplicator;
+import org.apache.lucene.replicator.PerSessionDirectoryFactory;
+import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.store.Directory;
@@ -35,7 +41,6 @@ import org.apache.lucene.store.RAMDirectory;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -43,47 +48,18 @@ import java.util.concurrent.ExecutorService;
 
 class IndexInstanceBuilder {
 
-	final static String INDEX_DATA = "data";
-	final static String REPL_WORK = "repl_work";
-	final static String UUID_FILE = "uuid";
-	final static String UUID_MASTER_FILE = "uuid.master";
-	final static String SETTINGS_FILE = "settings.json";
-	final static String FIELDS_FILE = "fields.json";
-	final static String ANALYZERS_FILE = "analyzers.json";
-	final static String RESOURCES_DIR = "resources";
-
-	static class FileSet {
-
-		final File uuidFile;
-		final File uuidMasterFile;
-		final File settingsFile;
-		final File indexDirectory;
-		final File dataDirectory;
-		final File analyzerMapFile;
-		final File resourcesDirectory;
-		final File fieldMapFile;
-		final Path replWorkPath;
-
-		private FileSet(File indexDirectory) {
-			this.uuidFile = new File(indexDirectory, UUID_FILE);
-			this.uuidMasterFile = new File(indexDirectory, UUID_MASTER_FILE);
-			this.indexDirectory = indexDirectory;
-			this.dataDirectory = new File(indexDirectory, INDEX_DATA);
-			this.analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
-			this.resourcesDirectory = new File(indexDirectory, RESOURCES_DIR);
-			this.fieldMapFile = new File(indexDirectory, FIELDS_FILE);
-			this.settingsFile = new File(indexDirectory, SETTINGS_FILE);
-			this.replWorkPath = indexDirectory.toPath().resolve(REPL_WORK);
-		}
-	}
-
 	final SchemaInstance schema;
-	final File indexDirectory;
-	final FileSet fileSet;
-	final SearcherFactory searcherFactory;
+	final IndexFileSet fileSet;
+
+	final ClassLoaderManager classLoaderManager;
 	final ExecutorService executorService;
 
-	IndexSettingsDefinition settings;
+	private final IndexServiceInterface indexService;
+	private final SearcherFactory searcherFactory;
+
+	final IndexSettingsDefinition settings;
+	final FileResourceLoader fileResourceLoader;
+	final UUID indexUuid;
 
 	Directory dataDirectory = null;
 
@@ -95,89 +71,41 @@ class IndexInstanceBuilder {
 	UpdatableAnalyzer indexAnalyzer = null;
 	UpdatableAnalyzer queryAnalyzer = null;
 
-	FileResourceLoader fileResourceLoader = null;
-
 	LocalReplicator replicator = null;
 	ReplicationClient replicationClient = null;
 	IndexReplicator indexReplicator = null;
 
-	UUID indexUuid = null;
-
-	IndexInstanceBuilder(final SchemaInstance schema, final File indexDirectory, final IndexSettingsDefinition settings,
-			final ExecutorService executorService) {
+	IndexInstanceBuilder(final SchemaInstance schema, final IndexFileSet fileSet,
+			final IndexSettingsDefinition settings, UUID indexUuid) {
 		this.schema = schema;
-		this.indexDirectory = indexDirectory;
+		this.fileSet = fileSet;
+		this.classLoaderManager = schema.getClassLoaderManager();
+		this.executorService = schema.getExecutorService();
 		this.settings = settings;
-		this.fileSet = new FileSet(indexDirectory);
-		this.searcherFactory = new MultiThreadSearcherFactory(executorService);
-		this.executorService = executorService;
-	}
-
-	private static class MultiThreadSearcherFactory extends SearcherFactory {
-
-		private final ExecutorService executorService;
-
-		private MultiThreadSearcherFactory(final ExecutorService executorService) {
-			this.executorService = executorService;
-		}
-
-		public IndexSearcher newSearcher(IndexReader reader, IndexReader previousReader) throws IOException {
-			return new IndexSearcher(reader, executorService);
-		}
+		this.searcherFactory = schema.getSearcherFactory();
+		this.indexService = schema.getService();
+		this.fileResourceLoader = new FileResourceLoader(classLoaderManager, null, fileSet.resourcesDirectory);
+		this.indexUuid = indexUuid;
 	}
 
 	private void buildCommon() throws IOException, ReflectiveOperationException, URISyntaxException {
 
-		if (!indexDirectory.exists())
-			indexDirectory.mkdir();
-		if (!indexDirectory.isDirectory())
-			throw new IOException("This name is not valid. No directory exists for this location: "
-					+ indexDirectory.getAbsolutePath());
-
-		// Manage the index UUID
-		if (fileSet.uuidFile.exists()) {
-			if (!fileSet.uuidFile.isFile())
-				throw new IOException("The UUID path is not a file: " + fileSet.uuidFile);
-			indexUuid = UUID.fromString(IOUtils.readFileAsString(fileSet.uuidFile));
-		} else {
-			indexUuid = HashUtils.newTimeBasedUUID();
-			IOUtils.writeStringAsFile(indexUuid.toString(), fileSet.uuidFile);
-		}
-
-		//Loading the settings
-		if (settings == null)
-			settings = fileSet.settingsFile.exists() ?
-					JsonMapper.MAPPER.readValue(fileSet.settingsFile, IndexSettingsDefinition.class) :
-					IndexSettingsDefinition.EMPTY;
-		else
-			JsonMapper.MAPPER.writeValue(fileSet.settingsFile, settings);
-
-		//Loading the fields
-		final File fieldMapFile = new File(indexDirectory, FIELDS_FILE);
-		fieldMap = fieldMapFile.exists() ?
-				JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
-				new LinkedHashMap<>();
-
-		//Loading the fields
-		final File analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
-		analyzerMap = analyzerMapFile.exists() ?
-				JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
-				new LinkedHashMap<>();
-
-		// Set the resource loader
-		fileResourceLoader = new FileResourceLoader(schema.getClassLoaderManager(), null, fileSet.resourcesDirectory);
+		analyzerMap = fileSet.loadAnalyzerMap();
+		fieldMap = fileSet.loadFieldMap();
 
 		final AnalyzerContext context =
-				new AnalyzerContext(schema.getClassLoaderManager(), fileResourceLoader, analyzerMap, fieldMap, false);
+				new AnalyzerContext(classLoaderManager, fileResourceLoader, analyzerMap, fieldMap, false);
 		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
 
 		// Open and lock the data directory
-		dataDirectory =
-				settings.directoryType == null || settings.directoryType == IndexSettingsDefinition.Type.FSDirectory ?
-						FSDirectory.open(fileSet.dataDirectory.toPath()) :
-						new RAMDirectory();
+		dataDirectory = getDirectory(settings, fileSet.dataDirectory);
+	}
 
+	static Directory getDirectory(IndexSettingsDefinition settings, File dataDirectory) throws IOException {
+		return settings.directoryType == null || settings.directoryType == IndexSettingsDefinition.Type.FSDirectory ?
+				FSDirectory.open(dataDirectory.toPath()) :
+				new RAMDirectory();
 	}
 
 	private void openOrCreateIndex() throws ReflectiveOperationException, IOException {
@@ -187,7 +115,7 @@ class IndexInstanceBuilder {
 		if (settings != null) {
 			if (settings.similarityClass != null && !settings.similarityClass.isEmpty())
 				indexWriterConfig.setSimilarity(
-						IndexUtils.findSimilarity(schema.getClassLoaderManager(), settings.similarityClass));
+						IndexUtils.findSimilarity(classLoaderManager, settings.similarityClass));
 			if (settings.ramBufferSize != null)
 				indexWriterConfig.setRAMBufferSizeMB(settings.ramBufferSize);
 
@@ -226,7 +154,7 @@ class IndexInstanceBuilder {
 		};
 		ReplicationClient.ReplicationHandler handler = new IndexReplicationHandler(dataDirectory, callback);
 		ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(fileSet.replWorkPath);
-		indexReplicator = new IndexReplicator(schema.getService(), settings.master, fileSet.uuidMasterFile);
+		indexReplicator = new IndexReplicator(indexService, settings.master, fileSet.uuidMasterFile);
 		replicationClient = new ReplicationClient(indexReplicator, handler, factory);
 
 		// we build the SearcherManager
@@ -259,7 +187,7 @@ class IndexInstanceBuilder {
 				buildSlave();
 			else
 				buildMaster();
-			return new IndexInstance(schema.getClassLoaderManager(), this);
+			return new IndexInstance(this);
 		} catch (IOException | ReflectiveOperationException | URISyntaxException e) {
 			abort();
 			throw e;
