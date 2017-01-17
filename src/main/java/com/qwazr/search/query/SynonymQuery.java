@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.BytesRef;
 
@@ -27,64 +28,69 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 
-public class TermsQuery extends AbstractMultiTermQuery {
+public class SynonymQuery extends AbstractMultiTermQuery {
 
 	final public Collection<Object> terms;
 
 	@JsonIgnore
-	final private Collection<BytesRef> bytesRefCollection;
+	final private Term[] termArray;
 
-	public TermsQuery() {
+	public SynonymQuery() {
 		terms = null;
-		bytesRefCollection = null;
+		termArray = null;
 	}
 
-	public TermsQuery(final String field, final Collection<Object> terms) {
+	public SynonymQuery(final String field, final Collection<Object> terms) {
 		super(field);
 		Objects.requireNonNull(field, "The field is null");
 		Objects.requireNonNull(terms, "The term list is null");
 		this.terms = terms;
-		this.bytesRefCollection = null;
+		this.termArray = null;
 	}
 
-	public TermsQuery(final String field, final Object... terms) {
+	public SynonymQuery(final String field, final Object... terms) {
 		super(field);
 		Objects.requireNonNull(field, "The field is null");
 		Objects.requireNonNull(terms, "The term list is null");
-		this.bytesRefCollection = null;
 		this.terms = new ArrayList<>(terms.length);
 		Collections.addAll(this.terms, terms);
+		this.termArray = null;
 	}
 
-	private TermsQuery(final Builder builder) {
+	private SynonymQuery(final Builder builder) {
 		super(builder);
 		this.terms = null;
-		this.bytesRefCollection = builder.terms;
+		termArray = new Term[builder.terms.size()];
+		int i = 0;
+		for (BytesRef br : builder.terms)
+			termArray[i++] = new Term(builder.field, br);
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		final Collection<BytesRef> bytesRefs;
-		if (bytesRefCollection == null) {
-			bytesRefs = new ArrayList<>();
-			terms.forEach(term -> bytesRefs.add(BytesRefUtils.fromAny(term)));
+		final Term[] ta;
+		if (termArray == null) {
+			ta = new Term[terms.size()];
+			int i = 0;
+			for (Object t : terms)
+				ta[i++] = new Term(field, BytesRefUtils.fromAny(t));
 		} else
-			bytesRefs = bytesRefCollection;
-		return new org.apache.lucene.queries.TermsQuery(field, bytesRefs);
+			ta = termArray;
+		return new org.apache.lucene.search.SynonymQuery(ta);
 	}
 
 	public static Builder of(final String field) {
 		return new Builder(field);
 	}
 
-	public static class Builder extends MultiTermBuilder<TermsQuery> {
+	public static class Builder extends MultiTermBuilder<SynonymQuery> {
 
 		private Builder(final String field) {
 			super(field);
 		}
 
-		final public TermsQuery build() {
-			return new TermsQuery(this);
+		final public SynonymQuery build() {
+			return new SynonymQuery(this);
 		}
 	}
 }

@@ -15,26 +15,81 @@
  */
 package com.qwazr.search.query;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.search.MultiTermQuery;
+import com.qwazr.search.index.BytesRefUtils;
+import org.apache.lucene.util.BytesRef;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class AbstractMultiTermQuery extends AbstractFieldQuery {
 
-	public AbstractMultiTermQuery() {
+	protected AbstractMultiTermQuery() {
 	}
 
 	protected AbstractMultiTermQuery(final String field) {
 		super(field);
 	}
 
-	@JsonIgnore
-	@Override
-	public abstract MultiTermQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException;
+	protected AbstractMultiTermQuery(final MultiTermBuilder builder) {
+		super(builder);
+	}
 
+	abstract static public class MultiTermBuilder<T extends AbstractMultiTermQuery> extends AbstractFieldBuilder {
+
+		final List<BytesRef> terms = new ArrayList<>();
+
+		protected MultiTermBuilder(final String field) {
+			super(field);
+		}
+
+		final public MultiTermBuilder<T> add(final BytesRef... bytes) {
+			if (bytes != null)
+				for (BytesRef b : bytes)
+					if (b != null)
+						terms.add(b);
+			return this;
+		}
+
+		final public MultiTermBuilder<T> add(final String... term) {
+			if (term != null)
+				for (String t : term)
+					if (t != null)
+						terms.add(BytesRefUtils.Converter.STRING.from(t));
+			return this;
+		}
+
+		final public MultiTermBuilder<T> add(final Integer... value) {
+			if (value != null)
+				for (Integer v : value)
+					if (v != null)
+						terms.add(BytesRefUtils.Converter.INT.from(v));
+			return this;
+		}
+
+		final public MultiTermBuilder<T> add(final Float... value) {
+			if (value != null)
+				for (Float v : value)
+					if (v != null)
+						terms.add(BytesRefUtils.Converter.FLOAT.from(v));
+			return this;
+		}
+
+		final public MultiTermBuilder<T> add(final Long... value) {
+			if (value != null)
+				for (Long v : value)
+					if (v != null)
+						terms.add(BytesRefUtils.Converter.LONG.from(v));
+			return this;
+		}
+
+		final public MultiTermBuilder<T> add(final Double... value) {
+			if (value != null)
+				for (Double v : value)
+					if (v != null)
+						terms.add(BytesRefUtils.Converter.DOUBLE.from(v));
+			return this;
+		}
+
+		abstract public T build();
+	}
 }

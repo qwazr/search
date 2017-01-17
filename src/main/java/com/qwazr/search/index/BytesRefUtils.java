@@ -153,6 +153,8 @@ public class BytesRefUtils {
 	static public BytesRef fromAny(final Object value) {
 		if (value == null)
 			return new BytesRef(BytesRef.EMPTY_BYTES);
+		if (value instanceof BytesRef)
+			return (BytesRef) value;
 		if (value instanceof String)
 			return Converter.STRING.from((String) value);
 		if (value instanceof Integer)
@@ -163,8 +165,6 @@ public class BytesRefUtils {
 			return Converter.LONG.from((Long) value);
 		if (value instanceof Double)
 			return Converter.DOUBLE.from((Double) value);
-		if (value instanceof BytesRef)
-			return (BytesRef) value;
 		// Last chance (string conversion)
 		return new BytesRef(value.toString());
 	}
