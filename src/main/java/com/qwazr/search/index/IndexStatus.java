@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.DocValuesType;
@@ -27,9 +28,12 @@ import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.LiveIndexWriterConfig;
+import org.apache.lucene.index.MergePolicy;
 import org.apache.lucene.index.SegmentCommitInfo;
 import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
+import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -62,11 +66,14 @@ public class IndexStatus {
 	final public Set<String> fields;
 	final public IndexSettingsDefinition settings;
 	final public Map<String, Set<FieldInfoStatus>> field_infos;
+	final public Integer number_of_segment;
 	final public List<SegmentInfoStatus> segment_infos;
+	final public MergePolicyStatus merge_policy;
 
 	public IndexStatus() {
 		num_docs = null;
 		num_deleted_docs = null;
+		merge_policy = null;
 		has_pending_merges = null;
 		has_uncommitted_changes = null;
 		snapshot_deletion_count = null;
@@ -80,6 +87,7 @@ public class IndexStatus {
 		fields = null;
 		settings = null;
 		field_infos = null;
+		number_of_segment = null;
 		segment_infos = null;
 	}
 
@@ -92,15 +100,19 @@ public class IndexStatus {
 		field_infos = new TreeMap<>();
 		fillFieldInfos(field_infos, indexReader.leaves());
 		if (indexWriter == null) {
+			merge_policy = null;
 			has_pending_merges = null;
 			has_uncommitted_changes = null;
 			has_deletions = null;
 			ram_buffer_size_mb = null;
 		} else {
+			final LiveIndexWriterConfig config = indexWriter.getConfig();
+			final MergePolicy mergePolicy = config.getMergePolicy();
+			merge_policy = mergePolicy == null ? null : new MergePolicyStatus(mergePolicy);
 			has_pending_merges = indexWriter.hasPendingMerges();
 			has_uncommitted_changes = indexWriter.hasUncommittedChanges();
 			has_deletions = indexWriter.hasDeletions();
-			ram_buffer_size_mb = indexWriter.getConfig().getRAMBufferSizeMB();
+			ram_buffer_size_mb = config.getRAMBufferSizeMB();
 		}
 		if (snapshotDeletionPolicy != null) {
 			snapshot_deletion_count = snapshotDeletionPolicy.getSnapshotCount();
@@ -121,11 +133,14 @@ public class IndexStatus {
 		final SegmentInfos segmentInfos =
 				directory != null && directory instanceof FSDirectory ? SegmentInfos.readLatestCommit(directory) : null;
 		if (segmentInfos != null) {
+			number_of_segment = segmentInfos.size();
 			segment_infos = new ArrayList<>();
 			for (SegmentCommitInfo segmentInfo : segmentInfos)
 				segment_infos.add(new SegmentInfoStatus(segmentInfo));
-		} else
+		} else {
+			number_of_segment = null;
 			segment_infos = null;
+		}
 	}
 
 	private void fillFieldInfos(final Map<String, Set<FieldInfoStatus>> field_infos,
@@ -166,6 +181,45 @@ public class IndexStatus {
 		if (!Objects.deepEquals(fields, s.fields))
 			return false;
 		return true;
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
+	public static class MergePolicyStatus {
+
+		final public String type;
+		final public Double max_cfs_segment_size_mb;
+		final public Double no_cfs_ratio;
+
+		//TieredMergePolicy
+		final public Integer max_merge_at_once;
+		final public Double max_merged_segment_mb;
+		final public Double segments_per_tier;
+
+		public MergePolicyStatus() {
+			type = null;
+			max_cfs_segment_size_mb = null;
+			no_cfs_ratio = null;
+
+			max_merge_at_once = null;
+			max_merged_segment_mb = null;
+			segments_per_tier = null;
+		}
+
+		MergePolicyStatus(final MergePolicy mergePolicy) {
+			type = mergePolicy.getClass().getTypeName();
+			max_cfs_segment_size_mb = mergePolicy.getMaxCFSSegmentSizeMB();
+			no_cfs_ratio = mergePolicy.getNoCFSRatio();
+			if (mergePolicy instanceof TieredMergePolicy) {
+				TieredMergePolicy tmp = (TieredMergePolicy) mergePolicy;
+				max_merge_at_once = tmp.getMaxMergeAtOnce();
+				max_merged_segment_mb = tmp.getMaxMergedSegmentMB();
+				segments_per_tier = tmp.getSegmentsPerTier();
+			} else {
+				max_merge_at_once = null;
+				max_merged_segment_mb = null;
+				segments_per_tier = null;
+			}
+		}
 	}
 
 	public static class FieldInfoStatus {
@@ -267,15 +321,19 @@ public class IndexStatus {
 		@JsonProperty("size_in_bytes")
 		final public Long sizeInBytes;
 
+		final public String size;
+
 		final public Collection<String> files;
 
 		public SegmentInfoStatus() {
 			sizeInBytes = null;
+			size = null;
 			files = null;
 		}
 
 		SegmentInfoStatus(final SegmentCommitInfo segmentInfo) throws IOException {
 			sizeInBytes = segmentInfo.sizeInBytes();
+			size = FileUtils.byteCountToDisplaySize(sizeInBytes);
 			files = segmentInfo.files();
 		}
 	}
