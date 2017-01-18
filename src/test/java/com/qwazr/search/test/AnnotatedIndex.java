@@ -23,13 +23,13 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexOptions;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
 import static com.qwazr.search.field.FieldDefinition.Template.FacetField;
-import static com.qwazr.search.field.FieldDefinition.Template.MultiFacetField;
 import static com.qwazr.search.field.FieldDefinition.Template.SortedDocValuesField;
 import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValuesField;
 import static com.qwazr.search.field.FieldDefinition.Template.StoredField;
@@ -66,8 +66,8 @@ public class AnnotatedIndex {
 			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 	final public String content;
 
-	@IndexField(template = FieldDefinition.Template.SortedSetMultiDocValuesFacetField)
-	final public String[] category;
+	@IndexField(template = FieldDefinition.Template.SortedSetDocValuesFacetField, facetMultivalued = true)
+	final public Collection<String> category;
 
 	@IndexField(template = FieldDefinition.Template.DoubleDocValuesField)
 	final public Double price;
@@ -89,7 +89,7 @@ public class AnnotatedIndex {
 	@IndexField(name = "dynamic_simple_facet_*", template = FacetField)
 	final public LinkedHashMap<String, Object> simpleFacets;
 
-	@IndexField(name = "dynamic_multi_facet_*", template = MultiFacetField, stored = true)
+	@IndexField(name = "dynamic_multi_facet_*", template = FacetField, facetMultivalued = true)
 	final public LinkedHashMap<String, Object> multiFacets;
 
 	@IndexField(template = StoredField)
@@ -122,7 +122,7 @@ public class AnnotatedIndex {
 		this.titleStd = title;
 		this.titleSort = title;
 		this.content = content;
-		this.category = categories;
+		this.category = Arrays.asList(categories);
 		this.price = price;
 		this.quantity = quantity;
 		this.dvQty = quantity;
@@ -147,7 +147,7 @@ public class AnnotatedIndex {
 	}
 
 	public AnnotatedIndex multiFacet(String field, String... values) {
-		multiFacets.put("dynamic_multi_facet_" + field, values);
+		multiFacets.put("dynamic_multi_facet_" + field, Arrays.asList(values));
 		return this;
 	}
 

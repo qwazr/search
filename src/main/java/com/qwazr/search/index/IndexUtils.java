@@ -20,8 +20,6 @@ import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.MultiDocValues;
-import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.IOException;
@@ -31,16 +29,13 @@ class IndexUtils {
 	final static String[] similarityClassPrefixes =
 			{ "", "com.qwazr.search.similarity.", "org.apache.lucene.search.similarities." };
 
-	final static Similarity findSimilarity(final ClassLoaderManager classLoaderManager,
-			final String similarityClassname) throws ReflectiveOperationException, IOException {
+	static Similarity findSimilarity(final ClassLoaderManager classLoaderManager, final String similarityClassname)
+			throws ReflectiveOperationException, IOException {
 		return classLoaderManager.newInstance(similarityClassname, similarityClassPrefixes);
 	}
 
-	final static SortedSetDocValuesReaderState getNewFacetsState(final IndexReader indexReader) throws IOException {
-		SortedSetDocValues dv = MultiDocValues.getSortedSetValues(indexReader, FieldDefinition.FACET_FIELD);
-		if (dv == null)
-			return null;
-		return new DefaultSortedSetDocValuesReaderState(indexReader, FieldDefinition.FACET_FIELD);
+	static SortedSetDocValuesReaderState getNewFacetsState(final IndexReader indexReader) throws IOException {
+		return new DefaultSortedSetDocValuesReaderState(indexReader, FieldDefinition.SORTEDSET_FACET_FIELD);
 	}
 
 }

@@ -67,8 +67,7 @@ public class DrillDownQuery extends AbstractQuery {
 			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig);
 		else
 			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig, baseQuery.getQuery(queryContext));
-		if (dimPath != null)
-			dimPath.forEach(dimPath -> dimPath.forEach(drillDownQuery::add));
+		dimPath.forEach(dimPath -> dimPath.forEach(drillDownQuery::add));
 		return drillDownQuery;
 	}
 

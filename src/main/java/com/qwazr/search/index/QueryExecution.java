@@ -22,6 +22,7 @@ import com.qwazr.search.query.DrillDownQuery;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Collector;
@@ -37,6 +38,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 final class QueryExecution {
@@ -44,6 +46,8 @@ final class QueryExecution {
 	final QueryContext queryContext;
 	final QueryDefinition queryDef;
 	final TimeTracker timeTracker;
+	final Set<String> facetKeys;
+	final FacetsConfig facetsConfig;
 	final int numHits;
 	final Sort sort;
 	final boolean bNeedScore;
@@ -64,6 +68,9 @@ final class QueryExecution {
 		this.query = queryDef.query == null ? new MatchAllDocsQuery() : queryDef.query.getQuery(queryContext);
 
 		this.sort = queryDef.sorts == null ? null : SortUtils.buildSort(queryContext.fieldMap, queryDef.sorts);
+
+		this.facetKeys = queryDef.facets == null ? null : queryDef.facets.keySet();
+		this.facetsConfig = facetKeys == null ? null : queryContext.fieldMap.getNewFacetsConfig(facetKeys);
 
 		this.numHits = queryDef.getEnd();
 		this.bNeedScore = sort == null || sort.needsScores();

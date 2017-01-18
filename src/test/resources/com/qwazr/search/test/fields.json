@@ -13,7 +13,8 @@
     "index_options": "DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS"
   },
   "category": {
-    "template": "SortedSetMultiDocValuesFacetField"
+    "template": "SortedSetDocValuesFacetField",
+    "facet_multivalued": true
   },
   "format": {
     "template": "FacetField"
@@ -70,8 +71,8 @@
     "template": "FacetField"
   },
   "dynamic_multi_facet_*": {
-    "template": "MultiFacetField",
-    "stored": true
+    "template": "FacetField",
+    "facet_multivalued": true
   },
   "integer_payload": {
     "analyzer": "com.qwazr.search.test.IntegerPayloadAnalyzer",

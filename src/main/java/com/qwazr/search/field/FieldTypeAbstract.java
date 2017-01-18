@@ -21,16 +21,12 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.SerializationUtils;
-import com.qwazr.utils.StringUtils;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.BytesRef;
 
 import javax.ws.rs.core.Response;
-import java.io.Externalizable;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -129,7 +125,10 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 			fillValue(fieldName, value, fieldConsumer);
 	}
 
-	abstract protected void fillValue(final String fieldName, final Object value, final FieldConsumer fieldConsumer);
+	protected void fillValue(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
+		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+				"Not supported type for the field: " + fieldName + ": " + value.getClass());
+	}
 
 	@Override
 	final public void dispatch(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
@@ -144,30 +143,6 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 	@Override
 	public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
 		return ValueConverter.newConverter(fieldName, fieldMapItem.definition, reader);
-	}
-
-	final protected byte[] toBytes(final String fieldName, final Serializable value) {
-		try {
-			return SerializationUtils.toExternalizorBytes(value);
-		} catch (IOException | ReflectiveOperationException e) {
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot serialize the value of the field " + fieldName, e);
-		}
-	}
-
-	final protected byte[] toBytes(final String fieldName, final Externalizable value) {
-		try {
-			return SerializationUtils.toExternalizorBytes(value);
-		} catch (IOException | ReflectiveOperationException e) {
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot serialize the value of the field " + fieldName, e);
-		}
-	}
-
-	final protected <T> T notNull(final T value, final String fieldName, final String msg) {
-		if (value != null)
-			return value;
-		throw new RuntimeException("Error on field: " + fieldName + " - " + msg == null ? StringUtils.EMPTY : msg);
 	}
 
 	@Override

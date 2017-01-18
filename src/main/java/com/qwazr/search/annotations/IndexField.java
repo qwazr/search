@@ -67,6 +67,12 @@ public @interface IndexField {
 
 	int dimensionNumBytes() default 0;
 
+	boolean facetMultivalued() default false;
+
+	boolean facetHierarchical() default false;
+
+	boolean facetRequireDimCount() default false;
+
 	@Deprecated
 	enum FieldTypeNumeric {
 

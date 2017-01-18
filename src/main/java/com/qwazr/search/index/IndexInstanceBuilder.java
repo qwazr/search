@@ -22,6 +22,8 @@ import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
+import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
+import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.SerialMergeScheduler;
@@ -33,7 +35,6 @@ import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.PerSessionDirectoryFactory;
 import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.search.SearcherFactory;
-import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
@@ -62,12 +63,16 @@ class IndexInstanceBuilder {
 	final UUID indexUuid;
 
 	Directory dataDirectory = null;
+	Directory taxonomyDirectory = null;
 
 	LinkedHashMap<String, AnalyzerDefinition> analyzerMap = null;
 	LinkedHashMap<String, FieldDefinition> fieldMap = null;
 
 	IndexWriter indexWriter = null;
-	SearcherManager searcherManager = null;
+	DirectoryTaxonomyWriter taxonomyWriter = null;
+
+	SearcherTaxonomyManager searcherTaxonomyManager = null;
+
 	UpdatableAnalyzer indexAnalyzer = null;
 	UpdatableAnalyzer queryAnalyzer = null;
 
@@ -98,8 +103,9 @@ class IndexInstanceBuilder {
 		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
 
-		// Open and lock the data directory
+		// Open and lock the index directories
 		dataDirectory = getDirectory(settings, fileSet.dataDirectory);
+		taxonomyDirectory = getDirectory(settings, fileSet.taxonomyDirectory);
 	}
 
 	static Directory getDirectory(IndexSettingsDefinition settings, File dataDirectory) throws IOException {
@@ -108,7 +114,7 @@ class IndexInstanceBuilder {
 				new RAMDirectory();
 	}
 
-	private void openOrCreateIndex() throws ReflectiveOperationException, IOException {
+	private void openOrCreateDataIndex() throws ReflectiveOperationException, IOException {
 
 		final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
@@ -141,15 +147,23 @@ class IndexInstanceBuilder {
 			indexWriter.commit();
 	}
 
+	private void openOrCreateTaxonomyIndex() throws IOException {
+		taxonomyWriter = new DirectoryTaxonomyWriter(taxonomyDirectory, IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+	}
+
 	private void buildSlave() throws IOException, URISyntaxException, ReflectiveOperationException {
 
 		// We just want to be sure the index exists.
-		openOrCreateIndex();
+		openOrCreateDataIndex();
 		indexWriter.close();
 		indexWriter = null;
 
+		openOrCreateTaxonomyIndex();
+		taxonomyWriter.close();
+		taxonomyWriter = null;
+
 		Callable<Boolean> callback = () -> {
-			searcherManager.maybeRefresh();
+			searcherTaxonomyManager.maybeRefresh();
 			return true;
 		};
 		ReplicationClient.ReplicationHandler handler = new IndexReplicationHandler(dataDirectory, callback);
@@ -158,26 +172,34 @@ class IndexInstanceBuilder {
 		replicationClient = new ReplicationClient(indexReplicator, handler, factory);
 
 		// we build the SearcherManager
-		searcherManager = new SearcherManager(dataDirectory, searcherFactory);
+		searcherTaxonomyManager = new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory);
 	}
 
 	private void buildMaster() throws IOException, ReflectiveOperationException {
 
-		openOrCreateIndex();
+		openOrCreateDataIndex();
+		openOrCreateTaxonomyIndex();
 
 		// Manage the master replication (revision publishing)
 		replicator = new LocalReplicator();
 		replicator.publish(new IndexRevision(indexWriter));
 
 		// Finally we build the SearcherManager
-		searcherManager = new SearcherManager(indexWriter, searcherFactory);
+		searcherTaxonomyManager = new SearcherTaxonomyManager(indexWriter, searcherFactory, taxonomyWriter);
 	}
 
 	private void abort() {
-		IOUtils.closeQuietly(replicationClient, searcherManager, indexAnalyzer, queryAnalyzer, replicator);
+		IOUtils.closeQuietly(replicationClient, searcherTaxonomyManager, indexAnalyzer, queryAnalyzer, replicator);
+
+		if (taxonomyWriter != null)
+			IOUtils.closeQuietly(taxonomyWriter);
+		IOUtils.closeQuietly(taxonomyDirectory);
+		taxonomyDirectory = null;
+
 		if (indexWriter != null && indexWriter.isOpen())
 			IOUtils.closeQuietly(indexWriter);
 		IOUtils.closeQuietly(dataDirectory);
+		dataDirectory = null;
 	}
 
 	IndexInstance build() throws ReflectiveOperationException, IOException, URISyntaxException {

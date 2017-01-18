@@ -57,16 +57,16 @@ class Geo3DPointType extends FieldTypeAbstract {
 		final Number lat = (Number) values.get("lat");
 		if (lat != null) {
 			final Number lon = (Number) values.get("lon");
-			notNull(lon, fieldName, "The longitude (lon) parameter is missing");
+			TypeUtils.notNull(lon, fieldName, "The longitude (lon) parameter is missing");
 			consumer.accept(fieldName, new Geo3DPoint(fieldName, lat.doubleValue(), lon.doubleValue()));
 			return;
 		}
 		final Number x = (Number) values.get("x");
-		notNull(x, fieldName, "The x parameter is missing");
+		TypeUtils.notNull(x, fieldName, "The x parameter is missing");
 		final Number y = (Number) values.get("y");
-		notNull(y, fieldName, "The y parameter is missing");
+		TypeUtils.notNull(y, fieldName, "The y parameter is missing");
 		final Number z = (Number) values.get("z");
-		notNull(z, fieldName, "The z parameter is missing");
+		TypeUtils.notNull(z, fieldName, "The z parameter is missing");
 		consumer.accept(fieldName, new Geo3DPoint(fieldName, x.doubleValue(), y.doubleValue(), z.doubleValue()));
 	}
 

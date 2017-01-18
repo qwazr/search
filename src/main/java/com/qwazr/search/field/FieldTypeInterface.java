@@ -80,9 +80,14 @@ public interface FieldTypeInterface {
 		case SortedSetDocValuesField:
 			return new SortedSetDocValuesType(fieldMapItem);
 		case FacetField:
+			return new FacetType(fieldMapItem);
+		case IntAssociatedField:
+			return new IntAssociationFacetType(fieldMapItem);
+		case FloatAssociatedField:
+			return new FloatAssociationFacetType(fieldMapItem);
+		case StringAssociatedField:
+			return new StringAssociationFacetType(fieldMapItem);
 		case SortedSetDocValuesFacetField:
-		case MultiFacetField:
-		case SortedSetMultiDocValuesFacetField:
 			return new SortedSetDocValuesFacetType(fieldMapItem);
 		case StoredField:
 			return new StoredFieldType(fieldMapItem);

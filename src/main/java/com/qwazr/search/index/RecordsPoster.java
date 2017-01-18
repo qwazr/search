@@ -20,6 +20,7 @@ import com.qwazr.utils.HashUtils;
 import com.qwazr.server.ServerException;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 
@@ -33,23 +34,26 @@ abstract class RecordsPoster {
 
 	protected final Map<String, Field> fields;
 	protected final FieldMap fieldMap;
-	protected final IndexWriter indexWriter;
-	protected int counter;
+	private final IndexWriter indexWriter;
+	private final TaxonomyWriter taxonomyWriter;
+	int counter;
 
-	RecordsPoster(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter) {
+	RecordsPoster(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter,
+			final TaxonomyWriter taxonomyWriter) {
 		this.fields = fields;
 		this.fieldMap = fieldMap;
 		this.indexWriter = indexWriter;
+		this.taxonomyWriter = taxonomyWriter;
 		this.counter = 0;
 	}
 
-	final protected void updateDocument(Object id, final FieldConsumer.ForDocument fields) {
+	final void updateDocument(Object id, final FieldConsumer.ForDocument fields) {
 		if (id == null)
 			id = HashUtils.newTimeBasedUUID().toString();
 		final Term termId = new Term(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id));
 		final FacetsConfig facetsConfig = fieldMap.getNewFacetsConfig(fields.fieldNameSet);
 		try {
-			final Document facetedDoc = facetsConfig.build(fields.document);
+			final Document facetedDoc = facetsConfig.build(taxonomyWriter, fields.document);
 			indexWriter.updateDocument(termId, facetedDoc);
 		} catch (IOException e) {
 			throw new ServerException(e);
@@ -57,7 +61,7 @@ abstract class RecordsPoster {
 		counter++;
 	}
 
-	final protected void updateDocValues(final Object id, final FieldConsumer.ForDocValues fields) {
+	final void updateDocValues(final Object id, final FieldConsumer.ForDocValues fields) {
 		if (id == null)
 			throw new ServerException(Response.Status.BAD_REQUEST,
 					"The field " + FieldDefinition.ID_FIELD + " is missing");
@@ -72,8 +76,8 @@ abstract class RecordsPoster {
 
 	final static class UpdateMapDocument extends RecordsPoster implements Consumer<Map<String, Object>> {
 
-		UpdateMapDocument(final FieldMap fieldMap, final IndexWriter indexWriter) {
-			super(null, fieldMap, indexWriter);
+		UpdateMapDocument(final FieldMap fieldMap, final IndexWriter indexWriter, final TaxonomyWriter taxonomyWriter) {
+			super(null, fieldMap, indexWriter, taxonomyWriter);
 		}
 
 		@Override
@@ -88,8 +92,8 @@ abstract class RecordsPoster {
 	final static class UpdateObjectDocument extends RecordsPoster implements Consumer<Object> {
 
 		UpdateObjectDocument(final Map<String, java.lang.reflect.Field> fields, final FieldMap fieldMap,
-				final IndexWriter indexWriter) {
-			super(fields, fieldMap, indexWriter);
+				final IndexWriter indexWriter, final TaxonomyWriter taxonomyWriter) {
+			super(fields, fieldMap, indexWriter, taxonomyWriter);
 		}
 
 		@Override
@@ -104,8 +108,9 @@ abstract class RecordsPoster {
 
 	final static class UpdateMapDocValues extends RecordsPoster implements Consumer<Map<String, Object>> {
 
-		UpdateMapDocValues(final FieldMap fieldMap, final IndexWriter indexWriter) {
-			super(null, fieldMap, indexWriter);
+		UpdateMapDocValues(final FieldMap fieldMap, final IndexWriter indexWriter,
+				final TaxonomyWriter taxonomyWriter) {
+			super(null, fieldMap, indexWriter, taxonomyWriter);
 		}
 
 		@Override
@@ -119,12 +124,13 @@ abstract class RecordsPoster {
 
 	final static class UpdateObjectDocValues extends RecordsPoster implements Consumer<Object> {
 
-		UpdateObjectDocValues(Map<String, Field> fields, FieldMap fieldMap, IndexWriter indexWriter) {
-			super(fields, fieldMap, indexWriter);
+		UpdateObjectDocValues(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter,
+				final TaxonomyWriter taxonomyWriter) {
+			super(fields, fieldMap, indexWriter, taxonomyWriter);
 		}
 
 		@Override
-		final public void accept(Object record) {
+		final public void accept(final Object record) {
 			final FieldConsumer.ForDocValues fieldsBuilder = new FieldConsumer.ForDocValues();
 			final RecordBuilder.ForObject recordBuilder = new RecordBuilder.ForObject(fieldMap, fieldsBuilder, record);
 			fields.forEach(recordBuilder);

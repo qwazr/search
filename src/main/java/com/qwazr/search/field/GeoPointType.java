@@ -55,9 +55,9 @@ class GeoPointType extends StorableFieldType {
 	@Override
 	protected void fillMap(final String fieldName, final Map<Object, Object> values, final FieldConsumer consumer) {
 		final Number latitude = (Number) values.get("lat");
-		notNull(latitude, fieldName, "The latitude parameter (lat) is missing");
+		TypeUtils.notNull(latitude, fieldName, "The latitude parameter (lat) is missing");
 		final Number longitude = (Number) values.get("lon");
-		notNull(longitude, fieldName, "The longitude parameter (lon) is missing");
+		TypeUtils.notNull(longitude, fieldName, "The longitude parameter (lon) is missing");
 		consumer.accept(fieldName,
 				new GeoPointField(fieldName, latitude.doubleValue(), longitude.doubleValue(), store));
 	}

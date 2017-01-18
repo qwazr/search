@@ -42,6 +42,9 @@ public class FieldDefinition {
 	public final Boolean store_termvector_positions;
 	public final Boolean store_termvector_payloads;
 	public final Boolean omit_norms;
+	public final Boolean facet_multivalued;
+	public final Boolean facet_hierarchical;
+	public final Boolean facet_require_dim_count;
 	@Deprecated
 	public final FieldType.LegacyNumericType numeric_type;
 	public final IndexOptions index_options;
@@ -76,9 +79,10 @@ public class FieldDefinition {
 		StringField,
 		TextField,
 		FacetField,
-		MultiFacetField,
-		SortedSetDocValuesFacetField,
-		SortedSetMultiDocValuesFacetField
+		IntAssociatedField,
+		FloatAssociatedField,
+		StringAssociatedField,
+		SortedSetDocValuesFacetField
 	}
 
 	public final Template template;
@@ -99,6 +103,9 @@ public class FieldDefinition {
 		dimension_count = null;
 		dimension_num_bytes = null;
 		template = null;
+		facet_multivalued = null;
+		facet_hierarchical = null;
+		facet_require_dim_count = null;
 	}
 
 	private FieldDefinition(Builder builder) {
@@ -117,6 +124,9 @@ public class FieldDefinition {
 		dimension_count = builder.dimension_count;
 		dimension_num_bytes = builder.dimension_num_bytes;
 		template = builder.template;
+		facet_multivalued = builder.facet_multivalued;
+		facet_hierarchical = builder.facet_hierarchical;
+		facet_require_dim_count = builder.facet_require_dim_count;
 	}
 
 	public FieldDefinition(final IndexField indexField) {
@@ -139,6 +149,9 @@ public class FieldDefinition {
 		dimension_count = indexField.dimensionCount();
 		dimension_num_bytes = indexField.dimensionNumBytes();
 		template = indexField.template();
+		facet_multivalued = indexField.facetMultivalued();
+		facet_hierarchical = indexField.facetHierarchical();
+		facet_require_dim_count = indexField.facetRequireDimCount();
 	}
 
 	public boolean equals(final Object o) {
@@ -175,6 +188,12 @@ public class FieldDefinition {
 			return false;
 		if (!Objects.equals(dimension_num_bytes, f.dimension_num_bytes))
 			return false;
+		if (!Objects.equals(facet_multivalued, f.facet_multivalued))
+			return false;
+		if (!Objects.equals(facet_hierarchical, f.facet_hierarchical))
+			return false;
+		if (!Objects.equals(facet_require_dim_count, f.facet_require_dim_count))
+			return false;
 		return true;
 	}
 
@@ -182,25 +201,28 @@ public class FieldDefinition {
 			new TypeReference<LinkedHashMap<String, FieldDefinition>>() {
 			};
 
-	public final static LinkedHashMap<String, FieldDefinition> newFieldMap(String jsonString) throws IOException {
+	public final static LinkedHashMap<String, FieldDefinition> newFieldMap(final String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
 		return JsonMapper.MAPPER.readValue(jsonString, MapStringFieldTypeRef);
 	}
 
-	public final static FieldDefinition newField(String jsonString) throws IOException {
+	public final static FieldDefinition newField(final String jsonString) throws IOException {
 		return JsonMapper.MAPPER.readValue(jsonString, FieldDefinition.class);
 	}
 
 	public final static String ID_FIELD = "$id$";
 
-	public final static String FACET_FIELD = FacetsConfig.DEFAULT_INDEX_FIELD_NAME;
+	public final static String TAXONOMY_FACET_FIELD = FacetsConfig.DEFAULT_INDEX_FIELD_NAME;
+
+	public final static String SORTEDSET_FACET_FIELD = FacetsConfig.DEFAULT_INDEX_FIELD_NAME + "$sdv";
 
 	public final static String SCORE_FIELD = "$score";
 
 	public final static String DOC_FIELD = "$doc";
 
-	public static final String[] RESERVED_NAMES = { ID_FIELD, FACET_FIELD, SCORE_FIELD, DOC_FIELD };
+	public static final String[] RESERVED_NAMES =
+			{ ID_FIELD, TAXONOMY_FACET_FIELD, SORTEDSET_FACET_FIELD, SCORE_FIELD, DOC_FIELD };
 
 	public final static Builder builder() {
 		return new Builder();
@@ -227,86 +249,104 @@ public class FieldDefinition {
 		private Integer dimension_count = null;
 		private Integer dimension_num_bytes = null;
 		private Template template = null;
+		private Boolean facet_multivalued = null;
+		private Boolean facet_hierarchical = null;
+		private Boolean facet_require_dim_count = null;
 
 		public Builder() {
 		}
 
-		public Builder(Template template) {
+		public Builder(final Template template) {
 			this.template = template;
 		}
 
-		public Builder setAnalyzer(String analyzer) {
+		public Builder analyzer(String analyzer) {
 			this.analyzer = analyzer;
 			return this;
 		}
 
-		public Builder setQueryAnalyzer(String query_analyzer) {
+		public Builder queryAnalyzer(String query_analyzer) {
 			this.query_analyzer = query_analyzer;
 			return this;
 		}
 
-		public Builder setTokenized(Boolean tokenized) {
+		public Builder tokenized(Boolean tokenized) {
 			this.tokenized = tokenized;
 			return this;
 		}
 
-		public Builder setStored(Boolean stored) {
+		public Builder stored(Boolean stored) {
 			this.stored = stored;
 			return this;
 		}
 
-		public Builder setStoreTermVectors(Boolean store_termvectors) {
+		public Builder storeTermVectors(Boolean store_termvectors) {
 			this.store_termvectors = store_termvectors;
 			return this;
 		}
 
-		public Builder setStoreTermVectorOffsets(Boolean store_termvector_offsets) {
+		public Builder storeTermVectorOffsets(Boolean store_termvector_offsets) {
 			this.store_termvector_offsets = store_termvector_offsets;
 			return this;
 		}
 
-		public Builder setStoreTermVectorPositions(Boolean store_termvector_positions) {
+		public Builder storeTermVectorPositions(Boolean store_termvector_positions) {
 			this.store_termvector_positions = store_termvector_positions;
 			return this;
 		}
 
-		public Builder setStoreTermVectorPayloads(Boolean store_termvector_payloads) {
+		public Builder storeTermVectorPayloads(Boolean store_termvector_payloads) {
 			this.store_termvector_payloads = store_termvector_payloads;
 			return this;
 		}
 
-		public Builder setOmitNorms(Boolean omit_norms) {
+		public Builder omitNorms(Boolean omit_norms) {
 			this.omit_norms = omit_norms;
 			return this;
 		}
 
-		public Builder setNumericType(FieldType.LegacyNumericType numeric_type) {
+		public Builder numericType(FieldType.LegacyNumericType numeric_type) {
 			this.numeric_type = numeric_type;
 			return this;
 		}
 
-		public Builder setIndexOptions(IndexOptions index_options) {
+		public Builder indexOptions(IndexOptions index_options) {
 			this.index_options = index_options;
 			return this;
 		}
 
-		public Builder setDocValuesType(DocValuesType docvalues_type) {
+		public Builder docValuesType(DocValuesType docvalues_type) {
 			this.docvalues_type = docvalues_type;
 			return this;
 		}
 
-		public Builder setDimensionCount(Integer dimension_count) {
+		public Builder dimensionCount(Integer dimension_count) {
 			this.dimension_count = dimension_count;
 			return this;
 		}
 
-		public Builder setDimensionNumBytes(Integer dimension_num_bytes) {
+		public Builder dimensionNumBytes(Integer dimension_num_bytes) {
 			this.dimension_num_bytes = dimension_num_bytes;
 			return this;
 		}
 
-		public Builder setTemplate(Template template) {
+		public Builder template(Template template) {
 			this.template = template;
+			return this;
+		}
+
+		public Builder facetMultivalued(Boolean facet_multivalued) {
+			this.facet_multivalued = facet_multivalued;
+			return this;
+		}
+
+		public Builder facetHierarchical(Boolean facet_hierarchical) {
+			this.facet_hierarchical = facet_hierarchical;
+			return this;
+		}
+
+		public Builder facetRequireDimCount(Boolean facet_require_dim_count) {
+			this.facet_require_dim_count = facet_require_dim_count;
 			return this;
 		}
 

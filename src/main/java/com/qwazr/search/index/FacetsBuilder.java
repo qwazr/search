@@ -20,8 +20,10 @@ import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.LabelAndValue;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
+import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.BooleanClause;
@@ -35,7 +37,7 @@ import java.util.Map;
 
 abstract class FacetsBuilder {
 
-	private final QueryContext queryContext;
+	protected final QueryContext queryContext;
 	private final LinkedHashMap<String, FacetDefinition> facetsDef;
 	private final Query searchQuery;
 	private final TimeTracker timeTracker;
@@ -51,8 +53,7 @@ abstract class FacetsBuilder {
 		this.timeTracker = timeTracker;
 	}
 
-	final FacetsBuilder build()
-			throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
+	final FacetsBuilder build() throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
 		for (Map.Entry<String, FacetDefinition> entry : facetsDef.entrySet()) {
 			final String dim = entry.getKey();
 			final FacetDefinition facet = entry.getValue();
@@ -71,8 +72,6 @@ abstract class FacetsBuilder {
 	}
 
 	private Map<String, Number> buildFacetState(final String dim, final FacetDefinition facet) throws IOException {
-		if (queryContext.state == null || queryContext.state.getOrdRange(dim) == null)
-			return Collections.emptyMap();
 		final int top = facet.top == null ? 10 : facet.top;
 		final LinkedHashMap<String, Number> facetMap = new LinkedHashMap<>();
 		final FacetResult facetResult = getFacetResult(top, dim);
@@ -99,20 +98,26 @@ abstract class FacetsBuilder {
 
 	static class WithCollectors extends FacetsBuilder {
 
-		private final SortedSetDocValuesFacetCounts counts;
+		private final SortedSetDocValuesFacetCounts sortedSetCounts;
+		private final FastTaxonomyFacetCounts taxonomyCounts;
 
-		WithCollectors(final QueryContext queryContext, final LinkedHashMap<String, FacetDefinition> facetsDef,
-				final Query searchQuery, final TimeTracker timeTracker, final FacetsCollector facetsCollector)
+		WithCollectors(final QueryContext queryContext, final FacetsConfig facetsConfig,
+				final LinkedHashMap<String, FacetDefinition> facetsDef, final Query searchQuery,
+				final TimeTracker timeTracker, final FacetsCollector facetsCollector)
 				throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 			super(queryContext, facetsDef, searchQuery, timeTracker);
-			this.counts = queryContext.state == null ?
+			this.sortedSetCounts = queryContext.docValueReaderState == null ?
 					null :
-					new SortedSetDocValuesFacetCounts(queryContext.state, facetsCollector);
+					new SortedSetDocValuesFacetCounts(queryContext.docValueReaderState, facetsCollector);
+			this.taxonomyCounts =
+					new FastTaxonomyFacetCounts(queryContext.taxonomyReader, facetsConfig, facetsCollector);
 		}
 
 		@Override
 		final protected FacetResult getFacetResult(final int top, final String dim) throws IOException {
-			return counts.getTopChildren(top, dim);
+			if (queryContext.docValueReaderState.getOrdRange(dim) != null)
+				return sortedSetCounts.getTopChildren(top, dim);
+			return taxonomyCounts.getTopChildren(top, dim);
 		}
 	}
 
@@ -121,8 +126,7 @@ abstract class FacetsBuilder {
 		final DrillSideways.DrillSidewaysResult results;
 
 		WithSideways(final QueryContext queryContext, final LinkedHashMap<String, FacetDefinition> facetsDef,
-				final Query searchQuery, final TimeTracker timeTracker,
-				final DrillSideways.DrillSidewaysResult results)
+				final Query searchQuery, final TimeTracker timeTracker, final DrillSideways.DrillSidewaysResult results)
 				throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 			super(queryContext, facetsDef, searchQuery, timeTracker);
 			this.results = results;

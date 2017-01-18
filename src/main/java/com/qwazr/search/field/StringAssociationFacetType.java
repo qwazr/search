@@ -18,22 +18,27 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StoredField;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
+import com.qwazr.server.ServerException;
+import org.apache.lucene.facet.taxonomy.AssociationFacetField;
 
-class SortedSetDocValuesFacetType extends StorableFieldType {
+import javax.ws.rs.core.Response;
+import java.util.Objects;
 
-	SortedSetDocValuesFacetType(final FieldMap.Item fieldMapItem) {
+class StringAssociationFacetType extends FieldTypeAbstract {
+
+	StringAssociationFacetType(final FieldMap.Item fieldMapItem) {
 		super(fieldMapItem, BytesRefUtils.Converter.STRING);
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
-		String stringValue = value.toString();
-		consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
-		if (store == Field.Store.YES)
-			consumer.accept(fieldName, new StoredField(fieldName, stringValue));
+	protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
+		Objects.requireNonNull(values, "The value array is empty");
+		if (values.length < 2)
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE, "Expected at least 2 values");
+		final String assoc = values[0].toString();
+		final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
+		consumer.accept(fieldName,
+				new AssociationFacetField(BytesRefUtils.Converter.STRING.from(assoc), fieldName, path));
 	}
 
 }

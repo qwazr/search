@@ -31,6 +31,8 @@ import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
+import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
+import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexCommit;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -45,10 +47,8 @@ import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.join.JoinUtil;
 import org.apache.lucene.search.join.ScoreMode;
 import org.apache.lucene.store.Directory;
@@ -82,11 +82,13 @@ final public class IndexInstance implements Closeable {
 
 	private final SchemaInstance schema;
 	private final Directory dataDirectory;
+	private final Directory taxonomyDirectory;
 	private final LiveIndexWriterConfig indexWriterConfig;
 	private final SnapshotDeletionPolicy snapshotDeletionPolicy;
 	private final IndexWriter indexWriter;
+	private final TaxonomyWriter taxonomyWriter;
 
-	private final SearcherManager searcherManager;
+	private final SearcherTaxonomyManager searcherTaxonomyManager;
 	private final Set<MultiSearchInstance> multiSearchInstances;
 
 	private final ExecutorService executorService;
@@ -106,14 +108,16 @@ final public class IndexInstance implements Closeable {
 	private volatile LinkedHashMap<String, AnalyzerDefinition> analyzerMap;
 
 	private volatile Pair<IndexReader, SortedSetDocValuesReaderState> facetsReaderStateCache;
+	private final ReentrantLock facetsReaderStateCacheLog = new ReentrantLock(true);
 
 	IndexInstance(final IndexInstanceBuilder builder) {
 		this.classLoaderManager = builder.classLoaderManager;
 		this.schema = builder.schema;
 		this.fileSet = builder.fileSet;
-		this.indexName = builder.fileSet.indexDirectory.getName();
+		this.indexName = builder.fileSet.mainDirectory.getName();
 		this.indexUuid = builder.indexUuid;
 		this.dataDirectory = builder.dataDirectory;
+		this.taxonomyDirectory = builder.taxonomyDirectory;
 		this.analyzerMap = builder.analyzerMap;
 		this.fieldMap = builder.fieldMap == null ? null : new FieldMap(builder.fieldMap);
 		this.indexWriter = builder.indexWriter;
@@ -124,10 +128,11 @@ final public class IndexInstance implements Closeable {
 			this.indexWriterConfig = null;
 			this.snapshotDeletionPolicy = null;
 		}
+		this.taxonomyWriter = builder.taxonomyWriter;
+		//TODO Handle snapshotDeletionPolicy
 		this.indexAnalyzer = builder.indexAnalyzer;
 		this.queryAnalyzer = builder.queryAnalyzer;
 		this.settings = builder.settings;
-		this.searcherManager = builder.searcherManager;
 		this.multiSearchInstances = ConcurrentHashMap.newKeySet();
 		this.executorService = builder.executorService;
 		this.fileResourceLoader = builder.fileResourceLoader;
@@ -136,6 +141,7 @@ final public class IndexInstance implements Closeable {
 		this.indexReplicator = builder.indexReplicator;
 		this.replicationLock = new ReentrantLock(true);
 		this.facetsReaderStateCache = null;
+		this.searcherTaxonomyManager = builder.searcherTaxonomyManager;
 	}
 
 	public IndexSettingsDefinition getSettings() {
@@ -148,7 +154,12 @@ final public class IndexInstance implements Closeable {
 
 	@Override
 	public void close() {
-		IOUtils.closeQuietly(replicationClient, searcherManager, indexAnalyzer, queryAnalyzer, replicator);
+		IOUtils.closeQuietly(replicationClient, searcherTaxonomyManager, indexAnalyzer, queryAnalyzer, replicator);
+
+		if (taxonomyWriter != null)
+			IOUtils.closeQuietly(taxonomyWriter);
+		IOUtils.closeQuietly(taxonomyDirectory);
+
 		if (indexWriter != null && indexWriter.isOpen())
 			IOUtils.closeQuietly(indexWriter);
 		IOUtils.closeQuietly(dataDirectory);
@@ -159,8 +170,8 @@ final public class IndexInstance implements Closeable {
 	 */
 	void delete() {
 		close();
-		if (fileSet.indexDirectory.exists())
-			FileUtils.deleteQuietly(fileSet.indexDirectory);
+		if (fileSet.mainDirectory.exists())
+			FileUtils.deleteQuietly(fileSet.mainDirectory);
 	}
 
 	boolean register(final MultiSearchInstance multiSearchInstance) {
@@ -172,13 +183,13 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private IndexStatus getIndexStatus() throws IOException {
-		final IndexSearcher indexSearcher = searcherManager.acquire();
+		final SearcherTaxonomyManager.SearcherAndTaxonomy searcherAndTaxonomy = searcherTaxonomyManager.acquire();
 		try {
 			return new IndexStatus(indexUuid, indexReplicator != null ? indexReplicator.getMasterUuid() : null,
-					dataDirectory, indexSearcher.getIndexReader(), indexWriter, snapshotDeletionPolicy, settings,
-					analyzerMap.keySet(), fieldMap.getFieldDefinitionMap().keySet());
+					dataDirectory, searcherAndTaxonomy.searcher.getIndexReader(), indexWriter, snapshotDeletionPolicy,
+					settings, analyzerMap.keySet(), fieldMap.getFieldDefinitionMap().keySet());
 		} finally {
-			searcherManager.release(indexSearcher);
+			searcherTaxonomyManager.release(searcherAndTaxonomy);
 		}
 	}
 
@@ -189,12 +200,13 @@ final public class IndexInstance implements Closeable {
 	FieldStats getFieldStats(String fieldName) throws IOException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
-			final IndexSearcher indexSearcher = searcherManager.acquire();
+			final SearcherTaxonomyManager.SearcherAndTaxonomy searcherAndTaxonomy = searcherTaxonomyManager.acquire();
 			try {
-				final Terms terms = MultiFields.getFields(indexSearcher.getIndexReader()).terms(fieldName);
+				final Terms terms =
+						MultiFields.getFields(searcherAndTaxonomy.searcher.getIndexReader()).terms(fieldName);
 				return terms == null ? new FieldStats() : new FieldStats(terms, fieldMap.getFieldType(fieldName));
 			} finally {
-				searcherManager.release(indexSearcher);
+				searcherTaxonomyManager.release(searcherAndTaxonomy);
 			}
 		} finally {
 			if (sem != null)
@@ -295,16 +307,16 @@ final public class IndexInstance implements Closeable {
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
-			final IndexSearcher indexSearcher = searcherManager.acquire();
+			final SearcherTaxonomyManager.SearcherAndTaxonomy searcherAndTaxonomy = searcherTaxonomyManager.acquire();
 			try {
 				final Query fromQuery = joinQuery.from_query == null ?
 						new MatchAllDocsQuery() :
-						joinQuery.from_query.getQuery(buildQueryContext(indexSearcher, null));
+						joinQuery.from_query.getQuery(buildQueryContext(searcherAndTaxonomy, null));
 				return JoinUtil.createJoinQuery(joinQuery.from_field, joinQuery.multiple_values_per_document,
-						joinQuery.to_field, fromQuery, indexSearcher,
+						joinQuery.to_field, fromQuery, searcherAndTaxonomy.searcher,
 						joinQuery.score_mode == null ? ScoreMode.None : joinQuery.score_mode);
 			} finally {
-				searcherManager.release(indexSearcher);
+				searcherTaxonomyManager.release(searcherAndTaxonomy);
 			}
 		} finally {
 			if (sem != null)
@@ -316,7 +328,7 @@ final public class IndexInstance implements Closeable {
 		indexWriter.flush();
 		indexWriter.commit();
 		replicator.publish(new IndexRevision(indexWriter));
-		searcherManager.maybeRefresh();
+		searcherTaxonomyManager.maybeRefresh();
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
@@ -450,19 +462,19 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private RecordsPoster.UpdateObjectDocument getDocumentPoster(final Map<String, Field> fields) {
-		return new RecordsPoster.UpdateObjectDocument(fields, fieldMap, indexWriter);
+		return new RecordsPoster.UpdateObjectDocument(fields, fieldMap, indexWriter, taxonomyWriter);
 	}
 
 	private RecordsPoster.UpdateMapDocument getDocumentPoster() {
-		return new RecordsPoster.UpdateMapDocument(fieldMap, indexWriter);
+		return new RecordsPoster.UpdateMapDocument(fieldMap, indexWriter, taxonomyWriter);
 	}
 
 	private RecordsPoster.UpdateObjectDocValues getDocValuesPoster(final Map<String, Field> fields) {
-		return new RecordsPoster.UpdateObjectDocValues(fields, fieldMap, indexWriter);
+		return new RecordsPoster.UpdateObjectDocValues(fields, fieldMap, indexWriter, taxonomyWriter);
 	}
 
 	private RecordsPoster.UpdateMapDocValues getDocValuesPoster() {
-		return new RecordsPoster.UpdateMapDocValues(fieldMap, indexWriter);
+		return new RecordsPoster.UpdateMapDocValues(fieldMap, indexWriter, taxonomyWriter);
 	}
 
 	final <T> int postDocument(final Map<String, Field> fields, final T document)
@@ -648,15 +660,21 @@ final public class IndexInstance implements Closeable {
 		Objects.requireNonNull(queryDefinition.query, "The query is missing - Index: " + indexName);
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			final QueryContext queryContext =
-					new QueryContext(schema, fileResourceLoader, null, executorService, indexAnalyzer, queryAnalyzer,
-							fieldMap, null, queryDefinition);
-			final Query query = queryDefinition.query.getQuery(queryContext);
-			int docs = indexWriter.numDocs();
-			indexWriter.deleteDocuments(query);
-			nrtCommit();
-			docs -= indexWriter.numDocs();
-			return new ResultDefinition.WithMap(docs);
+			final SearcherTaxonomyManager.SearcherAndTaxonomy searcherAndTaxonomy = searcherTaxonomyManager.acquire();
+			try {
+				final QueryContext queryContext =
+						new QueryContext(schema, fileResourceLoader, searcherAndTaxonomy.searcher,
+								searcherAndTaxonomy.taxonomyReader, executorService, indexAnalyzer, queryAnalyzer,
+								fieldMap, null, queryDefinition);
+				final Query query = queryDefinition.query.getQuery(queryContext);
+				int docs = indexWriter.numDocs();
+				indexWriter.deleteDocuments(query);
+				nrtCommit();
+				docs -= indexWriter.numDocs();
+				return new ResultDefinition.WithMap(docs);
+			} finally {
+				searcherTaxonomyManager.release(searcherAndTaxonomy);
+			}
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -668,20 +686,20 @@ final public class IndexInstance implements Closeable {
 		Objects.requireNonNull(fieldName, "The field name is missing - Index: " + indexName);
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
-			final IndexSearcher indexSearcher = searcherManager.acquire();
+			final SearcherTaxonomyManager.SearcherAndTaxonomy searcherAndTaxonomy = searcherTaxonomyManager.acquire();
 			try {
 				FieldMap.Item fieldMapItem = fieldMap.find(fieldName);
 				if (fieldMapItem == null)
 					throw new ServerException(Response.Status.NOT_FOUND,
 							"Field not found: " + fieldName + " - Index: " + indexName);
 				FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldMapItem);
-				Terms terms = MultiFields.getTerms(indexSearcher.getIndexReader(), fieldName);
+				Terms terms = MultiFields.getTerms(searcherAndTaxonomy.searcher.getIndexReader(), fieldName);
 				if (terms == null)
 					return Collections.emptyList();
 				return TermEnumDefinition.buildTermList(fieldType, terms.iterator(), prefix, start == null ? 0 : start,
 						rows == null ? 20 : rows);
 			} finally {
-				searcherManager.release(indexSearcher);
+				searcherTaxonomyManager.release(searcherAndTaxonomy);
 			}
 		} finally {
 			if (sem != null)
@@ -689,23 +707,36 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	private synchronized SortedSetDocValuesReaderState getFacetsState(final IndexReader indexReader)
-			throws IOException {
-		Pair<IndexReader, SortedSetDocValuesReaderState> current = facetsReaderStateCache;
-		if (current != null && current.getLeft() == indexReader)
-			return current.getRight();
-		SortedSetDocValuesReaderState newState = IndexUtils.getNewFacetsState(indexReader);
-		facetsReaderStateCache = Pair.of(indexReader, newState);
-		return newState;
+	private SortedSetDocValuesReaderState getFacetsStateNoLock(final IndexReader indexReader) throws IOException {
+		final Pair<IndexReader, SortedSetDocValuesReaderState> current = facetsReaderStateCache;
+		return (current != null && current.getLeft() == indexReader) ? current.getRight() : null;
 	}
 
-	final private QueryContext buildQueryContext(final IndexSearcher indexSearcher,
+	private SortedSetDocValuesReaderState getFacetsState(final IndexReader indexReader) throws IOException {
+		SortedSetDocValuesReaderState state = getFacetsStateNoLock(indexReader);
+		if (state != null)
+			return state;
+		facetsReaderStateCacheLog.lock();
+		try {
+			state = getFacetsStateNoLock(indexReader);
+			if (state != null)
+				return state;
+			state = IndexUtils.getNewFacetsState(indexReader);
+			facetsReaderStateCache = Pair.of(indexReader, state);
+			return state;
+		} finally {
+			facetsReaderStateCacheLog.unlock();
+		}
+	}
+
+	private QueryContext buildQueryContext(final SearcherTaxonomyManager.SearcherAndTaxonomy searcherAndTaxonomy,
 			final QueryDefinition queryDefinition) throws IOException {
 		if (indexWriterConfig != null)
-			indexSearcher.setSimilarity(indexWriterConfig.getSimilarity());
-		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
-		return new QueryContext(schema, fileResourceLoader, indexSearcher, executorService, indexAnalyzer,
-				queryAnalyzer, fieldMap, facetsState, queryDefinition);
+			searcherAndTaxonomy.searcher.setSimilarity(indexWriterConfig.getSimilarity());
+		final SortedSetDocValuesReaderState facetsState = getFacetsState(searcherAndTaxonomy.searcher.getIndexReader());
+		return new QueryContext(schema, fileResourceLoader, searcherAndTaxonomy.searcher,
+				searcherAndTaxonomy.taxonomyReader, executorService, indexAnalyzer, queryAnalyzer, fieldMap,
+				facetsState, queryDefinition);
 	}
 
 	final ResultDefinition search(final QueryDefinition queryDefinition,
@@ -713,12 +744,12 @@ final public class IndexInstance implements Closeable {
 			throws IOException, InterruptedException, ParseException, ReflectiveOperationException, QueryNodeException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
-			final IndexSearcher indexSearcher = searcherManager.acquire();
+			final SearcherTaxonomyManager.SearcherAndTaxonomy searcherAndTaxonomy = searcherTaxonomyManager.acquire();
 			try {
-				return new QueryExecution(buildQueryContext(indexSearcher, queryDefinition)).execute(
+				return new QueryExecution(buildQueryContext(searcherAndTaxonomy, queryDefinition)).execute(
 						documentBuilderFactory);
 			} finally {
-				searcherManager.release(indexSearcher);
+				searcherTaxonomyManager.release(searcherAndTaxonomy);
 			}
 		} finally {
 			if (sem != null)
@@ -730,11 +761,11 @@ final public class IndexInstance implements Closeable {
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
-			final IndexSearcher indexSearcher = searcherManager.acquire();
+			final SearcherTaxonomyManager.SearcherAndTaxonomy searcherAndTaxonomy = searcherTaxonomyManager.acquire();
 			try {
-				return new QueryExecution(buildQueryContext(indexSearcher, queryDefinition)).explain(docId);
+				return new QueryExecution(buildQueryContext(searcherAndTaxonomy, queryDefinition)).explain(docId);
 			} finally {
-				searcherManager.release(indexSearcher);
+				searcherTaxonomyManager.release(searcherAndTaxonomy);
 			}
 		} finally {
 			if (sem != null)

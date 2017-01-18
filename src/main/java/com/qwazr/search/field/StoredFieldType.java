@@ -40,9 +40,10 @@ class StoredFieldType extends FieldTypeAbstract {
 		else if (value instanceof Float)
 			consumer.accept(fieldName, new StoredField(fieldName, (float) value));
 		else if (value instanceof Externalizable)
-			consumer.accept(fieldName, new StoredField(fieldName, toBytes(fieldName, (Externalizable) value)));
+			consumer.accept(fieldName,
+					new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Externalizable) value)));
 		else if (value instanceof Serializable)
-			consumer.accept(fieldName, new StoredField(fieldName, toBytes(fieldName, (Serializable) value)));
+			consumer.accept(fieldName, new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Serializable) value)));
 		else
 			consumer.accept(fieldName, new StoredField(fieldName, value.toString()));
 	}

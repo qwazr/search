@@ -32,6 +32,7 @@ import java.util.UUID;
 public class IndexFileSet {
 
 	final static String INDEX_DATA = "data";
+	final static String INDEX_TAXONOMY = "taxonomy";
 	final static String REPL_WORK = "repl_work";
 	final static String UUID_FILE = "uuid";
 	final static String UUID_MASTER_FILE = "uuid.master";
@@ -43,31 +44,33 @@ public class IndexFileSet {
 	final private File uuidFile;
 	final File uuidMasterFile;
 	final private File settingsFile;
-	final File indexDirectory;
+	final File mainDirectory;
 	final File dataDirectory;
+	final File taxonomyDirectory;
 	final private File analyzerMapFile;
 	final File resourcesDirectory;
 	final private File fieldMapFile;
 	final Path replWorkPath;
 
-	IndexFileSet(final File indexDirectory) {
-		this.uuidFile = new File(indexDirectory, UUID_FILE);
-		this.uuidMasterFile = new File(indexDirectory, UUID_MASTER_FILE);
-		this.indexDirectory = indexDirectory;
-		this.dataDirectory = new File(indexDirectory, INDEX_DATA);
-		this.analyzerMapFile = new File(indexDirectory, ANALYZERS_FILE);
-		this.resourcesDirectory = new File(indexDirectory, RESOURCES_DIR);
-		this.fieldMapFile = new File(indexDirectory, FIELDS_FILE);
-		this.settingsFile = new File(indexDirectory, SETTINGS_FILE);
-		this.replWorkPath = indexDirectory.toPath().resolve(REPL_WORK);
+	IndexFileSet(final File mainDirectory) {
+		this.uuidFile = new File(mainDirectory, UUID_FILE);
+		this.uuidMasterFile = new File(mainDirectory, UUID_MASTER_FILE);
+		this.mainDirectory = mainDirectory;
+		this.dataDirectory = new File(mainDirectory, INDEX_DATA);
+		this.taxonomyDirectory = new File(mainDirectory, INDEX_TAXONOMY);
+		this.analyzerMapFile = new File(mainDirectory, ANALYZERS_FILE);
+		this.resourcesDirectory = new File(mainDirectory, RESOURCES_DIR);
+		this.fieldMapFile = new File(mainDirectory, FIELDS_FILE);
+		this.settingsFile = new File(mainDirectory, SETTINGS_FILE);
+		this.replWorkPath = mainDirectory.toPath().resolve(REPL_WORK);
 	}
 
 	void checkIndexDirectory() throws IOException {
-		if (!indexDirectory.exists())
-			indexDirectory.mkdir();
-		if (!indexDirectory.isDirectory())
+		if (!mainDirectory.exists())
+			mainDirectory.mkdir();
+		if (!mainDirectory.isDirectory())
 			throw new IOException("This name is not valid. No directory exists for this location: "
-					+ indexDirectory.getAbsolutePath());
+					+ mainDirectory.getAbsolutePath());
 	}
 
 	/**

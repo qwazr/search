@@ -153,7 +153,7 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull("The Content field is not present", field = fields.get("content"));
 		Assert.assertEquals(EnglishAnalyzer.class.getName(), field.analyzer);
 		Assert.assertNotNull("The Category field is not present", field = fields.get("category"));
-		Assert.assertEquals(FieldDefinition.Template.SortedSetMultiDocValuesFacetField, field.template);
+		Assert.assertEquals(FieldDefinition.Template.SortedSetDocValuesFacetField, field.template);
 		Assert.assertNotNull("The Price field is not present", field = fields.get("price"));
 		Assert.assertEquals(FieldDefinition.Template.DoubleDocValuesField, field.template);
 	}

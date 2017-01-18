@@ -20,6 +20,7 @@ import com.qwazr.search.collector.ConcurrentCollector;
 import com.qwazr.search.query.DrillDownQuery;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.FacetsCollectorManager;
+import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.ParallelDrillSideways;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -55,13 +56,11 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 
 		if (queryExecution.useDrillSideways) {
 
-			final Set<String> facetKeys = queryExecution.queryDef.facets.keySet();
 			final ParallelDrillSideways.Result<QueryCollectors> drillSidewaysResult =
 					new ParallelDrillSideways(queryExecution.queryContext.executorService,
-							queryExecution.queryContext.indexSearcher,
-							queryExecution.queryContext.fieldMap.getNewFacetsConfig(facetKeys),
-							queryExecution.queryContext.state).search(
-							(org.apache.lucene.facet.DrillDownQuery) queryExecution.query, facetKeys,
+							queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
+							queryExecution.queryContext.docValueReaderState).search(
+							(org.apache.lucene.facet.DrillDownQuery) queryExecution.query, queryExecution.facetKeys,
 							getDimPathPairs((DrillDownQuery) queryExecution.queryDef.query), this);
 			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.queryDef.facets,
 					queryExecution.query, queryExecution.timeTracker, drillSidewaysResult).build();
@@ -72,8 +71,9 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 			facetsCollector = getFacetsCollector();
 			facetsBuilder = facetsCollector == null ?
 					null :
-					new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.queryDef.facets,
-							queryExecution.query, queryExecution.timeTracker, facetsCollector).build();
+					new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
+							queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+							facetsCollector).build();
 		}
 
 		return facetsBuilder;

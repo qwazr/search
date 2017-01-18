@@ -20,6 +20,7 @@ import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
+import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 
@@ -28,8 +29,9 @@ import java.util.concurrent.ExecutorService;
 final public class QueryContext {
 
 	final public IndexSearcher indexSearcher;
+	final public TaxonomyReader taxonomyReader;
 	final public ExecutorService executorService;
-	final public SortedSetDocValuesReaderState state;
+	final public SortedSetDocValuesReaderState docValueReaderState;
 	final public UpdatableAnalyzer indexAnalyzer;
 	final public UpdatableAnalyzer queryAnalyzer;
 	final public FieldMap fieldMap;
@@ -40,15 +42,17 @@ final public class QueryContext {
 	final public SchemaInstance schemaInstance;
 
 	public QueryContext(final SchemaInstance schemaInstance, final ResourceLoader resourceLoader,
-			final IndexSearcher indexSearcher, final ExecutorService executorService,
-			final UpdatableAnalyzer indexAnalyzer, final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
-			final SortedSetDocValuesReaderState state, final QueryDefinition queryDefinition) {
+			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
+			final ExecutorService executorService, final UpdatableAnalyzer indexAnalyzer,
+			final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
+			final SortedSetDocValuesReaderState docValueReaderState, final QueryDefinition queryDefinition) {
 		this.schemaInstance = schemaInstance;
 		this.classLoaderManager = schemaInstance == null ? null : schemaInstance.getClassLoaderManager();
 		this.resourceLoader = resourceLoader;
 		this.indexSearcher = indexSearcher;
+		this.taxonomyReader = taxonomyReader;
 		this.executorService = executorService;
-		this.state = state;
+		this.docValueReaderState = docValueReaderState;
 		this.indexAnalyzer = indexAnalyzer;
 		this.queryAnalyzer = queryAnalyzer;
 		this.fieldMap = fieldMap;

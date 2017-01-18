@@ -60,7 +60,7 @@ public class FieldMap {
 		return FieldTypeInterface.getInstance(find(fieldName));
 	}
 
-	final public LinkedHashMap<String, FieldDefinition> getFieldDefinitionMap() {
+	final LinkedHashMap<String, FieldDefinition> getFieldDefinitionMap() {
 		return fieldDefinitionMap;
 	}
 
@@ -89,15 +89,15 @@ public class FieldMap {
 		if (fieldMapItem.definition.template == null)
 			return;
 		switch (fieldMapItem.definition.template) {
-		case FacetField:
 		case SortedSetDocValuesFacetField:
-			facetsConfig.setMultiValued(fieldName, false);
-			facetsConfig.setHierarchical(fieldName, false);
-			break;
-		case MultiFacetField:
-		case SortedSetMultiDocValuesFacetField:
-			facetsConfig.setMultiValued(fieldName, true);
-			facetsConfig.setHierarchical(fieldName, false);
+			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.SORTEDSET_FACET_FIELD);
+		case FacetField:
+			if (fieldMapItem.definition.facet_multivalued != null)
+				facetsConfig.setMultiValued(fieldName, fieldMapItem.definition.facet_multivalued);
+			if (fieldMapItem.definition.facet_hierarchical != null)
+				facetsConfig.setHierarchical(fieldName, fieldMapItem.definition.facet_hierarchical);
+			if (fieldMapItem.definition.facet_require_dim_count != null)
+				facetsConfig.setRequireDimCount(fieldName, fieldMapItem.definition.facet_require_dim_count);
 			break;
 		}
 	}
@@ -114,7 +114,7 @@ public class FieldMap {
 		return facetsConfig;
 	}
 
-	final public Set<String> getStaticFieldSet() {
+	final Set<String> getStaticFieldSet() {
 		return nameDefMap.keySet();
 	}
 }

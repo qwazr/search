@@ -120,10 +120,9 @@ class QueryCollectorsClassic extends QueryCollectors {
 		if (queryExecution.useDrillSideways) {
 
 			final DrillSideways.DrillSidewaysResult drillSidewaysResult =
-					new DrillSideways(queryExecution.queryContext.indexSearcher,
-							queryExecution.queryContext.fieldMap.getNewFacetsConfig(
-									queryExecution.queryDef.facets.keySet()), queryExecution.queryContext.state).search(
-							(org.apache.lucene.facet.DrillDownQuery) queryExecution.query, finalCollector);
+					new DrillSideways(queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
+							queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState)
+							.search((org.apache.lucene.facet.DrillDownQuery) queryExecution.query, finalCollector);
 			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.queryDef.facets,
 					queryExecution.query, queryExecution.timeTracker, drillSidewaysResult).build();
 
@@ -132,8 +131,9 @@ class QueryCollectorsClassic extends QueryCollectors {
 			queryExecution.queryContext.indexSearcher.search(queryExecution.query, finalCollector);
 			facetsBuilder = facetsCollector == null ?
 					null :
-					new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.queryDef.facets,
-							queryExecution.query, queryExecution.timeTracker, facetsCollector).build();
+					new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
+							queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+							facetsCollector).build();
 
 		}
 

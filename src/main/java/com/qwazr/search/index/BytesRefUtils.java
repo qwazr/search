@@ -19,6 +19,8 @@ import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.facet.taxonomy.FloatAssociationFacetField;
+import org.apache.lucene.facet.taxonomy.IntAssociationFacetField;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
@@ -47,6 +49,8 @@ public class BytesRefUtils {
 		FloatPointConverter FLOAT_POINT = new FloatPointConverter();
 		IntPointConverter INT_POINT = new IntPointConverter();
 		LongPointConverter LONG_POINT = new LongPointConverter();
+		IntFacetConverter INT_FACET = new IntFacetConverter();
+		FloatFacetConverter FLOAT_FACET = new FloatFacetConverter();
 	}
 
 	final static public class StringConverter implements Converter<String> {
@@ -234,6 +238,36 @@ public class BytesRefUtils {
 			if (bytesRef == null || bytesRef.bytes == null)
 				return null;
 			return LongPoint.decodeDimension(bytesRef.bytes, 0);
+		}
+	}
+
+	final static public class IntFacetConverter implements Converter<Integer> {
+
+		@Override
+		final public BytesRef from(final Integer value) {
+			return IntAssociationFacetField.intToBytesRef(value);
+		}
+
+		@Override
+		public final Integer to(final BytesRef bytesRef) {
+			if (bytesRef == null || bytesRef.bytes == null)
+				return null;
+			return IntAssociationFacetField.bytesRefToInt(bytesRef);
+		}
+	}
+
+	final static public class FloatFacetConverter implements Converter<Float> {
+
+		@Override
+		final public BytesRef from(final Float value) {
+			return FloatAssociationFacetField.floatToBytesRef(value);
+		}
+
+		@Override
+		public final Float to(final BytesRef bytesRef) {
+			if (bytesRef == null || bytesRef.bytes == null)
+				return null;
+			return FloatAssociationFacetField.bytesRefToFloat(bytesRef);
 		}
 	}
 }
