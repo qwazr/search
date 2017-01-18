@@ -15,6 +15,7 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.facet.DrillSideways;
@@ -33,7 +34,9 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 abstract class FacetsBuilder {
 
@@ -96,16 +99,29 @@ abstract class FacetsBuilder {
 		return facetMap;
 	}
 
+	static Set<String> getFields(LinkedHashMap<String, FacetDefinition> facets) {
+		if (facets == null || facets.isEmpty())
+			return null;
+		final LinkedHashSet<String> fields = new LinkedHashSet<>();
+		facets.forEach((field, facetDefinition) -> {
+			if (facetDefinition.queries == null)
+				fields.add(field);
+		});
+		return fields;
+	}
+
 	static class WithCollectors extends FacetsBuilder {
 
 		private final SortedSetDocValuesFacetCounts sortedSetCounts;
 		private final FastTaxonomyFacetCounts taxonomyCounts;
+		private final FacetsConfig facetsConfig;
 
 		WithCollectors(final QueryContext queryContext, final FacetsConfig facetsConfig,
 				final LinkedHashMap<String, FacetDefinition> facetsDef, final Query searchQuery,
 				final TimeTracker timeTracker, final FacetsCollector facetsCollector)
 				throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 			super(queryContext, facetsDef, searchQuery, timeTracker);
+			this.facetsConfig = facetsConfig;
 			this.sortedSetCounts = queryContext.docValueReaderState == null ?
 					null :
 					new SortedSetDocValuesFacetCounts(queryContext.docValueReaderState, facetsCollector);
@@ -115,9 +131,13 @@ abstract class FacetsBuilder {
 
 		@Override
 		final protected FacetResult getFacetResult(final int top, final String dim) throws IOException {
-			if (queryContext.docValueReaderState.getOrdRange(dim) != null)
-				return sortedSetCounts.getTopChildren(top, dim);
-			return taxonomyCounts.getTopChildren(top, dim);
+			if (FieldDefinition.SORTEDSET_FACET_FIELD.equals(facetsConfig.getDimConfig(dim).indexFieldName)) {
+				if (queryContext.docValueReaderState != null)
+					if (queryContext.docValueReaderState.getOrdRange(dim) != null)
+						return sortedSetCounts.getTopChildren(top, dim);
+			} else
+				return taxonomyCounts.getTopChildren(top, dim);
+			return null;
 		}
 	}
 

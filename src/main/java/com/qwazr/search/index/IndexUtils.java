@@ -35,7 +35,13 @@ class IndexUtils {
 	}
 
 	static SortedSetDocValuesReaderState getNewFacetsState(final IndexReader indexReader) throws IOException {
-		return new DefaultSortedSetDocValuesReaderState(indexReader, FieldDefinition.SORTEDSET_FACET_FIELD);
+		try {
+			return new DefaultSortedSetDocValuesReaderState(indexReader, FieldDefinition.SORTEDSET_FACET_FIELD);
+		} catch (IllegalArgumentException e) {
+			if (e.getMessage().contains("was not indexed with SortedSetDocValues"))
+				return null;
+			throw e;
+		}
 	}
 
 }

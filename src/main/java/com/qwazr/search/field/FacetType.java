@@ -18,9 +18,13 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.facet.FacetField;
 
-class FacetType extends FieldTypeAbstract {
+import java.util.Arrays;
+
+class FacetType extends StorableFieldType {
 
 	FacetType(final FieldMap.Item fieldMapItem) {
 		super(fieldMapItem, BytesRefUtils.Converter.STRING);
@@ -29,11 +33,15 @@ class FacetType extends FieldTypeAbstract {
 	@Override
 	final protected void fillArray(final String fieldName, final String[] values, final FieldConsumer consumer) {
 		consumer.accept(fieldName, new FacetField(fieldName, values));
+		if (store != null && store == Field.Store.YES)
+			consumer.accept(fieldName, new StoredField(fieldName, Arrays.toString(values)));
 	}
 
 	@Override
 	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
 		String stringValue = value.toString();
 		consumer.accept(fieldName, new FacetField(fieldName, stringValue));
+		if (store != null && store == Field.Store.YES)
+			consumer.accept(fieldName, new StoredField(fieldName, stringValue));
 	}
 }

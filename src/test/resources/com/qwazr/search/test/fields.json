@@ -72,7 +72,8 @@
   },
   "dynamic_multi_facet_*": {
     "template": "FacetField",
-    "facet_multivalued": true
+    "facet_multivalued": true,
+    "stored": true
   },
   "integer_payload": {
     "analyzer": "com.qwazr.search.test.IntegerPayloadAnalyzer",
