@@ -17,11 +17,8 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.collector.BaseCollector;
 import com.qwazr.search.collector.ConcurrentCollector;
-import com.qwazr.search.query.DrillDownQuery;
+import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetsCollector;
-import org.apache.lucene.facet.FacetsCollectorManager;
-import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.facet.ParallelDrillSideways;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Collector;
@@ -36,12 +33,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 class QueryCollectorManager extends QueryCollectors implements CollectorManager<Collector, QueryCollectors> {
 
 	private final Collection<QueryCollectorsClassic> queryCollectorsList;
-	private volatile FacetsCollector facetsCollector;
+	private FacetsCollector facetsCollector;
 
 	QueryCollectorManager(final QueryExecution queryExecution) {
 		super(queryExecution);
@@ -56,12 +52,11 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 
 		if (queryExecution.useDrillSideways) {
 
-			final ParallelDrillSideways.Result<QueryCollectors> drillSidewaysResult =
-					new ParallelDrillSideways(queryExecution.queryContext.executorService,
-							queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
-							queryExecution.queryContext.docValueReaderState).search(
-							(org.apache.lucene.facet.DrillDownQuery) queryExecution.query, queryExecution.facetKeys,
-							getDimPathPairs((DrillDownQuery) queryExecution.queryDef.query), this);
+			final DrillSideways.ConcurrentDrillSidewaysResult<QueryCollectors> drillSidewaysResult =
+					new MixedDrillSideways(queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
+							queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState,
+							queryExecution.queryContext.executorService).search(
+							(org.apache.lucene.facet.DrillDownQuery) queryExecution.query, this);
 			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.queryDef.facets,
 					queryExecution.query, queryExecution.timeTracker, drillSidewaysResult).build();
 
@@ -132,6 +127,8 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 				topFieldDocsList.toArray(new TopFieldDocs[topFieldDocsList.size()]));
 	}
 
+	private final static FacetsCollector EMPTY_FACETS_COLLECTOR = new FacetsCollector();
+
 	@Override
 	public final FacetsCollector getFacetsCollector() throws IOException {
 		if (facetsCollector != null) // cache
@@ -139,13 +136,12 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 		if (queryExecution.queryDef.facets == null || queryExecution.queryDef.facets.isEmpty())
 			return null;
 		if (queryCollectorsList == null || queryCollectorsList.isEmpty())
-			return FacetsCollectorManager.EMPTY;
-		final FacetsCollectorManager manager = new FacetsCollectorManager();
-		final List<FacetsCollector> facetCollectors = new ArrayList<>();
+			return EMPTY_FACETS_COLLECTOR;
+		facetsCollector = new FacetsCollector();
+		final List<FacetsCollector.MatchingDocs> matchingDocs = facetsCollector.getMatchingDocs();
 		for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
 			if (queryCollectors.facetsCollector != null)
-				facetCollectors.add(queryCollectors.facetsCollector);
-		facetsCollector = manager.reduce(facetCollectors);
+				matchingDocs.addAll(queryCollectors.facetsCollector.getMatchingDocs());
 		return facetsCollector;
 	}
 

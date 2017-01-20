@@ -82,7 +82,7 @@ public class FieldDefinition {
 		IntAssociatedField,
 		FloatAssociatedField,
 		StringAssociatedField,
-		SortedSetDocValuesFacetField
+		SortedSetDocValuesFacetField,
 	}
 
 	public final Template template;

@@ -427,14 +427,24 @@ public abstract class JsonAbstractTest {
 		}
 	}
 
-	private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef,
-			int expectedCount) throws IOException {
+	private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, String index,
+			QueryDefinition queryDef, int expectedCount) throws IOException {
 		checkErrorStatusCode(() -> client.searchQuery(SCHEMA_NAME, INDEX_DUMMY_NAME, queryDef, null), 404);
-		final ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, queryDef, null);
+		final ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, index, queryDef, null);
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(expectedCount, result.total_hits.intValue());
 		return result;
+	}
+
+	private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef,
+			int expectedCount) throws IOException {
+		return checkQueryIndex(client, INDEX_MASTER_NAME, queryDef, expectedCount);
+	}
+
+	private ResultDefinition.WithMap checkQuerySlaveIndex(IndexServiceInterface client, QueryDefinition queryDef,
+			int expectedCount) throws IOException {
+		return checkQueryIndex(client, INDEX_SLAVE_NAME, queryDef, expectedCount);
 	}
 
 	private void checkIndexSize(IndexServiceInterface client, long expectedCount) throws IOException {
@@ -990,6 +1000,11 @@ public abstract class JsonAbstractTest {
 		// Second one should do nothing
 		Assert.assertEquals(200, client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME).getStatus());
 		checkReplication(client);
+	}
+
+	public void test851checkTaxonomyReplication() throws IOException, URISyntaxException {
+		final IndexServiceInterface client = getClient();
+		checkFacetFiltersResult(checkQuerySlaveIndex(client, FACETS_DRILLDOWN_QUERY, 2), 5);
 	}
 
 	private class UpdateDocThread implements Runnable {

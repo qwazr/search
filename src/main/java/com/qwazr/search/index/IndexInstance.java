@@ -325,6 +325,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private void nrtCommit() throws IOException {
+		taxonomyWriter.commit();
 		indexWriter.flush();
 		indexWriter.commit();
 		replicator.publish(new IndexRevision(indexWriter));

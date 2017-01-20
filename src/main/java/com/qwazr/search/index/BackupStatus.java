@@ -16,7 +16,6 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.qwazr.utils.http.HttpRequest;
 import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.store.Directory;
@@ -97,8 +96,7 @@ public class BackupStatus {
 	}
 
 	SortedMap<String, BackupStatus> getBackupName(
-			final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults,
-			final String backupName) {
+			final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults, final String backupName) {
 		return schemaResults.computeIfAbsent(backupName, name -> new TreeMap<>());
 	}
 

@@ -91,15 +91,17 @@ public class FieldMap {
 		switch (fieldMapItem.definition.template) {
 		case SortedSetDocValuesFacetField:
 			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.SORTEDSET_FACET_FIELD);
+			break;
 		case FacetField:
-			if (fieldMapItem.definition.facet_multivalued != null)
-				facetsConfig.setMultiValued(fieldName, fieldMapItem.definition.facet_multivalued);
-			if (fieldMapItem.definition.facet_hierarchical != null)
-				facetsConfig.setHierarchical(fieldName, fieldMapItem.definition.facet_hierarchical);
-			if (fieldMapItem.definition.facet_require_dim_count != null)
-				facetsConfig.setRequireDimCount(fieldName, fieldMapItem.definition.facet_require_dim_count);
+			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_FACET_FIELD);
 			break;
 		}
+		if (fieldMapItem.definition.facet_multivalued != null)
+			facetsConfig.setMultiValued(fieldName, fieldMapItem.definition.facet_multivalued);
+		if (fieldMapItem.definition.facet_hierarchical != null)
+			facetsConfig.setHierarchical(fieldName, fieldMapItem.definition.facet_hierarchical);
+		if (fieldMapItem.definition.facet_require_dim_count != null)
+			facetsConfig.setRequireDimCount(fieldName, fieldMapItem.definition.facet_require_dim_count);
 	}
 
 	final public FacetsConfig getNewFacetsConfig(final Collection<String> concreteFieldNames) {
