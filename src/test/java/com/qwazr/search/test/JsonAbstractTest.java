@@ -911,16 +911,6 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
-	public void test700DeleteDoc() throws URISyntaxException, IOException {
-		final IndexServiceInterface client = getClient();
-		final ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, DELETE_QUERY, true);
-		Assert.assertNotNull(result);
-		Assert.assertNotNull(result.total_hits);
-		Assert.assertEquals(2L, (long) result.total_hits);
-		checkAllSizes(client, 3);
-	}
-
-	@Test
 	public void test800ThirdBackup() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
 		final BackupStatus status = doBackup(client, INDEX_BACKUP_NAME3);
@@ -1002,6 +992,7 @@ public abstract class JsonAbstractTest {
 		checkReplication(client);
 	}
 
+	@Test
 	public void test851checkTaxonomyReplication() throws IOException, URISyntaxException {
 		final IndexServiceInterface client = getClient();
 		checkFacetFiltersResult(checkQuerySlaveIndex(client, FACETS_DRILLDOWN_QUERY, 2), 5);
@@ -1074,6 +1065,16 @@ public abstract class JsonAbstractTest {
 		Assert.assertNotNull(client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME));
 		final Map<String, Object> result = client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, "5");
 		Assert.assertNotNull(result);
+	}
+
+	@Test
+	public void test900DeleteDoc() throws URISyntaxException, IOException {
+		final IndexServiceInterface client = getClient();
+		final ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, DELETE_QUERY, true);
+		Assert.assertNotNull(result);
+		Assert.assertNotNull(result.total_hits);
+		Assert.assertEquals(3L, (long) result.total_hits);
+		checkAllSizes(client, 3);
 	}
 
 	private Response checkDelete(String indexName, int expectedCode) throws URISyntaxException {

@@ -23,17 +23,12 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
-import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
-import org.apache.lucene.replicator.IndexReplicationHandler;
-import org.apache.lucene.replicator.IndexRevision;
 import org.apache.lucene.replicator.LocalReplicator;
-import org.apache.lucene.replicator.PerSessionDirectoryFactory;
-import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -46,6 +41,8 @@ import java.util.LinkedHashMap;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+
+import static org.apache.lucene.replicator.IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter;
 
 class IndexInstanceBuilder {
 
@@ -69,7 +66,7 @@ class IndexInstanceBuilder {
 	LinkedHashMap<String, FieldDefinition> fieldMap = null;
 
 	IndexWriter indexWriter = null;
-	DirectoryTaxonomyWriter taxonomyWriter = null;
+	SnapshotDirectoryTaxonomyWriter taxonomyWriter = null;
 
 	SearcherTaxonomyManager searcherTaxonomyManager = null;
 
@@ -77,7 +74,6 @@ class IndexInstanceBuilder {
 	UpdatableAnalyzer queryAnalyzer = null;
 
 	LocalReplicator replicator = null;
-	ReplicationClient replicationClient = null;
 	IndexReplicator indexReplicator = null;
 
 	IndexInstanceBuilder(final SchemaInstance schema, final IndexFileSet fileSet,
@@ -135,41 +131,38 @@ class IndexInstanceBuilder {
 			indexWriterConfig.setMergePolicy(mergePolicy);
 		}
 
-		final SerialMergeScheduler serialMergeScheduler = new SerialMergeScheduler();
-		indexWriterConfig.setMergeScheduler(serialMergeScheduler);
+		indexWriterConfig.setMergeScheduler(new SerialMergeScheduler());
 
 		final SnapshotDeletionPolicy snapshotDeletionPolicy =
 				new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
 		indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
 
-		indexWriter = new IndexWriter(dataDirectory, indexWriterConfig);
+		indexWriter = checkCommit(new IndexWriter(dataDirectory, indexWriterConfig));
+	}
+
+	private IndexWriter checkCommit(final IndexWriter indexWriter) throws IOException {
 		if (indexWriter.hasUncommittedChanges())
 			indexWriter.commit();
+		return indexWriter;
 	}
 
 	private void openOrCreateTaxonomyIndex() throws IOException {
-		taxonomyWriter = new DirectoryTaxonomyWriter(taxonomyDirectory, IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+		taxonomyWriter = new SnapshotDirectoryTaxonomyWriter(taxonomyDirectory);
+		checkCommit(taxonomyWriter.getIndexWriter());
 	}
 
 	private void buildSlave() throws IOException, URISyntaxException, ReflectiveOperationException {
 
-		// We just want to be sure the index exists.
-		openOrCreateDataIndex();
-		indexWriter.close();
-		indexWriter = null;
-
-		openOrCreateTaxonomyIndex();
-		taxonomyWriter.close();
-		taxonomyWriter = null;
-
-		Callable<Boolean> callback = () -> {
-			searcherTaxonomyManager.maybeRefresh();
+		final Callable<Boolean> callback = () -> {
+			if (searcherTaxonomyManager != null)
+				searcherTaxonomyManager.maybeRefresh();
 			return true;
 		};
-		ReplicationClient.ReplicationHandler handler = new IndexReplicationHandler(dataDirectory, callback);
-		ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(fileSet.replWorkPath);
-		indexReplicator = new IndexReplicator(indexService, settings.master, fileSet.uuidMasterFile);
-		replicationClient = new ReplicationClient(indexReplicator, handler, factory);
+
+		indexReplicator = new IndexReplicator(indexService, settings.master, fileSet.uuidMasterFile, dataDirectory,
+				taxonomyDirectory, fileSet.replWorkPath, callback);
+
+		indexReplicator.updateNow();
 
 		// we build the SearcherManager
 		searcherTaxonomyManager = new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory);
@@ -182,14 +175,13 @@ class IndexInstanceBuilder {
 
 		// Manage the master replication (revision publishing)
 		replicator = new LocalReplicator();
-		replicator.publish(new IndexRevision(indexWriter));
 
 		// Finally we build the SearcherManager
-		searcherTaxonomyManager = new SearcherTaxonomyManager(indexWriter, searcherFactory, taxonomyWriter);
+		searcherTaxonomyManager = new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter);
 	}
 
 	private void abort() {
-		IOUtils.closeQuietly(replicationClient, searcherTaxonomyManager, indexAnalyzer, queryAnalyzer, replicator);
+		IOUtils.closeQuietly(indexReplicator, searcherTaxonomyManager, indexAnalyzer, queryAnalyzer, replicator);
 
 		if (taxonomyWriter != null)
 			IOUtils.closeQuietly(taxonomyWriter);
@@ -218,4 +210,5 @@ class IndexInstanceBuilder {
 			throw new ServerException(e);
 		}
 	}
+
 }

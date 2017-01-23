@@ -40,7 +40,7 @@ public class JavaTest {
 		private static IndexManager indexManager = null;
 
 		public JavaLibraryTest() {
-			super(IndexSettingsDefinition.of().type(IndexSettingsDefinition.Type.RAMDirectory).
+			super(IndexSettingsDefinition.of().type(IndexSettingsDefinition.Type.FSDirectory).
 					master("testSchema", "testIndexMaster").ramBufferSize(32d).build());
 		}
 

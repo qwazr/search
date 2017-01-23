@@ -130,8 +130,10 @@ public class IndexStatus {
 		this.settings = settings;
 		this.analyzers = analyzers;
 		this.fields = fields;
-		final SegmentInfos segmentInfos =
-				directory != null && directory instanceof FSDirectory ? SegmentInfos.readLatestCommit(directory) : null;
+
+		final SegmentInfos segmentInfos = directory != null && directory instanceof FSDirectory ?
+				version == 1 ? null : SegmentInfos.readLatestCommit(directory) :
+				null;
 		if (segmentInfos != null) {
 			number_of_segment = segmentInfos.size();
 			segment_infos = new ArrayList<>();

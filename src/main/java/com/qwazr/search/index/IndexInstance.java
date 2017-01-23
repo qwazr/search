@@ -32,7 +32,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
-import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexCommit;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -42,9 +41,8 @@ import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.replicator.IndexRevision;
+import org.apache.lucene.replicator.IndexAndTaxonomyRevision;
 import org.apache.lucene.replicator.LocalReplicator;
-import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -86,7 +84,7 @@ final public class IndexInstance implements Closeable {
 	private final LiveIndexWriterConfig indexWriterConfig;
 	private final SnapshotDeletionPolicy snapshotDeletionPolicy;
 	private final IndexWriter indexWriter;
-	private final TaxonomyWriter taxonomyWriter;
+	private final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter;
 
 	private final SearcherTaxonomyManager searcherTaxonomyManager;
 	private final Set<MultiSearchInstance> multiSearchInstances;
@@ -97,7 +95,6 @@ final public class IndexInstance implements Closeable {
 	private final ClassLoaderManager classLoaderManager;
 
 	private final LocalReplicator replicator;
-	private final ReplicationClient replicationClient;
 	private final IndexReplicator indexReplicator;
 	private final ReentrantLock replicationLock;
 
@@ -129,7 +126,6 @@ final public class IndexInstance implements Closeable {
 			this.snapshotDeletionPolicy = null;
 		}
 		this.taxonomyWriter = builder.taxonomyWriter;
-		//TODO Handle snapshotDeletionPolicy
 		this.indexAnalyzer = builder.indexAnalyzer;
 		this.queryAnalyzer = builder.queryAnalyzer;
 		this.settings = builder.settings;
@@ -137,7 +133,6 @@ final public class IndexInstance implements Closeable {
 		this.executorService = builder.executorService;
 		this.fileResourceLoader = builder.fileResourceLoader;
 		this.replicator = builder.replicator;
-		this.replicationClient = builder.replicationClient;
 		this.indexReplicator = builder.indexReplicator;
 		this.replicationLock = new ReentrantLock(true);
 		this.facetsReaderStateCache = null;
@@ -154,7 +149,7 @@ final public class IndexInstance implements Closeable {
 
 	@Override
 	public void close() {
-		IOUtils.closeQuietly(replicationClient, searcherTaxonomyManager, indexAnalyzer, queryAnalyzer, replicator);
+		IOUtils.closeQuietly(indexReplicator, searcherTaxonomyManager, indexAnalyzer, queryAnalyzer, replicator);
 
 		if (taxonomyWriter != null)
 			IOUtils.closeQuietly(taxonomyWriter);
@@ -325,11 +320,12 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private void nrtCommit() throws IOException {
-		taxonomyWriter.commit();
 		indexWriter.flush();
 		indexWriter.commit();
-		replicator.publish(new IndexRevision(indexWriter));
+		taxonomyWriter.getIndexWriter().flush();
+		taxonomyWriter.commit();
 		searcherTaxonomyManager.maybeRefresh();
+		replicator.publish(new IndexAndTaxonomyRevision(indexWriter, taxonomyWriter));
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
@@ -405,7 +401,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	void replicationCheck() throws IOException {
-		if (replicationClient == null)
+		if (indexReplicator == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"No replication master has been setup - Index: " + indexName);
 
@@ -439,7 +435,7 @@ final public class IndexInstance implements Closeable {
 				setAnalyzers(indexReplicator.getMasterAnalyzers());
 				setFields(indexReplicator.getMasterFields());
 
-				replicationClient.updateNow();
+				indexReplicator.updateNow();
 
 			} finally {
 				replicationLock.unlock();

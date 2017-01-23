@@ -17,17 +17,31 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.utils.IOUtils;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.IOUtils;
+import org.apache.lucene.replicator.IndexAndTaxonomyReplicationHandler;
+import org.apache.lucene.replicator.PerSessionDirectoryFactory;
+import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.replicator.Revision;
 import org.apache.lucene.replicator.SessionToken;
+import org.apache.lucene.store.Directory;
 
 import javax.ws.rs.core.Response;
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Callable;
 
 class IndexReplicator implements Replicator {
 
@@ -36,22 +50,33 @@ class IndexReplicator implements Replicator {
 	private final File masterUuidFile;
 	private volatile String masterUuidString;
 	private volatile UUID masterUuid;
+
+	private final ReplicationClient replicationClient;
+
 	private final Set<InputStream> inputStreams;
 
-	IndexReplicator(final IndexServiceInterface service, final RemoteIndex master, final File masterUuidFile)
-			throws URISyntaxException, IOException {
+	IndexReplicator(final IndexServiceInterface service, final RemoteIndex master, final File masterUuidFile,
+			final Directory indexDirectory, final Directory taxonomyDirectory, final Path replWorkPath,
+			final Callable<Boolean> callback) throws URISyntaxException, IOException {
 		this.master = master;
 		this.masterUuidFile = masterUuidFile;
-		indexService = master == null ?
+		this.indexService = master == null ?
 				null :
 				master.host == null ?
 						service :
 						"localhost".equals(master.host) ? service : new IndexSingleClient(master);
-		this.inputStreams = new LinkedHashSet<>();
 		if (masterUuidFile.exists() && masterUuidFile.length() > 0) {
-			masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
-			masterUuidString = masterUuid.toString();
-		}
+			this.masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
+			this.masterUuidString = masterUuid.toString();
+		} else
+			checkRemoteMasterUuid();
+
+		this.inputStreams = new LinkedHashSet<>();
+
+		final IndexAndTaxonomyReplicationHandler handler =
+				new IndexAndTaxonomyReplicationHandler(indexDirectory, taxonomyDirectory, callback);
+		final ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(replWorkPath);
+		this.replicationClient = new ReplicationClient(this, handler, factory);
 	}
 
 	private IndexServiceInterface checkService() {
@@ -60,7 +85,7 @@ class IndexReplicator implements Replicator {
 		return indexService;
 	}
 
-	String checkRemoteMasterUuid() throws IOException {
+	final String checkRemoteMasterUuid() throws IOException {
 		final UUID remoteMasterUuid = UUID.fromString(checkService().getIndex(master.schema, master.index).index_uuid);
 		if (masterUuid == null) {
 			masterUuid = remoteMasterUuid;
@@ -75,48 +100,8 @@ class IndexReplicator implements Replicator {
 		return masterUuidString;
 	}
 
-	UUID getMasterUuid() {
+	final UUID getMasterUuid() {
 		return masterUuid;
-	}
-
-	@Override
-	public void publish(final Revision revision) throws IOException {
-		throw new UnsupportedOperationException(
-				"this replicator implementation does not support remote publishing of revisions");
-	}
-
-	@Override
-	public SessionToken checkForUpdate(final String currVersion) throws IOException {
-		final AbstractStreamingOutput streamingOutput =
-				checkService().replicationUpdate(master.schema, master.index, masterUuidString, currVersion);
-		if (streamingOutput == null)
-			return null;
-		try (final InputStream inputStream = streamingOutput.getInputStream()) {
-			if (inputStream == null)
-				return null;
-			final DataInput input = new DataInputStream(inputStream);
-			return new SessionToken(input);
-		}
-	}
-
-	@Override
-	public void release(final String sessionID) throws IOException {
-		checkService().replicationRelease(master.schema, master.index, masterUuidString, sessionID);
-	}
-
-	@Override
-	public InputStream obtainFile(final String sessionID, final String source, final String fileName)
-			throws IOException {
-		final InputStream stream =
-				checkService().replicationObtain(master.schema, master.index, masterUuidString, sessionID, source,
-						fileName).getInputStream();
-		inputStreams.add(stream);
-		return stream;
-	}
-
-	@Override
-	public void close() throws IOException {
-		inputStreams.forEach(IOUtils::closeQuietly);
 	}
 
 	final LinkedHashMap<String, AnalyzerDefinition> getMasterAnalyzers() {
@@ -139,4 +124,50 @@ class IndexReplicator implements Replicator {
 		return checkService().getResource(master.schema, master.index, resourceName).getInputStream();
 	}
 
+	@Override
+	final public void publish(final Revision revision) throws IOException {
+		throw new UnsupportedOperationException(
+				"this replicator implementation does not support remote publishing of revisions");
+	}
+
+	@Override
+	public SessionToken checkForUpdate(final String currVersion) throws IOException {
+		final AbstractStreamingOutput streamingOutput =
+				checkService().replicationUpdate(master.schema, master.index, masterUuidString, currVersion);
+		if (streamingOutput == null)
+			return null;
+		try (final InputStream inputStream = streamingOutput.getInputStream()) {
+			if (inputStream == null)
+				return null;
+			final DataInput input = new DataInputStream(inputStream);
+			return new SessionToken(input);
+		}
+	}
+
+	@Override
+	final public void release(final String sessionID) throws IOException {
+		checkService().replicationRelease(master.schema, master.index, masterUuidString, sessionID);
+	}
+
+	@Override
+	final public InputStream obtainFile(final String sessionID, final String source, final String fileName)
+			throws IOException {
+		final InputStream stream =
+				checkService().replicationObtain(master.schema, master.index, masterUuidString, sessionID, source,
+						fileName).getInputStream();
+		inputStreams.add(stream);
+		return stream;
+	}
+
+	@Override
+	final public void close() throws IOException {
+		inputStreams.forEach(IOUtils::closeQuietly);
+		IOUtils.closeQuietly(replicationClient);
+	}
+
+	final void updateNow() throws IOException {
+		replicationClient.updateNow();
+		inputStreams.forEach(IOUtils::closeQuietly);
+		inputStreams.clear();
+	}
 }
