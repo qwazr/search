@@ -563,7 +563,7 @@ public abstract class JavaAbstractTest {
 		final IndexStatus indexStatus = slave.createUpdateIndex();
 		Assert.assertNotNull(indexStatus);
 		Assert.assertNotNull(indexStatus.index_uuid);
-		Assert.assertNull(indexStatus.master_uuid);
+		Assert.assertNotNull(indexStatus.master_uuid);
 
 		// Second call to check setting comparison
 		Assert.assertNotNull(slave.createUpdateIndex());

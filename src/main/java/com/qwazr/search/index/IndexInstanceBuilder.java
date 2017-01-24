@@ -28,6 +28,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
+import org.apache.lucene.replicator.IndexAndTaxonomyRevision;
 import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.store.Directory;
@@ -73,7 +74,7 @@ class IndexInstanceBuilder {
 	UpdatableAnalyzer indexAnalyzer = null;
 	UpdatableAnalyzer queryAnalyzer = null;
 
-	LocalReplicator replicator = null;
+	LocalReplicator localReplicator = null;
 	IndexReplicator indexReplicator = null;
 
 	IndexInstanceBuilder(final SchemaInstance schema, final IndexFileSet fileSet,
@@ -174,14 +175,15 @@ class IndexInstanceBuilder {
 		openOrCreateTaxonomyIndex();
 
 		// Manage the master replication (revision publishing)
-		replicator = new LocalReplicator();
+		localReplicator = new LocalReplicator();
+		localReplicator.publish(new IndexAndTaxonomyRevision(indexWriter, taxonomyWriter));
 
 		// Finally we build the SearcherManager
 		searcherTaxonomyManager = new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter);
 	}
 
 	private void abort() {
-		IOUtils.closeQuietly(indexReplicator, searcherTaxonomyManager, indexAnalyzer, queryAnalyzer, replicator);
+		IOUtils.closeQuietly(indexReplicator, searcherTaxonomyManager, indexAnalyzer, queryAnalyzer, localReplicator);
 
 		if (taxonomyWriter != null)
 			IOUtils.closeQuietly(taxonomyWriter);

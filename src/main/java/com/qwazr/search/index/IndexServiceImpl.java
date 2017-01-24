@@ -25,7 +25,7 @@ import com.qwazr.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.replicator.Replicator;
+import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.SessionToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -532,8 +532,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final String masterUuid, final String sessionID, final String source, final String fileName) {
 		try {
 			checkRight(null);
-			final Replicator replicator = indexManager.get(schemaName).get(indexName, false).getReplicator(masterUuid);
-			final InputStream input = replicator.obtainFile(sessionID, source, fileName);
+			final LocalReplicator localReplicator =
+					indexManager.get(schemaName).get(indexName, false).getLocalReplicator(masterUuid);
+			final InputStream input = localReplicator.obtainFile(sessionID, source, fileName);
 			if (input == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "File not found: " + fileName);
 			return AbstractStreamingOutput.with(input);
@@ -547,7 +548,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final String sessionID) {
 		try {
 			checkRight(null);
-			indexManager.get(schemaName).get(indexName, false).getReplicator(masterUuid).release(sessionID);
+			indexManager.get(schemaName).get(indexName, false).getLocalReplicator(masterUuid).release(sessionID);
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -562,7 +563,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 			final SessionToken token = indexManager.get(schemaName)
 					.get(indexName, false)
-					.getReplicator(masterUuid)
+					.getLocalReplicator(masterUuid)
 					.checkForUpdate(currentVersion);
 			if (token == null) // Returns a 204 (no content)
 				return null;

@@ -43,7 +43,6 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.replicator.IndexAndTaxonomyRevision;
 import org.apache.lucene.replicator.LocalReplicator;
-import org.apache.lucene.replicator.Replicator;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
@@ -94,7 +93,7 @@ final public class IndexInstance implements Closeable {
 	private final FileResourceLoader fileResourceLoader;
 	private final ClassLoaderManager classLoaderManager;
 
-	private final LocalReplicator replicator;
+	private final LocalReplicator localReplicator;
 	private final IndexReplicator indexReplicator;
 	private final ReentrantLock replicationLock;
 
@@ -132,7 +131,7 @@ final public class IndexInstance implements Closeable {
 		this.multiSearchInstances = ConcurrentHashMap.newKeySet();
 		this.executorService = builder.executorService;
 		this.fileResourceLoader = builder.fileResourceLoader;
-		this.replicator = builder.replicator;
+		this.localReplicator = builder.localReplicator;
 		this.indexReplicator = builder.indexReplicator;
 		this.replicationLock = new ReentrantLock(true);
 		this.facetsReaderStateCache = null;
@@ -149,7 +148,7 @@ final public class IndexInstance implements Closeable {
 
 	@Override
 	public void close() {
-		IOUtils.closeQuietly(indexReplicator, searcherTaxonomyManager, indexAnalyzer, queryAnalyzer, replicator);
+		IOUtils.closeQuietly(indexReplicator, searcherTaxonomyManager, indexAnalyzer, queryAnalyzer, localReplicator);
 
 		if (taxonomyWriter != null)
 			IOUtils.closeQuietly(taxonomyWriter);
@@ -325,7 +324,7 @@ final public class IndexInstance implements Closeable {
 		taxonomyWriter.getIndexWriter().flush();
 		taxonomyWriter.commit();
 		searcherTaxonomyManager.maybeRefresh();
-		replicator.publish(new IndexAndTaxonomyRevision(indexWriter, taxonomyWriter));
+		localReplicator.publish(new IndexAndTaxonomyRevision(indexWriter, taxonomyWriter));
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
@@ -395,9 +394,9 @@ final public class IndexInstance implements Closeable {
 		return uuid;
 	}
 
-	final Replicator getReplicator(final String remoteMasterUuid) {
+	final LocalReplicator getLocalReplicator(final String remoteMasterUuid) {
 		checkRemoteMasterUUID(remoteMasterUuid, indexUuid);
-		return replicator;
+		return localReplicator;
 	}
 
 	void replicationCheck() throws IOException {
