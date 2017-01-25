@@ -144,16 +144,25 @@ abstract class FacetsBuilder {
 	static class WithSideways extends FacetsBuilder {
 
 		final DrillSideways.DrillSidewaysResult results;
+		private final FacetsConfig facetsConfig;
 
-		WithSideways(final QueryContext queryContext, final LinkedHashMap<String, FacetDefinition> facetsDef,
-				final Query searchQuery, final TimeTracker timeTracker, final DrillSideways.DrillSidewaysResult results)
+		WithSideways(final QueryContext queryContext, final FacetsConfig facetsConfig,
+				final LinkedHashMap<String, FacetDefinition> facetsDef, final Query searchQuery,
+				final TimeTracker timeTracker, final DrillSideways.DrillSidewaysResult results)
 				throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 			super(queryContext, facetsDef, searchQuery, timeTracker);
+			this.facetsConfig = facetsConfig;
 			this.results = results;
 		}
 
 		@Override
 		final protected FacetResult getFacetResult(final int top, final String dim) throws IOException {
+			if (FieldDefinition.SORTEDSET_FACET_FIELD.equals(facetsConfig.getDimConfig(dim).indexFieldName)) {
+				if (queryContext.docValueReaderState == null)
+					return null;
+				if (queryContext.docValueReaderState.getOrdRange(dim) == null)
+					return null;
+			}
 			return results.facets.getTopChildren(top, dim);
 		}
 	}

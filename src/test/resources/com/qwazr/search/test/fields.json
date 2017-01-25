@@ -16,6 +16,12 @@
     "template": "SortedSetDocValuesFacetField",
     "facet_multivalued": true
   },
+  "empty_sortedset_facet": {
+    "template": "SortedSetDocValuesFacetField"
+  },
+  "empty_taxonomy_facet": {
+    "template": "FacetField"
+  },
   "format": {
     "template": "FacetField"
   },

@@ -57,8 +57,9 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 							queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState,
 							queryExecution.queryContext.executorService).search(
 							(org.apache.lucene.facet.DrillDownQuery) queryExecution.query, this);
-			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.queryDef.facets,
-					queryExecution.query, queryExecution.timeTracker, drillSidewaysResult).build();
+			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.facetsConfig,
+					queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+					drillSidewaysResult).build();
 
 		} else {
 

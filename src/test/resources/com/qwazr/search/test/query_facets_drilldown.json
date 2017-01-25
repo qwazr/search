@@ -32,6 +32,10 @@
     },
     "dynamic_multi_facet_cat": {
     },
+    "empty_sortedset_facet": {
+    },
+    "empty_taxonomy_facet": {
+    },
     "format": {
     },
     "dynamic_simple_facet_type": {}

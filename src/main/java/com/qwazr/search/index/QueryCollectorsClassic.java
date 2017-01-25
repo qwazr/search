@@ -123,8 +123,9 @@ class QueryCollectorsClassic extends QueryCollectors {
 					new DrillSideways(queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
 							queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState)
 							.search((org.apache.lucene.facet.DrillDownQuery) queryExecution.query, finalCollector);
-			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.queryDef.facets,
-					queryExecution.query, queryExecution.timeTracker, drillSidewaysResult).build();
+			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.facetsConfig,
+					queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+					drillSidewaysResult).build();
 
 		} else {
 
