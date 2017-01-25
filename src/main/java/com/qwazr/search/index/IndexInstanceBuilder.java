@@ -25,6 +25,7 @@ import com.qwazr.utils.IOUtils;
 import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
@@ -163,7 +164,9 @@ class IndexInstanceBuilder {
 		indexReplicator = new IndexReplicator(indexService, settings.master, fileSet.uuidMasterFile, dataDirectory,
 				taxonomyDirectory, fileSet.replWorkPath, callback);
 
-		indexReplicator.updateNow();
+		if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0
+				|| SegmentInfos.getLastCommitGeneration(taxonomyDirectory) < 0)
+			indexReplicator.updateNow();
 
 		// we build the SearcherManager
 		searcherTaxonomyManager = new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory);
