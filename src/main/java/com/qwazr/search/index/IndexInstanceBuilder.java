@@ -203,7 +203,7 @@ class IndexInstanceBuilder {
 	IndexInstance build() throws ReflectiveOperationException, IOException, URISyntaxException {
 		try {
 			buildCommon();
-			if (fileSet.uuidMasterFile.exists() || settings.master != null)
+			if (settings.master != null && settings.master.schema != null && settings.master.index != null)
 				buildSlave();
 			else
 				buildMaster();

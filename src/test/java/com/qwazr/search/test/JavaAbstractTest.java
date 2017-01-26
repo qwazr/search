@@ -562,11 +562,20 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService slave = getSlave();
 
 		// Let's first create an empty index (without master)
-		getIndexService().createUpdateIndex(slave.getSchemaName(), slave.getIndexName());
+		final IndexStatus nonSlaveStatus =
+				getIndexService().createUpdateIndex(slave.getSchemaName(), slave.getIndexName());
+		Assert.assertNotNull(nonSlaveStatus);
+		Assert.assertNull(nonSlaveStatus.master_uuid);
+		Assert.assertNotNull(nonSlaveStatus.settings);
+		Assert.assertNull(nonSlaveStatus.settings.master);
 
 		final IndexStatus indexStatus = slave.createUpdateIndex();
 		Assert.assertNotNull(indexStatus);
 		Assert.assertNotNull(indexStatus.index_uuid);
+		Assert.assertNotNull(indexStatus.settings);
+		Assert.assertNotNull(indexStatus.settings.master);
+		Assert.assertNotNull(indexStatus.settings.master.schema);
+		Assert.assertNotNull(indexStatus.settings.master.index);
 		Assert.assertNotNull(indexStatus.master_uuid);
 
 		// Second call to check setting comparison
