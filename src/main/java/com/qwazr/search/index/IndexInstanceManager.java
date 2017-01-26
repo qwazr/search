@@ -82,6 +82,7 @@ class IndexInstanceManager implements Closeable {
 						throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 								"This index already contains document.");
 					indexInstance.delete();
+					indexInstance = null;
 					checkDirectoryAndUuid();
 				}
 			}
