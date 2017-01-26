@@ -25,8 +25,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Date;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class BackupStatus {
@@ -50,16 +48,16 @@ public class BackupStatus {
 		this.files_count = files_count;
 	}
 
-	final static BackupStatus newBackupStatus(final File backupDir) throws IOException {
+	static BackupStatus newBackupStatus(final File backupDir) throws IOException {
 		if (backupDir == null)
 			return null;
 		try (final Directory dir = FSDirectory.open(backupDir.toPath())) {
 			try (final DirectoryReader reader = DirectoryReader.open(dir)) {
-				File[] files = backupDir.listFiles((FileFilter) FileFileFilter.FILE);
+				final File[] files = backupDir.listFiles((FileFilter) FileFileFilter.FILE);
 				long bytes_size = 0;
 				if (files == null)
 					return null;
-				long generation = reader.getVersion();
+				final long generation = reader.getVersion();
 				for (File file : files)
 					bytes_size += file.length();
 				return new BackupStatus(generation, backupDir.lastModified(), bytes_size, files.length);
@@ -67,12 +65,10 @@ public class BackupStatus {
 		}
 	}
 
-	private static final boolean equalsNull(Object o1, Object o2) {
+	private static boolean equalsNull(final Object o1, final Object o2) {
 		if (o1 == null)
 			return o2 == null;
-		if (o2 == null)
-			return false;
-		return o1.equals(o2);
+		return o2 != null && o1.equals(o2);
 	}
 
 	public int hashCode() {
@@ -93,11 +89,6 @@ public class BackupStatus {
 		if (!equalsNull(bytes_size, s.bytes_size))
 			return false;
 		return equalsNull(bytes_size, s.bytes_size);
-	}
-
-	SortedMap<String, BackupStatus> getBackupName(
-			final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults, final String backupName) {
-		return schemaResults.computeIfAbsent(backupName, name -> new TreeMap<>());
 	}
 
 }

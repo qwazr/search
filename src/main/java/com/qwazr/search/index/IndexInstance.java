@@ -84,6 +84,7 @@ final public class IndexInstance implements Closeable {
 	private final SnapshotDeletionPolicy snapshotDeletionPolicy;
 	private final IndexWriter indexWriter;
 	private final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter;
+	private final ReentrantLock commitLock;
 
 	private final SearcherTaxonomyManager searcherTaxonomyManager;
 	private final Set<MultiSearchInstance> multiSearchInstances;
@@ -104,9 +105,10 @@ final public class IndexInstance implements Closeable {
 	private volatile LinkedHashMap<String, AnalyzerDefinition> analyzerMap;
 
 	private volatile Pair<IndexReader, SortedSetDocValuesReaderState> facetsReaderStateCache;
-	private final ReentrantLock facetsReaderStateCacheLog = new ReentrantLock(true);
+	private final ReentrantLock facetsReaderStateCacheLog;
 
 	IndexInstance(final IndexInstanceBuilder builder) {
+		this.commitLock = new ReentrantLock(true);
 		this.classLoaderManager = builder.classLoaderManager;
 		this.schema = builder.schema;
 		this.fileSet = builder.fileSet;
@@ -135,6 +137,7 @@ final public class IndexInstance implements Closeable {
 		this.indexReplicator = builder.indexReplicator;
 		this.replicationLock = new ReentrantLock(true);
 		this.facetsReaderStateCache = null;
+		this.facetsReaderStateCacheLog = new ReentrantLock(true);
 		this.searcherTaxonomyManager = builder.searcherTaxonomyManager;
 	}
 
@@ -319,12 +322,17 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private void nrtCommit() throws IOException {
-		indexWriter.flush();
-		indexWriter.commit();
-		taxonomyWriter.getIndexWriter().flush();
-		taxonomyWriter.commit();
-		searcherTaxonomyManager.maybeRefresh();
-		localReplicator.publish(new IndexAndTaxonomyRevision(indexWriter, taxonomyWriter));
+		commitLock.lock();
+		try {
+			taxonomyWriter.getIndexWriter().flush();
+			taxonomyWriter.commit();
+			indexWriter.flush();
+			indexWriter.commit();
+			searcherTaxonomyManager.maybeRefresh();
+			localReplicator.publish(new IndexAndTaxonomyRevision(indexWriter, taxonomyWriter));
+		} finally {
+			commitLock.unlock();
+		}
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
