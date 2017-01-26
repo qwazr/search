@@ -56,7 +56,7 @@ public class RemoteIndex extends RemoteService {
 		if (StringUtils.isEmpty(remoteIndexUrl))
 			return null;
 
-		final RemoteService.Builder builder = new RemoteService.Builder(remoteIndexUrl);
+		final RemoteService.Builder builder = RemoteService.of(remoteIndexUrl);
 
 		final String path = builder.getPathSegment(0);
 		final String schema = builder.getPathSegment(1);

@@ -167,7 +167,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final IndexSettingsDefinition settings) {
 		try {
 			checkRight(schemaName);
-			return indexManager.get(schemaName).createUpdate(indexName, settings).getStatus();
+			return indexManager.get(schemaName)
+					.createUpdate(indexName, settings == null ? IndexSettingsDefinition.EMPTY : settings)
+					.getStatus();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -175,7 +177,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public IndexStatus createUpdateIndex(final String schemaName, final String indexName) {
-		return createUpdateIndex(schemaName, indexName, null);
+		return createUpdateIndex(schemaName, indexName, IndexSettingsDefinition.EMPTY);
 	}
 
 	@Override

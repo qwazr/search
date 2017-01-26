@@ -15,11 +15,13 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LockUtils;
 import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.store.Directory;
 
+import javax.ws.rs.core.Response;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -33,8 +35,8 @@ class IndexInstanceManager implements Closeable {
 
 	private final SchemaInstance schema;
 	private final IndexFileSet fileSet;
-	private final UUID indexUuid;
 
+	private UUID indexUuid;
 	private IndexSettingsDefinition settings;
 	private IndexInstance indexInstance;
 
@@ -44,10 +46,13 @@ class IndexInstanceManager implements Closeable {
 		this.schema = schema;
 		this.fileSet = new IndexFileSet(indexDirectory);
 
+		checkDirectoryAndUuid();
+		settings = fileSet.loadSettings();
+	}
+
+	private void checkDirectoryAndUuid() throws IOException {
 		fileSet.checkIndexDirectory();
 		indexUuid = fileSet.checkUuid();
-		settings = fileSet.loadSettings();
-
 	}
 
 	private IndexInstance ensureOpen() throws ReflectiveOperationException, IOException, URISyntaxException {
@@ -60,15 +65,30 @@ class IndexInstanceManager implements Closeable {
 		return rwl.writeEx(this::ensureOpen);
 	}
 
-	IndexInstance createUpdate(final IndexSettingsDefinition settings) throws Exception {
+	private boolean isNewMaster(final IndexSettingsDefinition newSettings) {
+		if (newSettings == null || newSettings.master == null)
+			return false;
+		return settings == null || !Objects.equals(settings.master, newSettings.master);
+	}
+
+	IndexInstance createUpdate(final IndexSettingsDefinition newSettings) throws Exception {
 		return rwl.writeEx(() -> {
-			final boolean same = Objects.equals(settings, this.settings);
+			final boolean same = Objects.equals(newSettings, settings);
 			if (same && indexInstance != null)
 				return indexInstance;
+			if (indexInstance != null) {
+				if (isNewMaster(newSettings)) {
+					if (indexInstance.getStatus().num_docs > 0)
+						throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+								"This index already contains document.");
+					indexInstance.delete();
+					checkDirectoryAndUuid();
+				}
+			}
 			closeIndex();
 			if (settings != null && !same) {
-				this.settings = settings;
-				fileSet.writeSettings(settings);
+				fileSet.writeSettings(newSettings);
+				settings = newSettings;
 			}
 			return ensureOpen();
 		});

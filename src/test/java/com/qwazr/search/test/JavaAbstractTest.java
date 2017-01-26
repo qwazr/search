@@ -560,6 +560,10 @@ public abstract class JavaAbstractTest {
 		final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers = master.getAnalyzers();
 
 		final AnnotatedIndexService slave = getSlave();
+
+		// Let's first create an empty index (without master)
+		getIndexService().createUpdateIndex(slave.getSchemaName(), slave.getIndexName());
+
 		final IndexStatus indexStatus = slave.createUpdateIndex();
 		Assert.assertNotNull(indexStatus);
 		Assert.assertNotNull(indexStatus.index_uuid);

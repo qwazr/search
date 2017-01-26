@@ -42,7 +42,7 @@ public class TestServer {
 		SearchServer.main();
 		IndexServiceBuilder indexServiceBuilder = SearchServer.getInstance().getServiceBuilder();
 		service = indexServiceBuilder.local();
-		remote = indexServiceBuilder.remote(new RemoteService(BASE_URL));
+		remote = indexServiceBuilder.remote(RemoteService.of(BASE_URL).build());
 	}
 
 }

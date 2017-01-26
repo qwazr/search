@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -115,6 +116,7 @@ public class SchemaInstance implements Closeable {
 	}
 
 	IndexInstance createUpdate(final String indexName, final IndexSettingsDefinition settings) throws Exception {
+		Objects.requireNonNull(settings, "The settings cannot be null");
 		return indexMap.computeIfAbsent(indexName, name -> {
 			try {
 				return new IndexInstanceManager(this, new File(schemaDirectory, name));

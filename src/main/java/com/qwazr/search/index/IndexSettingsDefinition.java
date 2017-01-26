@@ -94,7 +94,7 @@ public class IndexSettingsDefinition {
 			return false;
 		if (!Objects.equals(similarityClass, s.similarityClass))
 			return false;
-		if (!Objects.deepEquals(master, s.master))
+		if (!Objects.equals(master, s.master))
 			return false;
 		if (!Objects.equals(ramBufferSize, s.ramBufferSize))
 			return false;

@@ -107,7 +107,8 @@ class IndexInstanceBuilder {
 	}
 
 	static Directory getDirectory(IndexSettingsDefinition settings, File dataDirectory) throws IOException {
-		return settings.directoryType == null || settings.directoryType == IndexSettingsDefinition.Type.FSDirectory ?
+		return settings == null || settings.directoryType == null
+				|| settings.directoryType == IndexSettingsDefinition.Type.FSDirectory ?
 				FSDirectory.open(dataDirectory.toPath()) :
 				new RAMDirectory();
 	}
