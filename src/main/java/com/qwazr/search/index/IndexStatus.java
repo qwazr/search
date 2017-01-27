@@ -32,7 +32,6 @@ import org.apache.lucene.index.LiveIndexWriterConfig;
 import org.apache.lucene.index.MergePolicy;
 import org.apache.lucene.index.SegmentCommitInfo;
 import org.apache.lucene.index.SegmentInfos;
-import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -56,8 +55,6 @@ public class IndexStatus {
 	final public Boolean has_pending_merges;
 	final public Boolean has_uncommitted_changes;
 	final public Boolean has_deletions;
-	final public Integer snapshot_deletion_count;
-	final public List<String> snapshot_deletion_commits;
 	final public Double ram_buffer_size_mb;
 	final public String index_uuid;
 	final public String master_uuid;
@@ -76,8 +73,6 @@ public class IndexStatus {
 		merge_policy = null;
 		has_pending_merges = null;
 		has_uncommitted_changes = null;
-		snapshot_deletion_count = null;
-		snapshot_deletion_commits = null;
 		ram_buffer_size_mb = null;
 		has_deletions = null;
 		index_uuid = null;
@@ -92,8 +87,7 @@ public class IndexStatus {
 	}
 
 	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final Directory directory,
-			final IndexReader indexReader, final IndexWriter indexWriter,
-			final SnapshotDeletionPolicy snapshotDeletionPolicy, final IndexSettingsDefinition settings,
+			final IndexReader indexReader, final IndexWriter indexWriter, final IndexSettingsDefinition settings,
 			final Set<String> analyzers, final Set<String> fields) throws IOException {
 		num_docs = (long) indexReader.numDocs();
 		num_deleted_docs = (long) indexReader.numDeletedDocs();
@@ -113,15 +107,6 @@ public class IndexStatus {
 			has_uncommitted_changes = indexWriter.hasUncommittedChanges();
 			has_deletions = indexWriter.hasDeletions();
 			ram_buffer_size_mb = config.getRAMBufferSizeMB();
-		}
-		if (snapshotDeletionPolicy != null) {
-			snapshot_deletion_count = snapshotDeletionPolicy.getSnapshotCount();
-			snapshot_deletion_commits = new ArrayList<>(snapshot_deletion_count);
-			snapshotDeletionPolicy.getSnapshots()
-					.forEach(indexCommit -> snapshot_deletion_commits.add(indexCommit.getSegmentsFileName()));
-		} else {
-			snapshot_deletion_count = null;
-			snapshot_deletion_commits = null;
 		}
 
 		this.index_uuid = indexUuid == null ? null : indexUuid.toString();

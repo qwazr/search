@@ -27,21 +27,21 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
-import org.apache.lucene.index.IndexCommit;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.MultiFields;
-import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.replicator.IndexAndTaxonomyReplicationHandler;
 import org.apache.lucene.replicator.IndexAndTaxonomyRevision;
 import org.apache.lucene.replicator.LocalReplicator;
+import org.apache.lucene.replicator.PerSessionDirectoryFactory;
+import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
@@ -49,17 +49,18 @@ import org.apache.lucene.search.join.JoinUtil;
 import org.apache.lucene.search.join.ScoreMode;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +81,6 @@ final public class IndexInstance implements Closeable {
 	private final SchemaInstance schema;
 	private final Directory dataDirectory;
 	private final Directory taxonomyDirectory;
-	private final SnapshotDeletionPolicy snapshotDeletionPolicy;
 	private final Similarity similarity;
 	private final IndexWriter indexWriter;
 	private final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter;
@@ -120,12 +120,6 @@ final public class IndexInstance implements Closeable {
 		this.fieldMap = builder.fieldMap == null ? null : new FieldMap(builder.fieldMap);
 		this.similarity = builder.similarity;
 		this.indexWriter = builder.indexWriter;
-		if (builder.indexWriter != null) { // We are a master
-			this.snapshotDeletionPolicy =
-					(SnapshotDeletionPolicy) builder.indexWriter.getConfig().getIndexDeletionPolicy();
-		} else { // We are a slave (no write)
-			this.snapshotDeletionPolicy = null;
-		}
 		this.taxonomyWriter = builder.taxonomyWriter;
 		this.indexAnalyzer = builder.indexAnalyzer;
 		this.queryAnalyzer = builder.queryAnalyzer;
@@ -183,8 +177,8 @@ final public class IndexInstance implements Closeable {
 		final SearcherTaxonomyManager.SearcherAndTaxonomy searcherAndTaxonomy = searcherTaxonomyManager.acquire();
 		try {
 			return new IndexStatus(indexUuid, indexReplicator != null ? indexReplicator.getMasterUuid() : null,
-					dataDirectory, searcherAndTaxonomy.searcher.getIndexReader(), indexWriter, snapshotDeletionPolicy,
-					settings, analyzerMap.keySet(), fieldMap.getFieldDefinitionMap().keySet());
+					dataDirectory, searcherAndTaxonomy.searcher.getIndexReader(), indexWriter, settings,
+					analyzerMap.keySet(), fieldMap.getFieldDefinitionMap().keySet());
 		} finally {
 			searcherTaxonomyManager.release(searcherAndTaxonomy);
 		}
@@ -336,39 +330,34 @@ final public class IndexInstance implements Closeable {
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
-	final synchronized BackupStatus backup(final File backupIndexDirectory) throws IOException {
+	final synchronized BackupStatus backup(final Path backupIndexDirectory) throws IOException {
 		checkIsMaster();
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
-			if (!backupIndexDirectory.exists())
-				backupIndexDirectory.mkdir();
-			if (!backupIndexDirectory.exists() || !backupIndexDirectory.isDirectory())
+
+			// Create (or check) the backup directory
+			if (Files.notExists(backupIndexDirectory))
+				Files.createDirectory(backupIndexDirectory);
+			if (!Files.isDirectory(backupIndexDirectory))
 				throw new IOException(
-						"Cannot create the backup directory: " + backupIndexDirectory.getAbsolutePath() + " - Index: "
-								+ indexName);
-			// Get the existing files
-			final Map<String, File> fileMap = new HashMap<>();
-			for (File file : backupIndexDirectory.listFiles((FileFilter) FileFileFilter.FILE))
-				fileMap.put(file.getName(), file);
-			final IndexCommit commit = snapshotDeletionPolicy.snapshot();
-			try {
-				for (String fileName : commit.getFileNames()) {
-					fileMap.remove(fileName);
-					final File sourceFile = new File(fileSet.dataDirectory, fileName);
-					final File targetFile = new File(backupIndexDirectory, fileName);
-					if (targetFile.exists() && targetFile.length() == sourceFile.length()
-							&& targetFile.lastModified() == sourceFile.lastModified())
-						continue;
-					FileUtils.copyFile(sourceFile, targetFile, true);
+						"Cannot create the backup directory: " + backupIndexDirectory + " - Index: " + indexName);
+
+			try (final Directory dataDir = FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_DATA));
+					final Directory taxoDir = FSDirectory.open(
+							backupIndexDirectory.resolve(IndexFileSet.INDEX_TAXONOMY))) {
+
+				final PerSessionDirectoryFactory sourceDirFactory =
+						new PerSessionDirectoryFactory(backupIndexDirectory.resolve(IndexFileSet.REPL_WORK));
+				final IndexAndTaxonomyReplicationHandler handler =
+						new IndexAndTaxonomyReplicationHandler(dataDir, taxoDir, () -> false);
+				try (final ReplicationClient replicationClient = new ReplicationClient(localReplicator, handler,
+						sourceDirFactory)) {
+					replicationClient.updateNow();
+				} catch (IOException e) {
+					FileUtils.deleteQuietly(backupIndexDirectory.toFile());
+					throw e;
 				}
-				// Delete files from previous backup
-				fileMap.forEach((name, file) -> file.delete());
 				return BackupStatus.newBackupStatus(backupIndexDirectory);
-			} catch (IOException e) {
-				FileUtils.deleteQuietly(backupIndexDirectory);
-				throw e;
-			} finally {
-				snapshotDeletionPolicy.release(commit);
 			}
 		} finally {
 			if (sem != null)
@@ -376,7 +365,7 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final BackupStatus getBackup(final File backupIndexDirectory) throws IOException {
+	final BackupStatus getBackup(final Path backupIndexDirectory) throws IOException {
 		checkIsMaster();
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {

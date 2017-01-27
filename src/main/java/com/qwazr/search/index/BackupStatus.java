@@ -16,59 +16,67 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.apache.commons.io.filefilter.FileFileFilter;
+import com.qwazr.server.ServerException;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
-import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Date;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class BackupStatus {
 
-	final public Long version;
+	final public Long index_version;
+	final public Long taxonomy_version;
 	final public Date date;
 	final public Long bytes_size;
 	final public Integer files_count;
 
 	public BackupStatus() {
-		version = null;
+		index_version = null;
+		taxonomy_version = null;
 		date = null;
 		bytes_size = null;
 		files_count = null;
 	}
 
-	private BackupStatus(Long version, long date, Long bytes_size, Integer files_count) {
-		this.version = version;
-		this.date = new Date(date);
+	private BackupStatus(Long index_version, Long taxonomy_version, FileTime date, Long bytes_size,
+			Integer files_count) {
+		this.index_version = index_version;
+		this.taxonomy_version = taxonomy_version;
+		this.date = new Date(date.toMillis());
 		this.bytes_size = bytes_size;
 		this.files_count = files_count;
 	}
 
-	static BackupStatus newBackupStatus(final File backupDir) throws IOException {
+	static BackupStatus newBackupStatus(final Path backupDir) throws IOException {
 		if (backupDir == null)
 			return null;
-		try (final Directory dir = FSDirectory.open(backupDir.toPath())) {
-			try (final DirectoryReader reader = DirectoryReader.open(dir)) {
-				final File[] files = backupDir.listFiles((FileFilter) FileFileFilter.FILE);
-				long bytes_size = 0;
-				if (files == null)
-					return null;
-				final long generation = reader.getVersion();
-				for (File file : files)
-					bytes_size += file.length();
-				return new BackupStatus(generation, backupDir.lastModified(), bytes_size, files.length);
+		try (final Directory indexDir = FSDirectory.open(backupDir.resolve(IndexFileSet.INDEX_DATA));
+				final Directory taxoDir = FSDirectory.open(backupDir.resolve(IndexFileSet.INDEX_TAXONOMY))) {
+			try (final DirectoryReader indexReader = DirectoryReader.open(indexDir);
+					final DirectoryReader taxoReader = DirectoryReader.open(taxoDir)) {
+				final AtomicLong size = new AtomicLong();
+				final AtomicInteger count = new AtomicInteger();
+				Files.walk(backupDir).forEach(path -> {
+					try {
+						size.addAndGet(Files.size(path));
+					} catch (IOException e) {
+						throw new ServerException(e);
+					}
+					count.incrementAndGet();
+				});
+				return new BackupStatus(indexReader.getVersion(), taxoReader.getVersion(),
+						Files.getLastModifiedTime(backupDir), size.get(), count.get());
 			}
 		}
-	}
-
-	private static boolean equalsNull(final Object o1, final Object o2) {
-		if (o1 == null)
-			return o2 == null;
-		return o2 != null && o1.equals(o2);
 	}
 
 	public int hashCode() {
@@ -76,19 +84,22 @@ public class BackupStatus {
 		return 42;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (o == null)
 			return false;
 		if (!(o instanceof BackupStatus))
 			return false;
 		BackupStatus s = (BackupStatus) o;
-		if (!equalsNull(version, s.version))
+		if (!Objects.equals(index_version, s.index_version))
 			return false;
-		if (!equalsNull(date, s.date))
+		if (!Objects.equals(taxonomy_version, s.taxonomy_version))
 			return false;
-		if (!equalsNull(bytes_size, s.bytes_size))
+		if (!Objects.equals(date, s.date))
 			return false;
-		return equalsNull(bytes_size, s.bytes_size);
+		if (!Objects.equals(bytes_size, s.bytes_size))
+			return false;
+		return Objects.equals(files_count, s.files_count);
 	}
 
 }

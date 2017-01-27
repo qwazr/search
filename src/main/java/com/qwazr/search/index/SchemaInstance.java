@@ -17,7 +17,6 @@ package com.qwazr.search.index;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.StringUtils;
@@ -32,6 +31,8 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
@@ -42,6 +43,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class SchemaInstance implements Closeable {
@@ -58,7 +60,7 @@ public class SchemaInstance implements Closeable {
 	private final File schemaDirectory;
 	private final File settingsFile;
 	private volatile SchemaSettingsDefinition settingsDefinition;
-	private volatile File backupRootDirectory;
+	private volatile Path backupRootDirectory;
 
 	private final LockUtils.ReadWriteLock backupLock = new LockUtils.ReadWriteLock();
 
@@ -171,40 +173,37 @@ public class SchemaInstance implements Closeable {
 
 	final private static Pattern backupNameMatcher = Pattern.compile("[^a-zA-Z0-9-_]");
 
-	private File getBackupDirectory(final String backupName, boolean createIfNotExists) throws IOException {
+	private Path getBackupDirectory(final String backupName, boolean createIfNotExists) throws IOException {
 		if (backupRootDirectory == null)
 			throw new IOException("The backup root directory is not set for the schema: " + schemaDirectory.getName());
-		if (!backupRootDirectory.exists() || !backupRootDirectory.isDirectory())
-			throw new IOException(
-					"The backup root directory does not exists: " + backupRootDirectory.getAbsolutePath());
-		final File backupSchemaDirectory = new File(backupRootDirectory, schemaDirectory.getName());
-		if (createIfNotExists)
-			backupSchemaDirectory.mkdir();
-		if (!backupSchemaDirectory.exists() && !backupSchemaDirectory.isDirectory())
-			throw new IOException(
-					"The backup schema directory does not exists: " + backupSchemaDirectory.getAbsolutePath());
+		if (Files.notExists(backupRootDirectory) || !Files.isDirectory(backupRootDirectory))
+			throw new IOException("The backup root directory does not exists: " + backupRootDirectory);
+		final Path backupSchemaDirectory = backupRootDirectory.resolve(schemaDirectory.getName());
+		if (createIfNotExists && Files.notExists(backupSchemaDirectory))
+			Files.createDirectory(backupSchemaDirectory);
+		if (!Files.isDirectory(backupSchemaDirectory))
+			throw new IOException("The backup schema directory does not exists: " + backupSchemaDirectory);
 		if (StringUtils.isEmpty(backupName))
 			throw new IOException("The backup name is empty");
 		if (backupNameMatcher.matcher(backupName).find())
 			throw new IOException("The backup name should only contains alphanumeric characters, dash, or underscore : "
 					+ backupName);
-		final File backupDirectory = new File(backupSchemaDirectory, backupName);
-		if (createIfNotExists)
-			backupDirectory.mkdir();
-		if (!backupDirectory.exists() && !backupDirectory.isDirectory())
+		final Path backupDirectory = backupSchemaDirectory.resolve(backupName);
+		if (createIfNotExists && Files.notExists(backupDirectory))
+			Files.createDirectory(backupDirectory);
+		if (!Files.isDirectory(backupDirectory))
 			throw new IOException("The backup directory does not exists: " + backupName);
 		return backupDirectory;
 	}
 
 	BackupStatus backup(final String indexName, final String backupName) throws IOException {
 		return backupLock.writeEx(() -> {
-			final File backupIndexDirectory = new File(getBackupDirectory(backupName, true), indexName);
+			final Path backupIndexDirectory = getBackupDirectory(backupName, true).resolve(indexName);
 			return get(indexName, false).backup(backupIndexDirectory);
 		});
 	}
 
-	private void indexIterator(final String indexName, final BiConsumer<String, IndexInstance> consumer)
-			throws IOException {
+	private void indexIterator(final String indexName, final BiConsumer<String, IndexInstance> consumer) {
 		if ("*".equals(indexName)) {
 			indexMap.forEach(1,
 					(name, indexInstanceManager) -> consumer.accept(name, indexInstanceManager.getIndexInstance()));
@@ -216,11 +215,11 @@ public class SchemaInstance implements Closeable {
 		return backupLock.writeEx(() -> {
 			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
 				return null;
-			final File backupDirectory = getBackupDirectory(backupName, true);
+			final Path backupDirectory = getBackupDirectory(backupName, true);
 			final SortedMap<String, BackupStatus> results = new TreeMap<>();
 			indexIterator(indexName, (idxName, indexInstance) -> {
 				try {
-					results.put(idxName, indexInstance.backup(new File(backupDirectory, idxName)));
+					results.put(idxName, indexInstance.backup(backupDirectory.resolve(idxName)));
 				} catch (IOException e) {
 					throw new ServerException(e);
 				}
@@ -229,14 +228,12 @@ public class SchemaInstance implements Closeable {
 		});
 	}
 
-	private void backupIterator(final String backupName, final FunctionUtils.ConsumerEx<File, IOException> consumer)
-			throws IOException {
-		final File backupSchemaDirectory = new File(backupRootDirectory, schemaDirectory.getName());
-		if (!backupSchemaDirectory.exists() || !backupSchemaDirectory.isDirectory())
+	private void backupIterator(final String backupName, final Consumer<Path> consumer) throws IOException {
+		final Path backupSchemaDirectory = backupRootDirectory.resolve(schemaDirectory.getName());
+		if (Files.notExists(backupSchemaDirectory) || !Files.isDirectory(backupSchemaDirectory))
 			return;
 		if ("*".equals(backupName)) {
-			for (File bkpDir : backupSchemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE))
-				consumer.accept(bkpDir);
+			Files.list(backupSchemaDirectory).filter(path -> Files.isDirectory(path)).forEach(consumer);
 		} else
 			consumer.accept(getBackupDirectory(backupName, false));
 	}
@@ -247,19 +244,22 @@ public class SchemaInstance implements Closeable {
 			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
 				return null;
 			final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
+
 			backupIterator(backupName, backupDirectory -> {
+
 				final SortedMap<String, BackupStatus> backupResults = new TreeMap<>();
+
 				indexIterator(indexName, (idxName, indexInstance) -> {
-					final File backupIndexDirectory = new File(backupDirectory, idxName);
-					if (backupIndexDirectory.exists() && backupIndexDirectory.isDirectory())
-						try {
+					try {
+						final Path backupIndexDirectory = backupDirectory.resolve(idxName);
+						if (Files.exists(backupIndexDirectory) && Files.isDirectory(backupIndexDirectory))
 							backupResults.put(idxName, indexInstance.getBackup(backupIndexDirectory));
-						} catch (IOException e) {
-							throw new ServerException(e);
-						}
+					} catch (IOException e) {
+						throw new ServerException(e);
+					}
 				});
 				if (!backupResults.isEmpty())
-					results.put(backupDirectory.getName(), backupResults);
+					results.put(backupDirectory.toFile().getName(), backupResults);
 			});
 			return results;
 		});
@@ -270,20 +270,27 @@ public class SchemaInstance implements Closeable {
 			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
 				return 0;
 			final AtomicInteger counter = new AtomicInteger();
+
 			backupIterator(backupName, backupDirectory -> {
+
 				indexIterator(indexName, (idxName, indexInstance) -> {
-					final File backupIndexDirectory = new File(backupDirectory, idxName);
-					if (backupIndexDirectory.exists() && backupIndexDirectory.isDirectory()) {
-						try {
-							FileUtils.deleteDirectory(backupIndexDirectory);
-						} catch (IOException e) {
-							throw new ServerException(e);
-						}
+
+					final Path backupIndexDirectory = backupDirectory.resolve(idxName);
+					try {
+						FileUtils.deleteDirectory(backupIndexDirectory.toFile());
 						counter.incrementAndGet();
+					} catch (IOException e) {
+						throw new ServerException(e);
 					}
 				});
-				if (backupDirectory.list().length == 0)
-					FileUtils.deleteDirectory(backupDirectory);
+
+				try {
+					if (Files.exists(backupDirectory))
+						if (Files.list(backupDirectory).count() == 0)
+							Files.deleteIfExists(backupDirectory);
+				} catch (IOException e) {
+					throw new ServerException(e);
+				}
 			});
 			return counter.get();
 		});
@@ -318,7 +325,7 @@ public class SchemaInstance implements Closeable {
 		else
 			writeSemaphore = null;
 		if (!StringUtils.isEmpty(settingsDefinition.backup_directory_path))
-			backupRootDirectory = new File(settingsDefinition.backup_directory_path);
+			backupRootDirectory = new File(settingsDefinition.backup_directory_path).toPath();
 		else
 			backupRootDirectory = null;
 	}
