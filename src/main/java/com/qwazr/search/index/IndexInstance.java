@@ -35,7 +35,6 @@ import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
 import org.apache.lucene.index.IndexCommit;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.LiveIndexWriterConfig;
 import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.Terms;
@@ -48,6 +47,7 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.join.JoinUtil;
 import org.apache.lucene.search.join.ScoreMode;
+import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
 
 import javax.ws.rs.core.Response;
@@ -80,8 +80,8 @@ final public class IndexInstance implements Closeable {
 	private final SchemaInstance schema;
 	private final Directory dataDirectory;
 	private final Directory taxonomyDirectory;
-	private final LiveIndexWriterConfig indexWriterConfig;
 	private final SnapshotDeletionPolicy snapshotDeletionPolicy;
+	private final Similarity similarity;
 	private final IndexWriter indexWriter;
 	private final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter;
 	private final ReentrantLock commitLock;
@@ -118,12 +118,12 @@ final public class IndexInstance implements Closeable {
 		this.taxonomyDirectory = builder.taxonomyDirectory;
 		this.analyzerMap = builder.analyzerMap;
 		this.fieldMap = builder.fieldMap == null ? null : new FieldMap(builder.fieldMap);
+		this.similarity = builder.similarity;
 		this.indexWriter = builder.indexWriter;
 		if (builder.indexWriter != null) { // We are a master
-			this.indexWriterConfig = indexWriter.getConfig();
-			this.snapshotDeletionPolicy = (SnapshotDeletionPolicy) indexWriterConfig.getIndexDeletionPolicy();
+			this.snapshotDeletionPolicy =
+					(SnapshotDeletionPolicy) builder.indexWriter.getConfig().getIndexDeletionPolicy();
 		} else { // We are a slave (no write)
-			this.indexWriterConfig = null;
 			this.snapshotDeletionPolicy = null;
 		}
 		this.taxonomyWriter = builder.taxonomyWriter;
@@ -735,8 +735,8 @@ final public class IndexInstance implements Closeable {
 
 	private QueryContext buildQueryContext(final SearcherTaxonomyManager.SearcherAndTaxonomy searcherAndTaxonomy,
 			final QueryDefinition queryDefinition) throws IOException {
-		if (indexWriterConfig != null)
-			searcherAndTaxonomy.searcher.setSimilarity(indexWriterConfig.getSimilarity());
+		if (similarity != null)
+			searcherAndTaxonomy.searcher.setSimilarity(similarity);
 		final SortedSetDocValuesReaderState facetsState = getFacetsState(searcherAndTaxonomy.searcher.getIndexReader());
 		return new QueryContext(schema, fileResourceLoader, searcherAndTaxonomy.searcher,
 				searcherAndTaxonomy.taxonomyReader, executorService, indexAnalyzer, queryAnalyzer, fieldMap,

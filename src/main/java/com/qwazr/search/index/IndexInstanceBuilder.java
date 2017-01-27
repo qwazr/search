@@ -32,6 +32,7 @@ import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.replicator.IndexAndTaxonomyRevision;
 import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.search.SearcherFactory;
+import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
@@ -78,6 +79,8 @@ class IndexInstanceBuilder {
 	LocalReplicator localReplicator = null;
 	IndexReplicator indexReplicator = null;
 
+	Similarity similarity = null;
+
 	IndexInstanceBuilder(final SchemaInstance schema, final IndexFileSet fileSet,
 			final IndexSettingsDefinition settings, UUID indexUuid) {
 		this.schema = schema;
@@ -92,6 +95,9 @@ class IndexInstanceBuilder {
 	}
 
 	private void buildCommon() throws IOException, ReflectiveOperationException, URISyntaxException {
+
+		if (settings.similarityClass != null && !settings.similarityClass.isEmpty())
+			similarity = IndexUtils.findSimilarity(classLoaderManager, settings.similarityClass);
 
 		analyzerMap = fileSet.loadAnalyzerMap();
 		fieldMap = fileSet.loadFieldMap();
@@ -113,14 +119,13 @@ class IndexInstanceBuilder {
 				new RAMDirectory();
 	}
 
-	private void openOrCreateDataIndex() throws ReflectiveOperationException, IOException {
+	private void openOrCreateDataIndex() throws IOException {
 
 		final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 		if (settings != null) {
-			if (settings.similarityClass != null && !settings.similarityClass.isEmpty())
-				indexWriterConfig.setSimilarity(
-						IndexUtils.findSimilarity(classLoaderManager, settings.similarityClass));
+			if (similarity != null)
+				indexWriterConfig.setSimilarity(similarity);
 			if (settings.ramBufferSize != null)
 				indexWriterConfig.setRAMBufferSizeMB(settings.ramBufferSize);
 
@@ -154,7 +159,7 @@ class IndexInstanceBuilder {
 		checkCommit(taxonomyWriter.getIndexWriter());
 	}
 
-	private void buildSlave() throws IOException, URISyntaxException, ReflectiveOperationException {
+	private void buildSlave() throws IOException, URISyntaxException {
 
 		final Callable<Boolean> callback = () -> {
 			if (searcherTaxonomyManager != null)
@@ -173,7 +178,7 @@ class IndexInstanceBuilder {
 		searcherTaxonomyManager = new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory);
 	}
 
-	private void buildMaster() throws IOException, ReflectiveOperationException {
+	private void buildMaster() throws IOException {
 
 		openOrCreateDataIndex();
 		openOrCreateTaxonomyIndex();
