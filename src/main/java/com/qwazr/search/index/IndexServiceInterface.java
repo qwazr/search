@@ -300,10 +300,10 @@ public interface IndexServiceInterface extends ServiceInterface {
 			@PathParam("session_id") String sessionID);
 
 	@GET
-	@Path("/{schema_name}/{index_name}/replication/{master_uuid}/{current_version}")
+	@Path("/{schema_name}/{index_name}/replication/{master_uuid}")
 	AbstractStreamingOutput replicationUpdate(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, @PathParam("master_uuid") String masterUuid,
-			@PathParam("current_version") String current_version);
+			@QueryParam("current_version") String current_version);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/replication")

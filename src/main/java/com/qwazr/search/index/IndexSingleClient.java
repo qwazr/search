@@ -332,7 +332,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 			final String masterUuid, final String current_version) {
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/",
-						masterUuid, "/", current_version);
+						masterUuid).setParameter("current_version", current_version);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeStream(request, null, null, valid200204);
 	}
