@@ -60,11 +60,7 @@ class IndexReplicator implements Replicator {
 			final Callable<Boolean> callback) throws URISyntaxException, IOException {
 		this.master = master;
 		this.masterUuidFile = masterUuidFile;
-		this.indexService = master == null ?
-				null :
-				master.host == null ?
-						service :
-						"localhost".equals(master.host) ? service : new IndexSingleClient(master);
+		this.indexService = master == null ? null : master.host == null ? service : new IndexSingleClient(master);
 		if (masterUuidFile.exists() && masterUuidFile.length() > 0) {
 			this.masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
 			this.masterUuidString = masterUuid.toString();

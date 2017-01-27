@@ -213,7 +213,7 @@ class IndexInstanceBuilder {
 			throw e;
 		} catch (Exception e) {
 			abort();
-			throw new ServerException(e);
+			throw ServerException.getServerException(e);
 		}
 	}
 

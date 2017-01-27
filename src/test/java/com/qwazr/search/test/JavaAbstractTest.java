@@ -28,6 +28,7 @@ import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.RemoteIndex;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.search.index.SchemaSettingsDefinition;
@@ -45,6 +46,8 @@ import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.query.TermsQuery;
 import com.qwazr.search.query.WildcardQuery;
+import com.qwazr.server.RemoteService;
+import com.qwazr.server.ServerException;
 import com.qwazr.utils.http.HttpClients;
 import org.apache.http.pool.PoolStats;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
@@ -54,6 +57,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -569,6 +573,21 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(nonSlaveStatus.settings);
 		Assert.assertNull(nonSlaveStatus.settings.master);
 
+		// Then we set a wrong master node
+		try {
+			final IndexStatus wrongMasterStatus =
+					getIndexService().createUpdateIndex(slave.getSchemaName(), slave.getIndexName(),
+							IndexSettingsDefinition.of()
+									.master(new RemoteIndex(RemoteService.of("http://localhost:9092"), "dummy",
+											"dummy"))
+									.build());
+			Assert.fail("The exception has not been thrown");
+		} catch (WebApplicationException e) {
+			Assert.assertEquals(500, e.getResponse().getStatus());
+			Assert.assertTrue(e.getCause() instanceof ServerException);
+		}
+
+		// Now we set the real slave index
 		final IndexStatus indexStatus = slave.createUpdateIndex();
 		Assert.assertNotNull(indexStatus);
 		Assert.assertNotNull(indexStatus.index_uuid);
