@@ -28,8 +28,8 @@ public class MultiPhraseQueryTest extends AbstractQueryTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1", "Hello World"));
-		indexService.postDocument(new IndexRecord("2", "How are you ?"));
+		indexService.postDocument(new IndexRecord("1").label("Hello World"));
+		indexService.postDocument(new IndexRecord("2").label("How are you ?"));
 	}
 
 	@Test

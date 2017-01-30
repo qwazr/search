@@ -39,6 +39,7 @@ import java.io.IOException;
 		@JsonSubTypes.Type(value = DoubleSetQuery.class),
 		@JsonSubTypes.Type(value = DrillDownQuery.class),
 		@JsonSubTypes.Type(value = FacetPathQuery.class),
+		@JsonSubTypes.Type(value = FieldValueQuery.class),
 		@JsonSubTypes.Type(value = FloatExactQuery.class),
 		@JsonSubTypes.Type(value = FloatMultiRangeQuery.class),
 		@JsonSubTypes.Type(value = FloatRangeQuery.class),

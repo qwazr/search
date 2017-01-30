@@ -56,21 +56,32 @@ public abstract class AbstractQueryTest {
 	public static class IndexRecord {
 
 		@IndexField(name = FieldDefinition.ID_FIELD, template = FieldDefinition.Template.StringField)
-		public final String id;
+		final public String id;
 
 		@IndexField(name = "label",
 				template = FieldDefinition.Template.TextField,
 				analyzerClass = StandardAnalyzer.class)
-		public final String label;
+		public String label;
+
+		@IndexField(name = "intDocValue", template = FieldDefinition.Template.IntDocValuesField)
+		public Integer intDocValue;
 
 		public IndexRecord() {
 			id = null;
-			label = null;
 		}
 
-		protected IndexRecord(String id, String label) {
+		protected IndexRecord(String id) {
 			this.id = id;
+		}
+
+		protected IndexRecord label(String label) {
 			this.label = label;
+			return this;
+		}
+
+		protected IndexRecord intDocValue(Integer intDocValue) {
+			this.intDocValue = intDocValue;
+			return this;
 		}
 	}
 }

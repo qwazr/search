@@ -17,31 +17,29 @@ package com.qwazr.search.test.queries;
 
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.BooleanQuery;
-import com.qwazr.search.query.GraphQuery;
-import com.qwazr.search.query.PhraseQuery;
-import com.qwazr.search.query.TermQuery;
+import com.qwazr.search.query.FieldValueQuery;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 
-public class GraphQueryTest extends AbstractQueryTest {
+public class FieldValueQueryTest extends AbstractQueryTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1").label("Hello World"));
-		indexService.postDocument(new IndexRecord("2").label("How are you ?"));
+		indexService.postDocument(new IndexRecord("1").intDocValue(1));
+		indexService.postDocument(new IndexRecord("2").intDocValue(2));
+		indexService.postDocument(new IndexRecord("3"));
 	}
 
 	@Test
-	public void test() {
-		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new GraphQuery(
-				BooleanQuery.of(null, null).addClause(BooleanQuery.Occur.must, new TermQuery("label", "how")).build(),
-				new PhraseQuery("label", 1, "are", "you"))).build());
+	public void hasValue() {
+		ResultDefinition result =
+				indexService.searchQuery(QueryDefinition.of(new FieldValueQuery("intDocValue")).build());
 		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
-
+		System.out.println(result.query);
+		Assert.assertEquals(Long.valueOf(2), result.total_hits);
 	}
+
 }

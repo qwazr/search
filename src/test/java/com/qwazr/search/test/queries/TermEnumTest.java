@@ -27,7 +27,7 @@ public class TermEnumTest extends AbstractQueryTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1", "v"));
+		indexService.postDocument(new IndexRecord("1").label("v"));
 	}
 
 	@Test
