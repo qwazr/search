@@ -102,6 +102,14 @@ public class QueryDefinition extends BaseQueryDefinition {
 		query = builder.query;
 	}
 
+	public static QueryBuilder of() {
+		return new QueryBuilder();
+	}
+
+	public static QueryBuilder of(final AbstractQuery query) {
+		return new QueryBuilder(query);
+	}
+
 	public static QueryDefinition newQuery(final String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;

@@ -135,6 +135,10 @@ public class BooleanQuery extends AbstractQuery {
 		return builder.build();
 	}
 
+	public final static Builder of(final Boolean disableCoord, final Integer minimumNumberShouldMatch) {
+		return new Builder().setDisableCoord(disableCoord).setMinimumNumberShouldMatch(minimumNumberShouldMatch);
+	}
+
 	public final static class Builder {
 
 		private final List<BooleanClause> clauses;

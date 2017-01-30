@@ -45,15 +45,24 @@ public class TermEnumDefinition {
 	}
 
 	final static List<TermEnumDefinition> buildTermList(final FieldTypeInterface field, final TermsEnum termsEnum,
-			final String prefix, int start,
-			int rows) throws IOException {
-		final List<TermEnumDefinition> termList = new ArrayList<TermEnumDefinition>();
-		if (prefix != null)
-			termsEnum.seekCeil(new BytesRef(prefix));
-		while (start-- > 0 && termsEnum.next() != null)
-			;
-		while (rows-- > 0 && termsEnum.next() != null)
+			final String prefix, int start, int rows) throws IOException {
+		final List<TermEnumDefinition> termList = new ArrayList<>();
+		if (prefix != null) {
+			TermsEnum.SeekStatus status = termsEnum.seekCeil(new BytesRef(prefix));
+			if (status == null || status == TermsEnum.SeekStatus.END)
+				return termList;
+		} else if (termsEnum.next() == null)
+			return termList;
+
+		while (start-- > 0)
+			if (termsEnum.next() == null)
+				return termList;
+
+		while (rows-- > 0) {
 			termList.add(new TermEnumDefinition(field, termsEnum));
+			if (termsEnum.next() == null)
+				break;
+		}
 		return termList;
 	}
 

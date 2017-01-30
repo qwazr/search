@@ -19,6 +19,7 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,6 +39,12 @@ public class PhraseQuery extends AbstractQuery {
 		this.field = field;
 		this.slop = slop;
 		this.terms = terms;
+	}
+
+	public PhraseQuery(final String field, final Integer slop, final String... terms) {
+		this.field = field;
+		this.slop = slop;
+		this.terms = Arrays.asList(terms);
 	}
 
 	@Override
