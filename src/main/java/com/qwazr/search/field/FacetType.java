@@ -39,7 +39,11 @@ class FacetType extends StorableFieldType {
 
 	@Override
 	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
+		if (value == null)
+			return;
 		String stringValue = value.toString();
+		if (stringValue == null)
+			return;
 		consumer.accept(fieldName, new FacetField(fieldName, stringValue));
 		if (store != null && store == Field.Store.YES)
 			consumer.accept(fieldName, new StoredField(fieldName, stringValue));
