@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LockUtils;
 import org.apache.lucene.index.CheckIndex;
@@ -81,8 +82,9 @@ class IndexInstanceManager implements Closeable {
 					if (indexInstance.getStatus().num_docs > 0)
 						throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 								"This index already contains document.");
-					indexInstance.delete();
+					indexInstance.close();
 					indexInstance = null;
+					FileUtils.deleteQuietly(fileSet.mainDirectory);
 					checkDirectoryAndUuid();
 				}
 			}
@@ -130,9 +132,8 @@ class IndexInstanceManager implements Closeable {
 	public void delete() {
 		rwl.writeEx(() -> {
 			closeIndex();
-			if (indexInstance != null)
-				indexInstance.delete();
-			indexInstance = null;
+			if (fileSet.mainDirectory.exists())
+				FileUtils.deleteQuietly(fileSet.mainDirectory);
 		});
 	}
 

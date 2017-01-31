@@ -155,16 +155,7 @@ final public class IndexInstance implements Closeable {
 			IOUtils.closeQuietly(indexWriter);
 		IOUtils.closeQuietly(dataDirectory);
 	}
-
-	/**
-	 * Delete the index. The directory is deleted from the local file system.
-	 */
-	void delete() {
-		close();
-		if (fileSet.mainDirectory.exists())
-			FileUtils.deleteQuietly(fileSet.mainDirectory);
-	}
-
+	
 	boolean register(final MultiSearchInstance multiSearchInstance) {
 		return multiSearchInstances.add(multiSearchInstance);
 	}
