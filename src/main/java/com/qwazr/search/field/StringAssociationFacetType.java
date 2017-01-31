@@ -41,4 +41,14 @@ class StringAssociationFacetType extends FieldTypeAbstract {
 				new AssociationFacetField(BytesRefUtils.Converter.STRING.from(assoc), fieldName, path));
 	}
 
+	@Override
+	protected void fillArray(final String fieldName, final String[] values, final FieldConsumer consumer) {
+		Objects.requireNonNull(values, "The value array is empty");
+		if (values.length < 2)
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE, "Expected at least 2 values");
+		final String assoc = values[0];
+		final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
+		consumer.accept(fieldName,
+				new AssociationFacetField(BytesRefUtils.Converter.STRING.from(assoc), fieldName, path));
+	}
 }

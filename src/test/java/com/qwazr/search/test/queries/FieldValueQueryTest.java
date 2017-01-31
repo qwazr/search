@@ -24,7 +24,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class FieldValueQueryTest extends AbstractQueryTest {
+public class FieldValueQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
@@ -38,7 +38,6 @@ public class FieldValueQueryTest extends AbstractQueryTest {
 		ResultDefinition result =
 				indexService.searchQuery(QueryDefinition.of(new FieldValueQuery("intDocValue")).build());
 		Assert.assertNotNull(result);
-		System.out.println(result.query);
 		Assert.assertEquals(Long.valueOf(2), result.total_hits);
 	}
 

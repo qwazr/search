@@ -95,6 +95,15 @@ public class FieldMap {
 		case FacetField:
 			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_FACET_FIELD);
 			break;
+		case IntAssociatedField:
+			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD);
+			break;
+		case FloatAssociatedField:
+			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD);
+			break;
+		case StringAssociatedField:
+			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_STRING_ASSOC_FACET_FIELD);
+			break;
 		}
 		if (fieldMapItem.definition.facet_multivalued != null)
 			facetsConfig.setMultiValued(fieldName, fieldMapItem.definition.facet_multivalued);

@@ -23,7 +23,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.List;
 
-public class TermEnumTest extends AbstractQueryTest {
+public class TermEnumTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {

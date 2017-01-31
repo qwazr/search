@@ -30,7 +30,11 @@ class SortedSetDocValuesFacetType extends StorableFieldType {
 
 	@Override
 	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
-		String stringValue = value.toString();
+		if (value == null)
+			return;
+		final String stringValue = value.toString();
+		if (stringValue == null)
+			return;
 		consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
 		if (store == Field.Store.YES)
 			consumer.accept(fieldName, new StoredField(fieldName, stringValue));

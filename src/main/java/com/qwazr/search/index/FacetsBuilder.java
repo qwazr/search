@@ -25,6 +25,8 @@ import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.LabelAndValue;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
+import org.apache.lucene.facet.taxonomy.TaxonomyFacetSumFloatAssociations;
+import org.apache.lucene.facet.taxonomy.TaxonomyFacetSumIntAssociations;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.BooleanClause;
@@ -114,6 +116,8 @@ abstract class FacetsBuilder {
 
 		private final SortedSetDocValuesFacetCounts sortedSetCounts;
 		private final FastTaxonomyFacetCounts taxonomyCounts;
+		private final TaxonomyFacetSumFloatAssociations floatTaxonomyCounts;
+		private final TaxonomyFacetSumIntAssociations intTaxonomyCounts;
 		private final FacetsConfig facetsConfig;
 
 		WithCollectors(final QueryContext queryContext, final FacetsConfig facetsConfig,
@@ -122,21 +126,73 @@ abstract class FacetsBuilder {
 				throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 			super(queryContext, facetsDef, searchQuery, timeTracker);
 			this.facetsConfig = facetsConfig;
+			int facetFlag = checkFacetTypeFlags(facetsConfig, facetsDef);
 			this.sortedSetCounts = queryContext.docValueReaderState == null ?
 					null :
-					new SortedSetDocValuesFacetCounts(queryContext.docValueReaderState, facetsCollector);
-			this.taxonomyCounts =
-					new FastTaxonomyFacetCounts(queryContext.taxonomyReader, facetsConfig, facetsCollector);
+					(facetFlag & FACET_IS_SORTED) == FACET_IS_SORTED ?
+							new SortedSetDocValuesFacetCounts(queryContext.docValueReaderState, facetsCollector) :
+							null;
+			this.taxonomyCounts = (facetFlag & FACET_IS_TAXO) == FACET_IS_TAXO ?
+					new FastTaxonomyFacetCounts(queryContext.taxonomyReader, facetsConfig, facetsCollector) :
+					null;
+			this.floatTaxonomyCounts = (facetFlag & FACET_IS_TAXO_FLOAT) == FACET_IS_TAXO_FLOAT ?
+					new TaxonomyFacetSumFloatAssociations(FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD,
+							queryContext.taxonomyReader, facetsConfig, facetsCollector) :
+					null;
+			this.intTaxonomyCounts = (facetFlag & FACET_IS_TAXO_INT) == FACET_IS_TAXO_INT ?
+					new TaxonomyFacetSumIntAssociations(FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD,
+							queryContext.taxonomyReader, facetsConfig, facetsCollector) :
+					null;
+		}
+
+		private static int FACET_IS_SORTED = 1;
+		private static int FACET_IS_TAXO = 2;
+		private static int FACET_IS_TAXO_INT = 4;
+		private static int FACET_IS_TAXO_FLOAT = 8;
+
+		private int checkFacetTypeFlags(final FacetsConfig facetsConfig,
+				final LinkedHashMap<String, FacetDefinition> facetsDef) {
+			int flag = 0;
+			for (String dimName : facetsDef.keySet()) {
+				final String indexField = facetsConfig.getDimConfig(dimName).indexFieldName;
+				if (indexField == null)
+					continue;
+				switch (indexField) {
+				case FieldDefinition.SORTEDSET_FACET_FIELD:
+					flag = flag | FACET_IS_SORTED;
+					break;
+				case FieldDefinition.TAXONOMY_FACET_FIELD:
+					flag = flag | FACET_IS_TAXO;
+					break;
+				case FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD:
+					flag = flag | FACET_IS_TAXO_INT;
+					break;
+				case FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD:
+					flag = flag | FACET_IS_TAXO_FLOAT;
+					break;
+				}
+			}
+			return flag;
 		}
 
 		@Override
 		final protected FacetResult getFacetResult(final int top, final String dim) throws IOException {
-			if (FieldDefinition.SORTEDSET_FACET_FIELD.equals(facetsConfig.getDimConfig(dim).indexFieldName)) {
+			final String indexFieldName = facetsConfig.getDimConfig(dim).indexFieldName;
+			if (indexFieldName == null)
+				return null;
+			switch (indexFieldName) {
+			case FieldDefinition.SORTEDSET_FACET_FIELD:
 				if (queryContext.docValueReaderState != null)
 					if (queryContext.docValueReaderState.getOrdRange(dim) != null)
 						return sortedSetCounts.getTopChildren(top, dim);
-			} else
-				return taxonomyCounts.getTopChildren(top, dim);
+				break;
+			case FieldDefinition.TAXONOMY_FACET_FIELD:
+				return taxonomyCounts == null ? null : taxonomyCounts.getTopChildren(top, dim);
+			case FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD:
+				return intTaxonomyCounts == null ? null : intTaxonomyCounts.getTopChildren(top, dim);
+			case FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD:
+				return floatTaxonomyCounts == null ? null : floatTaxonomyCounts.getTopChildren(top, dim);
+			}
 			return null;
 		}
 	}

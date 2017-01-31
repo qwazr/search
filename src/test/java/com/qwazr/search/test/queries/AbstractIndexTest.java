@@ -16,12 +16,8 @@
 package com.qwazr.search.test.queries;
 
 import com.qwazr.search.annotations.AnnotatedIndexService;
-import com.qwazr.search.annotations.Index;
-import com.qwazr.search.annotations.IndexField;
-import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.utils.FileUtils;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -30,7 +26,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public abstract class AbstractQueryTest {
+public abstract class AbstractIndexTest {
 
 	private static Path rootDirectory;
 	private static IndexManager indexManager;
@@ -52,36 +48,4 @@ public abstract class AbstractQueryTest {
 		FileUtils.deleteQuietly(rootDirectory.toFile());
 	}
 
-	@Index(name = "QueryTest", schema = "QueriesTest")
-	public static class IndexRecord {
-
-		@IndexField(name = FieldDefinition.ID_FIELD, template = FieldDefinition.Template.StringField)
-		final public String id;
-
-		@IndexField(name = "label",
-				template = FieldDefinition.Template.TextField,
-				analyzerClass = StandardAnalyzer.class)
-		public String label;
-
-		@IndexField(name = "intDocValue", template = FieldDefinition.Template.IntDocValuesField)
-		public Integer intDocValue;
-
-		public IndexRecord() {
-			id = null;
-		}
-
-		protected IndexRecord(String id) {
-			this.id = id;
-		}
-
-		protected IndexRecord label(String label) {
-			this.label = label;
-			return this;
-		}
-
-		protected IndexRecord intDocValue(Integer intDocValue) {
-			this.intDocValue = intDocValue;
-			return this;
-		}
-	}
 }

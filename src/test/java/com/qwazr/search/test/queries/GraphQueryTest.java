@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class GraphQueryTest extends AbstractQueryTest {
+public class GraphQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
