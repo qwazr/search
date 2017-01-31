@@ -60,6 +60,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import javax.ws.rs.WebApplicationException;
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -721,17 +722,36 @@ public abstract class JavaAbstractTest {
 		getMaster().deleteAll();
 	}
 
+	protected abstract File getIndexDirectory();
+
+	private File getSchemaDir() {
+		return new File(getIndexDirectory(), AnnotatedIndex.SCHEMA_NAME);
+	}
+
+	private File getIndexDir(String name) {
+		return new File(getSchemaDir(), name);
+	}
+
 	@Test
 	public void test980DeleteIndex() throws URISyntaxException, IOException {
+		File indexSlave = getIndexDir(AnnotatedIndex.INDEX_NAME_SLAVE);
+		Assert.assertTrue(indexSlave.exists());
 		getSlave().deleteIndex();
 		checkErrorStatusCode(() -> getSlave().getIndexStatus(), 404);
+		Assert.assertFalse(indexSlave.exists());
+
+		File indexMaster = getIndexDir(AnnotatedIndex.INDEX_NAME_MASTER);
+		Assert.assertTrue(indexMaster.exists());
 		getMaster().deleteIndex();
 		checkErrorStatusCode(() -> getMaster().getIndexStatus(), 404);
+		Assert.assertFalse(indexMaster.exists());
 	}
 
 	@Test
 	public void test990DeleteSchema() throws URISyntaxException, IOException {
+		Assert.assertTrue(getSchemaDir().exists());
 		getMaster().deleteSchema();
+		Assert.assertFalse(getSchemaDir().exists());
 	}
 
 	@Test

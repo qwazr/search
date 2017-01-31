@@ -33,7 +33,7 @@ class SortedSetDocValuesFacetType extends StorableFieldType {
 		if (value == null)
 			return;
 		final String stringValue = value.toString();
-		if (stringValue == null)
+		if (stringValue == null || stringValue.isEmpty())
 			return;
 		consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
 		if (store == Field.Store.YES)

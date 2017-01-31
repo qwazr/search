@@ -25,6 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -39,6 +40,8 @@ public class JavaTest {
 
 		private static IndexManager indexManager = null;
 
+		private static File indexDirectory = null;
+
 		public JavaLibraryTest() {
 			super(IndexSettingsDefinition.of().type(IndexSettingsDefinition.Type.FSDirectory).
 					master("testSchema", "testIndexMaster").ramBufferSize(32d).build());
@@ -48,6 +51,7 @@ public class JavaTest {
 		public static void beforeClass() throws IOException {
 			final Path srcDirectory = Files.createTempDirectory("qwazr_src_test");
 			final Path rootDirectory = Files.createTempDirectory("qwazr_index_test");
+			indexDirectory = rootDirectory.toFile();
 			ClassLoaderManager classLoaderManager =
 					new ClassLoaderManager(srcDirectory.toFile(), Thread.currentThread());
 			indexManager = new IndexManager(classLoaderManager, rootDirectory, Executors.newCachedThreadPool());
@@ -56,6 +60,11 @@ public class JavaTest {
 		@Override
 		protected IndexServiceInterface getIndexService() {
 			return indexManager.getService();
+		}
+
+		@Override
+		protected File getIndexDirectory() {
+			return indexDirectory;
 		}
 
 		@AfterClass
@@ -86,6 +95,11 @@ public class JavaTest {
 		protected IndexServiceInterface getIndexService() throws URISyntaxException {
 			return TestServer.service;
 		}
+
+		@Override
+		protected File getIndexDirectory() {
+			return new File(TestServer.dataDir, "index");
+		}
 	}
 
 	public static class JavaRemoteTest extends JavaAbstractTest {
@@ -97,6 +111,11 @@ public class JavaTest {
 		@Override
 		protected IndexServiceInterface getIndexService() throws URISyntaxException {
 			return TestServer.remote;
+		}
+
+		@Override
+		protected File getIndexDirectory() {
+			return new File(TestServer.dataDir, "index");
 		}
 	}
 

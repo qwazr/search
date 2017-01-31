@@ -31,10 +31,11 @@ public class TestServer {
 
 	static final String BASE_URL = "http://localhost:9091";
 
+	static final File dataDir = Files.createTempDir();
+
 	public static synchronized void startServer() throws Exception {
 		if (service != null)
 			return;
-		final File dataDir = Files.createTempDir();
 		FileUtils.copyDirectory(new File("src/test/data"), dataDir);
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
 		System.setProperty("PUBLIC_ADDR", "localhost");
