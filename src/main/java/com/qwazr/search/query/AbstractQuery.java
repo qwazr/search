@@ -27,7 +27,8 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "query")
-@JsonSubTypes({ @JsonSubTypes.Type(value = BooleanQuery.class),
+@JsonSubTypes({ @JsonSubTypes.Type(value = BlendedTermQuery.class),
+		@JsonSubTypes.Type(value = BooleanQuery.class),
 		@JsonSubTypes.Type(value = BoostedQuery.class),
 		@JsonSubTypes.Type(value = BoostQuery.class),
 		@JsonSubTypes.Type(value = ConstantScoreQuery.class),

@@ -85,8 +85,6 @@ public interface FieldTypeInterface {
 			return new IntAssociationFacetType(fieldMapItem);
 		case FloatAssociatedField:
 			return new FloatAssociationFacetType(fieldMapItem);
-		case StringAssociatedField:
-			return new StringAssociationFacetType(fieldMapItem);
 		case SortedSetDocValuesFacetField:
 			return new SortedSetDocValuesFacetType(fieldMapItem);
 		case StoredField:

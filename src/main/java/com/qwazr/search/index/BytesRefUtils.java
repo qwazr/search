@@ -21,6 +21,7 @@ import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.facet.taxonomy.FloatAssociationFacetField;
 import org.apache.lucene.facet.taxonomy.IntAssociationFacetField;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
@@ -171,6 +172,10 @@ public class BytesRefUtils {
 			return Converter.DOUBLE.from((Double) value);
 		// Last chance (string conversion)
 		return new BytesRef(value.toString());
+	}
+
+	static public Term toTerm(final String field, final Object value) {
+		return new Term(field, fromAny(value));
 	}
 
 	final static public class DoublePointConverter implements Converter<Double> {
