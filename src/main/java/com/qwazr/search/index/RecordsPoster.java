@@ -16,8 +16,8 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.utils.HashUtils;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.HashUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
@@ -28,6 +28,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 abstract class RecordsPoster {
@@ -36,7 +37,7 @@ abstract class RecordsPoster {
 	protected final FieldMap fieldMap;
 	private final IndexWriter indexWriter;
 	private final TaxonomyWriter taxonomyWriter;
-	int counter;
+	final AtomicInteger counter;
 
 	RecordsPoster(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter,
 			final TaxonomyWriter taxonomyWriter) {
@@ -44,7 +45,7 @@ abstract class RecordsPoster {
 		this.fieldMap = fieldMap;
 		this.indexWriter = indexWriter;
 		this.taxonomyWriter = taxonomyWriter;
-		this.counter = 0;
+		this.counter = new AtomicInteger();
 	}
 
 	final void updateDocument(Object id, final FieldConsumer.ForDocument fields) {
@@ -58,7 +59,7 @@ abstract class RecordsPoster {
 		} catch (IOException e) {
 			throw new ServerException(e);
 		}
-		counter++;
+		counter.incrementAndGet();
 	}
 
 	final void updateDocValues(final Object id, final FieldConsumer.ForDocValues fields) {
@@ -71,7 +72,7 @@ abstract class RecordsPoster {
 		} catch (IOException e) {
 			throw new ServerException(e);
 		}
-		counter++;
+		counter.incrementAndGet();
 	}
 
 	final static class UpdateMapDocument extends RecordsPoster implements Consumer<Map<String, Object>> {

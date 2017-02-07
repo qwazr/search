@@ -246,7 +246,7 @@ public abstract class JavaAbstractTest {
 		Assert.assertEquals(record1, newRecord1);
 		AnnotatedIndex newRecord2 = checkRecord(record2);
 		Assert.assertEquals(record2, newRecord2);
-		Assert.assertEquals(new Long(10), service.getIndexStatus().version);
+		Assert.assertEquals(new Long(2), service.getIndexStatus().num_docs);
 	}
 
 	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, 1.11d, null, false, true);

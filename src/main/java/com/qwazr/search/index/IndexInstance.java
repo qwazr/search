@@ -59,6 +59,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -155,7 +156,7 @@ final public class IndexInstance implements Closeable {
 			IOUtils.closeQuietly(indexWriter);
 		IOUtils.closeQuietly(dataDirectory);
 	}
-	
+
 	boolean register(final MultiSearchInstance multiSearchInstance) {
 		return multiSearchInstances.add(multiSearchInstance);
 	}
@@ -472,7 +473,7 @@ final public class IndexInstance implements Closeable {
 			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
 			poster.accept(document);
 			nrtCommit();
-			return poster.counter;
+			return poster.counter.get();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -489,7 +490,7 @@ final public class IndexInstance implements Closeable {
 			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
 			poster.accept(document);
 			nrtCommit();
-			return poster.counter;
+			return poster.counter.get();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -505,9 +506,9 @@ final public class IndexInstance implements Closeable {
 		try {
 			schema.checkSize(documents.size());
 			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
-			documents.forEach(poster);
+			documents.parallelStream().forEach(poster);
 			nrtCommit();
-			return poster.counter;
+			return poster.counter.get();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -523,9 +524,9 @@ final public class IndexInstance implements Closeable {
 		try {
 			schema.checkSize(documents.size());
 			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
-			documents.forEach(poster);
+			documents.parallelStream().forEach(poster);
 			nrtCommit();
-			return poster.counter;
+			return poster.counter.get();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -541,10 +542,9 @@ final public class IndexInstance implements Closeable {
 		try {
 			schema.checkSize(documents.length);
 			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
-			for (T document : documents)
-				poster.accept(document);
+			Arrays.stream(documents).parallel().forEach(poster);
 			nrtCommit();
-			return poster.counter;
+			return poster.counter.get();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -561,7 +561,7 @@ final public class IndexInstance implements Closeable {
 			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			poster.accept(document);
 			nrtCommit();
-			return poster.counter;
+			return poster.counter.get();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -577,7 +577,7 @@ final public class IndexInstance implements Closeable {
 			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			poster.accept(document);
 			nrtCommit();
-			return poster.counter;
+			return poster.counter.get();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -594,7 +594,7 @@ final public class IndexInstance implements Closeable {
 			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			documents.forEach(poster);
 			nrtCommit();
-			return poster.counter;
+			return poster.counter.get();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -612,7 +612,7 @@ final public class IndexInstance implements Closeable {
 			for (T document : documents)
 				poster.accept(document);
 			nrtCommit();
-			return poster.counter;
+			return poster.counter.get();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -626,10 +626,10 @@ final public class IndexInstance implements Closeable {
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
-			RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
+			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			documents.forEach(poster);
 			nrtCommit();
-			return poster.counter;
+			return poster.counter.get();
 		} finally {
 			if (sem != null)
 				sem.release();
