@@ -25,6 +25,9 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class BytesRefUtils {
 
 	static private byte[] checkByteSize(final BytesRef bytesRef, final int expectedSize, final String errorMessage) {
@@ -41,6 +44,7 @@ public class BytesRefUtils {
 
 		T to(BytesRef bytesRef);
 
+		BytesRefConverter BYTESREF = new BytesRefConverter();
 		StringConverter STRING = new StringConverter();
 		IntegerConverter INT = new IntegerConverter();
 		LongConverter LONG = new LongConverter();
@@ -52,6 +56,19 @@ public class BytesRefUtils {
 		LongPointConverter LONG_POINT = new LongPointConverter();
 		IntFacetConverter INT_FACET = new IntFacetConverter();
 		FloatFacetConverter FLOAT_FACET = new FloatFacetConverter();
+	}
+
+	final static public class BytesRefConverter implements Converter<BytesRef> {
+
+		@Override
+		final public BytesRef from(final BytesRef value) {
+			return value == null ? new BytesRef(BytesRef.EMPTY_BYTES) : value;
+		}
+
+		@Override
+		final public BytesRef to(final BytesRef bytesRef) {
+			return bytesRef == null || bytesRef.bytes == null ? null : bytesRef;
+		}
 	}
 
 	final static public class StringConverter implements Converter<String> {
@@ -155,23 +172,23 @@ public class BytesRefUtils {
 		}
 	}
 
+	static private final Map<Class, Converter> CONVERTER_MAP = new HashMap<>();
+
+	static {
+		CONVERTER_MAP.put(BytesRef.class, Converter.BYTESREF);
+		CONVERTER_MAP.put(String.class, Converter.STRING);
+		CONVERTER_MAP.put(Integer.class, Converter.INT);
+		CONVERTER_MAP.put(Float.class, Converter.FLOAT);
+		CONVERTER_MAP.put(Long.class, Converter.LONG);
+		CONVERTER_MAP.put(Double.class, Converter.DOUBLE);
+		CONVERTER_MAP.put(BytesRef.class, Converter.BYTESREF);
+	}
+
 	static public BytesRef fromAny(final Object value) {
 		if (value == null)
 			return new BytesRef(BytesRef.EMPTY_BYTES);
-		if (value instanceof BytesRef)
-			return (BytesRef) value;
-		if (value instanceof String)
-			return Converter.STRING.from((String) value);
-		if (value instanceof Integer)
-			return Converter.INT.from((Integer) value);
-		if (value instanceof Float)
-			return Converter.FLOAT.from((Float) value);
-		if (value instanceof Long)
-			return Converter.LONG.from((Long) value);
-		if (value instanceof Double)
-			return Converter.DOUBLE.from((Double) value);
-		// Last chance (string conversion)
-		return new BytesRef(value.toString());
+		final Converter converter = CONVERTER_MAP.get(value.getClass());
+		return converter == null ? new BytesRef(value.toString()) : converter.from(value);
 	}
 
 	static public Term toTerm(final String field, final Object value) {
