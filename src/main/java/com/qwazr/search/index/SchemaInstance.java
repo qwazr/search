@@ -142,8 +142,6 @@ public class SchemaInstance implements Closeable {
 	 * @param indexName        The name of the index
 	 * @param ensureWriterOpen if true the index will be reopen if the writer has been closed
 	 * @return the indexInstance
-	 * @throws ServerException if any error occurs
-	 * @throws IOException     if any I/O error occurs
 	 */
 	public IndexInstance get(String indexName, boolean ensureWriterOpen) {
 		final IndexInstanceManager indexInstanceManager = checkIndexExists(indexName, indexMap.get(indexName));

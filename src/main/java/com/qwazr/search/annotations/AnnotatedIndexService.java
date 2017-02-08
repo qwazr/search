@@ -72,9 +72,11 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * Create a new index service. A class with Index and IndexField annotations.
 	 *
 	 * @param indexService         the IndexServiceInterface to use
-	 * @param schemaName           the IndexServiceInterface to use
-	 * @param indexName            the IndexServiceInterface to use
-	 * @param indexDefinitionClass an annotated class
+	 * @param indexDefinitionClass the class with define the index
+	 * @param schemaName           the name of the schema
+	 * @param indexName            the name of the index
+	 * @param settings             any additionnal settings
+	 * @throws URISyntaxException if the syntax of the remote URI is wrong
 	 */
 	public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass,
 			final String schemaName, final String indexName, final IndexSettingsDefinition settings)
@@ -186,7 +188,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 *
 	 * @return the index status
 	 */
-	public IndexStatus createUpdateIndex() throws URISyntaxException {
+	public IndexStatus createUpdateIndex() {
 		checkParameters();
 		return indexService.createUpdateIndex(schemaName, indexName, settings);
 	}
@@ -229,6 +231,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 
 	/**
 	 * Check if the there is differences between the annotated fields and the fields already declared
+	 *
+	 * @return the changed fields
 	 */
 	public Map<String, FieldStatus> getFieldChanges() {
 		checkParameters();
@@ -258,6 +262,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * Post a document to the index
 	 *
 	 * @param row the document to index
+	 * @throws IOException          if any I/O error occurs
+	 * @throws InterruptedException if the process is interrupted
 	 */
 	public void postDocument(final T row) throws IOException, InterruptedException {
 		checkParameters();
@@ -272,6 +278,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * Post a collection of document to the index
 	 *
 	 * @param rows a collection of document to index
+	 * @throws IOException          if any I/O error occurs
+	 * @throws InterruptedException if the process is interrupted
 	 */
 	public void postDocuments(final Collection<T> rows) throws IOException, InterruptedException {
 		checkParameters();
@@ -286,6 +294,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * Post an array of document to the index
 	 *
 	 * @param rows an array of document to index
+	 * @throws IOException          if any I/O error occurs
+	 * @throws InterruptedException if the process is interrupted
 	 */
 	public void postDocuments(final T... rows) throws IOException, InterruptedException {
 		checkParameters();
@@ -300,6 +310,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * Update the DocValues of one document
 	 *
 	 * @param row a collection of DocValues to update
+	 * @throws IOException          if any I/O error occurs
+	 * @throws InterruptedException if the process is interrupted
 	 */
 	public void updateDocumentValues(final T row) throws IOException, InterruptedException {
 		checkParameters();
@@ -314,6 +326,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * Update the DocValues of a collection of document
 	 *
 	 * @param rows a collection of document with a collection of DocValues to update
+	 * @throws IOException          if any I/O error occurs
+	 * @throws InterruptedException if the process is interrupted
 	 */
 	public void updateDocumentsValues(final Collection<T> rows) throws IOException, InterruptedException {
 		checkParameters();
@@ -328,6 +342,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * Update the DocValues of an array of document
 	 *
 	 * @param rows an array of document with a collection of DocValues to update
+	 * @throws IOException          if any I/O error occurs
+	 * @throws InterruptedException if the process is interrupted
 	 */
 	public void updateDocumentsValues(final T... rows) throws IOException, InterruptedException {
 		checkParameters();
@@ -341,7 +357,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	/**
 	 * @param id The ID of the document
 	 * @return an filled object or null if the document does not exist
-	 * @throws ReflectiveOperationException
+	 * @throws ReflectiveOperationException if the document cannot be created
 	 */
 	public T getDocument(final Object id) throws ReflectiveOperationException {
 		checkParameters();
@@ -484,8 +500,9 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	/**
 	 * Explain a query applied to a given DocId using dot format
 	 *
-	 * @param query the query definition
-	 * @param docId the ID of the document
+	 * @param query               the query definition
+	 * @param docId               the ID of the document
+	 * @param descriptionWrapSize the maximum number of character per line
 	 * @return the score computation for document and query
 	 */
 	public String explainQueryDot(final QueryDefinition query, final int docId, final Integer descriptionWrapSize) {

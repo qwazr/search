@@ -48,8 +48,9 @@ public class RemoteIndex extends RemoteService {
 	 * The form of the URL should be:
 	 * {protocol}://{username:password@}{host}:{port}/indexes/{schema}/{index}?timeout={timeout}
 	 *
-	 * @param remoteIndexUrl
+	 * @param remoteIndexUrl the URL of the remote index
 	 * @return an array of RemoteIndex
+	 * @throws URISyntaxException if the URI syntax is not correct
 	 */
 	public static RemoteIndex build(final String remoteIndexUrl) throws URISyntaxException {
 
