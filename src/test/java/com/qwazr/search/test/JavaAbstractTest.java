@@ -382,8 +382,16 @@ public abstract class JavaAbstractTest {
 		List<AnnotatedIndex> records = master.getDocuments(0, 2);
 		Assert.assertNotNull(records);
 		Assert.assertEquals(2L, records.size());
-		checkEqualsReturnedFields(records.get(0), record1, docValue1);
-		checkEqualsReturnedFields(records.get(1), record2, docValue2);
+		AnnotatedIndex doc1 = records.get(0);
+		AnnotatedIndex doc2 = records.get(1);
+		if (record1.id.equals(doc1.id))
+			checkEqualsReturnedFields(doc1, record1, docValue1);
+		else
+			checkEqualsReturnedFields(doc1, record2, docValue2);
+		if (record2.id.equals(doc2.id))
+			checkEqualsReturnedFields(doc2, record2, docValue2);
+		else
+			checkEqualsReturnedFields(doc2, record1, docValue1);
 	}
 
 	private void testSort(QueryBuilder queryBuilder, int resultCount,
