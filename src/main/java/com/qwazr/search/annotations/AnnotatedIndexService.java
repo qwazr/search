@@ -39,7 +39,6 @@ import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.util.EntityUtils;
-import org.apache.lucene.index.CheckIndex;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -138,7 +137,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	/**
 	 * Create a new schema or update an existing one
 	 *
-	 * @param settings
+	 * @param settings the settings to set
 	 * @return the schema settings
 	 */
 	public SchemaSettingsDefinition createUpdateSchema(final SchemaSettingsDefinition settings) {
@@ -461,8 +460,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	/**
 	 * Explain a query applied to a given DocId
 	 *
-	 * @param query
-	 * @param docId
+	 * @param query the query definition
+	 * @param docId the ID of the document
 	 * @return the score computation for document and query
 	 */
 	public ExplainDefinition explainQuery(final QueryDefinition query, final int docId) {
@@ -473,8 +472,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	/**
 	 * Explain a query applied to a given DocId using plain text
 	 *
-	 * @param query
-	 * @param docId
+	 * @param query the query definition
+	 * @param docId the ID of the document
 	 * @return the score computation for document and query
 	 */
 	public String explainQueryText(final QueryDefinition query, final int docId) {
@@ -485,8 +484,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	/**
 	 * Explain a query applied to a given DocId using dot format
 	 *
-	 * @param query
-	 * @param docId
+	 * @param query the query definition
+	 * @param docId the ID of the document
 	 * @return the score computation for document and query
 	 */
 	public String explainQueryDot(final QueryDefinition query, final int docId, final Integer descriptionWrapSize) {

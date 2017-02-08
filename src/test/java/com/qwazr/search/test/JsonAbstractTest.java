@@ -745,14 +745,19 @@ public abstract class JsonAbstractTest {
 		checkCollector(result, "maxPrice", 10.5D);
 	}
 
-	private void checkSnippets(ResultDocumentMap document, String snippetName, String... patterns) {
-		Assert.assertNotNull(document);
+	private boolean checkSnippets(ResultDocumentMap document, String snippetName, String... patterns) {
+		if (document == null)
+			return false;
 		final Map<String, String> highlights = document.getHighlights();
-		Assert.assertNotNull(highlights);
+		if (highlights == null)
+			return false;
 		final String snippet = highlights.get(snippetName);
-		Assert.assertNotNull(snippet);
+		if (snippet == null)
+			return false;
 		for (String pattern : patterns)
-			Assert.assertTrue(snippet.contains(pattern));
+			if (!snippet.contains(pattern))
+				return false;
+		return true;
 	}
 
 	@Test
@@ -760,8 +765,10 @@ public abstract class JsonAbstractTest {
 		final IndexServiceInterface client = getClient();
 		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_HIGHLIGHT, 1);
 		final ResultDocumentMap document = result.getDocuments().get(0);
-		checkSnippets(document, "my_custom_snippet", "<strong>search</strong>", "<strong>engine</strong>");
-		checkSnippets(document, "my_default_snippet", "<b>search</b>", "<b>engine</b>");
+		if (!checkSnippets(document, "my_custom_snippet", "<strong>search</strong>", "<strong>engine</strong>"))
+			Assert.fail("Snippet not found");
+		if (!checkSnippets(document, "my_default_snippet", "<b>search</b>", "<b>engine</b>"))
+			Assert.fail("Snippet not found");
 	}
 
 	private void checkSynonyms(final IndexServiceInterface client, final String queryString,
@@ -769,14 +776,21 @@ public abstract class JsonAbstractTest {
 		final QueryBuilder builder = new QueryBuilder(QUERY_HIGHLIGHT);
 		builder.queryString(queryString);
 		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, builder.build(), 2);
-		ResultDocumentMap document = result.getDocuments().get(0);
-		for (String multiWordHighlight : multiWordsHighlights) {
-			checkSnippets(document, "my_custom_snippet", "<strong>" + multiWordHighlight + "</strong>");
-			checkSnippets(document, "my_default_snippet", "<b>" + multiWordHighlight + "</b>");
+		boolean foundMultiWord1 = false;
+		boolean foundMultiWord2 = false;
+		boolean foundSimpleWord1 = false;
+		boolean foundSimpleWord2 = false;
+		for (ResultDocumentMap document : result.getDocuments()) {
+			for (String multiWordHighlight : multiWordsHighlights) {
+				foundMultiWord1 = foundMultiWord1 || checkSnippets(document, "my_custom_snippet",
+						"<strong>" + multiWordHighlight + "</strong>");
+				foundMultiWord2 = foundMultiWord2 || checkSnippets(document, "my_default_snippet",
+						"<b>" + multiWordHighlight + "</b>");
+			}
+			foundSimpleWord1 = foundSimpleWord1 || checkSnippets(document, "my_custom_snippet", "<strong>USA</strong>");
+			foundSimpleWord2 = foundSimpleWord2 || checkSnippets(document, "my_default_snippet", "<b>USA</b>");
 		}
-		document = result.getDocuments().get(1);
-		checkSnippets(document, "my_custom_snippet", "<strong>USA</strong>");
-		checkSnippets(document, "my_default_snippet", "<b>USA</b>");
+		Assert.assertTrue(foundMultiWord1 && foundMultiWord2 && foundSimpleWord1 && foundSimpleWord2);
 	}
 
 	@Test
