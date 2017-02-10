@@ -30,16 +30,15 @@ public class ConstantScoreAndBoostQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1").label("Hello World"));
-		indexService.postDocument(new IndexRecord("2").label("How are you ?"));
+		indexService.postDocument(new IndexRecord("1").textField("Hello World"));
+		indexService.postDocument(new IndexRecord("2").textField("How are you ?"));
 	}
 
 	@Test
 	public void test() {
 		final Float scoreValue = Float.MAX_VALUE - 1;
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(
-				QueryDefinition.of(new BoostQuery(new ConstantScoreQuery(new TermQuery("label", "hello")), scoreValue))
-						.build());
+		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+				new BoostQuery(new ConstantScoreQuery(new TermQuery("textField", "hello")), scoreValue)).build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(1), result.total_hits);
 		Assert.assertEquals(scoreValue, result.getDocuments().get(0).getScore());

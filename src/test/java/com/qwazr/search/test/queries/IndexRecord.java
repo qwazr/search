@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.test.queries;
 
+import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
@@ -27,7 +28,10 @@ public class IndexRecord {
 	final public String id;
 
 	@IndexField(template = FieldDefinition.Template.TextField, analyzerClass = StandardAnalyzer.class)
-	public String label;
+	public String textField;
+
+	@IndexField(template = FieldDefinition.Template.StringField)
+	public String stringField;
 
 	@IndexField(template = FieldDefinition.Template.IntDocValuesField)
 	public Integer intDocValue;
@@ -38,6 +42,12 @@ public class IndexRecord {
 	@IndexField(template = FieldDefinition.Template.FloatAssociatedField)
 	public Object[] floatAssociatedFacet;
 
+	@Copy(to = { @Copy.To(order = 1, field = "textField", boost = 2) })
+	public String copyText1Boosted;
+
+	@Copy(to = { @Copy.To(order = 2, field = "textField") })
+	public String copyText2;
+
 	public IndexRecord() {
 		id = null;
 	}
@@ -46,8 +56,23 @@ public class IndexRecord {
 		this.id = id;
 	}
 
-	public IndexRecord label(String label) {
-		this.label = label;
+	public IndexRecord textField(String textField) {
+		this.textField = textField;
+		return this;
+	}
+
+	public IndexRecord copyText1Boosted(String copyText) {
+		this.copyText1Boosted = copyText;
+		return this;
+	}
+
+	public IndexRecord copyText2(String copyText) {
+		this.copyText2 = copyText;
+		return this;
+	}
+
+	public IndexRecord stringField(String stringField) {
+		this.stringField = stringField;
 		return this;
 	}
 

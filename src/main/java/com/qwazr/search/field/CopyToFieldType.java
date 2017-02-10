@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,16 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.document.TextField;
 
-class TextFieldType extends StorableFieldType {
+public class CopyToFieldType extends FieldTypeAbstract {
 
-	TextFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.STRING);
+	public CopyToFieldType() {
+		super(null, null, null);
 	}
 
-	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
-		consumer.accept(fieldName, new TextField(fieldName, value.toString(), store), boost);
+	protected void fill(final String fieldName, final Object value, final Float boost,
+			final FieldConsumer fieldConsumer) {
+		// Nothing to do
 	}
-
 }

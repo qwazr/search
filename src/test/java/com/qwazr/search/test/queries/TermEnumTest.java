@@ -27,12 +27,12 @@ public class TermEnumTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1").label("v"));
+		indexService.postDocument(new IndexRecord("1").textField("v"));
 	}
 
 	@Test
 	public void testAll() throws IOException, InterruptedException {
-		List<TermEnumDefinition> terms = indexService.doExtractTerms("label", 0, 10);
+		List<TermEnumDefinition> terms = indexService.doExtractTerms("textField", 0, 10);
 		Assert.assertNotNull(terms);
 		Assert.assertEquals(1, terms.size());
 		Assert.assertEquals("v", terms.get(0).term);
@@ -40,7 +40,7 @@ public class TermEnumTest extends AbstractIndexTest {
 
 	@Test
 	public void testExact() throws IOException, InterruptedException {
-		List<TermEnumDefinition> terms = indexService.doExtractTerms("label", "v", 0, 10);
+		List<TermEnumDefinition> terms = indexService.doExtractTerms("textField", "v", 0, 10);
 		Assert.assertNotNull(terms);
 		Assert.assertEquals(1, terms.size());
 		Assert.assertEquals("v", terms.get(0).term);
@@ -48,7 +48,7 @@ public class TermEnumTest extends AbstractIndexTest {
 
 	@Test
 	public void testCeil() throws IOException, InterruptedException {
-		List<TermEnumDefinition> terms = indexService.doExtractTerms("label", "a", 0, 10);
+		List<TermEnumDefinition> terms = indexService.doExtractTerms("textField", "a", 0, 10);
 		Assert.assertNotNull(terms);
 		Assert.assertEquals(1, terms.size());
 		Assert.assertEquals("v", terms.get(0).term);
@@ -56,7 +56,7 @@ public class TermEnumTest extends AbstractIndexTest {
 
 	@Test
 	public void testAfter() throws IOException, InterruptedException {
-		List<TermEnumDefinition> terms = indexService.doExtractTerms("label", "a", 1, 10);
+		List<TermEnumDefinition> terms = indexService.doExtractTerms("textField", "a", 1, 10);
 		Assert.assertNotNull(terms);
 		Assert.assertEquals(0, terms.size());
 	}

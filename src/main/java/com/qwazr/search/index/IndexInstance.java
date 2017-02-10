@@ -672,12 +672,11 @@ final public class IndexInstance implements Closeable {
 		try {
 			final SearcherTaxonomyManager.SearcherAndTaxonomy searcherAndTaxonomy = searcherTaxonomyManager.acquire();
 			try {
-				FieldMap.Item fieldMapItem = fieldMap.find(fieldName);
-				if (fieldMapItem == null)
+				final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
+				if (fieldType == null)
 					throw new ServerException(Response.Status.NOT_FOUND,
 							"Field not found: " + fieldName + " - Index: " + indexName);
-				FieldTypeInterface fieldType = FieldTypeInterface.getInstance(fieldMapItem);
-				Terms terms = MultiFields.getTerms(searcherAndTaxonomy.searcher.getIndexReader(), fieldName);
+				final Terms terms = MultiFields.getTerms(searcherAndTaxonomy.searcher.getIndexReader(), fieldName);
 				if (terms == null)
 					return Collections.emptyList();
 				return TermEnumDefinition.buildTermList(fieldType, terms.iterator(), prefix, start == null ? 0 : start,

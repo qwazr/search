@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,6 +104,7 @@ public abstract class JsonAbstractTest {
 	public static final QueryDefinition QUERY_CHECK_RETURNED = getQuery("query_check_returned.json");
 	public static final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
 	public static final QueryDefinition QUERY_MULTIFIELD = getQuery("query_multifield.json");
+	public static final QueryDefinition QUERY_STANDARDQUERYPARSER = getQuery("query_standardqueryparser.json");
 	public static final QueryDefinition QUERY_GEO2D_BOX = getQuery("query_geo2d_box.json");
 	public static final QueryDefinition QUERY_GEO3D_BOX = getQuery("query_geo3d_box.json");
 	public static final QueryDefinition QUERY_GEO2D_DISTANCE = getQuery("query_geo2d_distance.json");
@@ -810,7 +811,15 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
-	public void test450getDocument() throws URISyntaxException {
+	public void test452StandardQueryParser() throws URISyntaxException, IOException {
+		final IndexServiceInterface client = getClient();
+		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_STANDARDQUERYPARSER, 1);
+		final ResultDocumentMap document = result.getDocuments().get(0);
+		Assert.assertTrue(((List<String>) document.fields.get("description")).get(0).startsWith("A web search engine"));
+	}
+
+	@Test
+	public void test455getDocument() throws URISyntaxException {
 		final IndexServiceInterface client = getClient();
 		final Map<String, Object> result = client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, "5");
 		Assert.assertNotNull(result);

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,24 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.FieldMap;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
 
 class IntPointType extends StorableFieldType {
 
-	IntPointType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem, BytesRefUtils.Converter.INT_POINT);
+	IntPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+		super(wildcardMatcher, definition, BytesRefUtils.Converter.INT_POINT);
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final Float boost,
+			final FieldConsumer consumer) {
 		int intValue = value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
-		consumer.accept(fieldName, new IntPoint(fieldName, intValue));
+		consumer.accept(fieldName, new IntPoint(fieldName, intValue), boost);
 		if (store == Field.Store.YES)
-			consumer.accept(fieldName, new StoredField(fieldName, intValue));
+			consumer.accept(fieldName, new StoredField(fieldName, intValue), boost);
 	}
 
 }

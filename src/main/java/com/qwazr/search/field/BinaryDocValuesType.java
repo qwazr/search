@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.BinaryDocValuesField;
 import org.apache.lucene.index.BinaryDocValues;
 import org.apache.lucene.index.IndexReader;
@@ -31,13 +31,14 @@ import java.io.IOException;
 
 class BinaryDocValuesType extends FieldTypeAbstract {
 
-	BinaryDocValuesType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem, null);
+	BinaryDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+		super(wildcardMatcher, definition, null);
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
-		consumer.accept(fieldName, new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
+	final public void fillValue(final String fieldName, final Object value, final Float boost,
+			final FieldConsumer consumer) {
+		consumer.accept(fieldName, new BinaryDocValuesField(fieldName, new BytesRef(value.toString())), boost);
 	}
 
 	@Override

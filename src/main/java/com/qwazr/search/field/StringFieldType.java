@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,21 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.search.SortField;
 
 class StringFieldType extends StorableFieldType {
 
-	StringFieldType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem, BytesRefUtils.Converter.STRING);
+	StringFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+		super(wildcardMatcher, definition, BytesRefUtils.Converter.STRING);
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
-		consumer.accept(fieldName, new StringField(fieldName, value.toString(), store));
+	final public void fillValue(final String fieldName, final Object value, final Float boost,
+			final FieldConsumer consumer) {
+		consumer.accept(fieldName, new StringField(fieldName, value.toString(), store), boost);
 	}
 
 	@Override

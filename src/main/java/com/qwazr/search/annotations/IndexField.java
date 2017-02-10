@@ -88,4 +88,5 @@ public @interface IndexField {
 			this.type = type;
 		}
 	}
+
 }

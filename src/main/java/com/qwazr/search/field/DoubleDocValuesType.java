@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.DoubleDocValuesField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
@@ -31,16 +31,19 @@ import java.io.IOException;
 
 class DoubleDocValuesType extends FieldTypeAbstract {
 
-	DoubleDocValuesType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem, BytesRefUtils.Converter.DOUBLE);
+	DoubleDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+		super(wildcardMatcher, definition, BytesRefUtils.Converter.DOUBLE);
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final Float boost,
+			final FieldConsumer consumer) {
+		final DoubleDocValuesField field;
 		if (value instanceof Number)
-			consumer.accept(fieldName, new DoubleDocValuesField(fieldName, ((Number) value).doubleValue()));
+			field = new DoubleDocValuesField(fieldName, ((Number) value).doubleValue());
 		else
-			consumer.accept(fieldName, new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString())));
+			field = new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString()));
+		consumer.accept(fieldName, field, boost);
 	}
 
 	@Override

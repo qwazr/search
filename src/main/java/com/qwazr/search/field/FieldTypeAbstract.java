@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.qwazr.search.field;
 
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.FieldMap;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.WildcardMatcher;
 import jdk.nashorn.api.scripting.JSObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.BytesRef;
 
@@ -29,120 +29,151 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 abstract class FieldTypeAbstract implements FieldTypeInterface {
 
-	final protected FieldMap.Item fieldMapItem;
+	final private WildcardMatcher wildcardMatcher;
+	final protected FieldDefinition definition;
 	final protected BytesRefUtils.Converter bytesRefConverter;
+	final private Map<FieldTypeInterface, Pair<String, Float>> copyToFields;
 
-	protected FieldTypeAbstract(final FieldMap.Item fieldMapItem, final BytesRefUtils.Converter bytesRefConverter) {
-		this.fieldMapItem = fieldMapItem;
+	protected FieldTypeAbstract(final WildcardMatcher wildcardMatcher, final FieldDefinition definition,
+			final BytesRefUtils.Converter bytesRefConverter) {
+		this.wildcardMatcher = wildcardMatcher;
+		this.definition = definition;
 		this.bytesRefConverter = bytesRefConverter;
+		this.copyToFields = new LinkedHashMap<>();
 	}
 
-	protected void fillArray(final String fieldName, final int[] values, final FieldConsumer consumer) {
+	@Override
+	final public void copyTo(final String fieldName, final FieldTypeInterface fieldType, final Float boost) {
+		copyToFields.put(fieldType, Pair.of(fieldName, boost));
+	}
+
+	@Override
+	final public FieldDefinition getDefinition() {
+		return definition;
+	}
+
+	protected void fillArray(final String fieldName, final int[] values, final Float boost,
+			final FieldConsumer consumer) {
 		for (int value : values)
-			fill(fieldName, value, consumer);
+			fill(fieldName, value, boost, consumer);
 	}
 
-	protected void fillArray(final String fieldName, final long[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final long[] values, final Float boost,
+			final FieldConsumer consumer) {
 		for (long value : values)
-			fill(fieldName, value, consumer);
+			fill(fieldName, value, boost, consumer);
 	}
 
-	protected void fillArray(final String fieldName, final double[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final double[] values, final Float boost,
+			final FieldConsumer consumer) {
 		for (double value : values)
-			fill(fieldName, value, consumer);
+			fill(fieldName, value, boost, consumer);
 	}
 
-	protected void fillArray(final String fieldName, final float[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final float[] values, final Float boost,
+			final FieldConsumer consumer) {
 		for (float value : values)
-			fill(fieldName, value, consumer);
+			fill(fieldName, value, boost, consumer);
 	}
 
-	protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final Object[] values, final Float boost,
+			final FieldConsumer consumer) {
 		for (Object value : values)
-			fill(fieldName, value, consumer);
+			fill(fieldName, value, boost, consumer);
 	}
 
-	protected void fillArray(final String fieldName, final String[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final String[] values, final Float boost,
+			final FieldConsumer consumer) {
 		for (String value : values)
-			fill(fieldName, value, consumer);
+			fill(fieldName, value, boost, consumer);
 	}
 
-	protected void fillCollection(final String fieldName, final Collection<Object> values,
+	protected void fillCollection(final String fieldName, final Collection<Object> values, final Float boost,
 			final FieldConsumer consumer) {
 		values.forEach(value -> {
 			if (value != null)
-				fill(fieldName, value, consumer);
+				fill(fieldName, value, boost, consumer);
 		});
 	}
 
-	protected void fillMap(final String fieldName, final Map<Object, Object> values, final FieldConsumer consumer) {
+	protected void fillMap(final String fieldName, final Map<Object, Object> values, final Float boost,
+			final FieldConsumer consumer) {
 		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 				"Map is not asupported type for the field: " + fieldName);
 	}
 
-	protected void fillJSObject(final String fieldName, final JSObject values, final FieldConsumer consumer) {
-		fillCollection(fieldName, values.values(), consumer);
+	protected void fillJSObject(final String fieldName, final JSObject values, final Float boost,
+			final FieldConsumer consumer) {
+		fillCollection(fieldName, values.values(), boost, consumer);
 	}
 
-	protected void fillDynamic(final Object value, final FieldConsumer fieldConsumer) {
-		if (!(value instanceof Map))
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Wrong value type for the field: " + fieldMapItem.name + ". A map was expected. We got a: "
-							+ value.getClass());
-		((Map<String, Object>) value).forEach((fieldName, valueObject) -> {
-			if (!fieldMapItem.match(fieldName))
-				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-						"The field name does not match the field pattern: " + fieldMapItem.name);
-			fill(fieldName, valueObject, fieldConsumer);
-		});
+	protected void fillWildcardMatcher(final String wildcardName, final Object value, final Float boost,
+			final FieldConsumer fieldConsumer) {
+		if (value instanceof Map) {
+			((Map<String, Object>) value).forEach((fieldName, valueObject) -> {
+				if (!wildcardMatcher.match(fieldName))
+					throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+							"The field name does not match the field pattern: " + wildcardName);
+				fill(fieldName, valueObject, boost, fieldConsumer);
+			});
+		} else
+			fill(wildcardName, value, boost, fieldConsumer);
 	}
 
-	protected void fill(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
+	protected void fill(final String fieldName, final Object value, final Float boost,
+			final FieldConsumer fieldConsumer) {
 		if (value == null)
 			return;
 		if (value instanceof String[])
-			fillArray(fieldName, (String[]) value, fieldConsumer);
+			fillArray(fieldName, (String[]) value, boost, fieldConsumer);
 		else if (value instanceof int[])
-			fillArray(fieldName, (int[]) value, fieldConsumer);
+			fillArray(fieldName, (int[]) value, boost, fieldConsumer);
 		else if (value instanceof long[])
-			fillArray(fieldName, (long[]) value, fieldConsumer);
+			fillArray(fieldName, (long[]) value, boost, fieldConsumer);
 		else if (value instanceof double[])
-			fillArray(fieldName, (double[]) value, fieldConsumer);
+			fillArray(fieldName, (double[]) value, boost, fieldConsumer);
 		else if (value instanceof float[])
-			fillArray(fieldName, (float[]) value, fieldConsumer);
+			fillArray(fieldName, (float[]) value, boost, fieldConsumer);
 		else if (value instanceof Object[])
-			fillArray(fieldName, (Object[]) value, fieldConsumer);
+			fillArray(fieldName, (Object[]) value, boost, fieldConsumer);
 		else if (value instanceof Collection)
-			fillCollection(fieldName, (Collection) value, fieldConsumer);
+			fillCollection(fieldName, (Collection) value, boost, fieldConsumer);
 		else if (value instanceof JSObject)
-			fillJSObject(fieldName, (JSObject) value, fieldConsumer);
+			fillJSObject(fieldName, (JSObject) value, boost, fieldConsumer);
 		else if (value instanceof Map)
-			fillMap(fieldName, (Map) value, fieldConsumer);
+			fillMap(fieldName, (Map) value, boost, fieldConsumer);
 		else
-			fillValue(fieldName, value, fieldConsumer);
+			fillValue(fieldName, value, boost, fieldConsumer);
 	}
 
-	protected void fillValue(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
+	protected void fillValue(final String fieldName, final Object value, final Float boost,
+			final FieldConsumer fieldConsumer) {
 		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 				"Not supported type for the field: " + fieldName + ": " + value.getClass());
 	}
 
 	@Override
-	final public void dispatch(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
+	final public void dispatch(final String fieldName, final Object value, final Float boost,
+			final FieldConsumer fieldConsumer) {
 		if (value == null)
 			return;
-		if (fieldMapItem.matcher != null && fieldMapItem.name.equals(fieldName))
-			fillDynamic(value, fieldConsumer);
-		else
-			fill(fieldName, value, fieldConsumer);
+		if (wildcardMatcher != null)
+			fillWildcardMatcher(fieldName, value, boost, fieldConsumer);
+		else {
+			fill(fieldName, value, boost, fieldConsumer);
+			if (!copyToFields.isEmpty())
+				copyToFields.forEach(
+						(fieldType, pair) -> fieldType.dispatch(pair.getKey(), value, pair.getRight(), fieldConsumer));
+		}
 	}
 
 	@Override
 	public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
-		return ValueConverter.newConverter(fieldName, fieldMapItem.definition, reader);
+		return ValueConverter.newConverter(fieldName, definition, reader);
 	}
 
 	@Override

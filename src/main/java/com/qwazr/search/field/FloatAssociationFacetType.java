@@ -17,8 +17,8 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.FieldMap;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.facet.taxonomy.FloatAssociationFacetField;
 
 import javax.ws.rs.core.Response;
@@ -26,18 +26,19 @@ import java.util.Objects;
 
 class FloatAssociationFacetType extends FieldTypeAbstract {
 
-	FloatAssociationFacetType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem, BytesRefUtils.Converter.FLOAT_FACET);
+	FloatAssociationFacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+		super(wildcardMatcher, definition, BytesRefUtils.Converter.FLOAT_FACET);
 	}
 
 	@Override
-	protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final Object[] values, final Float boost,
+			final FieldConsumer consumer) {
 		Objects.requireNonNull(values, "The value array is empty");
 		if (values.length < 2)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE, "Expected at least 2 values");
 		final float assoc = TypeUtils.getFloatNumber(fieldName, values[0]);
 		final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
-		consumer.accept(fieldName, new FloatAssociationFacetField(assoc, fieldName, path));
+		consumer.accept(fieldName, new FloatAssociationFacetField(assoc, fieldName, path), boost);
 	}
 
 }

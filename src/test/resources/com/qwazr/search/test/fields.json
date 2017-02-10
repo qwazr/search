@@ -85,5 +85,20 @@
     "analyzer": "com.qwazr.search.test.IntegerPayloadAnalyzer",
     "tokenized": true,
     "index_options": "DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS"
+  },
+  "fulltext": {
+    "tokenized": true,
+    "analyzer": "en.EnglishAnalyzer",
+    "index_options": "DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS",
+    "copy_from": [
+      {
+        "field": "name",
+        "boost": 2.0
+      },
+      {
+        "field": "description",
+        "boost": 1.0
+      }
+    ]
   }
 }

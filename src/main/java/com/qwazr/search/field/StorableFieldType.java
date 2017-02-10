@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,19 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldMap;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 
 abstract class StorableFieldType extends FieldTypeAbstract {
 
 	protected final Field.Store store;
 
-	StorableFieldType(final FieldMap.Item fieldMapItem, BytesRefUtils.Converter bytesRefConverter) {
-		super(fieldMapItem, bytesRefConverter);
-		this.store = fieldMapItem.definition == null ?
+	StorableFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition,
+			final BytesRefUtils.Converter bytesRefConverter) {
+		super(wildcardMatcher, definition, bytesRefConverter);
+		this.store = definition == null ?
 				Field.Store.NO :
-				(fieldMapItem.definition.stored != null && fieldMapItem.definition.stored) ?
-						Field.Store.YES :
-						Field.Store.NO;
+				(definition.stored != null && definition.stored) ? Field.Store.YES : Field.Store.NO;
 	}
 
 }

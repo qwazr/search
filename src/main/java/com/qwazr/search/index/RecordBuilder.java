@@ -34,12 +34,12 @@ abstract class RecordBuilder {
 		this.id = null;
 	}
 
-	final protected void addFieldValue(final String fieldName, final Object fieldValue) {
+	final void addFieldValue(final String fieldName, final Object fieldValue) {
 		if (fieldValue == null)
 			return;
 
-		FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
-		fieldType.dispatch(fieldName, fieldValue, fieldConsumer);
+		final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
+		fieldType.dispatch(fieldName, fieldValue, null, fieldConsumer);
 
 		if (FieldDefinition.ID_FIELD.equals(fieldName))
 			id = BytesRefUtils.fromAny(fieldValue);

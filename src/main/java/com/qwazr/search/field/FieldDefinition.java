@@ -17,6 +17,7 @@ package com.qwazr.search.field;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
@@ -27,8 +28,13 @@ import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class FieldDefinition {
@@ -51,6 +57,8 @@ public class FieldDefinition {
 	public final DocValuesType docvalues_type;
 	public final Integer dimension_count;
 	public final Integer dimension_num_bytes;
+
+	public final CopyFrom[] copy_from;
 
 	public enum Template {
 		NONE,
@@ -106,6 +114,7 @@ public class FieldDefinition {
 		facet_multivalued = null;
 		facet_hierarchical = null;
 		facet_require_dim_count = null;
+		copy_from = null;
 	}
 
 	private FieldDefinition(Builder builder) {
@@ -127,9 +136,12 @@ public class FieldDefinition {
 		facet_multivalued = builder.facet_multivalued;
 		facet_hierarchical = builder.facet_hierarchical;
 		facet_require_dim_count = builder.facet_require_dim_count;
+		copy_from = builder.copyFrom == null || builder.copyFrom.isEmpty() ?
+				null :
+				builder.copyFrom.toArray(new CopyFrom[builder.copyFrom.size()]);
 	}
 
-	public FieldDefinition(final IndexField indexField) {
+	public FieldDefinition(final String fieldName, final IndexField indexField, final Map<String, Copy> copyMap) {
 		analyzer = indexField.analyzerClass() != Analyzer.class ?
 				indexField.analyzerClass().getName() :
 				StringUtils.isEmpty(indexField.analyzer()) ? null : indexField.analyzer();
@@ -152,6 +164,7 @@ public class FieldDefinition {
 		facet_multivalued = indexField.facetMultivalued();
 		facet_hierarchical = indexField.facetHierarchical();
 		facet_require_dim_count = indexField.facetRequireDimCount();
+		copy_from = CopyFrom.from(fieldName, copyMap);
 	}
 
 	public boolean equals(final Object o) {
@@ -258,6 +271,7 @@ public class FieldDefinition {
 		private Boolean facet_multivalued = null;
 		private Boolean facet_hierarchical = null;
 		private Boolean facet_require_dim_count = null;
+		private LinkedHashSet<CopyFrom> copyFrom = null;
 
 		public Builder() {
 		}
@@ -356,9 +370,48 @@ public class FieldDefinition {
 			return this;
 		}
 
+		public Builder copyFrom(String field, Float boost) {
+			if (copyFrom == null)
+				copyFrom = new LinkedHashSet<>();
+			copyFrom.add(new CopyFrom(field, boost));
+			return this;
+		}
+
 		public FieldDefinition build() {
 			return new FieldDefinition(this);
 		}
 
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
+	static public class CopyFrom {
+
+		public final String field;
+		public final Float boost;
+
+		public CopyFrom() {
+			field = null;
+			boost = null;
+		}
+
+		private CopyFrom(final String field, final Float boost) {
+			this.field = field;
+			this.boost = boost;
+		}
+
+		public static CopyFrom[] from(final String fieldName, final Map<String, Copy> copyMap) {
+			if (copyMap == null || copyMap.isEmpty())
+				return null;
+			final TreeMap<Integer, List<CopyFrom>> map = new TreeMap<>();
+			copyMap.forEach((name, copy) -> {
+				for (Copy.To to : copy.to())
+					if (fieldName.equals(to.field()))
+						map.computeIfAbsent(to.order(), order -> new ArrayList<>()).add(new CopyFrom(name, to.boost()));
+			});
+
+			final List<CopyFrom> globalCopyFromList = new ArrayList<>();
+			map.forEach((order, copyFromList) -> globalCopyFromList.addAll(copyFromList));
+			return globalCopyFromList.toArray(new CopyFrom[globalCopyFromList.size()]);
+		}
 	}
 }

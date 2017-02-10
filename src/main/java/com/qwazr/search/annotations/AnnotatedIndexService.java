@@ -68,6 +68,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 
 	private final Map<String, IndexField> indexFieldMap;
 
+	private final Map<String, Copy> copyMap;
+
 	/**
 	 * Create a new index service. A class with Index and IndexField annotations.
 	 *
@@ -95,14 +97,22 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 		this.settings = settings != null ? settings : IndexSettingsDefinition.of(index).build();
 
 		indexFieldMap = new LinkedHashMap<>();
+		copyMap = new LinkedHashMap<>();
 		AnnotationsUtils.browseFieldsRecursive(indexDefinitionClass, field -> {
-			if (!field.isAnnotationPresent(IndexField.class))
-				return;
-			field.setAccessible(true);
-			final IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
-			final String fieldName = StringUtils.isEmpty(indexField.name()) ? field.getName() : indexField.name();
-			indexFieldMap.put(fieldName, indexField);
-			fieldMap.put(fieldName, field);
+			if (field.isAnnotationPresent(IndexField.class)) {
+				field.setAccessible(true);
+				final IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
+				final String fieldName = StringUtils.isEmpty(indexField.name()) ? field.getName() : indexField.name();
+				indexFieldMap.put(fieldName, indexField);
+				fieldMap.put(fieldName, field);
+			}
+			if (field.isAnnotationPresent(Copy.class)) {
+				field.setAccessible(true);
+				final Copy copy = field.getDeclaredAnnotation(Copy.class);
+				final String fieldName = StringUtils.isEmpty(copy.name()) ? field.getName() : copy.name();
+				copyMap.put(fieldName, copy);
+				fieldMap.put(fieldName, field);
+			}
 		});
 	}
 
@@ -211,7 +221,8 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	private LinkedHashMap<String, FieldDefinition> getAnnotatedFields() {
 		final LinkedHashMap<String, FieldDefinition> indexFields = new LinkedHashMap<>();
 		if (indexFieldMap != null)
-			indexFieldMap.forEach((name, propertyField) -> indexFields.put(name, new FieldDefinition(propertyField)));
+			indexFieldMap.forEach(
+					(name, propertyField) -> indexFields.put(name, new FieldDefinition(name, propertyField, copyMap)));
 		return indexFields;
 	}
 

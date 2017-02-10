@@ -462,7 +462,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public ExplainDefinition explainQuery(final String schema_name, final String index_name,
 			final QueryDefinition query, int docId) {
 		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search/",
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search/explain/",
 						Integer.toString(docId));
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, query, null, ExplainDefinition.class, valid200Json);
@@ -471,7 +471,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public String explainQueryText(String schema_name, String index_name, QueryDefinition query, int docId) {
 		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search/",
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search/explain/",
 						Integer.toString(docId));
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		request.addHeader("Accept", MediaType.TEXT_PLAIN);
@@ -482,7 +482,7 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public String explainQueryDot(String schemaName, String indexName, QueryDefinition query, int docId,
 			Integer descriptionWrapSize) {
 		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", indexName, "/search/",
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", indexName, "/search/explain/",
 						Integer.toString(docId)).setParameter("wrap", descriptionWrapSize);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		request.addHeader("Accept", MEDIATYPE_TEXT_GRAPHVIZ);

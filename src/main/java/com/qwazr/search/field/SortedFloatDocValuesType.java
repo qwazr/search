@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import com.qwazr.search.field.Converters.MultiDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
@@ -33,18 +33,19 @@ import java.io.IOException;
 
 class SortedFloatDocValuesType extends FieldTypeAbstract {
 
-	SortedFloatDocValuesType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem, BytesRefUtils.Converter.FLOAT);
+	SortedFloatDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+		super(wildcardMatcher, definition, BytesRefUtils.Converter.FLOAT);
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final Float boost,
+			final FieldConsumer consumer) {
 		if (value instanceof Number)
 			consumer.accept(fieldName, new SortedNumericDocValuesField(fieldName,
-					NumericUtils.floatToSortableInt(((Number) value).floatValue())));
+					NumericUtils.floatToSortableInt(((Number) value).floatValue())), boost);
 		else
 			consumer.accept(fieldName, new SortedNumericDocValuesField(fieldName,
-					NumericUtils.floatToSortableInt(Float.parseFloat(value.toString()))));
+					NumericUtils.floatToSortableInt(Float.parseFloat(value.toString()))), boost);
 	}
 
 	@Override

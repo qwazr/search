@@ -15,18 +15,23 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.CopyToFieldType;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.facet.FacetsConfig;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class FieldMap {
 
 	private final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap;
-	private final HashMap<String, Item> nameDefMap;
-	private final HashMap<WildcardMatcher, Item> wildcardMap;
+	private final HashMap<String, FieldTypeInterface> nameDefMap;
+	private final HashMap<WildcardMatcher, FieldTypeInterface> wildcardMap;
 
 	FieldMap(final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap) {
 
@@ -36,59 +41,57 @@ public class FieldMap {
 		fieldDefinitionMap.forEach((name, definition) -> {
 			if (name.indexOf('*') != -1 || name.indexOf('?') != -1) {
 				final WildcardMatcher wildcardMatcher = new WildcardMatcher(name);
-				wildcardMap.put(wildcardMatcher, new Item(name, definition, wildcardMatcher));
-			} else
-				nameDefMap.put(name, new Item(name, definition, null));
+				wildcardMap.put(wildcardMatcher, FieldTypeInterface.getInstance(wildcardMatcher, definition));
+			} else {
+				final FieldTypeInterface fieldType = FieldTypeInterface.getInstance(null, definition);
+				nameDefMap.put(name, fieldType);
+			}
 		});
+
+		// Handle copy-to
+		final HashMap<String, FieldTypeInterface> newFields = new HashMap<>();
+		nameDefMap.forEach((name, fieldType) -> {
+			final FieldDefinition definition = fieldType.getDefinition();
+			if (definition.copy_from == null)
+				return;
+			for (FieldDefinition.CopyFrom copyFrom : definition.copy_from) {
+				final FieldTypeInterface fieldDest;
+				if (nameDefMap.containsKey(copyFrom.field))
+					fieldDest = nameDefMap.get(copyFrom.field);
+				else
+					fieldDest = newFields.computeIfAbsent(copyFrom.field, n -> new CopyToFieldType());
+				fieldDest.copyTo(name, fieldType, copyFrom.boost);
+			}
+		});
+		nameDefMap.putAll(newFields);
 
 		this.fieldDefinitionMap = fieldDefinitionMap;
 	}
 
-	final Item find(final String fieldName) {
+	final public FieldTypeInterface getFieldType(final String fieldName) {
 		if (fieldName == null || fieldName.isEmpty())
 			throw new IllegalArgumentException("Empty fieldname is not allowed");
-		final Item item = nameDefMap.get(fieldName);
-		if (item != null)
-			return item;
-		for (Map.Entry<WildcardMatcher, Item> entry : wildcardMap.entrySet())
+		final FieldTypeInterface fieldType = nameDefMap.get(fieldName);
+		if (fieldType != null)
+			return fieldType;
+		for (Map.Entry<WildcardMatcher, FieldTypeInterface> entry : wildcardMap.entrySet())
 			if (entry.getKey().match(fieldName))
 				return entry.getValue();
 		throw new IllegalArgumentException("No field definition for the field: " + fieldName);
-	}
-
-	final public FieldTypeInterface getFieldType(final String fieldName) {
-		return FieldTypeInterface.getInstance(find(fieldName));
 	}
 
 	final LinkedHashMap<String, FieldDefinition> getFieldDefinitionMap() {
 		return fieldDefinitionMap;
 	}
 
-	final public class Item {
-
-		public final String name;
-
-		public final FieldDefinition definition;
-
-		public final WildcardMatcher matcher;
-
-		private Item(final String name, final FieldDefinition definition, final WildcardMatcher matcher) {
-			this.name = name;
-			this.definition = definition;
-			this.matcher = matcher;
-
-		}
-
-		final public boolean match(final String fieldName) {
-			return matcher.match(fieldName);
-		}
-	}
-
 	private void setFacetConfig(final String fieldName, final FacetsConfig facetsConfig) {
-		final FieldMap.Item fieldMapItem = find(fieldName);
-		if (fieldMapItem.definition.template == null)
+		final FieldTypeInterface fieldType = getFieldType(fieldName);
+		if (fieldType == null)
 			return;
-		switch (fieldMapItem.definition.template) {
+		final FieldDefinition definition = fieldType.getDefinition();
+		if (definition == null || definition.template == null)
+			return;
+		switch (definition.template) {
 		case SortedSetDocValuesFacetField:
 			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.SORTEDSET_FACET_FIELD);
 			break;
@@ -105,12 +108,12 @@ public class FieldMap {
 			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_STRING_ASSOC_FACET_FIELD);
 			break;
 		}
-		if (fieldMapItem.definition.facet_multivalued != null)
-			facetsConfig.setMultiValued(fieldName, fieldMapItem.definition.facet_multivalued);
-		if (fieldMapItem.definition.facet_hierarchical != null)
-			facetsConfig.setHierarchical(fieldName, fieldMapItem.definition.facet_hierarchical);
-		if (fieldMapItem.definition.facet_require_dim_count != null)
-			facetsConfig.setRequireDimCount(fieldName, fieldMapItem.definition.facet_require_dim_count);
+		if (definition.facet_multivalued != null)
+			facetsConfig.setMultiValued(fieldName, definition.facet_multivalued);
+		if (definition.facet_hierarchical != null)
+			facetsConfig.setHierarchical(fieldName, definition.facet_hierarchical);
+		if (definition.facet_require_dim_count != null)
+			facetsConfig.setRequireDimCount(fieldName, definition.facet_require_dim_count);
 	}
 
 	final public FacetsConfig getNewFacetsConfig(final Collection<String> concreteFieldNames) {

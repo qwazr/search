@@ -29,14 +29,15 @@ public class BlendedTermQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1").label("Hello World"));
-		indexService.postDocument(new IndexRecord("2").label("How are you ?"));
+		indexService.postDocument(new IndexRecord("1").textField("Hello World"));
+		indexService.postDocument(new IndexRecord("2").textField("How are you ?"));
 	}
 
 	@Test
 	public void test() {
 		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(
-				new BlendedTermQuery(new ArrayList<>()).term("label", "hello", 2.0F).term("label", "world")).build());
+				new BlendedTermQuery(new ArrayList<>()).term("textField", "hello", 2.0F).term("textField", "world"))
+				.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(1), result.total_hits);
 	}

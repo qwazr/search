@@ -1,0 +1,12 @@
+{
+  "query_string": "search engine",
+  "query": {
+    "query": "StandardQueryParser",
+    "default_field": "fulltext"
+  },
+  "start": 0,
+  "rows": 5,
+  "returned_fields": [
+    "description"
+  ]
+}

@@ -17,27 +17,28 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.FieldMap;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 
 class SortedSetDocValuesFacetType extends StorableFieldType {
 
-	SortedSetDocValuesFacetType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem, BytesRefUtils.Converter.STRING);
+	SortedSetDocValuesFacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+		super(wildcardMatcher, definition, BytesRefUtils.Converter.STRING);
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
+	final public void fillValue(final String fieldName, final Object value, final Float boost,
+			final FieldConsumer consumer) {
 		if (value == null)
 			return;
 		final String stringValue = value.toString();
 		if (stringValue == null || stringValue.isEmpty())
 			return;
-		consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
+		consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue), boost);
 		if (store == Field.Store.YES)
-			consumer.accept(fieldName, new StoredField(fieldName, stringValue));
+			consumer.accept(fieldName, new StoredField(fieldName, stringValue), boost);
 	}
 
 }

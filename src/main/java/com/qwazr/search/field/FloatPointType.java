@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,25 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.FieldMap;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
 
 class FloatPointType extends StorableFieldType {
 
-	FloatPointType(final FieldMap.Item fieldMapItem) {
-		super(fieldMapItem, BytesRefUtils.Converter.FLOAT_POINT);
+	FloatPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+		super(wildcardMatcher, definition, BytesRefUtils.Converter.FLOAT_POINT);
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final FieldConsumer consumer) {
-		float floatValue = value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(value.toString());
-		consumer.accept(fieldName, new DoublePoint(fieldName, floatValue));
+	final public void fillValue(final String fieldName, final Object value, final Float boost,
+			final FieldConsumer consumer) {
+		final float floatValue =
+				value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(value.toString());
+		consumer.accept(fieldName, new DoublePoint(fieldName, floatValue), boost);
 		if (store == Field.Store.YES)
-			consumer.accept(fieldName, new StoredField(fieldName, floatValue));
+			consumer.accept(fieldName, new StoredField(fieldName, floatValue), boost);
 	}
 
 }

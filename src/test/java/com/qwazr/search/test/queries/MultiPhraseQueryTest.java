@@ -28,14 +28,14 @@ public class MultiPhraseQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1").label("Hello World"));
-		indexService.postDocument(new IndexRecord("2").label("How are you ?"));
+		indexService.postDocument(new IndexRecord("1").textField("Hello World"));
+		indexService.postDocument(new IndexRecord("2").textField("How are you ?"));
 	}
 
 	@Test
 	public void withoutPositions() {
 		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new MultiPhraseQuery("label", 1).add("hello", "world")).build());
+				QueryDefinition.of(new MultiPhraseQuery("textField", 1).add("hello", "world")).build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(1), result.total_hits);
 	}
@@ -43,7 +43,7 @@ public class MultiPhraseQueryTest extends AbstractIndexTest {
 	@Test
 	public void withPositions() {
 		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new MultiPhraseQuery("label", 1).add(1, "how", "are")).build());
+				QueryDefinition.of(new MultiPhraseQuery("textField", 1).add(1, "how", "are")).build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(1), result.total_hits);
 	}

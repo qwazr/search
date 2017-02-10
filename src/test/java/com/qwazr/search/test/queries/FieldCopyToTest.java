@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2016-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,31 +17,33 @@ package com.qwazr.search.test.queries;
 
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.BooleanQuery;
-import com.qwazr.search.query.GraphQuery;
 import com.qwazr.search.query.PhraseQuery;
-import com.qwazr.search.query.TermQuery;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 
-public class GraphQueryTest extends AbstractIndexTest {
+public class FieldCopyToTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1").textField("Hello World"));
-		indexService.postDocument(new IndexRecord("2").textField("How are you ?"));
+		indexService.postDocument(new IndexRecord("1").copyText1Boosted("Boosted Text 1").copyText2("Copied Text 2"));
 	}
 
 	@Test
-	public void test() {
-		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new GraphQuery(BooleanQuery.of(null, null)
-				.addClause(BooleanQuery.Occur.must, new TermQuery("textField", "how"))
-				.build(), new PhraseQuery("textField", 1, "are", "you"))).build());
+	public void testBoostedText() {
+		ResultDefinition result = indexService.searchQuery(
+				QueryDefinition.of(new PhraseQuery("textField", 1, "boosted", "text", "1")).build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(1), result.total_hits);
+	}
 
+	@Test
+	public void testCopiedText() {
+		ResultDefinition result = indexService.searchQuery(
+				QueryDefinition.of(new PhraseQuery("textField", 1, "copied", "text", "2")).build());
+		Assert.assertNotNull(result);
+		Assert.assertEquals(Long.valueOf(1), result.total_hits);
 	}
 }
