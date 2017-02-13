@@ -27,9 +27,7 @@ import org.apache.lucene.index.Term;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 abstract class RecordsPoster {
@@ -38,6 +36,7 @@ abstract class RecordsPoster {
 	protected final FieldMap fieldMap;
 	protected final IndexWriter indexWriter;
 	protected final TaxonomyWriter taxonomyWriter;
+	protected int count;
 
 	RecordsPoster(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter,
 			final TaxonomyWriter taxonomyWriter) {
@@ -45,81 +44,65 @@ abstract class RecordsPoster {
 		this.fieldMap = fieldMap;
 		this.indexWriter = indexWriter;
 		this.taxonomyWriter = taxonomyWriter;
+		this.count = 0;
 	}
 
-	public abstract int writeIndex();
+	final int getCount() {
+		return count;
+	}
 
 	private static abstract class Documents extends RecordsPoster {
 
-		private final ConcurrentHashMap<Term, Document> documents;
+		protected final FieldConsumer.ForDocument documentBuilder;
 
 		protected Documents(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter,
 				final TaxonomyWriter taxonomyWriter) {
 			super(fields, fieldMap, indexWriter, taxonomyWriter);
-			this.documents = new ConcurrentHashMap<>();
+			documentBuilder = new FieldConsumer.ForDocument();
 		}
 
-		protected void updateDocument(Object id, final FieldConsumer.ForDocument fields) {
+		final void updateDocument(Object id) {
 			if (id == null)
 				id = HashUtils.newTimeBasedUUID().toString();
 			final Term termId = new Term(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id));
-			final FacetsConfig facetsConfig = fieldMap.getFacetsConfig(fields.fieldNameSet);
+			final FacetsConfig facetsConfig = fieldMap.getFacetsConfig(documentBuilder.fieldNameSet);
 			try {
-				final Document facetedDoc = facetsConfig.build(taxonomyWriter, fields.document);
-				documents.put(termId, facetedDoc);
+				final Document facetedDoc = facetsConfig.build(taxonomyWriter, documentBuilder.document);
+				indexWriter.updateDocument(termId, facetedDoc);
+				count++;
+				documentBuilder.reset();
 			} catch (IOException e) {
 				throw new ServerException(e);
 			}
-		}
-
-		@Override
-		final public int writeIndex() {
-			documents.forEach(100, (term, document) -> {
-				try {
-					indexWriter.updateDocument(term, document);
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			});
-			final int count = documents.size();
-			documents.clear();
-			return count;
 		}
 
 	}
 
 	private static abstract class DocValues extends RecordsPoster {
 
-		private final ConcurrentHashMap<Term, List<org.apache.lucene.document.Field>> docsValues;
+		protected final FieldConsumer.ForDocValues documentBuilder;
 
 		protected DocValues(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter,
 				final TaxonomyWriter taxonomyWriter) {
 			super(fields, fieldMap, indexWriter, taxonomyWriter);
-			this.docsValues = new ConcurrentHashMap<>();
+			documentBuilder = new FieldConsumer.ForDocValues();
 		}
 
-		protected void updateDocValues(final Object id, final FieldConsumer.ForDocValues fields) {
+		final void updateDocValues(final Object id) {
 			if (id == null)
 				throw new ServerException(Response.Status.BAD_REQUEST,
 						"The field " + FieldDefinition.ID_FIELD + " is missing");
 			final Term termId = new Term(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id));
-			docsValues.put(termId, fields.fieldList);
+			try {
+				indexWriter.updateDocValues(termId, documentBuilder.fieldList.toArray(
+						new org.apache.lucene.document.Field[documentBuilder.fieldList.size()]));
+				count++;
+				documentBuilder.reset();
+			} catch (IOException e) {
+				throw new ServerException(e);
+			}
 		}
 
-		@Override
-		final public int writeIndex() {
-			docsValues.forEach(100, (term, fieldList) -> {
-				try {
-					indexWriter.updateDocValues(term,
-							fieldList.toArray(new org.apache.lucene.document.Field[fieldList.size()]));
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			});
-			final int count = docsValues.size();
-			docsValues.clear();
-			return count;
-		}
 	}
 
 	final static class UpdateMapDocument extends Documents implements Consumer<Map<String, Object>> {
@@ -130,10 +113,9 @@ abstract class RecordsPoster {
 
 		@Override
 		final public void accept(final Map<String, Object> document) {
-			final FieldConsumer.ForDocument documentBuilder = new FieldConsumer.ForDocument();
 			final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(fieldMap, documentBuilder);
 			document.forEach(recordBuilder);
-			updateDocument(recordBuilder.id, documentBuilder);
+			updateDocument(recordBuilder.id);
 		}
 
 	}
@@ -147,11 +129,10 @@ abstract class RecordsPoster {
 
 		@Override
 		final public void accept(final Object record) {
-			final FieldConsumer.ForDocument documentBuilder = new FieldConsumer.ForDocument();
 			final RecordBuilder.ForObject recordBuilder =
 					new RecordBuilder.ForObject(fieldMap, documentBuilder, record);
 			fields.forEach(recordBuilder);
-			updateDocument(recordBuilder.id, documentBuilder);
+			updateDocument(recordBuilder.id);
 		}
 	}
 
@@ -164,10 +145,9 @@ abstract class RecordsPoster {
 
 		@Override
 		final public void accept(final Map<String, Object> document) {
-			final FieldConsumer.ForDocValues fieldsBuilder = new FieldConsumer.ForDocValues();
-			final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(fieldMap, fieldsBuilder);
+			final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(fieldMap, documentBuilder);
 			document.forEach(recordBuilder);
-			updateDocValues(recordBuilder.id, fieldsBuilder);
+			updateDocValues(recordBuilder.id);
 		}
 	}
 
@@ -180,10 +160,10 @@ abstract class RecordsPoster {
 
 		@Override
 		final public void accept(final Object record) {
-			final FieldConsumer.ForDocValues fieldsBuilder = new FieldConsumer.ForDocValues();
-			final RecordBuilder.ForObject recordBuilder = new RecordBuilder.ForObject(fieldMap, fieldsBuilder, record);
+			final RecordBuilder.ForObject recordBuilder =
+					new RecordBuilder.ForObject(fieldMap, documentBuilder, record);
 			fields.forEach(recordBuilder);
-			updateDocValues(recordBuilder.id, fieldsBuilder);
+			updateDocValues(recordBuilder.id);
 		}
 	}
 }

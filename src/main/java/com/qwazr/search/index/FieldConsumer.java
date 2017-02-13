@@ -25,12 +25,20 @@ import java.util.List;
 
 public interface FieldConsumer {
 
+	void reset();
+
 	void accept(final String fieldName, final Field field, final Float boost);
 
 	final class ForDocument implements FieldConsumer {
 
 		final HashSet<String> fieldNameSet = new HashSet<>();
 		final Document document = new Document();
+
+		@Override
+		final public void reset() {
+			fieldNameSet.clear();
+			document.clear();
+		}
 
 		@Override
 		final public void accept(final String fieldName, final Field field, final Float boost) {
@@ -44,6 +52,11 @@ public interface FieldConsumer {
 	final class ForDocValues implements FieldConsumer {
 
 		final List<Field> fieldList = new ArrayList<>();
+
+		@Override
+		final public void reset() {
+			fieldList.clear();
+		}
 
 		@Override
 		final public void accept(final String fieldName, final Field field, final Float boost) {
