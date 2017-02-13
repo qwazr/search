@@ -442,7 +442,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public <T> int postDocuments(final String schemaName, final String indexName, final Map<String, Field> fields,
-			final List<T> documents) throws IOException, InterruptedException {
+			final Collection<T> documents) throws IOException, InterruptedException {
 		checkRight(schemaName);
 		return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents);
 	}
@@ -478,7 +478,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public <T> int updateDocsValues(final String schemaName, final String indexName,
-			final Map<String, Field> fields, final List<T> documents) throws IOException, InterruptedException {
+			final Map<String, Field> fields, final Collection<T> documents) throws IOException, InterruptedException {
 		checkRight(schemaName);
 		return indexManager.get(schemaName).get(indexName, true).updateDocsValues(fields, documents);
 	}

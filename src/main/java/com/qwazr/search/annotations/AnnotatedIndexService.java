@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -291,7 +292,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * @throws IOException          if any I/O error occurs
 	 * @throws InterruptedException if the process is interrupted
 	 */
-	public void postDocuments(final List<T> rows) throws IOException, InterruptedException {
+	public void postDocuments(final Collection<T> rows) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
 		if (annotatedService != null)
@@ -323,7 +324,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * @throws IOException          if any I/O error occurs
 	 * @throws InterruptedException if the process is interrupted
 	 */
-	public void updateDocumentsValues(final List<T> rows) throws IOException, InterruptedException {
+	public void updateDocumentsValues(final Collection<T> rows) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
 		if (annotatedService != null)
@@ -331,7 +332,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 		else
 			indexService.updateMappedDocsValues(schemaName, indexName, newMapCollection(rows));
 	}
-	
+
 	/**
 	 * @param id The ID of the document
 	 * @return an filled object or null if the document does not exist

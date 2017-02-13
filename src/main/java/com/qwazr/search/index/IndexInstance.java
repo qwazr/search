@@ -514,7 +514,7 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final <T> int postDocuments(final Map<String, Field> fields, final List<T> documents)
+	final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents)
 			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return 0;
@@ -565,7 +565,7 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final <T> int updateDocsValues(final Map<String, Field> fields, final List<T> documents)
+	final <T> int updateDocsValues(final Map<String, Field> fields, final Collection<T> documents)
 			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return 0;
