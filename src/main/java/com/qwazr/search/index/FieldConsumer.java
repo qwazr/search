@@ -29,12 +29,12 @@ public interface FieldConsumer {
 
 	final class ForDocument implements FieldConsumer {
 
-		HashSet<String> fieldNameSet = new HashSet<>();
-		Document document = new Document();
+		final HashSet<String> fieldNameSet = new HashSet<>();
+		final Document document = new Document();
 
 		@Override
 		final public void accept(final String fieldName, final Field field, final Float boost) {
-			if (boost != null)
+			if (boost != null && boost != 1.0F)
 				field.setBoost(boost);
 			document.add(field);
 			fieldNameSet.add(fieldName);
@@ -50,7 +50,7 @@ public interface FieldConsumer {
 			// We will not update the internal ID of the document
 			if (FieldDefinition.ID_FIELD.equals(field.name()))
 				return;
-			if (boost != null)
+			if (boost != null && boost != 1.0F)
 				field.setBoost(boost);
 			fieldList.add(field);
 		}

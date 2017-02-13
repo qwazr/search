@@ -46,7 +46,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -292,29 +291,13 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * @throws IOException          if any I/O error occurs
 	 * @throws InterruptedException if the process is interrupted
 	 */
-	public void postDocuments(final Collection<T> rows) throws IOException, InterruptedException {
+	public void postDocuments(final List<T> rows) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
 		if (annotatedService != null)
 			annotatedService.postDocuments(schemaName, indexName, fieldMap, rows);
 		else
 			indexService.postMappedDocuments(schemaName, indexName, newMapCollection(rows));
-	}
-
-	/**
-	 * Post an array of document to the index
-	 *
-	 * @param rows an array of document to index
-	 * @throws IOException          if any I/O error occurs
-	 * @throws InterruptedException if the process is interrupted
-	 */
-	public void postDocuments(final T... rows) throws IOException, InterruptedException {
-		checkParameters();
-		Objects.requireNonNull(rows, "The documents array (rows) cannot be null");
-		if (annotatedService != null)
-			annotatedService.postDocuments(schemaName, indexName, fieldMap, rows);
-		else
-			indexService.postMappedDocuments(schemaName, indexName, newMapArray(rows));
 	}
 
 	/**
@@ -340,7 +323,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * @throws IOException          if any I/O error occurs
 	 * @throws InterruptedException if the process is interrupted
 	 */
-	public void updateDocumentsValues(final Collection<T> rows) throws IOException, InterruptedException {
+	public void updateDocumentsValues(final List<T> rows) throws IOException, InterruptedException {
 		checkParameters();
 		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
 		if (annotatedService != null)
@@ -348,23 +331,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 		else
 			indexService.updateMappedDocsValues(schemaName, indexName, newMapCollection(rows));
 	}
-
-	/**
-	 * Update the DocValues of an array of document
-	 *
-	 * @param rows an array of document with a collection of DocValues to update
-	 * @throws IOException          if any I/O error occurs
-	 * @throws InterruptedException if the process is interrupted
-	 */
-	public void updateDocumentsValues(final T... rows) throws IOException, InterruptedException {
-		checkParameters();
-		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
-		if (annotatedService != null)
-			annotatedService.updateDocsValues(schemaName, indexName, fieldMap, rows);
-		else
-			indexService.updateMappedDocsValues(schemaName, indexName, newMapArray(rows));
-	}
-
+	
 	/**
 	 * @param id The ID of the document
 	 * @return an filled object or null if the document does not exist

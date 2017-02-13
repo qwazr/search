@@ -59,7 +59,6 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -473,7 +472,7 @@ final public class IndexInstance implements Closeable {
 			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
 			poster.accept(document);
 			nrtCommit();
-			return poster.counter.get();
+			return poster.getCount();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -490,7 +489,7 @@ final public class IndexInstance implements Closeable {
 			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
 			poster.accept(document);
 			nrtCommit();
-			return poster.counter.get();
+			return poster.getCount();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -506,16 +505,16 @@ final public class IndexInstance implements Closeable {
 		try {
 			schema.checkSize(documents.size());
 			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
-			documents.parallelStream().forEach(poster);
+			documents.forEach(poster);
 			nrtCommit();
-			return poster.counter.get();
+			return poster.getCount();
 		} finally {
 			if (sem != null)
 				sem.release();
 		}
 	}
 
-	final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents)
+	final <T> int postDocuments(final Map<String, Field> fields, final List<T> documents)
 			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return 0;
@@ -524,27 +523,9 @@ final public class IndexInstance implements Closeable {
 		try {
 			schema.checkSize(documents.size());
 			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
-			documents.parallelStream().forEach(poster);
+			documents.forEach(poster);
 			nrtCommit();
-			return poster.counter.get();
-		} finally {
-			if (sem != null)
-				sem.release();
-		}
-	}
-
-	final <T> int postDocuments(final Map<String, Field> fields, final T... documents)
-			throws IOException, InterruptedException {
-		if (documents == null || documents.length == 0)
-			return 0;
-		checkIsMaster();
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
-			schema.checkSize(documents.length);
-			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
-			Arrays.stream(documents).parallel().forEach(poster);
-			nrtCommit();
-			return poster.counter.get();
+			return poster.getCount();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -561,7 +542,7 @@ final public class IndexInstance implements Closeable {
 			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			poster.accept(document);
 			nrtCommit();
-			return poster.counter.get();
+			return poster.getCount();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -577,14 +558,14 @@ final public class IndexInstance implements Closeable {
 			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			poster.accept(document);
 			nrtCommit();
-			return poster.counter.get();
+			return poster.getCount();
 		} finally {
 			if (sem != null)
 				sem.release();
 		}
 	}
 
-	final <T> int updateDocsValues(final Map<String, Field> fields, final Collection<T> documents)
+	final <T> int updateDocsValues(final Map<String, Field> fields, final List<T> documents)
 			throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return 0;
@@ -594,25 +575,7 @@ final public class IndexInstance implements Closeable {
 			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			documents.forEach(poster);
 			nrtCommit();
-			return poster.counter.get();
-		} finally {
-			if (sem != null)
-				sem.release();
-		}
-	}
-
-	final <T> int updateDocsValues(final Map<String, Field> fields, final T... documents)
-			throws IOException, InterruptedException {
-		if (documents == null || documents.length == 0)
-			return 0;
-		checkIsMaster();
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
-			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
-			for (T document : documents)
-				poster.accept(document);
-			nrtCommit();
-			return poster.counter.get();
+			return poster.getCount();
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -629,7 +592,7 @@ final public class IndexInstance implements Closeable {
 			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			documents.forEach(poster);
 			nrtCommit();
-			return poster.counter.get();
+			return poster.getCount();
 		} finally {
 			if (sem != null)
 				sem.release();

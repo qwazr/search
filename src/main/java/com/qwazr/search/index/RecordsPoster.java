@@ -28,7 +28,6 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 abstract class RecordsPoster {
@@ -37,7 +36,7 @@ abstract class RecordsPoster {
 	protected final FieldMap fieldMap;
 	private final IndexWriter indexWriter;
 	private final TaxonomyWriter taxonomyWriter;
-	final AtomicInteger counter;
+	private int counter;
 
 	RecordsPoster(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter,
 			final TaxonomyWriter taxonomyWriter) {
@@ -45,7 +44,7 @@ abstract class RecordsPoster {
 		this.fieldMap = fieldMap;
 		this.indexWriter = indexWriter;
 		this.taxonomyWriter = taxonomyWriter;
-		this.counter = new AtomicInteger();
+		this.counter = 0;
 	}
 
 	final void updateDocument(Object id, final FieldConsumer.ForDocument fields) {
@@ -59,7 +58,7 @@ abstract class RecordsPoster {
 		} catch (IOException e) {
 			throw new ServerException(e);
 		}
-		counter.incrementAndGet();
+		counter++;
 	}
 
 	final void updateDocValues(final Object id, final FieldConsumer.ForDocValues fields) {
@@ -72,7 +71,11 @@ abstract class RecordsPoster {
 		} catch (IOException e) {
 			throw new ServerException(e);
 		}
-		counter.incrementAndGet();
+		counter++;
+	}
+
+	final int getCount() {
+		return counter;
 	}
 
 	final static class UpdateMapDocument extends RecordsPoster implements Consumer<Map<String, Object>> {

@@ -105,7 +105,7 @@ public class AnnotatedIndexServiceTest {
 	@Test
 	public void test200putDocuments() {
 		try {
-			service.postDocuments(new IndexRecord("This is the title", "Few terms in the content"));
+			service.postDocument(new IndexRecord("This is the title", "Few terms in the content"));
 			Assert.assertEquals(Long.valueOf(1), service.getIndexStatus().num_docs);
 		} catch (Exception e) {
 			Assert.fail(e.getMessage());
