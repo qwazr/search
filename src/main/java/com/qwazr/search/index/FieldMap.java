@@ -32,6 +32,7 @@ public class FieldMap {
 	private final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap;
 	private final HashMap<String, FieldTypeInterface> nameDefMap;
 	private final HashMap<WildcardMatcher, FieldTypeInterface> wildcardMap;
+	private final FacetsConfig facetsConfig;
 
 	FieldMap(final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap) {
 
@@ -66,6 +67,9 @@ public class FieldMap {
 		nameDefMap.putAll(newFields);
 
 		this.fieldDefinitionMap = fieldDefinitionMap;
+
+		facetsConfig = new FacetsConfig();
+
 	}
 
 	final public FieldTypeInterface getFieldType(final String fieldName) {
@@ -84,7 +88,9 @@ public class FieldMap {
 		return fieldDefinitionMap;
 	}
 
-	private void setFacetConfig(final String fieldName, final FacetsConfig facetsConfig) {
+	private void checkFacetConfig(final String fieldName) {
+		if (facetsConfig.getDimConfigs().containsKey(fieldName))
+			return;
 		final FieldTypeInterface fieldType = getFieldType(fieldName);
 		if (fieldType == null)
 			return;
@@ -116,15 +122,13 @@ public class FieldMap {
 			facetsConfig.setRequireDimCount(fieldName, definition.facet_require_dim_count);
 	}
 
-	final public FacetsConfig getNewFacetsConfig(final Collection<String> concreteFieldNames) {
-		final FacetsConfig facetsConfig = new FacetsConfig();
-		concreteFieldNames.forEach((fieldName) -> setFacetConfig(fieldName, facetsConfig));
+	final public FacetsConfig getFacetsConfig(final Collection<String> concreteFieldNames) {
+		concreteFieldNames.forEach(this::checkFacetConfig);
 		return facetsConfig;
 	}
 
-	final public FacetsConfig getNewFacetsConfig(final String fieldName) {
-		final FacetsConfig facetsConfig = new FacetsConfig();
-		setFacetConfig(fieldName, facetsConfig);
+	final public FacetsConfig getFacetsConfig(final String fieldName) {
+		checkFacetConfig(fieldName);
 		return facetsConfig;
 	}
 

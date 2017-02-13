@@ -471,8 +471,9 @@ final public class IndexInstance implements Closeable {
 			schema.checkSize(1);
 			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
 			poster.accept(document);
+			final int count = poster.writeIndex();
 			nrtCommit();
-			return poster.getCount();
+			return count;
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -488,8 +489,9 @@ final public class IndexInstance implements Closeable {
 			schema.checkSize(1);
 			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
 			poster.accept(document);
+			final int count = poster.writeIndex();
 			nrtCommit();
-			return poster.getCount();
+			return count;
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -505,9 +507,10 @@ final public class IndexInstance implements Closeable {
 		try {
 			schema.checkSize(documents.size());
 			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
-			documents.forEach(poster);
+			documents.parallelStream().forEach(poster);
+			final int count = poster.writeIndex();
 			nrtCommit();
-			return poster.getCount();
+			return count;
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -523,9 +526,10 @@ final public class IndexInstance implements Closeable {
 		try {
 			schema.checkSize(documents.size());
 			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
-			documents.forEach(poster);
+			documents.parallelStream().forEach(poster);
+			final int count = poster.writeIndex();
 			nrtCommit();
-			return poster.getCount();
+			return count;
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -541,8 +545,9 @@ final public class IndexInstance implements Closeable {
 		try {
 			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			poster.accept(document);
+			final int count = poster.writeIndex();
 			nrtCommit();
-			return poster.getCount();
+			return count;
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -557,8 +562,9 @@ final public class IndexInstance implements Closeable {
 		try {
 			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			poster.accept(document);
+			final int count = poster.writeIndex();
 			nrtCommit();
-			return poster.getCount();
+			return count;
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -574,8 +580,9 @@ final public class IndexInstance implements Closeable {
 		try {
 			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			documents.forEach(poster);
+			final int count = poster.writeIndex();
 			nrtCommit();
-			return poster.getCount();
+			return count;
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -591,8 +598,9 @@ final public class IndexInstance implements Closeable {
 		try {
 			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			documents.forEach(poster);
+			final int count = poster.writeIndex();
 			nrtCommit();
-			return poster.getCount();
+			return count;
 		} finally {
 			if (sem != null)
 				sem.release();

@@ -61,7 +61,7 @@ public class DrillDownQuery extends AbstractQuery {
 		final org.apache.lucene.facet.DrillDownQuery drillDownQuery;
 		final Set<String> fieldSet = new HashSet<>();
 		dimPath.forEach(map -> fieldSet.addAll(map.keySet()));
-		final FacetsConfig facetsConfig = queryContext.fieldMap.getNewFacetsConfig(fieldSet);
+		final FacetsConfig facetsConfig = queryContext.fieldMap.getFacetsConfig(fieldSet);
 		Objects.requireNonNull(facetsConfig, "FacetsConfig is null");
 		if (baseQuery == null)
 			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig);

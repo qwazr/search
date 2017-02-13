@@ -70,7 +70,7 @@ final class QueryExecution {
 		this.sort = queryDef.sorts == null ? null : SortUtils.buildSort(queryContext.fieldMap, queryDef.sorts);
 
 		this.facetKeys = queryDef.facets == null ? null : FacetsBuilder.getFields(queryDef.facets);
-		this.facetsConfig = facetKeys == null ? null : queryContext.fieldMap.getNewFacetsConfig(facetKeys);
+		this.facetsConfig = facetKeys == null ? null : queryContext.fieldMap.getFacetsConfig(facetKeys);
 
 		this.numHits = queryDef.getEnd();
 		this.bNeedScore = sort == null || sort.needsScores();

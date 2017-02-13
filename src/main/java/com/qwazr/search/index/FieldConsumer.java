@@ -43,7 +43,7 @@ public interface FieldConsumer {
 
 	final class ForDocValues implements FieldConsumer {
 
-		private List<Field> fieldList = new ArrayList<>();
+		final List<Field> fieldList = new ArrayList<>();
 
 		@Override
 		final public void accept(final String fieldName, final Field field, final Float boost) {
@@ -55,8 +55,5 @@ public interface FieldConsumer {
 			fieldList.add(field);
 		}
 
-		final Field[] toArray() {
-			return fieldList.toArray(new Field[fieldList.size()]);
-		}
 	}
 }
