@@ -57,6 +57,9 @@ public class IndexSettingsDefinition {
 	@JsonProperty("segments_per_tier")
 	final public Double segmentsPerTier;
 
+	@JsonProperty("enable_taxonomy_index")
+	final public Boolean enableTaxonomyIndex;
+
 	public IndexSettingsDefinition() {
 		directoryType = null;
 		similarityClass = null;
@@ -65,6 +68,7 @@ public class IndexSettingsDefinition {
 		maxMergeAtOnce = null;
 		maxMergedSegmentMB = null;
 		segmentsPerTier = null;
+		enableTaxonomyIndex = null;
 	}
 
 	private IndexSettingsDefinition(final Builder builder) {
@@ -75,6 +79,7 @@ public class IndexSettingsDefinition {
 		this.maxMergeAtOnce = builder.maxMergeAtOnce;
 		this.maxMergedSegmentMB = builder.maxMergedSegmentMB;
 		this.segmentsPerTier = builder.segmentsPerTier;
+		this.enableTaxonomyIndex = builder.enableTaxonomyIndex;
 	}
 
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
@@ -83,6 +88,10 @@ public class IndexSettingsDefinition {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
 		return JsonMapper.MAPPER.readValue(jsonString, IndexSettingsDefinition.class);
+	}
+
+	public static boolean useTaxonomyIndex(final IndexSettingsDefinition settings) {
+		return settings != null && (settings.enableTaxonomyIndex == null ? false : settings.enableTaxonomyIndex);
 	}
 
 	@Override
@@ -103,6 +112,8 @@ public class IndexSettingsDefinition {
 		if (!Objects.equals(maxMergedSegmentMB, s.maxMergedSegmentMB))
 			return false;
 		if (!Objects.equals(segmentsPerTier, s.segmentsPerTier))
+			return false;
+		if (!Objects.equals(enableTaxonomyIndex, s.enableTaxonomyIndex))
 			return false;
 		return true;
 	}
@@ -128,6 +139,7 @@ public class IndexSettingsDefinition {
 		private Integer maxMergeAtOnce;
 		private Double maxMergedSegmentMB;
 		private Double segmentsPerTier;
+		private Boolean enableTaxonomyIndex;
 
 		private Builder() {
 		}
@@ -140,6 +152,7 @@ public class IndexSettingsDefinition {
 			maxMergeAtOnce(annotatedIndex.maxMergeAtOnce());
 			maxMergedSegmentMB(annotatedIndex.maxMergedSegmentMB());
 			segmentsPerTier(annotatedIndex.segmentsPerTier());
+			enableTaxonomyIndex = annotatedIndex.enableTaxonomyIndex();
 		}
 
 		private Builder(final IndexSettingsDefinition settings) {
@@ -150,6 +163,7 @@ public class IndexSettingsDefinition {
 			this.maxMergeAtOnce = settings.maxMergeAtOnce;
 			this.maxMergedSegmentMB = settings.maxMergedSegmentMB;
 			this.segmentsPerTier = settings.segmentsPerTier;
+			this.enableTaxonomyIndex = settings.enableTaxonomyIndex;
 		}
 
 		public Builder type(final Type directoryType) {
@@ -195,6 +209,11 @@ public class IndexSettingsDefinition {
 
 		public Builder segmentsPerTier(final Double segmentsPerTier) {
 			this.segmentsPerTier = segmentsPerTier;
+			return this;
+		}
+
+		public Builder enableTaxonomyIndex(final Boolean enableTaxonomyIndex) {
+			this.enableTaxonomyIndex = enableTaxonomyIndex;
 			return this;
 		}
 

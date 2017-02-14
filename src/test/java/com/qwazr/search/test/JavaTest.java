@@ -44,7 +44,7 @@ public class JavaTest {
 
 		public JavaLibraryTest() {
 			super(IndexSettingsDefinition.of().type(IndexSettingsDefinition.Type.FSDirectory).
-					master("testSchema", "testIndexMaster").ramBufferSize(32d).build());
+					master("testSchema", "testIndexMaster").ramBufferSize(32d).enableTaxonomyIndex(false).build());
 		}
 
 		@BeforeClass
@@ -79,6 +79,7 @@ public class JavaTest {
 		try {
 			remoteSlaveSettings = IndexSettingsDefinition.of()
 					.master(TestServer.BASE_URL + "/indexes/testSchema/testIndexMaster")
+					.enableTaxonomyIndex(false)
 					.build();
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);

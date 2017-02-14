@@ -29,13 +29,13 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
-import static com.qwazr.search.field.FieldDefinition.Template.FacetField;
 import static com.qwazr.search.field.FieldDefinition.Template.SortedDocValuesField;
+import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValuesFacetField;
 import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValuesField;
 import static com.qwazr.search.field.FieldDefinition.Template.StoredField;
 import static com.qwazr.search.field.FieldDefinition.Template.StringField;
 
-@Index(name = AnnotatedIndex.INDEX_NAME_MASTER, schema = AnnotatedIndex.SCHEMA_NAME)
+@Index(name = AnnotatedIndex.INDEX_NAME_MASTER, schema = AnnotatedIndex.SCHEMA_NAME, enableTaxonomyIndex = false)
 public class AnnotatedIndex {
 
 	public final static String SCHEMA_NAME = "testSchema";
@@ -86,10 +86,10 @@ public class AnnotatedIndex {
 	@IndexField(template = SortedSetDocValuesField)
 	final public Collection<String> docValuesCategory;
 
-	@IndexField(name = "dynamic_simple_facet_*", template = FacetField)
+	@IndexField(name = "dynamic_simple_facet_*", template = SortedSetDocValuesFacetField)
 	final public LinkedHashMap<String, Object> simpleFacets;
 
-	@IndexField(name = "dynamic_multi_facet_*", template = FacetField, facetMultivalued = true)
+	@IndexField(name = "dynamic_multi_facet_*", template = SortedSetDocValuesFacetField, facetMultivalued = true)
 	final public LinkedHashMap<String, Object> multiFacets;
 
 	@IndexField(template = StoredField)

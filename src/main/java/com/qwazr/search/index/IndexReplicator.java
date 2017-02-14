@@ -21,6 +21,7 @@ import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import org.apache.lucene.replicator.IndexAndTaxonomyReplicationHandler;
+import org.apache.lucene.replicator.IndexReplicationHandler;
 import org.apache.lucene.replicator.PerSessionDirectoryFactory;
 import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.replicator.Replicator;
@@ -69,7 +70,8 @@ class IndexReplicator implements Replicator {
 
 		this.inputStreams = new LinkedHashSet<>();
 
-		final IndexAndTaxonomyReplicationHandler handler =
+		final ReplicationClient.ReplicationHandler handler = taxonomyDirectory == null ?
+				new IndexReplicationHandler(indexDirectory, callback) :
 				new IndexAndTaxonomyReplicationHandler(indexDirectory, taxonomyDirectory, callback);
 		final ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(replWorkPath);
 		this.replicationClient = new ReplicationClient(this, handler, factory);

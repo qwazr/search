@@ -1,3 +1,4 @@
 {
-  "similarity_class": "com.qwazr.search.test.PayloadSimilarity"
+  "similarity_class": "com.qwazr.search.test.PayloadSimilarity",
+  "enable_taxonomy_index": true
 }

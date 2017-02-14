@@ -578,7 +578,8 @@ public abstract class JavaAbstractTest {
 
 		// Let's first create an empty index (without master)
 		final IndexStatus nonSlaveStatus =
-				getIndexService().createUpdateIndex(slave.getSchemaName(), slave.getIndexName());
+				getIndexService().createUpdateIndex(slave.getSchemaName(), slave.getIndexName(),
+						IndexSettingsDefinition.of().enableTaxonomyIndex(false).build());
 		Assert.assertNotNull(nonSlaveStatus);
 		Assert.assertNull(nonSlaveStatus.master_uuid);
 		Assert.assertNotNull(nonSlaveStatus.settings);

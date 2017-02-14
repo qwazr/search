@@ -18,19 +18,43 @@ package com.qwazr.search.index;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.SearcherFactory;
+import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
 class MultiThreadSearcherFactory extends SearcherFactory {
 
-	private final ExecutorService executorService;
+	static MultiThreadSearcherFactory of(ExecutorService executorService, Similarity similarity) {
+		return similarity == null ?
+				new MultiThreadSearcherFactory(executorService) :
+				new WithSimilarity(executorService, similarity);
+	}
 
-	MultiThreadSearcherFactory(final ExecutorService executorService) {
+	protected final ExecutorService executorService;
+
+	private MultiThreadSearcherFactory(final ExecutorService executorService) {
 		this.executorService = executorService;
 	}
 
-	public IndexSearcher newSearcher(IndexReader reader, IndexReader previousReader) throws IOException {
+	public IndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader) throws IOException {
 		return new IndexSearcher(reader, executorService);
+	}
+
+	static class WithSimilarity extends MultiThreadSearcherFactory {
+
+		private final Similarity similarity;
+
+		private WithSimilarity(final ExecutorService executorService, final Similarity similarity) {
+			super(executorService);
+			this.similarity = similarity;
+		}
+
+		final public IndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader)
+				throws IOException {
+			final IndexSearcher searcher = new IndexSearcher(reader, executorService);
+			searcher.setSimilarity(similarity);
+			return searcher;
+		}
 	}
 }

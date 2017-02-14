@@ -23,7 +23,6 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.lucene.search.SearcherFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
@@ -50,8 +49,6 @@ public class SchemaInstance implements Closeable {
 
 	private final static String SETTINGS_FILE = "settings.json";
 
-	private final SearcherFactory searcherFactory;
-
 	private final ConcurrentHashMap<String, IndexInstanceManager> indexMap;
 
 	private final ClassLoaderManager classLoaderManager;
@@ -71,7 +68,6 @@ public class SchemaInstance implements Closeable {
 			final File schemaDirectory, final ExecutorService executorService)
 			throws IOException, ReflectiveOperationException, URISyntaxException {
 
-		this.searcherFactory = new MultiThreadSearcherFactory(executorService);
 		this.executorService = executorService;
 		this.classLoaderManager = classLoaderManager;
 		this.service = service;
@@ -98,10 +94,6 @@ public class SchemaInstance implements Closeable {
 
 	final IndexServiceInterface getService() {
 		return service;
-	}
-
-	final SearcherFactory getSearcherFactory() {
-		return searcherFactory;
 	}
 
 	final ClassLoaderManager getClassLoaderManager() {
