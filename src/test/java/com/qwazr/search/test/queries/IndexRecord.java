@@ -21,7 +21,7 @@ import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
-@Index(name = "IndexRecord", schema = "TestQueries")
+@Index(name = "IndexRecord", schema = "TestQueries", enableTaxonomyIndex = true)
 public class IndexRecord {
 
 	@IndexField(name = FieldDefinition.ID_FIELD, template = FieldDefinition.Template.StringField)
