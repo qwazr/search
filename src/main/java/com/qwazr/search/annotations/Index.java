@@ -48,5 +48,5 @@ public @interface Index {
 
 	double segmentsPerTier() default IndexSettingsDefinition.DEFAULT_SEGMENTS_PER_TIER;
 
-	boolean enableTaxonomyIndex() default true;
+	boolean enableTaxonomyIndex() default false;
 }
