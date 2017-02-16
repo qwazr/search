@@ -66,7 +66,7 @@ final class MultiSearchContext implements Closeable, AutoCloseable {
 			indexInstance.fillAnalyzers(analyzerMap);
 			resourceLoader = indexInstance.newResourceLoader(resourceLoader);
 		}
-		fieldMap = new FieldMap(fieldDefinitionMap);
+		fieldMap = new FieldMap(fieldDefinitionMap, null);
 		final AnalyzerContext analyzerContext =
 				new AnalyzerContext(schemaInstance.getClassLoaderManager(), resourceLoader, analyzerMap,
 						fieldDefinitionMap, failOnException);

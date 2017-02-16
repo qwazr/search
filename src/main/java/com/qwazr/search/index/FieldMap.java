@@ -33,8 +33,12 @@ public class FieldMap {
 	private final HashMap<String, FieldTypeInterface> nameDefMap;
 	private final HashMap<WildcardMatcher, FieldTypeInterface> wildcardMap;
 	private final FacetsConfig facetsConfig;
+	private final String sortedSetFacetField;
 
-	FieldMap(final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap) {
+	FieldMap(final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap, final String sortedSetFacetField) {
+
+		this.sortedSetFacetField =
+				sortedSetFacetField == null ? FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD : sortedSetFacetField;
 
 		nameDefMap = new HashMap<>();
 		wildcardMap = new HashMap<>();
@@ -99,7 +103,7 @@ public class FieldMap {
 			return;
 		switch (definition.template) {
 		case SortedSetDocValuesFacetField:
-			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.SORTEDSET_FACET_FIELD);
+			facetsConfig.setIndexFieldName(fieldName, sortedSetFacetField);
 			break;
 		case FacetField:
 			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_FACET_FIELD);
@@ -132,7 +136,12 @@ public class FieldMap {
 		return facetsConfig;
 	}
 
+	final String getSortedSetFacetField() {
+		return sortedSetFacetField;
+	}
+
 	final Set<String> getStaticFieldSet() {
 		return nameDefMap.keySet();
 	}
+
 }

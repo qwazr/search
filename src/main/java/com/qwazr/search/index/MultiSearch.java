@@ -80,7 +80,8 @@ class MultiSearch implements Closeable, AutoCloseable {
 			return null;
 		incRef();
 		try {
-			final SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader());
+			final SortedSetDocValuesReaderState state =
+					IndexUtils.getNewFacetsState(indexSearcher.getIndexReader(), null);
 			final QueryContext queryContext =
 					new QueryContext(context.schemaInstance, null, indexSearcher, null, context.executorService,
 							context.indexAnalyzer, context.queryAnalyzer, context.fieldMap, state, queryDef);

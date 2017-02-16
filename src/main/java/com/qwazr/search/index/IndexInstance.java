@@ -111,7 +111,8 @@ final public class IndexInstance implements Closeable {
 		this.dataDirectory = builder.dataDirectory;
 		this.taxonomyDirectory = builder.taxonomyDirectory;
 		this.analyzerMap = builder.analyzerMap;
-		this.fieldMap = builder.fieldMap == null ? null : new FieldMap(builder.fieldMap);
+		this.fieldMap =
+				builder.fieldMap == null ? null : new FieldMap(builder.fieldMap, builder.settings.sortedSetFacetField);
 		this.writerAndSearcher = builder.writerAndSearcher;
 		this.indexAnalyzer = builder.indexAnalyzer;
 		this.queryAnalyzer = builder.queryAnalyzer;
@@ -194,7 +195,7 @@ final public class IndexInstance implements Closeable {
 	synchronized void setFields(final LinkedHashMap<String, FieldDefinition> fields)
 			throws ServerException, IOException {
 		fileSet.writeFieldMap(fields);
-		fieldMap = new FieldMap(fields);
+		fieldMap = new FieldMap(fields, settings.sortedSetFacetField);
 		refreshFieldsAnalyzers(analyzerMap, fields);
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
@@ -646,7 +647,7 @@ final public class IndexInstance implements Closeable {
 			state = getFacetsStateNoLock(indexReader);
 			if (state != null)
 				return state;
-			state = IndexUtils.getNewFacetsState(indexReader);
+			state = IndexUtils.getNewFacetsState(indexReader, fieldMap.getSortedSetFacetField());
 			facetsReaderStateCache = Pair.of(indexReader, state);
 			return state;
 		} finally {

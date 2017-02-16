@@ -43,6 +43,7 @@ import java.util.Set;
 abstract class FacetsBuilder {
 
 	protected final QueryContext queryContext;
+	protected final String sortedSetFacetField;
 	private final LinkedHashMap<String, FacetDefinition> facetsDef;
 	private final Query searchQuery;
 	private final TimeTracker timeTracker;
@@ -51,9 +52,9 @@ abstract class FacetsBuilder {
 
 	private FacetsBuilder(final QueryContext queryContext, final LinkedHashMap<String, FacetDefinition> facetsDef,
 			final Query searchQuery, final TimeTracker timeTracker) {
-
 		this.facetsDef = facetsDef;
 		this.queryContext = queryContext;
+		this.sortedSetFacetField = queryContext.fieldMap.getSortedSetFacetField();
 		this.searchQuery = searchQuery;
 		this.timeTracker = timeTracker;
 	}
@@ -157,19 +158,20 @@ abstract class FacetsBuilder {
 				final String indexField = facetsConfig.getDimConfig(dimName).indexFieldName;
 				if (indexField == null)
 					continue;
-				switch (indexField) {
-				case FieldDefinition.SORTEDSET_FACET_FIELD:
+				if (indexField.equals(sortedSetFacetField)) {
 					flag = flag | FACET_IS_SORTED;
-					break;
-				case FieldDefinition.TAXONOMY_FACET_FIELD:
-					flag = flag | FACET_IS_TAXO;
-					break;
-				case FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD:
-					flag = flag | FACET_IS_TAXO_INT;
-					break;
-				case FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD:
-					flag = flag | FACET_IS_TAXO_FLOAT;
-					break;
+				} else {
+					switch (indexField) {
+					case FieldDefinition.TAXONOMY_FACET_FIELD:
+						flag = flag | FACET_IS_TAXO;
+						break;
+					case FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD:
+						flag = flag | FACET_IS_TAXO_INT;
+						break;
+					case FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD:
+						flag = flag | FACET_IS_TAXO_FLOAT;
+						break;
+					}
 				}
 			}
 			return flag;
@@ -180,18 +182,19 @@ abstract class FacetsBuilder {
 			final String indexFieldName = facetsConfig.getDimConfig(dim).indexFieldName;
 			if (indexFieldName == null)
 				return null;
-			switch (indexFieldName) {
-			case FieldDefinition.SORTEDSET_FACET_FIELD:
+			if (indexFieldName.equals(sortedSetFacetField)) {
 				if (queryContext.docValueReaderState != null)
 					if (queryContext.docValueReaderState.getOrdRange(dim) != null)
 						return sortedSetCounts.getTopChildren(top, dim);
-				break;
-			case FieldDefinition.TAXONOMY_FACET_FIELD:
-				return taxonomyCounts == null ? null : taxonomyCounts.getTopChildren(top, dim);
-			case FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD:
-				return intTaxonomyCounts == null ? null : intTaxonomyCounts.getTopChildren(top, dim);
-			case FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD:
-				return floatTaxonomyCounts == null ? null : floatTaxonomyCounts.getTopChildren(top, dim);
+			} else {
+				switch (indexFieldName) {
+				case FieldDefinition.TAXONOMY_FACET_FIELD:
+					return taxonomyCounts == null ? null : taxonomyCounts.getTopChildren(top, dim);
+				case FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD:
+					return intTaxonomyCounts == null ? null : intTaxonomyCounts.getTopChildren(top, dim);
+				case FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD:
+					return floatTaxonomyCounts == null ? null : floatTaxonomyCounts.getTopChildren(top, dim);
+				}
 			}
 			return null;
 		}
@@ -213,7 +216,7 @@ abstract class FacetsBuilder {
 
 		@Override
 		final protected FacetResult getFacetResult(final int top, final String dim) throws IOException {
-			if (FieldDefinition.SORTEDSET_FACET_FIELD.equals(facetsConfig.getDimConfig(dim).indexFieldName)) {
+			if (sortedSetFacetField.equals(facetsConfig.getDimConfig(dim).indexFieldName)) {
 				if (queryContext.docValueReaderState == null)
 					return null;
 				if (queryContext.docValueReaderState.getOrdRange(dim) == null)

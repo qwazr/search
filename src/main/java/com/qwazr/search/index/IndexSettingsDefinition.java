@@ -60,6 +60,9 @@ public class IndexSettingsDefinition {
 	@JsonProperty("enable_taxonomy_index")
 	final public Boolean enableTaxonomyIndex;
 
+	@JsonProperty("sorted_set_facet_field")
+	final public String sortedSetFacetField;
+
 	public IndexSettingsDefinition() {
 		directoryType = null;
 		similarityClass = null;
@@ -69,6 +72,7 @@ public class IndexSettingsDefinition {
 		maxMergedSegmentMB = null;
 		segmentsPerTier = null;
 		enableTaxonomyIndex = null;
+		sortedSetFacetField = null;
 	}
 
 	private IndexSettingsDefinition(final Builder builder) {
@@ -80,6 +84,7 @@ public class IndexSettingsDefinition {
 		this.maxMergedSegmentMB = builder.maxMergedSegmentMB;
 		this.segmentsPerTier = builder.segmentsPerTier;
 		this.enableTaxonomyIndex = builder.enableTaxonomyIndex;
+		this.sortedSetFacetField = builder.sortedSetFacetField;
 	}
 
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
@@ -115,6 +120,8 @@ public class IndexSettingsDefinition {
 			return false;
 		if (!Objects.equals(enableTaxonomyIndex, s.enableTaxonomyIndex))
 			return false;
+		if (!Objects.equals(sortedSetFacetField, s.sortedSetFacetField))
+			return false;
 		return true;
 	}
 
@@ -140,6 +147,7 @@ public class IndexSettingsDefinition {
 		private Double maxMergedSegmentMB;
 		private Double segmentsPerTier;
 		private Boolean enableTaxonomyIndex;
+		private String sortedSetFacetField;
 
 		private Builder() {
 		}
@@ -153,6 +161,7 @@ public class IndexSettingsDefinition {
 			maxMergedSegmentMB(annotatedIndex.maxMergedSegmentMB());
 			segmentsPerTier(annotatedIndex.segmentsPerTier());
 			enableTaxonomyIndex = annotatedIndex.enableTaxonomyIndex();
+			sortedSetFacetField = annotatedIndex.sortedSetFacetField();
 		}
 
 		private Builder(final IndexSettingsDefinition settings) {
@@ -164,6 +173,7 @@ public class IndexSettingsDefinition {
 			this.maxMergedSegmentMB = settings.maxMergedSegmentMB;
 			this.segmentsPerTier = settings.segmentsPerTier;
 			this.enableTaxonomyIndex = settings.enableTaxonomyIndex;
+			this.sortedSetFacetField = settings.sortedSetFacetField;
 		}
 
 		public Builder type(final Type directoryType) {
@@ -214,6 +224,11 @@ public class IndexSettingsDefinition {
 
 		public Builder enableTaxonomyIndex(final Boolean enableTaxonomyIndex) {
 			this.enableTaxonomyIndex = enableTaxonomyIndex;
+			return this;
+		}
+
+		public Builder sortedSetFacetField(final String sortedSetFacetField) {
+			this.sortedSetFacetField = sortedSetFacetField;
 			return this;
 		}
 

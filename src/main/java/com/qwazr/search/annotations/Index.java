@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.annotations;
 
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -49,4 +50,6 @@ public @interface Index {
 	double segmentsPerTier() default IndexSettingsDefinition.DEFAULT_SEGMENTS_PER_TIER;
 
 	boolean enableTaxonomyIndex() default false;
+
+	String sortedSetFacetField() default FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD;
 }

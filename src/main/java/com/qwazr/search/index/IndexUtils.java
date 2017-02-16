@@ -34,9 +34,11 @@ class IndexUtils {
 		return classLoaderManager.newInstance(similarityClassname, similarityClassPrefixes);
 	}
 
-	static SortedSetDocValuesReaderState getNewFacetsState(final IndexReader indexReader) throws IOException {
+	static SortedSetDocValuesReaderState getNewFacetsState(final IndexReader indexReader, final String stateFacetField)
+			throws IOException {
 		try {
-			return new DefaultSortedSetDocValuesReaderState(indexReader, FieldDefinition.SORTEDSET_FACET_FIELD);
+			return new DefaultSortedSetDocValuesReaderState(indexReader,
+					stateFacetField == null ? FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD : stateFacetField);
 		} catch (IllegalArgumentException e) {
 			if (e.getMessage().contains("was not indexed with SortedSetDocValues"))
 				return null;

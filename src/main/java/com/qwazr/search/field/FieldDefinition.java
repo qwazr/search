@@ -234,14 +234,11 @@ public class FieldDefinition {
 
 	public final static String TAXONOMY_STRING_ASSOC_FACET_FIELD = FacetsConfig.DEFAULT_INDEX_FIELD_NAME + "$string";
 
-	public final static String SORTEDSET_FACET_FIELD = FacetsConfig.DEFAULT_INDEX_FIELD_NAME + "$sdv";
+	public final static String DEFAULT_SORTEDSET_FACET_FIELD = FacetsConfig.DEFAULT_INDEX_FIELD_NAME + "$sdv";
 
 	public final static String SCORE_FIELD = "$score";
 
 	public final static String DOC_FIELD = "$doc";
-
-	public static final String[] RESERVED_NAMES =
-			{ ID_FIELD, TAXONOMY_FACET_FIELD, SORTEDSET_FACET_FIELD, SCORE_FIELD, DOC_FIELD };
 
 	public final static Builder builder() {
 		return new Builder();
