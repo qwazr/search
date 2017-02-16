@@ -186,13 +186,6 @@ public class SchemaInstance implements Closeable {
 		return backupDirectory;
 	}
 
-	BackupStatus backup(final String indexName, final String backupName) throws IOException {
-		return backupLock.writeEx(() -> {
-			final Path backupIndexDirectory = getBackupDirectory(backupName, true).resolve(indexName);
-			return get(indexName, false).backup(backupIndexDirectory);
-		});
-	}
-
 	private void indexIterator(final String indexName, final BiConsumer<String, IndexInstance> consumer) {
 		if ("*".equals(indexName)) {
 			indexMap.forEach(1,
@@ -200,7 +193,7 @@ public class SchemaInstance implements Closeable {
 		} else
 			consumer.accept(indexName, get(indexName, false));
 	}
-
+	
 	SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) throws IOException {
 		return backupLock.writeEx(() -> {
 			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))

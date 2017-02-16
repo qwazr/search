@@ -21,6 +21,7 @@ import com.qwazr.server.GenericServer;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.StringUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -172,6 +173,8 @@ public class IndexManager implements Closeable {
 		final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
 		schemaIterator(schemaName, (schName, schemaInstance) -> {
 			synchronized (results) {
+				if ("*".equals(schemaName) && StringUtils.isEmpty(schemaInstance.getSettings().backup_directory_path))
+					return;
 				final SortedMap<String, BackupStatus> schemaResults = schemaInstance.backups(indexName, backupName);
 				if (schemaResults != null && !schemaResults.isEmpty())
 					results.put(schName, schemaResults);
