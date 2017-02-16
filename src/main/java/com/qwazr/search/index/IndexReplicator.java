@@ -70,11 +70,17 @@ class IndexReplicator implements Replicator {
 
 		this.inputStreams = new LinkedHashSet<>();
 
-		final ReplicationClient.ReplicationHandler handler = taxonomyDirectory == null ?
+		final ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(replWorkPath);
+		this.replicationClient =
+				new ReplicationClient(this, getNewReplicationHandler(indexDirectory, taxonomyDirectory, callback),
+						factory);
+	}
+
+	static ReplicationClient.ReplicationHandler getNewReplicationHandler(final Directory indexDirectory,
+			final Directory taxonomyDirectory, final Callable<Boolean> callback) throws IOException {
+		return taxonomyDirectory == null ?
 				new IndexReplicationHandler(indexDirectory, callback) :
 				new IndexAndTaxonomyReplicationHandler(indexDirectory, taxonomyDirectory, callback);
-		final ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(replWorkPath);
-		this.replicationClient = new ReplicationClient(this, handler, factory);
 	}
 
 	private IndexServiceInterface checkService() {

@@ -204,7 +204,8 @@ public class SchemaInstance implements Closeable {
 	SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) throws IOException {
 		return backupLock.writeEx(() -> {
 			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
-				return null;
+				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+						"Backup path not defined in the schema settings");
 			final Path backupDirectory = getBackupDirectory(backupName, true);
 			final SortedMap<String, BackupStatus> results = new TreeMap<>();
 			indexIterator(indexName, (idxName, indexInstance) -> {

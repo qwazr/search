@@ -35,7 +35,7 @@ import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValues
 import static com.qwazr.search.field.FieldDefinition.Template.StoredField;
 import static com.qwazr.search.field.FieldDefinition.Template.StringField;
 
-@Index(name = AnnotatedIndex.INDEX_NAME_MASTER, schema = AnnotatedIndex.SCHEMA_NAME, enableTaxonomyIndex = false)
+@Index(name = AnnotatedIndex.INDEX_NAME_MASTER,  schema = AnnotatedIndex.SCHEMA_NAME, enableTaxonomyIndex = false)
 public class AnnotatedIndex {
 
 	public final static String SCHEMA_NAME = "testSchema";

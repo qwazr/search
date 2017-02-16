@@ -59,10 +59,12 @@ public class BackupStatus {
 	static BackupStatus newBackupStatus(final Path backupDir) throws IOException {
 		if (backupDir == null)
 			return null;
-		try (final Directory indexDir = FSDirectory.open(backupDir.resolve(IndexFileSet.INDEX_DATA));
-				final Directory taxoDir = FSDirectory.open(backupDir.resolve(IndexFileSet.INDEX_TAXONOMY))) {
+		final Path dataPath = backupDir.resolve(IndexFileSet.INDEX_DATA);
+		final Path taxoPath = backupDir.resolve(IndexFileSet.INDEX_TAXONOMY);
+		try (final Directory indexDir = FSDirectory.open(dataPath);
+				final Directory taxoDir = Files.exists(taxoPath) ? FSDirectory.open(taxoPath) : null) {
 			try (final DirectoryReader indexReader = DirectoryReader.open(indexDir);
-					final DirectoryReader taxoReader = DirectoryReader.open(taxoDir)) {
+					final DirectoryReader taxoReader = taxoDir == null ? null : DirectoryReader.open(taxoDir)) {
 				final AtomicLong size = new AtomicLong();
 				final AtomicInteger count = new AtomicInteger();
 				Files.walk(backupDir).forEach(path -> {
@@ -73,7 +75,7 @@ public class BackupStatus {
 					}
 					count.incrementAndGet();
 				});
-				return new BackupStatus(indexReader.getVersion(), taxoReader.getVersion(),
+				return new BackupStatus(indexReader.getVersion(), taxoReader == null ? null : taxoReader.getVersion(),
 						Files.getLastModifiedTime(backupDir), size.get(), count.get());
 			}
 		}

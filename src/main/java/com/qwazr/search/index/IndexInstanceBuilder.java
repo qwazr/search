@@ -162,7 +162,7 @@ class IndexInstanceBuilder {
 	private void buildSlave() throws IOException, URISyntaxException {
 
 		indexReplicator = new IndexReplicator(indexService, settings.master, fileSet.uuidMasterFile, dataDirectory,
-				taxonomyDirectory, fileSet.replWorkPath, () -> true);
+				taxonomyDirectory, fileSet.replWorkPath, () -> false);
 
 		if (taxonomyDirectory != null) {
 			if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0

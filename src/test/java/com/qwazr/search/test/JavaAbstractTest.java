@@ -15,11 +15,13 @@
  */
 package com.qwazr.search.test;
 
+import com.google.common.io.Files;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.collector.MaxNumericCollector;
 import com.qwazr.search.collector.MinNumericCollector;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.index.BackupStatus;
 import com.qwazr.search.index.FacetDefinition;
 import com.qwazr.search.index.FieldStats;
 import com.qwazr.search.index.IndexCheckStatus;
@@ -67,6 +69,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.function.BiFunction;
 
 import static com.qwazr.search.test.JsonAbstractTest.checkErrorStatusCode;
@@ -78,6 +81,8 @@ public abstract class JavaAbstractTest {
 			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue" };
 
 	protected abstract IndexServiceInterface getIndexService() throws URISyntaxException, IOException;
+
+	static final File backupDir = Files.createTempDir();
 
 	private final IndexSettingsDefinition indexSlaveDefinition;
 
@@ -126,6 +131,10 @@ public abstract class JavaAbstractTest {
 		final SchemaSettingsDefinition settings2 = service.createUpdateSchema(settings1);
 		Assert.assertNotNull(settings2);
 		Assert.assertEquals(settings1, settings2);
+		final SchemaSettingsDefinition settings =
+				new SchemaSettingsDefinition(null, null, null, backupDir.getAbsolutePath());
+		final SchemaSettingsDefinition settings3 = service.createUpdateSchema(settings);
+		Assert.assertEquals(settings, settings3);
 	}
 
 	@Test
@@ -637,6 +646,21 @@ public abstract class JavaAbstractTest {
 
 		Assert.assertArrayEquals(slaveFields.keySet().toArray(), masterFields.keySet().toArray());
 		Assert.assertArrayEquals(slaveAnalyzers.keySet().toArray(), masterAnalyzers.keySet().toArray());
+	}
+
+	@Test
+	public void test850backup() throws IOException, URISyntaxException {
+		final AnnotatedIndexService master = getMaster();
+		final String backupName = "myBackup";
+		SortedMap<String, SortedMap<String, BackupStatus>> globalStatus = master.getBackups(backupName);
+		Assert.assertNotNull(globalStatus);
+		globalStatus = master.doBackup(backupName);
+		Assert.assertNotNull(globalStatus);
+		final Map<String, BackupStatus> schemaStatus = globalStatus.get(master.getSchemaName());
+		Assert.assertNotNull(schemaStatus);
+		final BackupStatus backupStatus = schemaStatus.get(master.getIndexName());
+		Assert.assertNotNull(backupStatus);
+		Assert.assertNotNull(backupStatus.index_version);
 	}
 
 	@Test

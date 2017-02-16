@@ -37,7 +37,6 @@ import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.replicator.IndexAndTaxonomyReplicationHandler;
 import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.PerSessionDirectoryFactory;
 import org.apache.lucene.replicator.ReplicationClient;
@@ -305,15 +304,14 @@ final public class IndexInstance implements Closeable {
 						"Cannot create the backup directory: " + backupIndexDirectory + " - Index: " + indexName);
 
 			try (final Directory dataDir = FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_DATA));
-					final Directory taxoDir = FSDirectory.open(
-							backupIndexDirectory.resolve(IndexFileSet.INDEX_TAXONOMY))) {
+					final Directory taxoDir = taxonomyDirectory == null ?
+							null :
+							FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_TAXONOMY))) {
 
 				final PerSessionDirectoryFactory sourceDirFactory =
 						new PerSessionDirectoryFactory(backupIndexDirectory.resolve(IndexFileSet.REPL_WORK));
-				final IndexAndTaxonomyReplicationHandler handler =
-						new IndexAndTaxonomyReplicationHandler(dataDir, taxoDir, () -> false);
-				try (final ReplicationClient replicationClient = new ReplicationClient(localReplicator, handler,
-						sourceDirFactory)) {
+				try (final ReplicationClient replicationClient = new ReplicationClient(localReplicator,
+						IndexReplicator.getNewReplicationHandler(dataDir, taxoDir, () -> false), sourceDirFactory)) {
 					replicationClient.updateNow();
 				} catch (IOException e) {
 					FileUtils.deleteQuietly(backupIndexDirectory.toFile());
