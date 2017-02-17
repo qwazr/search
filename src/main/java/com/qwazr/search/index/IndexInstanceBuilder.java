@@ -22,10 +22,10 @@ import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
+import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.SegmentInfos;
-import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.replicator.LocalReplicator;
@@ -119,6 +119,9 @@ class IndexInstanceBuilder {
 				new RAMDirectory();
 	}
 
+	private final static int MERGE_SCHEDULER_SSD_THREADS =
+			Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() / 2));
+
 	private void openOrCreateDataIndex() throws IOException {
 
 		final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
@@ -139,7 +142,9 @@ class IndexInstanceBuilder {
 			indexWriterConfig.setMergePolicy(mergePolicy);
 		}
 
-		indexWriterConfig.setMergeScheduler(new SerialMergeScheduler());
+		final ConcurrentMergeScheduler mergeScheduler = new ConcurrentMergeScheduler();
+		mergeScheduler.setMaxMergesAndThreads(MERGE_SCHEDULER_SSD_THREADS, MERGE_SCHEDULER_SSD_THREADS);
+		indexWriterConfig.setMergeScheduler(mergeScheduler);
 
 		final SnapshotDeletionPolicy snapshotDeletionPolicy =
 				new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
