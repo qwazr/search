@@ -819,6 +819,17 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
+	public void test453getQueryCacheStats() throws IOException, URISyntaxException {
+		final IndexServiceInterface client = getClient();
+		IndexStatus.QueryCacheStats cache = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME).query_cache;
+		Assert.assertNotNull(cache);
+		Assert.assertNotNull(cache.cache_count);
+		Assert.assertNotNull(cache.cache_size);
+		Assert.assertNotNull(cache.hit_rate);
+		Assert.assertNotNull(cache.miss_rate);
+	}
+
+	@Test
 	public void test455getDocument() throws URISyntaxException {
 		final IndexServiceInterface client = getClient();
 		final Map<String, Object> result = client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, "5");

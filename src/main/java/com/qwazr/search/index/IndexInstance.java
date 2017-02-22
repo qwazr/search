@@ -151,8 +151,8 @@ final public class IndexInstance implements Closeable {
 
 	private IndexStatus getIndexStatus() throws IOException {
 		return writerAndSearcher.search((indexSearcher, taxonomyReader) -> new IndexStatus(indexUuid,
-				indexReplicator != null ? indexReplicator.getMasterUuid() : null, dataDirectory,
-				indexSearcher.getIndexReader(), writerAndSearcher.getIndexWriter(), settings, analyzerMap.keySet(),
+				indexReplicator != null ? indexReplicator.getMasterUuid() : null, dataDirectory, indexSearcher,
+				writerAndSearcher.getIndexWriter(), settings, analyzerMap.keySet(),
 				fieldMap.getFieldDefinitionMap().keySet()));
 	}
 

@@ -33,6 +33,9 @@ import org.apache.lucene.index.MergePolicy;
 import org.apache.lucene.index.SegmentCommitInfo;
 import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.index.TieredMergePolicy;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.LRUQueryCache;
+import org.apache.lucene.search.QueryCache;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -66,6 +69,7 @@ public class IndexStatus {
 	final public Integer number_of_segment;
 	final public List<SegmentInfoStatus> segment_infos;
 	final public MergePolicyStatus merge_policy;
+	final public QueryCacheStats query_cache;
 
 	public IndexStatus() {
 		num_docs = null;
@@ -84,11 +88,13 @@ public class IndexStatus {
 		field_infos = null;
 		number_of_segment = null;
 		segment_infos = null;
+		query_cache = null;
 	}
 
 	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final Directory directory,
-			final IndexReader indexReader, final IndexWriter indexWriter, final IndexSettingsDefinition settings,
+			final IndexSearcher indexSearcher, final IndexWriter indexWriter, final IndexSettingsDefinition settings,
 			final Set<String> analyzers, final Set<String> fields) throws IOException {
+		final IndexReader indexReader = indexSearcher.getIndexReader();
 		num_docs = (long) indexReader.numDocs();
 		num_deleted_docs = (long) indexReader.numDeletedDocs();
 		field_infos = new TreeMap<>();
@@ -117,7 +123,7 @@ public class IndexStatus {
 		this.fields = fields;
 
 		final SegmentInfos segmentInfos = directory != null && directory instanceof FSDirectory ?
-				version == 1 ? null : SegmentInfos.readLatestCommit(directory) :
+				version == null || version == 1 ? null : SegmentInfos.readLatestCommit(directory) :
 				null;
 		if (segmentInfos != null) {
 			number_of_segment = segmentInfos.size();
@@ -128,6 +134,10 @@ public class IndexStatus {
 			number_of_segment = null;
 			segment_infos = null;
 		}
+		final QueryCache queryCache = indexSearcher.getQueryCache();
+		this.query_cache = queryCache != null && queryCache instanceof LRUQueryCache ?
+				new QueryCacheStats((LRUQueryCache) queryCache) :
+				null;
 	}
 
 	private void fillFieldInfos(final Map<String, Set<FieldInfoStatus>> field_infos,
@@ -322,6 +332,41 @@ public class IndexStatus {
 			sizeInBytes = segmentInfo.sizeInBytes();
 			size = FileUtils.byteCountToDisplaySize(sizeInBytes);
 			files = segmentInfo.files();
+		}
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
+	public static class QueryCacheStats {
+
+		public final Long cache_count;
+		public final Long cache_size;
+		public final Long eviction_count;
+		public final Long hit_count;
+		public final Long miss_count;
+		public final Long total_count;
+		public final Float hit_rate;
+		public final Float miss_rate;
+
+		public QueryCacheStats() {
+			cache_count = null;
+			cache_size = null;
+			eviction_count = null;
+			hit_count = null;
+			miss_count = null;
+			total_count = null;
+			hit_rate = null;
+			miss_rate = null;
+		}
+
+		private QueryCacheStats(final LRUQueryCache queryCache) {
+			cache_count = queryCache.getCacheCount();
+			cache_size = queryCache.getCacheSize();
+			eviction_count = queryCache.getEvictionCount();
+			hit_count = queryCache.getHitCount();
+			miss_count = queryCache.getMissCount();
+			total_count = queryCache.getTotalCount();
+			hit_rate = (float) (hit_count * 100) / total_count;
+			miss_rate = (float) (miss_count * 100) / total_count;
 		}
 	}
 }
