@@ -24,6 +24,7 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -117,7 +118,7 @@ public class BooleanQuery extends AbstractQuery {
 	private BooleanQuery(final Builder builder) {
 		this.disable_coord = builder.disableCoord;
 		this.minimum_number_should_match = builder.minimumNumberShouldMatch;
-		this.clauses = new ArrayList<>(builder.clauses);
+		this.clauses = builder.clauses == null ? Collections.emptyList() : new ArrayList<>(builder.clauses);
 	}
 
 	@Override
@@ -135,18 +136,17 @@ public class BooleanQuery extends AbstractQuery {
 		return builder.build();
 	}
 
-	public final static Builder of(final Boolean disableCoord, final Integer minimumNumberShouldMatch) {
+	public static Builder of(final Boolean disableCoord, final Integer minimumNumberShouldMatch) {
 		return new Builder().setDisableCoord(disableCoord).setMinimumNumberShouldMatch(minimumNumberShouldMatch);
 	}
 
 	public final static class Builder {
 
-		private final List<BooleanClause> clauses;
+		private List<BooleanClause> clauses;
 		private Boolean disableCoord;
 		private Integer minimumNumberShouldMatch;
 
 		public Builder() {
-			clauses = new ArrayList<>();
 		}
 
 		public final Builder setDisableCoord(final Boolean disableCoord) {
@@ -160,8 +160,14 @@ public class BooleanQuery extends AbstractQuery {
 		}
 
 		public final Builder addClause(final Occur occur, final AbstractQuery query) {
+			if (clauses == null)
+				clauses = new ArrayList<>();
 			clauses.add(new BooleanClause(occur, query));
 			return this;
+		}
+
+		public final int getSize() {
+			return clauses == null ? 0 : clauses.size();
 		}
 
 		final public BooleanQuery build() {
