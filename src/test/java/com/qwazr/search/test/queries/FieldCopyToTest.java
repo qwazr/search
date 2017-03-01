@@ -28,7 +28,8 @@ public class FieldCopyToTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1").copyText1Boosted("Boosted Text 1").copyText2("Copied Text 2"));
+		indexService.postDocument(
+				new IndexRecord("1").copyTextBoost2("Boosted Text 1").copyTextNoBoost("Copied Text 2"));
 	}
 
 	@Test

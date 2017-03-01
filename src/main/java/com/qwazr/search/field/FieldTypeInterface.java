@@ -39,7 +39,7 @@ public interface FieldTypeInterface {
 
 	FieldDefinition getDefinition();
 
-	void copyTo(final String fieldName, final FieldTypeInterface fieldType, final Float boost);
+	void copyTo(final String fieldName, final FieldTypeInterface fieldType);
 
 	static FieldTypeInterface getInstance(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		if (definition.template == null)

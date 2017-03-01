@@ -35,8 +35,6 @@ public @interface Copy {
 		int order();
 
 		String field();
-
-		float boost() default 1F;
 	}
 
 }

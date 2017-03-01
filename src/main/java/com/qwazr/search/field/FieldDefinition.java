@@ -367,10 +367,10 @@ public class FieldDefinition {
 			return this;
 		}
 
-		public Builder copyFrom(String field, Float boost) {
+		public Builder copyFrom(String field) {
 			if (copyFrom == null)
 				copyFrom = new LinkedHashSet<>();
-			copyFrom.add(new CopyFrom(field, boost));
+			copyFrom.add(new CopyFrom(field));
 			return this;
 		}
 
@@ -384,16 +384,13 @@ public class FieldDefinition {
 	static public class CopyFrom {
 
 		public final String field;
-		public final Float boost;
 
 		public CopyFrom() {
 			field = null;
-			boost = null;
 		}
 
-		private CopyFrom(final String field, final Float boost) {
+		private CopyFrom(final String field) {
 			this.field = field;
-			this.boost = boost;
 		}
 
 		public static CopyFrom[] from(final String fieldName, final Map<String, Copy> copyMap) {
@@ -403,7 +400,7 @@ public class FieldDefinition {
 			copyMap.forEach((name, copy) -> {
 				for (Copy.To to : copy.to())
 					if (fieldName.equals(to.field()))
-						map.computeIfAbsent(to.order(), order -> new ArrayList<>()).add(new CopyFrom(name, to.boost()));
+						map.computeIfAbsent(to.order(), order -> new ArrayList<>()).add(new CopyFrom(name));
 			});
 
 			final List<CopyFrom> globalCopyFromList = new ArrayList<>();

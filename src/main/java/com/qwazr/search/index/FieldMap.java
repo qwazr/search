@@ -65,7 +65,7 @@ public class FieldMap {
 					fieldDest = nameDefMap.get(copyFrom.field);
 				else
 					fieldDest = newFields.computeIfAbsent(copyFrom.field, n -> new CopyToFieldType());
-				fieldDest.copyTo(name, fieldType, copyFrom.boost);
+				fieldDest.copyTo(name, fieldType);
 			}
 		});
 		nameDefMap.putAll(newFields);

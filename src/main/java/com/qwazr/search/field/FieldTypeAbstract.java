@@ -21,22 +21,21 @@ import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.WildcardMatcher;
 import jdk.nashorn.api.scripting.JSObject;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.BytesRef;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 abstract class FieldTypeAbstract implements FieldTypeInterface {
 
 	final private WildcardMatcher wildcardMatcher;
 	final protected FieldDefinition definition;
 	final protected BytesRefUtils.Converter bytesRefConverter;
-	final private Map<FieldTypeInterface, Pair<String, Float>> copyToFields;
+	final private Map<FieldTypeInterface, String> copyToFields;
 
 	protected FieldTypeAbstract(final WildcardMatcher wildcardMatcher, final FieldDefinition definition,
 			final BytesRefUtils.Converter bytesRefConverter) {
@@ -47,8 +46,8 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 	}
 
 	@Override
-	final public void copyTo(final String fieldName, final FieldTypeInterface fieldType, final Float boost) {
-		copyToFields.put(fieldType, Pair.of(fieldName, boost));
+	final public void copyTo(final String fieldName, final FieldTypeInterface fieldType) {
+		copyToFields.put(fieldType, fieldName);
 	}
 
 	@Override
@@ -167,7 +166,7 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 			fill(fieldName, value, boost, fieldConsumer);
 			if (!copyToFields.isEmpty())
 				copyToFields.forEach(
-						(fieldType, pair) -> fieldType.dispatch(pair.getKey(), value, pair.getRight(), fieldConsumer));
+						(fieldType, copyFieldName) -> fieldType.dispatch(copyFieldName, value, null, fieldConsumer));
 		}
 	}
 

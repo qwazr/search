@@ -24,7 +24,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 @Index(name = "IndexRecord", schema = "TestQueries", enableTaxonomyIndex = true)
 public class IndexRecord {
 
-	@IndexField(name = FieldDefinition.ID_FIELD, template = FieldDefinition.Template.StringField)
+	@IndexField(name = FieldDefinition.ID_FIELD, template = FieldDefinition.Template.StringField, stored = true)
 	final public String id;
 
 	@IndexField(template = FieldDefinition.Template.TextField, analyzerClass = StandardAnalyzer.class)
@@ -45,11 +45,17 @@ public class IndexRecord {
 	@IndexField(template = FieldDefinition.Template.FloatAssociatedField)
 	public Object[] floatAssociatedFacet;
 
-	@Copy(to = { @Copy.To(order = 1, field = "textField", boost = 2) })
-	public String copyText1Boosted;
+	@Copy(to = { @Copy.To(order = 4, field = "textField") })
+	public String copyTextBoost4;
+
+	@Copy(to = { @Copy.To(order = 3, field = "textField") })
+	public String copyTextBoost3;
 
 	@Copy(to = { @Copy.To(order = 2, field = "textField") })
-	public String copyText2;
+	public String copyTextBoost2;
+
+	@Copy(to = { @Copy.To(order = 1, field = "textField") })
+	public String copyTextNoBoost;
 
 	public IndexRecord() {
 		id = null;
@@ -64,13 +70,23 @@ public class IndexRecord {
 		return this;
 	}
 
-	public IndexRecord copyText1Boosted(String copyText) {
-		this.copyText1Boosted = copyText;
+	public IndexRecord copyTextNoBoost(String copyText) {
+		this.copyTextNoBoost = copyText;
 		return this;
 	}
 
-	public IndexRecord copyText2(String copyText) {
-		this.copyText2 = copyText;
+	public IndexRecord copyTextBoost2(String copyText) {
+		this.copyTextBoost2 = copyText;
+		return this;
+	}
+
+	public IndexRecord copyTextBoost3(String copyText) {
+		this.copyTextBoost3 = copyText;
+		return this;
+	}
+
+	public IndexRecord copyTextBoost4(String copyText) {
+		this.copyTextBoost4 = copyText;
 		return this;
 	}
 
