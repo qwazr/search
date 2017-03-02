@@ -40,7 +40,7 @@ public class SearchServer implements BaseServer {
 		builder.webService(WelcomeShutdownService.class);
 		final ClassLoaderManager classLoaderManager =
 				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread());
-		final ClusterManager clusterManager = new ClusterManager(builder);
+		final ClusterManager clusterManager = new ClusterManager(builder, executorService);
 		final IndexManager indexManager = new IndexManager(classLoaderManager, builder, executorService);
 		serviceBuilder = new IndexServiceBuilder(clusterManager, indexManager);
 		server = builder.build();
