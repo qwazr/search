@@ -58,15 +58,6 @@ public class IndexManager implements Closeable {
 
 	private final ExecutorService executorService;
 
-	public IndexManager(final ClassLoaderManager classLoaderManager, final GenericServer.Builder builder,
-			final ExecutorService executorService) throws IOException {
-		this(classLoaderManager, new File(builder.getConfiguration().dataDirectory, INDEXES_DIRECTORY),
-				executorService);
-		builder.webService(IndexServiceImpl.class);
-		builder.shutdownListener(server -> close());
-		builder.contextAttribute(this);
-	}
-
 	public IndexManager(final ClassLoaderManager classLoaderManager, final Path workDirectory,
 			final ExecutorService executorService) throws IOException {
 		this(classLoaderManager, workDirectory.toFile(), executorService);
@@ -96,6 +87,22 @@ public class IndexManager implements Closeable {
 				LOGGER.error(e.getMessage(), e);
 			}
 		}
+	}
+
+	public IndexManager registerContextAttribute(final GenericServer.Builder builder) {
+		builder.contextAttribute(this);
+		return this;
+	}
+
+	public IndexManager registerWebService(final GenericServer.Builder builder) {
+		registerContextAttribute(builder);
+		builder.webService(IndexServiceImpl.class);
+		return this;
+	}
+
+	public IndexManager registerShutdownListener(final GenericServer.Builder builder) {
+		builder.shutdownListener(server -> close());
+		return this;
 	}
 
 	final public IndexServiceInterface getService() {
