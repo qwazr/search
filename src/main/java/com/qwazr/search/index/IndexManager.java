@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -58,22 +59,12 @@ public class IndexManager implements Closeable {
 
 	private final ExecutorService executorService;
 
-	public IndexManager(final ClassLoaderManager classLoaderManager, final Path workDirectory,
+	public IndexManager(final ClassLoaderManager classLoaderManager, final Path indexesDirectory,
 			final ExecutorService executorService) throws IOException {
-		this(classLoaderManager, workDirectory.toFile(), executorService);
-	}
-
-	public IndexManager(final ClassLoaderManager classLoaderManager, final File workDirectory,
-			final ExecutorService executorService) throws IOException {
-		this.rootDirectory = workDirectory;
+		this.rootDirectory = indexesDirectory.toFile();
 		this.executorService = executorService;
-		if (!rootDirectory.exists())
-			rootDirectory.mkdir();
-		if (!rootDirectory.isDirectory())
-			throw new IOException(
-					"This name is not valid. No directory exists for this location: " + rootDirectory.getName());
-		this.classLoaderManager =
-				classLoaderManager == null ? new ClassLoaderManager((File) null, null) : classLoaderManager;
+
+		this.classLoaderManager = classLoaderManager == null ? new ClassLoaderManager(null, null) : classLoaderManager;
 		service = new IndexServiceImpl(this);
 		schemaMap = new ConcurrentHashMap<>();
 		File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -87,6 +78,15 @@ public class IndexManager implements Closeable {
 				LOGGER.error(e.getMessage(), e);
 			}
 		}
+	}
+
+	public static Path checkIndexesDirectory(final Path dataDirectory) throws IOException {
+		final Path indexesDirectory = dataDirectory.resolve(INDEXES_DIRECTORY);
+		if (!Files.exists(indexesDirectory))
+			Files.createDirectory(indexesDirectory);
+		if (!Files.isDirectory(indexesDirectory))
+			throw new IOException("This name is not valid. No directory exists for this location: " + indexesDirectory);
+		return indexesDirectory;
 	}
 
 	public IndexManager registerContextAttribute(final GenericServer.Builder builder) {
