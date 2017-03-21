@@ -1,5 +1,4 @@
 {
-  "query_string": "name",
   "query": {
     "query": "MatchAllDocsQuery"
   },

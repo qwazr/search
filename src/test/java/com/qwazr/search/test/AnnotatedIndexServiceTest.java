@@ -128,6 +128,12 @@ public class AnnotatedIndexServiceTest {
 	}
 
 	@Test
+	public void test501query() throws IOException, InterruptedException {
+		Integer result = service.query(context -> context.indexSearcher.getIndexReader().numDocs());
+		Assert.assertEquals(Integer.valueOf(1), result);
+	}
+
+	@Test
 	public void test510explain() {
 		MultiFieldQuery mfq = new MultiFieldQuery(QueryParserOperator.AND, "Title terms", null).boost("title", 10F)
 				.boost("content", 1.0F);

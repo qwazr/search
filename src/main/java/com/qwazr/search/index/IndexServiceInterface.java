@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServiceInterface;
 import com.qwazr.server.ServiceName;
+import com.qwazr.utils.FunctionUtils;
+import org.apache.commons.lang3.NotImplementedException;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
@@ -33,6 +35,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -386,4 +389,10 @@ public interface IndexServiceInterface extends ServiceInterface {
 			new TypeReference<Collection<Map<String, Object>>>() {
 			};
 
+	interface QueryActions<T> extends FunctionUtils.FunctionEx<QueryContext, T, IOException> {
+	}
+
+	default <T> T query(String schemaName, String indexName, QueryActions<T> actions) throws IOException {
+		throw new NotImplementedException("Method not available");
+	}
 }

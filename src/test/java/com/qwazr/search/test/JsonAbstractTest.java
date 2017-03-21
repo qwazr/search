@@ -30,6 +30,8 @@ import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentMap;
 import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.index.TermDefinition;
+import com.qwazr.search.query.QueryParserOperator;
+import com.qwazr.search.query.StandardQueryParser;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.FunctionUtils;
@@ -775,7 +777,11 @@ public abstract class JsonAbstractTest {
 	private void checkSynonyms(final IndexServiceInterface client, final String queryString,
 			final String... multiWordsHighlights) throws IOException {
 		final QueryBuilder builder = new QueryBuilder(QUERY_HIGHLIGHT);
-		builder.queryString(queryString);
+		builder.query(StandardQueryParser.of()
+				.setDefaultField("description")
+				.setQueryParserOperator(QueryParserOperator.AND)
+				.setQueryString(queryString)
+				.build());
 		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, builder.build(), 2);
 		boolean foundMultiWord1 = false;
 		boolean foundMultiWord2 = false;

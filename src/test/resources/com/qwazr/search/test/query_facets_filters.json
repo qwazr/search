@@ -1,5 +1,4 @@
 {
-  "query_string": "name",
   "query": {
     "query": "BooleanQuery",
     "clauses": [
@@ -7,7 +6,8 @@
         "occur": "must",
         "query": {
           "query": "StandardQueryParser",
-          "default_field": "name"
+          "default_field": "name",
+          "query_string": "name"
         }
       },
       {

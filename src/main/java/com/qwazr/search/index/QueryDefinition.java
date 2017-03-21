@@ -29,10 +29,6 @@ import java.util.LinkedHashSet;
 @JsonInclude(Include.NON_EMPTY)
 public class QueryDefinition extends BaseQueryDefinition {
 
-	final public String query_string;
-	final public Boolean escape_query;
-	final public char[] escaped_chars;
-
 	final public LinkedHashMap<String, SortEnum> sorts;
 	final public LinkedHashMap<String, CollectorDefinition> collectors;
 
@@ -78,9 +74,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 	}
 
 	public QueryDefinition() {
-		query_string = null;
-		escape_query = null;
-		escaped_chars = null;
 		returned_fields = null;
 		facets = null;
 		sorts = null;
@@ -91,9 +84,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	QueryDefinition(final QueryBuilder builder) {
 		super(builder);
-		query_string = builder.queryString;
-		escape_query = builder.escapeQuery;
-		escaped_chars = builder.escapedChars;
 		returned_fields = builder.returnedFields;
 		facets = builder.facets;
 		sorts = builder.sorts;

@@ -108,7 +108,6 @@ interface WriterAndSearcher extends Closeable {
 		final public <T> T search(final SearchAction<T> action) throws IOException {
 			final IndexSearcher searcher = searcherManager.acquire();
 			try {
-
 				return action.apply(searcher, null);
 			} finally {
 				searcherManager.release(searcher);

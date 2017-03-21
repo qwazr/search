@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,11 +65,10 @@ public class StandardQueryParser extends AbstractQuery {
 	}
 
 	public StandardQueryParser(Analyzer analyzer, String[] multi_fields, String default_field,
-			LinkedHashMap<String, Float> fields_boost,
-			Boolean allow_leading_wildcard, QueryParserOperator default_operator, Integer phrase_slop,
-			Boolean enable_position_increments, Boolean analyzer_range_terms, Float fuzzy_min_sim,
-			Integer fuzzy_prefix_length, Integer max_determinized_states, Boolean lowercase_expanded_terms,
-			String query_string) {
+			LinkedHashMap<String, Float> fields_boost, Boolean allow_leading_wildcard,
+			QueryParserOperator default_operator, Integer phrase_slop, Boolean enable_position_increments,
+			Boolean analyzer_range_terms, Float fuzzy_min_sim, Integer fuzzy_prefix_length,
+			Integer max_determinized_states, Boolean lowercase_expanded_terms, String query_string) {
 		this.analyzer = analyzer;
 		this.multi_fields = multi_fields;
 		this.default_field = default_field;
@@ -104,7 +103,8 @@ public class StandardQueryParser extends AbstractQuery {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException, QueryNodeException {
+	final public Query getQuery(final QueryContext queryContext)
+			throws IOException, ParseException, QueryNodeException {
 
 		final org.apache.lucene.queryparser.flexible.standard.StandardQueryParser parser =
 				new org.apache.lucene.queryparser.flexible.standard.StandardQueryParser(
@@ -127,9 +127,13 @@ public class StandardQueryParser extends AbstractQuery {
 			parser.setLowercaseExpandedTerms(lowercase_expanded_terms);
 		if (multi_fields != null)
 			parser.setMultiFields(multi_fields);
-		return parser.parse(query_string == null ? queryContext.queryString : query_string, default_field);
+		return parser.parse(query_string, default_field);
 	}
 
+	public static Builder of() {
+		return new Builder();
+	}
+	
 	public static class Builder {
 
 		private Analyzer analyzer = null;

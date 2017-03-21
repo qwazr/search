@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,6 @@ public class QueryBuilder {
 	Boolean queryDebug = null;
 	LinkedHashSet<String> returnedFields = null;
 
-	String queryString = null;
-	Boolean escapeQuery = null;
-	char[] escapedChars = null;
-
 	Similarity similarity = null;
 
 	LinkedHashMap<String, FacetDefinition> facets = null;
@@ -56,10 +52,6 @@ public class QueryBuilder {
 		queryDebug = queryDef.query_debug;
 		returnedFields = queryDef.returned_fields;
 
-		queryString = queryDef.query_string;
-		escapeQuery = queryDef.escape_query;
-		escapedChars = queryDef.escaped_chars;
-
 		facets = queryDef.facets;
 		sorts = queryDef.sorts;
 		collectors = queryDef.collectors;
@@ -81,21 +73,6 @@ public class QueryBuilder {
 
 	public QueryBuilder rows(final Integer rows) {
 		this.rows = rows;
-		return this;
-	}
-
-	public QueryBuilder queryString(final String queryString) {
-		this.queryString = queryString;
-		return this;
-	}
-
-	public QueryBuilder escapeQuery(final Boolean escapeQuery) {
-		this.escapeQuery = escapeQuery;
-		return this;
-	}
-
-	public QueryBuilder escapedChars(final char[] escapedChars) {
-		this.escapedChars = escapedChars;
 		return this;
 	}
 

@@ -806,4 +806,12 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			throw ServerException.getTextException(LOGGER, e);
 		}
 	}
+
+	@Override
+	public <T> T query(final String schemaName, final String indexName, final QueryActions<T> actions)
+			throws IOException {
+		checkRight(schemaName);
+		final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
+		return index.query(actions);
+	}
 }

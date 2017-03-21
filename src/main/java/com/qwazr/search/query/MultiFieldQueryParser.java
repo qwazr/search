@@ -43,6 +43,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	final public Integer fuzzy_prefix_length;
 	final public Integer max_determinized_states;
 	final public Boolean lowercase_expanded_terms;
+	final public String query_string;
 
 	public MultiFieldQueryParser() {
 		analyzer = null;
@@ -58,6 +59,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 		fuzzy_prefix_length = null;
 		max_determinized_states = null;
 		lowercase_expanded_terms = null;
+		query_string = null;
 	}
 
 	public MultiFieldQueryParser(Builder builder) {
@@ -74,6 +76,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 		this.fuzzy_prefix_length = builder.fuzzy_prefix_length;
 		this.max_determinized_states = builder.max_determinized_states;
 		this.lowercase_expanded_terms = builder.lowercase_expanded_terms;
+		this.query_string = builder.query_string;
 	}
 
 	@Override
@@ -101,7 +104,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 			parser.setLowercaseExpandedTerms(lowercase_expanded_terms);
 		if (max_determinized_states != null)
 			parser.setMaxDeterminizedStates(max_determinized_states);
-		return parser.parse(queryContext.queryString);
+		return parser.parse(query_string);
 	}
 
 	public static class Builder {
@@ -119,6 +122,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 		private Integer fuzzy_prefix_length = null;
 		private Integer max_determinized_states = null;
 		private Boolean lowercase_expanded_terms = null;
+		private String query_string = null;
 
 		public MultiFieldQueryParser build() {
 			return new MultiFieldQueryParser(this);
@@ -131,7 +135,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 
 		public Builder addField(String... fieldSet) {
 			if (fields == null)
-				fields = new LinkedHashSet<String>();
+				fields = new LinkedHashSet<>();
 			for (String field : fieldSet)
 				fields.add(field);
 			return this;
@@ -139,7 +143,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 
 		public Builder addBoost(String field, Float boost) {
 			if (boosts == null)
-				boosts = new LinkedHashMap<String, Float>();
+				boosts = new LinkedHashMap<>();
 			boosts.put(field, boost);
 			return this;
 		}
@@ -191,6 +195,11 @@ public class MultiFieldQueryParser extends AbstractQuery {
 
 		public Builder setLowercaseExpandedTerms(Boolean lowercase_expanded_terms) {
 			this.lowercase_expanded_terms = lowercase_expanded_terms;
+			return this;
+		}
+
+		public Builder setQueryString(String queryString) {
+			this.query_string = queryString;
 			return this;
 		}
 	}

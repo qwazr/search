@@ -1,10 +1,10 @@
 {
-  "query_string": "name",
   "query": {
     "query": "DrillDownQuery",
     "baseQuery": {
       "query": "StandardQueryParser",
-      "default_field": "name"
+      "default_field": "name",
+      "query_string": "name"
     },
     "useDrillSideways": true,
     "dimPath": [

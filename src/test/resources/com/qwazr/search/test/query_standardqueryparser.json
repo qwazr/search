@@ -1,8 +1,8 @@
 {
-  "query_string": "search engine",
   "query": {
     "query": "StandardQueryParser",
-    "default_field": "fulltext"
+    "default_field": "fulltext",
+    "query_string": "search engine"
   },
   "start": 0,
   "rows": 5,

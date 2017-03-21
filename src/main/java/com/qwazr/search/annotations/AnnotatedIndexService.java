@@ -536,7 +536,12 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 				}
 			});
 		}
-		return new ResultDefinition.WithObject<T>(resultWithMap, documents);
+		return new ResultDefinition.WithObject<>(resultWithMap, documents);
+	}
+
+	public <R> R query(final IndexServiceInterface.QueryActions<R> actions) throws IOException {
+		checkParameters();
+		return indexService.query(schemaName, indexName, actions);
 	}
 
 	public void deleteAll() {

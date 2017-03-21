@@ -1,5 +1,4 @@
 {
-  "query_string": "",
   "query": {
     "query": "PayloadScoreQuery",
     "payload_function": "AveragePayloadFunction",

@@ -106,7 +106,6 @@ public class MultiFieldQuery extends AbstractQuery {
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ReflectiveOperationException {
 		Objects.requireNonNull(fieldsBoosts, "Fields boosts is missing");
 
-		final String queryString = StringUtils.isEmpty(this.queryString) ? queryContext.queryString : this.queryString;
 		if (StringUtils.isEmpty(queryString))
 			return new org.apache.lucene.search.MatchNoDocsQuery();
 

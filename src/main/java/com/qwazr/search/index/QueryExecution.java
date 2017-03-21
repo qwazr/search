@@ -57,13 +57,13 @@ final class QueryExecution {
 
 	private final boolean isConcurrent;
 
-	QueryExecution(final QueryContext queryContext)
+	QueryExecution(final QueryContext queryContext, final QueryDefinition queryDefinition)
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
 
 		this.timeTracker = new TimeTracker();
 
 		this.queryContext = queryContext;
-		this.queryDef = queryContext.queryDefinition;
+		this.queryDef = queryDefinition;
 
 		this.query = queryDef.query == null ? new MatchAllDocsQuery() : queryDef.query.getQuery(queryContext);
 

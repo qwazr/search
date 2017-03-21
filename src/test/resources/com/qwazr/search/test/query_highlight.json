@@ -1,9 +1,9 @@
 {
-  "query_string": "search engine",
   "query": {
     "query": "StandardQueryParser",
     "default_field": "description",
-    "default_operator": "AND"
+    "default_operator": "AND",
+    "query_string": "search engine"
   },
   "highlighters": {
     "my_custom_snippet": {
