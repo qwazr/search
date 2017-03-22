@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,10 @@ import java.io.IOException;
 
 public class IntSetQuery extends AbstractFieldQuery {
 
-	public int[] values;
+	final public int[] values;
 
 	public IntSetQuery() {
+		values = null;
 	}
 
 	public IntSetQuery(final String field, final int... values) {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,13 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.index.IndexManager;
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.utils.ArrayUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.join.JoinUtil;
 import org.apache.lucene.search.join.ScoreMode;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 
 public class JoinQuery extends AbstractQuery {
 
