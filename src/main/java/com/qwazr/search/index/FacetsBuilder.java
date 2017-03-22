@@ -42,7 +42,7 @@ import java.util.Set;
 
 abstract class FacetsBuilder {
 
-	protected final QueryContext queryContext;
+	protected final QueryContextImpl queryContext;
 	protected final String sortedSetFacetField;
 	private final LinkedHashMap<String, FacetDefinition> facetsDef;
 	private final Query searchQuery;
@@ -50,7 +50,7 @@ abstract class FacetsBuilder {
 
 	final LinkedHashMap<String, Map<String, Number>> results = new LinkedHashMap<>();
 
-	private FacetsBuilder(final QueryContext queryContext, final LinkedHashMap<String, FacetDefinition> facetsDef,
+	private FacetsBuilder(final QueryContextImpl queryContext, final LinkedHashMap<String, FacetDefinition> facetsDef,
 			final Query searchQuery, final TimeTracker timeTracker) {
 		this.facetsDef = facetsDef;
 		this.queryContext = queryContext;
@@ -121,7 +121,7 @@ abstract class FacetsBuilder {
 		private final TaxonomyFacetSumIntAssociations intTaxonomyCounts;
 		private final FacetsConfig facetsConfig;
 
-		WithCollectors(final QueryContext queryContext, final FacetsConfig facetsConfig,
+		WithCollectors(final QueryContextImpl queryContext, final FacetsConfig facetsConfig,
 				final LinkedHashMap<String, FacetDefinition> facetsDef, final Query searchQuery,
 				final TimeTracker timeTracker, final FacetsCollector facetsCollector)
 				throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
@@ -205,7 +205,7 @@ abstract class FacetsBuilder {
 		final DrillSideways.DrillSidewaysResult results;
 		private final FacetsConfig facetsConfig;
 
-		WithSideways(final QueryContext queryContext, final FacetsConfig facetsConfig,
+		WithSideways(final QueryContextImpl queryContext, final FacetsConfig facetsConfig,
 				final LinkedHashMap<String, FacetDefinition> facetsDef, final Query searchQuery,
 				final TimeTracker timeTracker, final DrillSideways.DrillSidewaysResult results)
 				throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {

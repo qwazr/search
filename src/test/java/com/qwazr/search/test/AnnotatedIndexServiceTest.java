@@ -129,7 +129,7 @@ public class AnnotatedIndexServiceTest {
 
 	@Test
 	public void test501query() throws IOException, InterruptedException {
-		Integer result = service.query(context -> context.indexSearcher.getIndexReader().numDocs());
+		Integer result = service.query(context -> context.getIndexReader().numDocs());
 		Assert.assertEquals(Integer.valueOf(1), result);
 	}
 

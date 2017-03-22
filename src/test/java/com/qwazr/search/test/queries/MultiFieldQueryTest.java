@@ -16,10 +16,12 @@
 package com.qwazr.search.test.queries;
 
 import com.qwazr.search.index.ExplainDefinition;
+import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
+import org.apache.lucene.search.Query;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -47,6 +49,14 @@ public class MultiFieldQueryTest extends AbstractIndexTest {
 				new MultiFieldQuery(QueryParserOperator.AND, "Hello", 0).boost("textField", 1F)
 						.boost("stringField", 1F)).build();
 		checkQuery(queryDef);
+	}
+
+	@Test
+	public void luceneQuery() throws IOException, ReflectiveOperationException {
+		Query luceneQuery = new MultiFieldQuery(QueryParserOperator.AND, "Hello World", 0).boost("textField", 1F)
+				.boost("stringField", 1F)
+				.getQuery(QueryContext.DEFAULT);
+		Assert.assertNotNull(luceneQuery);
 	}
 
 }

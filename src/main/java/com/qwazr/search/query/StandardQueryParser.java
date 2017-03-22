@@ -108,7 +108,7 @@ public class StandardQueryParser extends AbstractQuery {
 
 		final org.apache.lucene.queryparser.flexible.standard.StandardQueryParser parser =
 				new org.apache.lucene.queryparser.flexible.standard.StandardQueryParser(
-						analyzer != null ? analyzer : queryContext.queryAnalyzer);
+						analyzer != null ? analyzer : queryContext.getQueryAnalyzer());
 		if (fields_boost != null)
 			parser.setFieldsBoost(fields_boost);
 		if (default_operator != null)
@@ -133,7 +133,7 @@ public class StandardQueryParser extends AbstractQuery {
 	public static Builder of() {
 		return new Builder();
 	}
-	
+
 	public static class Builder {
 
 		private Analyzer analyzer = null;

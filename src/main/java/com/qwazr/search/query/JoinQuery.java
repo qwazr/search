@@ -60,7 +60,7 @@ public class JoinQuery extends AbstractQuery {
 	@Override
 	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
-		return queryContext.schemaInstance.get(from_index, false).createJoinQuery(this);
+		return queryContext.getIndex(from_index).createJoinQuery(this);
 	}
 
 }

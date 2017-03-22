@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,8 +41,7 @@ public class FacetPathQuery extends AbstractQuery {
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		Objects.requireNonNull(dimension, "The dimension is missing");
-		final String indexFieldName =
-				queryContext.fieldMap.getFacetsConfig(dimension).getDimConfig(dimension).indexFieldName;
+		final String indexFieldName = queryContext.getFacetsConfig(dimension).getDimConfig(dimension).indexFieldName;
 		final Term term = new Term(indexFieldName, FacetsConfig.pathToString(dimension, path));
 		return new org.apache.lucene.search.TermQuery(term);
 	}

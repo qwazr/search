@@ -78,7 +78,8 @@ public class MoreLikeThisQuery extends AbstractQuery {
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
 		Objects.requireNonNull(doc_num, "The doc_num field is missing");
-		final MoreLikeThis mlt = new MoreLikeThis(queryContext.indexSearcher.getIndexReader());
+
+		final MoreLikeThis mlt = new MoreLikeThis(queryContext.getIndexReader());
 		if (is_boost != null)
 			mlt.setBoost(is_boost);
 		if (boost_factor != null)
@@ -103,7 +104,7 @@ public class MoreLikeThisQuery extends AbstractQuery {
 			mlt.setMinWordLen(min_word_len);
 		if (stop_words != null)
 			mlt.setStopWords(stop_words);
-		mlt.setAnalyzer(queryContext.queryAnalyzer);
+		mlt.setAnalyzer(queryContext.getQueryAnalyzer());
 		return mlt.like(doc_num);
 	}
 }

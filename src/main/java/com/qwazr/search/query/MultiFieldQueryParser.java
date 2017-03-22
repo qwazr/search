@@ -83,7 +83,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
 		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser =
 				new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(fields,
-						analyzer == null ? queryContext.queryAnalyzer : analyzer, boosts);
+						analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, boosts);
 		if (default_operator != null)
 			parser.setDefaultOperator(default_operator.queryParseroperator);
 		if (allow_leading_wildcard != null)

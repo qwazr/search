@@ -16,42 +16,43 @@
 package com.qwazr.search.index;
 
 import com.qwazr.classloader.ClassLoaderManager;
-import com.qwazr.search.analysis.UpdatableAnalyzer;
-import org.apache.lucene.analysis.util.ResourceLoader;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
-import org.apache.lucene.facet.taxonomy.TaxonomyReader;
-import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.index.IndexReader;
 
-import java.util.concurrent.ExecutorService;
+import java.util.Collection;
 
-final public class QueryContext {
+public interface QueryContext {
 
-	final public IndexSearcher indexSearcher;
-	final TaxonomyReader taxonomyReader;
-	final ExecutorService executorService;
-	final SortedSetDocValuesReaderState docValueReaderState;
-	final UpdatableAnalyzer indexAnalyzer;
-	final public UpdatableAnalyzer queryAnalyzer;
-	final public FieldMap fieldMap;
-	final ResourceLoader resourceLoader;
-	final public ClassLoaderManager classLoaderManager;
-	final public SchemaInstance schemaInstance;
-
-	QueryContext(final SchemaInstance schemaInstance, final ResourceLoader resourceLoader,
-			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
-			final ExecutorService executorService, final UpdatableAnalyzer indexAnalyzer,
-			final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
-			final SortedSetDocValuesReaderState docValueReaderState) {
-		this.schemaInstance = schemaInstance;
-		this.classLoaderManager = schemaInstance == null ? null : schemaInstance.getClassLoaderManager();
-		this.resourceLoader = resourceLoader;
-		this.indexSearcher = indexSearcher;
-		this.taxonomyReader = taxonomyReader;
-		this.executorService = executorService;
-		this.docValueReaderState = docValueReaderState;
-		this.indexAnalyzer = indexAnalyzer;
-		this.queryAnalyzer = queryAnalyzer;
-		this.fieldMap = fieldMap;
+	default IndexInstance getIndex(String indexName) {
+		return null;
 	}
 
+	default ClassLoaderManager getClassLoaderManager() {
+		return null;
+	}
+
+	Analyzer DEFAULT_QUERY_ANALYZER = new StandardAnalyzer();
+
+	default Analyzer getQueryAnalyzer() {
+		return DEFAULT_QUERY_ANALYZER;
+	}
+
+	FacetsConfig DEFAULT_FACETS_CONFIG = new FacetsConfig();
+
+	default FacetsConfig getFacetsConfig(String dimension) {
+		return DEFAULT_FACETS_CONFIG;
+	}
+
+	default FacetsConfig getFacetsConfig(Collection<String> fieldSet) {
+		return DEFAULT_FACETS_CONFIG;
+	}
+
+	default IndexReader getIndexReader() {
+		return null;
+	}
+
+	QueryContext DEFAULT = new QueryContext() {
+	};
 }

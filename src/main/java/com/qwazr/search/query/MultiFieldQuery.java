@@ -109,8 +109,6 @@ public class MultiFieldQuery extends AbstractQuery {
 		if (StringUtils.isEmpty(queryString))
 			return new org.apache.lucene.search.MatchNoDocsQuery();
 
-		final IndexReader indexReader = queryContext.indexSearcher.getIndexReader();
-
 		// Determine the field level occur operator
 		final BooleanClause.Occur defaultOccur =
 				defaultOperator == null || defaultOperator.queryParseroperator == QueryParser.Operator.AND ?
@@ -120,9 +118,9 @@ public class MultiFieldQuery extends AbstractQuery {
 		final SortedMap<Integer, List<Query>> byPosQueries = new TreeMap<>();
 		// Build term queries
 		fieldsBoosts.forEach((field, boost) -> {
-			try (final TokenStream tokenStream = queryContext.queryAnalyzer.tokenStream(field, queryString)) {
+			try (final TokenStream tokenStream = queryContext.getQueryAnalyzer().tokenStream(field, queryString)) {
 				final FieldTermsQuery fieldTermsQuery =
-						new FieldTermsQuery(byPosQueries, tokenStream, field, indexReader);
+						new FieldTermsQuery(byPosQueries, tokenStream, field, queryContext.getIndexReader());
 				fieldTermsQuery.forEachToken();
 				tokenStream.end();
 			} catch (IOException e) {
@@ -194,7 +192,7 @@ public class MultiFieldQuery extends AbstractQuery {
 		@Override
 		public boolean token() throws IOException {
 			final Term term = new Term(field, charTermAttr.toString());
-			final int freq = indexReader.docFreq(term);
+			final int freq = indexReader == null ? 0 : indexReader.docFreq(term);
 			minTermFreq = Math.min(freq, minTermFreq);
 			Query termQuery = getTermQuery(minTermFreq, term);
 			byPosQueries.computeIfAbsent(currentPos, ArrayList::new)

@@ -591,8 +591,8 @@ final public class IndexInstance implements Closeable {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				try {
 					final QueryContext queryContext =
-							new QueryContext(schema, fileResourceLoader, indexSearcher, taxonomyReader, executorService,
-									indexAnalyzer, queryAnalyzer, fieldMap, null);
+							new QueryContextImpl(schema, fileResourceLoader, indexSearcher, taxonomyReader,
+									executorService, indexAnalyzer, queryAnalyzer, fieldMap, null);
 					final Query query = queryDefinition.query.getQuery(queryContext);
 					final IndexWriter indexWriter = writerAndSearcher.getIndexWriter();
 					int docs = indexWriter.numDocs();
@@ -654,10 +654,10 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	private QueryContext buildQueryContext(final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader)
+	private QueryContextImpl buildQueryContext(final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader)
 			throws IOException {
 		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
-		return new QueryContext(schema, fileResourceLoader, indexSearcher, taxonomyReader, executorService,
+		return new QueryContextImpl(schema, fileResourceLoader, indexSearcher, taxonomyReader, executorService,
 				indexAnalyzer, queryAnalyzer, fieldMap, facetsState);
 	}
 
@@ -665,7 +665,7 @@ final public class IndexInstance implements Closeable {
 			final ResultDocumentBuilder.BuilderFactory<?> documentBuilderFactory) throws IOException {
 		return query(context -> {
 			try {
-				return new QueryExecution(context, queryDefinition).execute(documentBuilderFactory);
+				return new QueryExecution((QueryContextImpl) context, queryDefinition).execute(documentBuilderFactory);
 			} catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
 				throw new ServerException(e);
 			}
@@ -689,7 +689,7 @@ final public class IndexInstance implements Closeable {
 		try {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				try {
-					final QueryContext context = buildQueryContext(indexSearcher, taxonomyReader);
+					final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader);
 					return new QueryExecution(context, queryDefinition).explain(docId);
 				} catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
 					throw new ServerException(e);

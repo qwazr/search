@@ -94,7 +94,7 @@ public class CustomScoreQuery extends AbstractQuery {
 			customScoreQuery = buildCustomScoreQueryProvider(query, queryContext, customScoreProviderClass);
 		else if (customScoreProviderClassName != null)
 			customScoreQuery = buildCustomScoreQueryProvider(query, queryContext,
-					getProviderClass(queryContext.classLoaderManager));
+					getProviderClass(queryContext.getClassLoaderManager()));
 		else
 			customScoreQuery = buildCustomScoreQuery(query, queryContext);
 		return customScoreQuery;
@@ -115,7 +115,8 @@ public class CustomScoreQuery extends AbstractQuery {
 	private Class<? extends CustomScoreProvider> getProviderClass(final ClassLoaderManager classLoaderManager)
 			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		Class<? extends CustomScoreProvider> customScoreProviderClass =
-				ClassLoaderUtils.findClass(classLoaderManager.getClassLoader(), customScoreProviderClassName, null);
+				ClassLoaderUtils.findClass(classLoaderManager == null ? null : classLoaderManager.getClassLoader(),
+						customScoreProviderClassName, null);
 		Objects.requireNonNull(customScoreProviderClass, "Cannot find the class for " + customScoreProviderClassName);
 		return customScoreProviderClass;
 	}
