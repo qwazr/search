@@ -108,7 +108,6 @@ Here an example of search request:
 {
   "start": 0,
   "rows": 10,
-  "query_string": "Article",
   "query": {
     "query": "BooleanQuery",
     "clauses": [
@@ -120,6 +119,7 @@ Here an example of search request:
             "name",
             "description"
           ],
+          "query_string": "Article",
           "boosts": {
             "name": 10,
             "description": 1

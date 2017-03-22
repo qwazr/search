@@ -16,7 +16,6 @@ It includes:
 
 ```json
 {
-    "query_string": "name",
     "query": {
         "query": "BooleanQuery",
         "clauses": [
@@ -24,7 +23,8 @@ It includes:
                 "occur": "must",
                 "query": {
                     "query": "StandardQueryParser",
-                    "default_field": "name"
+                    "default_field": "name",
+                    "query_string": "name"
                 }
             },
             {
@@ -47,8 +47,6 @@ It includes:
             }
         ]
     },
-    "escape_query": true,
-    "escaped_chars": ":~^",
     "returned_fields": [
         "name",
         "price"
