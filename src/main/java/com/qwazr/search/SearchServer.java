@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,11 +36,12 @@ public class SearchServer implements BaseServer {
 
 	private SearchServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
-		final GenericServer.Builder builder =
-				GenericServer.of(configuration, executorService).webService(WelcomeShutdownService.class);
 		final ClassLoaderManager classLoaderManager =
-				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread()).registerContextAttribute(
-						builder);
+				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread());
+		final GenericServer.Builder builder =
+				GenericServer.of(configuration, executorService, classLoaderManager.getClassLoader())
+						.webService(WelcomeShutdownService.class);
+		classLoaderManager.registerContextAttribute(builder);
 		final ClusterManager clusterManager =
 				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
 						.registerProtocolListener(builder)
