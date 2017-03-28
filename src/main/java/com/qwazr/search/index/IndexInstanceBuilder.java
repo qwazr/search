@@ -26,6 +26,7 @@ import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.SegmentInfos;
+import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.replicator.LocalReplicator;
@@ -142,9 +143,9 @@ class IndexInstanceBuilder {
 			indexWriterConfig.setMergePolicy(mergePolicy);
 		}
 
-		final ConcurrentMergeScheduler mergeScheduler = new ConcurrentMergeScheduler();
-		mergeScheduler.setMaxMergesAndThreads(MERGE_SCHEDULER_SSD_THREADS, MERGE_SCHEDULER_SSD_THREADS);
-		indexWriterConfig.setMergeScheduler(mergeScheduler);
+		//final ConcurrentMergeScheduler mergeScheduler = new ConcurrentMergeScheduler();
+		//mergeScheduler.setMaxMergesAndThreads(MERGE_SCHEDULER_SSD_THREADS, MERGE_SCHEDULER_SSD_THREADS);
+		indexWriterConfig.setMergeScheduler(new SerialMergeScheduler());
 
 		final SnapshotDeletionPolicy snapshotDeletionPolicy =
 				new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
