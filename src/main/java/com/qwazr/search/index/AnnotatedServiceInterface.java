@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.utils.FieldMapWrapper;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -35,12 +37,11 @@ public interface AnnotatedServiceInterface {
 	<T> int updateDocsValues(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents)
 			throws IOException, InterruptedException;
 
-	<T> T getDocument(String schemaName, String indexName, Object id, Map<String, Field> fields,
-			Class<T> indexDefinitionClass);
+	<T> T getDocument(String schemaName, String indexName, Object id, FieldMapWrapper<T> fieldMapWrapper);
 
 	<T> List<T> getDocuments(String schemaName, String indexName, Integer start, Integer rows,
-			Map<String, Field> fields, Class<T> indexDefinitionClass);
+			FieldMapWrapper<T> fieldMapWrapper);
 
 	<T> ResultDefinition.WithObject<T> searchQuery(String schemaName, String indexName, QueryDefinition query,
-			Map<String, Field> fields, Class<T> indexDefinitionClass);
+			FieldMapWrapper<T> fieldMapWrapper);
 }

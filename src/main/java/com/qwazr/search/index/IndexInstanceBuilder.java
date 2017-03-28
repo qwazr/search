@@ -25,7 +25,10 @@ import com.qwazr.utils.IOUtils;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.MergeScheduler;
+import org.apache.lucene.index.NoMergeScheduler;
 import org.apache.lucene.index.SegmentInfos;
+import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.replicator.LocalReplicator;
@@ -140,11 +143,26 @@ class IndexInstanceBuilder {
 			if (settings.segmentsPerTier != null)
 				mergePolicy.setSegmentsPerTier(settings.segmentsPerTier);
 			indexWriterConfig.setMergePolicy(mergePolicy);
-		}
 
-		final ConcurrentMergeScheduler mergeScheduler = new ConcurrentMergeScheduler();
-		mergeScheduler.setMaxMergesAndThreads(MERGE_SCHEDULER_SSD_THREADS, MERGE_SCHEDULER_SSD_THREADS);
-		indexWriterConfig.setMergeScheduler(mergeScheduler);
+			final MergeScheduler mergeScheduler;
+			if (settings.mergeScheduler != null) {
+				switch (settings.mergeScheduler) {
+				case NO:
+					mergeScheduler = NoMergeScheduler.INSTANCE;
+					break;
+				default:
+				case CONCURRENT:
+					mergeScheduler = new ConcurrentMergeScheduler();
+					((ConcurrentMergeScheduler) mergeScheduler).setMaxMergesAndThreads(MERGE_SCHEDULER_SSD_THREADS,
+							MERGE_SCHEDULER_SSD_THREADS);
+					break;
+				case SERIAL:
+					mergeScheduler = new SerialMergeScheduler();
+					break;
+				}
+				indexWriterConfig.setMergeScheduler(mergeScheduler);
+			}
+		}
 
 		final SnapshotDeletionPolicy snapshotDeletionPolicy =
 				new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());

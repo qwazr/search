@@ -17,13 +17,13 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.spatial.geopoint.document.GeoPointField;
+import org.apache.lucene.document.LatLonPoint;
 
 import java.util.Map;
 
-class GeoPointType extends StorableFieldType {
+class LatLonPointType extends FieldTypeAbstract {
 
-	GeoPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+	LatLonPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(wildcardMatcher, definition, null);
 	}
 
@@ -33,7 +33,7 @@ class GeoPointType extends StorableFieldType {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even double values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new GeoPointField(fieldName, values[i++], values[i++], store), boost);
+			consumer.accept(fieldName, new LatLonPoint(fieldName, values[i++], values[i++]), boost);
 	}
 
 	@Override
@@ -42,7 +42,7 @@ class GeoPointType extends StorableFieldType {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even float values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new GeoPointField(fieldName, values[i++], values[i++], store), boost);
+			consumer.accept(fieldName, new LatLonPoint(fieldName, values[i++], values[i++]), boost);
 	}
 
 	@Override
@@ -51,8 +51,8 @@ class GeoPointType extends StorableFieldType {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even number values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new GeoPointField(fieldName, ((Number) values[i++]).doubleValue(),
-					((Number) values[i++]).doubleValue(), store), boost);
+			consumer.accept(fieldName, new LatLonPoint(fieldName, ((Number) values[i++]).doubleValue(),
+					((Number) values[i++]).doubleValue()), boost);
 	}
 
 	@Override
@@ -62,8 +62,7 @@ class GeoPointType extends StorableFieldType {
 		TypeUtils.notNull(latitude, fieldName, "The latitude parameter (lat) is missing");
 		final Number longitude = (Number) values.get("lon");
 		TypeUtils.notNull(longitude, fieldName, "The longitude parameter (lon) is missing");
-		consumer.accept(fieldName, new GeoPointField(fieldName, latitude.doubleValue(), longitude.doubleValue(), store),
-				boost);
+		consumer.accept(fieldName, new LatLonPoint(fieldName, latitude.doubleValue(), longitude.doubleValue()), boost);
 	}
 
 	@Override

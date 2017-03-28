@@ -57,8 +57,6 @@ public interface FieldTypeInterface {
 		case FloatField:
 		case FloatPoint:
 			return new FloatPointType(wildcardMatcher, definition);
-		case GeoPoint:
-			return new GeoPointType(wildcardMatcher, definition);
 		case Geo3DPoint:
 			return new Geo3DPointType(wildcardMatcher, definition);
 		case IntDocValuesField:
@@ -66,6 +64,8 @@ public interface FieldTypeInterface {
 		case IntField:
 		case IntPoint:
 			return new IntPointType(wildcardMatcher, definition);
+		case LatLonPoint:
+			return new LatLonPointType(wildcardMatcher, definition);
 		case LongDocValuesField:
 			return new LongDocValuesType(wildcardMatcher, definition);
 		case LongField:

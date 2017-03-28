@@ -1,6 +1,6 @@
 {
   "query": {
-    "query": "GeoPointInBBoxQuery",
+    "query": "LatLonPointBBoxQuery",
     "field": "geo2d",
     "min_latitude": 36.783333,
     "max_latitude": 38.783333,

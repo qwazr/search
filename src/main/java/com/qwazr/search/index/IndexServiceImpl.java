@@ -22,6 +22,7 @@ import com.qwazr.search.query.TermQuery;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.FieldMapWrapper;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -647,11 +648,14 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 		return builder.build();
 	}
 
-	private QueryDefinition getMatchAllDocQuery(final Integer start, final Integer rows) {
+	private QueryDefinition getMatchAllDocQuery(final Integer start, final Integer rows,
+			final FieldMapWrapper<?> wrapper) {
 		final QueryBuilder builder = new QueryBuilder();
-		builder.query(new MatchAllDocsQuery());
-		builder.start(start).rows(rows);
-		builder.returnedField("*");
+		builder.query(new MatchAllDocsQuery()).start(start).rows(rows);
+		if (wrapper == null)
+			builder.returnedField("*");
+		else
+			builder.returnedField(wrapper.fieldMap.keySet());
 		return builder.build();
 	}
 
@@ -663,12 +667,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	private ResultDefinition doSearchObject(final String schemaName, final String indexName,
-			final QueryDefinition query, final Map<String, Field> fields, final Class<?> indexDefinitionClass)
+			final QueryDefinition query, final FieldMapWrapper<?> wrapper)
 			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
 		checkRight(schemaName);
 		final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
-		return index.search(query,
-				ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass));
+		return index.search(query, ResultDocumentBuilder.ObjectBuilderFactory.createFactory(wrapper));
 	}
 
 	@Override
@@ -694,7 +697,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	final public List<Map<String, Object>> getDocuments(final String schemaName, final String indexName,
 			final Integer start, final Integer rows) {
 		try {
-			ResultDefinition result = doSearchMap(schemaName, indexName, getMatchAllDocQuery(start, rows));
+			ResultDefinition result = doSearchMap(schemaName, indexName, getMatchAllDocQuery(start, rows, null));
 			if (result == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "No document found");
 			List<Map<String, Object>> documents = new ArrayList<>();
@@ -709,10 +712,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public <T> T getDocument(final String schemaName, final String indexName, final Object id,
-			final Map<String, Field> fields, final Class<T> indexDefinitionClass) {
+			final FieldMapWrapper<T> wrapper) {
 		try {
-			final ResultDefinition result =
-					doSearchObject(schemaName, indexName, getDocumentQuery(id), fields, indexDefinitionClass);
+			final ResultDefinition result = doSearchObject(schemaName, indexName, getDocumentQuery(id), wrapper);
 			if (result == null)
 				return null;
 			final List<ResultDocumentObject<T>> docs = result.getDocuments();
@@ -726,11 +728,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public <T> List<T> getDocuments(final String schemaName, final String indexName, final Integer start,
-			final Integer rows, final Map<String, Field> fields, final Class<T> indexDefinitionClass) {
+			final Integer rows, final FieldMapWrapper<T> wrapper) {
 		try {
 			final ResultDefinition result =
-					doSearchObject(schemaName, indexName, getMatchAllDocQuery(start, rows), fields,
-							indexDefinitionClass);
+					doSearchObject(schemaName, indexName, getMatchAllDocQuery(start, rows, wrapper), wrapper);
 			if (result == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "No document found");
 			final List<T> documents = new ArrayList<>();
@@ -760,11 +761,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public <T> ResultDefinition.WithObject<T> searchQuery(final String schemaName, final String indexName,
-			final QueryDefinition query, final Map<String, Field> fields, final Class<T> indexDefinitionClass) {
+			final QueryDefinition query, final FieldMapWrapper<T> wrapper) {
 		try {
 			checkRight(schemaName);
 			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilderFactory =
-					ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass);
+					ResultDocumentBuilder.ObjectBuilderFactory.createFactory(wrapper);
 			final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
 			return (ResultDefinition.WithObject<T>) index.search(query, documentBuilderFactory);
 		} catch (Exception e) {

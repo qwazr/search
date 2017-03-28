@@ -16,8 +16,9 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.Converters.ValueConverter;
-import com.qwazr.utils.SerializationUtils;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.FieldMapWrapper;
+import com.qwazr.utils.SerializationUtils;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.util.BytesRef;
 
@@ -50,15 +51,14 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		private final T record;
 		private final Map<String, Field> fieldMap;
 
-		Builder(final int pos, final ScoreDoc scoreDoc, final float maxScore, final Class<T> objectClass,
-				final Map<String, Field> fieldMap) {
+		Builder(final int pos, final ScoreDoc scoreDoc, final float maxScore, final FieldMapWrapper<T> wrapper) {
 			super(pos, scoreDoc, maxScore);
 			try {
-				this.record = objectClass.newInstance();
+				this.record = wrapper.constructor.newInstance();
 			} catch (ReflectiveOperationException e) {
 				throw new ServerException(e);
 			}
-			this.fieldMap = fieldMap;
+			this.fieldMap = wrapper.fieldMap;
 		}
 
 		@Override

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.document.LatLonPoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.Objects;
 
-public class GeoPointDistanceQuery extends AbstractQuery {
+public class LatLonPointDistanceQuery extends AbstractQuery {
 
 	final public String field;
 
@@ -31,14 +32,14 @@ public class GeoPointDistanceQuery extends AbstractQuery {
 
 	final public double radius_meters;
 
-	public GeoPointDistanceQuery() {
+	public LatLonPointDistanceQuery() {
 		field = null;
 		center_latitude = 0;
 		center_longitude = 0;
 		radius_meters = 0;
 	}
 
-	public GeoPointDistanceQuery(final String field, final double centerLatitude, final double centerLongitude,
+	public LatLonPointDistanceQuery(final String field, final double centerLatitude, final double centerLongitude,
 			final double radiusMeters) {
 		Objects.requireNonNull(field, "The field is null");
 		this.field = field;
@@ -49,7 +50,6 @@ public class GeoPointDistanceQuery extends AbstractQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.spatial.geopoint.search.GeoPointDistanceQuery(field, center_latitude,
-				center_longitude, radius_meters);
+		return LatLonPoint.newDistanceQuery(field, center_latitude, center_longitude, radius_meters);
 	}
 }

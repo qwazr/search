@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,23 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.document.LatLonPoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-public class GeoPointInBBoxQuery extends AbstractGeoBoxQuery {
+public class LatLonPointBBoxQuery extends AbstractGeoBoxQuery {
 
-	public GeoPointInBBoxQuery() {
+	public LatLonPointBBoxQuery() {
 	}
 
-	public GeoPointInBBoxQuery(final String field, final double minLatitude, final double maxLatitude,
+	public LatLonPointBBoxQuery(final String field, final double minLatitude, final double maxLatitude,
 			final double minLongitude, final double maxLongitude) {
 		super(field, minLatitude, maxLatitude, minLongitude, maxLongitude);
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.spatial.geopoint.search.GeoPointInBBoxQuery(field, min_latitude, max_latitude,
-				min_longitude, max_longitude);
+		return LatLonPoint.newBoxQuery(field, min_latitude, max_latitude, min_longitude, max_longitude);
 	}
 }

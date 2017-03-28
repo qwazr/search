@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,10 @@ public class IndexSettingsDefinition {
 		FSDirectory, RAMDirectory
 	}
 
+	public enum MergeScheduler {
+		NO, CONCURRENT, SERIAL
+	}
+
 	public static final int DEFAULT_MAX_MERGE_AT_ONCE = 10;
 	public static final int DEFAULT_SEGMENTS_PER_TIER = 10;
 	public static final double DEFAULT_MAX_MERGED_SEGMENT_MB = 5 * 1024 * 1024;
@@ -44,6 +48,9 @@ public class IndexSettingsDefinition {
 
 	@JsonProperty("directory_type")
 	final public Type directoryType;
+
+	@JsonProperty("merge_scheduler")
+	final public MergeScheduler mergeScheduler;
 
 	@JsonProperty("ram_buffer_size")
 	final public Double ramBufferSize;
@@ -65,6 +72,7 @@ public class IndexSettingsDefinition {
 
 	public IndexSettingsDefinition() {
 		directoryType = null;
+		mergeScheduler = null;
 		similarityClass = null;
 		master = null;
 		ramBufferSize = null;
@@ -77,6 +85,7 @@ public class IndexSettingsDefinition {
 
 	private IndexSettingsDefinition(final Builder builder) {
 		this.directoryType = builder.directoryType;
+		this.mergeScheduler = builder.mergeScheduler;
 		this.similarityClass = builder.similarityClass;
 		this.master = builder.master;
 		this.ramBufferSize = builder.ramBufferSize;
@@ -105,6 +114,8 @@ public class IndexSettingsDefinition {
 			return false;
 		final IndexSettingsDefinition s = (IndexSettingsDefinition) o;
 		if (!Objects.equals(directoryType, s.directoryType))
+			return false;
+		if (!Objects.equals(mergeScheduler, s.mergeScheduler))
 			return false;
 		if (!Objects.equals(similarityClass, s.similarityClass))
 			return false;
@@ -140,6 +151,7 @@ public class IndexSettingsDefinition {
 	public static class Builder {
 
 		private Type directoryType;
+		private MergeScheduler mergeScheduler;
 		private String similarityClass;
 		private RemoteIndex master;
 		private Double ramBufferSize;
@@ -154,6 +166,7 @@ public class IndexSettingsDefinition {
 
 		private Builder(final Index annotatedIndex) throws URISyntaxException {
 			directoryType = annotatedIndex.type();
+			mergeScheduler = annotatedIndex.mergeScheduler();
 			similarityClass(annotatedIndex.similarityClass());
 			master(annotatedIndex.replicationMaster());
 			ramBufferSize(annotatedIndex.ramBufferSize());
@@ -166,6 +179,7 @@ public class IndexSettingsDefinition {
 
 		private Builder(final IndexSettingsDefinition settings) {
 			this.directoryType = settings.directoryType;
+			this.mergeScheduler = settings.mergeScheduler;
 			this.similarityClass = settings.similarityClass;
 			this.master = settings.master;
 			this.ramBufferSize = settings.ramBufferSize;
@@ -178,6 +192,11 @@ public class IndexSettingsDefinition {
 
 		public Builder type(final Type directoryType) {
 			this.directoryType = directoryType;
+			return this;
+		}
+
+		public Builder mergeScheduler(final MergeScheduler mergeScheduler) {
+			this.mergeScheduler = mergeScheduler;
 			return this;
 		}
 

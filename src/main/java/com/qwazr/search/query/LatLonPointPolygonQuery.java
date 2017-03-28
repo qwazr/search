@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,14 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.document.LatLonPoint;
 import org.apache.lucene.geo.Polygon;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.Objects;
 
-public class GeoPointInPolygonQuery extends AbstractQuery {
+public class LatLonPointPolygonQuery extends AbstractQuery {
 
 	public final class GeoPolygon {
 
@@ -56,13 +57,13 @@ public class GeoPointInPolygonQuery extends AbstractQuery {
 	@JsonIgnore
 	private Polygon[] lucenePolygons;
 
-	public GeoPointInPolygonQuery() {
+	public LatLonPointPolygonQuery() {
 		field = null;
 		polygons = null;
 		lucenePolygons = null;
 	}
 
-	public GeoPointInPolygonQuery(final String field, final GeoPolygon... poligons) {
+	public LatLonPointPolygonQuery(final String field, final GeoPolygon... poligons) {
 		Objects.requireNonNull(field, "The field is null");
 		Objects.requireNonNull(poligons, "The poligons parameter is null");
 		this.field = field;
@@ -74,10 +75,10 @@ public class GeoPointInPolygonQuery extends AbstractQuery {
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		if (lucenePolygons == null)
 			lucenePolygons = toPolygons(polygons);
-		return new org.apache.lucene.spatial.geopoint.search.GeoPointInPolygonQuery(field, lucenePolygons);
+		return LatLonPoint.newPolygonQuery(field, lucenePolygons);
 	}
 
-	public static Polygon[] toPolygons(GeoPolygon... geoPolygons) {
+	public static Polygon[] toPolygons(final GeoPolygon... geoPolygons) {
 		if (geoPolygons == null)
 			return null;
 		final Polygon[] polygons = new Polygon[geoPolygons.length];

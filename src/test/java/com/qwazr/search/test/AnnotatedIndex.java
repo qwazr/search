@@ -18,6 +18,7 @@ package com.qwazr.search.test;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexOptions;
@@ -35,7 +36,10 @@ import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValues
 import static com.qwazr.search.field.FieldDefinition.Template.StoredField;
 import static com.qwazr.search.field.FieldDefinition.Template.StringField;
 
-@Index(name = AnnotatedIndex.INDEX_NAME_MASTER,  schema = AnnotatedIndex.SCHEMA_NAME, enableTaxonomyIndex = false)
+@Index(name = AnnotatedIndex.INDEX_NAME_MASTER,
+		schema = AnnotatedIndex.SCHEMA_NAME,
+		enableTaxonomyIndex = false,
+		mergeScheduler = IndexSettingsDefinition.MergeScheduler.SERIAL)
 public class AnnotatedIndex {
 
 	public final static String SCHEMA_NAME = "testSchema";

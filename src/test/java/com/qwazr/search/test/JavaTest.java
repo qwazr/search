@@ -43,8 +43,13 @@ public class JavaTest {
 		private static File indexDirectory = null;
 
 		public JavaLibraryTest() {
-			super(IndexSettingsDefinition.of().type(IndexSettingsDefinition.Type.FSDirectory).
-					master("testSchema", "testIndexMaster").ramBufferSize(32d).enableTaxonomyIndex(false).build());
+			super(IndexSettingsDefinition.of()
+					.type(IndexSettingsDefinition.Type.FSDirectory)
+					.mergeScheduler(IndexSettingsDefinition.MergeScheduler.NO)
+					.master("testSchema", "testIndexMaster")
+					.ramBufferSize(32d)
+					.enableTaxonomyIndex(false)
+					.build());
 		}
 
 		@BeforeClass

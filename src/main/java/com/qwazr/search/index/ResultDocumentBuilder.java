@@ -16,12 +16,12 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.utils.FieldMapWrapper;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.util.BytesRef;
 
-import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -95,18 +95,16 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 
 	static class ObjectBuilderFactory<T> extends BuilderFactory<ResultDocumentObject<T>> {
 
-		private final Class<T> objectClass;
-		private final Map<String, Field> fieldMap;
+		private final FieldMapWrapper<T> wrapper;
 
-		private ObjectBuilderFactory(final Class<T> objectClass, final Map<String, Field> fieldMap) {
-			this.objectClass = objectClass;
-			this.fieldMap = fieldMap;
+		private ObjectBuilderFactory(final FieldMapWrapper<T> wrapper) {
+			this.wrapper = wrapper;
 		}
 
 		@Override
 		final ResultDocumentBuilder<ResultDocumentObject<T>> createBuilder(final int pos, final ScoreDoc scoreDoc,
 				final float maxScore) {
-			return new ResultDocumentObject.Builder<>(pos, scoreDoc, maxScore, objectClass, fieldMap);
+			return new ResultDocumentObject.Builder<T>(pos, scoreDoc, maxScore, wrapper);
 		}
 
 		@Override
@@ -120,9 +118,8 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 			return new ResultDefinition.WithObject(resultBuilder);
 		}
 
-		final static <T> ObjectBuilderFactory<T> createFactory(final Map<String, Field> fieldMap,
-				final Class<T> objectClass) {
-			return new ObjectBuilderFactory(objectClass, fieldMap);
+		final static <T> ObjectBuilderFactory<T> createFactory(final FieldMapWrapper<?> wrapper) {
+			return new ObjectBuilderFactory(wrapper);
 		}
 
 	}

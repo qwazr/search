@@ -56,7 +56,7 @@
     "template": "IntPoint"
   },
   "geo2d": {
-    "template": "GeoPoint"
+    "template": "LatLonPoint"
   },
   "geo3d": {
     "template": "Geo3DPoint"

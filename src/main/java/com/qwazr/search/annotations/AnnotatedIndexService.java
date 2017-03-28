@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Emmanuel Keller / QWAZR
+ * Copyright 2016-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,7 +55,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 
-public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
+public class AnnotatedIndexService<T> {
 
 	protected final AnnotatedServiceInterface annotatedService;
 
@@ -70,6 +71,12 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 
 	private final Map<String, Copy> copyMap;
 
+	private final FieldMapWrappers fieldMapWrappers;
+
+	private final FieldMapWrapper<T> schemaFieldMapWrapper;
+
+	private final LinkedHashMap<String, Field> fieldMap;
+
 	/**
 	 * Create a new index service. A class with Index and IndexField annotations.
 	 *
@@ -83,7 +90,6 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass,
 			final String schemaName, final String indexName, final IndexSettingsDefinition settings)
 			throws URISyntaxException {
-		super(new LinkedHashMap<>(), indexDefinitionClass);
 		Objects.requireNonNull(indexService, "The indexService parameter is null");
 		Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
 		this.indexService = indexService;
@@ -95,6 +101,10 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 		this.schemaName = schemaName != null ? schemaName : index.schema();
 		this.indexName = indexName != null ? indexName : index.name();
 		this.settings = settings != null ? settings : IndexSettingsDefinition.of(index).build();
+
+		this.fieldMapWrappers = new FieldMapWrappers();
+		this.schemaFieldMapWrapper = fieldMapWrappers.get(indexDefinitionClass);
+		this.fieldMap = new LinkedHashMap<>();
 
 		indexFieldMap = new LinkedHashMap<>();
 		copyMap = new LinkedHashMap<>();
@@ -282,7 +292,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 		if (annotatedService != null)
 			annotatedService.postDocument(schemaName, indexName, fieldMap, row);
 		else
-			indexService.postMappedDocument(schemaName, indexName, newMap(row));
+			indexService.postMappedDocument(schemaName, indexName, schemaFieldMapWrapper.newMap(row));
 	}
 
 	/**
@@ -298,7 +308,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 		if (annotatedService != null)
 			annotatedService.postDocuments(schemaName, indexName, fieldMap, rows);
 		else
-			indexService.postMappedDocuments(schemaName, indexName, newMapCollection(rows));
+			indexService.postMappedDocuments(schemaName, indexName, schemaFieldMapWrapper.newMapCollection(rows));
 	}
 
 	/**
@@ -314,7 +324,7 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 		if (annotatedService != null)
 			annotatedService.updateDocValues(schemaName, indexName, fieldMap, row);
 		else
-			indexService.updateMappedDocValues(schemaName, indexName, newMap(row));
+			indexService.updateMappedDocValues(schemaName, indexName, schemaFieldMapWrapper.newMap(row));
 	}
 
 	/**
@@ -330,7 +340,26 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 		if (annotatedService != null)
 			annotatedService.updateDocsValues(schemaName, indexName, fieldMap, rows);
 		else
-			indexService.updateMappedDocsValues(schemaName, indexName, newMapCollection(rows));
+			indexService.updateMappedDocsValues(schemaName, indexName, schemaFieldMapWrapper.newMapCollection(rows));
+	}
+
+	private <C> C getDocument(final Object id, final FieldMapWrapper<C> wrapper) throws ReflectiveOperationException {
+		checkParameters();
+		Objects.requireNonNull(id, "The id cannot be empty");
+		if (annotatedService != null)
+			return (C) annotatedService.getDocument(schemaName, indexName, id, wrapper);
+		else
+			return wrapper.toRecord(indexService.getDocument(schemaName, indexName, id.toString()));
+	}
+
+	/**
+	 * @param id          The ID of the document
+	 * @param objectClass the type of the instance to return
+	 * @return an filled object or null if the document does not exist
+	 * @throws ReflectiveOperationException if the document cannot be created
+	 */
+	public <C> C getDocument(final Object id, final Class<C> objectClass) throws ReflectiveOperationException {
+		return getDocument(id, fieldMapWrappers.get(objectClass));
 	}
 
 	/**
@@ -339,20 +368,25 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 	 * @throws ReflectiveOperationException if the document cannot be created
 	 */
 	public T getDocument(final Object id) throws ReflectiveOperationException {
+		return getDocument(id, schemaFieldMapWrapper);
+	}
+
+	private <C> List<C> getDocuments(final Integer start, final Integer rows, final FieldMapWrapper<C> wrapper) {
 		checkParameters();
-		Objects.requireNonNull(id, "The id cannot be empty");
 		if (annotatedService != null)
-			return annotatedService.getDocument(schemaName, indexName, id, fieldMap, objectClass);
+			return annotatedService.getDocuments(schemaName, indexName, start, rows, wrapper);
 		else
-			return toRecord(indexService.getDocument(schemaName, indexName, id.toString()));
+			return wrapper.toRecords(indexService.getDocuments(schemaName, indexName, start, rows));
+	}
+
+	public <C> List<C> getDocuments(final Integer start, final Integer rows, final Class<C> clazz) {
+		checkParameters();
+		return getDocuments(start, rows, fieldMapWrappers.get(clazz));
 	}
 
 	public List<T> getDocuments(final Integer start, final Integer rows) {
 		checkParameters();
-		if (annotatedService != null)
-			return annotatedService.getDocuments(schemaName, indexName, start, rows, fieldMap, objectClass);
-		else
-			return toRecords(indexService.getDocuments(schemaName, indexName, start, rows));
+		return getDocuments(start, rows, schemaFieldMapWrapper);
 	}
 
 	/**
@@ -439,17 +473,29 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 		return indexService.doBackup(schemaName, indexName, backupName);
 	}
 
+	private <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query,
+			final FieldMapWrapper<C> wrapper) {
+		checkParameters();
+		if (annotatedService != null)
+			return annotatedService.searchQuery(schemaName, indexName, query, wrapper);
+		else
+			return toRecords(indexService.searchQuery(schemaName, indexName, query, false), wrapper);
+	}
+
+	public ResultDefinition.WithObject<T> searchQuery(final QueryDefinition query) {
+		return searchQuery(query, schemaFieldMapWrapper);
+	}
+
 	/**
 	 * Execute a search query
 	 *
-	 * @param query the query to execute
+	 * @param query       the query to execute
+	 * @param objectClass the type of the objects to return
 	 * @return the results
 	 */
-	public ResultDefinition.WithObject<T> searchQuery(final QueryDefinition query) {
+	public <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query, final Class<C> objectClass) {
 		checkParameters();
-		if (annotatedService != null)
-			return annotatedService.searchQuery(schemaName, indexName, query, fieldMap, objectClass);
-		return toRecords(indexService.searchQuery(schemaName, indexName, query, false));
+		return searchQuery(query, fieldMapWrappers.get(objectClass));
 	}
 
 	/**
@@ -523,14 +569,15 @@ public class AnnotatedIndexService<T> extends FieldMapWrapper<T> {
 			throw new WebApplicationException(response);
 	}
 
-	private ResultDefinition.WithObject<T> toRecords(final ResultDefinition.WithMap resultWithMap) {
+	private <C> ResultDefinition.WithObject<C> toRecords(final ResultDefinition.WithMap resultWithMap,
+			final FieldMapWrapper<C> wrapper) {
 		if (resultWithMap == null)
 			return null;
-		final List<ResultDocumentObject<T>> documents = new ArrayList<>();
+		final List<ResultDocumentObject<C>> documents = new ArrayList<>();
 		if (resultWithMap.documents != null) {
 			resultWithMap.documents.forEach(resultDocMap -> {
 				try {
-					documents.add(new ResultDocumentObject(resultDocMap, toRecord(resultDocMap.fields)));
+					documents.add(new ResultDocumentObject<C>(resultDocMap, wrapper.toRecord(resultDocMap.fields)));
 				} catch (ReflectiveOperationException e) {
 					throw new RuntimeException(e);
 				}
