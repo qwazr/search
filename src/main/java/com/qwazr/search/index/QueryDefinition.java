@@ -103,12 +103,12 @@ public class QueryDefinition extends BaseQueryDefinition {
 		return new QueryBuilder(queryDefinition);
 	}
 
-	public static QueryBuilder of(final Query luceneQuery) {
-		return new QueryBuilder(null, luceneQuery);
+	public static QueryBuilder of(final Query query) {
+		return new QueryBuilder(query);
 	}
 
 	public static QueryBuilder of(final AbstractQuery query) {
-		return new QueryBuilder(query, null);
+		return new QueryBuilder(query);
 	}
 
 	public static QueryDefinition newQuery(final String jsonString) throws IOException {

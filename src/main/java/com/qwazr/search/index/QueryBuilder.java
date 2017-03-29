@@ -46,12 +46,10 @@ public class QueryBuilder {
 
 	Query luceneQuery;
 
-	QueryBuilder(final AbstractQuery query, final Query luceneQuery) {
-		this.query = query;
-		this.luceneQuery = luceneQuery;
+	public QueryBuilder() {
 	}
 
-	QueryBuilder(final QueryDefinition queryDef) {
+	public QueryBuilder(final QueryDefinition queryDef) {
 		start = queryDef.start;
 		rows = queryDef.rows;
 		queryDebug = queryDef.query_debug;
@@ -67,8 +65,16 @@ public class QueryBuilder {
 		luceneQuery = queryDef.luceneQuery;
 	}
 
+	public QueryBuilder(final Query query) {
+		this.luceneQuery = query;
+	}
+
+	public QueryBuilder(final AbstractQuery query) {
+		this.query = query;
+	}
+
 	public QueryBuilder query(final Query query) {
-		this.luceneQuery = luceneQuery;
+		this.luceneQuery = query;
 		this.query = null;
 		return this;
 	}
