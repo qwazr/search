@@ -102,28 +102,28 @@ public class AnnotatedIndexService<T> {
 		this.indexName = indexName != null ? indexName : index.name();
 		this.settings = settings != null ? settings : IndexSettingsDefinition.of(index).build();
 
-		this.fieldMapWrappers = new FieldMapWrappers();
-		this.schemaFieldMapWrapper = fieldMapWrappers.get(indexDefinitionClass);
 		this.fieldMap = new LinkedHashMap<>();
-
 		indexFieldMap = new LinkedHashMap<>();
 		copyMap = new LinkedHashMap<>();
 		AnnotationsUtils.browseFieldsRecursive(indexDefinitionClass, field -> {
 			if (field.isAnnotationPresent(IndexField.class)) {
 				field.setAccessible(true);
 				final IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
-				final String fieldName = StringUtils.isEmpty(indexField.name()) ? field.getName() : indexField.name();
+				final String fieldName = FieldMapWrappers.getFieldName(indexField.name(), field);
 				indexFieldMap.put(fieldName, indexField);
 				fieldMap.put(fieldName, field);
 			}
 			if (field.isAnnotationPresent(Copy.class)) {
 				field.setAccessible(true);
 				final Copy copy = field.getDeclaredAnnotation(Copy.class);
-				final String fieldName = StringUtils.isEmpty(copy.name()) ? field.getName() : copy.name();
+				final String fieldName = FieldMapWrappers.getFieldName(copy.name(), field);
 				copyMap.put(fieldName, copy);
 				fieldMap.put(fieldName, field);
 			}
 		});
+
+		this.fieldMapWrappers = new FieldMapWrappers(fieldMap.keySet());
+		this.schemaFieldMapWrapper = fieldMapWrappers.get(indexDefinitionClass);
 	}
 
 	public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass)
@@ -560,6 +560,10 @@ public class AnnotatedIndexService<T> {
 	public ResultDefinition<?> deleteByQuery(final QueryDefinition query) {
 		checkParameters();
 		return indexService.searchQuery(schemaName, indexName, query, true);
+	}
+
+	public void registerClass(final Class<?> objectClass) throws NoSuchMethodException {
+		fieldMapWrappers.newFieldMapWrapper(objectClass);
 	}
 
 	public void replicationCheck() {

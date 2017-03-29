@@ -71,14 +71,9 @@ class ResultDefinitionBuilder<T extends ResultDocumentAbstract> {
 		if (resultDocumentBuilders != null) {
 			this.documents = new ArrayList<>(resultDocumentBuilders.length);
 			if (resultDocumentBuilders.length > 0) {
-				final Set<String> returnedFields =
-						queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
-								fieldMap.getStaticFieldSet() :
-								queryDefinition.returned_fields;
-
-				if (returnedFields != null && !returnedFields.isEmpty()) {
-					buildStoredFields(returnedFields);
-					buildDocValuesReturnedFields(returnedFields);
+				if (documentBuilderFactory.returnedFields != null && !documentBuilderFactory.returnedFields.isEmpty()) {
+					buildStoredFields(documentBuilderFactory.returnedFields);
+					buildDocValuesReturnedFields(documentBuilderFactory.returnedFields);
 				}
 				buildHighlights();
 				for (ResultDocumentBuilder<T> rdb : resultDocumentBuilders)

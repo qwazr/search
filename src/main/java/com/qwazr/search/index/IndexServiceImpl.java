@@ -662,16 +662,14 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	private ResultDefinition doSearchMap(final String schemaName, final String indexName, final QueryDefinition query)
 			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
 		checkRight(schemaName);
-		IndexInstance index = indexManager.get(schemaName).get(indexName, false);
-		return index.search(query, ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
+		return indexManager.get(schemaName).get(indexName, false).searchMap(query);
 	}
 
 	private ResultDefinition doSearchObject(final String schemaName, final String indexName,
 			final QueryDefinition query, final FieldMapWrapper<?> wrapper)
 			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
 		checkRight(schemaName);
-		final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
-		return index.search(query, ResultDocumentBuilder.ObjectBuilderFactory.createFactory(wrapper));
+		return indexManager.get(schemaName).get(indexName, false).searchObject(query, wrapper);
 	}
 
 	@Override
@@ -753,7 +751,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			if (delete != null && delete)
 				return index.deleteByQuery(query);
 			else
-				return (ResultDefinition.WithMap) index.search(query, ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
+				return index.searchMap(query);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -764,10 +762,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final QueryDefinition query, final FieldMapWrapper<T> wrapper) {
 		try {
 			checkRight(schemaName);
-			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilderFactory =
-					ResultDocumentBuilder.ObjectBuilderFactory.createFactory(wrapper);
-			final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
-			return (ResultDefinition.WithObject<T>) index.search(query, documentBuilderFactory);
+			return indexManager.get(schemaName).get(indexName, false).searchObject(query, wrapper);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}

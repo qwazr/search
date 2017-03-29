@@ -20,14 +20,29 @@ import com.qwazr.utils.FieldMapWrapper;
 import com.qwazr.utils.StringUtils;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 class FieldMapWrappers extends FieldMapWrapper.Cache {
 
-	FieldMapWrappers() {
+	private final Set<String> indexFields;
+
+	FieldMapWrappers(final Set<String> indexFields) {
 		super(new ConcurrentHashMap<>());
+		this.indexFields = indexFields;
+	}
+
+	static String getFieldName(final String annotationName, final Field field) {
+		return StringUtils.isEmpty(annotationName) ? field.getName() : annotationName;
+	}
+
+	private String checkFieldName(final String annotationName, final Field field) {
+		final String fieldName = getFieldName(annotationName, field);
+		if (indexFields != null && !indexFields.contains(fieldName))
+			throw new IllegalArgumentException("Unknown field: " + fieldName);
+		return fieldName;
 	}
 
 	@Override
@@ -37,15 +52,12 @@ class FieldMapWrappers extends FieldMapWrapper.Cache {
 			if (field.isAnnotationPresent(IndexField.class)) {
 				field.setAccessible(true);
 				final IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
-				final String fieldName = StringUtils.isEmpty(indexField.name()) ? field.getName() : indexField.name();
-				fieldMap.put(fieldName, field);
+				fieldMap.put(checkFieldName(indexField.name(), field), field);
 			}
 			if (field.isAnnotationPresent(IndexMapping.class)) {
 				field.setAccessible(true);
 				final IndexMapping indexMapping = field.getDeclaredAnnotation(IndexMapping.class);
-				final String fieldName =
-						StringUtils.isEmpty(indexMapping.value()) ? field.getName() : indexMapping.value();
-				fieldMap.put(fieldName, field);
+				fieldMap.put(checkFieldName(indexMapping.value(), field), field);
 			}
 		});
 		return new FieldMapWrapper<>(fieldMap, objectClass);

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.apache.lucene.util.BytesRef;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implements Consumer<IndexableField> {
@@ -86,6 +87,12 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 
 	abstract static class BuilderFactory<T extends ResultDocumentAbstract> {
 
+		final Set<String> returnedFields;
+
+		protected BuilderFactory(Set<String> returnedFields) {
+			this.returnedFields = returnedFields;
+		}
+
 		abstract ResultDocumentBuilder<T> createBuilder(int pos, ScoreDoc scoreDoc, float maxScore);
 
 		abstract ResultDocumentBuilder<T>[] createArray(int size);
@@ -93,11 +100,12 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 		abstract ResultDefinition<T> build(ResultDefinitionBuilder<T> resultBuilder);
 	}
 
-	static class ObjectBuilderFactory<T> extends BuilderFactory<ResultDocumentObject<T>> {
+	final static class ObjectBuilderFactory<T> extends BuilderFactory<ResultDocumentObject<T>> {
 
 		private final FieldMapWrapper<T> wrapper;
 
-		private ObjectBuilderFactory(final FieldMapWrapper<T> wrapper) {
+		ObjectBuilderFactory(final FieldMapWrapper<T> wrapper) {
+			super(wrapper.fieldMap.keySet());
 			this.wrapper = wrapper;
 		}
 
@@ -118,15 +126,13 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 			return new ResultDefinition.WithObject(resultBuilder);
 		}
 
-		final static <T> ObjectBuilderFactory<T> createFactory(final FieldMapWrapper<?> wrapper) {
-			return new ObjectBuilderFactory(wrapper);
-		}
-
 	}
 
-	static class MapBuilderFactory extends BuilderFactory<ResultDocumentMap> {
+	final static class MapBuilderFactory extends BuilderFactory<ResultDocumentMap> {
 
-		static final MapBuilderFactory INSTANCE = new MapBuilderFactory();
+		MapBuilderFactory(final Set<String> returnedFields) {
+			super(returnedFields);
+		}
 
 		@Override
 		final ResultDocumentBuilder<ResultDocumentMap> createBuilder(final int pos, final ScoreDoc scoreDoc,

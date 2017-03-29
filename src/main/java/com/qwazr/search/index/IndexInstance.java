@@ -24,6 +24,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.FieldMapWrapper;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
@@ -61,6 +62,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -661,7 +663,7 @@ final public class IndexInstance implements Closeable {
 				indexAnalyzer, queryAnalyzer, fieldMap, facetsState);
 	}
 
-	final ResultDefinition search(final QueryDefinition queryDefinition,
+	private final ResultDefinition search(final QueryDefinition queryDefinition,
 			final ResultDocumentBuilder.BuilderFactory<?> documentBuilderFactory) throws IOException {
 		return query(context -> {
 			try {
@@ -670,6 +672,21 @@ final public class IndexInstance implements Closeable {
 				throw new ServerException(e);
 			}
 		});
+	}
+
+	final ResultDefinition.WithMap searchMap(final QueryDefinition queryDefinition) throws IOException {
+		final Set<String> returnedFields =
+				queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
+						fieldMap.getStaticFieldSet() :
+						queryDefinition.returned_fields;
+		return (ResultDefinition.WithMap) search(queryDefinition,
+				new ResultDocumentBuilder.MapBuilderFactory(returnedFields));
+	}
+
+	final <T> ResultDefinition.WithObject<T> searchObject(final QueryDefinition queryDefinition,
+			final FieldMapWrapper<?> wrapper) throws IOException {
+		return (ResultDefinition.WithObject<T>) search(queryDefinition,
+				new ResultDocumentBuilder.ObjectBuilderFactory(wrapper));
 	}
 
 	final <T> T query(final FunctionUtils.FunctionEx<QueryContext, T, IOException> queryActions) throws IOException {

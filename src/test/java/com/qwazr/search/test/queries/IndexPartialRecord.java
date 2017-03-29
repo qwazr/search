@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.annotations;
+package com.qwazr.search.test.queries;
 
-import com.qwazr.utils.StringUtils;
+import com.qwazr.search.annotations.IndexMapping;
+import com.qwazr.search.field.FieldDefinition;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+public class IndexPartialRecord {
 
-@Retention(RetentionPolicy.RUNTIME)
-public @interface IndexMapping {
+	@IndexMapping(FieldDefinition.ID_FIELD)
+	final public String id = null;
 
-	String value() default StringUtils.EMPTY;
+	@IndexMapping()
+	final public Integer intDocValue = null;
 
 }
