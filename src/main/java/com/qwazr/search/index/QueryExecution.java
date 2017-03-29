@@ -65,7 +65,9 @@ final class QueryExecution {
 		this.queryContext = queryContext;
 		this.queryDef = queryDefinition;
 
-		this.query = queryDef.query == null ? new MatchAllDocsQuery() : queryDef.query.getQuery(queryContext);
+		this.query = queryDef.luceneQuery != null ?
+				queryDef.luceneQuery :
+				queryDef.query == null ? new MatchAllDocsQuery() : queryDef.query.getQuery(queryContext);
 
 		this.sort = queryDef.sorts == null ? null : SortUtils.buildSort(queryContext.fieldMap, queryDef.sorts);
 

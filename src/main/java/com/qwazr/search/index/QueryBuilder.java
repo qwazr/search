@@ -17,36 +17,41 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.query.AbstractQuery;
 import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.similarities.Similarity;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
 
 public class QueryBuilder {
 
-	Integer start = null;
-	Integer rows = null;
-	Boolean queryDebug = null;
-	LinkedHashSet<String> returnedFields = null;
+	Integer start;
+	Integer rows;
+	Boolean queryDebug;
+	LinkedHashSet<String> returnedFields;
 
-	Similarity similarity = null;
+	Similarity similarity;
 
-	LinkedHashMap<String, FacetDefinition> facets = null;
+	LinkedHashMap<String, FacetDefinition> facets;
 
-	LinkedHashMap<String, QueryDefinition.SortEnum> sorts = null;
-	LinkedHashMap<String, QueryDefinition.CollectorDefinition> collectors = null;
+	LinkedHashMap<String, QueryDefinition.SortEnum> sorts;
+	LinkedHashMap<String, QueryDefinition.CollectorDefinition> collectors;
 
-	LinkedHashMap<String, HighlighterDefinition> highlighters = null;
+	LinkedHashMap<String, HighlighterDefinition> highlighters;
 
-	AbstractQuery query = null;
+	AbstractQuery query;
 
-	public QueryBuilder() {
-	}
+	Query luceneQuery;
 
-	public QueryBuilder(final AbstractQuery query) {
+	QueryBuilder(final AbstractQuery query, final Query luceneQuery) {
 		this.query = query;
+		this.luceneQuery = luceneQuery;
 	}
 
-	public QueryBuilder(final QueryDefinition queryDef) {
+	QueryBuilder(final QueryDefinition queryDef) {
 		start = queryDef.start;
 		rows = queryDef.rows;
 		queryDebug = queryDef.query_debug;
@@ -59,6 +64,19 @@ public class QueryBuilder {
 		highlighters = queryDef.highlighters;
 
 		query = queryDef.query;
+		luceneQuery = queryDef.luceneQuery;
+	}
+
+	public QueryBuilder query(final Query query) {
+		this.luceneQuery = luceneQuery;
+		this.query = null;
+		return this;
+	}
+
+	public QueryBuilder query(final AbstractQuery query) {
+		this.luceneQuery = null;
+		this.query = query;
+		return this;
 	}
 
 	public QueryBuilder queryDebug(final Boolean queryDebug) {
@@ -190,11 +208,6 @@ public class QueryBuilder {
 		if (this.highlighters == null)
 			this.highlighters = new LinkedHashMap<>();
 		this.highlighters.put(name, highlighter);
-		return this;
-	}
-
-	public QueryBuilder query(final AbstractQuery query) {
-		this.query = query;
 		return this;
 	}
 

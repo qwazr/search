@@ -15,12 +15,14 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
+import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -53,6 +55,9 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	final public LinkedHashMap<String, HighlighterDefinition> highlighters;
 
+	@JsonIgnore
+	final Query luceneQuery;
+
 	final public AbstractQuery query;
 
 	public static class CollectorDefinition {
@@ -80,6 +85,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		collectors = null;
 		highlighters = null;
 		query = null;
+		luceneQuery = null;
 	}
 
 	QueryDefinition(final QueryBuilder builder) {
@@ -90,14 +96,19 @@ public class QueryDefinition extends BaseQueryDefinition {
 		collectors = builder.collectors;
 		highlighters = builder.highlighters;
 		query = builder.query;
+		luceneQuery = builder.luceneQuery;
 	}
 
-	public static QueryBuilder of() {
-		return new QueryBuilder();
+	public static QueryBuilder of(final QueryDefinition queryDefinition) {
+		return new QueryBuilder(queryDefinition);
+	}
+
+	public static QueryBuilder of(final Query luceneQuery) {
+		return new QueryBuilder(null, luceneQuery);
 	}
 
 	public static QueryBuilder of(final AbstractQuery query) {
-		return new QueryBuilder(query);
+		return new QueryBuilder(query, null);
 	}
 
 	public static QueryDefinition newQuery(final String jsonString) throws IOException {

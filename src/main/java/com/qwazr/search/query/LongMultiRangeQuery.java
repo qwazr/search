@@ -17,7 +17,6 @@ package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
-import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.search.Query;
 
@@ -34,6 +33,10 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery<Long> {
 		upper_values = null;
 	}
 
+	public LongMultiRangeQuery(final String field, final long lowerValue, final long upperValue) {
+		this(field, new long[] { lowerValue }, new long[] { upperValue });
+	}
+
 	public LongMultiRangeQuery(final String field, final long[] lowerValues, final long[] upperValues) {
 		super(field);
 		this.lower_values = lowerValues;
@@ -42,7 +45,10 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery<Long> {
 
 	@Override
 	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return LongPoint.newRangeQuery(field, lower_values, upper_values);
+		if (lower_values.length == 1)
+			return LongPoint.newRangeQuery(field, lower_values[0], upper_values[0]);
+		else
+			return LongPoint.newRangeQuery(field, lower_values, upper_values);
 	}
 
 	public static class Builder extends AbstractBuilder<Long> {
@@ -57,6 +63,7 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery<Long> {
 			return new LongMultiRangeQuery(field, ArrayUtils.toPrimitiveLong(lowerValues),
 					ArrayUtils.toPrimitiveLong(upperValues));
 		}
+		
 	}
 
 }

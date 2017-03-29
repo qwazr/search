@@ -776,7 +776,7 @@ public abstract class JsonAbstractTest {
 
 	private void checkSynonyms(final IndexServiceInterface client, final String queryString,
 			final String... multiWordsHighlights) throws IOException {
-		final QueryBuilder builder = new QueryBuilder(QUERY_HIGHLIGHT);
+		final QueryBuilder builder = QueryDefinition.of(QUERY_HIGHLIGHT);
 		builder.query(StandardQueryParser.of()
 				.setDefaultField("description")
 				.setQueryParserOperator(QueryParserOperator.AND)

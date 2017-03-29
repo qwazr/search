@@ -17,7 +17,6 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.AbstractStreamingOutput;
@@ -28,6 +27,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.SessionToken;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -641,8 +641,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	private QueryDefinition getDocumentQuery(final Object id) {
-		final QueryBuilder builder = new QueryBuilder();
-		builder.query(new TermQuery(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id)));
+		final QueryBuilder builder =
+				QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id)));
 		builder.rows(1);
 		builder.returnedField("*");
 		return builder.build();
@@ -650,8 +650,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	private QueryDefinition getMatchAllDocQuery(final Integer start, final Integer rows,
 			final FieldMapWrapper<?> wrapper) {
-		final QueryBuilder builder = new QueryBuilder();
-		builder.query(new MatchAllDocsQuery()).start(start).rows(rows);
+		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).start(start).rows(rows);
 		if (wrapper == null)
 			builder.returnedField("*");
 		else

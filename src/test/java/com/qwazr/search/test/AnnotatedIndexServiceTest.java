@@ -122,7 +122,7 @@ public class AnnotatedIndexServiceTest {
 		MultiFieldQuery multiFieldQuery =
 				new MultiFieldQuery(fieldBoosts, QueryParserOperator.AND, "Title terms", null);
 
-		QueryBuilder builder = new QueryBuilder(multiFieldQuery);
+		QueryBuilder builder = QueryDefinition.of(multiFieldQuery);
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
 		Assert.assertEquals(Long.valueOf(1), results.total_hits);
 	}
@@ -137,7 +137,7 @@ public class AnnotatedIndexServiceTest {
 	public void test510explain() {
 		MultiFieldQuery mfq = new MultiFieldQuery(QueryParserOperator.AND, "Title terms", null).boost("title", 10F)
 				.boost("content", 1.0F);
-		QueryDefinition query = new QueryBuilder(mfq).build();
+		QueryDefinition query = QueryDefinition.of(mfq).build();
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);
 		Assert.assertNotNull(results);
 		int docId = results.getDocuments().get(0).getDoc();
