@@ -35,7 +35,7 @@ public abstract class AbstractIndexTest {
 	@BeforeClass
 	public static void beforeClass() throws IOException, URISyntaxException {
 		rootDirectory = Files.createTempDirectory("qwazr_index_test");
-		indexManager = new IndexManager(null, rootDirectory, null);
+		indexManager = new IndexManager(rootDirectory, null);
 		indexService = indexManager.getService(IndexRecord.class);
 		indexService.createUpdateSchema();
 		indexService.createUpdateIndex();

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.ClassLoaderUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.lucene.analysis.util.ResourceLoader;
 
@@ -29,13 +29,10 @@ import java.util.Objects;
 
 class FileResourceLoader implements ResourceLoader {
 
-	private final ClassLoaderManager classLoaderManager;
 	private final ResourceLoader delegate;
 	private final File directory;
 
-	FileResourceLoader(final ClassLoaderManager classLoaderManager, final ResourceLoader delegate,
-			final File directory) {
-		this.classLoaderManager = classLoaderManager;
+	FileResourceLoader(final ResourceLoader delegate, final File directory) {
 		this.delegate = delegate;
 		this.directory = directory;
 	}
@@ -64,18 +61,18 @@ class FileResourceLoader implements ResourceLoader {
 	@Override
 	public <T> Class<? extends T> findClass(final String cname, final Class<T> expectedType) {
 		try {
-			return classLoaderManager.findClass(cname);
+			return ClassLoaderUtils.findClass(cname);
 		} catch (ClassNotFoundException e) {
 			throw new ServerException("Cannot find class " + cname, e);
 		}
 	}
 
 	@Override
-	public <T> T newInstance(final String cname, final Class<T> expectedType) {
+	public <T> T newInstance(final String className, final Class<T> expectedType) {
 		try {
-			return findClass(cname, expectedType).newInstance();
+			return findClass(className, expectedType).newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
-			throw new ServerException("Cannot create an instance of class " + cname, e);
+			throw new ServerException("Cannot create an instance of class " + className, e);
 		}
 	}
 }

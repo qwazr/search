@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.utils.ClassLoaderUtils;
 import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.IndexReader;
@@ -29,9 +29,11 @@ class IndexUtils {
 	final static String[] similarityClassPrefixes =
 			{ "", "com.qwazr.search.similarity.", "org.apache.lucene.search.similarities." };
 
-	static Similarity findSimilarity(final ClassLoaderManager classLoaderManager, final String similarityClassname)
+	static Similarity findSimilarity(final String similarityClassname)
 			throws ReflectiveOperationException, IOException {
-		return classLoaderManager.newInstance(similarityClassname, similarityClassPrefixes);
+		final Class<Similarity> similarityClass =
+				ClassLoaderUtils.findClass(similarityClassname, similarityClassPrefixes);
+		return similarityClass.newInstance();
 	}
 
 	static SortedSetDocValuesReaderState getNewFacetsState(final IndexReader indexReader, final String stateFacetField)

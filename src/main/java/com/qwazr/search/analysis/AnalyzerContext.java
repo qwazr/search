@@ -15,8 +15,9 @@
  */
 package com.qwazr.search.analysis;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.utils.ClassLoaderUtils;
+import com.qwazr.utils.ReflectiveUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
@@ -37,7 +38,7 @@ public class AnalyzerContext {
 	public final Map<String, Analyzer> indexAnalyzerMap;
 	public final Map<String, Analyzer> queryAnalyzerMap;
 
-	public AnalyzerContext(final ClassLoaderManager classLoaderManager, final ResourceLoader resourceLoader,
+	public AnalyzerContext(final Map<Class<?>, ?> parameterMap, final ResourceLoader resourceLoader,
 			final Map<String, AnalyzerDefinition> analyzerMap, final Map<String, FieldDefinition> fields,
 			final boolean failOnException) throws ServerException {
 
@@ -55,13 +56,13 @@ public class AnalyzerContext {
 
 				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ?
 						null :
-						findAnalyzer(classLoaderManager, resourceLoader, analyzerMap, fieldDef.analyzer);
+						findAnalyzer(parameterMap, resourceLoader, analyzerMap, fieldDef.analyzer);
 				if (indexAnalyzer != null)
 					indexAnalyzerMap.put(fieldName, indexAnalyzer);
 
 				final Analyzer queryAnalyzer = StringUtils.isEmpty(fieldDef.query_analyzer) ?
 						indexAnalyzer :
-						findAnalyzer(classLoaderManager, resourceLoader, analyzerMap, fieldDef.query_analyzer);
+						findAnalyzer(parameterMap, resourceLoader, analyzerMap, fieldDef.query_analyzer);
 				if (queryAnalyzer != null)
 					queryAnalyzerMap.put(fieldName, queryAnalyzer);
 
@@ -75,17 +76,18 @@ public class AnalyzerContext {
 		});
 	}
 
-	final static String[] analyzerClassPrefixes = { "", "org.apache.lucene.analysis." };
+	final static String[] analyzerClassPrefixes = { StringUtils.EMPTY, "org.apache.lucene.analysis." };
 
-	private static Analyzer findAnalyzer(final ClassLoaderManager classLoaderManager,
-			final ResourceLoader resourceLoader, final Map<String, AnalyzerDefinition> analyzerMap,
-			final String analyzerName) throws InterruptedException, ReflectiveOperationException, IOException {
+	private static Analyzer findAnalyzer(final Map<Class<?>, ?> parameterMap, final ResourceLoader resourceLoader,
+			final Map<String, AnalyzerDefinition> analyzerMap, final String analyzerName)
+			throws InterruptedException, ReflectiveOperationException, IOException {
 		if (analyzerMap != null) {
 			AnalyzerDefinition analyzerDef = analyzerMap.get(analyzerName);
 			if (analyzerDef != null)
-				return new CustomAnalyzer(classLoaderManager, resourceLoader, analyzerDef);
+				return new CustomAnalyzer(resourceLoader, analyzerDef);
 		}
-		return classLoaderManager.newInstance(analyzerName, analyzerClassPrefixes);
+		final Class<Analyzer> analyzerClass = ClassLoaderUtils.findClass(analyzerName, analyzerClassPrefixes);
+		return ReflectiveUtils.findBestMatchingConstructor(parameterMap, analyzerClass).newInstance();
 	}
 
 }

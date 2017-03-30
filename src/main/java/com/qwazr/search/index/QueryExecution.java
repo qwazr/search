@@ -15,10 +15,10 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.collector.ConcurrentCollector;
 import com.qwazr.search.field.SortUtils;
 import com.qwazr.search.query.DrillDownQuery;
+import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.commons.lang3.tuple.Pair;
@@ -81,23 +81,21 @@ final class QueryExecution {
 						&& queryDef.facets != null;
 		if (queryDef.collectors != null && !queryDef.collectors.isEmpty()) {
 			collectorConstructors = new ArrayList<>();
-			isConcurrent = buildExternalCollectors(queryContext.classLoaderManager, queryDef.collectors,
-					collectorConstructors);
+			isConcurrent = buildExternalCollectors(queryDef.collectors, collectorConstructors);
 		} else {
 			collectorConstructors = null;
 			isConcurrent = true;
 		}
 	}
 
-	private static boolean buildExternalCollectors(final ClassLoaderManager classLoaderManager,
-			final Map<String, QueryDefinition.CollectorDefinition> collectors,
+	private static boolean buildExternalCollectors(final Map<String, QueryDefinition.CollectorDefinition> collectors,
 			final List<Pair<Constructor, Object[]>> collectorConstructors) throws ReflectiveOperationException {
 		if (collectors == null || collectors.isEmpty())
 			return true; // By default we use concurrent
 		final AtomicInteger concurrentCollectors = new AtomicInteger(0);
 		final AtomicInteger classicCollectors = new AtomicInteger(0);
 		FunctionUtils.forEach(collectors, (name, collector) -> {
-			final Class<? extends Collector> collectorClass = classLoaderManager.findClass(collector.classname);
+			final Class<? extends Collector> collectorClass = ClassLoaderUtils.findClass(collector.classname);
 			Constructor<?>[] constructors = collectorClass.getConstructors();
 			if (constructors.length == 0)
 				throw new ReflectiveOperationException("No constructor for class: " + collectorClass);

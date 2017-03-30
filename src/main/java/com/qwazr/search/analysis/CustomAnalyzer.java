@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,24 @@
  */
 package com.qwazr.search.analysis;
 
-import com.qwazr.classloader.ClassLoaderManager;
+import com.qwazr.utils.ClassLoaderUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.KeywordTokenizerFactory;
-import org.apache.lucene.analysis.util.*;
+import org.apache.lucene.analysis.util.AbstractAnalysisFactory;
+import org.apache.lucene.analysis.util.ResourceLoader;
+import org.apache.lucene.analysis.util.ResourceLoaderAware;
+import org.apache.lucene.analysis.util.TokenFilterFactory;
+import org.apache.lucene.analysis.util.TokenizerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 final public class CustomAnalyzer extends Analyzer {
 
@@ -32,19 +41,18 @@ final public class CustomAnalyzer extends Analyzer {
 	private final TokenizerFactory tokenizerFactory;
 	private final List<TokenFilterFactory> tokenFilterFactories;
 
-	public CustomAnalyzer(final ClassLoaderManager classLoaderManager, final ResourceLoader resourceLoader,
-			final AnalyzerDefinition analyzerDefinition) throws ReflectiveOperationException, IOException {
+	public CustomAnalyzer(final ResourceLoader resourceLoader, final AnalyzerDefinition analyzerDefinition)
+			throws ReflectiveOperationException, IOException {
 		super(GLOBAL_REUSE_STRATEGY);
 		positionIncrementGap = analyzerDefinition.position_increment_gap == null ?
 				null :
 				new HashMap<>(analyzerDefinition.position_increment_gap);
 		offsetGap = analyzerDefinition.offset_gap == null ? null : new HashMap<>(analyzerDefinition.offset_gap);
-		tokenizerFactory = getFactory(classLoaderManager, resourceLoader, analyzerDefinition.tokenizer,
-				KeywordTokenizerFactory.class);
+		tokenizerFactory = getFactory(resourceLoader, analyzerDefinition.tokenizer, KeywordTokenizerFactory.class);
 		if (analyzerDefinition.filters != null && !analyzerDefinition.filters.isEmpty()) {
 			tokenFilterFactories = new ArrayList<>(analyzerDefinition.filters.size());
 			for (LinkedHashMap<String, String> filterDef : analyzerDefinition.filters)
-				tokenFilterFactories.add(getFactory(classLoaderManager, resourceLoader, filterDef, null));
+				tokenFilterFactories.add(getFactory(resourceLoader, filterDef, null));
 		} else
 			tokenFilterFactories = null;
 	}
@@ -74,8 +82,8 @@ final public class CustomAnalyzer extends Analyzer {
 		return new TokenStreamComponents(source, result);
 	}
 
-	private static <T extends AbstractAnalysisFactory> T getFactory(final ClassLoaderManager classLoaderManager,
-			final ResourceLoader resourceLoader, LinkedHashMap<String, String> args, final Class<T> defaultClass)
+	private static <T extends AbstractAnalysisFactory> T getFactory(final ResourceLoader resourceLoader,
+			LinkedHashMap<String, String> args, final Class<T> defaultClass)
 			throws ReflectiveOperationException, IOException {
 		final String clazz;
 		if (args != null) {
@@ -83,7 +91,7 @@ final public class CustomAnalyzer extends Analyzer {
 			clazz = args.remove("class");
 		} else
 			clazz = null;
-		final Class<T> factoryClass = clazz == null ? defaultClass : getFactoryClass(classLoaderManager, clazz);
+		final Class<T> factoryClass = clazz == null ? defaultClass : getFactoryClass(clazz);
 		if (factoryClass == null)
 			throw new ClassNotFoundException("No class found for: " + clazz);
 		final T factory =
@@ -93,15 +101,15 @@ final public class CustomAnalyzer extends Analyzer {
 		return factory;
 	}
 
-	private static <T extends AbstractAnalysisFactory> Class<T> getFactoryClass(
-			final ClassLoaderManager classLoaderManager, String clazz) throws ClassNotFoundException {
+	private static <T extends AbstractAnalysisFactory> Class<T> getFactoryClass(String clazz)
+			throws ClassNotFoundException {
 		if (!clazz.endsWith("Factory"))
 			clazz += "Factory";
 		try {
-			return classLoaderManager.findClass(clazz);
+			return ClassLoaderUtils.findClass(clazz);
 		} catch (ClassNotFoundException e) {
 			clazz = "org.apache.lucene.analysis." + clazz;
-			return classLoaderManager.findClass(clazz);
+			return ClassLoaderUtils.findClass(clazz);
 		}
 	}
 }

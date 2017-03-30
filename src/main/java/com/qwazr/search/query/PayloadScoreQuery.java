@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ClassLoaderUtils;
 import org.apache.lucene.queries.payloads.AveragePayloadFunction;
@@ -95,11 +94,10 @@ public class PayloadScoreQuery extends AbstractQuery {
 
 	final static String[] payloadFunctionClassPrefixes = { "", "org.apache.lucene.queries.payloads." };
 
-	private static PayloadFunction getPayloadFunction(final ClassLoaderManager classLoaderManager,
-			final String payloadFunction) throws ReflectiveOperationException, IOException {
-		return (PayloadFunction) ClassLoaderUtils.findClass(
-				classLoaderManager == null ? null : classLoaderManager.getClassLoader(), payloadFunction,
-				payloadFunctionClassPrefixes).newInstance();
+	private static PayloadFunction getPayloadFunction(final String payloadFunction)
+			throws ReflectiveOperationException, IOException {
+		return (PayloadFunction) ClassLoaderUtils.findClass(payloadFunction, payloadFunctionClassPrefixes)
+				.newInstance();
 	}
 
 	@Override
@@ -108,7 +106,7 @@ public class PayloadScoreQuery extends AbstractQuery {
 		Objects.requireNonNull(wrapped_query, "The wrapped span query is missing");
 		if (payloadFunction == null) {
 			Objects.requireNonNull(payload_function, "The payload function is missing");
-			payloadFunction = getPayloadFunction(queryContext.getClassLoaderManager(), payload_function);
+			payloadFunction = getPayloadFunction(payload_function);
 		}
 		Objects.requireNonNull(payloadFunction, "The payload function is missing");
 		return new org.apache.lucene.queries.payloads.PayloadScoreQuery(wrapped_query.getQuery(queryContext),

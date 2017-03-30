@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.CustomAnalyzer;
@@ -62,7 +61,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -89,7 +87,6 @@ final public class IndexInstance implements Closeable {
 	private final ExecutorService executorService;
 	private final IndexSettingsDefinition settings;
 	private final FileResourceLoader fileResourceLoader;
-	private final ClassLoaderManager classLoaderManager;
 
 	private final LocalReplicator localReplicator;
 	private final IndexReplicator indexReplicator;
@@ -105,7 +102,6 @@ final public class IndexInstance implements Closeable {
 	private final ReentrantLock facetsReaderStateCacheLog;
 
 	IndexInstance(final IndexInstanceBuilder builder) {
-		this.classLoaderManager = builder.classLoaderManager;
 		this.schema = builder.schema;
 		this.fileSet = builder.fileSet;
 		this.indexName = builder.fileSet.mainDirectory.getName();
@@ -189,7 +185,8 @@ final public class IndexInstance implements Closeable {
 	private void refreshFieldsAnalyzers(final LinkedHashMap<String, AnalyzerDefinition> analyzers,
 			final LinkedHashMap<String, FieldDefinition> fields) throws IOException {
 		final AnalyzerContext analyzerContext =
-				new AnalyzerContext(classLoaderManager, fileResourceLoader, analyzers, fields, true);
+				new AnalyzerContext(schema.getGlobalConstructorParameterMap(), fileResourceLoader, analyzers, fields,
+						true);
 		indexAnalyzer.update(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext.queryAnalyzerMap);
 	}
@@ -243,7 +240,7 @@ final public class IndexInstance implements Closeable {
 		if (analyzerDefinition == null)
 			throw new ServerException(Response.Status.NOT_FOUND,
 					"Analyzer not found: " + analyzerName + " - Index: " + indexName);
-		try (final Analyzer analyzer = new CustomAnalyzer(classLoaderManager, fileResourceLoader, analyzerDefinition)) {
+		try (final Analyzer analyzer = new CustomAnalyzer(fileResourceLoader, analyzerDefinition)) {
 			return TermDefinition.buildTermList(analyzer, StringUtils.EMPTY, inputText);
 		}
 	}
@@ -808,7 +805,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final FileResourceLoader newResourceLoader(final FileResourceLoader resourceLoader) {
-		return new FileResourceLoader(classLoaderManager, resourceLoader, fileSet.resourcesDirectory);
+		return new FileResourceLoader(resourceLoader, fileSet.resourcesDirectory);
 	}
 
 }

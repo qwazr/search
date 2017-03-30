@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.facet.FacetsConfig;
@@ -26,10 +25,6 @@ import java.util.Collection;
 public interface QueryContext {
 
 	default IndexInstance getIndex(String indexName) {
-		return null;
-	}
-
-	default ClassLoaderManager getClassLoaderManager() {
 		return null;
 	}
 

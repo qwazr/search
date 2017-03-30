@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.ServerException;
@@ -49,22 +48,21 @@ public class IndexManager implements Closeable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IndexManager.class);
 
+	private final Map<Class<?>, Object> globalConstructorParameterMap;
+
 	private final ConcurrentHashMap<String, SchemaInstance> schemaMap;
 
 	private final File rootDirectory;
-
-	private final ClassLoaderManager classLoaderManager;
 
 	private final IndexServiceInterface service;
 
 	private final ExecutorService executorService;
 
-	public IndexManager(final ClassLoaderManager classLoaderManager, final Path indexesDirectory,
-			final ExecutorService executorService) throws IOException {
+	public IndexManager(final Path indexesDirectory, final ExecutorService executorService) throws IOException {
 		this.rootDirectory = indexesDirectory.toFile();
 		this.executorService = executorService;
 
-		this.classLoaderManager = classLoaderManager == null ? new ClassLoaderManager(null, null) : classLoaderManager;
+		globalConstructorParameterMap = new ConcurrentHashMap<>();
 		service = new IndexServiceImpl(this);
 		schemaMap = new ConcurrentHashMap<>();
 		File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -73,7 +71,7 @@ public class IndexManager implements Closeable {
 		for (File schemaDirectory : directories) {
 			try {
 				schemaMap.put(schemaDirectory.getName(),
-						new SchemaInstance(classLoaderManager, service, schemaDirectory, executorService));
+						new SchemaInstance(globalConstructorParameterMap, service, schemaDirectory, executorService));
 			} catch (ServerException | IOException | ReflectiveOperationException | URISyntaxException e) {
 				LOGGER.error(e.getMessage(), e);
 			}
@@ -105,6 +103,13 @@ public class IndexManager implements Closeable {
 		return this;
 	}
 
+	public void registerGlobalConstructorParameter(Object... parameters) {
+		if (parameters != null)
+			for (final Object parameter : parameters)
+				if (parameter != null)
+					globalConstructorParameterMap.put(parameter.getClass(), parameter);
+	}
+
 	final public IndexServiceInterface getService() {
 		return service;
 	}
@@ -125,8 +130,9 @@ public class IndexManager implements Closeable {
 		synchronized (schemaMap) {
 			SchemaInstance schemaInstance = schemaMap.get(schemaName);
 			if (schemaInstance == null) {
-				schemaInstance = new SchemaInstance(classLoaderManager, service, new File(rootDirectory, schemaName),
-						executorService);
+				schemaInstance =
+						new SchemaInstance(globalConstructorParameterMap, service, new File(rootDirectory, schemaName),
+								executorService);
 				schemaMap.put(schemaName, schemaInstance);
 			}
 			if (settings != null)

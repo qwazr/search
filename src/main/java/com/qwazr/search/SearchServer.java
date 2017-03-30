@@ -15,7 +15,6 @@
  */
 package com.qwazr.search;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.search.index.IndexServiceBuilder;
@@ -36,19 +35,15 @@ public class SearchServer implements BaseServer {
 
 	private SearchServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
-		final ClassLoaderManager classLoaderManager =
-				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread());
 		final GenericServer.Builder builder =
-				GenericServer.of(configuration, executorService, classLoaderManager.getClassLoader())
-						.webService(WelcomeShutdownService.class);
-		classLoaderManager.registerContextAttribute(builder);
+				GenericServer.of(configuration, executorService).webService(WelcomeShutdownService.class);
 		final ClusterManager clusterManager =
 				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
 						.registerProtocolListener(builder)
 						.registerWebService(builder);
-		final IndexManager indexManager = new IndexManager(classLoaderManager,
-				IndexManager.checkIndexesDirectory(configuration.dataDirectory.toPath()),
-				executorService).registerWebService(builder).registerShutdownListener(builder);
+		final IndexManager indexManager =
+				new IndexManager(IndexManager.checkIndexesDirectory(configuration.dataDirectory.toPath()),
+						executorService).registerWebService(builder).registerShutdownListener(builder);
 		serviceBuilder = new IndexServiceBuilder(clusterManager, indexManager);
 		server = builder.build();
 	}

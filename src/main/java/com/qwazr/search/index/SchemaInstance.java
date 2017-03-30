@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LockUtils;
@@ -32,6 +31,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
@@ -51,9 +51,9 @@ public class SchemaInstance implements Closeable {
 
 	private final ConcurrentHashMap<String, IndexInstanceManager> indexMap;
 
-	private final ClassLoaderManager classLoaderManager;
 	private final IndexServiceInterface service;
 	private final ExecutorService executorService;
+	private final Map<Class<?>, ?> globalConstructorParameterMap;
 	private final File schemaDirectory;
 	private final File settingsFile;
 	private volatile SchemaSettingsDefinition settingsDefinition;
@@ -64,12 +64,12 @@ public class SchemaInstance implements Closeable {
 	private volatile Semaphore readSemaphore;
 	private volatile Semaphore writeSemaphore;
 
-	SchemaInstance(final ClassLoaderManager classLoaderManager, final IndexServiceInterface service,
+	SchemaInstance(final Map<Class<?>, ?> globalConstructorParameterMap, final IndexServiceInterface service,
 			final File schemaDirectory, final ExecutorService executorService)
 			throws IOException, ReflectiveOperationException, URISyntaxException {
 
+		this.globalConstructorParameterMap = globalConstructorParameterMap;
 		this.executorService = executorService;
-		this.classLoaderManager = classLoaderManager;
 		this.service = service;
 		this.schemaDirectory = schemaDirectory;
 		if (!schemaDirectory.exists())
@@ -96,12 +96,12 @@ public class SchemaInstance implements Closeable {
 		return service;
 	}
 
-	final ClassLoaderManager getClassLoaderManager() {
-		return classLoaderManager;
-	}
-
 	final ExecutorService getExecutorService() {
 		return executorService;
+	}
+
+	final Map<Class<?>, ?> getGlobalConstructorParameterMap() {
+		return globalConstructorParameterMap;
 	}
 
 	@Override
@@ -193,7 +193,7 @@ public class SchemaInstance implements Closeable {
 		} else
 			consumer.accept(indexName, get(indexName, false));
 	}
-	
+
 	SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) throws IOException {
 		return backupLock.writeEx(() -> {
 			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))

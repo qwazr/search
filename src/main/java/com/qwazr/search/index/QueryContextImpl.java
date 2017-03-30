@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.util.ResourceLoader;
@@ -38,7 +37,6 @@ final class QueryContextImpl implements QueryContext {
 	final UpdatableAnalyzer queryAnalyzer;
 	final FieldMap fieldMap;
 	final ResourceLoader resourceLoader;
-	final ClassLoaderManager classLoaderManager;
 	final SchemaInstance schemaInstance;
 
 	QueryContextImpl(final SchemaInstance schemaInstance, final ResourceLoader resourceLoader,
@@ -47,7 +45,6 @@ final class QueryContextImpl implements QueryContext {
 			final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
 			final SortedSetDocValuesReaderState docValueReaderState) {
 		this.schemaInstance = schemaInstance;
-		this.classLoaderManager = schemaInstance == null ? null : schemaInstance.getClassLoaderManager();
 		this.resourceLoader = resourceLoader;
 		this.indexSearcher = indexSearcher;
 		this.taxonomyReader = taxonomyReader;
@@ -61,11 +58,6 @@ final class QueryContextImpl implements QueryContext {
 	@Override
 	public IndexInstance getIndex(final String indexName) {
 		return schemaInstance.get(indexName, false);
-	}
-
-	@Override
-	public ClassLoaderManager getClassLoaderManager() {
-		return classLoaderManager;
 	}
 
 	@Override

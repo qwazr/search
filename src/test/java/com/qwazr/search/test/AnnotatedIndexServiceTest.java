@@ -82,7 +82,7 @@ public class AnnotatedIndexServiceTest {
 	public void test100createService() throws IOException, URISyntaxException {
 
 		// Create the indexManager
-		indexManager = new IndexManager(null, workDirectory, executor);
+		indexManager = new IndexManager(workDirectory, executor);
 		Assert.assertNotNull(indexManager);
 
 		// Get the service

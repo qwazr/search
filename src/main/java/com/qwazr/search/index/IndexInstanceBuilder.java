@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
@@ -52,7 +51,6 @@ class IndexInstanceBuilder {
 	final SchemaInstance schema;
 	final IndexFileSet fileSet;
 
-	final ClassLoaderManager classLoaderManager;
 	final ExecutorService executorService;
 
 	private final IndexServiceInterface indexService;
@@ -85,18 +83,17 @@ class IndexInstanceBuilder {
 			final IndexSettingsDefinition settings, UUID indexUuid) {
 		this.schema = schema;
 		this.fileSet = fileSet;
-		this.classLoaderManager = schema.getClassLoaderManager();
 		this.executorService = schema.getExecutorService();
 		this.settings = settings;
 		this.indexService = schema.getService();
-		this.fileResourceLoader = new FileResourceLoader(classLoaderManager, null, fileSet.resourcesDirectory);
+		this.fileResourceLoader = new FileResourceLoader(null, fileSet.resourcesDirectory);
 		this.indexUuid = indexUuid;
 	}
 
 	private void buildCommon() throws IOException, ReflectiveOperationException, URISyntaxException {
 
 		if (settings.similarityClass != null && !settings.similarityClass.isEmpty())
-			similarity = IndexUtils.findSimilarity(classLoaderManager, settings.similarityClass);
+			similarity = IndexUtils.findSimilarity(settings.similarityClass);
 
 		searcherFactory = MultiThreadSearcherFactory.of(executorService, similarity);
 
@@ -104,7 +101,8 @@ class IndexInstanceBuilder {
 		fieldMap = fileSet.loadFieldMap();
 
 		final AnalyzerContext context =
-				new AnalyzerContext(classLoaderManager, fileResourceLoader, analyzerMap, fieldMap, false);
+				new AnalyzerContext(schema.getGlobalConstructorParameterMap(), fileResourceLoader, analyzerMap,
+						fieldMap, false);
 		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
 

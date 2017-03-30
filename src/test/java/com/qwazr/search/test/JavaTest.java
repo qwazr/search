@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.test;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
@@ -54,12 +53,9 @@ public class JavaTest {
 
 		@BeforeClass
 		public static void beforeClass() throws IOException {
-			final Path srcDirectory = Files.createTempDirectory("qwazr_src_test");
 			final Path rootDirectory = Files.createTempDirectory("qwazr_index_test");
 			indexDirectory = rootDirectory.toFile();
-			ClassLoaderManager classLoaderManager =
-					new ClassLoaderManager(srcDirectory.toFile(), Thread.currentThread());
-			indexManager = new IndexManager(classLoaderManager, rootDirectory, Executors.newCachedThreadPool());
+			indexManager = new IndexManager(rootDirectory, Executors.newCachedThreadPool());
 		}
 
 		@Override

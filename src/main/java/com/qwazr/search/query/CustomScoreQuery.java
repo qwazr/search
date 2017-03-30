@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ClassLoaderUtils;
 import org.apache.lucene.index.LeafReaderContext;
@@ -93,8 +92,7 @@ public class CustomScoreQuery extends AbstractQuery {
 		if (customScoreProviderClass != null)
 			customScoreQuery = buildCustomScoreQueryProvider(query, queryContext, customScoreProviderClass);
 		else if (customScoreProviderClassName != null)
-			customScoreQuery = buildCustomScoreQueryProvider(query, queryContext,
-					getProviderClass(queryContext.getClassLoaderManager()));
+			customScoreQuery = buildCustomScoreQueryProvider(query, queryContext, getProviderClass());
 		else
 			customScoreQuery = buildCustomScoreQuery(query, queryContext);
 		return customScoreQuery;
@@ -112,11 +110,10 @@ public class CustomScoreQuery extends AbstractQuery {
 			return new org.apache.lucene.queries.CustomScoreQuery(query);
 	}
 
-	private Class<? extends CustomScoreProvider> getProviderClass(final ClassLoaderManager classLoaderManager)
+	private Class<? extends CustomScoreProvider> getProviderClass()
 			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		Class<? extends CustomScoreProvider> customScoreProviderClass =
-				ClassLoaderUtils.findClass(classLoaderManager == null ? null : classLoaderManager.getClassLoader(),
-						customScoreProviderClassName, null);
+				ClassLoaderUtils.findClass(customScoreProviderClassName, null);
 		Objects.requireNonNull(customScoreProviderClass, "Cannot find the class for " + customScoreProviderClassName);
 		return customScoreProviderClass;
 	}
