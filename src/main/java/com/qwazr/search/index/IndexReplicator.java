@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,12 +56,12 @@ class IndexReplicator implements Replicator {
 
 	private final Set<InputStream> inputStreams;
 
-	IndexReplicator(final IndexServiceInterface service, final RemoteIndex master, final File masterUuidFile,
+	IndexReplicator(final IndexServiceInterface localService, final RemoteIndex master, final File masterUuidFile,
 			final Directory indexDirectory, final Directory taxonomyDirectory, final Path replWorkPath,
 			final Callable<Boolean> callback) throws URISyntaxException, IOException {
 		this.master = master;
 		this.masterUuidFile = masterUuidFile;
-		this.indexService = master == null ? null : master.host == null ? service : new IndexSingleClient(master);
+		this.indexService = master == null ? null : master.host == null ? localService : new IndexSingleClient(master);
 		if (masterUuidFile.exists() && masterUuidFile.length() > 0) {
 			this.masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
 			this.masterUuidString = masterUuid.toString();

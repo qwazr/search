@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,9 @@
 package com.qwazr.search.analysis;
 
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.utils.ClassLoaderUtils;
-import com.qwazr.utils.ReflectiveUtils;
-import com.qwazr.utils.StringUtils;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.ClassLoaderUtils;
+import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.slf4j.Logger;
@@ -38,9 +37,9 @@ public class AnalyzerContext {
 	public final Map<String, Analyzer> indexAnalyzerMap;
 	public final Map<String, Analyzer> queryAnalyzerMap;
 
-	public AnalyzerContext(final Map<Class<?>, ?> parameterMap, final ResourceLoader resourceLoader,
-			final Map<String, AnalyzerDefinition> analyzerMap, final Map<String, FieldDefinition> fields,
-			final boolean failOnException) throws ServerException {
+	public AnalyzerContext(final ResourceLoader resourceLoader, final Map<String, FieldDefinition> fields,
+			final boolean failOnException, final Map<String, ? extends AnalyzerFactory>... analyzerFactoryMaps)
+			throws ServerException {
 
 		if (fields == null || fields.size() == 0) {
 			this.indexAnalyzerMap = Collections.emptyMap();
@@ -56,13 +55,13 @@ public class AnalyzerContext {
 
 				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ?
 						null :
-						findAnalyzer(parameterMap, resourceLoader, analyzerMap, fieldDef.analyzer);
+						findAnalyzer(resourceLoader, fieldDef.analyzer, analyzerFactoryMaps);
 				if (indexAnalyzer != null)
 					indexAnalyzerMap.put(fieldName, indexAnalyzer);
 
 				final Analyzer queryAnalyzer = StringUtils.isEmpty(fieldDef.query_analyzer) ?
 						indexAnalyzer :
-						findAnalyzer(parameterMap, resourceLoader, analyzerMap, fieldDef.query_analyzer);
+						findAnalyzer(resourceLoader, fieldDef.query_analyzer, analyzerFactoryMaps);
 				if (queryAnalyzer != null)
 					queryAnalyzerMap.put(fieldName, queryAnalyzer);
 
@@ -78,16 +77,20 @@ public class AnalyzerContext {
 
 	final static String[] analyzerClassPrefixes = { StringUtils.EMPTY, "org.apache.lucene.analysis." };
 
-	private static Analyzer findAnalyzer(final Map<Class<?>, ?> parameterMap, final ResourceLoader resourceLoader,
-			final Map<String, AnalyzerDefinition> analyzerMap, final String analyzerName)
+	private static Analyzer findAnalyzer(final ResourceLoader resourceLoader, final String analyzerName,
+			final Map<String, ? extends AnalyzerFactory>... analyzerFactoryMaps)
 			throws InterruptedException, ReflectiveOperationException, IOException {
-		if (analyzerMap != null) {
-			AnalyzerDefinition analyzerDef = analyzerMap.get(analyzerName);
-			if (analyzerDef != null)
-				return new CustomAnalyzer(resourceLoader, analyzerDef);
+		if (analyzerFactoryMaps != null) {
+			for (final Map<String, ? extends AnalyzerFactory> analyzerFactoryMap : analyzerFactoryMaps) {
+				if (analyzerFactoryMap != null) {
+					final AnalyzerFactory factory = analyzerFactoryMap.get(analyzerName);
+					if (factory != null)
+						return factory.createAnalyzer(resourceLoader);
+				}
+			}
 		}
 		final Class<Analyzer> analyzerClass = ClassLoaderUtils.findClass(analyzerName, analyzerClassPrefixes);
-		return ReflectiveUtils.findBestMatchingConstructor(parameterMap, analyzerClass).newInstance();
+		return analyzerClass.newInstance();
 	}
 
 }

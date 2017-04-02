@@ -15,6 +15,7 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -23,19 +24,23 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-class MultiSearchInstance implements Closeable, AutoCloseable {
+class MultiSearchInstance implements Closeable {
 
-	private final SchemaInstance schemaInstance;
+	private final IndexInstance.Provider indexProvider;
+	private final Map<String, AnalyzerFactory> analyzerFactoryMap;
 	private final ExecutorService executorService;
 	private final Set<IndexInstance> indexInstances;
 	private volatile MultiSearchContext multiSearchContext;
 
-	MultiSearchInstance(final SchemaInstance schemaInstance, final ExecutorService executorService)
+	MultiSearchInstance(final IndexInstance.Provider indexProvider,
+			final Map<String, AnalyzerFactory> analyzerFactoryMap, final ExecutorService executorService)
 			throws IOException, ServerException {
-		this.schemaInstance = schemaInstance;
+		this.indexProvider = indexProvider;
+		this.analyzerFactoryMap = analyzerFactoryMap;
 		this.executorService = executorService;
 		this.indexInstances = new HashSet<>();
 		this.multiSearchContext = null;
@@ -63,7 +68,9 @@ class MultiSearchInstance implements Closeable, AutoCloseable {
 			return context;
 		synchronized (indexInstances) {
 			if (multiSearchContext == null)
-				multiSearchContext = new MultiSearchContext(schemaInstance, executorService, indexInstances, true);
+				multiSearchContext =
+						new MultiSearchContext(indexProvider, analyzerFactoryMap, executorService, indexInstances,
+								true);
 			return multiSearchContext;
 		}
 	}

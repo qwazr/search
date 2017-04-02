@@ -15,10 +15,12 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
@@ -31,29 +33,27 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-public class SchemaInstance implements Closeable {
+class SchemaInstance implements IndexInstance.Provider, Closeable {
 
 	private final static String SETTINGS_FILE = "settings.json";
 
 	private final ConcurrentHashMap<String, IndexInstanceManager> indexMap;
+	private final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap;
 
+	private final ReadWriteSemaphores readWriteSemaphores;
 	private final IndexServiceInterface service;
 	private final ExecutorService executorService;
-	private final Map<Class<?>, ?> globalConstructorParameterMap;
 	private final File schemaDirectory;
 	private final File settingsFile;
 	private volatile SchemaSettingsDefinition settingsDefinition;
@@ -61,14 +61,12 @@ public class SchemaInstance implements Closeable {
 
 	private final LockUtils.ReadWriteLock backupLock = new LockUtils.ReadWriteLock();
 
-	private volatile Semaphore readSemaphore;
-	private volatile Semaphore writeSemaphore;
-
-	SchemaInstance(final Map<Class<?>, ?> globalConstructorParameterMap, final IndexServiceInterface service,
-			final File schemaDirectory, final ExecutorService executorService)
+	SchemaInstance(final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap,
+			final IndexServiceInterface service, final File schemaDirectory, final ExecutorService executorService)
 			throws IOException, ReflectiveOperationException, URISyntaxException {
 
-		this.globalConstructorParameterMap = globalConstructorParameterMap;
+		this.readWriteSemaphores = new ReadWriteSemaphores(null, null);
+		this.analyzerFactoryMap = analyzerFactoryMap;
 		this.executorService = executorService;
 		this.service = service;
 		this.schemaDirectory = schemaDirectory;
@@ -85,23 +83,13 @@ public class SchemaInstance implements Closeable {
 				SchemaSettingsDefinition.EMPTY;
 		checkSettings();
 
-		File[] directories = schemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
+		final File[] directories = schemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
 		if (directories == null)
 			return;
 		for (File indexDirectory : directories)
-			indexMap.put(indexDirectory.getName(), new IndexInstanceManager(this, indexDirectory));
-	}
-
-	final IndexServiceInterface getService() {
-		return service;
-	}
-
-	final ExecutorService getExecutorService() {
-		return executorService;
-	}
-
-	final Map<Class<?>, ?> getGlobalConstructorParameterMap() {
-		return globalConstructorParameterMap;
+			indexMap.put(indexDirectory.getName(),
+					new IndexInstanceManager(this, analyzerFactoryMap, readWriteSemaphores, executorService, service,
+							indexDirectory));
 	}
 
 	@Override
@@ -113,7 +101,8 @@ public class SchemaInstance implements Closeable {
 		Objects.requireNonNull(settings, "The settings cannot be null");
 		return indexMap.computeIfAbsent(indexName, name -> {
 			try {
-				return new IndexInstanceManager(this, new File(schemaDirectory, name));
+				return new IndexInstanceManager(this, analyzerFactoryMap, readWriteSemaphores, executorService, service,
+						new File(schemaDirectory, name));
 			} catch (IOException e) {
 				throw new ServerException(e);
 			}
@@ -142,6 +131,11 @@ public class SchemaInstance implements Closeable {
 		} catch (Exception e) {
 			throw new ServerException(e);
 		}
+	}
+
+	@Override
+	public IndexInstance getIndex(String name) {
+		return get(name, false);
 	}
 
 	void delete() {
@@ -296,64 +290,22 @@ public class SchemaInstance implements Closeable {
 
 	private synchronized void checkSettings() throws IOException, URISyntaxException {
 		if (settingsDefinition == null) {
-			readSemaphore = null;
-			writeSemaphore = null;
+			readWriteSemaphores.setReadSize(null);
+			readWriteSemaphores.setWriteSize(null);
 			return;
 		}
-		if (settingsDefinition.max_simultaneous_read != null)
-			readSemaphore = new Semaphore(settingsDefinition.max_simultaneous_read);
-		else
-			readSemaphore = null;
-		if (settingsDefinition.max_simultaneous_write != null)
-			writeSemaphore = new Semaphore(settingsDefinition.max_simultaneous_write);
-		else
-			writeSemaphore = null;
+		readWriteSemaphores.setReadSize(settingsDefinition.max_simultaneous_read);
+		readWriteSemaphores.setWriteSize(settingsDefinition.max_simultaneous_write);
+
 		if (!StringUtils.isEmpty(settingsDefinition.backup_directory_path))
 			backupRootDirectory = new File(settingsDefinition.backup_directory_path).toPath();
 		else
 			backupRootDirectory = null;
 	}
 
-	private static Semaphore atomicAquire(final Semaphore semaphore) {
-		if (semaphore == null)
-			return null;
-		try {
-			semaphore.acquire();
-			return semaphore;
-		} catch (InterruptedException e) {
-			throw new ServerException(e);
-		}
-	}
-
-	Semaphore acquireReadSemaphore() {
-		return atomicAquire(readSemaphore);
-	}
-
-	Semaphore acquireWriteSemaphore() {
-		return atomicAquire(writeSemaphore);
-	}
-
-	final void checkSize(final int addSize) throws IOException {
-		if (settingsDefinition == null)
-			return;
-		if (settingsDefinition.max_size == null)
-			return;
-		final AtomicLong totalSize = new AtomicLong();
-		indexIterator("*", (name, indexInstance) -> {
-			final long indexSize;
-			try {
-				indexSize = indexInstance.getStatus().num_docs;
-			} catch (IOException | InterruptedException e) {
-				throw new ServerException(e);
-			}
-			if (totalSize.addAndGet(indexSize) + addSize > settingsDefinition.max_size)
-				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-						"This schema is limited to " + settingsDefinition.max_size + " documents");
-		});
-	}
-
-	IndexCheckStatus checkIndex(String indexName) throws IOException {
+	IndexCheckStatus checkIndex(final String indexName) throws IOException {
 		final IndexInstanceManager indexInstanceManager = indexMap.get(indexName);
 		return indexInstanceManager == null ? null : new IndexCheckStatus(indexInstanceManager.check());
 	}
+
 }

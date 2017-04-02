@@ -37,14 +37,14 @@ final class QueryContextImpl implements QueryContext {
 	final UpdatableAnalyzer queryAnalyzer;
 	final FieldMap fieldMap;
 	final ResourceLoader resourceLoader;
-	final SchemaInstance schemaInstance;
+	final IndexInstance.Provider indexProvider;
 
-	QueryContextImpl(final SchemaInstance schemaInstance, final ResourceLoader resourceLoader,
+	QueryContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
 			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
 			final ExecutorService executorService, final UpdatableAnalyzer indexAnalyzer,
 			final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
 			final SortedSetDocValuesReaderState docValueReaderState) {
-		this.schemaInstance = schemaInstance;
+		this.indexProvider = indexProvider;
 		this.resourceLoader = resourceLoader;
 		this.indexSearcher = indexSearcher;
 		this.taxonomyReader = taxonomyReader;
@@ -57,7 +57,7 @@ final class QueryContextImpl implements QueryContext {
 
 	@Override
 	public IndexInstance getIndex(final String indexName) {
-		return schemaInstance.get(indexName, false);
+		return indexProvider == null ? null : indexProvider.getIndex(indexName);
 	}
 
 	@Override

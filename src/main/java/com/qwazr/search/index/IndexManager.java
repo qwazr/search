@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.ServerException;
@@ -48,13 +49,13 @@ public class IndexManager implements Closeable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IndexManager.class);
 
-	private final Map<Class<?>, Object> globalConstructorParameterMap;
-
 	private final ConcurrentHashMap<String, SchemaInstance> schemaMap;
 
 	private final File rootDirectory;
 
 	private final IndexServiceInterface service;
+
+	private final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap;
 
 	private final ExecutorService executorService;
 
@@ -62,16 +63,17 @@ public class IndexManager implements Closeable {
 		this.rootDirectory = indexesDirectory.toFile();
 		this.executorService = executorService;
 
-		globalConstructorParameterMap = new ConcurrentHashMap<>();
 		service = new IndexServiceImpl(this);
 		schemaMap = new ConcurrentHashMap<>();
+		analyzerFactoryMap = new ConcurrentHashMap<>();
+
 		File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
 		if (directories == null)
 			return;
 		for (File schemaDirectory : directories) {
 			try {
 				schemaMap.put(schemaDirectory.getName(),
-						new SchemaInstance(globalConstructorParameterMap, service, schemaDirectory, executorService));
+						new SchemaInstance(analyzerFactoryMap, service, schemaDirectory, executorService));
 			} catch (ServerException | IOException | ReflectiveOperationException | URISyntaxException e) {
 				LOGGER.error(e.getMessage(), e);
 			}
@@ -103,11 +105,9 @@ public class IndexManager implements Closeable {
 		return this;
 	}
 
-	public void registerGlobalConstructorParameter(Object... parameters) {
-		if (parameters != null)
-			for (final Object parameter : parameters)
-				if (parameter != null)
-					globalConstructorParameterMap.put(parameter.getClass(), parameter);
+	public IndexManager registerAnalyzerFactory(final String name, final AnalyzerFactory factory) {
+		analyzerFactoryMap.put(name, factory);
+		return this;
 	}
 
 	final public IndexServiceInterface getService() {
@@ -130,9 +130,8 @@ public class IndexManager implements Closeable {
 		synchronized (schemaMap) {
 			SchemaInstance schemaInstance = schemaMap.get(schemaName);
 			if (schemaInstance == null) {
-				schemaInstance =
-						new SchemaInstance(globalConstructorParameterMap, service, new File(rootDirectory, schemaName),
-								executorService);
+				schemaInstance = new SchemaInstance(analyzerFactoryMap, service, new File(rootDirectory, schemaName),
+						executorService);
 				schemaMap.put(schemaName, schemaInstance);
 			}
 			if (settings != null)

@@ -16,11 +16,13 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerContext;
-import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.analysis.AnalyzerFactory;
+import com.qwazr.search.analysis.CustomAnalyzer;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -41,6 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
@@ -48,10 +51,10 @@ import static org.apache.lucene.replicator.IndexAndTaxonomyRevision.SnapshotDire
 
 class IndexInstanceBuilder {
 
-	final SchemaInstance schema;
 	final IndexFileSet fileSet;
-
 	final ExecutorService executorService;
+	final ReadWriteSemaphores readWriteSemaphores;
+	final IndexInstance.Provider indexProvider;
 
 	private final IndexServiceInterface indexService;
 
@@ -65,7 +68,8 @@ class IndexInstanceBuilder {
 	private IndexWriter indexWriter = null;
 	private SnapshotDirectoryTaxonomyWriter taxonomyWriter = null;
 
-	LinkedHashMap<String, AnalyzerDefinition> analyzerMap = null;
+	final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap;
+	LinkedHashMap<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap = null;
 	LinkedHashMap<String, FieldDefinition> fieldMap = null;
 
 	WriterAndSearcher writerAndSearcher = null;
@@ -79,13 +83,17 @@ class IndexInstanceBuilder {
 	Similarity similarity = null;
 	SearcherFactory searcherFactory = null;
 
-	IndexInstanceBuilder(final SchemaInstance schema, final IndexFileSet fileSet,
+	IndexInstanceBuilder(final IndexInstance.Provider indexProvider,
+			final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
+			final ExecutorService executorService, final IndexServiceInterface indexService, final IndexFileSet fileSet,
 			final IndexSettingsDefinition settings, UUID indexUuid) {
-		this.schema = schema;
 		this.fileSet = fileSet;
-		this.executorService = schema.getExecutorService();
+		this.executorService = executorService;
+		this.readWriteSemaphores = readWriteSemaphores;
+		this.indexProvider = indexProvider;
 		this.settings = settings;
-		this.indexService = schema.getService();
+		this.globalAnalyzerFactoryMap = globalAnalyzerFactoryMap;
+		this.indexService = indexService;
 		this.fileResourceLoader = new FileResourceLoader(null, fileSet.resourcesDirectory);
 		this.indexUuid = indexUuid;
 	}
@@ -97,12 +105,10 @@ class IndexInstanceBuilder {
 
 		searcherFactory = MultiThreadSearcherFactory.of(executorService, similarity);
 
-		analyzerMap = fileSet.loadAnalyzerMap();
+		localAnalyzerFactoryMap = fileSet.loadAnalyzerDefinitionMap();
 		fieldMap = fileSet.loadFieldMap();
 
-		final AnalyzerContext context =
-				new AnalyzerContext(schema.getGlobalConstructorParameterMap(), fileResourceLoader, analyzerMap,
-						fieldMap, false);
+		final AnalyzerContext context = new AnalyzerContext(fileResourceLoader, fieldMap, false);
 		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
 

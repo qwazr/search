@@ -94,7 +94,7 @@ final class QueryExecution {
 			return true; // By default we use concurrent
 		final AtomicInteger concurrentCollectors = new AtomicInteger(0);
 		final AtomicInteger classicCollectors = new AtomicInteger(0);
-		FunctionUtils.forEach(collectors, (name, collector) -> {
+		FunctionUtils.forEachEx(collectors, (name, collector) -> {
 			final Class<? extends Collector> collectorClass = ClassLoaderUtils.findClass(collector.classname);
 			Constructor<?>[] constructors = collectorClass.getConstructors();
 			if (constructors.length == 0)

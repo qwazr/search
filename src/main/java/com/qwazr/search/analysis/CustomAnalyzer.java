@@ -42,7 +42,7 @@ final public class CustomAnalyzer extends Analyzer {
 	private final List<TokenFilterFactory> tokenFilterFactories;
 
 	public CustomAnalyzer(final ResourceLoader resourceLoader, final AnalyzerDefinition analyzerDefinition)
-			throws ReflectiveOperationException, IOException {
+			throws IOException, ReflectiveOperationException {
 		super(GLOBAL_REUSE_STRATEGY);
 		positionIncrementGap = analyzerDefinition.position_increment_gap == null ?
 				null :
@@ -112,4 +112,37 @@ final public class CustomAnalyzer extends Analyzer {
 			return ClassLoaderUtils.findClass(clazz);
 		}
 	}
+
+	final public static class Factory implements AnalyzerFactory {
+
+		final public AnalyzerDefinition definition;
+
+		public Factory(AnalyzerDefinition definition) {
+			this.definition = definition;
+		}
+
+		@Override
+		public Analyzer createAnalyzer(ResourceLoader resourceLoader) throws IOException, ReflectiveOperationException {
+			return new CustomAnalyzer(resourceLoader, definition);
+		}
+	}
+
+	public static LinkedHashMap<String, CustomAnalyzer.Factory> createFactoryMap(
+			final Map<String, AnalyzerDefinition> definitionMap) {
+		if (definitionMap == null)
+			return null;
+		final LinkedHashMap<String, CustomAnalyzer.Factory> factoryMap = new LinkedHashMap<>();
+		definitionMap.forEach((name, def) -> factoryMap.put(name, new CustomAnalyzer.Factory(def)));
+		return factoryMap;
+	}
+
+	public static LinkedHashMap<String, AnalyzerDefinition> createDefinitionMap(
+			final LinkedHashMap<String, CustomAnalyzer.Factory> factoryMap) {
+		if (factoryMap == null)
+			return null;
+		final LinkedHashMap<String, AnalyzerDefinition> definitionMap = new LinkedHashMap<>();
+		factoryMap.forEach((name, factory) -> definitionMap.put(name, factory.definition));
+		return definitionMap;
+	}
+
 }

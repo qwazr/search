@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.search.analysis.CustomAnalyzer;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
@@ -27,6 +28,7 @@ import com.qwazr.utils.FieldMapWrapper;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
@@ -68,16 +70,20 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
 
 final public class IndexInstance implements Closeable {
+
+	@FunctionalInterface
+	public interface Provider {
+		IndexInstance getIndex(String name);
+	}
 
 	private final IndexFileSet fileSet;
 	private final UUID indexUuid;
 	private final String indexName;
 
-	private final SchemaInstance schema;
+	private final ReadWriteSemaphores readWriteSemaphores;
 	private final Directory dataDirectory;
 	private final Directory taxonomyDirectory;
 	private final WriterAndSearcher writerAndSearcher;
@@ -87,6 +93,7 @@ final public class IndexInstance implements Closeable {
 	private final ExecutorService executorService;
 	private final IndexSettingsDefinition settings;
 	private final FileResourceLoader fileResourceLoader;
+	private final Provider indexProvider;
 
 	private final LocalReplicator localReplicator;
 	private final IndexReplicator indexReplicator;
@@ -96,19 +103,24 @@ final public class IndexInstance implements Closeable {
 	private final UpdatableAnalyzer queryAnalyzer;
 
 	private volatile FieldMap fieldMap;
-	private volatile LinkedHashMap<String, AnalyzerDefinition> analyzerMap;
+	private volatile LinkedHashMap<String, AnalyzerDefinition> analyzerDefinitionMap;
+	private final LinkedHashMap<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap;
+	private final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap;
 
 	private volatile Pair<IndexReader, SortedSetDocValuesReaderState> facetsReaderStateCache;
 	private final ReentrantLock facetsReaderStateCacheLog;
 
 	IndexInstance(final IndexInstanceBuilder builder) {
-		this.schema = builder.schema;
+		this.readWriteSemaphores = builder.readWriteSemaphores;
+		this.indexProvider = builder.indexProvider;
 		this.fileSet = builder.fileSet;
 		this.indexName = builder.fileSet.mainDirectory.getName();
 		this.indexUuid = builder.indexUuid;
 		this.dataDirectory = builder.dataDirectory;
 		this.taxonomyDirectory = builder.taxonomyDirectory;
-		this.analyzerMap = builder.analyzerMap;
+		this.localAnalyzerFactoryMap = builder.localAnalyzerFactoryMap;
+		this.analyzerDefinitionMap = CustomAnalyzer.createDefinitionMap(localAnalyzerFactoryMap);
+		this.globalAnalyzerFactoryMap = builder.globalAnalyzerFactoryMap;
 		this.fieldMap =
 				builder.fieldMap == null ? null : new FieldMap(builder.fieldMap, builder.settings.sortedSetFacetField);
 		this.writerAndSearcher = builder.writerAndSearcher;
@@ -151,7 +163,7 @@ final public class IndexInstance implements Closeable {
 	private IndexStatus getIndexStatus() throws IOException {
 		return writerAndSearcher.search((indexSearcher, taxonomyReader) -> new IndexStatus(indexUuid,
 				indexReplicator != null ? indexReplicator.getMasterUuid() : null, dataDirectory, indexSearcher,
-				writerAndSearcher.getIndexWriter(), settings, analyzerMap.keySet(),
+				writerAndSearcher.getIndexWriter(), settings, localAnalyzerFactoryMap.keySet(),
 				fieldMap.getFieldDefinitionMap().keySet()));
 	}
 
@@ -160,42 +172,34 @@ final public class IndexInstance implements Closeable {
 	}
 
 	FieldStats getFieldStats(String fieldName) throws IOException {
-		final Semaphore sem = schema.acquireReadSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				final Terms terms = MultiFields.getFields(indexSearcher.getIndexReader()).terms(fieldName);
 				return terms == null ? new FieldStats() : new FieldStats(terms, fieldMap.getFieldType(fieldName));
 			});
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
 	IndexStatus getStatus() throws IOException, InterruptedException {
-		final Semaphore sem = schema.acquireReadSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return getIndexStatus();
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
-	private void refreshFieldsAnalyzers(final LinkedHashMap<String, AnalyzerDefinition> analyzers,
-			final LinkedHashMap<String, FieldDefinition> fields) throws IOException {
+	private void refreshFieldsAnalyzers() throws IOException {
 		final AnalyzerContext analyzerContext =
-				new AnalyzerContext(schema.getGlobalConstructorParameterMap(), fileResourceLoader, analyzers, fields,
-						true);
+				new AnalyzerContext(fileResourceLoader, fieldMap.getFieldDefinitionMap(), true,
+						globalAnalyzerFactoryMap, localAnalyzerFactoryMap);
 		indexAnalyzer.update(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext.queryAnalyzerMap);
+		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
 	synchronized void setFields(final LinkedHashMap<String, FieldDefinition> fields)
 			throws ServerException, IOException {
 		fileSet.writeFieldMap(fields);
 		fieldMap = new FieldMap(fields, settings.sortedSetFacetField);
-		refreshFieldsAnalyzers(analyzerMap, fields);
+		refreshFieldsAnalyzers();
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
@@ -216,42 +220,55 @@ final public class IndexInstance implements Closeable {
 	}
 
 	LinkedHashMap<String, AnalyzerDefinition> getAnalyzers() {
-		return analyzerMap;
+		return analyzerDefinitionMap;
 	}
 
-	synchronized void setAnalyzers(final LinkedHashMap<String, AnalyzerDefinition> analyzers)
-			throws ServerException, IOException {
-		refreshFieldsAnalyzers(analyzerMap, fieldMap.getFieldDefinitionMap());
-		fileSet.writeAnalyzerMap(analyzers);
-		analyzerMap = analyzers;
-		multiSearchInstances.forEach(MultiSearchInstance::refresh);
+	private void updateLocalAnalyzers() throws IOException {
+		refreshFieldsAnalyzers();
+		analyzerDefinitionMap = CustomAnalyzer.createDefinitionMap(localAnalyzerFactoryMap);
+		fileSet.writeAnalyzerDefinitionMap(analyzerDefinitionMap);
 	}
 
-	void setAnalyzer(final String analyzerName, final AnalyzerDefinition analyzer) throws IOException, ServerException {
-		final LinkedHashMap<String, AnalyzerDefinition> analyzers =
-				(LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone();
-		analyzers.put(analyzerName, analyzer);
-		setAnalyzers(analyzers);
+	void setAnalyzer(final String analyzerName, final AnalyzerDefinition analyzerDefinition) throws IOException {
+		Objects.requireNonNull(analyzerName, "The analyzer name is missing");
+		Objects.requireNonNull(analyzerDefinition, () -> "The analyzer definition is missing: " + analyzerName);
+		synchronized (localAnalyzerFactoryMap) {
+			localAnalyzerFactoryMap.put(analyzerName, new CustomAnalyzer.Factory(analyzerDefinition));
+			updateLocalAnalyzers();
+		}
 	}
 
-	List<TermDefinition> testAnalyzer(final String analyzerName, final String inputText)
-			throws ServerException, InterruptedException, ReflectiveOperationException, IOException {
-		final AnalyzerDefinition analyzerDefinition = analyzerMap.get(analyzerName);
-		if (analyzerDefinition == null)
-			throw new ServerException(Response.Status.NOT_FOUND,
-					"Analyzer not found: " + analyzerName + " - Index: " + indexName);
-		try (final Analyzer analyzer = new CustomAnalyzer(fileResourceLoader, analyzerDefinition)) {
-			return TermDefinition.buildTermList(analyzer, StringUtils.EMPTY, inputText);
+	void setAnalyzers(final Map<String, AnalyzerDefinition> analyzerDefinitionMap) throws IOException {
+		Objects.requireNonNull(analyzerDefinitionMap, "The analyzer map is null");
+		synchronized (localAnalyzerFactoryMap) {
+			localAnalyzerFactoryMap.putAll(CustomAnalyzer.createFactoryMap(analyzerDefinitionMap));
+			updateLocalAnalyzers();
 		}
 	}
 
 	void deleteAnalyzer(final String analyzerName) throws IOException, ServerException {
-		final LinkedHashMap<String, AnalyzerDefinition> analyzers =
-				(LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone();
-		if (analyzers.remove(analyzerName) == null)
+		synchronized (localAnalyzerFactoryMap) {
+			if (localAnalyzerFactoryMap.remove(analyzerName) == null)
+				throw new ServerException(Response.Status.NOT_FOUND,
+						"Analyzer not found: " + analyzerName + " - Index: " + indexName);
+			updateLocalAnalyzers();
+		}
+	}
+
+	List<TermDefinition> testAnalyzer(final String analyzerName, final String inputText)
+			throws ServerException, InterruptedException, ReflectiveOperationException, IOException {
+		AnalyzerFactory factory;
+		synchronized (localAnalyzerFactoryMap) {
+			factory = localAnalyzerFactoryMap.get(analyzerName);
+		}
+		if (factory == null && globalAnalyzerFactoryMap != null)
+			factory = globalAnalyzerFactoryMap.get(analyzerName);
+		if (factory == null)
 			throw new ServerException(Response.Status.NOT_FOUND,
 					"Analyzer not found: " + analyzerName + " - Index: " + indexName);
-		setAnalyzers(analyzers);
+		try (final Analyzer analyzer = factory.createAnalyzer(fileResourceLoader)) {
+			return TermDefinition.buildTermList(analyzer, StringUtils.EMPTY, inputText);
+		}
 	}
 
 	Analyzer getIndexAnalyzer(final String field) throws ServerException, IOException {
@@ -263,8 +280,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	public Query createJoinQuery(final JoinQuery joinQuery) throws IOException {
-		final Semaphore sem = schema.acquireReadSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				try {
 					final Query fromQuery = joinQuery.from_query == null ?
@@ -278,9 +294,6 @@ final public class IndexInstance implements Closeable {
 				}
 
 			});
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -293,8 +306,7 @@ final public class IndexInstance implements Closeable {
 
 	final synchronized BackupStatus backup(final Path backupIndexDirectory) throws IOException {
 		checkIsMaster();
-		final Semaphore sem = schema.acquireReadSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 
 			// Create (or check) the backup directory
 			if (Files.notExists(backupIndexDirectory))
@@ -319,20 +331,13 @@ final public class IndexInstance implements Closeable {
 				}
 				return BackupStatus.newBackupStatus(backupIndexDirectory);
 			}
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
 	final BackupStatus getBackup(final Path backupIndexDirectory) throws IOException {
 		checkIsMaster();
-		final Semaphore sem = schema.acquireReadSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return BackupStatus.newBackupStatus(backupIndexDirectory);
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -361,9 +366,7 @@ final public class IndexInstance implements Closeable {
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"No replication master has been setup - Index: " + indexName);
 
-		final Semaphore sem = schema.acquireWriteSemaphore();
-
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 
 			// We only want one replication at a time
 			replicationLock.lock();
@@ -397,25 +400,18 @@ final public class IndexInstance implements Closeable {
 			} finally {
 				replicationLock.unlock();
 			}
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
 	final void deleteAll() throws IOException {
 		checkIsMaster();
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
 				if (indexWriter != null)
 					indexWriter.deleteAll();
 				return null;
 			});
 			nrtCommit();
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -448,16 +444,11 @@ final public class IndexInstance implements Closeable {
 		if (document == null)
 			return 0;
 		checkIsMaster();
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
-			schema.checkSize(1);
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
 			poster.accept(document);
 			nrtCommit();
 			return poster.getCount();
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -465,16 +456,11 @@ final public class IndexInstance implements Closeable {
 		if (document == null || document.isEmpty())
 			return 0;
 		checkIsMaster();
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
-			schema.checkSize(1);
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
 			poster.accept(document);
 			nrtCommit();
 			return poster.getCount();
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -483,16 +469,11 @@ final public class IndexInstance implements Closeable {
 		if (documents == null || documents.isEmpty())
 			return 0;
 		checkIsMaster();
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
-			schema.checkSize(documents.size());
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
 			documents.forEach(poster);
 			nrtCommit();
 			return poster.getCount();
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -501,16 +482,11 @@ final public class IndexInstance implements Closeable {
 		if (documents == null || documents.isEmpty())
 			return 0;
 		checkIsMaster();
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
-			schema.checkSize(documents.size());
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
 			documents.forEach(poster);
 			nrtCommit();
 			return poster.getCount();
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -519,15 +495,11 @@ final public class IndexInstance implements Closeable {
 		if (document == null)
 			return 0;
 		checkIsMaster();
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			poster.accept(document);
 			nrtCommit();
 			return poster.getCount();
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -535,15 +507,11 @@ final public class IndexInstance implements Closeable {
 		if (document == null || document.isEmpty())
 			return 0;
 		checkIsMaster();
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			poster.accept(document);
 			nrtCommit();
 			return poster.getCount();
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -552,15 +520,11 @@ final public class IndexInstance implements Closeable {
 		if (documents == null || documents.isEmpty())
 			return 0;
 		checkIsMaster();
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			documents.forEach(poster);
 			nrtCommit();
 			return poster.getCount();
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -569,15 +533,11 @@ final public class IndexInstance implements Closeable {
 		if (documents == null || documents.isEmpty())
 			return 0;
 		checkIsMaster();
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
 			documents.forEach(poster);
 			nrtCommit();
 			return poster.getCount();
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -585,12 +545,11 @@ final public class IndexInstance implements Closeable {
 		checkIsMaster();
 		Objects.requireNonNull(queryDefinition, "The queryDefinition is missing - Index: " + indexName);
 		Objects.requireNonNull(queryDefinition.query, "The query is missing - Index: " + indexName);
-		final Semaphore sem = schema.acquireWriteSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				try {
 					final QueryContext queryContext =
-							new QueryContextImpl(schema, fileResourceLoader, indexSearcher, taxonomyReader,
+							new QueryContextImpl(indexProvider, fileResourceLoader, indexSearcher, taxonomyReader,
 									executorService, indexAnalyzer, queryAnalyzer, fieldMap, null);
 					final Query query = queryDefinition.query.getQuery(queryContext);
 					final IndexWriter indexWriter = writerAndSearcher.getIndexWriter();
@@ -603,17 +562,13 @@ final public class IndexInstance implements Closeable {
 					throw new ServerException(e);
 				}
 			});
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
 	final List<TermEnumDefinition> getTermsEnum(final String fieldName, final String prefix, final Integer start,
 			final Integer rows) throws InterruptedException, IOException {
 		Objects.requireNonNull(fieldName, "The field name is missing - Index: " + indexName);
-		final Semaphore sem = schema.acquireReadSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
 				if (fieldType == null)
@@ -625,9 +580,6 @@ final public class IndexInstance implements Closeable {
 				return TermEnumDefinition.buildTermList(fieldType, terms.iterator(), prefix, start == null ? 0 : start,
 						rows == null ? 20 : rows);
 			});
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -656,7 +608,7 @@ final public class IndexInstance implements Closeable {
 	private QueryContextImpl buildQueryContext(final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader)
 			throws IOException {
 		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
-		return new QueryContextImpl(schema, fileResourceLoader, indexSearcher, taxonomyReader, executorService,
+		return new QueryContextImpl(indexProvider, fileResourceLoader, indexSearcher, taxonomyReader, executorService,
 				indexAnalyzer, queryAnalyzer, fieldMap, facetsState);
 	}
 
@@ -687,20 +639,15 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final <T> T query(final FunctionUtils.FunctionEx<QueryContext, T, IOException> queryActions) throws IOException {
-		final Semaphore sem = schema.acquireReadSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> queryActions.apply(
 					buildQueryContext(indexSearcher, taxonomyReader)));
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
 	final Explanation explain(final QueryDefinition queryDefinition, final int docId)
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
-		final Semaphore sem = schema.acquireReadSemaphore();
-		try {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				try {
 					final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader);
@@ -709,9 +656,6 @@ final public class IndexInstance implements Closeable {
 					throw new ServerException(e);
 				}
 			});
-		} finally {
-			if (sem != null)
-				sem.release();
 		}
 	}
 
@@ -728,12 +672,12 @@ final public class IndexInstance implements Closeable {
 		});
 	}
 
-	void fillAnalyzers(final Map<String, AnalyzerDefinition> analyzers) {
+	void fillAnalyzers(final Map<String, AnalyzerFactory> analyzers) {
 		if (analyzers == null)
 			return;
-		this.analyzerMap.forEach((name, analyzerDef) -> {
+		this.localAnalyzerFactoryMap.forEach((name, factory) -> {
 			if (!analyzers.containsKey(name))
-				analyzers.put(name, analyzerDef);
+				analyzers.put(name, factory);
 		});
 	}
 
@@ -769,8 +713,7 @@ final public class IndexInstance implements Closeable {
 		final File resourceFile = fileResourceLoader.checkResourceName(resourceName);
 		IOUtils.copy(inputStream, resourceFile);
 		resourceFile.setLastModified(lastModified);
-		refreshFieldsAnalyzers((LinkedHashMap<String, AnalyzerDefinition>) analyzerMap.clone(),
-				fieldMap.getFieldDefinitionMap());
+		refreshFieldsAnalyzers();
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 

@@ -16,7 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerContext;
-import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
@@ -36,17 +36,19 @@ import java.util.concurrent.ExecutorService;
 
 final class MultiSearchContext implements Closeable, AutoCloseable {
 
-	final SchemaInstance schemaInstance;
+	final IndexInstance.Provider indexProvider;
 	final ExecutorService executorService;
 	final IndexReader[] indexReaders;
 	final FieldMap fieldMap;
+	final Map<String, AnalyzerFactory> analyzers;
 	final UpdatableAnalyzer indexAnalyzer;
 	final UpdatableAnalyzer queryAnalyzer;
 
-	MultiSearchContext(final SchemaInstance schemaInstance, final ExecutorService executorService,
-			final Set<IndexInstance> indexInstances, final boolean failOnException)
-			throws IOException, ServerException {
-		this.schemaInstance = schemaInstance;
+	MultiSearchContext(final IndexInstance.Provider indexProvider, final Map<String, AnalyzerFactory> analyzers,
+			final ExecutorService executorService, final Set<IndexInstance> indexInstances,
+			final boolean failOnException) throws IOException, ServerException {
+		this.indexProvider = indexProvider;
+		this.analyzers = analyzers;
 		this.executorService = executorService;
 		if (indexInstances.isEmpty()) {
 			indexReaders = null;
@@ -57,7 +59,7 @@ final class MultiSearchContext implements Closeable, AutoCloseable {
 		}
 		indexReaders = new IndexReader[indexInstances.size()];
 		int i = 0;
-		final Map<String, AnalyzerDefinition> analyzerMap = new HashMap<>();
+		final Map<String, AnalyzerFactory> analyzerMap = new HashMap<>();
 		FileResourceLoader resourceLoader = null;
 		final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap = new LinkedHashMap<>();
 		for (IndexInstance indexInstance : indexInstances) {
@@ -68,8 +70,7 @@ final class MultiSearchContext implements Closeable, AutoCloseable {
 		}
 		fieldMap = new FieldMap(fieldDefinitionMap, null);
 		final AnalyzerContext analyzerContext =
-				new AnalyzerContext(schemaInstance.getGlobalConstructorParameterMap(), resourceLoader, analyzerMap,
-						fieldDefinitionMap, failOnException);
+				new AnalyzerContext(resourceLoader, fieldDefinitionMap, failOnException, analyzerMap, analyzers);
 		indexAnalyzer = new UpdatableAnalyzer(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(analyzerContext.queryAnalyzerMap);
 	}

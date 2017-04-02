@@ -17,6 +17,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.analysis.CustomAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.IOUtils;
@@ -97,7 +98,7 @@ public class IndexFileSet {
 				IndexSettingsDefinition.EMPTY;
 	}
 
-	void writeSettings(IndexSettingsDefinition settings) throws IOException {
+	void writeSettings(final IndexSettingsDefinition settings) throws IOException {
 		if (settings == null)
 			Files.deleteIfExists(settingsFile.toPath());
 		else
@@ -110,24 +111,26 @@ public class IndexFileSet {
 				new LinkedHashMap<>();
 	}
 
-	void writeFieldMap(LinkedHashMap<String, FieldDefinition> fieldMap) throws IOException {
+	void writeFieldMap(final LinkedHashMap<String, FieldDefinition> fieldMap) throws IOException {
 		if (fieldMap == null)
 			Files.deleteIfExists(fieldMapFile.toPath());
 		else
 			JsonMapper.MAPPER.writeValue(fieldMapFile, fieldMap);
 	}
 
-	LinkedHashMap<String, AnalyzerDefinition> loadAnalyzerMap() throws IOException {
+	LinkedHashMap<String, CustomAnalyzer.Factory> loadAnalyzerDefinitionMap() throws IOException {
 		return analyzerMapFile.exists() ?
-				JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
+				CustomAnalyzer.createFactoryMap(
+						JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef)) :
 				new LinkedHashMap<>();
 	}
 
-	void writeAnalyzerMap(final LinkedHashMap<String, AnalyzerDefinition> analyzers) throws IOException {
-		if (analyzers == null)
+	void writeAnalyzerDefinitionMap(final LinkedHashMap<String, AnalyzerDefinition> definitionMap) throws IOException {
+		if (definitionMap == null) {
 			Files.deleteIfExists(analyzerMapFile.toPath());
-		else
-			JsonMapper.MAPPER.writeValue(analyzerMapFile, analyzers);
+			return;
+		}
+		JsonMapper.MAPPER.writeValue(analyzerMapFile, definitionMap);
 	}
 
 }

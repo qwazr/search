@@ -15,10 +15,12 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LockUtils;
+import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.store.Directory;
 
@@ -27,25 +29,38 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 
 class IndexInstanceManager implements Closeable {
 
 	private final LockUtils.ReadWriteLock rwl;
 
-	private final SchemaInstance schema;
+	private final IndexInstance.Provider indexProvider;
+	private final ExecutorService executorService;
+	private final IndexServiceInterface indexServiceInterface;
 	private final IndexFileSet fileSet;
+	private final Map<String, AnalyzerFactory> analyzerFactoryMap;
+	private final ReadWriteSemaphores readWriteSemaphores;
 
 	private UUID indexUuid;
 	private IndexSettingsDefinition settings;
 	private IndexInstance indexInstance;
 
-	IndexInstanceManager(final SchemaInstance schema, final File indexDirectory) throws IOException {
+	IndexInstanceManager(final IndexInstance.Provider indexProvider,
+			final Map<String, AnalyzerFactory> analyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
+			final ExecutorService executorService, final IndexServiceInterface indexServiceInterface,
+			final File indexDirectory) throws IOException {
 
 		rwl = new LockUtils.ReadWriteLock();
-		this.schema = schema;
+		this.indexProvider = indexProvider;
+		this.executorService = executorService;
+		this.indexServiceInterface = indexServiceInterface;
 		this.fileSet = new IndexFileSet(indexDirectory);
+		this.analyzerFactoryMap = analyzerFactoryMap;
+		this.readWriteSemaphores = readWriteSemaphores;
 
 		checkDirectoryAndUuid();
 		settings = fileSet.loadSettings();
@@ -58,7 +73,8 @@ class IndexInstanceManager implements Closeable {
 
 	private IndexInstance ensureOpen() throws ReflectiveOperationException, IOException, URISyntaxException {
 		if (indexInstance == null)
-			indexInstance = new IndexInstanceBuilder(schema, fileSet, settings, indexUuid).build();
+			indexInstance = new IndexInstanceBuilder(indexProvider, analyzerFactoryMap, readWriteSemaphores, executorService,
+					indexServiceInterface, fileSet, settings, indexUuid).build();
 		return indexInstance;
 	}
 
@@ -67,9 +83,8 @@ class IndexInstanceManager implements Closeable {
 	}
 
 	private boolean isNewMaster(final IndexSettingsDefinition newSettings) {
-		if (newSettings == null || newSettings.master == null)
-			return false;
-		return settings == null || !Objects.equals(settings.master, newSettings.master);
+		return !(newSettings == null || newSettings.master == null) && (settings == null || !Objects.equals(
+				settings.master, newSettings.master));
 	}
 
 	IndexInstance createUpdate(final IndexSettingsDefinition newSettings) throws Exception {
