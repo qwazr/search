@@ -30,12 +30,9 @@ import java.util.Map;
 
 public class BytesRefUtils {
 
-	static private byte[] checkByteSize(final BytesRef bytesRef, final int expectedSize, final String errorMessage) {
-		if (bytesRef == null || bytesRef.bytes == null)
-			return null;
+	static private void checkByteSize(final BytesRef bytesRef, final int expectedSize, final String errorMessage) {
 		if (bytesRef.bytes.length != expectedSize)
 			throw new RuntimeException(errorMessage);
-		return bytesRef.bytes;
 	}
 
 	static private boolean isEmpty(final BytesRef bytesRef) {
@@ -103,9 +100,7 @@ public class BytesRefUtils {
 		final public Integer to(final BytesRef bytesRef) {
 			if (isEmpty(bytesRef))
 				return null;
-			final byte[] bytes = checkByteSize(bytesRef, Integer.BYTES, "Cannot convert value to int");
-			if (bytes == null)
-				return null;
+			checkByteSize(bytesRef, Integer.BYTES, "Cannot convert value to int");
 			return NumericUtils.sortableBytesToInt(bytesRef.bytes, 0);
 		}
 	}
@@ -125,9 +120,7 @@ public class BytesRefUtils {
 		final public Long to(final BytesRef bytesRef) {
 			if (isEmpty(bytesRef))
 				return null;
-			final byte[] bytes = checkByteSize(bytesRef, Long.BYTES, "Cannot convert value to long");
-			if (bytes == null)
-				return null;
+			checkByteSize(bytesRef, Long.BYTES, "Cannot convert value to long");
 			return NumericUtils.sortableBytesToLong(bytesRef.bytes, 0);
 		}
 	}
@@ -147,9 +140,7 @@ public class BytesRefUtils {
 		final public Float to(final BytesRef bytesRef) {
 			if (isEmpty(bytesRef))
 				return null;
-			final byte[] bytes = checkByteSize(bytesRef, Float.BYTES, "Cannot convert value to float");
-			if (bytes == null)
-				return null;
+			checkByteSize(bytesRef, Float.BYTES, "Cannot convert value to float");
 			return NumericUtils.sortableIntToFloat(NumericUtils.sortableBytesToInt(bytesRef.bytes, 0));
 		}
 	}
@@ -169,9 +160,7 @@ public class BytesRefUtils {
 		final public Double to(final BytesRef bytesRef) {
 			if (isEmpty(bytesRef))
 				return null;
-			final byte[] bytes = checkByteSize(bytesRef, Double.BYTES, "Cannot convert value to double");
-			if (bytes == null)
-				return null;
+			checkByteSize(bytesRef, Double.BYTES, "Cannot convert value to double");
 			return NumericUtils.sortableLongToDouble(NumericUtils.sortableBytesToLong(bytesRef.bytes, 0));
 		}
 	}
