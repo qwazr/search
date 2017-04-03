@@ -240,11 +240,11 @@ public class FieldDefinition {
 
 	public final static String DOC_FIELD = "$doc";
 
-	public final static Builder builder() {
+	public final static Builder of() {
 		return new Builder();
 	}
 
-	public final static Builder builder(Template template) {
+	public final static Builder of(Template template) {
 		return new Builder(template);
 	}
 
