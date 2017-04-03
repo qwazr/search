@@ -39,6 +39,9 @@ public class IndexRecord {
 	@IndexField(template = FieldDefinition.Template.IntPoint)
 	public Integer intPoint;
 
+	@IndexField(template = FieldDefinition.Template.FloatDocValuesField)
+	public Float floatDocValue;
+
 	@IndexField(template = FieldDefinition.Template.IntAssociatedField)
 	public Object[] intAssociatedFacet;
 
@@ -102,6 +105,11 @@ public class IndexRecord {
 
 	public IndexRecord intPoint(Integer intPoint) {
 		this.intPoint = intPoint;
+		return this;
+	}
+
+	public IndexRecord floatDocValue(Float floatDocValue) {
+		this.floatDocValue = floatDocValue;
 		return this;
 	}
 
