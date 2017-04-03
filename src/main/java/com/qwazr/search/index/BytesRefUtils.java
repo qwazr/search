@@ -38,6 +38,10 @@ public class BytesRefUtils {
 		return bytesRef.bytes;
 	}
 
+	static private boolean isEmpty(final BytesRef bytesRef) {
+		return bytesRef == null || bytesRef.bytes == BytesRef.EMPTY_BYTES || bytesRef.bytes == null;
+	}
+
 	public interface Converter<T> {
 
 		BytesRef from(T value);
@@ -62,12 +66,12 @@ public class BytesRefUtils {
 
 		@Override
 		final public BytesRef from(final BytesRef value) {
-			return value == null ? new BytesRef(BytesRef.EMPTY_BYTES) : value;
+			return value == null ? new BytesRef() : value;
 		}
 
 		@Override
 		final public BytesRef to(final BytesRef bytesRef) {
-			return bytesRef == null || bytesRef.bytes == null ? null : bytesRef;
+			return isEmpty(bytesRef) ? null : bytesRef;
 		}
 	}
 
@@ -75,12 +79,12 @@ public class BytesRefUtils {
 
 		@Override
 		final public BytesRef from(final String value) {
-			return value == null ? new BytesRef(BytesRef.EMPTY_BYTES) : new BytesRef(value);
+			return value == null ? new BytesRef() : new BytesRef(value);
 		}
 
 		@Override
 		final public String to(final BytesRef bytesRef) {
-			return bytesRef == null || bytesRef.bytes == null ? null : bytesRef.utf8ToString();
+			return isEmpty(bytesRef) ? null : bytesRef.utf8ToString();
 		}
 	}
 
@@ -89,7 +93,7 @@ public class BytesRefUtils {
 		@Override
 		final public BytesRef from(final Integer value) {
 			if (value == null)
-				return new BytesRef(BytesRef.EMPTY_BYTES);
+				return new BytesRef();
 			final BytesRef bytesRef = new BytesRef(new byte[4]);
 			NumericUtils.intToSortableBytes(value, bytesRef.bytes, 0);
 			return bytesRef;
@@ -97,7 +101,7 @@ public class BytesRefUtils {
 
 		@Override
 		final public Integer to(final BytesRef bytesRef) {
-			if (bytesRef == null)
+			if (isEmpty(bytesRef))
 				return null;
 			final byte[] bytes = checkByteSize(bytesRef, Integer.BYTES, "Cannot convert value to int");
 			if (bytes == null)
@@ -111,7 +115,7 @@ public class BytesRefUtils {
 		@Override
 		final public BytesRef from(final Long value) {
 			if (value == null)
-				return new BytesRef(BytesRef.EMPTY_BYTES);
+				return new BytesRef();
 			final BytesRef bytesRef = new BytesRef(new byte[8]);
 			NumericUtils.longToSortableBytes(value, bytesRef.bytes, 0);
 			return bytesRef;
@@ -119,7 +123,7 @@ public class BytesRefUtils {
 
 		@Override
 		final public Long to(final BytesRef bytesRef) {
-			if (bytesRef == null)
+			if (isEmpty(bytesRef))
 				return null;
 			final byte[] bytes = checkByteSize(bytesRef, Long.BYTES, "Cannot convert value to long");
 			if (bytes == null)
@@ -133,7 +137,7 @@ public class BytesRefUtils {
 		@Override
 		final public BytesRef from(final Float value) {
 			if (value == null)
-				return new BytesRef(BytesRef.EMPTY_BYTES);
+				return new BytesRef();
 			final BytesRef bytesRef = new BytesRef(new byte[4]);
 			NumericUtils.intToSortableBytes(NumericUtils.floatToSortableInt(value), bytesRef.bytes, 0);
 			return bytesRef;
@@ -141,7 +145,7 @@ public class BytesRefUtils {
 
 		@Override
 		final public Float to(final BytesRef bytesRef) {
-			if (bytesRef == null)
+			if (isEmpty(bytesRef))
 				return null;
 			final byte[] bytes = checkByteSize(bytesRef, Float.BYTES, "Cannot convert value to float");
 			if (bytes == null)
@@ -155,7 +159,7 @@ public class BytesRefUtils {
 		@Override
 		final public BytesRef from(final Double value) {
 			if (value == null)
-				return new BytesRef(BytesRef.EMPTY_BYTES);
+				return new BytesRef();
 			final BytesRef bytesRef = new BytesRef(new byte[8]);
 			NumericUtils.longToSortableBytes(NumericUtils.doubleToSortableLong(value), bytesRef.bytes, 0);
 			return bytesRef;
@@ -163,7 +167,7 @@ public class BytesRefUtils {
 
 		@Override
 		final public Double to(final BytesRef bytesRef) {
-			if (bytesRef == null)
+			if (isEmpty(bytesRef))
 				return null;
 			final byte[] bytes = checkByteSize(bytesRef, Double.BYTES, "Cannot convert value to double");
 			if (bytes == null)
@@ -186,7 +190,7 @@ public class BytesRefUtils {
 
 	static public BytesRef fromAny(final Object value) {
 		if (value == null)
-			return new BytesRef(BytesRef.EMPTY_BYTES);
+			return new BytesRef();
 		final Converter converter = CONVERTER_MAP.get(value.getClass());
 		return converter == null ? new BytesRef(value.toString()) : converter.from(value);
 	}
@@ -199,6 +203,8 @@ public class BytesRefUtils {
 
 		@Override
 		final public BytesRef from(final Double value) {
+			if (value == null)
+				return new BytesRef();
 			final BytesRef bytesRef = new BytesRef(new byte[8]);
 			DoublePoint.encodeDimension(value, bytesRef.bytes, 0);
 			return bytesRef;
@@ -206,7 +212,7 @@ public class BytesRefUtils {
 
 		@Override
 		public final Double to(final BytesRef bytesRef) {
-			if (bytesRef == null || bytesRef.bytes == null)
+			if (isEmpty(bytesRef))
 				return null;
 			return DoublePoint.decodeDimension(bytesRef.bytes, 0);
 		}
@@ -216,6 +222,8 @@ public class BytesRefUtils {
 
 		@Override
 		final public BytesRef from(final Float value) {
+			if (value == null)
+				return new BytesRef();
 			final BytesRef bytesRef = new BytesRef(new byte[8]);
 			FloatPoint.encodeDimension(value, bytesRef.bytes, 0);
 			return bytesRef;
@@ -223,7 +231,7 @@ public class BytesRefUtils {
 
 		@Override
 		public final Float to(final BytesRef bytesRef) {
-			if (bytesRef == null || bytesRef.bytes == null)
+			if (isEmpty(bytesRef))
 				return null;
 			return FloatPoint.decodeDimension(bytesRef.bytes, 0);
 		}
@@ -233,6 +241,8 @@ public class BytesRefUtils {
 
 		@Override
 		final public BytesRef from(final Integer value) {
+			if (value == null)
+				return new BytesRef();
 			final BytesRef bytesRef = new BytesRef(new byte[8]);
 			IntPoint.encodeDimension(value, bytesRef.bytes, 0);
 			return bytesRef;
@@ -240,7 +250,7 @@ public class BytesRefUtils {
 
 		@Override
 		public final Integer to(final BytesRef bytesRef) {
-			if (bytesRef == null || bytesRef.bytes == null)
+			if (isEmpty(bytesRef))
 				return null;
 			return IntPoint.decodeDimension(bytesRef.bytes, 0);
 		}
@@ -250,6 +260,8 @@ public class BytesRefUtils {
 
 		@Override
 		final public BytesRef from(final Long value) {
+			if (value == null)
+				return new BytesRef();
 			final BytesRef bytesRef = new BytesRef(new byte[8]);
 			LongPoint.encodeDimension(value, bytesRef.bytes, 0);
 			return bytesRef;
@@ -257,7 +269,7 @@ public class BytesRefUtils {
 
 		@Override
 		public final Long to(final BytesRef bytesRef) {
-			if (bytesRef == null || bytesRef.bytes == null)
+			if (isEmpty(bytesRef))
 				return null;
 			return LongPoint.decodeDimension(bytesRef.bytes, 0);
 		}
@@ -267,14 +279,12 @@ public class BytesRefUtils {
 
 		@Override
 		final public BytesRef from(final Integer value) {
-			return IntAssociationFacetField.intToBytesRef(value);
+			return value == null ? new BytesRef() : IntAssociationFacetField.intToBytesRef(value);
 		}
 
 		@Override
 		public final Integer to(final BytesRef bytesRef) {
-			if (bytesRef == null || bytesRef.bytes == null)
-				return null;
-			return IntAssociationFacetField.bytesRefToInt(bytesRef);
+			return isEmpty(bytesRef) ? null : IntAssociationFacetField.bytesRefToInt(bytesRef);
 		}
 	}
 
@@ -282,14 +292,12 @@ public class BytesRefUtils {
 
 		@Override
 		final public BytesRef from(final Float value) {
-			return FloatAssociationFacetField.floatToBytesRef(value);
+			return value == null ? new BytesRef() : FloatAssociationFacetField.floatToBytesRef(value);
 		}
 
 		@Override
 		public final Float to(final BytesRef bytesRef) {
-			if (bytesRef == null || bytesRef.bytes == null)
-				return null;
-			return FloatAssociationFacetField.bytesRefToFloat(bytesRef);
+			return isEmpty(bytesRef) ? null : FloatAssociationFacetField.bytesRefToFloat(bytesRef);
 		}
 	}
 }
