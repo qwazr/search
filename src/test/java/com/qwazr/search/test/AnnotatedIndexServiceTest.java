@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.test;
 
+import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
@@ -51,6 +52,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AnnotatedIndexServiceTest {
@@ -85,6 +87,16 @@ public class AnnotatedIndexServiceTest {
 		indexManager = new IndexManager(workDirectory, executor);
 		Assert.assertNotNull(indexManager);
 
+		// Register a named analyzer
+		final AtomicInteger factoryCallCount = new AtomicInteger();
+		final AtomicInteger analyzerCallCount = new AtomicInteger();
+		final AnalyzerFactory analyzerFactory = resourceLoader -> {
+			Assert.assertNotNull(resourceLoader);
+			factoryCallCount.incrementAndGet();
+			return new AnnotatedIndex.TestAnalyzer(analyzerCallCount);
+		};
+		indexManager.registerAnalyzerFactory(AnnotatedIndex.INJECTED_ANALYZER_NAME, analyzerFactory);
+
 		// Get the service
 		service = indexManager.getService(IndexRecord.class);
 		Assert.assertNotNull(service);
@@ -100,6 +112,11 @@ public class AnnotatedIndexServiceTest {
 		Map<String, FieldDefinition> fields = service.createUpdateFields();
 		Assert.assertNotNull(fields);
 		Assert.assertEquals(2, fields.size());
+
+		// Check analyzer creation
+		service.testAnalyzer(AnnotatedIndex.INJECTED_ANALYZER_NAME, "Test");
+		Assert.assertEquals(1, factoryCallCount.get());
+		Assert.assertEquals(1, analyzerCallCount.get());
 	}
 
 	@Test

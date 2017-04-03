@@ -19,6 +19,8 @@ import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexSettingsDefinition;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.KeywordTokenizer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexOptions;
@@ -29,6 +31,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.qwazr.search.field.FieldDefinition.Template.SortedDocValuesField;
 import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValuesFacetField;
@@ -70,6 +73,12 @@ public class AnnotatedIndex {
 			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 	final public String content;
 
+	final public static String INJECTED_ANALYZER_NAME = "InjectedAnalyzer";
+	@IndexField(tokenized = true,
+			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS,
+			analyzer = INJECTED_ANALYZER_NAME)
+	final public String contentAnalyzerFactory;
+
 	@IndexField(template = FieldDefinition.Template.SortedSetDocValuesFacetField, facetMultivalued = true)
 	final public Collection<String> category;
 
@@ -108,6 +117,7 @@ public class AnnotatedIndex {
 		titleStd = null;
 		titleSort = null;
 		content = null;
+		contentAnalyzerFactory = null;
 		category = null;
 		price = null;
 		quantity = null;
@@ -126,6 +136,7 @@ public class AnnotatedIndex {
 		this.titleStd = title;
 		this.titleSort = title;
 		this.content = content;
+		this.contentAnalyzerFactory = content;
 		this.category = Arrays.asList(categories);
 		this.price = price;
 		this.quantity = quantity;
@@ -216,6 +227,21 @@ public class AnnotatedIndex {
 			if (!Objects.equals(price, v.price))
 				return false;
 			return Objects.equals(content, v.content);
+		}
+	}
+
+	public static class TestAnalyzer extends Analyzer {
+
+		private final AtomicInteger counter;
+
+		public TestAnalyzer(AtomicInteger counter) {
+			this.counter = counter;
+		}
+
+		@Override
+		protected TokenStreamComponents createComponents(String fieldName) {
+			counter.incrementAndGet();
+			return new TokenStreamComponents(new KeywordTokenizer());
 		}
 	}
 
