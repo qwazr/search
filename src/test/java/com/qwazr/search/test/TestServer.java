@@ -23,6 +23,7 @@ import com.qwazr.server.RemoteService;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestServer {
 
@@ -33,6 +34,8 @@ public class TestServer {
 
 	static final File dataDir = Files.createTempDir();
 
+	public static final AtomicInteger injectedAnalyzerCount = new AtomicInteger();
+
 	public static synchronized void startServer() throws Exception {
 		if (service != null)
 			return;
@@ -41,6 +44,10 @@ public class TestServer {
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
 		SearchServer.main();
+		SearchServer.getInstance()
+				.getIndexManager()
+				.registerAnalyzerFactory(AnnotatedIndex.INJECTED_ANALYZER_NAME,
+						resourceLoader -> new AnnotatedIndex.TestAnalyzer(injectedAnalyzerCount));
 		IndexServiceBuilder indexServiceBuilder = SearchServer.getInstance().getServiceBuilder();
 		service = indexServiceBuilder.local();
 		remote = indexServiceBuilder.remote(RemoteService.of(BASE_URL).build());

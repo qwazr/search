@@ -16,6 +16,7 @@
 package com.qwazr.search.test;
 
 import com.google.common.io.Files;
+import com.qwazr.search.SearchServer;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.collector.MaxNumericCollector;
@@ -114,6 +115,8 @@ public abstract class JavaAbstractTest {
 	public void test000startServer() throws Exception {
 		TestServer.startServer();
 		Assert.assertNotNull(TestServer.service);
+		Assert.assertNotNull(SearchServer.getInstance().getClusterManager());
+		Assert.assertNotNull(SearchServer.getInstance().getIndexManager());
 	}
 
 	@Test
@@ -152,7 +155,7 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService service = getMaster();
 		final Map<String, AnnotatedIndexService.FieldStatus> fieldChanges = service.getFieldChanges();
 		Assert.assertNotNull(fieldChanges);
-		Assert.assertEquals(15, fieldChanges.size());
+		Assert.assertEquals(16, fieldChanges.size());
 		fieldChanges.forEach(
 				(s, fieldStatus) -> Assert.assertEquals(AnnotatedIndexService.FieldStatus.EXISTS_ONLY_IN_ANNOTATION,
 						fieldStatus));

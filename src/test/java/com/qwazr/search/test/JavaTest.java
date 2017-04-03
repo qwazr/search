@@ -30,6 +30,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ JavaTest.JavaLibraryTest.class, JavaTest.JavaLocalTest.class, JavaTest.JavaRemoteTest.class })
@@ -56,6 +57,8 @@ public class JavaTest {
 			final Path rootDirectory = Files.createTempDirectory("qwazr_index_test");
 			indexDirectory = rootDirectory.toFile();
 			indexManager = new IndexManager(rootDirectory, Executors.newCachedThreadPool());
+			indexManager.registerAnalyzerFactory(AnnotatedIndex.INJECTED_ANALYZER_NAME,
+					resourceLoader -> new AnnotatedIndex.TestAnalyzer(new AtomicInteger()));
 		}
 
 		@Override

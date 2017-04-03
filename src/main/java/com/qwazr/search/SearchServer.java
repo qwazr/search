@@ -32,20 +32,28 @@ public class SearchServer implements BaseServer {
 
 	private final GenericServer server;
 	private final IndexServiceBuilder serviceBuilder;
+	private final ClusterManager clusterManager;
+	private final IndexManager indexManager;
 
 	private SearchServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final GenericServer.Builder builder =
 				GenericServer.of(configuration, executorService).webService(WelcomeShutdownService.class);
-		final ClusterManager clusterManager =
-				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
-						.registerProtocolListener(builder)
-						.registerWebService(builder);
-		final IndexManager indexManager =
-				new IndexManager(IndexManager.checkIndexesDirectory(configuration.dataDirectory.toPath()),
-						executorService).registerWebService(builder).registerShutdownListener(builder);
+		clusterManager = new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
+				.registerProtocolListener(builder)
+				.registerWebService(builder);
+		indexManager = new IndexManager(IndexManager.checkIndexesDirectory(configuration.dataDirectory.toPath()),
+				executorService).registerWebService(builder).registerShutdownListener(builder);
 		serviceBuilder = new IndexServiceBuilder(clusterManager, indexManager);
 		server = builder.build();
+	}
+
+	public ClusterManager getClusterManager() {
+		return clusterManager;
+	}
+
+	public IndexManager getIndexManager() {
+		return indexManager;
 	}
 
 	@Override
