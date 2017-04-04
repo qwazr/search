@@ -16,17 +16,25 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.StringUtils;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
-import java.util.Objects;
+import java.io.StringReader;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class MoreLikeThisQuery extends AbstractQuery {
 
+	final public String like_text;
+	final public String fieldname;
+	final public float percent_terms_to_match;
+
 	final public Integer doc_num;
+
 	final public Boolean is_boost;
 	final public Float boost_factor;
 	final public String[] fieldnames;
@@ -41,6 +49,9 @@ public class MoreLikeThisQuery extends AbstractQuery {
 	final public Set<String> stop_words;
 
 	public MoreLikeThisQuery() {
+		like_text = null;
+		fieldname = null;
+		percent_terms_to_match = 0;
 		doc_num = null;
 		is_boost = null;
 		boost_factor = null;
@@ -56,28 +67,27 @@ public class MoreLikeThisQuery extends AbstractQuery {
 		stop_words = null;
 	}
 
-	public MoreLikeThisQuery(Integer doc_num, Boolean is_boost, Float boost_factor, String[] fieldnames,
-			Integer max_doc_freq, Integer max_doc_freq_pct, Integer max_num_tokens_parsed, Integer max_query_terms,
-			Integer max_word_len, Integer min_doc_freq, Integer min_term_freq, Integer min_word_len,
-			Set<String> stop_words) {
-		this.doc_num = doc_num;
-		this.is_boost = is_boost;
-		this.boost_factor = boost_factor;
-		this.fieldnames = fieldnames;
-		this.max_doc_freq = max_doc_freq;
-		this.max_doc_freq_pct = max_doc_freq_pct;
-		this.max_num_tokens_parsed = max_num_tokens_parsed;
-		this.max_query_terms = max_query_terms;
-		this.max_word_len = max_word_len;
-		this.min_doc_freq = min_doc_freq;
-		this.min_term_freq = min_term_freq;
-		this.min_word_len = min_word_len;
-		this.stop_words = stop_words;
+	private MoreLikeThisQuery(final Builder builder) {
+		this.like_text = builder.likeText;
+		this.fieldname = builder.fieldname;
+		this.percent_terms_to_match = builder.percentTermsToMatch;
+		this.doc_num = builder.docNum;
+		this.is_boost = builder.isBoost;
+		this.boost_factor = builder.boostFactor;
+		this.fieldnames = builder.fieldnames;
+		this.max_doc_freq = builder.maxDocFreq;
+		this.max_doc_freq_pct = builder.maxDocFreqPct;
+		this.max_num_tokens_parsed = builder.maxNumTokensParsed;
+		this.max_query_terms = builder.maxQueryTerms;
+		this.max_word_len = builder.maxWordLen;
+		this.min_doc_freq = builder.minDocFreq;
+		this.min_term_freq = builder.minTermFreq;
+		this.min_word_len = builder.minWordLen;
+		this.stop_words = builder.stopWords;
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
-		Objects.requireNonNull(doc_num, "The doc_num field is missing");
 
 		final MoreLikeThis mlt = new MoreLikeThis(queryContext.getIndexReader());
 		if (is_boost != null)
@@ -105,6 +115,135 @@ public class MoreLikeThisQuery extends AbstractQuery {
 		if (stop_words != null)
 			mlt.setStopWords(stop_words);
 		mlt.setAnalyzer(queryContext.getQueryAnalyzer());
-		return mlt.like(doc_num);
+
+		if (doc_num != null)
+			return mlt.like(doc_num);
+		if (StringUtils.isEmpty(like_text) || StringUtils.isEmpty(fieldname))
+			throw new ParseException("Either doc_num or like_text/fieldname are missing");
+
+		final org.apache.lucene.search.BooleanQuery bq =
+				(org.apache.lucene.search.BooleanQuery) mlt.like(fieldname, new StringReader(like_text));
+		final org.apache.lucene.search.BooleanQuery.Builder newBq = new org.apache.lucene.search.BooleanQuery.Builder();
+		newBq.setDisableCoord(bq.isCoordDisabled());
+		for (BooleanClause clause : bq)
+			newBq.add(clause);
+		//make at least half the terms match
+		newBq.setMinimumNumberShouldMatch((int) (bq.clauses().size() * percent_terms_to_match));
+		return newBq.build();
 	}
+
+	public static Builder of(int docNum) {
+		return new Builder(docNum);
+	}
+
+	public static Builder of(String likeText, String fieldName) {
+		return of(likeText, fieldName, null);
+	}
+
+	public static Builder of(String likeText, String fieldName, Float percentTermsToMatch) {
+		return new Builder(likeText, fieldName, percentTermsToMatch);
+	}
+
+	public static class Builder {
+
+		public final String likeText;
+		public final String fieldname;
+		public final float percentTermsToMatch;
+		public final Integer docNum;
+		public Boolean isBoost;
+		public Float boostFactor;
+		public String[] fieldnames;
+		public Integer maxDocFreq;
+		public Integer maxDocFreqPct;
+		public Integer maxNumTokensParsed;
+		public Integer maxQueryTerms;
+		public Integer maxWordLen;
+		public Integer minDocFreq;
+		public Integer minTermFreq;
+		public Integer minWordLen;
+		public LinkedHashSet<String> stopWords;
+
+		private Builder(String likeText, String fieldname, Float percentTermsToMatch) {
+			this.likeText = likeText;
+			this.fieldname = fieldname;
+			this.percentTermsToMatch = percentTermsToMatch == null ? 0.3F : percentTermsToMatch;
+			this.docNum = null;
+		}
+
+		private Builder(Integer docNum) {
+			this.likeText = null;
+			this.fieldname = null;
+			this.percentTermsToMatch = 0;
+			this.docNum = docNum;
+		}
+
+		public Builder isBoost(Boolean isBoost) {
+			this.isBoost = isBoost;
+			return this;
+		}
+
+		public Builder boostFactor(Float boostFactor) {
+			this.boostFactor = boostFactor;
+			return this;
+		}
+
+		public Builder maxDocFreq(Integer maxDocFreq) {
+			this.maxDocFreq = maxDocFreq;
+			return this;
+		}
+
+		public Builder maxDocFreqPct(Integer maxDocFreqPct) {
+			this.maxDocFreqPct = maxDocFreqPct;
+			return this;
+		}
+
+		public Builder maxNumTokensParsed(Integer maxNumTokensParsed) {
+			this.maxNumTokensParsed = maxNumTokensParsed;
+			return this;
+		}
+
+		public Builder maxQueryTerms(Integer maxQueryTerms) {
+			this.maxQueryTerms = maxQueryTerms;
+			return this;
+		}
+
+		public Builder maxWordLen(Integer maxWordLen) {
+			this.maxWordLen = maxWordLen;
+			return this;
+		}
+
+		public Builder minDocFreq(Integer minDocFreq) {
+			this.minDocFreq = minDocFreq;
+			return this;
+		}
+
+		public Builder minTermFreq(Integer minTermFreq) {
+			this.minTermFreq = minTermFreq;
+			return this;
+		}
+
+		public Builder minWordLen(Integer minWordLen) {
+			this.minWordLen = minWordLen;
+			return this;
+		}
+
+		public Builder stopWord(String... stopWords) {
+			if (this.stopWords == null)
+				this.stopWords = new LinkedHashSet<>();
+			if (stopWords != null)
+				for (final String stopWord : stopWords)
+					this.stopWords.add(stopWord);
+			return this;
+		}
+
+		public Builder fieldnames(String... fieldnames) {
+			this.fieldnames = fieldnames;
+			return this;
+		}
+
+		public MoreLikeThisQuery build() {
+			return new MoreLikeThisQuery(this);
+		}
+	}
+
 }

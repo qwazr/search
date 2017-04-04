@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,33 +17,38 @@ package com.qwazr.search.test.queries;
 
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.PhraseQuery;
+import com.qwazr.search.query.MoreLikeThisQuery;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 
-public class FieldCopyToTest extends AbstractIndexTest {
+public class MoreLikeThisQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1").copyText2("Boosted Text 1").copyText1("Copied Text 2"));
+		indexService.postDocument(new IndexRecord("1").mlt("Hello World"));
+		indexService.postDocument(new IndexRecord("2").mlt("Hello world again"));
+		indexService.postDocument(new IndexRecord("3").mlt("absolutely nothing to match"));
 	}
 
 	@Test
-	public void testBoostedText() {
-		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new PhraseQuery("textField", 1, "boosted", "text", "1")).build());
+	public void mltTest() {
+		ResultDefinition.WithObject<IndexRecord> result;
+		result = indexService.searchQuery(
+				QueryDefinition.of(MoreLikeThisQuery.of("hello again", "mlt").minDocFreq(1).minTermFreq(1).build())
+						.build());
 		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
-	}
+		Assert.assertEquals(Long.valueOf(2), result.total_hits);
 
-	@Test
-	public void testCopiedText() {
-		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new PhraseQuery("textField", 1, "copied", "text", "2")).build());
+		result = indexService.searchQuery(QueryDefinition.of(MoreLikeThisQuery.of(result.getDocuments().get(0).getDoc())
+				.minDocFreq(1)
+				.minTermFreq(1)
+				.fieldnames("mlt")
+				.isBoost(true)
+				.build()).build());
 		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
+		Assert.assertEquals(Long.valueOf(2), result.total_hits);
 	}
 }

@@ -21,6 +21,9 @@ import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 @Index(name = "IndexRecord", schema = "TestQueries", enableTaxonomyIndex = true)
 public class IndexRecord {
 
@@ -48,17 +51,17 @@ public class IndexRecord {
 	@IndexField(template = FieldDefinition.Template.FloatAssociatedField)
 	public Object[] floatAssociatedFacet;
 
-	@Copy(to = { @Copy.To(order = 4, field = "textField") })
-	public String copyTextBoost4;
-
-	@Copy(to = { @Copy.To(order = 3, field = "textField") })
-	public String copyTextBoost3;
+	@Copy(to = { @Copy.To(order = 1, field = "textField") })
+	public String copyText1;
 
 	@Copy(to = { @Copy.To(order = 2, field = "textField") })
-	public String copyTextBoost2;
+	public String copyText2;
 
-	@Copy(to = { @Copy.To(order = 1, field = "textField") })
-	public String copyTextNoBoost;
+	@IndexField(template = FieldDefinition.Template.TextField,
+			analyzerClass = StandardAnalyzer.class,
+			stored = true,
+			omitNorms = true)
+	public ArrayList<String> mlt;
 
 	public IndexRecord() {
 		id = null;
@@ -73,23 +76,13 @@ public class IndexRecord {
 		return this;
 	}
 
-	public IndexRecord copyTextNoBoost(String copyText) {
-		this.copyTextNoBoost = copyText;
+	public IndexRecord copyText1(String copyText) {
+		this.copyText1 = copyText;
 		return this;
 	}
 
-	public IndexRecord copyTextBoost2(String copyText) {
-		this.copyTextBoost2 = copyText;
-		return this;
-	}
-
-	public IndexRecord copyTextBoost3(String copyText) {
-		this.copyTextBoost3 = copyText;
-		return this;
-	}
-
-	public IndexRecord copyTextBoost4(String copyText) {
-		this.copyTextBoost4 = copyText;
+	public IndexRecord copyText2(String copyText) {
+		this.copyText2 = copyText;
 		return this;
 	}
 
@@ -126,6 +119,13 @@ public class IndexRecord {
 		array[0] = assoc;
 		System.arraycopy(path, 0, array, 1, path.length);
 		this.floatAssociatedFacet = array;
+		return this;
+	}
+
+	public IndexRecord mlt(String... mlt) {
+		if (this.mlt == null)
+			this.mlt = new ArrayList<>();
+		Collections.addAll(this.mlt, mlt);
 		return this;
 	}
 }
