@@ -60,6 +60,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -241,7 +242,7 @@ final public class IndexInstance implements Closeable {
 	void setAnalyzers(final Map<String, AnalyzerDefinition> analyzerDefinitionMap) throws IOException {
 		Objects.requireNonNull(analyzerDefinitionMap, "The analyzer map is null");
 		synchronized (localAnalyzerFactoryMap) {
-			localAnalyzerFactoryMap.putAll(CustomAnalyzer.createFactoryMap(analyzerDefinitionMap));
+			localAnalyzerFactoryMap.putAll(CustomAnalyzer.createFactoryMap(analyzerDefinitionMap, LinkedHashMap::new));
 			updateLocalAnalyzers();
 		}
 	}
@@ -315,6 +316,23 @@ final public class IndexInstance implements Closeable {
 				throw new IOException(
 						"Cannot create the backup directory: " + backupIndexDirectory + " - Index: " + indexName);
 
+			// Copy the UUID
+			IOUtils.writeStringAsFile(indexUuid.toString(),
+					backupIndexDirectory.resolve(IndexFileSet.UUID_FILE).toFile());
+
+			// Copy the option UUID Master File
+			if (fileSet.uuidMasterFile != null && fileSet.uuidMasterFile.exists() && fileSet.uuidMasterFile.isFile())
+				Files.copy(fileSet.uuidMasterFile.toPath(), backupIndexDirectory.resolve(IndexFileSet.UUID_MASTER_FILE),
+						StandardCopyOption.REPLACE_EXISTING);
+
+			// Copy the settings, field definitions analyzer definitions
+			IndexSettingsDefinition.save(settings, backupIndexDirectory.resolve(IndexFileSet.SETTINGS_FILE).toFile());
+			FieldDefinition.saveMap(fieldMap.getFieldDefinitionMap(),
+					backupIndexDirectory.resolve(IndexFileSet.FIELDS_FILE).toFile());
+			AnalyzerDefinition.saveMap(analyzerDefinitionMap,
+					backupIndexDirectory.resolve(IndexFileSet.ANALYZERS_FILE).toFile());
+
+			// Copy the data using replication
 			try (final Directory dataDir = FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_DATA));
 					final Directory taxoDir = taxonomyDirectory == null ?
 							null :

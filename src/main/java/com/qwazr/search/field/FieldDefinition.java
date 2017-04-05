@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,9 @@ import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -35,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class FieldDefinition {
@@ -407,5 +410,20 @@ public class FieldDefinition {
 			map.forEach((order, copyFromList) -> globalCopyFromList.addAll(copyFromList));
 			return globalCopyFromList.toArray(new CopyFrom[globalCopyFromList.size()]);
 		}
+	}
+
+	static public void saveMap(final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap, final File fieldMapFile)
+			throws IOException {
+		if (fieldDefinitionMap == null)
+			Files.deleteIfExists(fieldMapFile.toPath());
+		else
+			JsonMapper.MAPPER.writeValue(fieldMapFile, fieldDefinitionMap);
+	}
+
+	static public LinkedHashMap<String, FieldDefinition> loadMap(final File fieldMapFile,
+			final Supplier<LinkedHashMap<String, FieldDefinition>> defaultMap) throws IOException {
+		return fieldMapFile != null && fieldMapFile.exists() && fieldMapFile.isFile() ?
+				JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
+				defaultMap == null ? null : defaultMap.get();
 	}
 }

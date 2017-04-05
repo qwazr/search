@@ -84,7 +84,7 @@ public class BackupStatus {
 				Files.getLastModifiedTime(backupDir), size.get(), count.get());
 	}
 
-	final private static Long getIndexVersion(final Path indexPath) throws IOException {
+	private static Long getIndexVersion(final Path indexPath) throws IOException {
 		if (indexPath == null || !Files.exists(indexPath) || !Files.isDirectory(indexPath))
 			return null;
 		if (!Files.list(indexPath).findAny().isPresent())

@@ -21,11 +21,9 @@ import com.qwazr.search.analysis.CustomAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.json.JsonMapper;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.UUID;
@@ -93,44 +91,28 @@ public class IndexFileSet {
 	}
 
 	IndexSettingsDefinition loadSettings() throws IOException {
-		return settingsFile.exists() ?
-				JsonMapper.MAPPER.readValue(settingsFile, IndexSettingsDefinition.class) :
-				IndexSettingsDefinition.EMPTY;
+		return IndexSettingsDefinition.load(settingsFile, () -> IndexSettingsDefinition.EMPTY);
 	}
 
 	void writeSettings(final IndexSettingsDefinition settings) throws IOException {
-		if (settings == null)
-			Files.deleteIfExists(settingsFile.toPath());
-		else
-			JsonMapper.MAPPER.writeValue(settingsFile, settings);
+		IndexSettingsDefinition.save(settings, settingsFile);
 	}
 
 	LinkedHashMap<String, FieldDefinition> loadFieldMap() throws IOException {
-		return fieldMapFile.exists() ?
-				JsonMapper.MAPPER.readValue(fieldMapFile, FieldDefinition.MapStringFieldTypeRef) :
-				new LinkedHashMap<>();
+		return FieldDefinition.loadMap(fieldMapFile, LinkedHashMap::new);
 	}
 
-	void writeFieldMap(final LinkedHashMap<String, FieldDefinition> fieldMap) throws IOException {
-		if (fieldMap == null)
-			Files.deleteIfExists(fieldMapFile.toPath());
-		else
-			JsonMapper.MAPPER.writeValue(fieldMapFile, fieldMap);
+	void writeFieldMap(final LinkedHashMap<String, FieldDefinition> fields) throws IOException {
+		FieldDefinition.saveMap(fields, fieldMapFile);
 	}
 
 	LinkedHashMap<String, CustomAnalyzer.Factory> loadAnalyzerDefinitionMap() throws IOException {
-		return analyzerMapFile.exists() ?
-				CustomAnalyzer.createFactoryMap(
-						JsonMapper.MAPPER.readValue(analyzerMapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef)) :
-				new LinkedHashMap<>();
+		return CustomAnalyzer.createFactoryMap(AnalyzerDefinition.loadMap(analyzerMapFile, LinkedHashMap::new),
+				LinkedHashMap::new);
 	}
 
 	void writeAnalyzerDefinitionMap(final LinkedHashMap<String, AnalyzerDefinition> definitionMap) throws IOException {
-		if (definitionMap == null) {
-			Files.deleteIfExists(analyzerMapFile.toPath());
-			return;
-		}
-		JsonMapper.MAPPER.writeValue(analyzerMapFile, definitionMap);
+		AnalyzerDefinition.saveMap(definitionMap, analyzerMapFile);
 	}
 
 }

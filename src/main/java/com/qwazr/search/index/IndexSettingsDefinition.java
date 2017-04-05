@@ -22,9 +22,12 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.lucene.search.similarities.Similarity;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexSettingsDefinition {
@@ -255,4 +258,19 @@ public class IndexSettingsDefinition {
 			return new IndexSettingsDefinition(this);
 		}
 	}
+
+	static IndexSettingsDefinition load(final File settingsFile,
+			final Supplier<IndexSettingsDefinition> defaultSettings) throws IOException {
+		return settingsFile != null && settingsFile.exists() && settingsFile.isFile() ?
+				JsonMapper.MAPPER.readValue(settingsFile, IndexSettingsDefinition.class) :
+				defaultSettings == null ? null : defaultSettings.get();
+	}
+
+	static void save(final IndexSettingsDefinition settings, final File settingsFile) throws IOException {
+		if (settings == null)
+			Files.deleteIfExists(settingsFile.toPath());
+		else
+			JsonMapper.MAPPER.writeValue(settingsFile, settings);
+	}
+
 }

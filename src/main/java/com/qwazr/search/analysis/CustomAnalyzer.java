@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.analysis;
 
+import com.google.common.base.Supplier;
 import com.qwazr.utils.ClassLoaderUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
@@ -128,9 +129,9 @@ final public class CustomAnalyzer extends Analyzer {
 	}
 
 	public static LinkedHashMap<String, CustomAnalyzer.Factory> createFactoryMap(
-			final Map<String, AnalyzerDefinition> definitionMap) {
+			final Map<String, AnalyzerDefinition> definitionMap, Supplier<LinkedHashMap<String, Factory>> defaultMap) {
 		if (definitionMap == null)
-			return null;
+			return defaultMap == null ? null : defaultMap.get();
 		final LinkedHashMap<String, CustomAnalyzer.Factory> factoryMap = new LinkedHashMap<>();
 		definitionMap.forEach((name, def) -> factoryMap.put(name, new CustomAnalyzer.Factory(def)));
 		return factoryMap;
