@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 final class QueryContextImpl implements QueryContext {
 
 	final IndexSearcher indexSearcher;
+	final IndexReader indexReader;
 	final TaxonomyReader taxonomyReader;
 	final ExecutorService executorService;
 	final SortedSetDocValuesReaderState docValueReaderState;
@@ -47,6 +48,7 @@ final class QueryContextImpl implements QueryContext {
 		this.indexProvider = indexProvider;
 		this.resourceLoader = resourceLoader;
 		this.indexSearcher = indexSearcher;
+		this.indexReader = indexSearcher.getIndexReader();
 		this.taxonomyReader = taxonomyReader;
 		this.executorService = executorService;
 		this.docValueReaderState = docValueReaderState;
@@ -77,7 +79,7 @@ final class QueryContextImpl implements QueryContext {
 
 	@Override
 	public IndexReader getIndexReader() {
-		return indexSearcher.getIndexReader();
+		return indexReader;
 	}
 
 }

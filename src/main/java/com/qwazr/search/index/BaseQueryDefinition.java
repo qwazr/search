@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,8 +44,13 @@ public class BaseQueryDefinition {
 	}
 
 	@JsonIgnore
+	final public int getStart() {
+		return start == null ? 0 : start;
+	}
+
+	@JsonIgnore
 	final public int getEnd() {
-		return (start == null ? 0 : start) + (rows == null ? 10 : rows);
+		return getStart() + (rows == null ? 10 : rows);
 	}
 
 }

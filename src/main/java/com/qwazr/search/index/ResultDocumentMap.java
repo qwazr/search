@@ -34,7 +34,7 @@ public class ResultDocumentMap extends ResultDocumentAbstract {
 		fields = null;
 	}
 
-	private ResultDocumentMap(Builder builder) {
+	ResultDocumentMap(Builder builder) {
 		super(builder);
 		fields = builder.fields;
 	}
@@ -47,8 +47,8 @@ public class ResultDocumentMap extends ResultDocumentAbstract {
 
 		private final LinkedHashMap<String, Object> fields;
 
-		Builder(final int pos, final ScoreDoc scoreDoc, final float maxScore) {
-			super(pos, scoreDoc, maxScore);
+		Builder(final int pos, final ScoreDoc scoreDoc) {
+			super(pos, scoreDoc);
 			this.fields = new LinkedHashMap<>();
 		}
 
@@ -58,9 +58,9 @@ public class ResultDocumentMap extends ResultDocumentAbstract {
 		}
 
 		@Override
-		final void setDocValuesField(final String fieldName, final ValueConverter converter, final int docId) {
+		final void setDocValuesField(final String fieldName, final ValueConverter converter) {
 			// TODO optimize for map
-			setStoredField(fieldName, converter.convert(docId));
+			setStoredField(fieldName, converter.convert(scoreDoc.doc));
 		}
 
 		@Override

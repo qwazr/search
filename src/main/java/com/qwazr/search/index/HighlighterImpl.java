@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Emmanuel Keller / QWAZR
+ * Copyright 2016-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,17 @@ package com.qwazr.search.index;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.postingshighlight.*;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.postingshighlight.DefaultPassageFormatter;
+import org.apache.lucene.search.postingshighlight.PassageFormatter;
+import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
+import org.apache.lucene.search.postingshighlight.WholeBreakIterator;
 
 import java.io.IOException;
 import java.text.BreakIterator;
 import java.util.Locale;
 
-public class HighlighterImpl extends PostingsHighlighter {
+class HighlighterImpl extends PostingsHighlighter {
 
 	private final HighlighterDefinition definition;
 
@@ -84,10 +88,11 @@ public class HighlighterImpl extends PostingsHighlighter {
 		return separator;
 	}
 
-	String[] highlights(Query query, IndexSearcher indexSearcher, int[] docs) throws IOException {
-		return highlightFields(new String[] { definition.field }, query, indexSearcher, docs,
-				definition.max_passages == null ? new int[] { 1 } : new int[] { definition.max_passages })
-				.get(definition.field);
+	String[] highlights(final Query query, final IndexSearcher indexSearcher, final TopDocs topDocs)
+			throws IOException {
+		return highlightFields(new String[] { definition.field }, query, indexSearcher, topDocs,
+				definition.max_passages == null ? new int[] { 1 } : new int[] { definition.max_passages }).get(
+				definition.field);
 
 	}
 }

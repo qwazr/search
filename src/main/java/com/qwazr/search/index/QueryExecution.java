@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-final class QueryExecution {
+final class QueryExecution<T extends ResultDocumentAbstract> {
 
 	final QueryContextImpl queryContext;
 	final QueryDefinition queryDef;
@@ -125,7 +125,8 @@ final class QueryExecution {
 		return concurrentCollectors.get() > 0 || classicCollectors.get() == 0;
 	}
 
-	final ResultDefinition execute(final ResultDocumentBuilder.BuilderFactory documentBuilderFactory)
+	final ResultDefinition<T> execute(final ResultDocumentsInterface resultDocuments,
+			final ResultDefinition.Builder<T> resultDefinitionBuilder)
 			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
 
 		final QueryCollectors queryCollectors =
@@ -147,12 +148,12 @@ final class QueryExecution {
 
 		timeTracker.next("search_query");
 
-		final ResultDefinitionBuilder resultBuilder =
-				new ResultDefinitionBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
-						queryCollectors.getExternalResults(), queryContext.fieldMap, timeTracker,
-						documentBuilderFactory, facetsBuilder, totalHits);
+		final ResultDocumentsBuilder resultBuilder =
+				new ResultDocumentsBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
+						queryCollectors.getExternalResults(), timeTracker, facetsBuilder,
+						totalHits == null ? 0 : totalHits, resultDocuments);
 
-		return documentBuilderFactory.build(resultBuilder);
+		return resultDefinitionBuilder.apply(resultBuilder);
 	}
 
 	final Explanation explain(final int docId) throws IOException {

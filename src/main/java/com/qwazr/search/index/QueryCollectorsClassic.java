@@ -53,7 +53,7 @@ class QueryCollectorsClassic extends QueryCollectors {
 
 	final Collector finalCollector;
 
-	QueryCollectorsClassic(final QueryExecution queryExecution) throws IOException, ReflectiveOperationException {
+	QueryCollectorsClassic(final QueryExecution<?> queryExecution) throws IOException, ReflectiveOperationException {
 		super(queryExecution);
 		collectors = new ArrayList<>();
 		facetsCollector = queryExecution.useDrillSideways ? null : buildFacetsCollector(queryExecution.queryDef.facets);

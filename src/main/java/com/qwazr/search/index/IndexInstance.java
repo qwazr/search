@@ -630,11 +630,13 @@ final public class IndexInstance implements Closeable {
 				indexAnalyzer, queryAnalyzer, fieldMap, facetsState);
 	}
 
-	private final ResultDefinition search(final QueryDefinition queryDefinition,
-			final ResultDocumentBuilder.BuilderFactory<?> documentBuilderFactory) throws IOException {
+	private <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDefinition,
+			final ResultDocumentsAbstract.Factory<T> resultDocumentsFactory) throws IOException {
 		return query(context -> {
 			try {
-				return new QueryExecution((QueryContextImpl) context, queryDefinition).execute(documentBuilderFactory);
+				final ResultDocumentsAbstract<T> resultDocuments = resultDocumentsFactory.newResultDocuments(context);
+				return new QueryExecution<T>((QueryContextImpl) context, queryDefinition).execute(resultDocuments,
+						resultDocuments);
 			} catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
 				throw new ServerException(e);
 			}
@@ -647,13 +649,13 @@ final public class IndexInstance implements Closeable {
 						fieldMap.getStaticFieldSet() :
 						queryDefinition.returned_fields;
 		return (ResultDefinition.WithMap) search(queryDefinition,
-				new ResultDocumentBuilder.MapBuilderFactory(returnedFields));
+				context -> new ResultDocumentsMap(context, queryDefinition, returnedFields));
 	}
 
 	final <T> ResultDefinition.WithObject<T> searchObject(final QueryDefinition queryDefinition,
-			final FieldMapWrapper<?> wrapper) throws IOException {
+			final FieldMapWrapper<T> wrapper) throws IOException {
 		return (ResultDefinition.WithObject<T>) search(queryDefinition,
-				new ResultDocumentBuilder.ObjectBuilderFactory(wrapper));
+				context -> new ResultDocumentsObject<>(context, queryDefinition, wrapper));
 	}
 
 	final <T> T query(final FunctionUtils.FunctionEx<QueryContext, T, IOException> queryActions) throws IOException {

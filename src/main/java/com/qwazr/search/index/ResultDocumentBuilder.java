@@ -16,12 +16,16 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.Converters.ValueConverter;
-import com.qwazr.utils.FieldMapWrapper;
+import com.qwazr.search.field.FieldTypeInterface;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.util.BytesRef;
 
+import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -31,17 +35,12 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 
 	final int pos;
 	final ScoreDoc scoreDoc;
-	final Float percentScore;
 
 	Map<String, String> highlights;
 
-	protected ResultDocumentBuilder(final int pos, final ScoreDoc scoreDoc, final float maxScore) {
+	protected ResultDocumentBuilder(final int pos, final ScoreDoc scoreDoc) {
 		this.pos = pos;
 		this.scoreDoc = scoreDoc;
-		if (maxScore > 0)
-			this.percentScore = scoreDoc.score == 0 ? 0 : scoreDoc.score / maxScore;
-		else
-			this.percentScore = null;
 	}
 
 	final void setHighlight(final String name, final String snippet) {
@@ -54,20 +53,15 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 
 	abstract T build();
 
-	abstract void setDocValuesField(final String fieldName, final ValueConverter converter, final int docId);
+	abstract void setDocValuesField(final String fieldName, final ValueConverter converter);
 
 	abstract void setStoredField(final String fieldName, final Object value);
 
 	@Override
 	public final void accept(final IndexableField field) {
-		Object value = getValue(field);
-		if (value == null)
-			return;
-		setStoredField(field.name(), value);
-	}
-
-	final void setStoredFields(final Document document) {
-		document.forEach(this);
+		final Object value = getValue(field);
+		if (value != null)
+			setStoredField(field.name(), value);
 	}
 
 	private final static Object getValue(final IndexableField field) {
@@ -85,70 +79,22 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 		return null;
 	}
 
-	abstract static class BuilderFactory<T extends ResultDocumentAbstract> {
-
-		final Set<String> returnedFields;
-
-		protected BuilderFactory(Set<String> returnedFields) {
-			this.returnedFields = returnedFields;
-		}
-
-		abstract ResultDocumentBuilder<T> createBuilder(int pos, ScoreDoc scoreDoc, float maxScore);
-
-		abstract ResultDocumentBuilder<T>[] createArray(int size);
-
-		abstract ResultDefinition<T> build(ResultDefinitionBuilder<T> resultBuilder);
+	final void extractStoredReturnedFields(@NotNull final IndexSearcher searcher,
+			@NotNull final Set<String> returnedFields) throws IOException {
+		final Document doc = searcher.doc(scoreDoc.doc, returnedFields);
+		doc.forEach(this);
 	}
 
-	final static class ObjectBuilderFactory<T> extends BuilderFactory<ResultDocumentObject<T>> {
-
-		private final FieldMapWrapper<T> wrapper;
-
-		ObjectBuilderFactory(final FieldMapWrapper<T> wrapper) {
-			super(wrapper.fieldMap.keySet());
-			this.wrapper = wrapper;
-		}
-
-		@Override
-		final ResultDocumentBuilder<ResultDocumentObject<T>> createBuilder(final int pos, final ScoreDoc scoreDoc,
-				final float maxScore) {
-			return new ResultDocumentObject.Builder<T>(pos, scoreDoc, maxScore, wrapper);
-		}
-
-		@Override
-		final ResultDocumentBuilder<ResultDocumentObject<T>>[] createArray(final int size) {
-			return new ResultDocumentBuilder[size];
-		}
-
-		@Override
-		final ResultDefinition<ResultDocumentObject<T>> build(
-				final ResultDefinitionBuilder<ResultDocumentObject<T>> resultBuilder) {
-			return new ResultDefinition.WithObject(resultBuilder);
-		}
-
-	}
-
-	final static class MapBuilderFactory extends BuilderFactory<ResultDocumentMap> {
-
-		MapBuilderFactory(final Set<String> returnedFields) {
-			super(returnedFields);
-		}
-
-		@Override
-		final ResultDocumentBuilder<ResultDocumentMap> createBuilder(final int pos, final ScoreDoc scoreDoc,
-				final float maxScore) {
-			return new ResultDocumentMap.Builder(pos, scoreDoc, maxScore);
-		}
-
-		@Override
-		final ResultDocumentBuilder<ResultDocumentMap>[] createArray(final int size) {
-			return new ResultDocumentBuilder[size];
-		}
-
-		@Override
-		final ResultDefinition<ResultDocumentMap> build(
-				final ResultDefinitionBuilder<ResultDocumentMap> resultBuilder) {
-			return new ResultDefinition.WithMap(resultBuilder);
+	final void extractDocValuesReturnedFields(@NotNull final IndexReader indexReader, @NotNull final FieldMap fieldMap,
+			@NotNull final Set<String> returnedFields) throws IOException {
+		for (String fieldName : returnedFields) {
+			final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
+			if (fieldType == null)
+				return;
+			final ValueConverter converter = fieldType.getConverter(fieldName, indexReader);
+			if (converter == null)
+				continue;
+			setDocValuesField(fieldName, converter);
 		}
 	}
 

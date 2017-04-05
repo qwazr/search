@@ -51,8 +51,8 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		private final T record;
 		private final Map<String, Field> fieldMap;
 
-		Builder(final int pos, final ScoreDoc scoreDoc, final float maxScore, final FieldMapWrapper<T> wrapper) {
-			super(pos, scoreDoc, maxScore);
+		Builder(final int pos, final ScoreDoc scoreDoc, final FieldMapWrapper<T> wrapper) {
+			super(pos, scoreDoc);
 			try {
 				this.record = wrapper.constructor.newInstance();
 			} catch (ReflectiveOperationException e) {
@@ -62,21 +62,21 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		}
 
 		@Override
-		final ResultDocumentObject build() {
-			return new ResultDocumentObject(this);
+		final ResultDocumentObject<T> build() {
+			return new ResultDocumentObject<>(this);
 		}
 
 		@Override
-		void setDocValuesField(final String fieldName, final ValueConverter converter, final int docId) {
+		void setDocValuesField(final String fieldName, final ValueConverter converter) {
 			final Field field = fieldMap.get(fieldName);
 			if (field == null)
 				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
 			final Class<?> fieldType = field.getType();
 			try {
 				if (Collection.class.isAssignableFrom(fieldType))
-					converter.fillCollection(record, field, fieldType, docId);
+					converter.fillCollection(record, field, fieldType, scoreDoc.doc);
 				else
-					converter.fillSingleValue(record, field, docId);
+					converter.fillSingleValue(record, field, scoreDoc.doc);
 			} catch (ReflectiveOperationException e) {
 				throw new ServerException(e);
 			}

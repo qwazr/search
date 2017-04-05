@@ -21,15 +21,13 @@ import java.util.Map;
 
 public abstract class ResultDocumentAbstract {
 
-	final public Float score;
-	final public Float percent_score;
+	final public float score;
 	final private int doc;
 	final private int shard_index;
 	final public Map<String, String> highlights;
 
 	public ResultDocumentAbstract() {
-		score = null;
-		percent_score = null;
+		score = 1.0F;
 		highlights = null;
 		doc = -1;
 		shard_index = -1;
@@ -37,7 +35,6 @@ public abstract class ResultDocumentAbstract {
 
 	protected ResultDocumentAbstract(final ResultDocumentBuilder builder) {
 		this.score = builder.scoreDoc.score;
-		this.percent_score = builder.percentScore;
 		highlights = builder.highlights;
 		this.doc = builder.scoreDoc.doc;
 		this.shard_index = builder.scoreDoc.shardIndex;
@@ -45,7 +42,6 @@ public abstract class ResultDocumentAbstract {
 
 	protected ResultDocumentAbstract(final ResultDocumentAbstract src) {
 		this.score = src.score;
-		this.percent_score = src.percent_score;
 		highlights = src.highlights;
 		this.doc = src.doc;
 		this.shard_index = src.shard_index;
@@ -53,15 +49,6 @@ public abstract class ResultDocumentAbstract {
 
 	final public Float getScore() {
 		return score;
-	}
-
-	@JsonIgnore
-	final public Float getPercentScore() {
-		return percent_score;
-	}
-
-	final public Float getPercent_score() {
-		return percent_score;
 	}
 
 	final public int getDoc() {

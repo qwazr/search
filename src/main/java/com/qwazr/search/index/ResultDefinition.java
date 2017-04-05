@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,16 @@
  **/
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.qwazr.utils.TimeTracker;
 
+import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 
@@ -43,17 +46,17 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		this.query = null;
 	}
 
-	protected ResultDefinition(final ResultDefinitionBuilder<T> builder) {
+	protected ResultDefinition(final ResultDocumentsBuilder builder, @NotNull final List<T> documents) {
 		this.query = builder.queryDebug;
 		this.timer = builder.timeTrackerStatus;
 		this.total_hits = builder.totalHits;
 		this.max_score = builder.maxScore;
-		this.documents = builder.documents;
+		this.documents = documents;
 		this.facets = builder.facets;
 		this.collectors = builder.collectors;
 	}
 
-	protected ResultDefinition(final ResultDefinition<?> src, final List<T> documents) {
+	protected ResultDefinition(final ResultDefinition<?> src, @NotNull final List<T> documents) {
 		this.query = src.query;
 		this.timer = src.timer;
 		this.total_hits = src.total_hits;
@@ -83,11 +86,13 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		this.timer = null;
 	}
 
-	public Long getTotal_hits() {
+	@JsonIgnore
+	public Long getTotalHits() {
 		return total_hits;
 	}
 
-	public Float getMax_score() {
+	@JsonIgnore
+	public Float getMaxScore() {
 		return max_score;
 	}
 
@@ -117,8 +122,8 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		public WithMap() {
 		}
 
-		WithMap(ResultDefinitionBuilder<ResultDocumentMap> builder) {
-			super(builder);
+		WithMap(ResultDocumentsBuilder builder, List<ResultDocumentMap> documents) {
+			super(builder, documents);
 		}
 
 		WithMap(long totalHits) {
@@ -128,14 +133,17 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 
 	public static class WithObject<T> extends ResultDefinition<ResultDocumentObject<T>> {
 
-		WithObject(ResultDefinitionBuilder<ResultDocumentObject<T>> builder) {
-			super(builder);
+		WithObject(ResultDocumentsBuilder builder, List<ResultDocumentObject<T>> documents) {
+			super(builder, documents);
 		}
 
 		public WithObject(final ResultDefinition<?> result, final List<ResultDocumentObject<T>> documents) {
 			super(result, documents);
 		}
 
+	}
+
+	interface Builder<T extends ResultDocumentAbstract> extends Function<ResultDocumentsBuilder, ResultDefinition<T>> {
 	}
 
 }
