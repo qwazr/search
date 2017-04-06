@@ -74,7 +74,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 		this.facetKeys = queryDef.facets == null ? null : FacetsBuilder.getFields(queryDef.facets);
 		this.facetsConfig = facetKeys == null ? null : queryContext.fieldMap.getFacetsConfig(facetKeys);
 
-		this.numHits = queryDef.getEnd();
+		this.numHits = queryDef.getEndValue();
 		this.bNeedScore = sort == null || sort.needsScores();
 		this.useDrillSideways =
 				queryDef.query instanceof DrillDownQuery && ((DrillDownQuery) queryDef.query).useDrillSideways

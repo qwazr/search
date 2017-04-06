@@ -969,7 +969,7 @@ public abstract class JsonAbstractTest {
 					client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, builder.build(), false);
 			idSet.add(result2.getDocuments().get(0).getDoc());
 		}
-		Assert.assertEquals(idSet.size(), result.total_hits.intValue());
+		Assert.assertEquals(result.total_hits.intValue(), idSet.size());
 	}
 
 	@Test

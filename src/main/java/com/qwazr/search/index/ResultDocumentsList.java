@@ -37,7 +37,7 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 			final Set<String> returnedFields) {
 		this.indexReader = context.indexReader;
 		this.fieldMap = context.fieldMap;
-		this.start = queryDefinition.getStart();
+		this.start = queryDefinition.getStartValue();
 		this.returnedFields = returnedFields != null ?
 				returnedFields :
 				queryDefinition.returned_fields != null && !queryDefinition.returned_fields.isEmpty() ?

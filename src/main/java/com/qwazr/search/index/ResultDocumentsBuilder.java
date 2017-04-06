@@ -45,8 +45,8 @@ class ResultDocumentsBuilder {
 
 		if (scoreDocs != null) {
 
-			final int start = queryDefinition.getStart();
-			final int end = Math.min(queryDefinition.getEnd(), scoreDocs.length);
+			final int start = queryDefinition.getStartValue();
+			final int end = Math.min(queryDefinition.getEndValue(), scoreDocs.length);
 			final int size = Math.max(end - start, 0);
 
 			int pos = 0;
