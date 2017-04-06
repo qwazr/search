@@ -150,7 +150,8 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 		timeTracker.next("search_query");
 
 		final ResultDocumentsBuilder resultBuilder =
-				new ResultDocumentsBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
+				new ResultDocumentsBuilder(queryDef, topDocs == null ? null : topDocs.scoreDocs,
+						topDocs == null ? 0 : topDocs.getMaxScore(), queryContext.indexSearcher, query, highlighters,
 						queryCollectors.getExternalResults(), timeTracker, facetsBuilder,
 						totalHits == null ? 0 : totalHits, resultDocumentsInterface);
 

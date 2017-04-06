@@ -395,4 +395,5 @@ public interface IndexServiceInterface extends ServiceInterface {
 	default <T> T query(String schemaName, String indexName, QueryActions<T> actions) throws IOException {
 		throw new NotImplementedException("Method not available");
 	}
+	
 }

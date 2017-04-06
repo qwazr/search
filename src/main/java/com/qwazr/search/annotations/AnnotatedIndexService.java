@@ -26,6 +26,7 @@ import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.QueryDocumentsIterator;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.search.index.ResultDocumentsInterface;
@@ -51,6 +52,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -493,11 +495,25 @@ public class AnnotatedIndexService<T> {
 	 *
 	 * @param query       the query to execute
 	 * @param objectClass the type of the objects to return
+	 * @param <C>         the type of the objects
 	 * @return the results
 	 */
 	public <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query, final Class<C> objectClass) {
 		checkParameters();
 		return searchQuery(query, fieldMapWrappers.get(objectClass));
+	}
+
+	/**
+	 * Iterator over any document who is matching the query
+	 *
+	 * @param query       the query to execute
+	 * @param objectClass the type of the objects to return
+	 * @param <C>         the type of the objects
+	 * @return a new iterator
+	 */
+	public <C> Iterator<C> searchIterator(final QueryDefinition query, final Class<C> objectClass) {
+		checkParameters();
+		return new QueryDocumentsIterator<>(this, query, objectClass);
 	}
 
 	/**
