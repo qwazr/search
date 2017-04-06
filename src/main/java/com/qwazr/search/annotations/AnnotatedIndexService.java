@@ -28,6 +28,7 @@ import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentObject;
+import com.qwazr.search.index.ResultDocumentsInterface;
 import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.index.TermDefinition;
 import com.qwazr.search.index.TermEnumDefinition;
@@ -37,6 +38,7 @@ import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.FieldMapWrapper;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.HttpEntity;
 import org.apache.http.util.EntityUtils;
 
@@ -496,6 +498,22 @@ public class AnnotatedIndexService<T> {
 	public <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query, final Class<C> objectClass) {
 		checkParameters();
 		return searchQuery(query, fieldMapWrappers.get(objectClass));
+	}
+
+	/**
+	 * Execute a search query
+	 *
+	 * @param query           the query to execute
+	 * @param resultDocuments the consumer which obtain the results
+	 * @return the results
+	 */
+	public ResultDefinition.Empty searchQuery(final QueryDefinition query,
+			final ResultDocumentsInterface resultDocuments) {
+		checkParameters();
+		if (annotatedService != null)
+			return annotatedService.searchQuery(schemaName, indexName, query, resultDocuments);
+		else
+			throw new NotImplementedException("Method not available");
 	}
 
 	/**

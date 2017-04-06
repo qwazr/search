@@ -84,9 +84,9 @@ class MultiSearchInstance implements Closeable {
 	}
 
 	<T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDef,
-			final ResultDocumentsInterface resultDocuments, final ResultDefinition.Builder<T> resultDefinitionBuilder)
+			final ResultDocuments<T> resultDocuments)
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
-		return getContext().search(queryDef, resultDocuments, resultDefinitionBuilder);
+		return getContext().search(queryDef, resultDocuments);
 	}
 
 	@Override

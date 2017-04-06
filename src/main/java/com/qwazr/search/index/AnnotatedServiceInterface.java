@@ -44,4 +44,7 @@ public interface AnnotatedServiceInterface {
 
 	<T> ResultDefinition.WithObject<T> searchQuery(String schemaName, String indexName, QueryDefinition query,
 			FieldMapWrapper<T> fieldMapWrapper);
+
+	ResultDefinition.Empty searchQuery(String schemaName, String indexName, QueryDefinition query,
+			ResultDocumentsInterface resultDocuments);
 }

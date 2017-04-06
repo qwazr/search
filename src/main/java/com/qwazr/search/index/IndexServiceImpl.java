@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -762,6 +762,17 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 		try {
 			checkRight(schemaName);
 			return indexManager.get(schemaName).get(indexName, false).searchObject(query, wrapper);
+		} catch (Exception e) {
+			throw ServerException.getJsonException(LOGGER, e);
+		}
+	}
+
+	@Override
+	public ResultDefinition.Empty searchQuery(String schemaName, String indexName, QueryDefinition query,
+			ResultDocumentsInterface resultDocuments) {
+		try {
+			checkRight(schemaName);
+			return indexManager.get(schemaName).get(indexName, false).searchInterface(query, resultDocuments);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}

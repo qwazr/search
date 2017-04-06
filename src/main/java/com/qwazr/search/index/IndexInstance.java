@@ -631,12 +631,11 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDefinition,
-			final ResultDocumentsAbstract.Factory<T> resultDocumentsFactory) throws IOException {
+			final ResultDocuments.Factory<T> resultDocumentsFactory) throws IOException {
 		return query(context -> {
 			try {
-				final ResultDocumentsAbstract<T> resultDocuments = resultDocumentsFactory.newResultDocuments(context);
-				return new QueryExecution<T>((QueryContextImpl) context, queryDefinition).execute(resultDocuments,
-						resultDocuments);
+				final ResultDocuments<T> resultDocuments = resultDocumentsFactory.newResultDocuments(context);
+				return new QueryExecution<T>((QueryContextImpl) context, queryDefinition).execute(resultDocuments);
 			} catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
 				throw new ServerException(e);
 			}
@@ -656,6 +655,11 @@ final public class IndexInstance implements Closeable {
 			final FieldMapWrapper<T> wrapper) throws IOException {
 		return (ResultDefinition.WithObject<T>) search(queryDefinition,
 				context -> new ResultDocumentsObject<>(context, queryDefinition, wrapper));
+	}
+
+	final ResultDefinition.Empty searchInterface(final QueryDefinition queryDefinition,
+			final ResultDocumentsInterface resultDocuments) throws IOException {
+		return (ResultDefinition.Empty) search(queryDefinition, context -> new ResultDocumentsEmpty(resultDocuments));
 	}
 
 	final <T> T query(final FunctionUtils.FunctionEx<QueryContext, T, IOException> queryActions) throws IOException {

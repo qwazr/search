@@ -91,8 +91,18 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		return total_hits;
 	}
 
+	@Deprecated
+	public Long getTotal_hits() {
+		return total_hits;
+	}
+
 	@JsonIgnore
 	public Float getMaxScore() {
+		return max_score;
+	}
+
+	@Deprecated
+	public Float getMax_score() {
 		return max_score;
 	}
 
@@ -143,7 +153,16 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 
 	}
 
+	public static class Empty extends ResultDefinition {
+
+		Empty(final ResultDocumentsBuilder builder) {
+			super(builder, null);
+		}
+
+	}
+
 	interface Builder<T extends ResultDocumentAbstract> extends Function<ResultDocumentsBuilder, ResultDefinition<T>> {
+		ResultDocumentsInterface getResultDocuments();
 	}
 
 }

@@ -125,9 +125,10 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 		return concurrentCollectors.get() > 0 || classicCollectors.get() == 0;
 	}
 
-	final ResultDefinition<T> execute(final ResultDocumentsInterface resultDocuments,
-			final ResultDefinition.Builder<T> resultDefinitionBuilder)
+	final ResultDefinition<T> execute(final ResultDocuments<T> resultDocuments)
 			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+
+		final ResultDocumentsInterface resultDocumentsInterface = resultDocuments.getResultDocuments();
 
 		final QueryCollectors queryCollectors =
 				isConcurrent ? new QueryCollectorManager(this) : new QueryCollectorsClassic(this);
@@ -151,9 +152,9 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 		final ResultDocumentsBuilder resultBuilder =
 				new ResultDocumentsBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
 						queryCollectors.getExternalResults(), timeTracker, facetsBuilder,
-						totalHits == null ? 0 : totalHits, resultDocuments);
+						totalHits == null ? 0 : totalHits, resultDocumentsInterface);
 
-		return resultDefinitionBuilder.apply(resultBuilder);
+		return resultDocuments.apply(resultBuilder);
 	}
 
 	final Explanation explain(final int docId) throws IOException {

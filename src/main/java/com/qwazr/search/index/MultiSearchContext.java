@@ -76,9 +76,9 @@ final class MultiSearchContext implements Closeable, AutoCloseable {
 	}
 
 	final <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDef,
-			final ResultDocumentsInterface resultDocuments, final ResultDefinition.Builder<T> resultDefinitionBuilder)
+			final ResultDocuments<T> resultDocuments)
 			throws ServerException, IOException, QueryNodeException, ParseException, ReflectiveOperationException {
-		return new MultiSearch(this).search(queryDef, resultDocuments, resultDefinitionBuilder);
+		return new MultiSearch(this).search(queryDef, resultDocuments);
 	}
 
 	@Override

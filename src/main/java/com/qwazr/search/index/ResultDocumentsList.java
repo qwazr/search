@@ -24,19 +24,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-abstract class ResultDocumentsAbstract<T extends ResultDocumentAbstract>
-		implements ResultDefinition.Builder<T>, ResultDocumentsInterface {
+abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
+		implements ResultDocuments<T>, ResultDocumentsInterface {
 
-	private final IndexSearcher indexSearcher;
 	private final IndexReader indexReader;
 	private final FieldMap fieldMap;
 	private final List<ResultDocumentBuilder<T>> documentsBuilder;
 	private final Set<String> returnedFields;
 	private final int start;
 
-	ResultDocumentsAbstract(final QueryContextImpl context, final QueryDefinition queryDefinition,
+	ResultDocumentsList(final QueryContextImpl context, final QueryDefinition queryDefinition,
 			final Set<String> returnedFields) {
-		this.indexSearcher = context.indexSearcher;
 		this.indexReader = context.indexReader;
 		this.fieldMap = context.fieldMap;
 		this.start = queryDefinition.getStart();
@@ -48,24 +46,28 @@ abstract class ResultDocumentsAbstract<T extends ResultDocumentAbstract>
 		this.documentsBuilder = new ArrayList<>();
 	}
 
-	abstract ResultDocumentBuilder<T> newResultDocumentBuilder(int absolutePos, ScoreDoc scoreDoc);
+	protected abstract ResultDocumentBuilder<T> newResultDocumentBuilder(int absolutePos, ScoreDoc scoreDoc)
+			throws IOException;
+
+	protected abstract ResultDefinition<T> newResultDefinition(ResultDocumentsBuilder resultDocumentsBuilder,
+			List<T> documents);
 
 	@Override
 	final public void doc(IndexSearcher searcher, int pos, ScoreDoc scoreDoc) throws IOException {
 		final ResultDocumentBuilder<T> builder = newResultDocumentBuilder(start + pos, scoreDoc);
+		if (builder == null)
+			return;
 		if (returnedFields != null) {
-			builder.extractStoredReturnedFields(indexSearcher, returnedFields);
+			builder.extractStoredReturnedFields(searcher, returnedFields);
 			builder.extractDocValuesReturnedFields(indexReader, fieldMap, returnedFields);
 		}
 		documentsBuilder.add(builder);
 	}
 
 	@Override
-	public void highlight(int pos, String name, String snippet) {
+	final public void highlight(int pos, String name, String snippet) {
 		documentsBuilder.get(pos).setHighlight(name, snippet);
 	}
-
-	abstract ResultDefinition<T> newResultDefinition(ResultDocumentsBuilder resultDocumentsBuilder, List<T> documents);
 
 	@Override
 	final public ResultDefinition<T> apply(ResultDocumentsBuilder resultDocumentsBuilder) {
@@ -74,8 +76,9 @@ abstract class ResultDocumentsAbstract<T extends ResultDocumentAbstract>
 		return newResultDefinition(resultDocumentsBuilder, documents);
 	}
 
-	interface Factory<T extends ResultDocumentAbstract> {
-
-		ResultDocumentsAbstract<T> newResultDocuments(QueryContext context);
+	@Override
+	final public ResultDocumentsInterface getResultDocuments() {
+		return this;
 	}
+
 }

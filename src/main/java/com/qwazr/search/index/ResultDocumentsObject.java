@@ -20,7 +20,7 @@ import org.apache.lucene.search.ScoreDoc;
 
 import java.util.List;
 
-final class ResultDocumentsObject<T> extends ResultDocumentsAbstract<ResultDocumentObject<T>> {
+final class ResultDocumentsObject<T> extends ResultDocumentsList<ResultDocumentObject<T>> {
 
 	private final FieldMapWrapper<T> wrapper;
 
@@ -31,13 +31,14 @@ final class ResultDocumentsObject<T> extends ResultDocumentsAbstract<ResultDocum
 	}
 
 	@Override
-	ResultDocumentBuilder<ResultDocumentObject<T>> newResultDocumentBuilder(int absolutePos, ScoreDoc scoreDoc) {
+	protected ResultDocumentBuilder<ResultDocumentObject<T>> newResultDocumentBuilder(int absolutePos,
+			ScoreDoc scoreDoc) {
 		return new ResultDocumentObject.Builder<>(absolutePos, scoreDoc, wrapper);
 	}
 
 	@Override
-	ResultDefinition<ResultDocumentObject<T>> newResultDefinition(ResultDocumentsBuilder resultDocumentsBuilder,
-			List<ResultDocumentObject<T>> documents) {
+	protected ResultDefinition<ResultDocumentObject<T>> newResultDefinition(
+			ResultDocumentsBuilder resultDocumentsBuilder, List<ResultDocumentObject<T>> documents) {
 		return new ResultDefinition.WithObject<>(resultDocumentsBuilder, documents);
 	}
 

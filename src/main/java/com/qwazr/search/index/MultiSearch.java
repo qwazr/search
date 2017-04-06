@@ -74,7 +74,7 @@ class MultiSearch implements Closeable, AutoCloseable {
 	}
 
 	<T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDef,
-			final ResultDocumentsInterface resultDocuments, final ResultDefinition.Builder<T> resultDefinitionBuilder)
+			final ResultDocuments<T> resultDocuments)
 			throws ServerException, IOException, QueryNodeException, ParseException, ReflectiveOperationException {
 		if (indexSearcher == null)
 			return null;
@@ -85,7 +85,7 @@ class MultiSearch implements Closeable, AutoCloseable {
 			final QueryContextImpl queryContext =
 					new QueryContextImpl(context.indexProvider, null, indexSearcher, null, context.executorService,
 							context.indexAnalyzer, context.queryAnalyzer, context.fieldMap, state);
-			return new QueryExecution(queryContext, queryDef).execute(resultDocuments, resultDefinitionBuilder);
+			return new QueryExecution<T>(queryContext, queryDef).execute(resultDocuments);
 		} finally {
 			decRef();
 		}
