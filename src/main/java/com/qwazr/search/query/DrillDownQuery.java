@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,16 @@ package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.search.Query;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 public class DrillDownQuery extends AbstractQuery {
 
@@ -69,25 +72,6 @@ public class DrillDownQuery extends AbstractQuery {
 			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig, baseQuery.getQuery(queryContext));
 		dimPath.forEach(dimPath -> dimPath.forEach(drillDownQuery::add));
 		return drillDownQuery;
-	}
-
-	final static Term facetTerm(final String indexedField, final String dim, final String... path) {
-		return new Term(indexedField, FacetsConfig.pathToString(dim, path));
-	}
-
-	final static List<Term> facetTerms(final String indexedField, final String dim, final Collection<String> terms) {
-		final List<Term> termList = new ArrayList<>(terms.size());
-		for (String term : terms)
-			termList.add(facetTerm(indexedField, dim, term));
-		return termList;
-	}
-
-	final static Query facetTermQuery(final FacetsConfig facetsConfig, final String dim,
-			final Set<String> filter_terms) {
-		final String indexedField = facetsConfig.getDimConfig(dim).indexFieldName;
-		if (filter_terms.size() == 1)
-			return new org.apache.lucene.search.TermQuery(facetTerm(indexedField, dim, filter_terms.iterator().next()));
-		return new org.apache.lucene.queries.TermsQuery(facetTerms(indexedField, dim, filter_terms));
 	}
 
 }

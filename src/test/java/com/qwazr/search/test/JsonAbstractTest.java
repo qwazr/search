@@ -30,6 +30,7 @@ import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentMap;
 import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.index.TermDefinition;
+import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.search.query.StandardQueryParser;
 import com.qwazr.server.ServerException;
@@ -54,6 +55,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -948,6 +950,26 @@ public abstract class JsonAbstractTest {
 				.keySet()
 				.forEach(fieldName -> JavaAbstractTest.checkFieldStats(fieldName,
 						client.getFieldStats(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName)));
+	}
+
+	@Test
+	public void test700paging() throws URISyntaxException {
+		final IndexServiceInterface client = getClient();
+		QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*");
+		builder.start(0).rows(0);
+		ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, builder.build(), false);
+		Assert.assertNotNull(result);
+		Assert.assertNotNull(result.total_hits);
+		Assert.assertTrue(result.total_hits > 0);
+		builder.rows(1);
+		Set<Integer> idSet = new HashSet<>();
+		for (int i = 0; i < result.total_hits; i++) {
+			builder.start(i);
+			ResultDefinition.WithMap result2 =
+					client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, builder.build(), false);
+			idSet.add(result2.getDocuments().get(0).getDoc());
+		}
+		Assert.assertEquals(idSet.size(), result.total_hits.intValue());
 	}
 
 	@Test
