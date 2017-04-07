@@ -108,7 +108,9 @@ class IndexInstanceBuilder {
 		localAnalyzerFactoryMap = fileSet.loadAnalyzerDefinitionMap();
 		fieldMap = fileSet.loadFieldMap();
 
-		final AnalyzerContext context = new AnalyzerContext(fileResourceLoader, fieldMap, false);
+		final AnalyzerContext context =
+				new AnalyzerContext(fileResourceLoader, fieldMap, false, globalAnalyzerFactoryMap,
+						localAnalyzerFactoryMap);
 		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
 

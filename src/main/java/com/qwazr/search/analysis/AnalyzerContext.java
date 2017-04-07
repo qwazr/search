@@ -70,7 +70,7 @@ public class AnalyzerContext {
 				if (failOnException)
 					throw new ServerException(Response.Status.NOT_ACCEPTABLE, msg, e);
 				else if (LOGGER.isWarnEnabled())
-					LOGGER.warn(msg);
+					LOGGER.warn(msg, e);
 			}
 		});
 	}
