@@ -61,7 +61,7 @@ public class AssociatedFacetTest extends AbstractIndexTest {
 
 	private void checkFloatFacets(ResultDefinition result, String... expectedKeys) {
 		Assert.assertNotNull(result.facets);
-		Map<String, Number> facet = (Map<String, Number>) result.facets.get("floatAssociatedFacet");
+		Map<String, Number> facet = (Map<String, Number>) result.getFacets().get("floatAssociatedFacet");
 		Assert.assertNotNull(facet);
 		for (String key : expectedKeys)
 			Assert.assertTrue(facet.containsKey(key));

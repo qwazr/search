@@ -114,6 +114,11 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		return facets == null ? Collections.emptyMap() : facets;
 	}
 
+	@JsonIgnore
+	public Map<String, Number> getFacet(String facetName) {
+		return facets == null ? Collections.emptyMap() : facets.get(facetName);
+	}
+
 	public TimeTracker.Status getTimer() {
 		return timer;
 	}

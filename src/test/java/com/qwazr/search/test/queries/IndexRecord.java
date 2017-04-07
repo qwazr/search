@@ -54,6 +54,9 @@ public class IndexRecord {
 	@IndexField(template = FieldDefinition.Template.FloatAssociatedField)
 	public Object[] floatAssociatedFacet;
 
+	@IndexField(template = FieldDefinition.Template.SortedSetDocValuesFacetField, facetMultivalued = false)
+	public String sortedSetDocValuesFacetField;
+
 	@IndexField(template = FieldDefinition.Template.FacetField)
 	public String facetField;
 
@@ -135,6 +138,11 @@ public class IndexRecord {
 		array[0] = assoc;
 		System.arraycopy(path, 0, array, 1, path.length);
 		this.floatAssociatedFacet = array;
+		return this;
+	}
+
+	public IndexRecord sortedSetDocValuesFacetField(String sortedSetDocValuesFacetField) {
+		this.sortedSetDocValuesFacetField = sortedSetDocValuesFacetField;
 		return this;
 	}
 

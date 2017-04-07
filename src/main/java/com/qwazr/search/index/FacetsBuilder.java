@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.AbstractQuery;
+import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetResult;
@@ -34,7 +35,6 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -63,13 +63,13 @@ abstract class FacetsBuilder {
 		for (Map.Entry<String, FacetDefinition> entry : facetsDef.entrySet()) {
 			final String dim = entry.getKey();
 			final FacetDefinition facet = entry.getValue();
-			final Map<String, Number> result;
+			final FacetBuilder facetBuilder;
 			if (facet.queries == null || facet.queries.isEmpty())
-				result = buildFacetState(dim, facet);
+				facetBuilder = buildFacetState(dim, facet);
 			else
-				result = buildFacetQueries(facet);
-			if (result != null)
-				results.put(dim, result);
+				facetBuilder = buildFacetQueries(facet);
+			if (facetBuilder != null)
+				results.put(dim, facetBuilder.build());
 		}
 
 		if (timeTracker != null)
@@ -77,29 +77,31 @@ abstract class FacetsBuilder {
 		return this;
 	}
 
-	private Map<String, Number> buildFacetState(final String dim, final FacetDefinition facet) throws IOException {
-		final int top = facet.top == null ? 10 : facet.top;
-		final LinkedHashMap<String, Number> facetMap = new LinkedHashMap<>();
+	private FacetBuilder buildFacetState(final String dim, final FacetDefinition facetDefinition) throws IOException {
+		final int top = facetDefinition.top == null ? 10 : facetDefinition.top;
 		final FacetResult facetResult = getFacetResult(top, dim);
 		if (facetResult == null || facetResult.labelValues == null)
-			return Collections.emptyMap();
+			return null;
+		final FacetBuilder facetBuilder = new FacetBuilder(facetDefinition);
 		for (LabelAndValue lv : facetResult.labelValues)
-			facetMap.put(lv.label, lv.value);
-		return facetMap;
+			facetBuilder.put(lv.label, lv.value);
+		return facetBuilder;
 	}
 
 	protected abstract FacetResult getFacetResult(final int top, final String dim) throws IOException;
 
-	private Map<String, Number> buildFacetQueries(final FacetDefinition facet)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
-		final LinkedHashMap<String, Number> facetMap = new LinkedHashMap<>();
-		for (Map.Entry<String, AbstractQuery> entry : facet.queries.entrySet()) {
+	private FacetBuilder buildFacetQueries(final FacetDefinition facet)
+			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+		final FacetBuilder facetBuilder = new FacetBuilder(facet);
+		final FunctionUtils.BiConsumerEx4<String, AbstractQuery, IOException, ParseException, QueryNodeException, ReflectiveOperationException>
+				consumer = (name, facetQuery) -> {
 			final BooleanQuery.Builder builder = new BooleanQuery.Builder();
 			builder.add(searchQuery, BooleanClause.Occur.FILTER);
-			builder.add(entry.getValue().getQuery(queryContext), BooleanClause.Occur.FILTER);
-			facetMap.put(entry.getKey(), queryContext.indexSearcher.count(builder.build()));
-		}
-		return facetMap;
+			builder.add(facetQuery.getQuery(queryContext), BooleanClause.Occur.FILTER);
+			facetBuilder.put(name, queryContext.indexSearcher.count(builder.build()));
+		};
+		FunctionUtils.forEachEx4(facet.queries, consumer);
+		return facetBuilder;
 	}
 
 	static Set<String> getFields(LinkedHashMap<String, FacetDefinition> facets) {

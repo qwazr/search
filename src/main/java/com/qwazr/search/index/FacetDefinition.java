@@ -24,23 +24,47 @@ import java.util.LinkedHashMap;
 public class FacetDefinition {
 
 	final public Integer top;
+
 	final public LinkedHashMap<String, AbstractQuery> queries;
+
+	final public String prefix;
+
+	final public Sort sort;
+
+	public enum Sort {
+		value_descending, value_ascending, count_descending, count_ascending
+	}
 
 	public FacetDefinition() {
 		this((Integer) null);
 	}
 
 	public FacetDefinition(Integer top) {
-		this(top, null);
+		this(top, (String) null);
 	}
 
 	public FacetDefinition(Integer top, LinkedHashMap<String, AbstractQuery> queries) {
+		this(top, null, null, queries);
+	}
+
+	public FacetDefinition(Integer top, String prefix) {
+		this(top, prefix, null);
+	}
+
+	public FacetDefinition(Integer top, String prefix, Sort sort) {
+		this(top, prefix, sort, null);
+	}
+
+	public FacetDefinition(Integer top, String prefix, Sort sort, LinkedHashMap<String, AbstractQuery> queries) {
 		this.top = top;
+		this.prefix = prefix;
+		this.sort = sort;
 		this.queries = queries;
 	}
 
 	private FacetDefinition(final Builder builder) {
-		this(builder.top, builder.queries != null && !builder.queries.isEmpty() ? builder.queries : null);
+		this(builder.top, builder.prefix, builder.sort,
+				builder.queries != null && !builder.queries.isEmpty() ? builder.queries : null);
 	}
 
 	public static Builder of() {
@@ -54,10 +78,22 @@ public class FacetDefinition {
 	public static class Builder {
 
 		public Integer top;
+		public String prefix;
+		public Sort sort;
 		public LinkedHashMap<String, AbstractQuery> queries;
 
 		public Builder top(Integer top) {
 			this.top = top;
+			return this;
+		}
+
+		public Builder prefix(String prefix) {
+			this.prefix = prefix;
+			return this;
+		}
+
+		public Builder sort(Sort sort) {
+			this.sort = sort;
 			return this;
 		}
 

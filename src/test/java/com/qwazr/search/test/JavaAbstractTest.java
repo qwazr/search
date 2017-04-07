@@ -726,7 +726,7 @@ public abstract class JavaAbstractTest {
 		final QueryBuilder builder = QueryDefinition.of(
 				new DrillDownQuery(new MatchAllDocsQuery(), true).add("dynamic_multi_facet_cat", "news"));
 		builder.collector("maxQuantity", ClassicMaxCollector.class);
-		builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10, null));
+		builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10));
 		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
 		checkCollector(result, "maxQuantity", 20L, 20);
 		checkFacets(result, "dynamic_multi_facet_cat", "news");
@@ -737,7 +737,7 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService master = getMaster();
 		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
 		builder.collector("maxQuantity", ClassicMaxCollector.class);
-		builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10, null));
+		builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10));
 		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
 		checkCollector(result, "maxQuantity", 20L, 20);
 		checkFacets(result, "dynamic_multi_facet_cat", "news");

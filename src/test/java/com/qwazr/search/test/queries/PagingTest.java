@@ -88,7 +88,7 @@ public class PagingTest extends AbstractIndexTest {
 	public void pagingFacetSort() throws URISyntaxException {
 		checkPaging(QueryDefinition.of(new MatchAllDocsQuery())
 				.returnedField("*")
-				.facet("facetField", new FacetDefinition(10, null))
+				.facet("facetField", new FacetDefinition(10))
 				.sort("sortedDocValues", QueryDefinition.SortEnum.ascending));
 	}
 
