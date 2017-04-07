@@ -81,7 +81,7 @@ abstract class FacetsBuilder {
 		final int top = facetDefinition.top == null ? 10 : facetDefinition.top;
 		final FacetResult facetResult = getFacetResult(top, dim);
 		if (facetResult == null || facetResult.labelValues == null)
-			return null;
+			return FacetBuilder.EMPTY;
 		final FacetBuilder facetBuilder = new FacetBuilder(facetDefinition);
 		for (LabelAndValue lv : facetResult.labelValues)
 			facetBuilder.put(lv.label, lv.value);

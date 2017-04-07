@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -49,12 +50,16 @@ public class QueryDocumentsIterator<T> implements Iterator<T> {
 	}
 
 	private synchronized boolean nextExecution() {
-		final ResultDefinition.WithObject<T> result = service.searchQuery(queryBuilder.build(), recordClass);
-		count = result.total_hits;
-		currentPos = 0;
-		currentDocuments = result.documents;
-		queryBuilder.start(queryBuilder.start + queryBuilder.rows);
-		return currentDocuments != null && !currentDocuments.isEmpty();
+		try {
+			final ResultDefinition.WithObject<T> result = service.searchQuery(queryBuilder.build(), recordClass);
+			count = result.total_hits;
+			currentPos = 0;
+			currentDocuments = result.documents;
+			queryBuilder.start(queryBuilder.start + queryBuilder.rows);
+			return currentDocuments != null && !currentDocuments.isEmpty();
+		} catch (IOException | ReflectiveOperationException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override

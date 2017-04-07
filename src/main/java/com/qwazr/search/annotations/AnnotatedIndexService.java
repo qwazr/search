@@ -28,6 +28,7 @@ import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.QueryDocumentsIterator;
 import com.qwazr.search.index.ResultDefinition;
+import com.qwazr.search.index.ResultDocumentMap;
 import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.search.index.ResultDocumentsInterface;
 import com.qwazr.search.index.SchemaSettingsDefinition;
@@ -347,11 +348,12 @@ public class AnnotatedIndexService<T> {
 			indexService.updateMappedDocsValues(schemaName, indexName, schemaFieldMapWrapper.newMapCollection(rows));
 	}
 
-	private <C> C getDocument(final Object id, final FieldMapWrapper<C> wrapper) throws ReflectiveOperationException {
+	private <C> C getDocument(final Object id, final FieldMapWrapper<C> wrapper)
+			throws ReflectiveOperationException, IOException {
 		checkParameters();
 		Objects.requireNonNull(id, "The id cannot be empty");
 		if (annotatedService != null)
-			return (C) annotatedService.getDocument(schemaName, indexName, id, wrapper);
+			return annotatedService.getDocument(schemaName, indexName, id, wrapper);
 		else
 			return wrapper.toRecord(indexService.getDocument(schemaName, indexName, id.toString()));
 	}
@@ -362,7 +364,8 @@ public class AnnotatedIndexService<T> {
 	 * @return an filled object or null if the document does not exist
 	 * @throws ReflectiveOperationException if the document cannot be created
 	 */
-	public <C> C getDocument(final Object id, final Class<C> objectClass) throws ReflectiveOperationException {
+	public <C> C getDocument(final Object id, final Class<C> objectClass)
+			throws ReflectiveOperationException, IOException {
 		return getDocument(id, fieldMapWrappers.get(objectClass));
 	}
 
@@ -371,11 +374,12 @@ public class AnnotatedIndexService<T> {
 	 * @return an filled object or null if the document does not exist
 	 * @throws ReflectiveOperationException if the document cannot be created
 	 */
-	public T getDocument(final Object id) throws ReflectiveOperationException {
+	public T getDocument(final Object id) throws ReflectiveOperationException, IOException {
 		return getDocument(id, schemaFieldMapWrapper);
 	}
 
-	private <C> List<C> getDocuments(final Integer start, final Integer rows, final FieldMapWrapper<C> wrapper) {
+	private <C> List<C> getDocuments(final Integer start, final Integer rows, final FieldMapWrapper<C> wrapper)
+			throws IOException, ReflectiveOperationException {
 		checkParameters();
 		if (annotatedService != null)
 			return annotatedService.getDocuments(schemaName, indexName, start, rows, wrapper);
@@ -383,12 +387,14 @@ public class AnnotatedIndexService<T> {
 			return wrapper.toRecords(indexService.getDocuments(schemaName, indexName, start, rows));
 	}
 
-	public <C> List<C> getDocuments(final Integer start, final Integer rows, final Class<C> clazz) {
+	public <C> List<C> getDocuments(final Integer start, final Integer rows, final Class<C> clazz)
+			throws IOException, ReflectiveOperationException {
 		checkParameters();
 		return getDocuments(start, rows, fieldMapWrappers.get(clazz));
 	}
 
-	public List<T> getDocuments(final Integer start, final Integer rows) {
+	public List<T> getDocuments(final Integer start, final Integer rows)
+			throws IOException, ReflectiveOperationException {
 		checkParameters();
 		return getDocuments(start, rows, schemaFieldMapWrapper);
 	}
@@ -498,7 +504,8 @@ public class AnnotatedIndexService<T> {
 	 * @param <C>         the type of the objects
 	 * @return the results
 	 */
-	public <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query, final Class<C> objectClass) {
+	public <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query, final Class<C> objectClass)
+			throws IOException, ReflectiveOperationException {
 		checkParameters();
 		return searchQuery(query, fieldMapWrappers.get(objectClass));
 	}
@@ -612,14 +619,12 @@ public class AnnotatedIndexService<T> {
 		if (resultWithMap == null)
 			return null;
 		final List<ResultDocumentObject<C>> documents = new ArrayList<>();
-		if (resultWithMap.documents != null) {
-			resultWithMap.documents.forEach(resultDocMap -> {
-				try {
-					documents.add(new ResultDocumentObject<C>(resultDocMap, wrapper.toRecord(resultDocMap.fields)));
-				} catch (ReflectiveOperationException e) {
-					throw new RuntimeException(e);
-				}
-			});
+		try {
+			if (resultWithMap.documents != null)
+				for (ResultDocumentMap resultDocMap : resultWithMap.documents)
+					documents.add(new ResultDocumentObject<>(resultDocMap, wrapper.toRecord(resultDocMap.fields)));
+		} catch (ReflectiveOperationException | IOException e) {
+			throw new RuntimeException(e);
 		}
 		return new ResultDefinition.WithObject<>(resultWithMap, documents);
 	}

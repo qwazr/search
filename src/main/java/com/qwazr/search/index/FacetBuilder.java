@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.utils.StringUtils;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -25,6 +26,13 @@ final class FacetBuilder {
 
 	private final String prefix;
 	private final Map<String, Number> facetResult;
+
+	final static FacetBuilder EMPTY = new FacetBuilder();
+
+	private FacetBuilder() {
+		prefix = null;
+		facetResult = Collections.emptyMap();
+	}
 
 	FacetBuilder(final FacetDefinition facetDefinition) {
 		this.prefix = StringUtils.isEmpty(facetDefinition.prefix) ? null : facetDefinition.prefix;

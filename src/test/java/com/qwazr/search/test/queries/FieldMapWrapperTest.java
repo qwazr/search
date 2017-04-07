@@ -53,7 +53,7 @@ public class FieldMapWrapperTest extends AbstractIndexTest {
 	}
 
 	@Test
-	public void getDocument() throws ReflectiveOperationException {
+	public void getDocument() throws ReflectiveOperationException, IOException {
 		IndexRecord indexRecord = documents.get(RandomUtils.nextInt(0, documents.size()));
 		IndexPartialRecord record = indexService.getDocument(indexRecord.id, IndexPartialRecord.class);
 		Assert.assertNotNull(record);
@@ -62,7 +62,7 @@ public class FieldMapWrapperTest extends AbstractIndexTest {
 	}
 
 	@Test
-	public void getDocuments() throws ReflectiveOperationException {
+	public void getDocuments() throws ReflectiveOperationException, IOException {
 		List<IndexPartialRecord> records = indexService.getDocuments(0, documents.size(), IndexPartialRecord.class);
 		Assert.assertNotNull(records);
 		Assert.assertEquals(records.size(), documents.size());
@@ -75,7 +75,7 @@ public class FieldMapWrapperTest extends AbstractIndexTest {
 	}
 
 	@Test
-	public void searchQuery() throws ReflectiveOperationException {
+	public void searchQuery() throws ReflectiveOperationException, IOException {
 		IndexRecord indexRecord = documents.get(RandomUtils.nextInt(0, documents.size()));
 		ResultDefinition.WithObject<IndexPartialRecord> results = indexService.searchQuery(
 				QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, indexRecord.id)).build(),

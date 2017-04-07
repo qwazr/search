@@ -48,6 +48,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 
 	static class Builder<T> extends ResultDocumentBuilder<ResultDocumentObject<T>> {
 
+		private final FieldMapWrapper<T> wrapper;
 		private final T record;
 		private final Map<String, Field> fieldMap;
 
@@ -55,6 +56,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 			super(pos, scoreDoc);
 			try {
 				this.record = wrapper.constructor.newInstance();
+				this.wrapper = wrapper;
 			} catch (ReflectiveOperationException e) {
 				throw new ServerException(e);
 			}
@@ -87,56 +89,9 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 			final Field field = fieldMap.get(fieldName);
 			if (field == null)
 				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
-
 			final Class<?> fieldType = field.getType();
-			final Class<?> fieldValueClass = fieldValue.getClass();
-
 			try {
-				if (fieldType.isAssignableFrom(fieldValueClass)) {
-					field.set(record, fieldValue);
-					return;
-				}
 
-				// Convert string to numeric value
-				if (fieldValueClass == String.class) {
-
-					if (fieldType == Integer.class) {
-						field.set(record, Integer.valueOf((String) fieldValue));
-						return;
-					}
-					if (fieldType == Long.class) {
-						field.set(record, Long.valueOf((String) fieldValue));
-						return;
-					}
-					if (fieldType == Double.class) {
-						field.set(record, Double.valueOf((String) fieldValue));
-						return;
-					}
-					if (fieldType == Float.class) {
-						field.set(record, Float.valueOf((String) fieldValue));
-						return;
-					}
-					if (fieldType == Short.class) {
-						field.set(record, Short.valueOf((String) fieldValue));
-						return;
-					}
-
-				}
-
-				// Check collection
-				Object value = field.get(record);
-				if (value == null) {
-					if (Collection.class.isAssignableFrom(fieldType)) {
-						value = fieldType.newInstance();
-						field.set(record, value);
-						return;
-					}
-				} else {
-					if (value instanceof Collection) {
-						((Collection) value).add(fieldValue);
-						return;
-					}
-				}
 				if (fieldValue instanceof BytesRef) {
 					final BytesRef br = (BytesRef) fieldValue;
 					if (Serializable.class.isAssignableFrom(fieldType)) {
@@ -145,9 +100,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 						return;
 					}
 				}
-
-				throw new UnsupportedOperationException(
-						"The field " + fieldName + " does not support this type: " + fieldValueClass.getSimpleName());
+				wrapper.toField(fieldValue, field, record);
 			} catch (ReflectiveOperationException | IOException e) {
 				throw new ServerException(e);
 			}
