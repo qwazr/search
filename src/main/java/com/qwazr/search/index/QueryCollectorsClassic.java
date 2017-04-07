@@ -57,8 +57,8 @@ class QueryCollectorsClassic extends QueryCollectors {
 		super(queryExecution);
 		collectors = new ArrayList<>();
 		facetsCollector = queryExecution.useDrillSideways ? null : buildFacetsCollector(queryExecution.queryDef.facets);
-		totalHitCountCollector = buildTotalHitsCollector(queryExecution.numHits);
-		topDocsCollector = buildTopDocCollector(queryExecution.sort, queryExecution.numHits, queryExecution.bNeedScore);
+		totalHitCountCollector = buildTotalHitsCollector(queryExecution.end);
+		topDocsCollector = buildTopDocCollector(queryExecution.sort, queryExecution.end, queryExecution.bNeedScore);
 		if (queryExecution.collectorConstructors != null) {
 			userCollectors = new ArrayList<>();
 			for (Pair<Constructor, Object[]> item : queryExecution.collectorConstructors)
@@ -152,7 +152,7 @@ class QueryCollectorsClassic extends QueryCollectors {
 
 	@Override
 	public final TopDocs getTopDocs() {
-		return topDocsCollector == null ? null : topDocsCollector.topDocs();
+		return topDocsCollector == null ? null : topDocsCollector.topDocs(queryExecution.start, queryExecution.rows);
 	}
 
 	@Override

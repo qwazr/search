@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.postingshighlight.DefaultPassageFormatter;
 import org.apache.lucene.search.postingshighlight.PassageFormatter;
 import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
@@ -87,8 +88,9 @@ class HighlighterImpl extends PostingsHighlighter {
 		return separator;
 	}
 
-	String[] highlights(final Query query, final IndexSearcher indexSearcher, final int[] docs) throws IOException {
-		return highlightFields(new String[] { definition.field }, query, indexSearcher, docs,
+	String[] highlights(final Query query, final IndexSearcher indexSearcher, final TopDocs topDocs)
+			throws IOException {
+		return highlightFields(new String[] { definition.field }, query, indexSearcher, topDocs,
 				definition.max_passages == null ? new int[] { 1 } : new int[] { definition.max_passages }).get(
 				definition.field);
 

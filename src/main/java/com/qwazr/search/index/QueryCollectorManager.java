@@ -116,7 +116,8 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 		for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
 			if (queryCollectors.topDocsCollector != null)
 				topDocsList.add(queryCollectors.topDocsCollector.topDocs());
-		return TopDocs.merge(queryExecution.numHits, topDocsList.toArray(new TopDocs[topDocsList.size()]));
+		return TopDocs.merge(queryExecution.start, queryExecution.end,
+				topDocsList.toArray(new TopDocs[topDocsList.size()]), true);
 	}
 
 	private TopDocs getTopFieldDocs() throws IOException {
@@ -124,8 +125,8 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 		for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
 			if (queryCollectors.topDocsCollector != null)
 				topFieldDocsList.add(((TopFieldCollector) queryCollectors.topDocsCollector).topDocs());
-		return TopFieldDocs.merge(queryExecution.sort, queryExecution.numHits,
-				topFieldDocsList.toArray(new TopFieldDocs[topFieldDocsList.size()]));
+		return TopFieldDocs.merge(queryExecution.sort, queryExecution.start, queryExecution.end,
+				topFieldDocsList.toArray(new TopFieldDocs[topFieldDocsList.size()]), true);
 	}
 
 	private final static FacetsCollector EMPTY_FACETS_COLLECTOR = new FacetsCollector();

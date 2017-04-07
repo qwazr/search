@@ -20,6 +20,7 @@ import com.qwazr.utils.TimeTracker;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopDocs;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
@@ -35,7 +36,7 @@ class ResultDocumentsBuilder {
 	final float maxScore;
 	final long totalHits;
 
-	ResultDocumentsBuilder(final QueryDefinition queryDefinition, final ScoreDoc[] scoreDocs, final float maxScore,
+	ResultDocumentsBuilder(final QueryDefinition queryDefinition, final TopDocs topDocs,
 			final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
 			final Map<String, Object> externalCollectorsResults, final TimeTracker timeTracker,
 			final FacetsBuilder facetsBuilder, long totalHits, @NotNull final ResultDocumentsInterface resultDocuments)
@@ -43,28 +44,22 @@ class ResultDocumentsBuilder {
 
 		this.collectors = externalCollectorsResults;
 
-		if (scoreDocs != null) {
+		if (topDocs != null && topDocs.scoreDocs != null) {
 
-			final int start = queryDefinition.getStartValue();
-			final int end = Math.min(queryDefinition.getEndValue(), scoreDocs.length);
-			final int size = Math.max(end - start, 0);
+			this.maxScore = topDocs.getMaxScore();
 
 			int pos = 0;
-			for (int i = start; i < end; i++)
-				resultDocuments.doc(indexSearcher, pos++, scoreDocs[i]);
+			for (ScoreDoc scoreDoc : topDocs.scoreDocs)
+				resultDocuments.doc(indexSearcher, pos++, scoreDoc);
 
 			if (timeTracker != null)
 				timeTracker.next("documents");
 
-			if (highlighters != null && size > 0) {
-				final int[] docs = new int[size];
-				pos = 0;
-				for (int i = start; i < end; i++)
-					docs[pos++] = scoreDocs[i].doc;
+			if (highlighters != null && topDocs.scoreDocs.length > 0) {
 
 				highlighters.forEach((name, highlighter) -> {
 					try {
-						final String[] snippetsByDoc = highlighter.highlights(luceneQuery, indexSearcher, docs);
+						final String[] snippetsByDoc = highlighter.highlights(luceneQuery, indexSearcher, topDocs);
 						int pos2 = 0;
 						for (String snippet : snippetsByDoc)
 							resultDocuments.highlight(pos2++, name, snippet);
@@ -75,9 +70,9 @@ class ResultDocumentsBuilder {
 				if (timeTracker != null)
 					timeTracker.next("highlighting");
 			}
-		}
+		} else
+			this.maxScore = 0;
 
-		this.maxScore = maxScore;
 		this.totalHits = totalHits;
 
 		this.facets = facetsBuilder == null ? null : facetsBuilder.results;

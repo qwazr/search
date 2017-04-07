@@ -49,8 +49,13 @@ public class BaseQueryDefinition {
 	}
 
 	@JsonIgnore
+	final public int getRowsValue() {
+		return rows == null ? 10 : rows;
+	}
+
+	@JsonIgnore
 	final public int getEndValue() {
-		return getStartValue() + (rows == null ? 10 : rows);
+		return getStartValue() + getRowsValue();
 	}
 
 }

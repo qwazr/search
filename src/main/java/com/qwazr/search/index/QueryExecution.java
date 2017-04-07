@@ -48,7 +48,9 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 	final TimeTracker timeTracker;
 	final Set<String> facetKeys;
 	final FacetsConfig facetsConfig;
-	final int numHits;
+	final int start;
+	final int rows;
+	final int end;
 	final Sort sort;
 	final boolean bNeedScore;
 	final boolean useDrillSideways;
@@ -74,7 +76,10 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 		this.facetKeys = queryDef.facets == null ? null : FacetsBuilder.getFields(queryDef.facets);
 		this.facetsConfig = facetKeys == null ? null : queryContext.fieldMap.getFacetsConfig(facetKeys);
 
-		this.numHits = queryDef.getEndValue();
+		this.start = queryDef.getStartValue();
+		this.rows = queryDef.getRowsValue();
+		this.end = start + rows;
+
 		this.bNeedScore = sort == null || sort.needsScores();
 		this.useDrillSideways =
 				queryDef.query instanceof DrillDownQuery && ((DrillDownQuery) queryDef.query).useDrillSideways
@@ -150,8 +155,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 		timeTracker.next("search_query");
 
 		final ResultDocumentsBuilder resultBuilder =
-				new ResultDocumentsBuilder(queryDef, topDocs == null ? null : topDocs.scoreDocs,
-						topDocs == null ? 0 : topDocs.getMaxScore(), queryContext.indexSearcher, query, highlighters,
+				new ResultDocumentsBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
 						queryCollectors.getExternalResults(), timeTracker, facetsBuilder,
 						totalHits == null ? 0 : totalHits, resultDocumentsInterface);
 

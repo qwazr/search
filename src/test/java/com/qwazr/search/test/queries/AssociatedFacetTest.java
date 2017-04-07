@@ -38,13 +38,16 @@ public class AssociatedFacetTest extends AbstractIndexTest {
 		indexService.postDocument(new IndexRecord("6").floatAssociatedFacet(666f, "float6"));
 	}
 
-	private void checkIntFacets(ResultDefinition result) {
+	private void checkIntFacets(ResultDefinition result, String... expectedKeys) {
 		Assert.assertNotNull(result.facets);
 		Map<String, Number> facet = (Map<String, Number>) result.facets.get("intAssociatedFacet");
 		Assert.assertNotNull(facet);
-		Assert.assertTrue(facet.containsKey("int1"));
-		Assert.assertTrue(facet.containsKey("int2"));
-		Assert.assertTrue(facet.containsKey("int3"));
+		for (String key : expectedKeys)
+			Assert.assertTrue("Key not found: " + key, facet.containsKey(key));
+	}
+
+	private void checkIntFacets(ResultDefinition result) {
+		checkIntFacets(result, "int1", "int2", "int3");
 	}
 
 	@Test
@@ -56,13 +59,16 @@ public class AssociatedFacetTest extends AbstractIndexTest {
 		checkIntFacets(result);
 	}
 
-	private void checkFloatFacets(ResultDefinition result) {
+	private void checkFloatFacets(ResultDefinition result, String... expectedKeys) {
 		Assert.assertNotNull(result.facets);
 		Map<String, Number> facet = (Map<String, Number>) result.facets.get("floatAssociatedFacet");
 		Assert.assertNotNull(facet);
-		Assert.assertTrue(facet.containsKey("float4"));
-		Assert.assertTrue(facet.containsKey("float5"));
-		Assert.assertTrue(facet.containsKey("float6"));
+		for (String key : expectedKeys)
+			Assert.assertTrue(facet.containsKey(key));
+	}
+
+	private void checkFloatFacets(ResultDefinition result) {
+		checkFloatFacets(result, "float4", "float5", "float6");
 	}
 
 	@Test
@@ -76,14 +82,27 @@ public class AssociatedFacetTest extends AbstractIndexTest {
 	}
 
 	@Test
-	public void AllFacets() {
+	public void allFacets() {
 		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
 				.facet("floatAssociatedFacet", new FacetDefinition())
-				.facet("intAssociatedFacet", new FacetDefinition())
+				.facet("intAssociatedFacet", FacetDefinition.of().build())
 				.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(6), result.total_hits);
 		checkIntFacets(result);
 		checkFloatFacets(result);
+	}
+
+	@Test
+	public void limitFacet() {
+		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
+				.facet("floatAssociatedFacet", FacetDefinition.of(2).build())
+				.facet("intAssociatedFacet", new FacetDefinition(2))
+				.build());
+		Assert.assertNotNull(result);
+		Assert.assertEquals(Long.valueOf(6), result.total_hits);
+		Assert.assertNotNull(result.facets);
+		checkIntFacets(result, "int2", "int3");
+		checkFloatFacets(result, "float5", "float6");
 	}
 }

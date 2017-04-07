@@ -15,6 +15,9 @@
  **/
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class HighlighterDefinition {
 
 	final public String field;

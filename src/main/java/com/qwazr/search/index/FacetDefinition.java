@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,23 @@
  **/
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qwazr.search.query.AbstractQuery;
 
 import java.util.LinkedHashMap;
 
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class FacetDefinition {
 
 	final public Integer top;
 	final public LinkedHashMap<String, AbstractQuery> queries;
 
 	public FacetDefinition() {
-		this.top = null;
-		this.queries = null;
+		this((Integer) null);
+	}
+
+	public FacetDefinition(Integer top) {
+		this(top, null);
 	}
 
 	public FacetDefinition(Integer top, LinkedHashMap<String, AbstractQuery> queries) {
@@ -34,4 +39,37 @@ public class FacetDefinition {
 		this.queries = queries;
 	}
 
+	private FacetDefinition(final Builder builder) {
+		this(builder.top, builder.queries != null && !builder.queries.isEmpty() ? builder.queries : null);
+	}
+
+	public static Builder of() {
+		return new Builder();
+	}
+
+	public static Builder of(Integer top) {
+		return new Builder().top(top);
+	}
+
+	public static class Builder {
+
+		public Integer top;
+		public LinkedHashMap<String, AbstractQuery> queries;
+
+		public Builder top(Integer top) {
+			this.top = top;
+			return this;
+		}
+
+		public Builder query(String name, AbstractQuery query) {
+			if (queries == null)
+				queries = new LinkedHashMap<>();
+			queries.put(name, query);
+			return this;
+		}
+
+		public FacetDefinition build() {
+			return new FacetDefinition(this);
+		}
+	}
 }
