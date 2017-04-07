@@ -96,6 +96,33 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 					field.set(record, fieldValue);
 					return;
 				}
+
+				// Convert string to numeric value
+				if (fieldValueClass == String.class) {
+
+					if (fieldType == Integer.class) {
+						field.set(record, Integer.valueOf((String) fieldValue));
+						return;
+					}
+					if (fieldType == Long.class) {
+						field.set(record, Long.valueOf((String) fieldValue));
+						return;
+					}
+					if (fieldType == Double.class) {
+						field.set(record, Double.valueOf((String) fieldValue));
+						return;
+					}
+					if (fieldType == Float.class) {
+						field.set(record, Float.valueOf((String) fieldValue));
+						return;
+					}
+					if (fieldType == Short.class) {
+						field.set(record, Short.valueOf((String) fieldValue));
+						return;
+					}
+
+				}
+
 				// Check collection
 				Object value = field.get(record);
 				if (value == null) {
@@ -118,6 +145,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 						return;
 					}
 				}
+
 				throw new UnsupportedOperationException(
 						"The field " + fieldName + " does not support this type: " + fieldValueClass.getSimpleName());
 			} catch (ReflectiveOperationException | IOException e) {

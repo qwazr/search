@@ -155,7 +155,7 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService service = getMaster();
 		final Map<String, AnnotatedIndexService.FieldStatus> fieldChanges = service.getFieldChanges();
 		Assert.assertNotNull(fieldChanges);
-		Assert.assertEquals(16, fieldChanges.size());
+		Assert.assertEquals(17, fieldChanges.size());
 		fieldChanges.forEach(
 				(s, fieldStatus) -> Assert.assertEquals(AnnotatedIndexService.FieldStatus.EXISTS_ONLY_IN_ANNOTATION,
 						fieldStatus));
