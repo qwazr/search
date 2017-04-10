@@ -50,18 +50,18 @@ public class AnalyzerContext {
 		this.indexAnalyzerMap = new HashMap<>();
 		this.queryAnalyzerMap = new HashMap<>();
 
+		final AnalyzerMapBuilder builder = new AnalyzerMapBuilder(resourceLoader, analyzerFactoryMaps);
+
 		fields.forEach((fieldName, fieldDef) -> {
 			try {
-
-				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ?
-						null :
-						findAnalyzer(resourceLoader, fieldDef.analyzer, analyzerFactoryMaps);
+				final Analyzer indexAnalyzer =
+						StringUtils.isEmpty(fieldDef.analyzer) ? null : builder.findAnalyzer(fieldDef.analyzer);
 				if (indexAnalyzer != null)
 					indexAnalyzerMap.put(fieldName, indexAnalyzer);
 
 				final Analyzer queryAnalyzer = StringUtils.isEmpty(fieldDef.query_analyzer) ?
 						indexAnalyzer :
-						findAnalyzer(resourceLoader, fieldDef.query_analyzer, analyzerFactoryMaps);
+						builder.findAnalyzer(fieldDef.query_analyzer);
 				if (queryAnalyzer != null)
 					queryAnalyzerMap.put(fieldName, queryAnalyzer);
 
@@ -77,10 +77,36 @@ public class AnalyzerContext {
 
 	final static String[] analyzerClassPrefixes = { StringUtils.EMPTY, "org.apache.lucene.analysis." };
 
-	private static Analyzer findAnalyzer(final ResourceLoader resourceLoader, final String analyzerName,
-			final Map<String, ? extends AnalyzerFactory>... analyzerFactoryMaps)
-			throws InterruptedException, ReflectiveOperationException, IOException {
-		if (analyzerFactoryMaps != null) {
+	final static class AnalyzerMapBuilder {
+
+		private final ResourceLoader resourceLoader;
+		private final Map<String, ? extends AnalyzerFactory>[] analyzerFactoryMaps;
+		private final Map<String, Analyzer> analyzerSingletonMap;
+
+		AnalyzerMapBuilder(final ResourceLoader resourceLoader,
+				final Map<String, ? extends AnalyzerFactory>... analyzerFactoryMaps) {
+			this.resourceLoader = resourceLoader;
+			this.analyzerFactoryMaps = analyzerFactoryMaps;
+			this.analyzerSingletonMap = new HashMap<>();
+		}
+
+		Analyzer findAnalyzer(final String analyzerName)
+				throws InterruptedException, ReflectiveOperationException, IOException {
+			Analyzer analyzer = analyzerSingletonMap.get(analyzerName);
+			if (analyzer != null)
+				return analyzer;
+			analyzer = getFromFactory(analyzerName);
+			if (analyzer == null) {
+				final Class<Analyzer> analyzerClass = ClassLoaderUtils.findClass(analyzerName, analyzerClassPrefixes);
+				analyzer = analyzerClass.newInstance();
+			}
+			analyzerSingletonMap.put(analyzerName, analyzer);
+			return analyzer;
+		}
+
+		Analyzer getFromFactory(final String analyzerName) throws IOException, ReflectiveOperationException {
+			if (analyzerFactoryMaps == null)
+				return null;
 			for (final Map<String, ? extends AnalyzerFactory> analyzerFactoryMap : analyzerFactoryMaps) {
 				if (analyzerFactoryMap != null) {
 					final AnalyzerFactory factory = analyzerFactoryMap.get(analyzerName);
@@ -88,9 +114,7 @@ public class AnalyzerContext {
 						return factory.createAnalyzer(resourceLoader);
 				}
 			}
+			return null;
 		}
-		final Class<Analyzer> analyzerClass = ClassLoaderUtils.findClass(analyzerName, analyzerClassPrefixes);
-		return analyzerClass.newInstance();
 	}
-
 }
