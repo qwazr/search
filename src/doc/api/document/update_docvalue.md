@@ -23,7 +23,13 @@ Where the payload file (my_payload) contains the fields to update (only DocValue
 
 ```json
 {
-  "$id$": "5",
-  "stock": 10
+  "document": 
+    {
+      "$id$": "5",
+      "stock": 10
+    },
+    "commit_user_data": {
+      "my_key" : "my_value"
+    }
 }
 ```

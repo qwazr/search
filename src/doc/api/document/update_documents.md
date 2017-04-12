@@ -23,59 +23,64 @@ curl -XPOST -H 'Content-Type: application/json' -d @my_payload \
 Where the payload file (my_payload) contains the collection of documents to index:
 
 ```json
-[
-  {
-    "$id$": "1",
-    "name": "First name",
-    "category": [
-      "cat1"
+{
+  "documents": [
+      {
+        "$id$": "1",
+        "name": "First name",
+        "category": [
+          "cat1"
+        ],
+        "format": "odd",
+        "single_date": "20160101",
+        "size": 100,
+        "price": 1.10,
+        "stock": 0
+      },
+      {
+        "$id$": "2",
+        "name": "Second name",
+        "category": [
+          "cat1",
+          "cat2"
+        ],
+        "format": "even",
+        "single_date": "20160202",
+        "size": 200,
+        "price": 2.20,
+        "stock": 0
+      },
+      {
+        "$id$": "3",
+        "name": "Third name",
+        "category": [
+          "cat1",
+          "cat2",
+          "cat3"
+        ],
+        "format": "odd",
+        "single_date": "20160103",
+        "size": 300,
+        "price": 3.30,
+        "stock": 0
+      },
+      {
+        "$id$": "4",
+        "name": "Fourth name",
+        "category": [
+          "cat1",
+          "cat2",
+          "cat3",
+          "cat4"
+        ],
+        "format": "even",
+        "size": 400,
+        "price": 4.40,
+        "stock": 0
+      }
     ],
-    "format": "odd",
-    "single_date": "20160101",
-    "size": 100,
-    "price": 1.10,
-    "stock": 0
-  },
-  {
-    "$id$": "2",
-    "name": "Second name",
-    "category": [
-      "cat1",
-      "cat2"
-    ],
-    "format": "even",
-    "single_date": "20160202",
-    "size": 200,
-    "price": 2.20,
-    "stock": 0
-  },
-  {
-    "$id$": "3",
-    "name": "Third name",
-    "category": [
-      "cat1",
-      "cat2",
-      "cat3"
-    ],
-    "format": "odd",
-    "single_date": "20160103",
-    "size": 300,
-    "price": 3.30,
-    "stock": 0
-  },
-  {
-    "$id$": "4",
-    "name": "Fourth name",
-    "category": [
-      "cat1",
-      "cat2",
-      "cat3",
-      "cat4"
-    ],
-    "format": "even",
-    "size": 400,
-    "price": 4.40,
-    "stock": 0
-  }
-]
+    "commit_user_data": {
+      "my_key" : "my_value"
+    }
+}
 ```

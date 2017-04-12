@@ -22,14 +22,20 @@ curl -XPOST -H 'Content-Type: application/json' -d @my_payload \
 Where the payload file (my_payload) contains the documents to update (only DocValues):
 
 ```json
-[
-  {
-    "$id$": "1",
-    "stock": 14
-  },
-  {
-    "$id$": "2",
-    "stock": 13
-  }
-]
+{
+"documents":
+    [
+      {
+        "$id$": "1",
+        "stock": 14
+      },
+      {
+        "$id$": "2",
+        "stock": 13
+      }
+    ],
+    "commit_user_data": {
+      "my_key" : "my_value"
+    }
+}
 ```
