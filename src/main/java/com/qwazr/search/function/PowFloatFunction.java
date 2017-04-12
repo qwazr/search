@@ -34,8 +34,8 @@ public class PowFloatFunction extends AbstractValueSource {
 	}
 
 	public PowFloatFunction(AbstractValueSource a, AbstractValueSource b) {
-		this.a = null;
-		this.b = null;
+		this.a = a;
+		this.b = b;
 	}
 
 	@Override
