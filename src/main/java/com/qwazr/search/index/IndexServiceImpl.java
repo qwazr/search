@@ -414,10 +414,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public Integer postMappedDocument(final String schemaName, final String indexName,
-			final Map<String, Object> document) {
+			final PostDefinition.Document post) {
 		try {
 			checkRight(schemaName);
-			return indexManager.get(schemaName).get(indexName, true).postMappedDocument(document);
+			return indexManager.get(schemaName).get(indexName, true).postMappedDocument(post);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -425,10 +425,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public Integer postMappedDocuments(final String schemaName, final String indexName,
-			final Collection<Map<String, Object>> documents) {
+			final PostDefinition.Documents post) {
 		try {
 			checkRight(schemaName);
-			return indexManager.get(schemaName).get(indexName, true).postMappedDocuments(documents);
+			return indexManager.get(schemaName).get(indexName, true).postMappedDocuments(post);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -436,24 +436,25 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public <T> int postDocument(final String schemaName, final String indexName, final Map<String, Field> fields,
-			final T document) throws IOException, InterruptedException {
+			final T document, final Map<String, String> commitUserData) throws IOException, InterruptedException {
 		checkRight(schemaName);
-		return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document);
+		return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData);
 	}
 
 	@Override
 	final public <T> int postDocuments(final String schemaName, final String indexName, final Map<String, Field> fields,
-			final Collection<T> documents) throws IOException, InterruptedException {
+			final Collection<T> documents, final Map<String, String> commitUserData)
+			throws IOException, InterruptedException {
 		checkRight(schemaName);
-		return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents);
+		return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents, commitUserData);
 	}
 
 	@Override
 	final public Integer updateMappedDocValues(final String schemaName, final String indexName,
-			final Map<String, Object> document) {
+			final PostDefinition.Document post) {
 		try {
 			checkRight(schemaName);
-			return indexManager.get(schemaName).get(indexName, true).updateMappedDocValues(document);
+			return indexManager.get(schemaName).get(indexName, true).updateMappedDocValues(post);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -461,10 +462,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public Integer updateMappedDocsValues(final String schemaName, final String indexName,
-			final Collection<Map<String, Object>> documents) {
+			final PostDefinition.Documents post) {
 		try {
 			checkRight(schemaName);
-			return indexManager.get(schemaName).get(indexName, true).updateMappedDocsValues(documents);
+			return indexManager.get(schemaName).get(indexName, true).updateMappedDocsValues(post);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -472,16 +473,18 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public <T> int updateDocValues(final String schemaName, final String indexName,
-			final Map<String, Field> fields, final T document) throws IOException, InterruptedException {
+			final Map<String, Field> fields, final T document, final Map<String, String> commitUserData)
+			throws IOException, InterruptedException {
 		checkRight(schemaName);
-		return indexManager.get(schemaName).get(indexName, true).updateDocValues(fields, document);
+		return indexManager.get(schemaName).get(indexName, true).updateDocValues(fields, document, commitUserData);
 	}
 
 	@Override
 	final public <T> int updateDocsValues(final String schemaName, final String indexName,
-			final Map<String, Field> fields, final Collection<T> documents) throws IOException, InterruptedException {
+			final Map<String, Field> fields, final Collection<T> documents, final Map<String, String> commitUserData)
+			throws IOException, InterruptedException {
 		checkRight(schemaName);
-		return indexManager.get(schemaName).get(indexName, true).updateDocsValues(fields, documents);
+		return indexManager.get(schemaName).get(indexName, true).updateDocsValues(fields, documents, commitUserData);
 	}
 
 	@Override
@@ -633,7 +636,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	final public Response deleteAll(final String schemaName, final String indexName) {
 		try {
 			checkRight(schemaName);
-			indexManager.get(schemaName).get(indexName, false).deleteAll();
+			indexManager.get(schemaName).get(indexName, false).deleteAll(null);
 			return Response.ok().build();
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);

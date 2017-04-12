@@ -29,7 +29,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -385,38 +384,38 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public Integer postMappedDocument(final String schema_name, final String index_name,
-			final Map<String, Object> document) {
+			final PostDefinition.Document post) {
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc");
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, document, null, Integer.class, valid200Json);
+		return executeJson(request, post, null, Integer.class, valid200Json);
 	}
 
 	@Override
 	public Integer postMappedDocuments(final String schema_name, final String index_name,
-			final Collection<Map<String, Object>> documents) {
+			final PostDefinition.Documents post) {
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/docs");
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, documents, null, Integer.class, valid200Json);
+		return executeJson(request, post, null, Integer.class, valid200Json);
 	}
 
 	@Override
 	public Integer updateMappedDocValues(final String schema_name, final String index_name,
-			final Map<String, Object> document) {
+			final PostDefinition.Document post) {
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc/values");
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, document, null, Integer.class, valid200Json);
+		return executeJson(request, post, null, Integer.class, valid200Json);
 	}
 
 	@Override
 	public Integer updateMappedDocsValues(final String schema_name, final String index_name,
-			final Collection<Map<String, Object>> documents) {
+			final PostDefinition.Documents post) {
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/docs/values");
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, documents, null, Integer.class, valid200Json);
+		return executeJson(request, post, null, Integer.class, valid200Json);
 	}
 
 	@Override

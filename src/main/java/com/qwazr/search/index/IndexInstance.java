@@ -298,8 +298,8 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	private void nrtCommit() throws IOException {
-		writerAndSearcher.commit((indexWriter, taxonomyWriter) -> {
+	private void nrtCommit(final Map<String, String> commitUserData) throws IOException {
+		writerAndSearcher.commit(commitUserData, (indexWriter, taxonomyWriter) -> {
 			localReplicator.publish(writerAndSearcher.newRevision());
 			multiSearchInstances.forEach(MultiSearchInstance::refresh);
 		});
@@ -421,7 +421,7 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final void deleteAll() throws IOException {
+	final void deleteAll(Map<String, String> commitUserData) throws IOException {
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
@@ -429,7 +429,7 @@ final public class IndexInstance implements Closeable {
 					indexWriter.deleteAll();
 				return null;
 			});
-			nrtCommit();
+			nrtCommit(commitUserData);
 		}
 	}
 
@@ -457,104 +457,103 @@ final public class IndexInstance implements Closeable {
 						taxonomyWriter));
 	}
 
-	final <T> int postDocument(final Map<String, Field> fields, final T document)
-			throws IOException, InterruptedException {
+	final <T> int postDocument(final Map<String, Field> fields, final T document,
+			final Map<String, String> commitUserData) throws IOException, InterruptedException {
 		if (document == null)
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
 			poster.accept(document);
-			nrtCommit();
+			nrtCommit(commitUserData);
 			return poster.getCount();
 		}
 	}
 
-	final int postMappedDocument(final Map<String, Object> document) throws IOException, InterruptedException {
-		if (document == null || document.isEmpty())
+	final int postMappedDocument(final PostDefinition.Document post) throws IOException, InterruptedException {
+		if (post == null || post.document == null || post.document.isEmpty())
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
-			poster.accept(document);
-			nrtCommit();
+			poster.accept(post.document);
+			nrtCommit(post.commitUserData);
 			return poster.getCount();
 		}
 	}
 
-	final int postMappedDocuments(final Collection<Map<String, Object>> documents)
-			throws IOException, InterruptedException {
-		if (documents == null || documents.isEmpty())
+	final int postMappedDocuments(final PostDefinition.Documents post) throws IOException, InterruptedException {
+		if (post == null || post.documents == null || post.documents.isEmpty())
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
-			documents.forEach(poster);
-			nrtCommit();
+			post.documents.forEach(poster);
+			nrtCommit(post.commitUserData);
 			return poster.getCount();
 		}
 	}
 
-	final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents)
-			throws IOException, InterruptedException {
+	final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents,
+			final Map<String, String> commitUserData) throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
 			documents.forEach(poster);
-			nrtCommit();
+			nrtCommit(commitUserData);
 			return poster.getCount();
 		}
 	}
 
-	final <T> int updateDocValues(final Map<String, Field> fields, final T document)
-			throws InterruptedException, IOException {
+	final <T> int updateDocValues(final Map<String, Field> fields, final T document,
+			final Map<String, String> commitUserData) throws InterruptedException, IOException {
 		if (document == null)
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			poster.accept(document);
-			nrtCommit();
+			nrtCommit(commitUserData);
 			return poster.getCount();
 		}
 	}
 
-	final int updateMappedDocValues(final Map<String, Object> document) throws IOException, InterruptedException {
-		if (document == null || document.isEmpty())
+	final int updateMappedDocValues(final PostDefinition.Document post) throws IOException, InterruptedException {
+		if (post == null || post.document == null || post.document.isEmpty())
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
-			poster.accept(document);
-			nrtCommit();
+			poster.accept(post.document);
+			nrtCommit(post.commitUserData);
 			return poster.getCount();
 		}
 	}
 
-	final <T> int updateDocsValues(final Map<String, Field> fields, final Collection<T> documents)
-			throws IOException, InterruptedException {
+	final <T> int updateDocsValues(final Map<String, Field> fields, final Collection<T> documents,
+			final Map<String, String> commitUserData) throws IOException, InterruptedException {
 		if (documents == null || documents.isEmpty())
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
 			documents.forEach(poster);
-			nrtCommit();
+			nrtCommit(commitUserData);
 			return poster.getCount();
 		}
 	}
 
-	final int updateMappedDocsValues(final Collection<Map<String, Object>> documents)
+	final int updateMappedDocsValues(final PostDefinition.Documents post)
 			throws IOException, ServerException, InterruptedException {
-		if (documents == null || documents.isEmpty())
+		if (post == null || post.documents == null || post.documents.isEmpty())
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
-			documents.forEach(poster);
-			nrtCommit();
+			post.documents.forEach(poster);
+			nrtCommit(post.commitUserData);
 			return poster.getCount();
 		}
 	}
@@ -573,7 +572,7 @@ final public class IndexInstance implements Closeable {
 					final IndexWriter indexWriter = writerAndSearcher.getIndexWriter();
 					int docs = indexWriter.numDocs();
 					indexWriter.deleteDocuments(query);
-					nrtCommit();
+					nrtCommit(queryDefinition.commitUserData);
 					docs -= indexWriter.numDocs();
 					return new ResultDefinition.WithMap(docs);
 				} catch (ParseException | ReflectiveOperationException | QueryNodeException e) {

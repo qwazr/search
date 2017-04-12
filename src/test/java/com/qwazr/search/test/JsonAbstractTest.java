@@ -24,6 +24,7 @@ import com.qwazr.search.index.IndexInstance;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexStatus;
+import com.qwazr.search.index.PostDefinition;
 import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
@@ -54,7 +55,6 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -114,11 +114,11 @@ public abstract class JsonAbstractTest {
 	public static final QueryDefinition QUERY_GEO2D_DISTANCE = getQuery("query_geo2d_distance.json");
 	public static final QueryDefinition QUERY_GEO3D_DISTANCE = getQuery("query_geo3d_distance.json");
 	public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
-	public static final Map<String, Object> UPDATE_DOC = getDoc("update_doc.json");
-	public static final Map<String, Object> UPDATE_DOC_ERROR = getDoc("update_doc_error.json");
-	public static final Collection<Map<String, Object>> UPDATE_DOCS = getDocs("update_docs.json");
-	public static final Map<String, Object> UPDATE_DOC_VALUE = getDoc("update_doc_value.json");
-	public static final Collection<Map<String, Object>> UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
+	public static final PostDefinition.Document UPDATE_DOC = getDoc("update_doc.json");
+	public static final PostDefinition.Document UPDATE_DOC_ERROR = getDoc("update_doc_error.json");
+	public static final PostDefinition.Documents UPDATE_DOCS = getDocs("update_docs.json");
+	public static final PostDefinition.Document UPDATE_DOC_VALUE = getDoc("update_doc_value.json");
+	public static final PostDefinition.Documents UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
 
 	protected abstract IndexServiceInterface getClient() throws URISyntaxException;
 
@@ -465,17 +465,17 @@ public abstract class JsonAbstractTest {
 		checkIndexSize(client, expectedSize);
 	}
 
-	public static Collection<Map<String, Object>> getDocs(String res) {
+	public static PostDefinition.Documents getDocs(String res) {
 		try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-			return JsonMapper.MAPPER.readValue(is, IndexServiceInterface.CollectionMapStringObjectTypeRef);
+			return JsonMapper.MAPPER.readValue(is, PostDefinition.Documents.class);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private static HashMap<String, Object> getDoc(String res) {
+	private static PostDefinition.Document getDoc(String res) {
 		try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-			return JsonMapper.MAPPER.readValue(is, IndexServiceInterface.MapStringObjectTypeRef);
+			return JsonMapper.MAPPER.readValue(is, PostDefinition.Document.class);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -510,7 +510,7 @@ public abstract class JsonAbstractTest {
 			Assert.assertEquals(Integer.valueOf(0), client.postMappedDocuments(SCHEMA_NAME, INDEX_MASTER_NAME, null));
 			final Integer result = client.postMappedDocuments(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOCS);
 			Assert.assertNotNull(result);
-			Assert.assertEquals(Integer.valueOf(UPDATE_DOCS.size()), result);
+			Assert.assertEquals(Integer.valueOf(UPDATE_DOCS.documents.size()), result);
 			checkAllSizes(client, 4);
 		}
 	}
@@ -599,7 +599,7 @@ public abstract class JsonAbstractTest {
 		Assert.assertEquals(Integer.valueOf(0), client.updateMappedDocsValues(SCHEMA_NAME, INDEX_MASTER_NAME, null));
 		final Integer count = client.updateMappedDocsValues(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOCS_VALUES);
 		Assert.assertNotNull(count);
-		Assert.assertEquals(Integer.valueOf(UPDATE_DOCS_VALUES.size()), count);
+		Assert.assertEquals(Integer.valueOf(UPDATE_DOCS_VALUES.documents.size()), count);
 		checkAllSizes(client, 5);
 
 		// Check the result
@@ -645,7 +645,7 @@ public abstract class JsonAbstractTest {
 
 	@Test
 	public void test410GetDocumentById() throws URISyntaxException, IOException {
-		final String id = (String) UPDATE_DOC.get(FieldDefinition.ID_FIELD);
+		final String id = (String) UPDATE_DOC.document.get(FieldDefinition.ID_FIELD);
 		IndexServiceInterface client = getClient();
 		checkErrorStatusCode(() -> client.getDocument(SCHEMA_NAME, INDEX_DUMMY_NAME, id), 404);
 		checkErrorStatusCode(() -> client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, DUMMY_DOC_ID), 404);

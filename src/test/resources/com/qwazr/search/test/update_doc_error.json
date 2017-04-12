@@ -1,8 +1,10 @@
 {
-  "$id$": "5",
-  "format": "odd",
-  "size": 500,
-  "price": 10.50,
-  "stock": 0,
-  "alpha_rank": 1
+  "document": {
+    "$id$": "5",
+    "format": "odd",
+    "size": 500,
+    "price": 10.50,
+    "stock": 0,
+    "alpha_rank": 1
+  }
 }

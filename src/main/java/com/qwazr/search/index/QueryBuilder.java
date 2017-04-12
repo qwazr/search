@@ -46,6 +46,8 @@ public class QueryBuilder {
 
 	Query luceneQuery;
 
+	Map<String, String> commitUserData;
+
 	public QueryBuilder() {
 	}
 
@@ -63,6 +65,7 @@ public class QueryBuilder {
 
 		query = queryDef.query;
 		luceneQuery = queryDef.luceneQuery;
+		commitUserData = queryDef.commitUserData;
 	}
 
 	public QueryBuilder(final Query query) {
@@ -217,6 +220,16 @@ public class QueryBuilder {
 		return this;
 	}
 
+	public QueryBuilder commitUserData(final String name, final String value) {
+		if (commitUserData == null)
+			commitUserData = new LinkedHashMap<>();
+		if (value == null)
+			commitUserData.remove(name);
+		else
+			commitUserData.put(name, value);
+		return this;
+	}
+	
 	public QueryDefinition build() {
 		return new QueryDefinition(this);
 	}

@@ -30,6 +30,7 @@ import org.apache.lucene.store.Directory;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 interface WriterAndSearcher extends Closeable {
@@ -42,7 +43,7 @@ interface WriterAndSearcher extends Closeable {
 
 	<T> T write(final WriteAction<T> action) throws IOException;
 
-	void commit(final CommitAction action) throws IOException;
+	void commit(final Map<String, String> userData, final CommitAction action) throws IOException;
 
 	IndexWriter getIndexWriter();
 
@@ -120,9 +121,11 @@ interface WriterAndSearcher extends Closeable {
 		}
 
 		@Override
-		final public void commit(final CommitAction action) throws IOException {
+		final public void commit(final Map<String, String> userData, final CommitAction action) throws IOException {
 			commitLock.lock();
 			try {
+				if (userData != null)
+					indexWriter.setLiveCommitData(userData.entrySet());
 				indexWriter.flush();
 				indexWriter.commit();
 				searcherManager.maybeRefresh();
@@ -188,11 +191,13 @@ interface WriterAndSearcher extends Closeable {
 		}
 
 		@Override
-		final public void commit(final CommitAction action) throws IOException {
+		final public void commit(final Map<String, String> userData, final CommitAction action) throws IOException {
 			commitLock.lock();
 			try {
 				taxonomyWriter.getIndexWriter().flush();
 				taxonomyWriter.commit();
+				if (userData != null)
+					indexWriter.setLiveCommitData(userData.entrySet());
 				indexWriter.flush();
 				indexWriter.commit();
 				searcherTaxonomyManager.maybeRefresh();

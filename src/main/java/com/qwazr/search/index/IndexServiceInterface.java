@@ -246,28 +246,28 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	Integer postMappedDocument(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-			Map<String, Object> document);
+			PostDefinition.Document document);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/docs")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	Integer postMappedDocuments(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, Collection<Map<String, Object>> documents);
+			@PathParam("index_name") String index_name, PostDefinition.Documents documents);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/doc/values")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	Integer updateMappedDocValues(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, Map<String, Object> document);
+			@PathParam("index_name") String index_name, PostDefinition.Document document);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/docs/values")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	Integer updateMappedDocsValues(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, Collection<Map<String, Object>> documents);
+			@PathParam("index_name") String index_name, PostDefinition.Documents documents);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/backup/{backup_name}")
@@ -395,5 +395,5 @@ public interface IndexServiceInterface extends ServiceInterface {
 	default <T> T query(String schemaName, String indexName, QueryActions<T> actions) throws IOException {
 		throw new NotImplementedException("Method not available");
 	}
-	
+
 }

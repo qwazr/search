@@ -18,6 +18,7 @@ package com.qwazr.search.test;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexStatus;
+import com.qwazr.search.index.PostDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import org.junit.Assert;
@@ -27,9 +28,7 @@ import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import static com.qwazr.search.test.JsonAbstractTest.getDocs;
 import static com.qwazr.search.test.JsonAbstractTest.getFieldMap;
@@ -41,7 +40,7 @@ public class GettingStartedTest {
 	private final static String MY_SCHEMA = "my_schema";
 	private final static String MY_INDEX = "my_index";
 	public static final LinkedHashMap<String, FieldDefinition> MY_FIELDS_JSON = getFieldMap("my_fields.json");
-	public static final Collection<Map<String, Object>> MY_DOCS_JSON = getDocs("my_docs.json");
+	public static final PostDefinition.Documents MY_DOCS_JSON = getDocs("my_docs.json");
 	public static final QueryDefinition MY_SEARCH_JSON = getQuery("my_search.json");
 
 	@Test
@@ -74,7 +73,7 @@ public class GettingStartedTest {
 		IndexServiceInterface client = TestServer.remote;
 		final Integer result = client.postMappedDocuments(MY_SCHEMA, MY_INDEX, MY_DOCS_JSON);
 		Assert.assertNotNull(result);
-		Assert.assertEquals(Integer.valueOf(MY_DOCS_JSON.size()), result);
+		Assert.assertEquals(Integer.valueOf(MY_DOCS_JSON.documents.size()), result);
 	}
 
 	@Test

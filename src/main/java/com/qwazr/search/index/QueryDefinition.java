@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
 public class QueryDefinition extends BaseQueryDefinition {
@@ -54,6 +55,9 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public LinkedHashMap<String, FacetDefinition> facets;
 
 	final public LinkedHashMap<String, HighlighterDefinition> highlighters;
+
+	@JsonProperty("commit_user_data")
+	final public Map<String, String> commitUserData;
 
 	@JsonIgnore
 	final Query luceneQuery;
@@ -86,6 +90,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		highlighters = null;
 		query = null;
 		luceneQuery = null;
+		commitUserData = null;
 	}
 
 	QueryDefinition(final QueryBuilder builder) {
@@ -97,6 +102,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		highlighters = builder.highlighters;
 		query = builder.query;
 		luceneQuery = builder.luceneQuery;
+		commitUserData = builder.commitUserData;
 	}
 
 	public static QueryBuilder of(final QueryDefinition queryDefinition) {

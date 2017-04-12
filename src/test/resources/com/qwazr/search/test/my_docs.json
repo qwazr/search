@@ -1,20 +1,25 @@
-[
-  {
-    "$id$": "1",
-    "name": "First article",
-    "description": "This is the description of the first article.",
-    "category": [
-      "news",
-      "economy"
-    ]
-  },
-  {
-    "$id$": "2",
-    "name": "Second article",
-    "description": "This is the description of the second article.",
-    "category": [
-      "news",
-      "science"
-    ]
+{
+  "documents": [
+    {
+      "$id$": "1",
+      "name": "First article",
+      "description": "This is the description of the first article.",
+      "category": [
+        "news",
+        "economy"
+      ]
+    },
+    {
+      "$id$": "2",
+      "name": "Second article",
+      "description": "This is the description of the second article.",
+      "category": [
+        "news",
+        "science"
+      ]
+    }
+  ],
+  "commit_user_data": {
+    "my_key": "my_value"
   }
-]
+}

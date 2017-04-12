@@ -25,6 +25,7 @@ import com.qwazr.search.index.IndexCheckStatus;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexStatus;
+import com.qwazr.search.index.PostDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.QueryDocumentsIterator;
 import com.qwazr.search.index.ResultDefinition;
@@ -287,17 +288,50 @@ public class AnnotatedIndexService<T> {
 	/**
 	 * Post a document to the index
 	 *
+	 * @param row            the document to index
+	 * @param commitUserData the optional user data
+	 * @throws IOException          if any I/O error occurs
+	 * @throws InterruptedException if the process is interrupted
+	 */
+	public void postDocument(final T row, final Map<String, String> commitUserData)
+			throws IOException, InterruptedException {
+		checkParameters();
+		Objects.requireNonNull(row, "The document (row) cannot be null");
+		if (annotatedService != null)
+			annotatedService.postDocument(schemaName, indexName, fieldMap, row, commitUserData);
+		else
+			indexService.postMappedDocument(schemaName, indexName,
+					PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData));
+	}
+
+	/**
+	 * Post a document to the index
+	 *
 	 * @param row the document to index
 	 * @throws IOException          if any I/O error occurs
 	 * @throws InterruptedException if the process is interrupted
 	 */
 	public void postDocument(final T row) throws IOException, InterruptedException {
+		postDocument(row, null);
+	}
+
+	/**
+	 * Post a collection of document to the index
+	 *
+	 * @param rows           a collection of document to index
+	 * @param commitUserData the optional user data
+	 * @throws IOException          if any I/O error occurs
+	 * @throws InterruptedException if the process is interrupted
+	 */
+	public void postDocuments(final Collection<T> rows, final Map<String, String> commitUserData)
+			throws IOException, InterruptedException {
 		checkParameters();
-		Objects.requireNonNull(row, "The document (row) cannot be null");
+		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
 		if (annotatedService != null)
-			annotatedService.postDocument(schemaName, indexName, fieldMap, row);
+			annotatedService.postDocuments(schemaName, indexName, fieldMap, rows, commitUserData);
 		else
-			indexService.postMappedDocument(schemaName, indexName, schemaFieldMapWrapper.newMap(row));
+			indexService.postMappedDocuments(schemaName, indexName,
+					PostDefinition.of(schemaFieldMapWrapper.newMapCollection(rows), commitUserData));
 	}
 
 	/**
@@ -308,12 +342,26 @@ public class AnnotatedIndexService<T> {
 	 * @throws InterruptedException if the process is interrupted
 	 */
 	public void postDocuments(final Collection<T> rows) throws IOException, InterruptedException {
+		postDocuments(rows, null);
+	}
+
+	/**
+	 * Update the DocValues of one document
+	 *
+	 * @param row            a collection of DocValues to update
+	 * @param commitUserData the optional user data
+	 * @throws IOException          if any I/O error occurs
+	 * @throws InterruptedException if the process is interrupted
+	 */
+	public void updateDocumentValues(final T row, final Map<String, String> commitUserData)
+			throws IOException, InterruptedException {
 		checkParameters();
-		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
+		Objects.requireNonNull(row, "The document (row) cannot be null");
 		if (annotatedService != null)
-			annotatedService.postDocuments(schemaName, indexName, fieldMap, rows);
+			annotatedService.updateDocValues(schemaName, indexName, fieldMap, row, commitUserData);
 		else
-			indexService.postMappedDocuments(schemaName, indexName, schemaFieldMapWrapper.newMapCollection(rows));
+			indexService.updateMappedDocValues(schemaName, indexName,
+					PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData));
 	}
 
 	/**
@@ -324,12 +372,26 @@ public class AnnotatedIndexService<T> {
 	 * @throws InterruptedException if the process is interrupted
 	 */
 	public void updateDocumentValues(final T row) throws IOException, InterruptedException {
+		updateDocumentValues(row, null);
+	}
+
+	/**
+	 * Update the DocValues of a collection of document
+	 *
+	 * @param rows           a collection of document with a collection of DocValues to update
+	 * @param commitUserData the optional user data
+	 * @throws IOException          if any I/O error occurs
+	 * @throws InterruptedException if the process is interrupted
+	 */
+	public void updateDocumentsValues(final Collection<T> rows, final Map<String, String> commitUserData)
+			throws IOException, InterruptedException {
 		checkParameters();
-		Objects.requireNonNull(row, "The document (row) cannot be null");
+		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
 		if (annotatedService != null)
-			annotatedService.updateDocValues(schemaName, indexName, fieldMap, row);
+			annotatedService.updateDocsValues(schemaName, indexName, fieldMap, rows, commitUserData);
 		else
-			indexService.updateMappedDocValues(schemaName, indexName, schemaFieldMapWrapper.newMap(row));
+			indexService.updateMappedDocsValues(schemaName, indexName,
+					PostDefinition.of(schemaFieldMapWrapper.newMapCollection(rows), commitUserData));
 	}
 
 	/**
@@ -340,12 +402,7 @@ public class AnnotatedIndexService<T> {
 	 * @throws InterruptedException if the process is interrupted
 	 */
 	public void updateDocumentsValues(final Collection<T> rows) throws IOException, InterruptedException {
-		checkParameters();
-		Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
-		if (annotatedService != null)
-			annotatedService.updateDocsValues(schemaName, indexName, fieldMap, rows);
-		else
-			indexService.updateMappedDocsValues(schemaName, indexName, schemaFieldMapWrapper.newMapCollection(rows));
+		updateDocumentsValues(rows, null);
 	}
 
 	private <C> C getDocument(final Object id, final FieldMapWrapper<C> wrapper)

@@ -1,146 +1,148 @@
-[
-  {
-    "$id$": "1",
-    "name": "First name",
-    "category": [
-      "cat1"
-    ],
-    "dynamic_multi_facet_cat": [
-      "dyn_cat1"
-    ],
-    "dynamic_simple_facet_type": "dyn_type1",
-    "format": "odd",
-    "single_date": "20160101",
-    "size": 100,
-    "size_int": 100,
-    "price": 1.10,
-    "price_float": 1.10,
-    "price_float_point": 1.10,
-    "price_double_point": 1.10,
-    "stock": 0,
-    "stock_long": 0,
-    "stock_sorted": 14,
-    "stock_long_sorted": 14,
-    "alpha_rank": "a",
-    "integer_payload": "1|1001",
-    "description": "The United States is wealthy.",
-    "geo2d": [
-      {
-        "lat": 48.8567,
-        "lon": 2.3508
-      }
-    ],
-    "geo3d": [
-      {
-        "lat": 48.8567,
-        "lon": 2.3508
-      }
-    ]
-  },
-  {
-    "$id$": "2",
-    "name": "Second name",
-    "category": [
-      "cat1",
-      "cat2"
-    ],
-    "dynamic_multi_facet_cat": [
-      "dyn_cat1",
-      "dyn_cat2"
-    ],
-    "dynamic_simple_facet_type": "dyn_type2",
-    "format": "even",
-    "single_date": "20160202",
-    "size": 200,
-    "size_int": 200,
-    "price": 2.20,
-    "price_float": 2.20,
-    "price_float_point": 2.20,
-    "price_double_point": 2.20,
-    "stock": 0,
-    "stock_long": 0,
-    "stock_sorted": 13,
-    "stock_long_sorted": 13,
-    "alpha_rank": "b",
-    "integer_payload": "2|2002",
-    "description": "The USA is wealthy.",
-    "geo2d": {
-      "lat": 37.783333,
-      "lon": -122.416667
+{
+  "documents": [
+    {
+      "$id$": "1",
+      "name": "First name",
+      "category": [
+        "cat1"
+      ],
+      "dynamic_multi_facet_cat": [
+        "dyn_cat1"
+      ],
+      "dynamic_simple_facet_type": "dyn_type1",
+      "format": "odd",
+      "single_date": "20160101",
+      "size": 100,
+      "size_int": 100,
+      "price": 1.10,
+      "price_float": 1.10,
+      "price_float_point": 1.10,
+      "price_double_point": 1.10,
+      "stock": 0,
+      "stock_long": 0,
+      "stock_sorted": 14,
+      "stock_long_sorted": 14,
+      "alpha_rank": "a",
+      "integer_payload": "1|1001",
+      "description": "The United States is wealthy.",
+      "geo2d": [
+        {
+          "lat": 48.8567,
+          "lon": 2.3508
+        }
+      ],
+      "geo3d": [
+        {
+          "lat": 48.8567,
+          "lon": 2.3508
+        }
+      ]
     },
-    "geo3d": {
-      "lat": 37.783333,
-      "lon": -122.416667
+    {
+      "$id$": "2",
+      "name": "Second name",
+      "category": [
+        "cat1",
+        "cat2"
+      ],
+      "dynamic_multi_facet_cat": [
+        "dyn_cat1",
+        "dyn_cat2"
+      ],
+      "dynamic_simple_facet_type": "dyn_type2",
+      "format": "even",
+      "single_date": "20160202",
+      "size": 200,
+      "size_int": 200,
+      "price": 2.20,
+      "price_float": 2.20,
+      "price_float_point": 2.20,
+      "price_double_point": 2.20,
+      "stock": 0,
+      "stock_long": 0,
+      "stock_sorted": 13,
+      "stock_long_sorted": 13,
+      "alpha_rank": "b",
+      "integer_payload": "2|2002",
+      "description": "The USA is wealthy.",
+      "geo2d": {
+        "lat": 37.783333,
+        "lon": -122.416667
+      },
+      "geo3d": {
+        "lat": 37.783333,
+        "lon": -122.416667
+      }
+    },
+    {
+      "$id$": "3",
+      "name": "Third name",
+      "category": [
+        "cat1",
+        "cat2",
+        "cat3"
+      ],
+      "dynamic_multi_facet_cat": [
+        "dyn_cat1",
+        "dyn_cat2",
+        "dyn_cat3"
+      ],
+      "dynamic_simple_facet_type": "dyn_type3",
+      "format": "odd",
+      "single_date": "20160103",
+      "size": 300,
+      "size_int": 300,
+      "price": 3.30,
+      "price_float": 3.30,
+      "price_float_point": 3.30,
+      "price_double_point": 3.30,
+      "stock": 0,
+      "stock_long": 0,
+      "stock_sorted": 12,
+      "stock_long_sorted": 12,
+      "alpha_rank": "c",
+      "integer_payload": [
+        "3|3003 3|3033",
+        "3|3333"
+      ],
+      "geo3d": {
+        "lat": -31.952222,
+        "lon": 115.858889
+      }
+    },
+    {
+      "$id$": "4",
+      "name": "Fourth name",
+      "category": [
+        "cat1",
+        "cat2",
+        "cat3",
+        "cat4"
+      ],
+      "dynamic_multi_facet_cat": [
+        "dyn_cat1",
+        "dyn_cat2",
+        "dyn_cat3",
+        "dyn_cat4"
+      ],
+      "dynamic_simple_facet_type": "dyn_type4",
+      "format": "even",
+      "size": 400,
+      "size_int": 400,
+      "price": 4.40,
+      "price_float": 4.40,
+      "price_float_point": 4.40,
+      "price_double_point": 4.40,
+      "stock": 0,
+      "stock_long": 0,
+      "stock_sorted": 11,
+      "stock_long_sorted": 11,
+      "alpha_rank": "d",
+      "integer_payload": "4|4004",
+      "geo3d": {
+        "lat": -31.952222,
+        "lon": 115.858889
+      }
     }
-  },
-  {
-    "$id$": "3",
-    "name": "Third name",
-    "category": [
-      "cat1",
-      "cat2",
-      "cat3"
-    ],
-    "dynamic_multi_facet_cat": [
-      "dyn_cat1",
-      "dyn_cat2",
-      "dyn_cat3"
-    ],
-    "dynamic_simple_facet_type": "dyn_type3",
-    "format": "odd",
-    "single_date": "20160103",
-    "size": 300,
-    "size_int": 300,
-    "price": 3.30,
-    "price_float": 3.30,
-    "price_float_point": 3.30,
-    "price_double_point": 3.30,
-    "stock": 0,
-    "stock_long": 0,
-    "stock_sorted": 12,
-    "stock_long_sorted": 12,
-    "alpha_rank": "c",
-    "integer_payload": [
-      "3|3003 3|3033",
-      "3|3333"
-    ],
-    "geo3d": {
-      "lat": -31.952222,
-      "lon": 115.858889
-    }
-  },
-  {
-    "$id$": "4",
-    "name": "Fourth name",
-    "category": [
-      "cat1",
-      "cat2",
-      "cat3",
-      "cat4"
-    ],
-    "dynamic_multi_facet_cat": [
-      "dyn_cat1",
-      "dyn_cat2",
-      "dyn_cat3",
-      "dyn_cat4"
-    ],
-    "dynamic_simple_facet_type": "dyn_type4",
-    "format": "even",
-    "size": 400,
-    "size_int": 400,
-    "price": 4.40,
-    "price_float": 4.40,
-    "price_float_point": 4.40,
-    "price_double_point": 4.40,
-    "stock": 0,
-    "stock_long": 0,
-    "stock_sorted": 11,
-    "stock_long_sorted": 11,
-    "alpha_rank": "d",
-    "integer_payload": "4|4004",
-    "geo3d": {
-      "lat": -31.952222,
-      "lon": 115.858889
-    }
-  }
-]
+  ]
+}
