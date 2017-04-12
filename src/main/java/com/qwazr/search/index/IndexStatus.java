@@ -45,6 +45,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
@@ -70,6 +71,7 @@ public class IndexStatus {
 	final public List<SegmentInfoStatus> segment_infos;
 	final public MergePolicyStatus merge_policy;
 	final public QueryCacheStats query_cache;
+	final public Map<String, String> commit_user_data;
 
 	public IndexStatus() {
 		num_docs = null;
@@ -89,6 +91,7 @@ public class IndexStatus {
 		number_of_segment = null;
 		segment_infos = null;
 		query_cache = null;
+		commit_user_data = null;
 	}
 
 	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final Directory directory,
@@ -105,6 +108,7 @@ public class IndexStatus {
 			has_uncommitted_changes = null;
 			has_deletions = null;
 			ram_buffer_size_mb = null;
+			commit_user_data = null;
 		} else {
 			final LiveIndexWriterConfig config = indexWriter.getConfig();
 			final MergePolicy mergePolicy = config.getMergePolicy();
@@ -113,6 +117,12 @@ public class IndexStatus {
 			has_uncommitted_changes = indexWriter.hasUncommittedChanges();
 			has_deletions = indexWriter.hasDeletions();
 			ram_buffer_size_mb = config.getRAMBufferSizeMB();
+			final Iterable<Map.Entry<String, String>> commitData = indexWriter.getLiveCommitData();
+			if (commitData != null) {
+				commit_user_data = new LinkedHashMap<>();
+				commitData.forEach(entry -> commit_user_data.put(entry.getKey(), entry.getValue()));
+			} else
+				commit_user_data = null;
 		}
 
 		this.index_uuid = indexUuid == null ? null : indexUuid.toString();

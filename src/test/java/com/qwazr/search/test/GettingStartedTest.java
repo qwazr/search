@@ -74,6 +74,11 @@ public class GettingStartedTest {
 		final Integer result = client.postMappedDocuments(MY_SCHEMA, MY_INDEX, MY_DOCS_JSON);
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Integer.valueOf(MY_DOCS_JSON.documents.size()), result);
+
+		// Check commit user data
+		final IndexStatus status = client.getIndex(MY_SCHEMA, MY_INDEX);
+		Assert.assertNotNull(status.commit_user_data);
+		Assert.assertEquals("my_value", status.commit_user_data.get("my_key"));
 	}
 
 	@Test
