@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.queries;
+package com.qwazr.search.test.units;
 
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.index.IndexManager;

@@ -13,32 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.queries;
+package com.qwazr.search.test.units;
 
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.FieldValueQuery;
+import com.qwazr.search.query.BoostQuery;
+import com.qwazr.search.query.ConstantScoreQuery;
+import com.qwazr.search.query.TermQuery;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 
-public class FieldValueQueryTest extends AbstractIndexTest {
+public class ConstantScoreAndBoostQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1").intDocValue(1));
-		indexService.postDocument(new IndexRecord("2").intDocValue(2));
-		indexService.postDocument(new IndexRecord("3"));
+		indexService.postDocument(new IndexRecord("1").textField("Hello World"));
+		indexService.postDocument(new IndexRecord("2").textField("How are you ?"));
 	}
 
 	@Test
-	public void hasValue() {
-		ResultDefinition result =
-				indexService.searchQuery(QueryDefinition.of(new FieldValueQuery("intDocValue")).build());
+	public void test() {
+		final Float scoreValue = Float.MAX_VALUE - 1;
+		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+				new BoostQuery(new ConstantScoreQuery(new TermQuery("textField", "hello")), scoreValue)).build());
 		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(2), result.total_hits);
+		Assert.assertEquals(Long.valueOf(1), result.total_hits);
+		Assert.assertEquals(scoreValue, result.getDocuments().get(0).getScore());
 	}
-
 }

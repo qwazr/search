@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -263,6 +263,15 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, IndexStatus.class, valid200Json);
+	}
+
+	@Override
+	public IndexStatus mergeIndex(final String schema_name, final String index_name, String merged_index,
+			final Map<String, String> commitUserData) {
+		final UBuilder uriBuilder =
+				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/merge/", merged_index);
+		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
+		return executeJson(request, commitUserData, null, IndexStatus.class, valid200Json);
 	}
 
 	@Override

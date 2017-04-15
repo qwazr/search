@@ -13,38 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.queries;
+package com.qwazr.search.test.units;
 
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.MultiPhraseQuery;
+import com.qwazr.search.query.MoreLikeThisQuery;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 
-public class MultiPhraseQueryTest extends AbstractIndexTest {
+public class MoreLikeThisQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1").textField("Hello World"));
-		indexService.postDocument(new IndexRecord("2").textField("How are you ?"));
+		indexService.postDocument(new IndexRecord("1").mlt("Hello World"));
+		indexService.postDocument(new IndexRecord("2").mlt("Hello world again"));
+		indexService.postDocument(new IndexRecord("3").mlt("absolutely nothing to match"));
 	}
 
 	@Test
-	public void withoutPositions() {
-		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new MultiPhraseQuery("textField", 1).add("hello", "world")).build());
+	public void mltTest() {
+		ResultDefinition.WithObject<IndexRecord> result;
+		result = indexService.searchQuery(
+				QueryDefinition.of(MoreLikeThisQuery.of("hello again", "mlt").minDocFreq(1).minTermFreq(1).build())
+						.build());
 		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
-	}
+		Assert.assertEquals(Long.valueOf(2), result.total_hits);
 
-	@Test
-	public void withPositions() {
-		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new MultiPhraseQuery("textField", 1).add(1, "how", "are")).build());
+		result = indexService.searchQuery(QueryDefinition.of(MoreLikeThisQuery.of(result.getDocuments().get(0).getDoc())
+				.minDocFreq(1)
+				.minTermFreq(1)
+				.fieldnames("mlt")
+				.isBoost(true)
+				.build()).build());
 		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
+		Assert.assertEquals(Long.valueOf(2), result.total_hits);
 	}
 }

@@ -433,6 +433,21 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
+	final IndexStatus merge(final IndexInstance mergedIndex, final Map<String, String> commitUserData)
+			throws IOException {
+		checkIsMaster();
+		try (final ReadWriteSemaphores.Lock writeLock = readWriteSemaphores.acquireWriteSemaphore()) {
+			writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
+				try (final ReadWriteSemaphores.Lock readLock = mergedIndex.readWriteSemaphores.acquireReadSemaphore()) {
+					indexWriter.addIndexes(mergedIndex.dataDirectory);
+				}
+				return null;
+			});
+			nrtCommit(commitUserData);
+			return getIndexStatus();
+		}
+	}
+
 	private RecordsPoster.UpdateObjectDocument getDocumentPoster(final Map<String, Field> fields) throws IOException {
 		return writerAndSearcher.write(
 				(indexWriter, taxonomyWriter) -> new RecordsPoster.UpdateObjectDocument(fields, fieldMap, indexWriter,

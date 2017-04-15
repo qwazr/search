@@ -38,7 +38,6 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -212,6 +211,13 @@ public interface IndexServiceInterface extends ServiceInterface {
 	IndexStatus getIndex(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
 	@POST
+	@Path("/{schema_name}/{index_name}/merge/{merged_index}")
+	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+	IndexStatus mergeIndex(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			@PathParam("merged_index") String merged_index, final Map<String, String> commitUserData);
+
+	@POST
 	@Path("/{schema_name}/{index_name}/check")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	IndexCheckStatus checkIndex(@PathParam("schema_name") String schema_name,
@@ -383,10 +389,6 @@ public interface IndexServiceInterface extends ServiceInterface {
 
 	TypeReference<LinkedHashMap<String, Object>> MapStringObjectTypeRef =
 			new TypeReference<LinkedHashMap<String, Object>>() {
-			};
-
-	TypeReference<Collection<Map<String, Object>>> CollectionMapStringObjectTypeRef =
-			new TypeReference<Collection<Map<String, Object>>>() {
 			};
 
 	interface QueryActions<T> extends FunctionUtils.FunctionEx<QueryContext, T, IOException> {

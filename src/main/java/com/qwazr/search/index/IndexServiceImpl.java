@@ -392,6 +392,17 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
+	final public IndexStatus mergeIndex(final String schemaName, final String indexName, final String mergedIndexName,
+			final Map<String, String> commitUserData) {
+		try {
+			checkRight(schemaName);
+			return indexManager.get(schemaName).mergeIndex(indexName, mergedIndexName, commitUserData);
+		} catch (Exception e) {
+			throw ServerException.getJsonException(LOGGER, e);
+		}
+	}
+
+	@Override
 	public IndexCheckStatus checkIndex(String schemaName, String indexName) {
 		try {
 			checkRight(schemaName);

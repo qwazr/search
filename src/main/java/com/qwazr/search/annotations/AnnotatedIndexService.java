@@ -695,4 +695,9 @@ public class AnnotatedIndexService<T> {
 		checkParameters();
 		indexService.deleteAll(schemaName, indexName);
 	}
+
+	public IndexStatus mergeIndex(final String mergedIndex, final Map<String, String> commitUserData) {
+		checkParameters();
+		return indexService.mergeIndex(schemaName, indexName, mergedIndex, commitUserData);
+	}
 }

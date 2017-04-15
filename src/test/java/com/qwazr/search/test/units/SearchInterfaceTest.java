@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.queries;
+package com.qwazr.search.test.units;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
+import com.qwazr.search.index.ResultDocumentsInterface;
 import com.qwazr.search.query.TermQuery;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -28,8 +31,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class FieldMapWrapperTest extends AbstractIndexTest {
+public class SearchInterfaceTest extends AbstractIndexTest {
 
 	private static List<IndexRecord> documents;
 
@@ -43,48 +47,19 @@ public class FieldMapWrapperTest extends AbstractIndexTest {
 	}
 
 	@Test
-	public void registerWrong() throws ReflectiveOperationException {
-		try {
-			indexService.registerClass(IndexPartialDummyRecord.class);
-			Assert.fail("IllegalArgumentException not thrown");
-		} catch (IllegalArgumentException e) {
-			Assert.assertTrue(e.getMessage().contains("nonExistingField"));
-		}
-	}
-
-	@Test
-	public void getDocument() throws ReflectiveOperationException, IOException {
+	public void searchQuery() throws ReflectiveOperationException {
 		IndexRecord indexRecord = documents.get(RandomUtils.nextInt(0, documents.size()));
-		IndexPartialRecord record = indexService.getDocument(indexRecord.id, IndexPartialRecord.class);
-		Assert.assertNotNull(record);
-		Assert.assertEquals(indexRecord.id, record.id);
-		Assert.assertEquals(indexRecord.intDocValue, record.intDocValue);
-	}
-
-	@Test
-	public void getDocuments() throws ReflectiveOperationException, IOException {
-		List<IndexPartialRecord> records = indexService.getDocuments(0, documents.size(), IndexPartialRecord.class);
-		Assert.assertNotNull(records);
-		Assert.assertEquals(records.size(), documents.size());
-		int i = 0;
-		for (IndexRecord document : documents) {
-			Assert.assertEquals(document.id, records.get(i).id);
-			Assert.assertEquals(document.intDocValue, records.get(i).intDocValue);
-			i++;
-		}
-	}
-
-	@Test
-	public void searchQuery() throws ReflectiveOperationException, IOException {
-		IndexRecord indexRecord = documents.get(RandomUtils.nextInt(0, documents.size()));
-		ResultDefinition.WithObject<IndexPartialRecord> results = indexService.searchQuery(
+		AtomicReference<String> idRef = new AtomicReference<>();
+		ResultDefinition.Empty results = indexService.searchQuery(
 				QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, indexRecord.id)).build(),
-				IndexPartialRecord.class);
+				new ResultDocumentsInterface() {
+					@Override
+					public void doc(IndexSearcher searcher, int pos, ScoreDoc scoreDoc) throws IOException {
+						idRef.set(searcher.doc(scoreDoc.doc).get(FieldDefinition.ID_FIELD));
+					}
+				});
 		Assert.assertNotNull(results);
 		Assert.assertEquals(Long.valueOf(1), results.total_hits);
-		IndexPartialRecord record = results.getDocuments().get(0).record;
-		Assert.assertEquals(indexRecord.id, record.id);
-		Assert.assertEquals(indexRecord.intDocValue, record.intDocValue);
+		Assert.assertEquals(indexRecord.id, idRef.get());
 	}
-
 }

@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
@@ -308,4 +309,8 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		return indexInstanceManager == null ? null : new IndexCheckStatus(indexInstanceManager.check());
 	}
 
+	IndexStatus mergeIndex(final String indexName, final String mergedIndexName,
+			final Map<String, String> commitUserData) throws IOException {
+		return getIndex(indexName).merge(getIndex(mergedIndexName), commitUserData);
+	}
 }
