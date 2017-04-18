@@ -671,10 +671,13 @@ public class AnnotatedIndexService<T> {
 			throw new WebApplicationException(response);
 	}
 
-	private <C> ResultDefinition.WithObject<C> toRecords(final ResultDefinition.WithMap resultWithMap,
+	private <C> ResultDefinition.WithObject<C> toRecords(final ResultDefinition<?> result,
 			final FieldMapWrapper<C> wrapper) {
-		if (resultWithMap == null)
+		if (result == null)
 			return null;
+		if (!(result instanceof ResultDefinition.WithMap))
+			return new ResultDefinition.WithObject(result.total_hits);
+		final ResultDefinition.WithMap resultWithMap = (ResultDefinition.WithMap) result;
 		final List<ResultDocumentObject<C>> documents = new ArrayList<>();
 		try {
 			if (resultWithMap.documents != null)
@@ -688,7 +691,7 @@ public class AnnotatedIndexService<T> {
 
 	public <R> R query(final IndexServiceInterface.QueryActions<R> actions) throws IOException {
 		checkParameters();
-		return indexService.query(schemaName, indexName, actions);
+		return indexService.query(schemaName, indexName, fieldMapWrappers, actions);
 	}
 
 	public void deleteAll() {

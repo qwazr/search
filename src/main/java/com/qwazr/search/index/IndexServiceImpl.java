@@ -675,14 +675,16 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	private ResultDefinition doSearchMap(final String schemaName, final String indexName, final QueryDefinition query)
 			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
 		checkRight(schemaName);
-		return indexManager.get(schemaName).get(indexName, false).searchMap(query);
+		return indexManager.get(schemaName).get(indexName, false).query(null, context -> context.searchMap(query));
 	}
 
 	private ResultDefinition doSearchObject(final String schemaName, final String indexName,
 			final QueryDefinition query, final FieldMapWrapper<?> wrapper)
 			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
 		checkRight(schemaName);
-		return indexManager.get(schemaName).get(indexName, false).searchObject(query, wrapper);
+		return indexManager.get(schemaName)
+				.get(indexName, false)
+				.query(null, context -> context.searchObject(query, wrapper));
 	}
 
 	@Override
@@ -764,7 +766,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			if (delete != null && delete)
 				return index.deleteByQuery(query);
 			else
-				return index.searchMap(query);
+				return index.query(null, context -> context.searchMap(query));
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -775,7 +777,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final QueryDefinition query, final FieldMapWrapper<T> wrapper) {
 		try {
 			checkRight(schemaName);
-			return indexManager.get(schemaName).get(indexName, false).searchObject(query, wrapper);
+			return indexManager.get(schemaName)
+					.get(indexName, false)
+					.query(null, context -> context.searchObject(query, wrapper));
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -786,7 +790,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			ResultDocumentsInterface resultDocuments) {
 		try {
 			checkRight(schemaName);
-			return indexManager.get(schemaName).get(indexName, false).searchInterface(query, resultDocuments);
+			return indexManager.get(schemaName)
+					.get(indexName, false)
+					.query(null, context -> context.searchInterface(query, resultDocuments));
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -828,10 +834,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	public <T> T query(final String schemaName, final String indexName, final QueryActions<T> actions)
-			throws IOException {
+	public <T> T query(final String schemaName, final String indexName, final FieldMapWrapper.Cache fieldMapWrappers,
+			final QueryActions<T> actions) throws IOException {
 		checkRight(schemaName);
 		final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
-		return index.query(actions);
+		return index.query(fieldMapWrappers, actions);
 	}
 }

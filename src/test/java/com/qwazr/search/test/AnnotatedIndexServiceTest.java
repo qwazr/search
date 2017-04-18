@@ -27,6 +27,7 @@ import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.SchemaSettingsDefinition;
+import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
 import org.apache.lucene.analysis.Analyzer;
@@ -146,8 +147,12 @@ public class AnnotatedIndexServiceTest {
 
 	@Test
 	public void test501query() throws IOException, InterruptedException {
-		Integer result = service.query(context -> context.getIndexReader().numDocs());
-		Assert.assertEquals(Integer.valueOf(1), result);
+		Long result = service.query(context -> {
+			ResultDefinition.WithObject<IndexRecord> res =
+					context.searchObject(QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
+			return res.total_hits + context.getIndexReader().numDocs();
+		});
+		Assert.assertEquals(Long.valueOf(2), result);
 	}
 
 	@Test

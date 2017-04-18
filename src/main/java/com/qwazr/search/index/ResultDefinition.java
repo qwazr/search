@@ -141,8 +141,8 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 			super(builder, documents);
 		}
 
-		WithMap(long totalHits) {
-			super(totalHits);
+		public WithMap(int docs) {
+			super(docs);
 		}
 	}
 
@@ -156,6 +156,10 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 			super(result, documents);
 		}
 
+		public WithObject(long totalHits) {
+			super(totalHits);
+		}
+
 	}
 
 	public static class Empty extends ResultDefinition {
@@ -163,7 +167,7 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		Empty(final ResultDocumentsBuilder builder) {
 			super(builder, null);
 		}
-
+		
 	}
 
 	interface Builder<T extends ResultDocumentAbstract> extends Function<ResultDocumentsBuilder, ResultDefinition<T>> {

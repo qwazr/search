@@ -16,15 +16,21 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.server.ServerException;
+import com.qwazr.utils.FieldMapWrapper;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.IndexSearcher;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 final class QueryContextImpl implements QueryContext {
@@ -39,13 +45,15 @@ final class QueryContextImpl implements QueryContext {
 	final FieldMap fieldMap;
 	final ResourceLoader resourceLoader;
 	final IndexInstance.Provider indexProvider;
+	final FieldMapWrapper.Cache fieldMapWrappers;
 
 	QueryContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
 			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
 			final ExecutorService executorService, final UpdatableAnalyzer indexAnalyzer,
 			final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
-			final SortedSetDocValuesReaderState docValueReaderState) {
+			final SortedSetDocValuesReaderState docValueReaderState, final FieldMapWrapper.Cache fieldMapWrappers) {
 		this.indexProvider = indexProvider;
+		this.fieldMapWrappers = fieldMapWrappers;
 		this.resourceLoader = resourceLoader;
 		this.indexSearcher = indexSearcher;
 		this.indexReader = indexSearcher.getIndexReader();
@@ -80,6 +88,46 @@ final class QueryContextImpl implements QueryContext {
 	@Override
 	public IndexReader getIndexReader() {
 		return indexReader;
+	}
+
+	private <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDefinition,
+			final ResultDocuments<T> resultDocuments) throws IOException {
+		try {
+			return new QueryExecution<T>(this, queryDefinition).execute(resultDocuments);
+		} catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
+			throw new ServerException(e);
+		}
+	}
+
+	@Override
+	public ResultDefinition.WithMap searchMap(QueryDefinition queryDefinition) throws IOException {
+		final Set<String> returnedFields =
+				queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
+						fieldMap.getStaticFieldSet() :
+						queryDefinition.returned_fields;
+		final ResultDocumentsMap resultDocumentsMap = new ResultDocumentsMap(this, queryDefinition, returnedFields);
+		return (ResultDefinition.WithMap) search(queryDefinition, resultDocumentsMap);
+	}
+
+	@Override
+	public <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, FieldMapWrapper<T> wrapper)
+			throws IOException {
+		final ResultDocumentsObject<T> resultDocumentsObject =
+				new ResultDocumentsObject<>(this, queryDefinition, wrapper);
+		return (ResultDefinition.WithObject<T>) search(queryDefinition, resultDocumentsObject);
+	}
+
+	@Override
+	public <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, Class<T> objectClass)
+			throws IOException {
+		return searchObject(queryDefinition, fieldMapWrappers.get(objectClass));
+	}
+
+	@Override
+	public ResultDefinition.Empty searchInterface(final QueryDefinition queryDefinition,
+			final ResultDocumentsInterface resultDocuments) throws IOException {
+		final ResultDocumentsEmpty resultDocumentEmpty = new ResultDocumentsEmpty(resultDocuments);
+		return (ResultDefinition.Empty) search(queryDefinition, resultDocumentEmpty);
 	}
 
 }

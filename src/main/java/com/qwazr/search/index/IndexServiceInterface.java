@@ -21,6 +21,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServiceInterface;
 import com.qwazr.server.ServiceName;
+import com.qwazr.utils.FieldMapWrapper;
 import com.qwazr.utils.FunctionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -391,10 +392,12 @@ public interface IndexServiceInterface extends ServiceInterface {
 			new TypeReference<LinkedHashMap<String, Object>>() {
 			};
 
+	@FunctionalInterface
 	interface QueryActions<T> extends FunctionUtils.FunctionEx<QueryContext, T, IOException> {
 	}
 
-	default <T> T query(String schemaName, String indexName, QueryActions<T> actions) throws IOException {
+	default <T> T query(String schemaName, String indexName, final FieldMapWrapper.Cache fieldMapWrappers,
+			QueryActions<T> actions) throws IOException {
 		throw new NotImplementedException("Method not available");
 	}
 

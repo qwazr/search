@@ -16,9 +16,5 @@
 package com.qwazr.search.index;
 
 interface ResultDocuments<T extends ResultDocumentAbstract> extends ResultDefinition.Builder<T> {
-	
-	interface Factory<T extends ResultDocumentAbstract> {
 
-		ResultDocuments<T> newResultDocuments(QueryContext context);
-	}
 }

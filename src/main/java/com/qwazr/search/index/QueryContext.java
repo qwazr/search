@@ -15,11 +15,14 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.utils.FieldMapWrapper;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.IndexReader;
 
+import java.io.IOException;
 import java.util.Collection;
 
 public interface QueryContext {
@@ -48,6 +51,26 @@ public interface QueryContext {
 		return null;
 	}
 
+	default ResultDefinition.WithMap searchMap(QueryDefinition queryDefinition) throws IOException {
+		throw new NotImplementedException("Not available");
+	}
+
+	default <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition,
+			final FieldMapWrapper<T> wrapper) throws IOException {
+		throw new NotImplementedException("Not available");
+	}
+
+	default <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, Class<T> objectClass)
+			throws IOException {
+		throw new NotImplementedException("Not available");
+	}
+
+	default ResultDefinition.Empty searchInterface(final QueryDefinition queryDefinition,
+			final ResultDocumentsInterface resultDocuments) throws IOException {
+		throw new NotImplementedException("Not available");
+	}
+
 	QueryContext DEFAULT = new QueryContext() {
 	};
+
 }
