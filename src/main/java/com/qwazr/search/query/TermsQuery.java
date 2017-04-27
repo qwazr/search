@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermInSetQuery;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
@@ -70,7 +71,7 @@ public class TermsQuery extends AbstractMultiTermQuery {
 			terms.forEach(term -> bytesRefs.add(BytesRefUtils.fromAny(term)));
 		} else
 			bytesRefs = bytesRefCollection;
-		return new org.apache.lucene.queries.TermsQuery(field, bytesRefs);
+		return new TermInSetQuery(field, bytesRefs);
 	}
 
 	public static Builder of(final String field) {
