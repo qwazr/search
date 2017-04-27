@@ -22,6 +22,7 @@ import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FieldMapWrapper;
+import com.qwazr.utils.reflection.ConstructorParameters;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -840,4 +841,5 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 		final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
 		return index.query(fieldMapWrappers, actions);
 	}
+
 }

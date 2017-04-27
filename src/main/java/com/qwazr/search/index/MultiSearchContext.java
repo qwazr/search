@@ -21,6 +21,7 @@ import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -44,9 +45,10 @@ final class MultiSearchContext implements Closeable, AutoCloseable {
 	final UpdatableAnalyzer indexAnalyzer;
 	final UpdatableAnalyzer queryAnalyzer;
 
-	MultiSearchContext(final IndexInstance.Provider indexProvider, final Map<String, AnalyzerFactory> analyzers,
-			final ExecutorService executorService, final Set<IndexInstance> indexInstances,
-			final boolean failOnException) throws IOException, ServerException {
+	MultiSearchContext(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
+			final Map<String, AnalyzerFactory> analyzers, final ExecutorService executorService,
+			final Set<IndexInstance> indexInstances, final boolean failOnException)
+			throws IOException, ServerException {
 		this.indexProvider = indexProvider;
 		this.analyzers = analyzers;
 		this.executorService = executorService;
@@ -70,7 +72,8 @@ final class MultiSearchContext implements Closeable, AutoCloseable {
 		}
 		fieldMap = new FieldMap(fieldDefinitionMap, null);
 		final AnalyzerContext analyzerContext =
-				new AnalyzerContext(resourceLoader, fieldDefinitionMap, failOnException, analyzerMap, analyzers);
+				new AnalyzerContext(instanceFactory, resourceLoader, fieldDefinitionMap, failOnException, analyzerMap,
+						analyzers);
 		indexAnalyzer = new UpdatableAnalyzer(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(analyzerContext.queryAnalyzerMap);
 	}

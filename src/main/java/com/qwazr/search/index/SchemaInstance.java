@@ -22,6 +22,7 @@ import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.json.JsonMapper;
+import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 
@@ -53,6 +54,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	private final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap;
 
 	private final ReadWriteSemaphores readWriteSemaphores;
+	private final ConstructorParametersImpl instanceFactory;
 	private final IndexServiceInterface service;
 	private final ExecutorService executorService;
 	private final File schemaDirectory;
@@ -62,11 +64,13 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
 	private final LockUtils.ReadWriteLock backupLock = new LockUtils.ReadWriteLock();
 
-	SchemaInstance(final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap,
-			final IndexServiceInterface service, final File schemaDirectory, final ExecutorService executorService)
+	SchemaInstance(final ConstructorParametersImpl instanceFactory,
+			final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap, final IndexServiceInterface service,
+			final File schemaDirectory, final ExecutorService executorService)
 			throws IOException, ReflectiveOperationException, URISyntaxException {
 
 		this.readWriteSemaphores = new ReadWriteSemaphores(null, null);
+		this.instanceFactory = instanceFactory;
 		this.analyzerFactoryMap = analyzerFactoryMap;
 		this.executorService = executorService;
 		this.service = service;
@@ -89,8 +93,8 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 			return;
 		for (File indexDirectory : directories)
 			indexMap.put(indexDirectory.getName(),
-					new IndexInstanceManager(this, analyzerFactoryMap, readWriteSemaphores, executorService, service,
-							indexDirectory));
+					new IndexInstanceManager(this, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
+							executorService, service, indexDirectory));
 	}
 
 	@Override
@@ -102,8 +106,8 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		Objects.requireNonNull(settings, "The settings cannot be null");
 		return indexMap.computeIfAbsent(indexName, name -> {
 			try {
-				return new IndexInstanceManager(this, analyzerFactoryMap, readWriteSemaphores, executorService, service,
-						new File(schemaDirectory, name));
+				return new IndexInstanceManager(this, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
+						executorService, service, new File(schemaDirectory, name));
 			} catch (IOException e) {
 				throw new ServerException(e);
 			}

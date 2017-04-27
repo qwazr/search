@@ -22,6 +22,7 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class IndexManager implements Closeable {
+public class IndexManager extends ConstructorParametersImpl implements Closeable {
 
 	public final static String INDEXES_DIRECTORY = "index";
 
@@ -60,6 +61,7 @@ public class IndexManager implements Closeable {
 	private final ExecutorService executorService;
 
 	public IndexManager(final Path indexesDirectory, final ExecutorService executorService) throws IOException {
+		super(new ConcurrentHashMap<>());
 		this.rootDirectory = indexesDirectory.toFile();
 		this.executorService = executorService;
 
@@ -73,7 +75,7 @@ public class IndexManager implements Closeable {
 		for (File schemaDirectory : directories) {
 			try {
 				schemaMap.put(schemaDirectory.getName(),
-						new SchemaInstance(analyzerFactoryMap, service, schemaDirectory, executorService));
+						new SchemaInstance(this, analyzerFactoryMap, service, schemaDirectory, executorService));
 			} catch (ServerException | IOException | ReflectiveOperationException | URISyntaxException e) {
 				LOGGER.error(e.getMessage(), e);
 			}
@@ -130,8 +132,9 @@ public class IndexManager implements Closeable {
 		synchronized (schemaMap) {
 			SchemaInstance schemaInstance = schemaMap.get(schemaName);
 			if (schemaInstance == null) {
-				schemaInstance = new SchemaInstance(analyzerFactoryMap, service, new File(rootDirectory, schemaName),
-						executorService);
+				schemaInstance =
+						new SchemaInstance(this, analyzerFactoryMap, service, new File(rootDirectory, schemaName),
+								executorService);
 				schemaMap.put(schemaName, schemaInstance);
 			}
 			if (settings != null)

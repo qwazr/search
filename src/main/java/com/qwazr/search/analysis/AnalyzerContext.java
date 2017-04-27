@@ -19,6 +19,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.slf4j.Logger;
@@ -37,9 +38,9 @@ public class AnalyzerContext {
 	public final Map<String, Analyzer> indexAnalyzerMap;
 	public final Map<String, Analyzer> queryAnalyzerMap;
 
-	public AnalyzerContext(final ResourceLoader resourceLoader, final Map<String, FieldDefinition> fields,
-			final boolean failOnException, final Map<String, ? extends AnalyzerFactory>... analyzerFactoryMaps)
-			throws ServerException {
+	public AnalyzerContext(final ConstructorParametersImpl instanceFactory, final ResourceLoader resourceLoader,
+			final Map<String, FieldDefinition> fields, final boolean failOnException,
+			final Map<String, ? extends AnalyzerFactory>... analyzerFactoryMaps) throws ServerException {
 
 		if (fields == null || fields.size() == 0) {
 			this.indexAnalyzerMap = Collections.emptyMap();
@@ -50,7 +51,7 @@ public class AnalyzerContext {
 		this.indexAnalyzerMap = new HashMap<>();
 		this.queryAnalyzerMap = new HashMap<>();
 
-		final AnalyzerMapBuilder builder = new AnalyzerMapBuilder(resourceLoader, analyzerFactoryMaps);
+		final AnalyzerMapBuilder builder = new AnalyzerMapBuilder(instanceFactory, resourceLoader, analyzerFactoryMaps);
 
 		fields.forEach((fieldName, fieldDef) -> {
 			try {
@@ -79,12 +80,14 @@ public class AnalyzerContext {
 
 	final static class AnalyzerMapBuilder {
 
+		private final ConstructorParametersImpl instanceFactory;
 		private final ResourceLoader resourceLoader;
 		private final Map<String, ? extends AnalyzerFactory>[] analyzerFactoryMaps;
 		private final Map<String, Analyzer> analyzerSingletonMap;
 
-		AnalyzerMapBuilder(final ResourceLoader resourceLoader,
+		AnalyzerMapBuilder(final ConstructorParametersImpl instanceFactory, final ResourceLoader resourceLoader,
 				final Map<String, ? extends AnalyzerFactory>... analyzerFactoryMaps) {
+			this.instanceFactory = instanceFactory;
 			this.resourceLoader = resourceLoader;
 			this.analyzerFactoryMaps = analyzerFactoryMaps;
 			this.analyzerSingletonMap = new HashMap<>();
@@ -98,7 +101,7 @@ public class AnalyzerContext {
 			analyzer = getFromFactory(analyzerName);
 			if (analyzer == null) {
 				final Class<Analyzer> analyzerClass = ClassLoaderUtils.findClass(analyzerName, analyzerClassPrefixes);
-				analyzer = analyzerClass.newInstance();
+				analyzer = instanceFactory.findBestMatchingConstructor(analyzerClass).newInstance();
 			}
 			analyzerSingletonMap.put(analyzerName, analyzer);
 			return analyzer;

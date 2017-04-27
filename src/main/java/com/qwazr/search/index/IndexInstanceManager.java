@@ -21,6 +21,7 @@ import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
+import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.store.Directory;
 
@@ -39,6 +40,7 @@ class IndexInstanceManager implements Closeable {
 	private final LockUtils.ReadWriteLock rwl;
 
 	private final IndexInstance.Provider indexProvider;
+	private final ConstructorParametersImpl instanceFactory;
 	private final ExecutorService executorService;
 	private final IndexServiceInterface indexServiceInterface;
 	private final IndexFileSet fileSet;
@@ -49,13 +51,14 @@ class IndexInstanceManager implements Closeable {
 	private IndexSettingsDefinition settings;
 	private IndexInstance indexInstance;
 
-	IndexInstanceManager(final IndexInstance.Provider indexProvider,
+	IndexInstanceManager(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
 			final Map<String, AnalyzerFactory> analyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
 			final ExecutorService executorService, final IndexServiceInterface indexServiceInterface,
 			final File indexDirectory) throws IOException {
 
 		rwl = new LockUtils.ReadWriteLock();
 		this.indexProvider = indexProvider;
+		this.instanceFactory = instanceFactory;
 		this.executorService = executorService;
 		this.indexServiceInterface = indexServiceInterface;
 		this.fileSet = new IndexFileSet(indexDirectory);
@@ -73,8 +76,9 @@ class IndexInstanceManager implements Closeable {
 
 	private IndexInstance ensureOpen() throws ReflectiveOperationException, IOException, URISyntaxException {
 		if (indexInstance == null)
-			indexInstance = new IndexInstanceBuilder(indexProvider, analyzerFactoryMap, readWriteSemaphores, executorService,
-					indexServiceInterface, fileSet, settings, indexUuid).build();
+			indexInstance =
+					new IndexInstanceBuilder(indexProvider, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
+							executorService, indexServiceInterface, fileSet, settings, indexUuid).build();
 		return indexInstance;
 	}
 

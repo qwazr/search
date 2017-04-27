@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
@@ -31,15 +32,17 @@ import java.util.concurrent.ExecutorService;
 class MultiSearchInstance implements Closeable {
 
 	private final IndexInstance.Provider indexProvider;
+	private final ConstructorParametersImpl instanceFactory;
 	private final Map<String, AnalyzerFactory> analyzerFactoryMap;
 	private final ExecutorService executorService;
 	private final Set<IndexInstance> indexInstances;
 	private volatile MultiSearchContext multiSearchContext;
 
-	MultiSearchInstance(final IndexInstance.Provider indexProvider,
+	MultiSearchInstance(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
 			final Map<String, AnalyzerFactory> analyzerFactoryMap, final ExecutorService executorService)
 			throws IOException, ServerException {
 		this.indexProvider = indexProvider;
+		this.instanceFactory = instanceFactory;
 		this.analyzerFactoryMap = analyzerFactoryMap;
 		this.executorService = executorService;
 		this.indexInstances = new HashSet<>();
@@ -69,8 +72,8 @@ class MultiSearchInstance implements Closeable {
 		synchronized (indexInstances) {
 			if (multiSearchContext == null)
 				multiSearchContext =
-						new MultiSearchContext(indexProvider, analyzerFactoryMap, executorService, indexInstances,
-								true);
+						new MultiSearchContext(indexProvider, instanceFactory, analyzerFactoryMap, executorService,
+								indexInstances, true);
 			return multiSearchContext;
 		}
 	}

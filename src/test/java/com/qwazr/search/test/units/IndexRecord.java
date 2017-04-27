@@ -19,6 +19,7 @@ import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
 import java.util.ArrayList;
@@ -32,6 +33,11 @@ public class IndexRecord {
 
 	@IndexField(template = FieldDefinition.Template.TextField, analyzerClass = StandardAnalyzer.class)
 	public String textField;
+
+	@IndexField(template = FieldDefinition.Template.TextField,
+			queryAnalyzerClass = SynonymsResourceAnalyzer.class,
+			analyzerClass = WhitespaceAnalyzer.class)
+	public String textSynonymsField;
 
 	@IndexField(template = FieldDefinition.Template.StringField)
 	public String stringField;
@@ -88,6 +94,11 @@ public class IndexRecord {
 
 	public IndexRecord textField(String textField) {
 		this.textField = textField;
+		return this;
+	}
+
+	public IndexRecord textSynonymsField(String textSynonymsField) {
+		this.textSynonymsField = textSynonymsField;
 		return this;
 	}
 

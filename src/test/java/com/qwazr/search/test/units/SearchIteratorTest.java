@@ -40,7 +40,7 @@ public class SearchIteratorTest extends AbstractIndexTest {
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException {
 		documents = new ArrayList<>();
-		for (int i = 0; i < RandomUtils.nextInt(1, 100); i++)
+		for (int i = 0; i < RandomUtils.nextInt(1, 1000); i++)
 			documents.add(new IndexRecord(RandomStringUtils.randomAlphanumeric(RandomUtils.nextInt(2, 5))).intDocValue(
 					RandomUtils.nextInt(2, 5)));
 		indexService.postDocuments(documents);

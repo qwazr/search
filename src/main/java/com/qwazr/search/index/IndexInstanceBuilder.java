@@ -23,6 +23,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
+import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -59,6 +60,7 @@ class IndexInstanceBuilder {
 	private final IndexServiceInterface indexService;
 
 	final IndexSettingsDefinition settings;
+	final ConstructorParametersImpl instanceFactory;
 	final FileResourceLoader fileResourceLoader;
 	final UUID indexUuid;
 
@@ -83,7 +85,7 @@ class IndexInstanceBuilder {
 	Similarity similarity = null;
 	SearcherFactory searcherFactory = null;
 
-	IndexInstanceBuilder(final IndexInstance.Provider indexProvider,
+	IndexInstanceBuilder(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
 			final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
 			final ExecutorService executorService, final IndexServiceInterface indexService, final IndexFileSet fileSet,
 			final IndexSettingsDefinition settings, UUID indexUuid) {
@@ -91,6 +93,7 @@ class IndexInstanceBuilder {
 		this.executorService = executorService;
 		this.readWriteSemaphores = readWriteSemaphores;
 		this.indexProvider = indexProvider;
+		this.instanceFactory = instanceFactory;
 		this.settings = settings;
 		this.globalAnalyzerFactoryMap = globalAnalyzerFactoryMap;
 		this.indexService = indexService;
@@ -109,7 +112,7 @@ class IndexInstanceBuilder {
 		fieldMap = fileSet.loadFieldMap();
 
 		final AnalyzerContext context =
-				new AnalyzerContext(fileResourceLoader, fieldMap, false, globalAnalyzerFactoryMap,
+				new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, false, globalAnalyzerFactoryMap,
 						localAnalyzerFactoryMap);
 		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);

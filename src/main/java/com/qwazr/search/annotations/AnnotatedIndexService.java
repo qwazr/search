@@ -285,6 +285,33 @@ public class AnnotatedIndexService<T> {
 		return fieldChanges;
 	}
 
+	public void postResource(final String resourceName, final InputStream input) {
+		checkParameters();
+		indexService.postResource(schemaName, indexName, resourceName, System.currentTimeMillis(), input);
+	}
+
+	public void postTextResource(final String resourceName, final String text) throws IOException {
+		try (final InputStream input = IOUtils.toInputStream(text, CharsetUtils.CharsetUTF8)) {
+			postResource(resourceName, input);
+		}
+	}
+
+	public InputStream getResource(final String resourceName) throws IOException {
+		checkParameters();
+		return indexService.getResource(schemaName, indexName, resourceName).getInputStream();
+	}
+
+	public String getTextResource(final String resourceName) throws IOException {
+		try (final InputStream input = getResource(resourceName)) {
+			return IOUtils.toString(input, CharsetUtils.CharsetUTF8);
+		}
+	}
+
+	public void deleteResource(final String resourceName) {
+		checkParameters();
+		indexService.deleteResource(schemaName, indexName, resourceName);
+	}
+
 	/**
 	 * Post a document to the index
 	 *

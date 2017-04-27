@@ -19,7 +19,6 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.utils.FileUtils;
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -29,17 +28,27 @@ import java.nio.file.Path;
 public abstract class AbstractIndexTest {
 
 	private static Path rootDirectory;
-	private static IndexManager indexManager;
-	protected static AnnotatedIndexService<IndexRecord> indexService;
+	static IndexManager indexManager;
+	static AnnotatedIndexService<IndexRecord> indexService;
 
-	@BeforeClass
-	public static void beforeClass() throws IOException, URISyntaxException {
+	static void initIndexManager() throws IOException, URISyntaxException {
 		rootDirectory = Files.createTempDirectory("qwazr_index_test");
 		indexManager = new IndexManager(rootDirectory, null);
-		indexService = indexManager.getService(IndexRecord.class);
+	}
+
+	static void initIndexService() throws IOException, URISyntaxException {
+		indexService = createIndexService(IndexRecord.class);
+	}
+
+	static <T> AnnotatedIndexService<T> createIndexService(Class<T> recordClass)
+			throws URISyntaxException, IOException {
+		if (indexManager == null)
+			initIndexManager();
+		final AnnotatedIndexService<T> indexService = indexManager.getService(recordClass);
 		indexService.createUpdateSchema();
 		indexService.createUpdateIndex();
 		indexService.createUpdateFields();
+		return indexService;
 	}
 
 	@AfterClass

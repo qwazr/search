@@ -29,6 +29,7 @@ import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
+import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
@@ -93,6 +94,7 @@ final public class IndexInstance implements Closeable {
 
 	private final ExecutorService executorService;
 	private final IndexSettingsDefinition settings;
+	private final ConstructorParametersImpl instanceFactory;
 	private final FileResourceLoader fileResourceLoader;
 	private final Provider indexProvider;
 
@@ -130,6 +132,7 @@ final public class IndexInstance implements Closeable {
 		this.settings = builder.settings;
 		this.multiSearchInstances = ConcurrentHashMap.newKeySet();
 		this.executorService = builder.executorService;
+		this.instanceFactory = builder.instanceFactory;
 		this.fileResourceLoader = builder.fileResourceLoader;
 		this.localReplicator = builder.localReplicator;
 		this.indexReplicator = builder.indexReplicator;
@@ -189,7 +192,7 @@ final public class IndexInstance implements Closeable {
 
 	private void refreshFieldsAnalyzers() throws IOException {
 		final AnalyzerContext analyzerContext =
-				new AnalyzerContext(fileResourceLoader, fieldMap.getFieldDefinitionMap(), true,
+				new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap.getFieldDefinitionMap(), true,
 						globalAnalyzerFactoryMap, localAnalyzerFactoryMap);
 		indexAnalyzer.update(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext.queryAnalyzerMap);
