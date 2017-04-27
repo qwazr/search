@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +35,8 @@ public class FieldMapWrapperTest extends AbstractIndexTest {
 	private static List<IndexRecord> documents;
 
 	@BeforeClass
-	public static void setup() throws IOException, InterruptedException {
+	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+		initIndexService();
 		documents = new ArrayList<>();
 		for (int i = 0; i < RandomUtils.nextInt(1, 10); i++)
 			documents.add(new IndexRecord(RandomStringUtils.randomAlphanumeric(RandomUtils.nextInt(2, 5))).intDocValue(

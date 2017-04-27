@@ -23,11 +23,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class FieldValueQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
-	public static void setup() throws IOException, InterruptedException {
+	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+		initIndexService();
 		indexService.postDocument(new IndexRecord("1").intDocValue(1));
 		indexService.postDocument(new IndexRecord("2").intDocValue(2));
 		indexService.postDocument(new IndexRecord("3"));

@@ -25,6 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedHashMap;
@@ -37,7 +38,8 @@ public class SortedFacetTest extends AbstractIndexTest {
 	public static Map<String, AtomicInteger> facetTerms;
 
 	@BeforeClass
-	public static void setup() throws IOException, InterruptedException {
+	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+		initIndexService();
 		documents = new ArrayList<>();
 		facetTerms = new LinkedHashMap<>();
 		for (int i = 0; i < RandomUtils.nextInt(50, 100); i++) {

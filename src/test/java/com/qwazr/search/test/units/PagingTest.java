@@ -37,7 +37,8 @@ public class PagingTest extends AbstractIndexTest {
 	private static LinkedHashMap<String, IndexRecord> documents;
 
 	@BeforeClass
-	public static void setup() throws IOException, InterruptedException {
+	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+		initIndexService();
 		documents = new LinkedHashMap<>();
 		for (int i = 0; i < RandomUtils.nextInt(201, 299); i++) {
 			final IndexRecord record =

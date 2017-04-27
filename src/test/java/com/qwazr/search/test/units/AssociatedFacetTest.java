@@ -24,12 +24,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 public class AssociatedFacetTest extends AbstractIndexTest {
 
 	@BeforeClass
-	public static void setup() throws IOException, InterruptedException {
+	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+		initIndexService();
 		indexService.postDocument(new IndexRecord("1").intAssociatedFacet(111, "int1"));
 		indexService.postDocument(new IndexRecord("2").intAssociatedFacet(222, "int2"));
 		indexService.postDocument(new IndexRecord("3").intAssociatedFacet(333, "int3"));

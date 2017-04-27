@@ -27,11 +27,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class MultiFieldQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
-	public static void setup() throws IOException, InterruptedException {
+	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+		initIndexService();
 		indexService.postDocument(new IndexRecord("1").textField("Hello World").stringField("Hello World"));
 	}
 

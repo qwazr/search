@@ -17,15 +17,16 @@ package com.qwazr.search.test.units;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.query.IntExactQuery;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.TermQuery;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,26 +37,21 @@ import java.util.Set;
 public class SearchIteratorTest extends AbstractIndexTest {
 
 	private static List<IndexRecord> documents;
+	private static List<IndexRecord> subset;
 
 	@BeforeClass
-	public static void setup() throws IOException, InterruptedException {
+	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+		initIndexService();
 		documents = new ArrayList<>();
-		for (int i = 0; i < RandomUtils.nextInt(1, 1000); i++)
-			documents.add(new IndexRecord(RandomStringUtils.randomAlphanumeric(RandomUtils.nextInt(2, 5))).intDocValue(
-					RandomUtils.nextInt(2, 5)));
+		subset = new ArrayList<>();
+		for (int i = 0; i < RandomUtils.nextInt(300, 500); i++)
+			documents.add(new IndexRecord(Integer.toString(i)).intPoint(RandomUtils.nextInt(0, 2)));
 		indexService.postDocuments(documents);
 	}
 
-	@Test
-	public void iterateAll() throws ReflectiveOperationException {
-		final Iterator<IndexRecord> iterator =
-				indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
-		Assert.assertNotNull(iterator);
-
+	void checkIterate(Iterator<IndexRecord> iterator, Set<String> ids) {
+		int initialSize = ids.size();
 		int count = 0;
-		final Set<String> ids = new HashSet<>();
-		documents.forEach(r -> ids.add(r.id));
-
 		while (iterator.hasNext()) {
 			final IndexRecord record = iterator.next();
 			Assert.assertNotNull(record);
@@ -63,7 +59,7 @@ public class SearchIteratorTest extends AbstractIndexTest {
 			count++;
 		}
 
-		Assert.assertEquals(documents.size(), count);
+		Assert.assertEquals(initialSize, count);
 		Assert.assertEquals(0, ids.size());
 
 		try {
@@ -72,6 +68,35 @@ public class SearchIteratorTest extends AbstractIndexTest {
 		} catch (NoSuchElementException e) {
 			Assert.assertNotNull(e);
 		}
+	}
+
+	@Test
+	public void iterateAll() throws ReflectiveOperationException {
+		final Iterator<IndexRecord> iterator =
+				indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
+		Assert.assertNotNull(iterator);
+
+		final Set<String> ids = new HashSet<>();
+		documents.forEach(r -> ids.add(r.id));
+		Assert.assertEquals(ids.size(), documents.size());
+
+		checkIterate(iterator, ids);
+	}
+
+	@Test
+	public void iterateSubSet() throws ReflectiveOperationException {
+
+		final Iterator<IndexRecord> iterator =
+				indexService.searchIterator(QueryDefinition.of(new IntExactQuery("intPoint", 0)).build(),
+						IndexRecord.class);
+		Assert.assertNotNull(iterator);
+
+		final Set<String> ids = new HashSet<>();
+		documents.stream().filter(doc -> doc.intPoint == 0).forEach(r -> ids.add(r.id));
+		Assert.assertNotEquals(0, ids.size());
+		Assert.assertNotEquals(documents.size(), ids.size());
+
+		checkIterate(iterator, ids);
 	}
 
 	@Test

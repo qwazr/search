@@ -28,6 +28,10 @@ public class SynonymsResourceAnalyzer extends Analyzer {
 
 	private final SynonymMap synonymMap;
 
+	public SynonymsResourceAnalyzer() {
+		synonymMap = null;
+	}
+
 	public SynonymsResourceAnalyzer(final SynonymMap synonymMap) {
 		this.synonymMap = synonymMap;
 	}

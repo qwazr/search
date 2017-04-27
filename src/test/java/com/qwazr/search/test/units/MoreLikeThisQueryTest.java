@@ -23,11 +23,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class MoreLikeThisQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
-	public static void setup() throws IOException, InterruptedException {
+	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+		initIndexService();
 		indexService.postDocument(new IndexRecord("1").mlt("Hello World"));
 		indexService.postDocument(new IndexRecord("2").mlt("Hello world again"));
 		indexService.postDocument(new IndexRecord("3").mlt("absolutely nothing to match"));

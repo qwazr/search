@@ -24,13 +24,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 
 public class FilterCollectorQueryTest extends AbstractIndexTest {
 
 	@BeforeClass
-	public static void setup() throws IOException, InterruptedException {
+	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+		initIndexService();
 		Collection<IndexRecord> indexRecords = new ArrayList<>();
 		int k = 0;
 		for (int i = 0; i < 10; i++) {
