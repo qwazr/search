@@ -91,8 +91,8 @@ class HighlighterImpl extends PostingsHighlighter {
 	String[] highlights(final Query query, final IndexSearcher indexSearcher, final TopDocs topDocs)
 			throws IOException {
 		return highlightFields(new String[] { definition.field }, query, indexSearcher, topDocs,
-				definition.max_passages == null ? new int[] { 1 } : new int[] { definition.max_passages }).get(
-				definition.field);
+				definition.max_passages == null ? new int[] { 1 } : new int[] { definition.max_passages })
+				.get(definition.field);
 
 	}
 }

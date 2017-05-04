@@ -47,7 +47,6 @@ class ResultDocumentsBuilder {
 		if (topDocs != null && topDocs.scoreDocs != null) {
 
 			this.maxScore = topDocs.getMaxScore();
-
 			int pos = 0;
 			for (ScoreDoc scoreDoc : topDocs.scoreDocs)
 				resultDocuments.doc(indexSearcher, pos++, scoreDoc);

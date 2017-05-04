@@ -31,7 +31,7 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 	private final FieldMap fieldMap;
 	private final List<ResultDocumentBuilder<T>> documentsBuilder;
 	private final Set<String> returnedFields;
-	private final int start;
+	protected final int start;
 
 	ResultDocumentsList(final QueryContextImpl context, final QueryDefinition queryDefinition,
 			final Set<String> returnedFields) {

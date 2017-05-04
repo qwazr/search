@@ -72,19 +72,33 @@ public class PagingTest extends AbstractIndexTest {
 
 			final int rows = RandomUtils.nextInt(8, 20);
 			final int expectedRows = start + rows > totalHits ? totalHits - start : rows;
-			builder.start(start).rows(rows);
+			final QueryDefinition queryDef = builder.start(start).rows(rows).build();
 
 			// Check Object
-			final ResultDefinition.WithObject<IndexRecord> resultObject = indexService.searchQuery(builder.build());
+			final ResultDefinition.WithObject<IndexRecord> resultObject = indexService.searchQuery(queryDef);
 			List<ResultDocumentObject<IndexRecord>> objectDocs = resultObject.getDocuments();
 			Assert.assertEquals(expectedRows, objectDocs.size());
-			objectDocs.forEach(objectDoc -> idSetObject.add(objectDoc.record.id));
+			int i = 0;
+			for (ResultDocumentObject<IndexRecord> objectDoc : objectDocs) {
+				ResultDocumentObject<IndexRecord> objectDoc2 = objectDocs.get(i);
+				Assert.assertEquals(objectDoc, objectDoc2);
+				Assert.assertEquals(i + start, objectDoc.getPos());
+				idSetObject.add(objectDoc.record.id);
+				i++;
+			}
 
 			// Check Map
-			final ResultDefinition.WithMap resultMap = indexService.searchQueryWithMap(builder.build());
+			final ResultDefinition.WithMap resultMap = indexService.searchQueryWithMap(queryDef);
 			List<ResultDocumentMap> mapDocs = resultMap.getDocuments();
 			Assert.assertEquals(expectedRows, mapDocs.size());
-			mapDocs.forEach(mapDoc -> idSetMap.add((String) mapDoc.getFields().get(FieldDefinition.ID_FIELD)));
+			i = 0;
+			for (ResultDocumentMap mapDoc : mapDocs) {
+				ResultDocumentMap mapDoc2 = mapDocs.get(i);
+				Assert.assertEquals(mapDoc, mapDoc2);
+				Assert.assertEquals(i + start, mapDoc.getPos());
+				idSetMap.add((String) mapDoc.getFields().get(FieldDefinition.ID_FIELD));
+				i++;
+			}
 
 			start += rows;
 		}

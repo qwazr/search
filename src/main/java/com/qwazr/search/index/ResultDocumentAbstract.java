@@ -22,6 +22,7 @@ import java.util.Map;
 public abstract class ResultDocumentAbstract {
 
 	final public float score;
+	final public int pos;
 	final private int doc;
 	final private int shard_index;
 	final public Map<String, String> highlights;
@@ -31,17 +32,20 @@ public abstract class ResultDocumentAbstract {
 		highlights = null;
 		doc = -1;
 		shard_index = -1;
+		pos = -1;
 	}
 
 	protected ResultDocumentAbstract(final ResultDocumentBuilder builder) {
 		this.score = builder.scoreDoc.score;
 		highlights = builder.highlights;
 		this.doc = builder.scoreDoc.doc;
+		this.pos = builder.pos;
 		this.shard_index = builder.scoreDoc.shardIndex;
 	}
 
 	protected ResultDocumentAbstract(final ResultDocumentAbstract src) {
 		this.score = src.score;
+		this.pos = src.pos;
 		highlights = src.highlights;
 		this.doc = src.doc;
 		this.shard_index = src.shard_index;
@@ -53,6 +57,10 @@ public abstract class ResultDocumentAbstract {
 
 	final public int getDoc() {
 		return doc;
+	}
+
+	final public int getPos() {
+		return pos;
 	}
 
 	final public int getShard_index() {
