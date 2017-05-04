@@ -116,7 +116,7 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 		for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
 			if (queryCollectors.topDocsCollector != null)
 				topDocsList.add(queryCollectors.topDocsCollector.topDocs());
-		return TopDocs.merge(queryExecution.start, queryExecution.end,
+		return TopDocs.merge(queryExecution.start, queryExecution.rows,
 				topDocsList.toArray(new TopDocs[topDocsList.size()]), true);
 	}
 
@@ -125,7 +125,7 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 		for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
 			if (queryCollectors.topDocsCollector != null)
 				topFieldDocsList.add(((TopFieldCollector) queryCollectors.topDocsCollector).topDocs());
-		return TopFieldDocs.merge(queryExecution.sort, queryExecution.start, queryExecution.end,
+		return TopFieldDocs.merge(queryExecution.sort, queryExecution.start, queryExecution.rows,
 				topFieldDocsList.toArray(new TopFieldDocs[topFieldDocsList.size()]), true);
 	}
 
