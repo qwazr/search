@@ -15,10 +15,13 @@
  */
 package com.qwazr.search.test.units;
 
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.FacetDefinition;
 import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
+import com.qwazr.search.index.ResultDocumentMap;
+import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
@@ -30,6 +33,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 public class PagingTest extends AbstractIndexTest {
@@ -49,28 +53,43 @@ public class PagingTest extends AbstractIndexTest {
 		}
 	}
 
-	private void checkPaging(final QueryBuilder builder) {
-
-		builder.start(0).rows(0);
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(builder.build());
+	private int checkEmpty(ResultDefinition result) {
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
-		final int totalHits = result.getTotalHits().intValue();
+		return result.getTotalHits().intValue();
+	}
+
+	private void checkPaging(final QueryBuilder builder) {
+
+		final int totalHits = checkEmpty(indexService.searchQuery(builder.build()));
+		Assert.assertEquals(totalHits, checkEmpty(indexService.searchQueryWithMap(builder.build())));
 
 		Assert.assertTrue(totalHits > 0);
-		final int rows = RandomUtils.nextInt(8, 20);
-		builder.rows(rows);
-		final Set<String> idSet = new HashSet<>();
-		for (int i = 0; i < totalHits; i += rows) {
-			builder.start(i);
-			result = indexService.searchQuery(builder.build());
-			result.getDocuments().forEach(doc -> idSet.add(doc.record.id));
-			if (i + rows > totalHits)
-				Assert.assertEquals(totalHits - i, result.getDocuments().size());
-			else
-				Assert.assertEquals(rows, result.getDocuments().size());
+		final Set<String> idSetObject = new HashSet<>();
+		final Set<String> idSetMap = new HashSet<>();
+		int start = 0;
+		while (start < totalHits) {
+
+			final int rows = RandomUtils.nextInt(8, 20);
+			final int expectedRows = start + rows > totalHits ? totalHits - start : rows;
+			builder.start(start).rows(rows);
+
+			// Check Object
+			final ResultDefinition.WithObject<IndexRecord> resultObject = indexService.searchQuery(builder.build());
+			List<ResultDocumentObject<IndexRecord>> objectDocs = resultObject.getDocuments();
+			Assert.assertEquals(expectedRows, objectDocs.size());
+			objectDocs.forEach(objectDoc -> idSetObject.add(objectDoc.record.id));
+
+			// Check Map
+			final ResultDefinition.WithMap resultMap = indexService.searchQueryWithMap(builder.build());
+			List<ResultDocumentMap> mapDocs = resultMap.getDocuments();
+			Assert.assertEquals(expectedRows, mapDocs.size());
+			mapDocs.forEach(mapDoc -> idSetMap.add((String) mapDoc.getFields().get(FieldDefinition.ID_FIELD)));
+
+			start += rows;
 		}
-		Assert.assertEquals(totalHits, idSet.size());
+		Assert.assertEquals(totalHits, idSetObject.size());
+		Assert.assertEquals(totalHits, idSetMap.size());
 	}
 
 	@Test
@@ -80,15 +99,13 @@ public class PagingTest extends AbstractIndexTest {
 
 	@Test
 	public void pagingSort() throws URISyntaxException {
-		checkPaging(QueryDefinition.of(new MatchAllDocsQuery())
-				.returnedField("*")
+		checkPaging(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*")
 				.sort("sortedDocValues", QueryDefinition.SortEnum.ascending));
 	}
 
 	@Test
 	public void pagingFacetSort() throws URISyntaxException {
-		checkPaging(QueryDefinition.of(new MatchAllDocsQuery())
-				.returnedField("*")
+		checkPaging(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*")
 				.facet("facetField", new FacetDefinition(10))
 				.sort("sortedDocValues", QueryDefinition.SortEnum.ascending));
 	}
