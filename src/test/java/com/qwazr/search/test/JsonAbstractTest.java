@@ -779,11 +779,9 @@ public abstract class JsonAbstractTest {
 	private void checkSynonyms(final IndexServiceInterface client, final String queryString,
 			final String... multiWordsHighlights) throws IOException {
 		final QueryBuilder builder = QueryDefinition.of(QUERY_HIGHLIGHT);
-		builder.query(StandardQueryParser.of()
-				.setDefaultField("description")
-				.setQueryParserOperator(QueryParserOperator.AND)
-				.setQueryString(queryString)
-				.build());
+		builder.query(
+				StandardQueryParser.of().setDefaultField("description").setQueryParserOperator(QueryParserOperator.AND)
+						.setQueryString(queryString).build());
 		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, builder.build(), 2);
 		boolean foundMultiWord1 = false;
 		boolean foundMultiWord2 = false;
@@ -791,10 +789,10 @@ public abstract class JsonAbstractTest {
 		boolean foundSimpleWord2 = false;
 		for (ResultDocumentMap document : result.getDocuments()) {
 			for (String multiWordHighlight : multiWordsHighlights) {
-				foundMultiWord1 = foundMultiWord1 || checkSnippets(document, "my_custom_snippet",
-						"<strong>" + multiWordHighlight + "</strong>");
-				foundMultiWord2 = foundMultiWord2 || checkSnippets(document, "my_default_snippet",
-						"<b>" + multiWordHighlight + "</b>");
+				foundMultiWord1 = foundMultiWord1 ||
+						checkSnippets(document, "my_custom_snippet", "<strong>" + multiWordHighlight + "</strong>");
+				foundMultiWord2 = foundMultiWord2 ||
+						checkSnippets(document, "my_default_snippet", "<b>" + multiWordHighlight + "</b>");
 			}
 			foundSimpleWord1 = foundSimpleWord1 || checkSnippets(document, "my_custom_snippet", "<strong>USA</strong>");
 			foundSimpleWord2 = foundSimpleWord2 || checkSnippets(document, "my_default_snippet", "<b>USA</b>");
@@ -816,6 +814,7 @@ public abstract class JsonAbstractTest {
 		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_MULTIFIELD, 1);
 		final ResultDocumentMap document = result.getDocuments().get(0);
 		Assert.assertTrue(((List<String>) document.fields.get("description")).get(0).startsWith("A web search engine"));
+		Assert.assertEquals(0, document.pos);
 	}
 
 	@Test
@@ -823,7 +822,9 @@ public abstract class JsonAbstractTest {
 		final IndexServiceInterface client = getClient();
 		final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_STANDARDQUERYPARSER, 1);
 		final ResultDocumentMap document = result.getDocuments().get(0);
-		Assert.assertTrue(((List<String>) document.fields.get("description")).get(0).startsWith("A web search engine"));
+		Assert.assertTrue(
+				((List<String>) document.getFields().get("description")).get(0).startsWith("A web search engine"));
+		Assert.assertEquals(0, document.getPos());
 	}
 
 	@Test
@@ -935,10 +936,10 @@ public abstract class JsonAbstractTest {
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(() -> client.doExtractTerms(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", null, null, null), 404);
 		Assert.assertNotNull(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, null));
-		final int firstSize = JavaAbstractTest.checkTermList(
-				client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, 10000)).size();
-		final int secondSize = JavaAbstractTest.checkTermList(
-				client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, 2, 10000)).size();
+		final int firstSize = JavaAbstractTest
+				.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, 10000)).size();
+		final int secondSize = JavaAbstractTest
+				.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, 2, 10000)).size();
 		Assert.assertEquals(firstSize, secondSize + 2);
 		JavaAbstractTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "a", null, null));
 	}
@@ -946,10 +947,8 @@ public abstract class JsonAbstractTest {
 	@Test
 	public void test620getFieldStats() throws IOException, URISyntaxException {
 		final IndexServiceInterface client = getClient();
-		client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME)
-				.keySet()
-				.forEach(fieldName -> JavaAbstractTest.checkFieldStats(fieldName,
-						client.getFieldStats(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName)));
+		client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME).keySet().forEach(fieldName -> JavaAbstractTest
+				.checkFieldStats(fieldName, client.getFieldStats(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName)));
 	}
 
 	@Test
