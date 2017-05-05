@@ -372,8 +372,8 @@ final public class IndexInstance implements Closeable {
 		final UUID uuid = UUID.fromString(remoteMasterUuid);
 		if (!Objects.equals(uuid, localUuid))
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"The UUID of the local index and the remote index does not match: " + localUuid + " <> "
-							+ remoteMasterUuid + " - " + indexName);
+					"The UUID of the local index and the remote index does not match: " + localUuid + " <> " +
+							remoteMasterUuid + " - " + indexName);
 		return uuid;
 	}
 
@@ -451,41 +451,62 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	private RecordsPoster.UpdateObjectDocument getDocumentPoster(final Map<String, Field> fields) throws IOException {
-		return writerAndSearcher.write(
-				(indexWriter, taxonomyWriter) -> new RecordsPoster.UpdateObjectDocument(fields, fieldMap, indexWriter,
-						taxonomyWriter));
+	private <T> int postObjectDoc(final RecordsPoster.ObjectDocument poster, final T document,
+			final Map<String, String> commitUserData) throws IOException {
+		poster.accept(document);
+		nrtCommit(commitUserData);
+		return poster.getCount();
 	}
 
-	private RecordsPoster.UpdateMapDocument getDocumentPoster() throws IOException {
-		return writerAndSearcher.write(
-				(indexWriter, taxonomyWriter) -> new RecordsPoster.UpdateMapDocument(fieldMap, indexWriter,
-						taxonomyWriter));
-	}
-
-	private RecordsPoster.UpdateObjectDocValues getDocValuesPoster(final Map<String, Field> fields) throws IOException {
-		return writerAndSearcher.write(
-				(indexWriter, taxonomyWriter) -> new RecordsPoster.UpdateObjectDocValues(fields, fieldMap, indexWriter,
-						taxonomyWriter));
-	}
-
-	private RecordsPoster.UpdateMapDocValues getDocValuesPoster() throws IOException {
-		return writerAndSearcher.write(
-				(indexWriter, taxonomyWriter) -> new RecordsPoster.UpdateMapDocValues(fieldMap, indexWriter,
-						taxonomyWriter));
+	private <T> int postObjectDocs(final RecordsPoster.ObjectDocument poster, final Collection<T> documents,
+			final Map<String, String> commitUserData) throws IOException {
+		for (final Object document : documents)
+			poster.accept(document);
+		nrtCommit(commitUserData);
+		return poster.getCount();
 	}
 
 	final <T> int postDocument(final Map<String, Field> fields, final T document,
-			final Map<String, String> commitUserData) throws IOException, InterruptedException {
+			final Map<String, String> commitUserData, boolean update) throws IOException, InterruptedException {
 		if (document == null)
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
-			poster.accept(document);
-			nrtCommit(commitUserData);
-			return poster.getCount();
+			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
+				final RecordsPoster.ObjectDocument poster =
+						RecordsPoster.create(fields, fieldMap, indexWriter, taxonomyWriter, update);
+				return postObjectDoc(poster, document, commitUserData);
+			});
 		}
+	}
+
+	final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents,
+			final Map<String, String> commitUserData, final boolean update) throws IOException, InterruptedException {
+		if (documents == null || documents.isEmpty())
+			return 0;
+		checkIsMaster();
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
+			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
+				final RecordsPoster.ObjectDocument poster =
+						RecordsPoster.create(fields, fieldMap, indexWriter, taxonomyWriter, update);
+				return postObjectDocs(poster, documents, commitUserData);
+			});
+		}
+	}
+
+	private int postMappedDoc(final RecordsPoster.MapDocument poster, final PostDefinition.Document post)
+			throws IOException {
+		poster.accept(post.document);
+		nrtCommit(post.commitUserData);
+		return poster.getCount();
+	}
+
+	private int postMappedDocs(final RecordsPoster.MapDocument poster, final PostDefinition.Documents post)
+			throws IOException {
+		for (final Map<String, Object> doc : post.documents)
+			poster.accept(doc);
+		nrtCommit(post.commitUserData);
+		return poster.getCount();
 	}
 
 	final int postMappedDocument(final PostDefinition.Document post) throws IOException, InterruptedException {
@@ -493,10 +514,11 @@ final public class IndexInstance implements Closeable {
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
-			poster.accept(post.document);
-			nrtCommit(post.commitUserData);
-			return poster.getCount();
+			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
+				final RecordsPoster.MapDocument poster = RecordsPoster.create(fieldMap, indexWriter, taxonomyWriter,
+						post.update == null ? true : post.update);
+				return postMappedDoc(poster, post);
+			});
 		}
 	}
 
@@ -505,23 +527,11 @@ final public class IndexInstance implements Closeable {
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			final RecordsPoster.UpdateMapDocument poster = getDocumentPoster();
-			post.documents.forEach(poster);
-			nrtCommit(post.commitUserData);
-			return poster.getCount();
-		}
-	}
-
-	final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents,
-			final Map<String, String> commitUserData) throws IOException, InterruptedException {
-		if (documents == null || documents.isEmpty())
-			return 0;
-		checkIsMaster();
-		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			final RecordsPoster.UpdateObjectDocument poster = getDocumentPoster(fields);
-			documents.forEach(poster);
-			nrtCommit(commitUserData);
-			return poster.getCount();
+			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
+				final RecordsPoster.MapDocument poster = RecordsPoster.create(fieldMap, indexWriter, taxonomyWriter,
+						post.update == null ? true : post.update);
+				return postMappedDocs(poster, post);
+			});
 		}
 	}
 
@@ -531,22 +541,11 @@ final public class IndexInstance implements Closeable {
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
-			poster.accept(document);
-			nrtCommit(commitUserData);
-			return poster.getCount();
-		}
-	}
-
-	final int updateMappedDocValues(final PostDefinition.Document post) throws IOException, InterruptedException {
-		if (post == null || post.document == null || post.document.isEmpty())
-			return 0;
-		checkIsMaster();
-		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
-			poster.accept(post.document);
-			nrtCommit(post.commitUserData);
-			return poster.getCount();
+			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
+				final RecordsPoster.UpdateObjectDocValues poster =
+						new RecordsPoster.UpdateObjectDocValues(fields, fieldMap, indexWriter, taxonomyWriter);
+				return postObjectDoc(poster, document, commitUserData);
+			});
 		}
 	}
 
@@ -556,10 +555,24 @@ final public class IndexInstance implements Closeable {
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			final RecordsPoster.UpdateObjectDocValues poster = getDocValuesPoster(fields);
-			documents.forEach(poster);
-			nrtCommit(commitUserData);
-			return poster.getCount();
+			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
+				final RecordsPoster.UpdateObjectDocValues poster =
+						new RecordsPoster.UpdateObjectDocValues(fields, fieldMap, indexWriter, taxonomyWriter);
+				return postObjectDocs(poster, documents, commitUserData);
+			});
+		}
+	}
+
+	final int updateMappedDocValues(final PostDefinition.Document post) throws IOException, InterruptedException {
+		if (post == null || post.document == null || post.document.isEmpty())
+			return 0;
+		checkIsMaster();
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
+			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
+				final RecordsPoster.MapDocument poster =
+						new RecordsPoster.UpdateMapDocValues(fieldMap, indexWriter, taxonomyWriter);
+				return postMappedDoc(poster, post);
+			});
 		}
 	}
 
@@ -569,10 +582,11 @@ final public class IndexInstance implements Closeable {
 			return 0;
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			final RecordsPoster.UpdateMapDocValues poster = getDocValuesPoster();
-			post.documents.forEach(poster);
-			nrtCommit(post.commitUserData);
-			return poster.getCount();
+			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
+				final RecordsPoster.MapDocument poster =
+						new RecordsPoster.UpdateMapDocValues(fieldMap, indexWriter, taxonomyWriter);
+				return postMappedDocs(poster, post);
+			});
 		}
 	}
 

@@ -22,7 +22,6 @@ import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FieldMapWrapper;
-import com.qwazr.utils.reflection.ConstructorParameters;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -450,7 +449,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	final public <T> int postDocument(final String schemaName, final String indexName, final Map<String, Field> fields,
 			final T document, final Map<String, String> commitUserData) throws IOException, InterruptedException {
 		checkRight(schemaName);
-		return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData);
+		return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData, true);
 	}
 
 	@Override
@@ -458,7 +457,24 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final Collection<T> documents, final Map<String, String> commitUserData)
 			throws IOException, InterruptedException {
 		checkRight(schemaName);
-		return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents, commitUserData);
+		return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents, commitUserData, true);
+	}
+
+	@Override
+	final public <T> int addDocument(final String schemaName, final String indexName, final Map<String, Field> fields,
+			final T document, final Map<String, String> commitUserData) throws IOException, InterruptedException {
+		checkRight(schemaName);
+		return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData, false);
+	}
+
+	@Override
+	final public <T> int addDocuments(final String schemaName, final String indexName, final Map<String, Field> fields,
+			final Collection<T> documents, final Map<String, String> commitUserData)
+			throws IOException, InterruptedException {
+		checkRight(schemaName);
+		return indexManager.get(schemaName)
+				.get(indexName, true)
+				.postDocuments(fields, documents, commitUserData, false);
 	}
 
 	@Override

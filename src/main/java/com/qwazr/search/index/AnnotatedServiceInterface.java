@@ -41,6 +41,22 @@ public interface AnnotatedServiceInterface {
 	<T> int postDocuments(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents,
 			Map<String, String> commitUserData) throws IOException, InterruptedException;
 
+	default <T> int addDocument(String schemaName, String indexName, Map<String, Field> fields, T document)
+			throws IOException, InterruptedException {
+		return addDocument(schemaName, indexName, fields, document, null);
+	}
+
+	<T> int addDocument(String schemaName, String indexName, Map<String, Field> fields, T document,
+			Map<String, String> commitUserData) throws IOException, InterruptedException;
+
+	default <T> int addDocuments(String schemaName, String indexName, Map<String, Field> fields,
+			Collection<T> documents) throws IOException, InterruptedException {
+		return addDocuments(schemaName, indexName, fields, documents, null);
+	}
+
+	<T> int addDocuments(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents,
+			Map<String, String> commitUserData) throws IOException, InterruptedException;
+
 	default <T> int updateDocValues(String schemaName, String indexName, Map<String, Field> fields, T document)
 			throws IOException, InterruptedException {
 		return updateDocValues(schemaName, indexName, fields, document, null);

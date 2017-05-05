@@ -27,12 +27,16 @@ public abstract class PostDefinition {
 	@JsonProperty("commit_user_data")
 	final public Map<String, String> commitUserData;
 
+	final public Boolean update;
+
 	public PostDefinition() {
 		commitUserData = null;
+		update = null;
 	}
 
-	PostDefinition(Map<String, String> commitUserData) {
+	PostDefinition(Map<String, String> commitUserData, Boolean update) {
 		this.commitUserData = commitUserData;
+		this.update = update;
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -44,8 +48,8 @@ public abstract class PostDefinition {
 			document = null;
 		}
 
-		Document(final Map<String, Object> document, final Map<String, String> commitUserData) {
-			super(commitUserData);
+		Document(final Map<String, Object> document, final Map<String, String> commitUserData, final Boolean update) {
+			super(commitUserData, update);
 			this.document = document;
 		}
 	}
@@ -59,19 +63,28 @@ public abstract class PostDefinition {
 			documents = null;
 		}
 
-		Documents(final List<Map<String, Object>> documents, final Map<String, String> commitUserData) {
-			super(commitUserData);
+		Documents(final List<Map<String, Object>> documents, final Map<String, String> commitUserData,
+				final Boolean update) {
+			super(commitUserData, update);
 			this.documents = documents;
 		}
 	}
 
-	public static Document of(final Map<String, Object> document, final Map<String, String> commitUserData) {
+	public static Document of(final Map<String, Object> document, final Map<String, String> commitUserData,
+			final Boolean update) {
+		return new PostDefinition.Document(document, commitUserData, update);
+	}
 
-		return new PostDefinition.Document(document, commitUserData);
+	public static Document of(final Map<String, Object> document, final Map<String, String> commitUserData) {
+		return of(document, commitUserData, null);
+	}
+
+	public static Documents of(final List<Map<String, Object>> documents, final Map<String, String> commitUserData,
+			final Boolean update) {
+		return new PostDefinition.Documents(documents, commitUserData, update);
 	}
 
 	public static Documents of(final List<Map<String, Object>> documents, final Map<String, String> commitUserData) {
-
-		return new PostDefinition.Documents(documents, commitUserData);
+		return of(documents, commitUserData, null);
 	}
 }
