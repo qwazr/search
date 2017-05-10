@@ -25,7 +25,6 @@ import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FieldMapWrapper;
-import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
@@ -35,6 +34,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
+import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.MultiFields;
@@ -301,11 +301,10 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	private void nrtCommit(final Map<String, String> commitUserData) throws IOException {
-		writerAndSearcher.commit(commitUserData, (indexWriter, taxonomyWriter) -> {
-			localReplicator.publish(writerAndSearcher.newRevision());
-			multiSearchInstances.forEach(MultiSearchInstance::refresh);
-		});
+	private void nrtCommit() throws IOException {
+		writerAndSearcher.commit();
+		localReplicator.publish(writerAndSearcher.newRevision());
+		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
 	final synchronized BackupStatus backup(final Path backupIndexDirectory) throws IOException {
@@ -428,11 +427,12 @@ final public class IndexInstance implements Closeable {
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
-				if (indexWriter != null)
-					indexWriter.deleteAll();
+				indexWriter.deleteAll();
+				if (commitUserData != null)
+					indexWriter.setLiveCommitData(commitUserData.entrySet());
 				return null;
 			});
-			nrtCommit(commitUserData);
+			nrtCommit();
 		}
 	}
 
@@ -443,151 +443,84 @@ final public class IndexInstance implements Closeable {
 			writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
 				try (final ReadWriteSemaphores.Lock readLock = mergedIndex.readWriteSemaphores.acquireReadSemaphore()) {
 					indexWriter.addIndexes(mergedIndex.dataDirectory);
+					if (commitUserData != null)
+						indexWriter.setLiveCommitData(commitUserData.entrySet());
 				}
 				return null;
 			});
-			nrtCommit(commitUserData);
+			nrtCommit();
 			return getIndexStatus();
 		}
 	}
 
-	private <T> int postObjectDoc(final RecordsPoster.ObjectDocument poster, final T document,
-			final Map<String, String> commitUserData) throws IOException {
-		poster.accept(document);
-		nrtCommit(commitUserData);
-		return poster.getCount();
+	private WriteContextImpl buildWriteContext(final IndexWriter indexWriter, final TaxonomyWriter taxonomyWriter)
+			throws IOException {
+		return new WriteContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzer, queryAnalyzer,
+				fieldMap, indexWriter, taxonomyWriter);
 	}
 
-	private <T> int postObjectDocs(final RecordsPoster.ObjectDocument poster, final Collection<T> documents,
-			final Map<String, String> commitUserData) throws IOException {
-		for (final Object document : documents)
-			poster.accept(document);
-		nrtCommit(commitUserData);
-		return poster.getCount();
+	final <T> T write(final IndexServiceInterface.WriteActions<T> writeActions) throws IOException {
+		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
+			return writerAndSearcher.write(((indexWriter, taxonomyWriter) -> writeActions.apply(
+					buildWriteContext(indexWriter, taxonomyWriter))));
+		}
+	}
+
+	private int checkCommit(final int results, final Map<String, String> commitUserData) throws IOException {
+		if (results > 0 || (commitUserData != null && !commitUserData.isEmpty()))
+			nrtCommit();
+		return results;
+	}
+
+	private int checkCommit(final int results, final PostDefinition post) throws IOException {
+		return checkCommit(results, post == null ? null : post.commitUserData);
 	}
 
 	final <T> int postDocument(final Map<String, Field> fields, final T document,
-			final Map<String, String> commitUserData, boolean update) throws IOException, InterruptedException {
-		if (document == null)
-			return 0;
+			final Map<String, String> commitUserData, boolean update) throws IOException {
 		checkIsMaster();
-		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
-				final RecordsPoster.ObjectDocument poster =
-						RecordsPoster.create(fields, fieldMap, indexWriter, taxonomyWriter, update);
-				return postObjectDoc(poster, document, commitUserData);
-			});
-		}
+		return write(
+				context -> checkCommit(context.postDocument(fields, document, commitUserData, update), commitUserData));
 	}
 
 	final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents,
-			final Map<String, String> commitUserData, final boolean update) throws IOException, InterruptedException {
-		if (documents == null || documents.isEmpty())
-			return 0;
+			final Map<String, String> commitUserData, final boolean update) throws IOException {
 		checkIsMaster();
-		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
-				final RecordsPoster.ObjectDocument poster =
-						RecordsPoster.create(fields, fieldMap, indexWriter, taxonomyWriter, update);
-				return postObjectDocs(poster, documents, commitUserData);
-			});
-		}
+		return write(context -> checkCommit(context.postDocuments(fields, documents, commitUserData, update),
+				commitUserData));
 	}
 
-	private int postMappedDoc(final RecordsPoster.MapDocument poster, final PostDefinition.Document post)
-			throws IOException {
-		poster.accept(post.document);
-		nrtCommit(post.commitUserData);
-		return poster.getCount();
-	}
-
-	private int postMappedDocs(final RecordsPoster.MapDocument poster, final PostDefinition.Documents post)
-			throws IOException {
-		for (final Map<String, Object> doc : post.documents)
-			poster.accept(doc);
-		nrtCommit(post.commitUserData);
-		return poster.getCount();
-	}
-
-	final int postMappedDocument(final PostDefinition.Document post) throws IOException, InterruptedException {
-		if (post == null || post.document == null || post.document.isEmpty())
-			return 0;
+	final int postMappedDocument(final PostDefinition.Document post) throws IOException {
 		checkIsMaster();
-		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
-				final RecordsPoster.MapDocument poster = RecordsPoster.create(fieldMap, indexWriter, taxonomyWriter,
-						post.update == null ? true : post.update);
-				return postMappedDoc(poster, post);
-			});
-		}
+		return write(context -> checkCommit(context.postMappedDocument(post), post));
 	}
 
-	final int postMappedDocuments(final PostDefinition.Documents post) throws IOException, InterruptedException {
-		if (post == null || post.documents == null || post.documents.isEmpty())
-			return 0;
+	final int postMappedDocuments(final PostDefinition.Documents post) throws IOException {
 		checkIsMaster();
-		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
-				final RecordsPoster.MapDocument poster = RecordsPoster.create(fieldMap, indexWriter, taxonomyWriter,
-						post.update == null ? true : post.update);
-				return postMappedDocs(poster, post);
-			});
-		}
+		return write(context -> checkCommit(context.postMappedDocuments(post), post));
 	}
 
 	final <T> int updateDocValues(final Map<String, Field> fields, final T document,
-			final Map<String, String> commitUserData) throws InterruptedException, IOException {
-		if (document == null)
-			return 0;
+			final Map<String, String> commitUserData) throws IOException {
 		checkIsMaster();
-		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
-				final RecordsPoster.UpdateObjectDocValues poster =
-						new RecordsPoster.UpdateObjectDocValues(fields, fieldMap, indexWriter, taxonomyWriter);
-				return postObjectDoc(poster, document, commitUserData);
-			});
-		}
+		return write(context -> checkCommit(context.updateDocValues(fields, document, commitUserData), commitUserData));
 	}
 
 	final <T> int updateDocsValues(final Map<String, Field> fields, final Collection<T> documents,
-			final Map<String, String> commitUserData) throws IOException, InterruptedException {
-		if (documents == null || documents.isEmpty())
-			return 0;
+			final Map<String, String> commitUserData) throws IOException {
 		checkIsMaster();
-		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
-				final RecordsPoster.UpdateObjectDocValues poster =
-						new RecordsPoster.UpdateObjectDocValues(fields, fieldMap, indexWriter, taxonomyWriter);
-				return postObjectDocs(poster, documents, commitUserData);
-			});
-		}
+		return write(
+				context -> checkCommit(context.updateDocsValues(fields, documents, commitUserData), commitUserData));
 	}
 
-	final int updateMappedDocValues(final PostDefinition.Document post) throws IOException, InterruptedException {
-		if (post == null || post.document == null || post.document.isEmpty())
-			return 0;
+	final int updateMappedDocValues(final PostDefinition.Document post) throws IOException {
 		checkIsMaster();
-		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
-				final RecordsPoster.MapDocument poster =
-						new RecordsPoster.UpdateMapDocValues(fieldMap, indexWriter, taxonomyWriter);
-				return postMappedDoc(poster, post);
-			});
-		}
+		return write(context -> checkCommit(context.updateMappedDocValues(post), post));
 	}
 
-	final int updateMappedDocsValues(final PostDefinition.Documents post)
-			throws IOException, ServerException, InterruptedException {
-		if (post == null || post.documents == null || post.documents.isEmpty())
-			return 0;
+	final int updateMappedDocsValues(final PostDefinition.Documents post) throws IOException {
 		checkIsMaster();
-		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			return writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
-				final RecordsPoster.MapDocument poster =
-						new RecordsPoster.UpdateMapDocValues(fieldMap, indexWriter, taxonomyWriter);
-				return postMappedDocs(poster, post);
-			});
-		}
+		return write(context -> checkCommit(context.updateMappedDocsValues(post), post));
 	}
 
 	final ResultDefinition.WithMap deleteByQuery(final QueryDefinition queryDefinition) throws IOException {
@@ -602,7 +535,9 @@ final public class IndexInstance implements Closeable {
 					final IndexWriter indexWriter = writerAndSearcher.getIndexWriter();
 					int docs = indexWriter.numDocs();
 					indexWriter.deleteDocuments(query);
-					nrtCommit(queryDefinition.commitUserData);
+					if (queryDefinition.commitUserData != null)
+						indexWriter.setLiveCommitData(queryDefinition.commitUserData.entrySet());
+					nrtCommit();
 					docs -= indexWriter.numDocs();
 					return new ResultDefinition.WithMap(docs);
 				} catch (ParseException | ReflectiveOperationException | QueryNodeException e) {
@@ -655,12 +590,12 @@ final public class IndexInstance implements Closeable {
 	private QueryContextImpl buildQueryContext(final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
 			final FieldMapWrapper.Cache fieldMapWrappers) throws IOException {
 		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
-		return new QueryContextImpl(indexProvider, fileResourceLoader, indexSearcher, taxonomyReader, executorService,
-				indexAnalyzer, queryAnalyzer, fieldMap, facetsState, fieldMapWrappers);
+		return new QueryContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzer, queryAnalyzer,
+				fieldMap, fieldMapWrappers, facetsState, indexSearcher, taxonomyReader);
 	}
 
 	final <T> T query(final FieldMapWrapper.Cache fieldMapWrappers,
-			final FunctionUtils.FunctionEx<QueryContext, T, IOException> queryActions) throws IOException {
+			final IndexServiceInterface.QueryActions<T> queryActions) throws IOException {
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> queryActions.apply(
 					buildQueryContext(indexSearcher, taxonomyReader, fieldMapWrappers)));

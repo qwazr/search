@@ -131,6 +131,23 @@ public class AnnotatedIndexServiceTest {
 	}
 
 	@Test
+	public void test400checkQuery() throws IOException {
+		Assert.assertEquals("Test", service.query(context -> {
+			Assert.assertNotNull(context.getIndexReader());
+			Assert.assertNotNull(context.getIndexSearcher());
+			return "Test";
+		}));
+	}
+
+	@Test
+	public void test400checkWrite() throws IOException {
+		Assert.assertEquals("Test", service.write(context -> {
+			Assert.assertNotNull(context.getIndexWriter());
+			return "Test";
+		}));
+	}
+
+	@Test
 	public void test500query() throws IOException, ReflectiveOperationException {
 
 		Map<String, Float> fieldBoosts = new HashMap<>();

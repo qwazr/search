@@ -18,9 +18,7 @@ package com.qwazr.search.index;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FieldMapWrapper;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.util.ResourceLoader;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.index.IndexReader;
@@ -29,65 +27,38 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.IndexSearcher;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-final class QueryContextImpl implements QueryContext {
+final class QueryContextImpl extends IndexContextImpl implements QueryContext {
 
 	final IndexSearcher indexSearcher;
 	final IndexReader indexReader;
 	final TaxonomyReader taxonomyReader;
-	final ExecutorService executorService;
 	final SortedSetDocValuesReaderState docValueReaderState;
-	final UpdatableAnalyzer indexAnalyzer;
-	final UpdatableAnalyzer queryAnalyzer;
-	final FieldMap fieldMap;
-	final ResourceLoader resourceLoader;
-	final IndexInstance.Provider indexProvider;
 	final FieldMapWrapper.Cache fieldMapWrappers;
 
 	QueryContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
-			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
 			final ExecutorService executorService, final UpdatableAnalyzer indexAnalyzer,
 			final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
-			final SortedSetDocValuesReaderState docValueReaderState, final FieldMapWrapper.Cache fieldMapWrappers) {
-		this.indexProvider = indexProvider;
+			final FieldMapWrapper.Cache fieldMapWrappers, final SortedSetDocValuesReaderState docValueReaderState,
+			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader) {
+		super(indexProvider, resourceLoader, executorService, indexAnalyzer, queryAnalyzer, fieldMap);
+		this.docValueReaderState = docValueReaderState;
 		this.fieldMapWrappers = fieldMapWrappers;
-		this.resourceLoader = resourceLoader;
 		this.indexSearcher = indexSearcher;
 		this.indexReader = indexSearcher.getIndexReader();
 		this.taxonomyReader = taxonomyReader;
-		this.executorService = executorService;
-		this.docValueReaderState = docValueReaderState;
-		this.indexAnalyzer = indexAnalyzer;
-		this.queryAnalyzer = queryAnalyzer;
-		this.fieldMap = fieldMap;
-	}
-
-	@Override
-	public IndexInstance getIndex(final String indexName) {
-		return indexProvider == null ? null : indexProvider.getIndex(indexName);
-	}
-
-	@Override
-	public Analyzer getQueryAnalyzer() {
-		return queryAnalyzer;
-	}
-
-	@Override
-	public FacetsConfig getFacetsConfig(final String dimension) {
-		return fieldMap.getFacetsConfig(dimension);
-	}
-
-	@Override
-	public FacetsConfig getFacetsConfig(Collection<String> fieldSet) {
-		return fieldMap.getFacetsConfig(fieldSet);
 	}
 
 	@Override
 	public IndexReader getIndexReader() {
 		return indexReader;
+	}
+
+	@Override
+	public IndexSearcher getIndexSearcher() {
+		return indexSearcher;
 	}
 
 	private <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDefinition,

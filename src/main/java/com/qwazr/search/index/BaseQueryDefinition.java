@@ -15,25 +15,30 @@
  **/
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Set;
+import java.util.LinkedHashSet;
 
 @JsonInclude(Include.NON_EMPTY)
 public class BaseQueryDefinition {
 
 	final public Integer start;
 	final public Integer rows;
-	final public Set<String> returned_fields;
+	final public LinkedHashSet<String> returned_fields;
 	final public Boolean query_debug;
 
-	public BaseQueryDefinition() {
-		start = null;
-		rows = null;
-		returned_fields = null;
-		query_debug = null;
+	@JsonCreator
+	BaseQueryDefinition(@JsonProperty("start") Integer start, @JsonProperty("rows") Integer rows,
+			@JsonProperty("returned_fields") LinkedHashSet<String> returnedFields,
+			@JsonProperty("query_debug") Boolean queryDebug) {
+		this.start = start;
+		this.rows = rows;
+		this.returned_fields = returnedFields;
+		this.query_debug = queryDebug;
 	}
 
 	public BaseQueryDefinition(final QueryBuilder builder) {

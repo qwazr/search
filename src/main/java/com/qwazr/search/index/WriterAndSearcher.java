@@ -30,7 +30,6 @@ import org.apache.lucene.store.Directory;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 interface WriterAndSearcher extends Closeable {
@@ -43,7 +42,7 @@ interface WriterAndSearcher extends Closeable {
 
 	<T> T write(final WriteAction<T> action) throws IOException;
 
-	void commit(final Map<String, String> userData, final CommitAction action) throws IOException;
+	void commit() throws IOException;
 
 	IndexWriter getIndexWriter();
 
@@ -121,16 +120,12 @@ interface WriterAndSearcher extends Closeable {
 		}
 
 		@Override
-		final public void commit(final Map<String, String> userData, final CommitAction action) throws IOException {
+		final public void commit() throws IOException {
 			commitLock.lock();
 			try {
-				if (userData != null)
-					indexWriter.setLiveCommitData(userData.entrySet());
 				indexWriter.flush();
 				indexWriter.commit();
 				searcherManager.maybeRefresh();
-				if (action != null)
-					action.apply(indexWriter, null);
 			} finally {
 				commitLock.unlock();
 			}
@@ -191,18 +186,14 @@ interface WriterAndSearcher extends Closeable {
 		}
 
 		@Override
-		final public void commit(final Map<String, String> userData, final CommitAction action) throws IOException {
+		final public void commit() throws IOException {
 			commitLock.lock();
 			try {
 				taxonomyWriter.getIndexWriter().flush();
 				taxonomyWriter.commit();
-				if (userData != null)
-					indexWriter.setLiveCommitData(userData.entrySet());
 				indexWriter.flush();
 				indexWriter.commit();
 				searcherTaxonomyManager.maybeRefresh();
-				if (action != null)
-					action.apply(indexWriter, taxonomyWriter);
 			} finally {
 				commitLock.unlock();
 			}
@@ -232,9 +223,4 @@ interface WriterAndSearcher extends Closeable {
 				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException;
 	}
 
-	interface CommitAction {
-
-		void apply(final IndexWriter indexWriter,
-				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException;
-	}
 }

@@ -17,37 +17,18 @@ package com.qwazr.search.index;
 
 import com.qwazr.utils.FieldMapWrapper;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.IndexSearcher;
 
 import java.io.IOException;
-import java.util.Collection;
 
-public interface QueryContext {
+public interface QueryContext extends IndexContext {
 
-	default IndexInstance getIndex(String indexName) {
+	default IndexReader getIndexReader() {
 		return null;
 	}
 
-	Analyzer DEFAULT_QUERY_ANALYZER = new StandardAnalyzer();
-
-	default Analyzer getQueryAnalyzer() {
-		return DEFAULT_QUERY_ANALYZER;
-	}
-
-	FacetsConfig DEFAULT_FACETS_CONFIG = new FacetsConfig();
-
-	default FacetsConfig getFacetsConfig(String dimension) {
-		return DEFAULT_FACETS_CONFIG;
-	}
-
-	default FacetsConfig getFacetsConfig(Collection<String> fieldSet) {
-		return DEFAULT_FACETS_CONFIG;
-	}
-
-	default IndexReader getIndexReader() {
+	default IndexSearcher getIndexSearcher() {
 		return null;
 	}
 

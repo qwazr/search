@@ -746,6 +746,11 @@ public class AnnotatedIndexService<T> {
 		return new ResultDefinition.WithObject<>(resultWithMap, documents);
 	}
 
+	public <R> R write(final IndexServiceInterface.WriteActions<R> actions) throws IOException {
+		checkParameters();
+		return indexService.write(schemaName, indexName, actions);
+	}
+
 	public <R> R query(final IndexServiceInterface.QueryActions<R> actions) throws IOException {
 		checkParameters();
 		return indexService.query(schemaName, indexName, fieldMapWrappers, actions);

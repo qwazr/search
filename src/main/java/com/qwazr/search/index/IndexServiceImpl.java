@@ -858,4 +858,12 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 		return index.query(fieldMapWrappers, actions);
 	}
 
+	@Override
+	public <T> T write(final String schemaName, final String indexName, final WriteActions<T> actions)
+			throws IOException {
+		checkRight(schemaName);
+		final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
+		return index.write(actions);
+	}
+
 }

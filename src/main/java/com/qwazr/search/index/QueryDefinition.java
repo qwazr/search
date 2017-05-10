@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -50,8 +51,6 @@ public class QueryDefinition extends BaseQueryDefinition {
 		descending_missing_last
 	}
 
-	final public LinkedHashSet<String> returned_fields;
-
 	final public LinkedHashMap<String, FacetDefinition> facets;
 
 	final public LinkedHashMap<String, HighlighterDefinition> highlighters;
@@ -71,31 +70,36 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 		final public Object[] arguments;
 
-		public CollectorDefinition() {
-			classname = null;
-			arguments = null;
-		}
-
-		public CollectorDefinition(final String classname, final Object... arguments) {
+		@JsonCreator
+		public CollectorDefinition(@JsonProperty("class") final String classname,
+				@JsonProperty("arguments") final Object... arguments) {
 			this.classname = classname;
 			this.arguments = arguments == null || arguments.length == 0 ? null : arguments;
 		}
 	}
 
-	public QueryDefinition() {
-		returned_fields = null;
-		facets = null;
-		sorts = null;
-		collectors = null;
-		highlighters = null;
-		query = null;
+	@JsonCreator
+	QueryDefinition(@JsonProperty("start") Integer start, @JsonProperty("rows") Integer rows,
+			@JsonProperty("returned_fields") LinkedHashSet<String> returnedFields,
+			@JsonProperty("query_debug") Boolean queryDebug,
+			@JsonProperty("sorts") LinkedHashMap<String, SortEnum> sorts,
+			@JsonProperty("collectors") LinkedHashMap<String, CollectorDefinition> collectors,
+			@JsonProperty("facets") LinkedHashMap<String, FacetDefinition> facets,
+			@JsonProperty("highlighters") LinkedHashMap<String, HighlighterDefinition> highlighters,
+			@JsonProperty("query") AbstractQuery query,
+			@JsonProperty("commit_user_data") Map<String, String> commitUserData) {
+		super(start, rows, returnedFields, queryDebug);
+		this.sorts = sorts;
+		this.collectors = collectors;
+		this.facets = facets;
+		this.highlighters = highlighters;
+		this.query = query;
+		this.commitUserData = commitUserData;
 		luceneQuery = null;
-		commitUserData = null;
 	}
 
 	QueryDefinition(final QueryBuilder builder) {
 		super(builder);
-		returned_fields = builder.returnedFields;
 		facets = builder.facets;
 		sorts = builder.sorts;
 		collectors = builder.collectors;

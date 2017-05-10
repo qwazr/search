@@ -229,7 +229,7 @@ public class QueryBuilder {
 			commitUserData.put(name, value);
 		return this;
 	}
-	
+
 	public QueryDefinition build() {
 		return new QueryDefinition(this);
 	}
