@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
@@ -25,10 +27,8 @@ public class DoubleExactQuery extends AbstractFieldQuery {
 
 	public double value;
 
-	public DoubleExactQuery() {
-	}
-
-	public DoubleExactQuery(final String field, final double value) {
+	@JsonCreator
+	public DoubleExactQuery(@JsonProperty("field") final String field, @JsonProperty("value") final double value) {
 		super(field);
 		this.value = value;
 	}

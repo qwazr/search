@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.function.AbstractValueSource;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -29,14 +31,11 @@ public class BoostedQuery extends AbstractQuery {
 	final public AbstractQuery sub_query;
 	final public AbstractValueSource value_source;
 
-	public BoostedQuery() {
-		sub_query = null;
-		value_source = null;
-	}
-
-	public BoostedQuery(final AbstractQuery sub_query, final AbstractValueSource value_source) {
-		this.sub_query = sub_query;
-		this.value_source = value_source;
+	@JsonCreator
+	public BoostedQuery(@JsonProperty("sub_query") final AbstractQuery subQuery,
+			@JsonProperty("value_source") final AbstractValueSource valueSource) {
+		this.sub_query = subQuery;
+		this.value_source = valueSource;
 	}
 
 	@Override

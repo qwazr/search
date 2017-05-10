@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -24,10 +26,8 @@ import java.io.IOException;
 
 public class FieldValueQuery extends AbstractFieldQuery {
 
-	public FieldValueQuery() {
-	}
-
-	public FieldValueQuery(final String field) {
+	@JsonCreator
+	public FieldValueQuery(@JsonProperty("field") final String field) {
 		super(field);
 	}
 

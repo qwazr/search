@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.Term;
@@ -28,12 +30,9 @@ public class FacetPathQuery extends AbstractQuery {
 	final public String dimension;
 	final public String[] path;
 
-	public FacetPathQuery() {
-		dimension = null;
-		path = null;
-	}
-
-	public FacetPathQuery(final String dimension, final String... path) {
+	@JsonCreator
+	public FacetPathQuery(@JsonProperty("dimension") final String dimension,
+			@JsonProperty("path") final String... path) {
 		this.dimension = dimension;
 		this.path = path;
 	}

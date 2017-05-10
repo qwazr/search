@@ -90,7 +90,7 @@ public class AnnotatedIndexService<T> {
 	 * @param indexDefinitionClass the class with define the index
 	 * @param schemaName           the name of the schema
 	 * @param indexName            the name of the index
-	 * @param settings             any additionnal settings
+	 * @param settings             any additional settings
 	 * @throws URISyntaxException if the syntax of the remote URI is wrong
 	 */
 	public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass,

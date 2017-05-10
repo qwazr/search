@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.search.Query;
@@ -25,11 +27,8 @@ public class LongSetQuery extends AbstractFieldQuery {
 
 	final public long[] values;
 
-	public LongSetQuery() {
-		values = null;
-	}
-
-	public LongSetQuery(final String field, final long... values) {
+	@JsonCreator
+	public LongSetQuery(@JsonProperty("field") final String field, @JsonProperty("values") final long... values) {
 		super(field);
 		this.values = values;
 	}

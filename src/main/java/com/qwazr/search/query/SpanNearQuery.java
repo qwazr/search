@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -30,29 +32,19 @@ public class SpanNearQuery extends AbstractSpanQuery {
 	final public Boolean in_order;
 	final public Integer slop;
 
-	public SpanNearQuery() {
-		clauses = null;
-		field = null;
-		in_order = null;
-		slop = null;
-	}
-
 	public SpanNearQuery(List<AbstractSpanQuery> clauses, String field) {
-		this.clauses = clauses;
-		this.field = field;
-		this.in_order = null;
-		this.slop = null;
+		this(clauses, field, null);
+
 	}
 
 	public SpanNearQuery(List<AbstractSpanQuery> clauses, String field, Boolean in_order) {
-		this.clauses = clauses;
-		this.field = field;
-		this.in_order = in_order;
-		this.slop = null;
+		this(clauses, field, in_order, null);
 	}
 
-	public SpanNearQuery(final List<AbstractSpanQuery> clauses, final String field, final Boolean in_order,
-			final Integer slop) {
+	@JsonCreator
+	public SpanNearQuery(@JsonProperty("clauses") final List<AbstractSpanQuery> clauses,
+			@JsonProperty("field") final String field, @JsonProperty("in_order") final Boolean in_order,
+			@JsonProperty("slop") final Integer slop) {
 		this.clauses = clauses;
 		this.field = field;
 		this.in_order = in_order;
@@ -63,8 +55,7 @@ public class SpanNearQuery extends AbstractSpanQuery {
 	final public SpanQuery getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		final org.apache.lucene.search.spans.SpanNearQuery.Builder builder =
-				new org.apache.lucene.search.spans.SpanNearQuery.Builder(
-						field, in_order == null ? false : in_order);
+				new org.apache.lucene.search.spans.SpanNearQuery.Builder(field, in_order == null ? false : in_order);
 		if (slop != null)
 			builder.setSlop(slop);
 		if (clauses != null)

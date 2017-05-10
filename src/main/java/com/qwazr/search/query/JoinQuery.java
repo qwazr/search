@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -32,17 +34,12 @@ public class JoinQuery extends AbstractQuery {
 	final public ScoreMode score_mode;
 	final public AbstractQuery from_query;
 
-	public JoinQuery() {
-		from_index = null;
-		from_field = null;
-		to_field = null;
-		multiple_values_per_document = null;
-		score_mode = null;
-		from_query = null;
-	}
-
-	public JoinQuery(final String fromIndex, final String fromField, final String toField,
-			final Boolean multipleValuesPerDocument, final ScoreMode scoreMode, final AbstractQuery fromQuery) {
+	@JsonCreator
+	public JoinQuery(@JsonProperty("from_index") final String fromIndex,
+			@JsonProperty("from_field") final String fromField, @JsonProperty("to_field") final String toField,
+			@JsonProperty("multiple_values_per_document") final Boolean multipleValuesPerDocument,
+			@JsonProperty("score_mode") final ScoreMode scoreMode,
+			@JsonProperty("from_query") final AbstractQuery fromQuery) {
 		this.from_index = fromIndex;
 		this.from_field = fromField;
 		this.to_field = toField;

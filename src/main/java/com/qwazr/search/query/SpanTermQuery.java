@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
@@ -31,16 +33,15 @@ public class SpanTermQuery extends AbstractSpanQuery {
 	@JsonIgnore
 	private final Term term;
 
-	public SpanTermQuery() {
-		field = null;
-		value = null;
-		term = null;
-	}
-
 	private SpanTermQuery(final String field, final Object value, final Term term) {
 		this.field = field;
 		this.value = value;
 		this.term = term;
+	}
+
+	@JsonCreator
+	private SpanTermQuery(@JsonProperty("field") final String field, @JsonProperty("value") final Object value) {
+		this(field, value, new Term(field, BytesRefUtils.fromAny(value)));
 	}
 
 	public SpanTermQuery(final Term term) {

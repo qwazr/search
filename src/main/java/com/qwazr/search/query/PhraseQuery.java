@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 
@@ -23,28 +25,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class PhraseQuery extends AbstractQuery {
+public class PhraseQuery extends AbstractFieldQuery {
 
-	final public String field;
 	final public List<String> terms;
 	final public Integer slop;
 
-	public PhraseQuery() {
-		field = null;
-		terms = null;
-		slop = null;
-	}
-
-	public PhraseQuery(final String field, final Integer slop, final List<String> terms) {
-		this.field = field;
+	@JsonCreator
+	public PhraseQuery(@JsonProperty("field") final String field, @JsonProperty("slop") final Integer slop,
+			@JsonProperty("terms") final List<String> terms) {
+		super(field);
 		this.slop = slop;
 		this.terms = terms;
 	}
 
 	public PhraseQuery(final String field, final Integer slop, final String... terms) {
-		this.field = field;
-		this.slop = slop;
-		this.terms = Arrays.asList(terms);
+		this(field, slop, Arrays.asList(terms));
 	}
 
 	@Override

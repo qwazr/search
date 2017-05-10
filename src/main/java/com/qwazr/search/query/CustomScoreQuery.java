@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
@@ -39,19 +40,23 @@ public class CustomScoreQuery extends AbstractQuery {
 	@JsonIgnore
 	public final Class<? extends CustomScoreProvider> customScoreProviderClass;
 
-	public CustomScoreQuery() {
-		subQuery = null;
-		scoringQuery = null;
-		scoringQueries = null;
-		customScoreProviderClassName = null;
-		customScoreProviderClass = null;
+	@JsonCreator
+	private CustomScoreQuery(@JsonProperty("subQuery") final AbstractQuery subQuery,
+			@JsonProperty("customScoreProvider") final String customScoreProviderClass,
+			@JsonProperty("scoringQuery") final FunctionQuery scoringQuery,
+			@JsonProperty("scoringQueries") final FunctionQuery... scoringQueries) {
+		this.subQuery = subQuery;
+		this.scoringQuery = scoringQuery;
+		this.scoringQueries = scoringQueries;
+		this.customScoreProviderClassName = customScoreProviderClass;
+		this.customScoreProviderClass = null;
 	}
 
 	public CustomScoreQuery(final AbstractQuery subQuery, final FunctionQuery... scoringQueries) {
-		this(subQuery, null, null, scoringQueries);
+		this(subQuery, null, (String) null, scoringQueries);
 	}
 
-	private CustomScoreQuery(final AbstractQuery subQuery,
+	public CustomScoreQuery(final AbstractQuery subQuery,
 			final Class<? extends CustomScoreProvider> customScoreProviderClass,
 			final String customScoreProviderClassName, final FunctionQuery... scoringQueries) {
 		this.subQuery = subQuery;
@@ -71,8 +76,10 @@ public class CustomScoreQuery extends AbstractQuery {
 		this.customScoreProviderClass = customScoreProviderClass;
 	}
 
-	public CustomScoreQuery(final AbstractQuery subQuery, final String customScoreProviderClass,
-			final FunctionQuery... scoringQueries) {
+	@JsonCreator
+	public CustomScoreQuery(@JsonProperty("subQuery") final AbstractQuery subQuery,
+			@JsonProperty("customScoreProvider") final String customScoreProviderClass,
+			@JsonProperty("scoringQueries") final FunctionQuery... scoringQueries) {
 		this(subQuery, null, customScoreProviderClass, scoringQueries);
 	}
 
@@ -113,7 +120,7 @@ public class CustomScoreQuery extends AbstractQuery {
 	private Class<? extends CustomScoreProvider> getProviderClass()
 			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		Class<? extends CustomScoreProvider> customScoreProviderClass =
-				ClassLoaderUtils.findClass(customScoreProviderClassName, null);
+				ClassLoaderUtils.findClass(customScoreProviderClassName);
 		Objects.requireNonNull(customScoreProviderClass, "Cannot find the class for " + customScoreProviderClassName);
 		return customScoreProviderClass;
 	}

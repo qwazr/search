@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractMultiTermQuery extends AbstractFieldQuery {
-
-	protected AbstractMultiTermQuery() {
-	}
 
 	protected AbstractMultiTermQuery(final String field) {
 		super(field);

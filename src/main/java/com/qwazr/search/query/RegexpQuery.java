@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
@@ -23,32 +25,24 @@ import org.apache.lucene.util.automaton.RegExp;
 
 import java.io.IOException;
 
-public class RegexpQuery extends AbstractQuery {
+public class RegexpQuery extends AbstractFieldQuery {
 
-	final public String field;
 	final public String text;
 	final public Integer flags;
 	final public Integer max_determinized_states;
 
-	public RegexpQuery() {
-		field = null;
-		text = null;
-		flags = null;
-		max_determinized_states = null;
-	}
-
 	public RegexpQuery(final String field, final String text, final Integer flags) {
-		this.field = field;
-		this.text = text;
-		this.flags = flags;
-		this.max_determinized_states = null;
+		this(field, text, flags, null);
 	}
 
-	public RegexpQuery(final String field, final String text, final Integer flags, final Integer max_determinized_states) {
-		this.field = field;
+	@JsonCreator
+	public RegexpQuery(@JsonProperty("field") final String field, @JsonProperty("text")  final String text,
+			@JsonProperty("flags") final Integer flags,
+			@JsonProperty("max_determinized_states") final Integer maxDeterminizedStates) {
+		super(field);
 		this.text = text;
 		this.flags = flags;
-		this.max_determinized_states = max_determinized_states;
+		this.max_determinized_states = maxDeterminizedStates;
 	}
 
 	@Override

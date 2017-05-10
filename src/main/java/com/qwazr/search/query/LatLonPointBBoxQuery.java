@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LatLonPoint;
 import org.apache.lucene.search.Query;
@@ -23,11 +25,12 @@ import java.io.IOException;
 
 public class LatLonPointBBoxQuery extends AbstractGeoBoxQuery {
 
-	public LatLonPointBBoxQuery() {
-	}
-
-	public LatLonPointBBoxQuery(final String field, final double minLatitude, final double maxLatitude,
-			final double minLongitude, final double maxLongitude) {
+	@JsonCreator
+	public LatLonPointBBoxQuery(@JsonProperty("field") final String field,
+			@JsonProperty("min_latitude") final double minLatitude,
+			@JsonProperty("max_latitude") final double maxLatitude,
+			@JsonProperty("min_longitude") final double minLongitude,
+			@JsonProperty("max_longitude") final double maxLongitude) {
 		super(field, minLatitude, maxLatitude, minLongitude, maxLongitude);
 	}
 

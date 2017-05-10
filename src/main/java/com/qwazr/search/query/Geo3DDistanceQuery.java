@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.spatial3d.Geo3DPoint;
@@ -29,14 +31,10 @@ public class Geo3DDistanceQuery extends AbstractFieldQuery {
 
 	public final double radius_meters;
 
-	public Geo3DDistanceQuery() {
-		latitude = 0;
-		longitude = 0;
-		radius_meters = 0;
-	}
-
-	public Geo3DDistanceQuery(final String field, final double latitude, final double longitude,
-			final double radiusMeters) {
+	@JsonCreator
+	public Geo3DDistanceQuery(@JsonProperty("field") final String field,
+			@JsonProperty("latitude") final double latitude, @JsonProperty("longitude") final double longitude,
+			@JsonProperty("radius_meters") final double radiusMeters) {
 		super(field);
 		this.latitude = latitude;
 		this.longitude = longitude;

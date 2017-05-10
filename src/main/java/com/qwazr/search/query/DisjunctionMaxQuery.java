@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -34,12 +35,9 @@ public class DisjunctionMaxQuery extends AbstractQuery {
 	@JsonProperty("tie_breaker_multiplier")
 	final public Float tieBreakerMultiplier;
 
-	public DisjunctionMaxQuery() {
-		queries = null;
-		tieBreakerMultiplier = null;
-	}
-
-	public DisjunctionMaxQuery(final List<AbstractQuery> queries, final Float tieBreakerMultiplier) {
+	@JsonCreator
+	public DisjunctionMaxQuery(@JsonProperty("queries") final List<AbstractQuery> queries,
+			@JsonProperty("tie_breaker_multiplier") final Float tieBreakerMultiplier) {
 		this.queries = queries;
 		this.tieBreakerMultiplier = tieBreakerMultiplier;
 	}

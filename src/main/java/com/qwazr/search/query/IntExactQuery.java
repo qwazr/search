@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.search.Query;
@@ -25,11 +27,8 @@ public class IntExactQuery extends AbstractFieldQuery {
 
 	final public int value;
 
-	public IntExactQuery() {
-		value = 0;
-	}
-
-	public IntExactQuery(final String field, final int value) {
+	@JsonCreator
+	public IntExactQuery(@JsonProperty("field") final String field, @JsonProperty("value") final int value) {
 		super(field);
 		this.value = value;
 	}

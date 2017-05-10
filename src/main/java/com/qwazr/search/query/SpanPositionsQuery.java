@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -29,20 +31,15 @@ import org.apache.lucene.search.spans.SpanTermQuery;
 
 import java.io.IOException;
 
-public class SpanPositionsQuery extends AbstractQuery {
+public class SpanPositionsQuery extends AbstractFieldQuery {
 
-	final public String field;
 	final public Integer distance;
 	final public String query_string;
 
-	public SpanPositionsQuery() {
-		field = null;
-		distance = null;
-		query_string = null;
-	}
-
-	public SpanPositionsQuery(final String field, final Integer distance, final String queryString) {
-		this.field = field;
+	@JsonCreator
+	public SpanPositionsQuery(@JsonProperty("field") final String field,
+			@JsonProperty("distance") final Integer distance, @JsonProperty("query_string") final String queryString) {
+		super(field);
 		this.distance = distance;
 		this.query_string = queryString;
 	}

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,11 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MultiTermQuery;
-import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
@@ -30,22 +31,18 @@ public class FuzzyQuery extends AbstractMultiTermQuery {
 	final public Boolean transpositions;
 	final public Integer prefix_length;
 
-	public FuzzyQuery() {
-		text = null;
-		max_edits = null;
-		max_expansions = null;
-		transpositions = null;
-		prefix_length = null;
-	}
-
-	public FuzzyQuery(final String field, final String text, final Integer max_edits, final Integer max_expansions,
-			final Boolean transpositions, final Integer prefix_length) {
+	@JsonCreator
+	public FuzzyQuery(@JsonProperty("field") final String field, @JsonProperty("text") final String text,
+			@JsonProperty("max_edits") final Integer maxEdits,
+			@JsonProperty("max_expansions") final Integer maxExpansions,
+			@JsonProperty("transpositions") final Boolean transpositions,
+			@JsonProperty("prefix_length") final Integer prefixLength) {
 		super(field);
 		this.text = text;
-		this.max_edits = max_edits;
-		this.max_expansions = max_expansions;
+		this.max_edits = maxEdits;
+		this.max_expansions = maxExpansions;
 		this.transpositions = transpositions;
-		this.prefix_length = prefix_length;
+		this.prefix_length = prefixLength;
 	}
 
 	@Override

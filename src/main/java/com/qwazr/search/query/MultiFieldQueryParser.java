@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
@@ -45,7 +46,8 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	final public Boolean lowercase_expanded_terms;
 	final public String query_string;
 
-	public MultiFieldQueryParser() {
+	@JsonCreator
+	private MultiFieldQueryParser() {
 		analyzer = null;
 		fields = null;
 		boosts = null;

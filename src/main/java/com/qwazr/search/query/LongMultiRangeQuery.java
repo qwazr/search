@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.document.LongPoint;
@@ -23,24 +25,22 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.Collection;
 
-public class LongMultiRangeQuery extends AbstractMultiRangeQuery<Long> {
+public class LongMultiRangeQuery extends AbstractMultiRangeQuery {
 
 	final public long[] lower_values;
 	final public long[] upper_values;
 
-	public LongMultiRangeQuery() {
-		lower_values = null;
-		upper_values = null;
+	@JsonCreator
+	public LongMultiRangeQuery(@JsonProperty("field") final String field,
+			@JsonProperty("lower_values") final long[] lowerValues,
+			@JsonProperty("upper_values") final long[] upperValues) {
+		super(field);
+		this.lower_values = lowerValues;
+		this.upper_values = upperValues;
 	}
 
 	public LongMultiRangeQuery(final String field, final long lowerValue, final long upperValue) {
 		this(field, new long[] { lowerValue }, new long[] { upperValue });
-	}
-
-	public LongMultiRangeQuery(final String field, final long[] lowerValues, final long[] upperValues) {
-		super(field);
-		this.lower_values = lowerValues;
-		this.upper_values = upperValues;
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery<Long> {
 			return new LongMultiRangeQuery(field, ArrayUtils.toPrimitiveLong(lowerValues),
 					ArrayUtils.toPrimitiveLong(upperValues));
 		}
-		
+
 	}
 
 }

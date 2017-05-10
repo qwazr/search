@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
@@ -35,16 +37,12 @@ public class TermsQuery extends AbstractMultiTermQuery {
 	@JsonIgnore
 	final private Collection<BytesRef> bytesRefCollection;
 
-	public TermsQuery() {
-		terms = null;
-		bytesRefCollection = null;
-	}
-
-	public TermsQuery(final String field, final Collection<Object> terms) {
+	@JsonCreator
+	public TermsQuery(@JsonProperty("field") final String field,
+			@JsonProperty("terms") final Collection<Object> terms) {
 		super(field);
-		Objects.requireNonNull(field, "The field is null");
-		Objects.requireNonNull(terms, "The term list is null");
-		this.terms = terms;
+		this.terms = Objects.requireNonNull(terms, "The term list is null");
+		;
 		this.bytesRefCollection = null;
 	}
 

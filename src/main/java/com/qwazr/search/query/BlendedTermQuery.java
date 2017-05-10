@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
@@ -30,13 +32,9 @@ public class BlendedTermQuery extends AbstractQuery {
 		public final Object value;
 		public final Float boost;
 
-		public Term() {
-			field = null;
-			value = null;
-			boost = null;
-		}
-
-		private Term(final String field, final Object value, final Float boost) {
+		@JsonCreator
+		public Term(@JsonProperty("field") final String field, @JsonProperty("value") final Object value,
+				@JsonProperty("boost") final Float boost) {
 			this.field = field;
 			this.value = value;
 			this.boost = boost;
@@ -53,11 +51,8 @@ public class BlendedTermQuery extends AbstractQuery {
 
 	final public Collection<Term> terms;
 
-	public BlendedTermQuery() {
-		terms = null;
-	}
-
-	public BlendedTermQuery(final Collection<Term> terms) {
+	@JsonCreator
+	public BlendedTermQuery(@JsonProperty("terms") final Collection<Term> terms) {
 		this.terms = terms;
 	}
 

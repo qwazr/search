@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.search.Query;
@@ -25,11 +27,8 @@ public class IntSetQuery extends AbstractFieldQuery {
 
 	final public int[] values;
 
-	public IntSetQuery() {
-		values = null;
-	}
-
-	public IntSetQuery(final String field, final int... values) {
+	@JsonCreator
+	public IntSetQuery(@JsonProperty("field") final String field, @JsonProperty("values") final int... values) {
 		super(field);
 		this.values = values;
 	}

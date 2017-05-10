@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.TermConsumer;
@@ -54,14 +55,6 @@ public class MultiFieldQuery extends AbstractQuery {
 	@JsonProperty("tie_breaker_multiplier")
 	final public Float tieBreakerMultiplier;
 
-	public MultiFieldQuery() {
-		fieldsBoosts = null;
-		defaultOperator = null;
-		queryString = null;
-		minNumberShouldMatch = null;
-		tieBreakerMultiplier = null;
-	}
-
 	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString) {
 		this(defaultOperator, queryString, null);
 	}
@@ -81,8 +74,12 @@ public class MultiFieldQuery extends AbstractQuery {
 		this(fieldsBoosts, defaultOperator, queryString, minNumberShouldMatch, null);
 	}
 
-	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final QueryParserOperator defaultOperator,
-			final String queryString, final Integer minNumberShouldMatch, final Float tieBreakerMultiplier) {
+	@JsonCreator
+	public MultiFieldQuery(@JsonProperty("fields_boosts") final Map<String, Float> fieldsBoosts,
+			@JsonProperty("default_operator") final QueryParserOperator defaultOperator,
+			@JsonProperty("query_string") final String queryString,
+			@JsonProperty("min_number_should_match") final Integer minNumberShouldMatch,
+			@JsonProperty("tie_breaker_multiplier") final Float tieBreakerMultiplier) {
 		this.fieldsBoosts = fieldsBoosts;
 		this.defaultOperator = defaultOperator;
 		this.queryString = queryString;

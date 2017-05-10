@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.search.Query;
@@ -23,12 +25,11 @@ import java.io.IOException;
 
 public class FloatRangeQuery extends AbstractRangeQuery<Float> {
 
-	public FloatRangeQuery() {
-	}
-
-	public FloatRangeQuery(final String field, final Float lower_value, final Float upper_value) {
-		super(field, lower_value == null ? Float.MIN_VALUE : lower_value,
-				upper_value == null ? Float.MAX_VALUE : upper_value);
+	@JsonCreator
+	public FloatRangeQuery(@JsonProperty("field") final String field,
+			@JsonProperty("lower_value") final Float lowerValue, @JsonProperty("upper_value") final Float upperValue) {
+		super(field, lowerValue == null ? Float.MIN_VALUE : lowerValue,
+				upperValue == null ? Float.MAX_VALUE : upperValue);
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,52 +15,23 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 
-public class TermQuery extends AbstractQuery {
+public class TermQuery extends AbstractFieldQuery {
 
-	final public String field;
 	final public Object term;
 
-	public TermQuery() {
-		field = null;
-		term = null;
-	}
-
-	public TermQuery(final String field, final String value) {
-		this.field = field;
-		this.term = value;
-	}
-
-	public TermQuery(final String field, final Long value) {
-		this.field = field;
-		this.term = value;
-	}
-
-	public TermQuery(final String field, final Integer value) {
-		this.field = field;
-		this.term = value;
-	}
-
-	public TermQuery(final String field, final Double value) {
-		this.field = field;
-		this.term = value;
-	}
-
-	public TermQuery(final String field, final Float value) {
-		this.field = field;
-		this.term = value;
-	}
-
-	public TermQuery(final String field, final BytesRef value) {
-		this.field = field;
-		this.term = value;
+	@JsonCreator
+	public TermQuery(@JsonProperty("field") String field, @JsonProperty("term") Object term) {
+		super(field);
+		this.term = term;
 	}
 
 	@Override

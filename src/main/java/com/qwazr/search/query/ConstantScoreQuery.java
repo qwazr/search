@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -26,11 +28,8 @@ public class ConstantScoreQuery extends AbstractQuery {
 
 	public final AbstractQuery query;
 
-	public ConstantScoreQuery() {
-		query = null;
-	}
-
-	public ConstantScoreQuery(final AbstractQuery query) {
+	@JsonCreator
+	public ConstantScoreQuery(@JsonProperty("query") final AbstractQuery query) {
 		this.query = query;
 	}
 

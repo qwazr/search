@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,27 +15,25 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
-public class IntMultiRangeQuery extends AbstractMultiRangeQuery<Integer> {
+public class IntMultiRangeQuery extends AbstractMultiRangeQuery {
 
 	final public int[] lower_values;
 	final public int[] upper_values;
 
-	public IntMultiRangeQuery() {
-		lower_values = null;
-		upper_values = null;
-	}
-
-	public IntMultiRangeQuery(final String field, final int[] lowerValues, final int[] upperValues) {
+	@JsonCreator
+	public IntMultiRangeQuery(@JsonProperty("field") final String field,
+			@JsonProperty("lower_values") final int[] lowerValues,
+			@JsonProperty("upper_values") final int[] upperValues) {
 		super(field);
 		this.lower_values = lowerValues;
 		this.upper_values = upperValues;

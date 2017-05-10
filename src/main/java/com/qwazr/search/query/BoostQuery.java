@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -28,12 +30,8 @@ public class BoostQuery extends AbstractQuery {
 	final public AbstractQuery query;
 	final public Float boost;
 
-	public BoostQuery() {
-		query = null;
-		boost = null;
-	}
-
-	public BoostQuery(final AbstractQuery query, final Float boost) {
+	@JsonCreator
+	public BoostQuery(@JsonProperty("query") final AbstractQuery query, @JsonProperty("boost") final Float boost) {
 		this.query = query;
 		this.boost = boost;
 	}

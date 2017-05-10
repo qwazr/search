@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +15,21 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-public class PrefixQuery extends AbstractQuery {
+public class PrefixQuery extends AbstractFieldQuery {
 
-	final public String field;
 	final public String text;
 
-	public PrefixQuery() {
-		field = null;
-		text = null;
-	}
-
-	public PrefixQuery(final String field, final String text) {
-		this.field = field;
+	@JsonCreator
+	public PrefixQuery(@JsonProperty("field") final String field, @JsonProperty("text") final String text) {
+		super(field);
 		this.text = text;
 	}
 

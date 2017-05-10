@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -47,28 +49,20 @@ public class StandardQueryParser extends AbstractQuery {
 	final public Boolean lowercase_expanded_terms;
 	final public String query_string;
 
-	public StandardQueryParser() {
-		analyzer = null;
-		multi_fields = null;
-		default_field = null;
-		fields_boost = null;
-		allow_leading_wildcard = null;
-		default_operator = null;
-		phrase_slop = null;
-		enable_position_increments = null;
-		analyzer_range_terms = null;
-		fuzzy_min_sim = null;
-		fuzzy_prefix_length = null;
-		max_determinized_states = null;
-		lowercase_expanded_terms = null;
-		query_string = null;
-	}
-
-	public StandardQueryParser(Analyzer analyzer, String[] multi_fields, String default_field,
-			LinkedHashMap<String, Float> fields_boost, Boolean allow_leading_wildcard,
-			QueryParserOperator default_operator, Integer phrase_slop, Boolean enable_position_increments,
-			Boolean analyzer_range_terms, Float fuzzy_min_sim, Integer fuzzy_prefix_length,
-			Integer max_determinized_states, Boolean lowercase_expanded_terms, String query_string) {
+	@JsonCreator
+	public StandardQueryParser(@JsonProperty("analyzer") Analyzer analyzer,
+			@JsonProperty("multi_fields") String[] multi_fields, @JsonProperty("default_field") String default_field,
+			@JsonProperty("fields_boost") LinkedHashMap<String, Float> fields_boost,
+			@JsonProperty("allow_leading_wildcard") Boolean allow_leading_wildcard,
+			@JsonProperty("default_operator") QueryParserOperator default_operator,
+			@JsonProperty("phrase_slop") Integer phrase_slop,
+			@JsonProperty("enable_position_increments") Boolean enable_position_increments,
+			@JsonProperty("analyzer_range_terms") Boolean analyzer_range_terms,
+			@JsonProperty("fuzzy_min_sim") Float fuzzy_min_sim,
+			@JsonProperty("fuzzy_prefix_length") Integer fuzzy_prefix_length,
+			@JsonProperty("max_determinized_states") Integer max_determinized_states,
+			@JsonProperty("lowercase_expanded_terms") Boolean lowercase_expanded_terms,
+			@JsonProperty("query_string") String query_string) {
 		this.analyzer = analyzer;
 		this.multi_fields = multi_fields;
 		this.default_field = default_field;

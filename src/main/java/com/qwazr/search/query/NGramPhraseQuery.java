@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
@@ -30,12 +31,9 @@ public class NGramPhraseQuery extends AbstractQuery {
 	@JsonProperty("ngram_size")
 	final public Integer nGramSize;
 
-	public NGramPhraseQuery() {
-		phraseQuery = null;
-		nGramSize = null;
-	}
-
-	public NGramPhraseQuery(final PhraseQuery phraseQuery, final Integer ngramSize) {
+	@JsonCreator
+	public NGramPhraseQuery(@JsonProperty("phrase_query") final PhraseQuery phraseQuery,
+			@JsonProperty("ngram_size") final Integer ngramSize) {
 		this.phraseQuery = phraseQuery;
 		this.nGramSize = ngramSize;
 	}

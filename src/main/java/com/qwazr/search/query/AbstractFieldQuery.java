@@ -22,13 +22,8 @@ public abstract class AbstractFieldQuery extends AbstractQuery {
 
 	final public String field;
 
-	protected AbstractFieldQuery() {
-		this.field = null;
-	}
-
 	protected AbstractFieldQuery(final String field) {
-		this.field = field;
-		Objects.requireNonNull(field, "The field is null");
+		this.field = Objects.requireNonNull(field, "The field is null");
 	}
 
 	protected AbstractFieldQuery(final AbstractFieldBuilder builder) {

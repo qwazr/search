@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -29,11 +31,8 @@ public class SpanQueryWrapper extends AbstractSpanQuery {
 
 	final public AbstractQuery wrapped_query;
 
-	public SpanQueryWrapper() {
-		wrapped_query = null;
-	}
-
-	public SpanQueryWrapper(final AbstractQuery wrappedQuery) {
+	@JsonCreator
+	public SpanQueryWrapper(@JsonProperty("wrapped_query") final AbstractQuery wrappedQuery) {
 		this.wrapped_query = wrappedQuery;
 	}
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
@@ -48,7 +49,8 @@ public class MoreLikeThisQuery extends AbstractQuery {
 	final public Integer min_word_len;
 	final public Set<String> stop_words;
 
-	public MoreLikeThisQuery() {
+	@JsonCreator
+	private MoreLikeThisQuery() {
 		like_text = null;
 		fieldname = null;
 		percent_terms_to_match = 0;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
@@ -22,13 +24,13 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 
 public class DoubleRangeQuery extends AbstractRangeQuery<Double> {
-	
-	public DoubleRangeQuery() {
-	}
 
-	public DoubleRangeQuery(final String field, final Double lower_value, final Double upper_value) {
-		super(field, lower_value == null ? Double.MIN_VALUE : lower_value,
-				upper_value == null ? Double.MAX_VALUE : upper_value);
+	@JsonCreator
+	public DoubleRangeQuery(@JsonProperty("field") final String field,
+			@JsonProperty("lower_value") final Double lowerValue,
+			@JsonProperty("upper_value") final Double upperValue) {
+		super(field, lowerValue == null ? Double.MIN_VALUE : lowerValue,
+				upperValue == null ? Double.MAX_VALUE : upperValue);
 	}
 
 	@Override

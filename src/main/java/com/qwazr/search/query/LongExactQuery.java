@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.search.Query;
@@ -25,11 +27,8 @@ public class LongExactQuery extends AbstractFieldQuery {
 
 	final public long value;
 
-	public LongExactQuery() {
-		value = 0;
-	}
-
-	public LongExactQuery(final String field, final long value) {
+	@JsonCreator
+	public LongExactQuery(@JsonProperty("field") final String field, @JsonProperty("value") final long value) {
 		super(field);
 		this.value = value;
 	}

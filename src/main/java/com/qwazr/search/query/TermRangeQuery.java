@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,26 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.MultiTermQuery;
 
 import java.io.IOException;
 
-public class TermRangeQuery extends AbstractQuery {
+public class TermRangeQuery extends AbstractFieldQuery {
 
-	final public String field;
 	final public String lower_term;
 	final public String upper_term;
 	final public Boolean include_lower;
 	final public Boolean include_upper;
 
-	public TermRangeQuery() {
-		field = null;
-		lower_term = null;
-		upper_term = null;
-		include_lower = null;
-		include_upper = null;
-	}
-
-	public TermRangeQuery(final String field, final String lower_term, final String upper_term,
-			final Boolean include_lower, final Boolean include_upper) {
-		this.field = field;
+	@JsonCreator
+	public TermRangeQuery(@JsonProperty("field") final String field,
+			@JsonProperty("lower_term") final String lower_term, @JsonProperty("upper_term") final String upper_term,
+			@JsonProperty("include_lower") final Boolean include_lower,
+			@JsonProperty("include_upper") final Boolean include_upper) {
+		super(field);
 		this.lower_term = lower_term;
 		this.upper_term = upper_term;
 		this.include_lower = include_lower;
@@ -47,8 +43,7 @@ public class TermRangeQuery extends AbstractQuery {
 
 	@Override
 	final public MultiTermQuery getQuery(final QueryContext queryContext) throws IOException {
-		return org.apache.lucene.search.TermRangeQuery
-				.newStringRange(field, lower_term, upper_term, include_lower == null ? true : include_lower,
-						include_upper == null ? true : include_upper);
+		return org.apache.lucene.search.TermRangeQuery.newStringRange(field, lower_term, upper_term,
+				include_lower == null ? true : include_lower, include_upper == null ? true : include_upper);
 	}
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,6 @@ public abstract class AbstractRangeQuery<T> extends AbstractFieldQuery {
 
 	final public T lower_value;
 	final public T upper_value;
-
-	protected AbstractRangeQuery() {
-		lower_value = null;
-		upper_value = null;
-	}
-
 
 	protected AbstractRangeQuery(final String field, final T lowerValue, final T upperValue) {
 		super(field);

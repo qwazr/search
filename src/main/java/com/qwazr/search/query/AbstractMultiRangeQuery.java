@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,17 +19,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public abstract class AbstractMultiRangeQuery<T> extends AbstractQuery {
-
-	final public String field;
-
-	public AbstractMultiRangeQuery() {
-		field = null;
-
-	}
+public abstract class AbstractMultiRangeQuery extends AbstractFieldQuery {
 
 	protected AbstractMultiRangeQuery(final String field) {
-		this.field = field;
+		super(field);
 	}
 
 	public abstract static class AbstractBuilder<T> {
@@ -50,9 +43,10 @@ public abstract class AbstractMultiRangeQuery<T> extends AbstractQuery {
 			return this;
 		}
 
-		protected abstract AbstractMultiRangeQuery<T> build(String field, Collection<T> lowerValues, Collection<T> upperValues);
+		protected abstract AbstractMultiRangeQuery build(String field, Collection<T> lowerValues,
+				Collection<T> upperValues);
 
-		public AbstractMultiRangeQuery<T> build() {
+		public AbstractMultiRangeQuery build() {
 			return build(field, lowerValues, upperValues);
 		}
 

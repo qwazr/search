@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ClassLoaderUtils;
 import org.apache.lucene.queries.payloads.AveragePayloadFunction;
@@ -43,27 +45,22 @@ public class PayloadScoreQuery extends AbstractQuery {
 		MIN, MAX, AVERAGE;
 	}
 
-	public PayloadScoreQuery() {
-		wrapped_query = null;
-		payloadFunction = null;
-		payload_function = null;
-		include_span_score = null;
-	}
-
 	public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final PayloadFunction payloadFunction,
 			final Boolean includeSpanScore) {
 		this.wrapped_query = wrappedQuery;
 		this.payloadFunction = payloadFunction;
 		this.payload_function = null;
-		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
+		this.include_span_score = includeSpanScore == null ? false : includeSpanScore;
 	}
 
-	public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final String payloadFunction,
-			final Boolean includeSpanScore) throws ReflectiveOperationException {
+	@JsonCreator
+	public PayloadScoreQuery(@JsonProperty("wrapped_query") final AbstractSpanQuery wrappedQuery,
+			@JsonProperty("payload_function") final String payloadFunction,
+			@JsonProperty("include_span_score") final Boolean includeSpanScore) {
 		this.wrapped_query = wrappedQuery;
 		this.payload_function = payloadFunction;
 		this.payloadFunction = null;
-		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
+		this.include_span_score = includeSpanScore == null ? false : includeSpanScore;
 	}
 
 	public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final FunctionType type,
@@ -110,6 +107,6 @@ public class PayloadScoreQuery extends AbstractQuery {
 		}
 		Objects.requireNonNull(payloadFunction, "The payload function is missing");
 		return new org.apache.lucene.queries.payloads.PayloadScoreQuery(wrapped_query.getQuery(queryContext),
-				payloadFunction, include_span_score == null ? false : include_span_score);
+				payloadFunction, include_span_score);
 	}
 }

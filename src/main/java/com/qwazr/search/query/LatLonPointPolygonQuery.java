@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LatLonPoint;
 import org.apache.lucene.geo.Polygon;
@@ -24,7 +26,7 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.Objects;
 
-public class LatLonPointPolygonQuery extends AbstractQuery {
+public class LatLonPointPolygonQuery extends AbstractFieldQuery {
 
 	public final class GeoPolygon {
 
@@ -32,13 +34,9 @@ public class LatLonPointPolygonQuery extends AbstractQuery {
 		public final double[] polyLons;
 		public final GeoPolygon[] holes;
 
-		public GeoPolygon() {
-			polyLats = null;
-			polyLons = null;
-			holes = null;
-		}
-
-		public GeoPolygon(final double[] polyLats, final double[] polyLons, final GeoPolygon[] holes) {
+		@JsonCreator
+		public GeoPolygon(@JsonProperty("polyLats") final double[] polyLats,
+				@JsonProperty("polyLons") final double[] polyLons, @JsonProperty("holes") final GeoPolygon[] holes) {
 			this.polyLats = polyLats;
 			this.polyLons = polyLons;
 			this.holes = holes;
@@ -51,22 +49,16 @@ public class LatLonPointPolygonQuery extends AbstractQuery {
 
 	}
 
-	final public String field;
 	final public GeoPolygon[] polygons;
 
 	@JsonIgnore
 	private Polygon[] lucenePolygons;
 
-	public LatLonPointPolygonQuery() {
-		field = null;
-		polygons = null;
-		lucenePolygons = null;
-	}
-
-	public LatLonPointPolygonQuery(final String field, final GeoPolygon... poligons) {
-		Objects.requireNonNull(field, "The field is null");
+	@JsonCreator
+	public LatLonPointPolygonQuery(@JsonProperty("field") final String field,
+			@JsonProperty("polygons") final GeoPolygon... poligons) {
+		super(field);
 		Objects.requireNonNull(poligons, "The poligons parameter is null");
-		this.field = field;
 		this.polygons = poligons;
 		this.lucenePolygons = toPolygons(poligons);
 	}

@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
@@ -35,22 +37,16 @@ public class SynonymQuery extends AbstractMultiTermQuery {
 	@JsonIgnore
 	final private Term[] termArray;
 
-	public SynonymQuery() {
-		terms = null;
-		termArray = null;
-	}
-
-	public SynonymQuery(final String field, final Collection<Object> terms) {
+	@JsonCreator
+	public SynonymQuery(@JsonProperty("field") final String field,
+			@JsonProperty("terms") final Collection<Object> terms) {
 		super(field);
-		Objects.requireNonNull(field, "The field is null");
-		Objects.requireNonNull(terms, "The term list is null");
-		this.terms = terms;
+		this.terms = Objects.requireNonNull(terms, "The term list is null");
 		this.termArray = null;
 	}
 
 	public SynonymQuery(final String field, final Object... terms) {
 		super(field);
-		Objects.requireNonNull(field, "The field is null");
 		Objects.requireNonNull(terms, "The term list is null");
 		this.terms = new ArrayList<>(terms.length);
 		Collections.addAll(this.terms, terms);

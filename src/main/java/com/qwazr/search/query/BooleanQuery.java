@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -53,12 +55,9 @@ public class BooleanQuery extends AbstractQuery {
 		public final Occur occur;
 		public final AbstractQuery query;
 
-		public BooleanClause() {
-			occur = null;
-			query = null;
-		}
-
-		public BooleanClause(final Occur occur, final AbstractQuery query) {
+		@JsonCreator
+		public BooleanClause(@JsonProperty("occur") final Occur occur,
+				@JsonProperty("query") final AbstractQuery query) {
 			this.occur = occur;
 			this.query = query;
 		}
@@ -71,10 +70,13 @@ public class BooleanQuery extends AbstractQuery {
 		}
 	}
 
-	public BooleanQuery() {
-		clauses = null;
-		disable_coord = null;
-		minimum_number_should_match = null;
+	@JsonCreator
+	public BooleanQuery(@JsonProperty("disable_coord") final Boolean disable_coord,
+			@JsonProperty("minimum_number_should_match") final Integer minimum_number_should_match,
+			@JsonProperty("clauses") final List<BooleanClause> clauses) {
+		this.disable_coord = disable_coord;
+		this.minimum_number_should_match = minimum_number_should_match;
+		this.clauses = clauses;
 	}
 
 	public BooleanQuery(final List<BooleanClause> clauses) {
@@ -99,13 +101,6 @@ public class BooleanQuery extends AbstractQuery {
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = null;
 		this.clauses = Arrays.asList(clauses);
-	}
-
-	public BooleanQuery(final Boolean disable_coord, final Integer minimum_number_should_match,
-			final List<BooleanClause> clauses) {
-		this.disable_coord = disable_coord;
-		this.minimum_number_should_match = minimum_number_should_match;
-		this.clauses = clauses;
 	}
 
 	public BooleanQuery(final Boolean disable_coord, final Integer minimum_number_should_match,

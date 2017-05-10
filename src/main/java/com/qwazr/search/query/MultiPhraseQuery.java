@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 
@@ -23,25 +25,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class MultiPhraseQuery extends AbstractQuery {
+public class MultiPhraseQuery extends AbstractFieldQuery {
 
-	final public String field;
 	final public List<String[]> terms;
 	final public List<Integer> positions;
 	final public Integer slop;
 
-	public MultiPhraseQuery() {
-		field = null;
-		terms = null;
-		positions = null;
-		slop = null;
+	@JsonCreator
+	public MultiPhraseQuery(@JsonProperty("field") String field, @JsonProperty("terms") List<String[]> terms,
+			@JsonProperty("positions") List<Integer> positions, @JsonProperty("slop") Integer slop) {
+		super(field);
+		this.terms = terms;
+		this.positions = positions;
+		this.slop = slop;
 	}
 
 	public MultiPhraseQuery(final String field, final Integer slop) {
-		this.field = field;
-		this.slop = slop;
-		this.terms = new ArrayList<>();
-		this.positions = new ArrayList<>();
+		this(field, new ArrayList<>(), new ArrayList<>(), slop);
 	}
 
 	public MultiPhraseQuery add(final String... terms) {

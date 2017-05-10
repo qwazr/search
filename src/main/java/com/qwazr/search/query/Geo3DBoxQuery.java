@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.spatial3d.Geo3DPoint;
@@ -23,11 +25,10 @@ import java.io.IOException;
 
 public class Geo3DBoxQuery extends AbstractGeoBoxQuery {
 
-	public Geo3DBoxQuery() {
-	}
-
-	public Geo3DBoxQuery(final String field, final double minLat, final double maxLat, final double minLon,
-			final double maxLon) {
+	@JsonCreator
+	public Geo3DBoxQuery(@JsonProperty("field") final String field, @JsonProperty("min_latitude") final double minLat,
+			@JsonProperty("max_latitude") final double maxLat, @JsonProperty("min_longitude") final double minLon,
+			@JsonProperty("max_longitude") final double maxLon) {
 		super(field, minLat, maxLat, minLon, maxLon);
 	}
 
