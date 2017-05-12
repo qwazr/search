@@ -98,7 +98,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 
 	public IndexManager registerWebService(final GenericServer.Builder builder) {
 		registerContextAttribute(builder);
-		builder.webService(IndexServiceImpl.class);
+		builder.singletons(service);
 		return this;
 	}
 

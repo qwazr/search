@@ -38,7 +38,7 @@ public class SearchServer implements BaseServer {
 	private SearchServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final GenericServer.Builder builder =
-				GenericServer.of(configuration, executorService).webService(WelcomeShutdownService.class);
+				GenericServer.of(configuration, executorService).singletons(new WelcomeShutdownService());
 		clusterManager = new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
 				.registerProtocolListener(builder)
 				.registerWebService(builder);
