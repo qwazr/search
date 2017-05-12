@@ -219,7 +219,7 @@ final public class IndexInstance implements Closeable {
 				(LinkedHashMap<String, FieldDefinition>) fieldMap.getFieldDefinitionMap().clone();
 		if (fields.remove(field_name) == null)
 			throw new ServerException(Response.Status.NOT_FOUND,
-					"Field not found: " + field_name + " - Index: " + indexName);
+					() -> "Field not found: " + field_name + " - Index: " + indexName);
 		setFields(fields);
 	}
 
@@ -254,7 +254,7 @@ final public class IndexInstance implements Closeable {
 		synchronized (localAnalyzerFactoryMap) {
 			if (localAnalyzerFactoryMap.remove(analyzerName) == null)
 				throw new ServerException(Response.Status.NOT_FOUND,
-						"Analyzer not found: " + analyzerName + " - Index: " + indexName);
+						() -> "Analyzer not found: " + analyzerName + " - Index: " + indexName);
 			updateLocalAnalyzers();
 		}
 	}
@@ -269,7 +269,7 @@ final public class IndexInstance implements Closeable {
 			factory = globalAnalyzerFactoryMap.get(analyzerName);
 		if (factory == null)
 			throw new ServerException(Response.Status.NOT_FOUND,
-					"Analyzer not found: " + analyzerName + " - Index: " + indexName);
+					() -> "Analyzer not found: " + analyzerName + " - Index: " + indexName);
 		try (final Analyzer analyzer = factory.createAnalyzer(fileResourceLoader)) {
 			return TermDefinition.buildTermList(analyzer, StringUtils.EMPTY, inputText);
 		}
@@ -371,8 +371,8 @@ final public class IndexInstance implements Closeable {
 		final UUID uuid = UUID.fromString(remoteMasterUuid);
 		if (!Objects.equals(uuid, localUuid))
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"The UUID of the local index and the remote index does not match: " + localUuid + " <> " +
-							remoteMasterUuid + " - " + indexName);
+					() -> "The UUID of the local index and the remote index does not match: " + localUuid + " <> " +
+							remoteMasterUuid + " - Index: " + indexName);
 		return uuid;
 	}
 
@@ -384,7 +384,7 @@ final public class IndexInstance implements Closeable {
 	void replicationCheck() throws IOException {
 		if (indexReplicator == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"No replication master has been setup - Index: " + indexName);
+					() -> "No replication master has been setup - Index: " + indexName);
 
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 
@@ -405,7 +405,7 @@ final public class IndexInstance implements Closeable {
 						postResource(remoteName, remoteInfo.lastModified, input);
 					} catch (IOException e) {
 						throw new ServerException(
-								"Cannot replicate the resource " + remoteName + " - Index: " + indexName, e);
+								() -> "Cannot replicate the resource " + remoteName + " - Index: " + indexName, e);
 					}
 				});
 				localResources.forEach((resourceName, resourceInfo) -> deleteResource(resourceName));
@@ -555,7 +555,7 @@ final public class IndexInstance implements Closeable {
 				final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
 				if (fieldType == null)
 					throw new ServerException(Response.Status.NOT_FOUND,
-							"Field not found: " + fieldName + " - Index: " + indexName);
+							() -> "Field not found: " + fieldName + " - Index: " + indexName);
 				final Terms terms = MultiFields.getTerms(indexSearcher.getIndexReader(), fieldName);
 				if (terms == null)
 					return Collections.emptyList();
@@ -689,18 +689,18 @@ final public class IndexInstance implements Closeable {
 	final InputStream getResource(final String resourceName) throws IOException {
 		if (!fileSet.resourcesDirectory.exists())
 			throw new ServerException(Response.Status.NOT_FOUND,
-					"Resource not found : " + resourceName + " - Index: " + indexName);
+					() -> "Resource not found : " + resourceName + " - Index: " + indexName);
 		return fileResourceLoader.openResource(resourceName);
 	}
 
 	final void deleteResource(final String resourceName) {
 		if (!fileSet.resourcesDirectory.exists())
 			throw new ServerException(Response.Status.NOT_FOUND,
-					"Resource not found : " + resourceName + " - Index: " + indexName);
+					() -> "Resource not found : " + resourceName + " - Index: " + indexName);
 		final File resourceFile = fileResourceLoader.checkResourceName(resourceName);
 		if (!resourceFile.exists())
 			throw new ServerException(Response.Status.NOT_FOUND,
-					"Resource not found : " + resourceName + " - Index: " + indexName);
+					() -> "Resource not found : " + resourceName + " - Index: " + indexName);
 		resourceFile.delete();
 	}
 

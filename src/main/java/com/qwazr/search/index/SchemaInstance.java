@@ -117,7 +117,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	private IndexInstanceManager checkIndexExists(final String indexName,
 			final IndexInstanceManager indexInstanceManager) {
 		if (indexInstanceManager == null)
-			throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);
+			throw new ServerException(Response.Status.NOT_FOUND, () -> "Index not found: " + indexName);
 		return indexInstanceManager;
 	}
 
@@ -175,8 +175,9 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		if (StringUtils.isEmpty(backupName))
 			throw new IOException("The backup name is empty");
 		if (backupNameMatcher.matcher(backupName).find())
-			throw new IOException("The backup name should only contains alphanumeric characters, dash, or underscore : "
-					+ backupName);
+			throw new IOException(
+					"The backup name should only contains alphanumeric characters, dash, or underscore : " +
+							backupName);
 		final Path backupDirectory = backupSchemaDirectory.resolve(backupName);
 		if (createIfNotExists && Files.notExists(backupDirectory))
 			Files.createDirectory(backupDirectory);
@@ -197,7 +198,8 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		return backupLock.writeEx(() -> {
 			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
 				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-						"Backup path not defined in the schema settings");
+						"Backup path not defined in the schema settings - Schema/index: " + schemaDirectory.getName() +
+								'/' + indexName);
 			final Path backupDirectory = getBackupDirectory(backupName, true);
 			final SortedMap<String, BackupStatus> results = new TreeMap<>();
 			indexIterator(indexName, (idxName, indexInstance) -> {

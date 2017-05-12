@@ -42,7 +42,7 @@ class FileResourceLoader implements ResourceLoader {
 		final String expectedResourceName = FilenameUtils.getName(FilenameUtils.normalize(resourceName));
 		if (!resourceName.equals(expectedResourceName))
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"The resource name is not valid. Expected: " + expectedResourceName);
+					() -> "The resource name is not valid. Expected: " + expectedResourceName);
 		return new File(directory, expectedResourceName);
 	}
 
@@ -55,7 +55,7 @@ class FileResourceLoader implements ResourceLoader {
 		}
 		if (delegate != null)
 			return delegate.openResource(resourceName);
-		throw new ServerException(Response.Status.NOT_FOUND, "Resource not found : " + resourceName);
+		throw new ServerException(Response.Status.NOT_FOUND, () -> "Resource not found : " + resourceName);
 	}
 
 	@Override
@@ -63,7 +63,7 @@ class FileResourceLoader implements ResourceLoader {
 		try {
 			return ClassLoaderUtils.findClass(cname);
 		} catch (ClassNotFoundException e) {
-			throw new ServerException("Cannot find class " + cname, e);
+			throw new ServerException(() -> "Cannot find class " + cname, e);
 		}
 	}
 
@@ -72,7 +72,7 @@ class FileResourceLoader implements ResourceLoader {
 		try {
 			return findClass(className, expectedType).newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
-			throw new ServerException("Cannot create an instance of class " + className, e);
+			throw new ServerException(() -> "Cannot create an instance of class " + className, e);
 		}
 	}
 }

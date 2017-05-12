@@ -154,7 +154,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 	SchemaInstance get(final String schemaName) {
 		final SchemaInstance schemaInstance = schemaMap.get(schemaName);
 		if (schemaInstance == null)
-			throw new ServerException(Status.NOT_FOUND, "Schema not found: " + schemaName);
+			throw new ServerException(Status.NOT_FOUND, () -> "Schema not found: " + schemaName);
 		return schemaInstance;
 	}
 

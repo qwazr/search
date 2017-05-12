@@ -68,8 +68,8 @@ public class IndexFileSet {
 		if (!mainDirectory.exists())
 			mainDirectory.mkdir();
 		if (!mainDirectory.isDirectory())
-			throw new IOException("This name is not valid. No directory exists for this location: "
-					+ mainDirectory.getAbsolutePath());
+			throw new IOException("This name is not valid. No directory exists for this location: " +
+					mainDirectory.getAbsolutePath());
 	}
 
 	/**

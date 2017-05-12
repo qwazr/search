@@ -72,7 +72,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		void setDocValuesField(final String fieldName, final ValueConverter converter) {
 			final Field field = fieldMap.get(fieldName);
 			if (field == null)
-				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
+				throw new ServerException(() -> "Unknown field " + fieldName + " for class " + record.getClass());
 			final Class<?> fieldType = field.getType();
 			try {
 				if (Collection.class.isAssignableFrom(fieldType))
@@ -88,7 +88,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		final void setStoredField(final String fieldName, final Object fieldValue) {
 			final Field field = fieldMap.get(fieldName);
 			if (field == null)
-				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
+				throw new ServerException(() -> "Unknown field " + fieldName + " for class " + record.getClass());
 			final Class<?> fieldType = field.getType();
 			try {
 

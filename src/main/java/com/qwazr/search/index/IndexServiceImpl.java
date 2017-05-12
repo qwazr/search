@@ -198,7 +198,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			Map<String, FieldDefinition> fieldMap = indexManager.get(schemaName).get(indexName, false).getFields();
 			FieldDefinition fieldDef = (fieldMap != null) ? fieldMap.get(fieldName) : null;
 			if (fieldDef == null)
-				throw new ServerException(Response.Status.NOT_FOUND, "Field not found: " + fieldName);
+				throw new ServerException(Response.Status.NOT_FOUND,
+						() -> "Field not found: " + fieldName + " - Schema/index:" + schemaName + '/' + indexName);
 			return fieldDef;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -223,7 +224,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 		final Analyzer analyzer =
 				index ? indexInstance.getIndexAnalyzer(fieldName) : indexInstance.getQueryAnalyzer(fieldName);
 		if (analyzer == null)
-			throw new ServerException("No analyzer found for " + fieldName);
+			throw new ServerException(
+					() -> "No analyzer found for " + fieldName + " - Schema/index: " + schemaName + '/' + indexName);
 		return TermDefinition.buildTermList(analyzer, fieldName, text);
 	}
 
@@ -317,7 +319,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 					indexManager.get(schemaName).get(indexName, false).getAnalyzers();
 			final AnalyzerDefinition analyzerDef = (analyzerMap != null) ? analyzerMap.get(analyzerName) : null;
 			if (analyzerDef == null)
-				throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzerName);
+				throw new ServerException(Response.Status.NOT_FOUND,
+						() -> "Analyzer not found: " + analyzerName + " - Schema/index: " + schemaName + '/' +
+								indexName);
 			return analyzerDef;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -556,7 +560,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 					indexManager.get(schemaName).get(indexName, false).getLocalReplicator(masterUuid);
 			final InputStream input = localReplicator.obtainFile(sessionID, source, fileName);
 			if (input == null)
-				throw new ServerException(Response.Status.NOT_FOUND, "File not found: " + fileName);
+				throw new ServerException(Response.Status.NOT_FOUND,
+						() -> "File not found: " + fileName + " - Schema/index: " + schemaName + '/' + indexName);
 			return AbstractStreamingOutput.with(input);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -630,7 +635,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			checkRight(null);
 			final InputStream input = indexManager.get(schemaName).get(indexName, false).getResource(resourceName);
 			if (input == null)
-				throw new ServerException(Response.Status.NOT_FOUND, "Resource not found: " + resourceName);
+				throw new ServerException(Response.Status.NOT_FOUND,
+						() -> "Resource not found: " + resourceName + " - Schema/index: " + schemaName + '/' +
+								indexName);
 			return AbstractStreamingOutput.with(input);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -716,7 +723,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 						return docs.get(0).getFields();
 				}
 			}
-			throw new ServerException(Response.Status.NOT_FOUND, "Document not found: " + id);
+			throw new ServerException(Response.Status.NOT_FOUND,
+					() -> "Document not found: " + id + " - Schema/index: " + schemaName + '/' + indexName);
 
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -729,7 +737,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 		try {
 			ResultDefinition result = doSearchMap(schemaName, indexName, getMatchAllDocQuery(start, rows, null));
 			if (result == null)
-				throw new ServerException(Response.Status.NOT_FOUND, "No document found");
+				throw new ServerException(Response.Status.NOT_FOUND,
+						() -> "No document found" + " - Schema/index: " + schemaName + '/' + indexName);
 			List<Map<String, Object>> documents = new ArrayList<>();
 			List<ResultDocumentMap> docs = result.getDocuments();
 			if (docs != null)
@@ -763,7 +772,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final ResultDefinition result =
 					doSearchObject(schemaName, indexName, getMatchAllDocQuery(start, rows, wrapper), wrapper);
 			if (result == null)
-				throw new ServerException(Response.Status.NOT_FOUND, "No document found");
+				throw new ServerException(Response.Status.NOT_FOUND,
+						() -> "No document found" + " - Schema/index: " + schemaName + '/' + indexName);
 			final List<T> documents = new ArrayList<>();
 			final List<ResultDocumentObject<T>> docs = result.getDocuments();
 			if (docs != null)

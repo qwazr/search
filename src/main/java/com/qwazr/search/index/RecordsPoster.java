@@ -75,7 +75,8 @@ interface RecordsPoster {
 		void updateDocument(Object id) throws IOException {
 			if (id == null)
 				throw new ServerException(Response.Status.BAD_REQUEST,
-						"The field " + FieldDefinition.ID_FIELD + " is missing");
+						() -> "The field " + FieldDefinition.ID_FIELD + " is missing - Index: " +
+								indexWriter.getDirectory());
 			final Term termId = new Term(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id));
 			indexWriter.updateDocument(termId, getFacetedDoc());
 			count++;
@@ -103,7 +104,7 @@ interface RecordsPoster {
 		final void updateDocValues(final Object id) throws IOException {
 			if (id == null)
 				throw new ServerException(Response.Status.BAD_REQUEST,
-						"The field " + FieldDefinition.ID_FIELD + " is missing");
+						() -> "The field " + FieldDefinition.ID_FIELD + " is missing - Index: " + indexWriter);
 			final Term termId = new Term(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id));
 			indexWriter.updateDocValues(termId, documentBuilder.fieldList.toArray(
 					new org.apache.lucene.document.Field[documentBuilder.fieldList.size()]));

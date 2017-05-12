@@ -29,38 +29,38 @@ interface TypeUtils {
 	static int getIntNumber(final String fieldName, final Object value) {
 		if (value == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot extract an integer from a null value for the field " + fieldName);
+					() -> "Cannot extract an integer from a null value for the field " + fieldName);
 		return value instanceof Number ? ((Number) value).intValue() : Integer.valueOf(value.toString());
 	}
 
 	static long getLongNumber(final String fieldName, final Object value) {
 		if (value == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot extract an long from a null value for the field " + fieldName);
+					() -> "Cannot extract an long from a null value for the field " + fieldName);
 		return value instanceof Number ? ((Number) value).longValue() : Long.valueOf(value.toString());
 	}
 
 	static float getFloatNumber(final String fieldName, final Object value) {
 		if (value == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot extract an float from a null value for the field " + fieldName);
+					() -> "Cannot extract an float from a null value for the field " + fieldName);
 		return value instanceof Number ? ((Number) value).floatValue() : Float.valueOf(value.toString());
 	}
 
 	static double getDoubleNumber(final String fieldName, final Object value) {
 		if (value == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot extract an double from a null value for the field " + fieldName);
+					() -> "Cannot extract an double from a null value for the field " + fieldName);
 		return value instanceof Number ? ((Number) value).doubleValue() : Double.valueOf(value.toString());
 	}
 
 	static String[] getStringArray(String fieldName, Object[] values, int start) {
 		if (values == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot extract an array from a null value for the field " + fieldName);
+					() -> "Cannot extract an array from a null value for the field " + fieldName);
 		if (start > values.length)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Not enough value in the array for the field " + fieldName);
+					() -> "Not enough value in the array for the field " + fieldName);
 		final String[] array = new String[values.length - start];
 		int j = 0;
 		for (int i = start; i < values.length; i++)
@@ -73,7 +73,7 @@ interface TypeUtils {
 			return SerializationUtils.toExternalizorBytes(value);
 		} catch (IOException | ReflectiveOperationException e) {
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot serialize the value of the field " + fieldName, e);
+					() -> "Cannot serialize the value of the field " + fieldName, e);
 		}
 	}
 
@@ -82,7 +82,7 @@ interface TypeUtils {
 			return SerializationUtils.toExternalizorBytes(value);
 		} catch (IOException | ReflectiveOperationException e) {
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot serialize the value of the field " + fieldName, e);
+					() -> "Cannot serialize the value of the field " + fieldName, e);
 		}
 	}
 

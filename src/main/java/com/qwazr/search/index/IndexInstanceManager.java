@@ -87,8 +87,8 @@ class IndexInstanceManager implements Closeable {
 	}
 
 	private boolean isNewMaster(final IndexSettingsDefinition newSettings) {
-		return !(newSettings == null || newSettings.master == null) && (settings == null || !Objects.equals(
-				settings.master, newSettings.master));
+		return !(newSettings == null || newSettings.master == null) &&
+				(settings == null || !Objects.equals(settings.master, newSettings.master));
 	}
 
 	IndexInstance createUpdate(final IndexSettingsDefinition newSettings) throws Exception {
@@ -100,7 +100,7 @@ class IndexInstanceManager implements Closeable {
 				if (isNewMaster(newSettings)) {
 					if (indexInstance.getStatus().num_docs > 0)
 						throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-								"This index already contains document.");
+								() -> "This index already contains document - Index: " + fileSet.mainDirectory);
 					indexInstance.close();
 					indexInstance = null;
 					FileUtils.deleteQuietly(fileSet.mainDirectory);

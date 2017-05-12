@@ -102,7 +102,7 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 	protected void fillMap(final String fieldName, final Map<Object, Object> values, final Float boost,
 			final FieldConsumer consumer) {
 		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-				"Map is not asupported type for the field: " + fieldName);
+				() -> "Map is not asupported type for the field: " + fieldName);
 	}
 
 	protected void fillJSObject(final String fieldName, final JSObject values, final Float boost,
@@ -116,7 +116,7 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 			((Map<String, Object>) value).forEach((fieldName, valueObject) -> {
 				if (!wildcardMatcher.match(fieldName))
 					throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-							"The field name does not match the field pattern: " + wildcardName);
+							() -> "The field name does not match the field pattern: " + wildcardName);
 				fill(fieldName, valueObject, boost, fieldConsumer);
 			});
 		} else
@@ -152,7 +152,7 @@ abstract class FieldTypeAbstract implements FieldTypeInterface {
 	protected void fillValue(final String fieldName, final Object value, final Float boost,
 			final FieldConsumer fieldConsumer) {
 		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-				"Not supported type for the field: " + fieldName + ": " + value.getClass());
+				() -> "Not supported type for the field: " + fieldName + ": " + value.getClass());
 	}
 
 	@Override

@@ -35,7 +35,8 @@ class IntAssociationFacetType extends FieldTypeAbstract {
 			final FieldConsumer consumer) {
 		Objects.requireNonNull(values, "The value array is empty");
 		if (values.length < 2)
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE, "Expected at least 2 values");
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+					() -> "Expected at least 2 values - Field: " + fieldName);
 		final int assoc = TypeUtils.getIntNumber(fieldName, values[0]);
 		final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
 		consumer.accept(fieldName, new IntAssociationFacetField(assoc, fieldName, path), boost);
