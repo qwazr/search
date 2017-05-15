@@ -18,9 +18,13 @@ package com.qwazr.search.index;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.FunctionUtils;
+import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetResult;
+import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.LabelAndValue;
@@ -48,6 +52,8 @@ abstract class FacetsBuilder {
 	private final Query searchQuery;
 	private final TimeTracker timeTracker;
 
+	public final static int DEFAULT_TOP = 10;
+
 	final LinkedHashMap<String, Map<String, Number>> results = new LinkedHashMap<>();
 
 	private FacetsBuilder(final QueryContextImpl queryContext, final LinkedHashMap<String, FacetDefinition> facetsDef,
@@ -63,13 +69,15 @@ abstract class FacetsBuilder {
 		for (Map.Entry<String, FacetDefinition> entry : facetsDef.entrySet()) {
 			final String dim = entry.getKey();
 			final FacetDefinition facet = entry.getValue();
-			final FacetBuilder facetBuilder;
-			if (facet.queries == null || facet.queries.isEmpty())
-				facetBuilder = buildFacetState(dim, facet);
-			else
-				facetBuilder = buildFacetQueries(facet);
-			if (facetBuilder != null)
-				results.put(dim, facetBuilder.build());
+			final FacetBuilder facetBuilder = new FacetBuilder(facet);
+			final boolean isQueries = MapUtils.isNotEmpty(facet.queries);
+			final boolean isSpecificValues = CollectionUtils.isNotEmpty(facet.specific_values);
+			final Integer top = facet.top != null ? facet.top : (isQueries || isSpecificValues) ? null : DEFAULT_TOP;
+			if (isSpecificValues || top != null)
+				buildFacetState(dim, top, facet.specific_values, facetBuilder);
+			if (isQueries)
+				buildFacetQueries(facet.queries, facetBuilder);
+			results.put(dim, facetBuilder.build());
 		}
 
 		if (timeTracker != null)
@@ -77,31 +85,38 @@ abstract class FacetsBuilder {
 		return this;
 	}
 
-	private FacetBuilder buildFacetState(final String dim, final FacetDefinition facetDefinition) throws IOException {
-		final int top = facetDefinition.top == null ? 10 : facetDefinition.top;
-		final FacetResult facetResult = getFacetResult(top, dim);
-		if (facetResult == null || facetResult.labelValues == null)
-			return FacetBuilder.EMPTY;
-		final FacetBuilder facetBuilder = new FacetBuilder(facetDefinition);
-		for (LabelAndValue lv : facetResult.labelValues)
-			facetBuilder.put(lv.label, lv.value);
-		return facetBuilder;
+	protected abstract Facets getFacets(final String dim) throws IOException;
+
+	private void buildFacetState(final String dim, final Integer top, final Set<String[]> specificValues,
+			final FacetBuilder facetBuilder) throws IOException {
+		final Facets facets = getFacets(dim);
+		if (facets == null)
+			return;
+		if (top != null && top > 0) {
+			final FacetResult facetResult = facets.getTopChildren(top, dim);
+			if (facetResult != null && facetResult.labelValues != null)
+				for (LabelAndValue lv : facetResult.labelValues)
+					facetBuilder.put(lv);
+		}
+		if (specificValues != null) {
+			for (String[] path : specificValues) {
+				final Number count = facets.getSpecificValue(dim, path);
+				facetBuilder.put(new LabelAndValue(StringUtils.join(path, '/'),
+						count == null || count.longValue() <= 0 ? 0 : count));
+			}
+		}
 	}
 
-	protected abstract FacetResult getFacetResult(final int top, final String dim) throws IOException;
-
-	private FacetBuilder buildFacetQueries(final FacetDefinition facet)
+	private void buildFacetQueries(final LinkedHashMap<String, AbstractQuery> queries, final FacetBuilder facetBuilder)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		final FacetBuilder facetBuilder = new FacetBuilder(facet);
 		final FunctionUtils.BiConsumerEx4<String, AbstractQuery, IOException, ParseException, QueryNodeException, ReflectiveOperationException>
 				consumer = (name, facetQuery) -> {
 			final BooleanQuery.Builder builder = new BooleanQuery.Builder();
 			builder.add(searchQuery, BooleanClause.Occur.FILTER);
 			builder.add(facetQuery.getQuery(queryContext), BooleanClause.Occur.FILTER);
-			facetBuilder.put(name, queryContext.indexSearcher.count(builder.build()));
+			facetBuilder.put(new LabelAndValue(name, queryContext.indexSearcher.count(builder.build())));
 		};
-		FunctionUtils.forEachEx4(facet.queries, consumer);
-		return facetBuilder;
+		FunctionUtils.forEachEx4(queries, consumer);
 	}
 
 	static Set<String> getFields(LinkedHashMap<String, FacetDefinition> facets) {
@@ -180,22 +195,22 @@ abstract class FacetsBuilder {
 		}
 
 		@Override
-		final protected FacetResult getFacetResult(final int top, final String dim) throws IOException {
+		final protected Facets getFacets(final String dim) throws IOException {
 			final String indexFieldName = facetsConfig.getDimConfig(dim).indexFieldName;
 			if (indexFieldName == null)
 				return null;
 			if (indexFieldName.equals(sortedSetFacetField)) {
 				if (queryContext.docValueReaderState != null)
 					if (queryContext.docValueReaderState.getOrdRange(dim) != null)
-						return sortedSetCounts.getTopChildren(top, dim);
+						return sortedSetCounts;
 			} else {
 				switch (indexFieldName) {
 				case FieldDefinition.TAXONOMY_FACET_FIELD:
-					return taxonomyCounts == null ? null : taxonomyCounts.getTopChildren(top, dim);
+					return taxonomyCounts;
 				case FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD:
-					return intTaxonomyCounts == null ? null : intTaxonomyCounts.getTopChildren(top, dim);
+					return intTaxonomyCounts;
 				case FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD:
-					return floatTaxonomyCounts == null ? null : floatTaxonomyCounts.getTopChildren(top, dim);
+					return floatTaxonomyCounts;
 				}
 			}
 			return null;
@@ -217,14 +232,14 @@ abstract class FacetsBuilder {
 		}
 
 		@Override
-		final protected FacetResult getFacetResult(final int top, final String dim) throws IOException {
+		final protected Facets getFacets(final String dim) throws IOException {
 			if (sortedSetFacetField.equals(facetsConfig.getDimConfig(dim).indexFieldName)) {
 				if (queryContext.docValueReaderState == null)
 					return null;
 				if (queryContext.docValueReaderState.getOrdRange(dim) == null)
 					return null;
 			}
-			return results.facets.getTopChildren(top, dim);
+			return results.facets;
 		}
 	}
 }

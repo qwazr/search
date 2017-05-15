@@ -17,8 +17,13 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qwazr.search.query.AbstractQuery;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.lucene.facet.LabelAndValue;
 
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class FacetDefinition {
@@ -27,12 +32,29 @@ public class FacetDefinition {
 
 	final public LinkedHashMap<String, AbstractQuery> queries;
 
+	final public LinkedHashSet<String[]> specific_values;
+
 	final public String prefix;
 
 	final public Sort sort;
 
-	public enum Sort {
-		value_descending, value_ascending, count_descending, count_ascending
+	public enum Sort implements Comparator<LabelAndValue> {
+
+		value_descending(FacetBuilder.VALUE_DESCENDING),
+		value_ascending(FacetBuilder.VALUE_ASCENDING),
+		label_descending(FacetBuilder.LABEL_DESCENDING),
+		label_ascending(FacetBuilder.LABEL_ASCENDING);
+
+		private final Comparator<LabelAndValue> comparator;
+
+		Sort(Comparator<LabelAndValue> comparator) {
+			this.comparator = comparator;
+		}
+
+		@Override
+		public int compare(LabelAndValue o1, LabelAndValue o2) {
+			return comparator.compare(o1, o2);
+		}
 	}
 
 	public FacetDefinition() {
@@ -40,11 +62,7 @@ public class FacetDefinition {
 	}
 
 	public FacetDefinition(Integer top) {
-		this(top, (String) null);
-	}
-
-	public FacetDefinition(Integer top, LinkedHashMap<String, AbstractQuery> queries) {
-		this(top, null, null, queries);
+		this(top, null);
 	}
 
 	public FacetDefinition(Integer top, String prefix) {
@@ -52,19 +70,21 @@ public class FacetDefinition {
 	}
 
 	public FacetDefinition(Integer top, String prefix, Sort sort) {
-		this(top, prefix, sort, null);
+		this(top, prefix, sort, null, null);
 	}
 
-	public FacetDefinition(Integer top, String prefix, Sort sort, LinkedHashMap<String, AbstractQuery> queries) {
+	public FacetDefinition(Integer top, String prefix, Sort sort, LinkedHashMap<String, AbstractQuery> queries,
+			LinkedHashSet<String[]> specificValues) {
 		this.top = top;
 		this.prefix = prefix;
 		this.sort = sort;
 		this.queries = queries;
+		this.specific_values = specificValues;
 	}
 
 	private FacetDefinition(final Builder builder) {
-		this(builder.top, builder.prefix, builder.sort,
-				builder.queries != null && !builder.queries.isEmpty() ? builder.queries : null);
+		this(builder.top, builder.prefix, builder.sort, MapUtils.isEmpty(builder.queries) ? null : builder.queries,
+				CollectionUtils.isEmpty(builder.specificValues) ? null : builder.specificValues);
 	}
 
 	public static Builder of() {
@@ -81,6 +101,7 @@ public class FacetDefinition {
 		public String prefix;
 		public Sort sort;
 		public LinkedHashMap<String, AbstractQuery> queries;
+		public LinkedHashSet<String[]> specificValues;
 
 		public Builder top(Integer top) {
 			this.top = top;
@@ -101,6 +122,13 @@ public class FacetDefinition {
 			if (queries == null)
 				queries = new LinkedHashMap<>();
 			queries.put(name, query);
+			return this;
+		}
+
+		public Builder specificValues(String... path) {
+			if (specificValues == null)
+				specificValues = new LinkedHashSet<>();
+			specificValues.add(path);
 			return this;
 		}
 

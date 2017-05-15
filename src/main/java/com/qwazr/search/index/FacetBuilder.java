@@ -13,40 +13,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 package com.qwazr.search.index;
 
 import com.qwazr.utils.StringUtils;
+import org.apache.lucene.facet.LabelAndValue;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 final class FacetBuilder {
 
+	private final FacetDefinition.Sort sort;
 	private final String prefix;
-	private final Map<String, Number> facetResult;
-
-	final static FacetBuilder EMPTY = new FacetBuilder();
-
-	private FacetBuilder() {
-		prefix = null;
-		facetResult = Collections.emptyMap();
-	}
+	private final List<LabelAndValue> facetResult;
 
 	FacetBuilder(final FacetDefinition facetDefinition) {
-		this.prefix = StringUtils.isEmpty(facetDefinition.prefix) ? null : facetDefinition.prefix;
-		this.facetResult = new LinkedHashMap<>();
+		prefix = StringUtils.isEmpty(facetDefinition.prefix) ? null : facetDefinition.prefix;
+		sort = facetDefinition.sort;
+		facetResult = new ArrayList<>();
 	}
 
-	void put(final String value, final Number count) {
+	void put(final LabelAndValue labelAndValue) {
 		if (prefix != null)
-			if (!value.startsWith(prefix))
+			if (!labelAndValue.label.startsWith(prefix))
 				return;
-		facetResult.put(value, count);
+		facetResult.add(labelAndValue);
 	}
 
 	Map<String, Number> build() {
-		return facetResult;
+		final Map<String, Number> result = new LinkedHashMap<>();
+		if (sort != null && facetResult.size() > 1)
+			Collections.sort(facetResult, sort);
+		facetResult.forEach((labelAndValue) -> result.put(labelAndValue.label, labelAndValue.value));
+		return result;
 	}
+
+	final static Comparator<LabelAndValue> LABEL_ASCENDING = (o1, o2) -> o1.label.compareTo(o2.label);
+	final static Comparator<LabelAndValue> LABEL_DESCENDING = (o1, o2) -> o2.label.compareTo(o1.label);
+	final static Comparator<LabelAndValue> VALUE_ASCENDING =
+			(o1, o2) -> Long.compare(o1.value.longValue(), o2.value.longValue());
+	final static Comparator<LabelAndValue> VALUE_DESCENDING =
+			(o1, o2) -> Long.compare(o2.value.longValue(), o1.value.longValue());
 }
