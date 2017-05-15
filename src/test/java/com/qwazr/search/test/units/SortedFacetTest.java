@@ -189,6 +189,6 @@ public class SortedFacetTest extends AbstractIndexTest {
 				.build());
 		final Map<String, Number> facetResult = checkResult(result);
 		Assert.assertEquals(1, facetResult.size());
-		Assert.assertEquals(expected, facetResult.get(facetName));
+		Assert.assertEquals(expected, facetResult.get(facetName).intValue());
 	}
 }
