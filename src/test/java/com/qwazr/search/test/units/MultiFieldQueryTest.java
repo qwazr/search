@@ -21,6 +21,7 @@ import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.search.Query;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -46,10 +47,18 @@ public class MultiFieldQueryTest extends AbstractIndexTest {
 	}
 
 	@Test
-	public void test() {
+	public void testWithDefaultAnalyzer() {
 		QueryDefinition queryDef = QueryDefinition.of(
 				new MultiFieldQuery(QueryParserOperator.AND, "Hello", 0).boost("textField", 1F)
 						.boost("stringField", 1F)).build();
+		checkQuery(queryDef);
+	}
+
+	@Test
+	public void testWithCustomAnalyzer() {
+		QueryDefinition queryDef = QueryDefinition.of(
+				new MultiFieldQuery(QueryParserOperator.AND, "Hello", 0, null, new StandardAnalyzer()).boost(
+						"textField", 1F).boost("stringField", 1F)).build();
 		checkQuery(queryDef);
 	}
 

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.TermConsumer;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.StringUtils;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -37,6 +38,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.HashMap;
 
 public class MultiFieldQuery extends AbstractQuery {
 
@@ -55,23 +57,41 @@ public class MultiFieldQuery extends AbstractQuery {
 	@JsonProperty("tie_breaker_multiplier")
 	final public Float tieBreakerMultiplier;
 
+	final private Analyzer analyzer;
+
 	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString) {
-		this(defaultOperator, queryString, null);
+		this(new HashMap<>(), defaultOperator, queryString, null, null, null);
 	}
 
 	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString,
 			final Integer minNumberShouldMatch) {
-		this(new LinkedHashMap<>(), defaultOperator, queryString, minNumberShouldMatch, null);
+		this(new HashMap<>(), defaultOperator, queryString, minNumberShouldMatch, null, null);
 	}
 
 	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString,
 			final Integer minNumberShouldMatch, final Float tieBreakerMultiplier) {
-		this(new LinkedHashMap<>(), defaultOperator, queryString, minNumberShouldMatch, tieBreakerMultiplier);
+		this(new HashMap<>(), defaultOperator, queryString, minNumberShouldMatch, tieBreakerMultiplier, null);
 	}
 
 	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final QueryParserOperator defaultOperator,
 			final String queryString, final Integer minNumberShouldMatch) {
-		this(fieldsBoosts, defaultOperator, queryString, minNumberShouldMatch, null);
+		this(fieldsBoosts, defaultOperator, queryString, minNumberShouldMatch, null, null);
+	}
+
+	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString,
+			final Integer minNumberShouldMatch, final Float tieBreakerMultiplier, final Analyzer analyzer) {
+		this(new HashMap<>(), defaultOperator, queryString, minNumberShouldMatch, tieBreakerMultiplier, analyzer);
+	}
+
+	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final QueryParserOperator defaultOperator,
+			final String queryString, final Integer minNumberShouldMatch, final Float tieBreakerMultiplier,
+			final Analyzer analyser) {
+		this.fieldsBoosts = fieldsBoosts;
+		this.defaultOperator = defaultOperator;
+		this.queryString = queryString;
+		this.minNumberShouldMatch = minNumberShouldMatch;
+		this.tieBreakerMultiplier = tieBreakerMultiplier;
+		this.analyzer = analyser;
 	}
 
 	@JsonCreator
@@ -80,11 +100,7 @@ public class MultiFieldQuery extends AbstractQuery {
 			@JsonProperty("query_string") final String queryString,
 			@JsonProperty("min_number_should_match") final Integer minNumberShouldMatch,
 			@JsonProperty("tie_breaker_multiplier") final Float tieBreakerMultiplier) {
-		this.fieldsBoosts = fieldsBoosts;
-		this.defaultOperator = defaultOperator;
-		this.queryString = queryString;
-		this.minNumberShouldMatch = minNumberShouldMatch;
-		this.tieBreakerMultiplier = tieBreakerMultiplier;
+		this(fieldsBoosts, defaultOperator, queryString, minNumberShouldMatch, tieBreakerMultiplier, null);
 	}
 
 	@JsonIgnore
@@ -112,10 +128,14 @@ public class MultiFieldQuery extends AbstractQuery {
 						BooleanClause.Occur.MUST :
 						BooleanClause.Occur.SHOULD;
 
+		// Select the right analyzer
+		final Analyzer alzr = analyzer != null ? analyzer : queryContext.getQueryAnalyzer();
+
+		new LinkedHashMap<>();
 		final SortedMap<Integer, List<Query>> byPosQueries = new TreeMap<>();
 		// Build term queries
 		fieldsBoosts.forEach((field, boost) -> {
-			try (final TokenStream tokenStream = queryContext.getQueryAnalyzer().tokenStream(field, queryString)) {
+			try (final TokenStream tokenStream = alzr.tokenStream(field, queryString)) {
 				final FieldTermsQuery fieldTermsQuery =
 						new FieldTermsQuery(byPosQueries, tokenStream, field, queryContext.getIndexReader());
 				fieldTermsQuery.forEachToken();
