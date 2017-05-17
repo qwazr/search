@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.search.annotations.AnnotatedIndexService;
+import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FunctionUtils;
@@ -96,8 +97,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 		return this;
 	}
 
-	public IndexManager registerWebService(final GenericServer.Builder builder) {
-		registerContextAttribute(builder);
+	public IndexManager registerWebService(final ApplicationBuilder builder) {
 		builder.singletons(service);
 		return this;
 	}

@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.HashMap;
 
 public class MultiFieldQuery extends AbstractQuery {
 
@@ -60,17 +59,17 @@ public class MultiFieldQuery extends AbstractQuery {
 	final private Analyzer analyzer;
 
 	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString) {
-		this(new HashMap<>(), defaultOperator, queryString, null, null, null);
+		this(new LinkedHashMap<>(), defaultOperator, queryString, null, null, null);
 	}
 
 	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString,
 			final Integer minNumberShouldMatch) {
-		this(new HashMap<>(), defaultOperator, queryString, minNumberShouldMatch, null, null);
+		this(new LinkedHashMap<>(), defaultOperator, queryString, minNumberShouldMatch, null, null);
 	}
 
 	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString,
 			final Integer minNumberShouldMatch, final Float tieBreakerMultiplier) {
-		this(new HashMap<>(), defaultOperator, queryString, minNumberShouldMatch, tieBreakerMultiplier, null);
+		this(new LinkedHashMap<>(), defaultOperator, queryString, minNumberShouldMatch, tieBreakerMultiplier, null);
 	}
 
 	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final QueryParserOperator defaultOperator,
@@ -80,7 +79,7 @@ public class MultiFieldQuery extends AbstractQuery {
 
 	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString,
 			final Integer minNumberShouldMatch, final Float tieBreakerMultiplier, final Analyzer analyzer) {
-		this(new HashMap<>(), defaultOperator, queryString, minNumberShouldMatch, tieBreakerMultiplier, analyzer);
+		this(new LinkedHashMap<>(), defaultOperator, queryString, minNumberShouldMatch, tieBreakerMultiplier, analyzer);
 	}
 
 	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final QueryParserOperator defaultOperator,

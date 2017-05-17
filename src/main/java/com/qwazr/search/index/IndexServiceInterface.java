@@ -20,7 +20,6 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServiceInterface;
-import com.qwazr.server.ServiceName;
 import com.qwazr.utils.FieldMapWrapper;
 import com.qwazr.utils.FunctionUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -47,7 +46,6 @@ import java.util.SortedMap;
 
 @RolesAllowed(IndexServiceInterface.SERVICE_NAME)
 @Path("/" + IndexServiceInterface.PATH)
-@ServiceName(IndexServiceInterface.SERVICE_NAME)
 public interface IndexServiceInterface extends ServiceInterface {
 
 	String SERVICE_NAME = "search";
