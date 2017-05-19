@@ -176,7 +176,9 @@ public class SortedFacetTest extends AbstractIndexTest {
 		String facetName = RandomStringUtils.randomAlphabetic(5);
 		String facetTerm1 = getRandomFacetValue();
 		String facetTerm2 = getRandomFacetValue();
-		int expected = facetTerms.get(facetTerm1).get() + facetTerms.get(facetTerm2).get();
+		int expected = facetTerm1.equals(facetTerm2) ?
+				facetTerms.get(facetTerm1).get() :
+				facetTerms.get(facetTerm1).get() + facetTerms.get(facetTerm2).get();
 		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
 				.facet("sortedSetDocValuesFacetField", FacetDefinition.of()
 						.query(facetName, BooleanQuery.of()
