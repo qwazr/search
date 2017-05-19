@@ -24,6 +24,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.FieldInfos;
+import org.apache.lucene.index.IndexCommit;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -36,16 +37,16 @@ import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.LRUQueryCache;
 import org.apache.lucene.search.QueryCache;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
@@ -53,6 +54,8 @@ import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexStatus {
+
+	private final static Logger LOGGER = LoggerFactory.getLogger(IndexStatus.class);
 
 	final public Long num_docs;
 	final public Long num_deleted_docs;
@@ -73,7 +76,7 @@ public class IndexStatus {
 	final public QueryCacheStats query_cache;
 	final public Map<String, String> commit_user_data;
 
-	public IndexStatus() {
+	IndexStatus() {
 		num_docs = null;
 		num_deleted_docs = null;
 		merge_policy = null;
@@ -94,9 +97,9 @@ public class IndexStatus {
 		commit_user_data = null;
 	}
 
-	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final Directory directory,
-			final IndexSearcher indexSearcher, final IndexWriter indexWriter, final IndexSettingsDefinition settings,
-			final Set<String> analyzers, final Set<String> fields) throws IOException {
+	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final IndexSearcher indexSearcher,
+			final IndexWriter indexWriter, final IndexSettingsDefinition settings, final Set<String> analyzers,
+			final Set<String> fields) {
 		final IndexReader indexReader = indexSearcher.getIndexReader();
 		num_docs = (long) indexReader.numDocs();
 		num_deleted_docs = (long) indexReader.numDeletedDocs();
@@ -132,14 +135,10 @@ public class IndexStatus {
 		this.analyzers = analyzers;
 		this.fields = fields;
 
-		final SegmentInfos segmentInfos = directory != null && directory instanceof FSDirectory ?
-				version == null || version == 1 ? null : SegmentInfos.readLatestCommit(directory) :
-				null;
+		final SegmentInfos segmentInfos = getSegmentInfos(indexReader);
 		if (segmentInfos != null) {
 			number_of_segment = segmentInfos.size();
-			segment_infos = new ArrayList<>();
-			for (SegmentCommitInfo segmentInfo : segmentInfos)
-				segment_infos.add(new SegmentInfoStatus(segmentInfo));
+			segment_infos = getSegmentsInfoStatus(segmentInfos);
 		} else {
 			number_of_segment = null;
 			segment_infos = null;
@@ -148,6 +147,34 @@ public class IndexStatus {
 		this.query_cache = queryCache != null && queryCache instanceof LRUQueryCache ?
 				new QueryCacheStats((LRUQueryCache) queryCache) :
 				null;
+	}
+
+	private static SegmentInfos getSegmentInfos(final IndexReader indexReader) {
+		if (!(indexReader instanceof DirectoryReader))
+			return null;
+		try {
+			final IndexCommit indexCommit = ((DirectoryReader) indexReader).getIndexCommit();
+			if (indexCommit == null)
+				return null;
+			return SegmentInfos.readCommit(indexCommit.getDirectory(), indexCommit.getSegmentsFileName());
+		} catch (IOException e) {
+			LOGGER.warn("Fail while extracting Segment information", e);
+			return null;
+		}
+	}
+
+	private static ArrayList<SegmentInfoStatus> getSegmentsInfoStatus(final SegmentInfos segmentInfos) {
+		if (segmentInfos == null)
+			return null;
+		final ArrayList<SegmentInfoStatus> segmentInfoStatuses = new ArrayList<>(segmentInfos.size());
+		for (SegmentCommitInfo segmentInfo : segmentInfos) {
+			try {
+				segmentInfoStatuses.add(new SegmentInfoStatus(segmentInfo));
+			} catch (IOException e) {
+				LOGGER.warn("Fail while extracting Segment information", e);
+			}
+		}
+		return segmentInfoStatuses;
 	}
 
 	private void fillFieldInfos(final Map<String, Set<FieldInfoStatus>> field_infos,

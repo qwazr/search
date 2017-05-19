@@ -166,7 +166,7 @@ final public class IndexInstance implements Closeable {
 
 	private IndexStatus getIndexStatus() throws IOException {
 		return writerAndSearcher.search((indexSearcher, taxonomyReader) -> new IndexStatus(indexUuid,
-				indexReplicator != null ? indexReplicator.getMasterUuid() : null, dataDirectory, indexSearcher,
+				indexReplicator != null ? indexReplicator.getMasterUuid() : null, indexSearcher,
 				writerAndSearcher.getIndexWriter(), settings, localAnalyzerFactoryMap.keySet(),
 				fieldMap.getFieldDefinitionMap().keySet()));
 	}
