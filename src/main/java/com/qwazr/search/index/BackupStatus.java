@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.server.ServerException;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexNotFoundException;
@@ -27,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.FileTime;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,19 +45,13 @@ public class BackupStatus {
 	final public Long bytes_size;
 	final public Integer files_count;
 
-	public BackupStatus() {
-		index_version = null;
-		taxonomy_version = null;
-		date = null;
-		bytes_size = null;
-		files_count = null;
-	}
-
-	private BackupStatus(Long index_version, Long taxonomy_version, FileTime date, Long bytes_size,
-			Integer files_count) {
+	@JsonCreator
+	BackupStatus(@JsonProperty("index_version") Long index_version,
+			@JsonProperty("taxonomy_version") Long taxonomy_version, @JsonProperty("date") Date date,
+			@JsonProperty("bytes_size") Long bytes_size, @JsonProperty("files_count") Integer files_count) {
 		this.index_version = index_version;
 		this.taxonomy_version = taxonomy_version;
-		this.date = new Date(date.toMillis());
+		this.date = date;
 		this.bytes_size = bytes_size;
 		this.files_count = files_count;
 	}
@@ -81,7 +76,7 @@ public class BackupStatus {
 		});
 
 		return new BackupStatus(getIndexVersion(dataPath), getIndexVersion(taxoPath),
-				Files.getLastModifiedTime(backupDir), size.get(), count.get());
+				new Date(Files.getLastModifiedTime(backupDir).toMillis()), size.get(), count.get());
 	}
 
 	private static Long getIndexVersion(final Path indexPath) throws IOException {

@@ -644,15 +644,16 @@ public abstract class JavaAbstractTest {
 		Assert.assertArrayEquals(slaveAnalyzers.keySet().toArray(), masterAnalyzers.keySet().toArray());
 	}
 
+	private final static String BACKUP_NAME = "myBackup";
+
 	@Test
 	public void test850backup() throws IOException, URISyntaxException {
 		final AnnotatedIndexService master = getMaster();
-		final String backupName = "myBackup";
-		SortedMap<String, SortedMap<String, BackupStatus>> globalStatus = master.getBackups(backupName);
+		SortedMap<String, SortedMap<String, BackupStatus>> globalStatus = master.getBackups("*");
 		Assert.assertNotNull(globalStatus);
-		globalStatus = master.doBackup(backupName);
+		globalStatus = master.doBackup(BACKUP_NAME);
 		Assert.assertNotNull(globalStatus);
-		final Map<String, BackupStatus> schemaStatus = globalStatus.get(master.getSchemaName());
+		final SortedMap<String, BackupStatus> schemaStatus = globalStatus.get(master.getSchemaName());
 		Assert.assertNotNull(schemaStatus);
 		final BackupStatus backupStatus = schemaStatus.get(master.getIndexName());
 		Assert.assertNotNull(backupStatus);
@@ -746,6 +747,19 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test950DeleteAll() throws URISyntaxException, IOException {
 		getMaster().deleteAll();
+	}
+
+	@Test
+	public void test960DeleteBackup() throws URISyntaxException, IOException {
+		SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups = getMaster().getBackups("*");
+		Assert.assertNotNull(backups);
+		Assert.assertFalse(backups.isEmpty());
+		final Integer count = getMaster().deleteBackups(BACKUP_NAME);
+		Assert.assertNotNull(count);
+		Assert.assertEquals(1, count, 0);
+		backups = getMaster().getBackups("*");
+		Assert.assertNotNull(backups);
+		Assert.assertTrue(backups.isEmpty());
 	}
 
 	protected abstract File getIndexDirectory();

@@ -597,6 +597,11 @@ public class AnnotatedIndexService<T> {
 		return indexService.doBackup(schemaName, indexName, backupName);
 	}
 
+	public Integer deleteBackups(final String backupName) {
+		checkParameters();
+		return indexService.deleteBackups(schemaName, indexName, backupName);
+	}
+
 	private <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query,
 			final FieldMapWrapper<C> wrapper) {
 		checkParameters();
