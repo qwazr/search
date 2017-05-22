@@ -25,11 +25,11 @@ import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FieldMapWrapper;
+import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
@@ -124,8 +124,8 @@ final public class IndexInstance implements Closeable {
 		this.localAnalyzerFactoryMap = builder.localAnalyzerFactoryMap;
 		this.analyzerDefinitionMap = CustomAnalyzer.createDefinitionMap(localAnalyzerFactoryMap);
 		this.globalAnalyzerFactoryMap = builder.globalAnalyzerFactoryMap;
-		this.fieldMap =
-				builder.fieldMap == null ? null : new FieldMap(builder.fieldMap, builder.settings.sortedSetFacetField);
+		this.fieldMap = builder.fieldMap == null ? null : new FieldMap(builder.fieldMap,
+				builder.settings.sortedSetFacetField);
 		this.writerAndSearcher = builder.writerAndSearcher;
 		this.indexAnalyzer = builder.indexAnalyzer;
 		this.queryAnalyzer = builder.queryAnalyzer;
@@ -191,9 +191,8 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private void refreshFieldsAnalyzers() throws IOException {
-		final AnalyzerContext analyzerContext =
-				new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap.getFieldDefinitionMap(), true,
-						globalAnalyzerFactoryMap, localAnalyzerFactoryMap);
+		final AnalyzerContext analyzerContext = new AnalyzerContext(instanceFactory, fileResourceLoader,
+				fieldMap.getFieldDefinitionMap(), true, globalAnalyzerFactoryMap, localAnalyzerFactoryMap);
 		indexAnalyzer.update(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext.queryAnalyzerMap);
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
@@ -287,9 +286,9 @@ final public class IndexInstance implements Closeable {
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				try {
-					final Query fromQuery = joinQuery.from_query == null ?
-							new MatchAllDocsQuery() :
-							joinQuery.from_query.getQuery(buildQueryContext(indexSearcher, taxonomyReader, null));
+					final Query fromQuery =
+							joinQuery.from_query == null ? new MatchAllDocsQuery() : joinQuery.from_query.getQuery(
+									buildQueryContext(indexSearcher, taxonomyReader, null));
 					return JoinUtil.createJoinQuery(joinQuery.from_field, joinQuery.multiple_values_per_document,
 							joinQuery.to_field, fromQuery, indexSearcher,
 							joinQuery.score_mode == null ? ScoreMode.None : joinQuery.score_mode);
@@ -336,17 +335,16 @@ final public class IndexInstance implements Closeable {
 
 			// Copy the data using replication
 			try (final Directory dataDir = FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_DATA));
-					final Directory taxoDir = taxonomyDirectory == null ?
-							null :
-							FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_TAXONOMY))) {
+					final Directory taxoDir = taxonomyDirectory == null ? null : FSDirectory.open(
+							backupIndexDirectory.resolve(IndexFileSet.INDEX_TAXONOMY))) {
 
-				final PerSessionDirectoryFactory sourceDirFactory =
-						new PerSessionDirectoryFactory(backupIndexDirectory.resolve(IndexFileSet.REPL_WORK));
+				final PerSessionDirectoryFactory sourceDirFactory = new PerSessionDirectoryFactory(
+						backupIndexDirectory.resolve(IndexFileSet.REPL_WORK));
 				try (final ReplicationClient replicationClient = new ReplicationClient(localReplicator,
 						IndexReplicator.getNewReplicationHandler(dataDir, taxoDir, () -> false), sourceDirFactory)) {
 					replicationClient.updateNow();
 				} catch (IOException e) {
-					FileUtils.deleteQuietly(backupIndexDirectory.toFile());
+					FileUtils.deleteDirectoryQuietly(backupIndexDirectory);
 					throw e;
 				}
 				return BackupStatus.newBackupStatus(backupIndexDirectory);
@@ -530,8 +528,8 @@ final public class IndexInstance implements Closeable {
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				try {
-					final Query query =
-							queryDefinition.query.getQuery(buildQueryContext(indexSearcher, taxonomyReader, null));
+					final Query query = queryDefinition.query.getQuery(
+							buildQueryContext(indexSearcher, taxonomyReader, null));
 					final IndexWriter indexWriter = writerAndSearcher.getIndexWriter();
 					int docs = indexWriter.numDocs();
 					indexWriter.deleteDocuments(query);

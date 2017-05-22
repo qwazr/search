@@ -102,7 +102,7 @@ class IndexInstanceManager implements Closeable {
 								() -> "This index already contains document - Index: " + fileSet.mainDirectory);
 					indexInstance.close();
 					indexInstance = null;
-					FileUtils.deleteQuietly(fileSet.mainDirectory);
+					FileUtils.deleteDirectoryQuietly(fileSet.mainDirectory.toPath());
 					checkDirectoryAndUuid();
 				}
 			}
@@ -151,7 +151,7 @@ class IndexInstanceManager implements Closeable {
 		rwl.writeEx(() -> {
 			closeIndex();
 			if (fileSet.mainDirectory.exists())
-				FileUtils.deleteQuietly(fileSet.mainDirectory);
+				FileUtils.deleteDirectoryQuietly(fileSet.mainDirectory.toPath());
 		});
 	}
 

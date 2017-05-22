@@ -17,13 +17,13 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 
 import javax.ws.rs.core.Response;
@@ -145,7 +145,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	void delete() {
 		indexMap.forEachValue(1, IndexInstanceManager::delete);
 		if (schemaDirectory.exists())
-			FileUtils.deleteQuietly(schemaDirectory);
+			FileUtils.deleteDirectoryQuietly(schemaDirectory.toPath());
 	}
 
 	void delete(final String indexName) throws ServerException, IOException {
@@ -266,7 +266,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
 					final Path backupIndexDirectory = backupDirectory.resolve(idxName);
 					try {
-						FileUtils.deleteDirectory(backupIndexDirectory.toFile());
+						FileUtils.deleteDirectory(backupIndexDirectory);
 						counter.incrementAndGet();
 					} catch (IOException e) {
 						throw new ServerException(e);
