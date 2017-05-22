@@ -83,9 +83,8 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		indexMap = new ConcurrentHashMap<>();
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
-		settingsDefinition = settingsFile.exists() ?
-				JsonMapper.MAPPER.readValue(settingsFile, SchemaSettingsDefinition.class) :
-				SchemaSettingsDefinition.EMPTY;
+		settingsDefinition = settingsFile.exists() ? JsonMapper.MAPPER.readValue(settingsFile,
+				SchemaSettingsDefinition.class) : SchemaSettingsDefinition.EMPTY;
 		checkSettings();
 
 		final File[] directories = schemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -188,8 +187,13 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
 	private void indexIterator(final String indexName, final BiConsumer<String, IndexInstance> consumer) {
 		if ("*".equals(indexName)) {
-			indexMap.forEach(1,
-					(name, indexInstanceManager) -> consumer.accept(name, indexInstanceManager.getIndexInstance()));
+			indexMap.forEach(1, (name, indexInstanceManager) -> {
+				try {
+					consumer.accept(name, indexInstanceManager.open());
+				} catch (Exception e) {
+					throw new ServerException(e);
+				}
+			});
 		} else
 			consumer.accept(indexName, get(indexName, false));
 	}

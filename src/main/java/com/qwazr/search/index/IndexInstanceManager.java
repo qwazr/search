@@ -76,9 +76,8 @@ class IndexInstanceManager implements Closeable {
 
 	private IndexInstance ensureOpen() throws ReflectiveOperationException, IOException, URISyntaxException {
 		if (indexInstance == null)
-			indexInstance =
-					new IndexInstanceBuilder(indexProvider, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
-							executorService, indexServiceInterface, fileSet, settings, indexUuid).build();
+			indexInstance = new IndexInstanceBuilder(indexProvider, instanceFactory, analyzerFactoryMap,
+					readWriteSemaphores, executorService, indexServiceInterface, fileSet, settings, indexUuid).build();
 		return indexInstance;
 	}
 
@@ -87,8 +86,8 @@ class IndexInstanceManager implements Closeable {
 	}
 
 	private boolean isNewMaster(final IndexSettingsDefinition newSettings) {
-		return !(newSettings == null || newSettings.master == null) &&
-				(settings == null || !Objects.equals(settings.master, newSettings.master));
+		return !(newSettings == null || newSettings.master == null) && (settings == null || !Objects.equals(
+				settings.master, newSettings.master));
 	}
 
 	IndexInstance createUpdate(final IndexSettingsDefinition newSettings) throws Exception {
