@@ -81,16 +81,22 @@ public class IndexStatus {
 	final public Map<String, String> commit_user_data;
 
 	@JsonCreator
-	IndexStatus(@JsonProperty Long num_docs, @JsonProperty Long num_deleted_docs,
-			@JsonProperty Boolean has_pending_merges, @JsonProperty Boolean has_uncommitted_changes,
-			@JsonProperty Boolean has_deletions, @JsonProperty Double ram_buffer_size_mb,
-			@JsonProperty String index_uuid, @JsonProperty String master_uuid, @JsonProperty Long version,
-			@JsonProperty Set<String> analyzers, @JsonProperty Set<String> fields,
-			@JsonProperty IndexSettingsDefinition settings, @JsonProperty Map<String, Set<FieldInfoStatus>> field_infos,
-			@JsonProperty Integer number_of_segment, @JsonProperty List<SegmentInfoStatus> segment_infos,
-			@JsonProperty Long segments_bytes_size, @JsonProperty String segments_size,
-			@JsonProperty MergePolicyStatus merge_policy, @JsonProperty QueryCacheStats query_cache,
-			@JsonProperty Map<String, String> commit_user_data) {
+	IndexStatus(@JsonProperty("num_docs") Long num_docs, @JsonProperty("num_deleted_docs") Long num_deleted_docs,
+			@JsonProperty("has_pending_merges") Boolean has_pending_merges,
+			@JsonProperty("has_uncommitted_changes") Boolean has_uncommitted_changes,
+			@JsonProperty("has_deletions") Boolean has_deletions,
+			@JsonProperty("ram_buffer_size_mb") Double ram_buffer_size_mb,
+			@JsonProperty("index_uuid") String index_uuid, @JsonProperty("master_uuid") String master_uuid,
+			@JsonProperty("version") Long version, @JsonProperty("analyzers") Set<String> analyzers,
+			@JsonProperty("fields") Set<String> fields, @JsonProperty("settings") IndexSettingsDefinition settings,
+			@JsonProperty("field_infos") Map<String, Set<FieldInfoStatus>> field_infos,
+			@JsonProperty("number_of_segment") Integer number_of_segment,
+			@JsonProperty("segment_infos") List<SegmentInfoStatus> segment_infos,
+			@JsonProperty("segments_bytes_size") Long segments_bytes_size,
+			@JsonProperty("segments_size") String segments_size,
+			@JsonProperty("merge_policy") MergePolicyStatus merge_policy,
+			@JsonProperty("query_cache") QueryCacheStats query_cache,
+			@JsonProperty("commit_user_data") Map<String, String> commit_user_data) {
 		this.num_docs = num_docs;
 		this.num_deleted_docs = num_deleted_docs;
 		this.merge_policy = merge_policy;
@@ -253,9 +259,12 @@ public class IndexStatus {
 		final public Double segments_per_tier;
 
 		@JsonCreator
-		MergePolicyStatus(@JsonProperty String type, @JsonProperty Double max_cfs_segment_size_mb,
-				@JsonProperty Double no_cfs_ratio, @JsonProperty Integer max_merge_at_once,
-				@JsonProperty Double max_merged_segment_mb, @JsonProperty Double segments_per_tier) {
+		MergePolicyStatus(@JsonProperty("type") String type,
+				@JsonProperty("max_cfs_segment_size_mb") Double max_cfs_segment_size_mb,
+				@JsonProperty("no_cfs_ratio") Double no_cfs_ratio,
+				@JsonProperty("max_merge_at_once") Integer max_merge_at_once,
+				@JsonProperty("max_merged_segment_mb") Double max_merged_segment_mb,
+				@JsonProperty("segments_per_tier") Double segments_per_tier) {
 			this.type = type;
 			this.max_cfs_segment_size_mb = max_cfs_segment_size_mb;
 			this.no_cfs_ratio = no_cfs_ratio;
@@ -299,11 +308,13 @@ public class IndexStatus {
 		private final int hashCode;
 
 		@JsonCreator
-		FieldInfoStatus(@JsonProperty Integer number, @JsonProperty Boolean omit_norms, @JsonProperty Boolean has_norms,
-				@JsonProperty Boolean has_payloads, @JsonProperty Boolean has_vectors,
-				@JsonProperty Long doc_values_gen, @JsonProperty DocValuesType doc_values_type,
-				@JsonProperty IndexOptions index_options, @JsonProperty Integer point_dimension_count,
-				@JsonProperty Integer point_num_bytes) {
+		FieldInfoStatus(@JsonProperty("number") Integer number, @JsonProperty("omit_norms") Boolean omit_norms,
+				@JsonProperty("has_norms") Boolean has_norms, @JsonProperty("has_payloads") Boolean has_payloads,
+				@JsonProperty("has_vectors") Boolean has_vectors, @JsonProperty("doc_values_gen") Long doc_values_gen,
+				@JsonProperty("doc_values_type") DocValuesType doc_values_type,
+				@JsonProperty("index_options") IndexOptions index_options,
+				@JsonProperty("point_dimension_count") Integer point_dimension_count,
+				@JsonProperty("point_num_bytes") Integer point_num_bytes) {
 			this.number = number;
 			this.omit_norms = omit_norms;
 			this.has_norms = has_norms;
@@ -383,8 +394,8 @@ public class IndexStatus {
 		final public Collection<String> files;
 
 		@JsonCreator
-		SegmentInfoStatus(@JsonProperty Long sizeInBytes, @JsonProperty String size,
-				@JsonProperty Collection<String> files) {
+		SegmentInfoStatus(@JsonProperty("size_in_bytes") Long sizeInBytes, @JsonProperty("size") String size,
+				@JsonProperty("files") Collection<String> files) {
 			this.sizeInBytes = sizeInBytes;
 			this.size = size;
 			this.files = files;
@@ -409,9 +420,10 @@ public class IndexStatus {
 		public final Float miss_rate;
 
 		@JsonCreator
-		QueryCacheStats(@JsonProperty Long cache_count, @JsonProperty Long cache_size,
-				@JsonProperty Long eviction_count, @JsonProperty Long hit_count, @JsonProperty Long miss_count,
-				@JsonProperty Long total_count, @JsonProperty Float hit_rate, @JsonProperty Float miss_rate) {
+		QueryCacheStats(@JsonProperty("cache_count") Long cache_count, @JsonProperty("cache_size") Long cache_size,
+				@JsonProperty("eviction_count") Long eviction_count, @JsonProperty("hit_count") Long hit_count,
+				@JsonProperty("miss_count") Long miss_count, @JsonProperty("total_count") Long total_count,
+				@JsonProperty("hit_count") Float hit_rate, @JsonProperty("miss_rate") Float miss_rate) {
 			this.cache_count = cache_count;
 			this.cache_size = cache_size;
 			this.eviction_count = eviction_count;
