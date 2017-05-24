@@ -423,7 +423,7 @@ public class IndexStatus {
 		QueryCacheStats(@JsonProperty("cache_count") Long cache_count, @JsonProperty("cache_size") Long cache_size,
 				@JsonProperty("eviction_count") Long eviction_count, @JsonProperty("hit_count") Long hit_count,
 				@JsonProperty("miss_count") Long miss_count, @JsonProperty("total_count") Long total_count,
-				@JsonProperty("hit_count") Float hit_rate, @JsonProperty("miss_rate") Float miss_rate) {
+				@JsonProperty("hit_rate") Float hit_rate, @JsonProperty("miss_rate") Float miss_rate) {
 			this.cache_count = cache_count;
 			this.cache_size = cache_size;
 			this.eviction_count = eviction_count;
