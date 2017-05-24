@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -51,6 +52,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexStatus {
@@ -72,29 +74,43 @@ public class IndexStatus {
 	final public Map<String, Set<FieldInfoStatus>> field_infos;
 	final public Integer number_of_segment;
 	final public List<SegmentInfoStatus> segment_infos;
+	final public Long segments_bytes_size;
+	final public String segments_size;
 	final public MergePolicyStatus merge_policy;
 	final public QueryCacheStats query_cache;
 	final public Map<String, String> commit_user_data;
 
-	IndexStatus() {
-		num_docs = null;
-		num_deleted_docs = null;
-		merge_policy = null;
-		has_pending_merges = null;
-		has_uncommitted_changes = null;
-		ram_buffer_size_mb = null;
-		has_deletions = null;
-		index_uuid = null;
-		master_uuid = null;
-		version = null;
-		analyzers = null;
-		fields = null;
-		settings = null;
-		field_infos = null;
-		number_of_segment = null;
-		segment_infos = null;
-		query_cache = null;
-		commit_user_data = null;
+	@JsonCreator
+	IndexStatus(@JsonProperty Long num_docs, @JsonProperty Long num_deleted_docs,
+			@JsonProperty Boolean has_pending_merges, @JsonProperty Boolean has_uncommitted_changes,
+			@JsonProperty Boolean has_deletions, @JsonProperty Double ram_buffer_size_mb,
+			@JsonProperty String index_uuid, @JsonProperty String master_uuid, @JsonProperty Long version,
+			@JsonProperty Set<String> analyzers, @JsonProperty Set<String> fields,
+			@JsonProperty IndexSettingsDefinition settings, @JsonProperty Map<String, Set<FieldInfoStatus>> field_infos,
+			@JsonProperty Integer number_of_segment, @JsonProperty List<SegmentInfoStatus> segment_infos,
+			@JsonProperty Long segments_bytes_size, @JsonProperty String segments_size,
+			@JsonProperty MergePolicyStatus merge_policy, @JsonProperty QueryCacheStats query_cache,
+			@JsonProperty Map<String, String> commit_user_data) {
+		this.num_docs = num_docs;
+		this.num_deleted_docs = num_deleted_docs;
+		this.merge_policy = merge_policy;
+		this.has_pending_merges = has_pending_merges;
+		this.has_uncommitted_changes = has_uncommitted_changes;
+		this.ram_buffer_size_mb = ram_buffer_size_mb;
+		this.has_deletions = has_deletions;
+		this.index_uuid = index_uuid;
+		this.master_uuid = master_uuid;
+		this.version = version;
+		this.analyzers = analyzers;
+		this.fields = fields;
+		this.settings = settings;
+		this.field_infos = field_infos;
+		this.number_of_segment = number_of_segment;
+		this.segment_infos = segment_infos;
+		this.segments_bytes_size = segments_bytes_size;
+		this.segments_size = segments_size;
+		this.query_cache = query_cache;
+		this.commit_user_data = commit_user_data;
 	}
 
 	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final IndexSearcher indexSearcher,
@@ -138,15 +154,19 @@ public class IndexStatus {
 		final SegmentInfos segmentInfos = getSegmentInfos(indexReader);
 		if (segmentInfos != null) {
 			number_of_segment = segmentInfos.size();
-			segment_infos = getSegmentsInfoStatus(segmentInfos);
+			final AtomicLong segmentsBytesSize = new AtomicLong();
+			segment_infos = getSegmentsInfoStatus(segmentInfos, segmentsBytesSize);
+			segments_bytes_size = segmentsBytesSize.get();
+			segments_size = FileUtils.byteCountToDisplaySize(segments_bytes_size);
 		} else {
 			number_of_segment = null;
 			segment_infos = null;
+			segments_bytes_size = null;
+			segments_size = null;
 		}
 		final QueryCache queryCache = indexSearcher.getQueryCache();
-		this.query_cache = queryCache != null && queryCache instanceof LRUQueryCache ?
-				new QueryCacheStats((LRUQueryCache) queryCache) :
-				null;
+		this.query_cache = queryCache != null && queryCache instanceof LRUQueryCache ? new QueryCacheStats(
+				(LRUQueryCache) queryCache) : null;
 	}
 
 	private static SegmentInfos getSegmentInfos(final IndexReader indexReader) {
@@ -163,13 +183,16 @@ public class IndexStatus {
 		}
 	}
 
-	private static ArrayList<SegmentInfoStatus> getSegmentsInfoStatus(final SegmentInfos segmentInfos) {
+	private static ArrayList<SegmentInfoStatus> getSegmentsInfoStatus(final SegmentInfos segmentInfos,
+			final AtomicLong totalBytesSize) {
 		if (segmentInfos == null)
 			return null;
 		final ArrayList<SegmentInfoStatus> segmentInfoStatuses = new ArrayList<>(segmentInfos.size());
 		for (SegmentCommitInfo segmentInfo : segmentInfos) {
 			try {
-				segmentInfoStatuses.add(new SegmentInfoStatus(segmentInfo));
+				final SegmentInfoStatus status = new SegmentInfoStatus(segmentInfo);
+				segmentInfoStatuses.add(status);
+				totalBytesSize.addAndGet(status.sizeInBytes);
 			} catch (IOException e) {
 				LOGGER.warn("Fail while extracting Segment information", e);
 			}
@@ -186,8 +209,8 @@ public class IndexStatus {
 			if (fieldInfos == null)
 				return;
 			fieldInfos.forEach(fieldInfo -> {
-				final Set<FieldInfoStatus> set =
-						field_infos.computeIfAbsent(fieldInfo.name, s -> new LinkedHashSet<>());
+				final Set<FieldInfoStatus> set = field_infos.computeIfAbsent(fieldInfo.name,
+						s -> new LinkedHashSet<>());
 				set.add(new FieldInfoStatus(fieldInfo));
 			});
 		});
@@ -229,14 +252,17 @@ public class IndexStatus {
 		final public Double max_merged_segment_mb;
 		final public Double segments_per_tier;
 
-		public MergePolicyStatus() {
-			type = null;
-			max_cfs_segment_size_mb = null;
-			no_cfs_ratio = null;
+		@JsonCreator
+		MergePolicyStatus(@JsonProperty String type, @JsonProperty Double max_cfs_segment_size_mb,
+				@JsonProperty Double no_cfs_ratio, @JsonProperty Integer max_merge_at_once,
+				@JsonProperty Double max_merged_segment_mb, @JsonProperty Double segments_per_tier) {
+			this.type = type;
+			this.max_cfs_segment_size_mb = max_cfs_segment_size_mb;
+			this.no_cfs_ratio = no_cfs_ratio;
 
-			max_merge_at_once = null;
-			max_merged_segment_mb = null;
-			segments_per_tier = null;
+			this.max_merge_at_once = max_merge_at_once;
+			this.max_merged_segment_mb = max_merged_segment_mb;
+			this.segments_per_tier = segments_per_tier;
 		}
 
 		MergePolicyStatus(final MergePolicy mergePolicy) {
@@ -272,35 +298,32 @@ public class IndexStatus {
 		@JsonIgnore
 		private final int hashCode;
 
-		public FieldInfoStatus() {
-			number = null;
-			omit_norms = null;
-			has_norms = null;
-			has_payloads = null;
-			has_vectors = null;
-			doc_values_gen = null;
-			doc_values_type = null;
-			index_options = null;
-			point_dimension_count = null;
-			point_num_bytes = null;
+		@JsonCreator
+		FieldInfoStatus(@JsonProperty Integer number, @JsonProperty Boolean omit_norms, @JsonProperty Boolean has_norms,
+				@JsonProperty Boolean has_payloads, @JsonProperty Boolean has_vectors,
+				@JsonProperty Long doc_values_gen, @JsonProperty DocValuesType doc_values_type,
+				@JsonProperty IndexOptions index_options, @JsonProperty Integer point_dimension_count,
+				@JsonProperty Integer point_num_bytes) {
+			this.number = number;
+			this.omit_norms = omit_norms;
+			this.has_norms = has_norms;
+			this.has_payloads = has_payloads;
+			this.has_vectors = has_vectors;
+			this.doc_values_gen = doc_values_gen;
+			this.doc_values_type = doc_values_type;
+			this.index_options = index_options;
+			this.point_dimension_count = point_dimension_count;
+			this.point_num_bytes = point_num_bytes;
 			hashCode = buildHashCode();
 		}
 
 		private FieldInfoStatus(final FieldInfo info) {
-			number = info.number;
-			omit_norms = info.omitsNorms();
-			has_norms = info.hasNorms();
-			has_payloads = info.hasPayloads();
-			has_vectors = info.hasVectors();
-			doc_values_gen = info.getDocValuesGen();
-			doc_values_type = info.getDocValuesType();
-			index_options = info.getIndexOptions();
-			point_dimension_count = info.getPointDimensionCount();
-			point_num_bytes = info.getPointNumBytes();
-			hashCode = buildHashCode();
+			this(info.number, info.omitsNorms(), info.hasNorms(), info.hasPayloads(), info.hasVectors(),
+					info.getDocValuesGen(), info.getDocValuesType(), info.getIndexOptions(),
+					info.getPointDimensionCount(), info.getPointNumBytes());
 		}
 
-		private final int buildHashCode() {
+		private int buildHashCode() {
 			final HashCodeBuilder builder = new HashCodeBuilder();
 			builder.append(number);
 			builder.append(omit_norms);
@@ -359,16 +382,17 @@ public class IndexStatus {
 
 		final public Collection<String> files;
 
-		public SegmentInfoStatus() {
-			sizeInBytes = null;
-			size = null;
-			files = null;
+		@JsonCreator
+		SegmentInfoStatus(@JsonProperty Long sizeInBytes, @JsonProperty String size,
+				@JsonProperty Collection<String> files) {
+			this.sizeInBytes = sizeInBytes;
+			this.size = size;
+			this.files = files;
 		}
 
 		SegmentInfoStatus(final SegmentCommitInfo segmentInfo) throws IOException {
-			sizeInBytes = segmentInfo.sizeInBytes();
-			size = FileUtils.byteCountToDisplaySize(sizeInBytes);
-			files = segmentInfo.files();
+			this(segmentInfo.sizeInBytes(), FileUtils.byteCountToDisplaySize(segmentInfo.sizeInBytes()),
+					segmentInfo.files());
 		}
 	}
 
@@ -384,26 +408,25 @@ public class IndexStatus {
 		public final Float hit_rate;
 		public final Float miss_rate;
 
-		public QueryCacheStats() {
-			cache_count = null;
-			cache_size = null;
-			eviction_count = null;
-			hit_count = null;
-			miss_count = null;
-			total_count = null;
-			hit_rate = null;
-			miss_rate = null;
+		@JsonCreator
+		QueryCacheStats(@JsonProperty Long cache_count, @JsonProperty Long cache_size,
+				@JsonProperty Long eviction_count, @JsonProperty Long hit_count, @JsonProperty Long miss_count,
+				@JsonProperty Long total_count, @JsonProperty Float hit_rate, @JsonProperty Float miss_rate) {
+			this.cache_count = cache_count;
+			this.cache_size = cache_size;
+			this.eviction_count = eviction_count;
+			this.hit_count = hit_count;
+			this.miss_count = miss_count;
+			this.total_count = total_count;
+			this.hit_rate = hit_rate;
+			this.miss_rate = miss_rate;
 		}
 
 		private QueryCacheStats(final LRUQueryCache queryCache) {
-			cache_count = queryCache.getCacheCount();
-			cache_size = queryCache.getCacheSize();
-			eviction_count = queryCache.getEvictionCount();
-			hit_count = queryCache.getHitCount();
-			miss_count = queryCache.getMissCount();
-			total_count = queryCache.getTotalCount();
-			hit_rate = (float) (hit_count * 100) / total_count;
-			miss_rate = (float) (miss_count * 100) / total_count;
+			this(queryCache.getCacheCount(), queryCache.getCacheSize(), queryCache.getEvictionCount(),
+					queryCache.getHitCount(), queryCache.getMissCount(), queryCache.getTotalCount(),
+					(float) (queryCache.getHitCount() * 100) / queryCache.getTotalCount(),
+					(float) (queryCache.getMissCount() * 100) / queryCache.getTotalCount());
 		}
 	}
 }
