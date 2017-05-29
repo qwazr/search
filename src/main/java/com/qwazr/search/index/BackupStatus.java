@@ -85,6 +85,8 @@ public class BackupStatus {
 		if (!Files.list(indexPath).findAny().isPresent())
 			return null;
 		try (final Directory indexDir = FSDirectory.open(indexPath)) {
+			if (!DirectoryReader.indexExists(indexDir))
+				return null;
 			try (final DirectoryReader indexReader = DirectoryReader.open(indexDir)) {
 				return indexReader.getVersion();
 			} catch (IndexNotFoundException e) {
