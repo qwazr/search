@@ -51,17 +51,17 @@ public class IndexFileSet {
 	final private File fieldMapFile;
 	final Path replWorkPath;
 
-	IndexFileSet(final File mainDirectory) {
-		this.uuidFile = new File(mainDirectory, UUID_FILE);
-		this.uuidMasterFile = new File(mainDirectory, UUID_MASTER_FILE);
-		this.mainDirectory = mainDirectory;
-		this.dataDirectory = new File(mainDirectory, INDEX_DATA);
-		this.taxonomyDirectory = new File(mainDirectory, INDEX_TAXONOMY);
-		this.analyzerMapFile = new File(mainDirectory, ANALYZERS_FILE);
-		this.resourcesDirectory = new File(mainDirectory, RESOURCES_DIR);
-		this.fieldMapFile = new File(mainDirectory, FIELDS_FILE);
-		this.settingsFile = new File(mainDirectory, SETTINGS_FILE);
-		this.replWorkPath = mainDirectory.toPath().resolve(REPL_WORK);
+	IndexFileSet(final Path mainDirectory) {
+		this.uuidFile = mainDirectory.resolve(UUID_FILE).toFile();
+		this.uuidMasterFile = mainDirectory.resolve(UUID_MASTER_FILE).toFile();
+		this.mainDirectory = mainDirectory.toFile();
+		this.dataDirectory = mainDirectory.resolve(INDEX_DATA).toFile();
+		this.taxonomyDirectory = mainDirectory.resolve(INDEX_TAXONOMY).toFile();
+		this.analyzerMapFile = mainDirectory.resolve(ANALYZERS_FILE).toFile();
+		this.resourcesDirectory = mainDirectory.resolve(RESOURCES_DIR).toFile();
+		this.fieldMapFile = mainDirectory.resolve(FIELDS_FILE).toFile();
+		this.settingsFile = mainDirectory.resolve(SETTINGS_FILE).toFile();
+		this.replWorkPath = mainDirectory.resolve(REPL_WORK);
 	}
 
 	void checkIndexDirectory() throws IOException {

@@ -131,9 +131,7 @@ public abstract class JsonAbstractTest {
 	@Test
 	public void test020CheckErrorIndex() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		final File schemaBackupDir = Files.createTempDirectory("backup_error_dir").toFile();
-		client.createUpdateSchema(SCHEMA_ERROR_NAME,
-				SchemaSettingsDefinition.of().backupDirectoryPath(schemaBackupDir.getPath()).build());
+		client.createUpdateSchema(SCHEMA_ERROR_NAME, null);
 		Assert.assertNotNull(client.getIndex(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME));
 		FieldDefinition fieldDef = client.getField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description");
 		Assert.assertNotNull(fieldDef);
@@ -146,7 +144,7 @@ public abstract class JsonAbstractTest {
 		IndexServiceInterface client = getClient();
 		final File schemaBackupDir = Files.createTempDirectory("backup_dir").toFile();
 		final SchemaSettingsDefinition settings1 = SchemaSettingsDefinition.of().backupDirectoryPath(
-				schemaBackupDir.getPath()).build();
+				schemaBackupDir.getAbsolutePath()).build();
 		SchemaSettingsDefinition settings2 = client.createUpdateSchema(SCHEMA_NAME, settings1);
 		Assert.assertNotNull(settings2);
 		Assert.assertEquals(settings1, settings2);
@@ -995,7 +993,7 @@ public abstract class JsonAbstractTest {
 		final IndexServiceInterface client = getClient();
 		Assert.assertEquals(Integer.valueOf(1),
 				client.deleteBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1));
-		Assert.assertEquals(Integer.valueOf(3), client.deleteBackups("*", "*", "*"));
+		Assert.assertEquals(Integer.valueOf(2), client.deleteBackups(SCHEMA_NAME, "*", "*"));
 	}
 
 	private void checkReplication(final IndexServiceInterface client) {

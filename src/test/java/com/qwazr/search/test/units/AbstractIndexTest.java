@@ -53,8 +53,12 @@ public abstract class AbstractIndexTest {
 
 	@AfterClass
 	public static void afterClass() throws IOException {
-		indexManager.close();
-		FileUtils.deleteDirectoryQuietly(rootDirectory);
+		if (indexManager != null) {
+			indexManager.close();
+			indexManager = null;
+		}
+		if (rootDirectory != null)
+			FileUtils.deleteDirectoryQuietly(rootDirectory);
 	}
 
 }

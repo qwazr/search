@@ -27,9 +27,9 @@ import org.apache.lucene.store.Directory;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -54,19 +54,24 @@ class IndexInstanceManager implements Closeable {
 	IndexInstanceManager(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
 			final Map<String, AnalyzerFactory> analyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
 			final ExecutorService executorService, final IndexServiceInterface indexServiceInterface,
-			final File indexDirectory) throws IOException {
+			final Path indexDirectory) {
 
-		rwl = new LockUtils.ReadWriteLock();
-		this.indexProvider = indexProvider;
-		this.instanceFactory = instanceFactory;
-		this.executorService = executorService;
-		this.indexServiceInterface = indexServiceInterface;
-		this.fileSet = new IndexFileSet(indexDirectory);
-		this.analyzerFactoryMap = analyzerFactoryMap;
-		this.readWriteSemaphores = readWriteSemaphores;
+		try {
+			rwl = new LockUtils.ReadWriteLock();
+			this.indexProvider = indexProvider;
+			this.instanceFactory = instanceFactory;
+			this.executorService = executorService;
+			this.indexServiceInterface = indexServiceInterface;
+			this.fileSet = new IndexFileSet(indexDirectory);
+			this.analyzerFactoryMap = analyzerFactoryMap;
+			this.readWriteSemaphores = readWriteSemaphores;
 
-		checkDirectoryAndUuid();
-		settings = fileSet.loadSettings();
+			checkDirectoryAndUuid();
+			settings = fileSet.loadSettings();
+
+		} catch (IOException e) {
+			throw new ServerException(e);
+		}
 	}
 
 	private void checkDirectoryAndUuid() throws IOException {

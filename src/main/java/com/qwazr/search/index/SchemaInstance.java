@@ -24,12 +24,10 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
-import org.apache.commons.io.filefilter.DirectoryFileFilter;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -57,7 +55,8 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	private final ConstructorParametersImpl instanceFactory;
 	private final IndexServiceInterface service;
 	private final ExecutorService executorService;
-	private final File schemaDirectory;
+	private final String schemaName;
+	private final Path schemaDirectory;
 	private final File settingsFile;
 	private volatile SchemaSettingsDefinition settingsDefinition;
 	private volatile Path backupRootDirectory;
@@ -74,11 +73,10 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		this.analyzerFactoryMap = analyzerFactoryMap;
 		this.executorService = executorService;
 		this.service = service;
-		this.schemaDirectory = schemaDirectory;
-		if (!schemaDirectory.exists())
-			schemaDirectory.mkdir();
-		if (!schemaDirectory.exists())
-			throw new IOException("The directory does not exist: " + schemaDirectory.getName());
+		this.schemaName = schemaDirectory.getName();
+		this.schemaDirectory = schemaDirectory.toPath();
+		if (!Files.exists(this.schemaDirectory))
+			Files.createDirectory(this.schemaDirectory);
 
 		indexMap = new ConcurrentHashMap<>();
 
@@ -87,13 +85,11 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 				SchemaSettingsDefinition.class) : SchemaSettingsDefinition.EMPTY;
 		checkSettings();
 
-		final File[] directories = schemaDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
-		if (directories == null)
-			return;
-		for (File indexDirectory : directories)
-			indexMap.put(indexDirectory.getName(),
+		Files.list(this.schemaDirectory).filter(path -> Files.isDirectory(path)).forEach(indexPath -> {
+			indexMap.put(indexPath.toFile().getName(),
 					new IndexInstanceManager(this, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
-							executorService, service, indexDirectory));
+							executorService, service, indexPath));
+		});
 	}
 
 	@Override
@@ -103,14 +99,9 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
 	IndexInstance createUpdate(final String indexName, final IndexSettingsDefinition settings) throws Exception {
 		Objects.requireNonNull(settings, "The settings cannot be null");
-		return indexMap.computeIfAbsent(indexName, name -> {
-			try {
-				return new IndexInstanceManager(this, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
-						executorService, service, new File(schemaDirectory, name));
-			} catch (IOException e) {
-				throw new ServerException(e);
-			}
-		}).createUpdate(settings);
+		return indexMap.computeIfAbsent(indexName,
+				name -> new IndexInstanceManager(this, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
+						executorService, service, schemaDirectory.resolve(name))).createUpdate(settings);
 	}
 
 	private IndexInstanceManager checkIndexExists(final String indexName,
@@ -144,8 +135,8 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
 	void delete() {
 		indexMap.forEachValue(1, IndexInstanceManager::delete);
-		if (schemaDirectory.exists())
-			FileUtils.deleteDirectoryQuietly(schemaDirectory.toPath());
+		if (Files.exists(schemaDirectory))
+			FileUtils.deleteDirectoryQuietly(schemaDirectory);
 	}
 
 	void delete(final String indexName) throws ServerException, IOException {
@@ -164,15 +155,15 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	private void checkBackupConfig() {
 		if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Backup path not defined in the schema settings - Schema: " + schemaDirectory.getName());
+					"Backup path not defined in the schema settings - Schema: " + schemaName);
 	}
 
 	private Path getBackupDirectory(final String backupName, boolean createIfNotExists) throws IOException {
 		if (backupRootDirectory == null)
-			throw new IOException("The backup root directory is not set for the schema: " + schemaDirectory.getName());
+			throw new IOException("The backup root directory is not set for the schema: " + schemaName);
 		if (Files.notExists(backupRootDirectory) || !Files.isDirectory(backupRootDirectory))
 			throw new IOException("The backup root directory does not exists: " + backupRootDirectory);
-		final Path backupSchemaDirectory = backupRootDirectory.resolve(schemaDirectory.getName());
+		final Path backupSchemaDirectory = backupRootDirectory.resolve(schemaName);
 		if (createIfNotExists && Files.notExists(backupSchemaDirectory))
 			Files.createDirectory(backupSchemaDirectory);
 		if (!Files.isDirectory(backupSchemaDirectory))
@@ -219,7 +210,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	}
 
 	private void backupIterator(final String backupName, final Consumer<Path> consumer) {
-		final Path backupSchemaDirectory = backupRootDirectory.resolve(schemaDirectory.getName());
+		final Path backupSchemaDirectory = backupRootDirectory.resolve(schemaName);
 		if (Files.notExists(backupSchemaDirectory) || !Files.isDirectory(backupSchemaDirectory))
 			return;
 		try {
@@ -260,7 +251,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
 	private void backupIndexDirectoryIterator(final Path backupDirectory, final String indexName,
 			final Consumer<Path> consumer) {
-		final Path backupSchemaDirectory = backupRootDirectory.resolve(schemaDirectory.getName());
+		final Path backupSchemaDirectory = backupRootDirectory.resolve(schemaName);
 		if (Files.notExists(backupSchemaDirectory) || !Files.isDirectory(backupSchemaDirectory))
 			return;
 		if ("*".equals(indexName)) {
