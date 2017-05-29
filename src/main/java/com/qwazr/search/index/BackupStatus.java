@@ -23,6 +23,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexNotFoundException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.NoLockFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +85,7 @@ public class BackupStatus {
 			return null;
 		if (!Files.list(indexPath).findAny().isPresent())
 			return null;
-		try (final Directory indexDir = FSDirectory.open(indexPath)) {
+		try (final Directory indexDir = FSDirectory.open(indexPath, NoLockFactory.INSTANCE)) {
 			if (!DirectoryReader.indexExists(indexDir))
 				return null;
 			try (final DirectoryReader indexReader = DirectoryReader.open(indexDir)) {
