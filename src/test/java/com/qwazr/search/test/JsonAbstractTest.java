@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.test;
 
-import com.google.common.io.Files;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.BackupStatus;
@@ -53,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -129,8 +129,11 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
-	public void test020CheckErrorIndex() throws URISyntaxException {
+	public void test020CheckErrorIndex() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
+		final File schemaBackupDir = Files.createTempDirectory("backup_error_dir").toFile();
+		client.createUpdateSchema(SCHEMA_ERROR_NAME,
+				SchemaSettingsDefinition.of().backupDirectoryPath(schemaBackupDir.getPath()).build());
 		Assert.assertNotNull(client.getIndex(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME));
 		FieldDefinition fieldDef = client.getField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description");
 		Assert.assertNotNull(fieldDef);
@@ -139,9 +142,9 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
-	public void test050CreateSchema() throws URISyntaxException {
+	public void test050CreateSchema() throws URISyntaxException, IOException {
 		IndexServiceInterface client = getClient();
-		final File schemaBackupDir = Files.createTempDir();
+		final File schemaBackupDir = Files.createTempDirectory("backup_dir").toFile();
 		final SchemaSettingsDefinition settings1 = SchemaSettingsDefinition.of().backupDirectoryPath(
 				schemaBackupDir.getPath()).build();
 		SchemaSettingsDefinition settings2 = client.createUpdateSchema(SCHEMA_NAME, settings1);
@@ -992,7 +995,7 @@ public abstract class JsonAbstractTest {
 		final IndexServiceInterface client = getClient();
 		Assert.assertEquals(Integer.valueOf(1),
 				client.deleteBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1));
-		Assert.assertEquals(Integer.valueOf(2), client.deleteBackups("*", "*", "*"));
+		Assert.assertEquals(Integer.valueOf(3), client.deleteBackups("*", "*", "*"));
 	}
 
 	private void checkReplication(final IndexServiceInterface client) {
