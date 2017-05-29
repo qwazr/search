@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
@@ -27,19 +29,19 @@ public class SchemaSettingsDefinition {
 	final public Long max_size;
 	final public String backup_directory_path;
 
-	public SchemaSettingsDefinition() {
-		max_simultaneous_write = null;
-		max_simultaneous_read = null;
-		max_size = null;
-		backup_directory_path = null;
+	@JsonCreator
+	private SchemaSettingsDefinition(@JsonProperty("max_simultaneous_write") final Integer maxSimultaneousWrite,
+			@JsonProperty("max_simultaneous_read") final Integer maxSimultaneousRead,
+			@JsonProperty("max_size") final Long maxSize,
+			@JsonProperty("backupDirectoryPath") final String backupDirectoryPath) {
+		this.max_simultaneous_write = maxSimultaneousWrite;
+		this.max_simultaneous_read = maxSimultaneousRead;
+		this.max_size = maxSize;
+		this.backup_directory_path = backupDirectoryPath;
 	}
 
-	public SchemaSettingsDefinition(final Integer max_simultaneous_write, final Integer max_simultaneous_read,
-			final Long max_size, final String backupDirectoryPath) {
-		this.max_simultaneous_write = max_simultaneous_write;
-		this.max_simultaneous_read = max_simultaneous_read;
-		this.max_size = max_size;
-		this.backup_directory_path = backupDirectoryPath;
+	private SchemaSettingsDefinition(Builder builder) {
+		this(builder.maxSimultaneousWrite, builder.maxSimultaneousRead, builder.maxSize, builder.backupDirectoryPath);
 	}
 
 	@Override
@@ -58,6 +60,41 @@ public class SchemaSettingsDefinition {
 		return true;
 	}
 
-	static final SchemaSettingsDefinition EMPTY = new SchemaSettingsDefinition();
+	static final SchemaSettingsDefinition EMPTY = SchemaSettingsDefinition.of().build();
 
+	public static Builder of() {
+		return new Builder();
+	}
+
+	public static class Builder {
+
+		public Integer maxSimultaneousWrite;
+		public Integer maxSimultaneousRead;
+		public Long maxSize;
+		public String backupDirectoryPath;
+
+		public Builder maxSimultaneousWrite(Integer maxSimultaneousWrite) {
+			this.maxSimultaneousWrite = maxSimultaneousWrite;
+			return this;
+		}
+
+		public Builder maxSimultaneousRead(Integer maxSimultaneousRead) {
+			this.maxSimultaneousRead = maxSimultaneousRead;
+			return this;
+		}
+
+		public Builder maxSize(Long maxSize) {
+			this.maxSize = maxSize;
+			return this;
+		}
+
+		public Builder backupDirectoryPath(String backupDirectoryPath) {
+			this.backupDirectoryPath = backupDirectoryPath;
+			return this;
+		}
+
+		public SchemaSettingsDefinition build() {
+			return new SchemaSettingsDefinition(this);
+		}
+	}
 }

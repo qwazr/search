@@ -161,6 +161,12 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
 	final private static Pattern backupNameMatcher = Pattern.compile("[^a-zA-Z0-9-_]");
 
+	private void checkBackupConfig() {
+		if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+					"Backup path not defined in the schema settings - Schema: " + schemaDirectory.getName());
+	}
+
 	private Path getBackupDirectory(final String backupName, boolean createIfNotExists) throws IOException {
 		if (backupRootDirectory == null)
 			throw new IOException("The backup root directory is not set for the schema: " + schemaDirectory.getName());
@@ -180,8 +186,6 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		final Path backupDirectory = backupSchemaDirectory.resolve(backupName);
 		if (createIfNotExists && Files.notExists(backupDirectory))
 			Files.createDirectory(backupDirectory);
-		if (!Files.isDirectory(backupDirectory))
-			throw new IOException("The backup directory does not exists: " + backupName);
 		return backupDirectory;
 	}
 
@@ -200,10 +204,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
 	SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) throws IOException {
 		return backupLock.writeEx(() -> {
-			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
-				throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-						"Backup path not defined in the schema settings - Schema/index: " + schemaDirectory.getName() +
-								'/' + indexName);
+			checkBackupConfig();
 			final Path backupDirectory = getBackupDirectory(backupName, true);
 			final SortedMap<String, BackupStatus> results = new TreeMap<>();
 			indexIterator(indexName, (idxName, indexInstance) -> {
@@ -217,21 +218,24 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		});
 	}
 
-	private void backupIterator(final String backupName, final Consumer<Path> consumer) throws IOException {
+	private void backupIterator(final String backupName, final Consumer<Path> consumer) {
 		final Path backupSchemaDirectory = backupRootDirectory.resolve(schemaDirectory.getName());
 		if (Files.notExists(backupSchemaDirectory) || !Files.isDirectory(backupSchemaDirectory))
 			return;
-		if ("*".equals(backupName)) {
-			Files.list(backupSchemaDirectory).filter(path -> Files.isDirectory(path)).forEach(consumer);
-		} else
-			consumer.accept(getBackupDirectory(backupName, false));
+		try {
+			if ("*".equals(backupName)) {
+				Files.list(backupSchemaDirectory).filter(path -> Files.isDirectory(path)).forEach(consumer);
+			} else
+				consumer.accept(getBackupDirectory(backupName, false));
+		} catch (IOException e) {
+			throw new ServerException(e);
+		}
 	}
 
 	SortedMap<String, SortedMap<String, BackupStatus>> getBackups(final String indexName, final String backupName)
 			throws IOException {
 		return backupLock.readEx(() -> {
-			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
-				return null;
+			checkBackupConfig();
 			final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
 
 			backupIterator(backupName, backupDirectory -> {
@@ -254,32 +258,49 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		});
 	}
 
+	private void backupIndexDirectoryIterator(final Path backupDirectory, final String indexName,
+			final Consumer<Path> consumer) {
+		final Path backupSchemaDirectory = backupRootDirectory.resolve(schemaDirectory.getName());
+		if (Files.notExists(backupSchemaDirectory) || !Files.isDirectory(backupSchemaDirectory))
+			return;
+		if ("*".equals(indexName)) {
+			try {
+				if (Files.exists(backupDirectory))
+					Files.list(backupDirectory).filter(path -> Files.isDirectory(path)).forEach(consumer);
+			} catch (IOException e) {
+				throw new ServerException(e);
+			}
+		} else {
+			final Path indexPath = backupDirectory.resolve(indexName);
+			if (Files.exists(indexPath))
+				consumer.accept(indexPath);
+		}
+	}
+
 	int deleteBackups(final String indexName, final String backupName) throws IOException {
 		return backupLock.writeEx(() -> {
-			if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
-				return 0;
+			checkBackupConfig();
 			final AtomicInteger counter = new AtomicInteger();
 
 			backupIterator(backupName, backupDirectory -> {
 
-				indexIterator(indexName, (idxName, indexInstance) -> {
+				backupIndexDirectoryIterator(backupDirectory, indexName, backupIndexDirectory -> {
 
-					final Path backupIndexDirectory = backupDirectory.resolve(idxName);
 					try {
 						FileUtils.deleteDirectory(backupIndexDirectory);
 						counter.incrementAndGet();
 					} catch (IOException e) {
 						throw new ServerException(e);
 					}
-				});
 
-				try {
-					if (Files.exists(backupDirectory))
-						if (Files.list(backupDirectory).count() == 0)
-							Files.deleteIfExists(backupDirectory);
-				} catch (IOException e) {
-					throw new ServerException(e);
-				}
+					try {
+						if (Files.exists(backupDirectory))
+							if (Files.list(backupDirectory).count() == 0)
+								Files.deleteIfExists(backupDirectory);
+					} catch (IOException e) {
+						throw new ServerException(e);
+					}
+				});
 			});
 			return counter.get();
 		});

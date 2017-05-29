@@ -134,8 +134,8 @@ public abstract class JavaAbstractTest {
 		final SchemaSettingsDefinition settings2 = service.createUpdateSchema(settings1);
 		Assert.assertNotNull(settings2);
 		Assert.assertEquals(settings1, settings2);
-		final SchemaSettingsDefinition settings = new SchemaSettingsDefinition(null, null, null,
-				backupDir.getAbsolutePath());
+		final SchemaSettingsDefinition settings = SchemaSettingsDefinition.of().backupDirectoryPath(
+				backupDir.getAbsolutePath()).build();
 		final SchemaSettingsDefinition settings3 = service.createUpdateSchema(settings);
 		Assert.assertEquals(settings, settings3);
 	}
