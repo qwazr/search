@@ -20,7 +20,7 @@ import com.qwazr.search.SearchServer;
 import com.qwazr.search.index.IndexServiceBuilder;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.server.RemoteService;
-import org.apache.commons.io.FileUtils;
+import com.qwazr.utils.FileUtils;
 
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,10 +44,8 @@ public class TestServer {
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
 		SearchServer.main();
-		SearchServer.getInstance()
-				.getIndexManager()
-				.registerAnalyzerFactory(AnnotatedIndex.INJECTED_ANALYZER_NAME,
-						resourceLoader -> new AnnotatedIndex.TestAnalyzer(injectedAnalyzerCount));
+		SearchServer.getInstance().getIndexManager().registerAnalyzerFactory(AnnotatedIndex.INJECTED_ANALYZER_NAME,
+				resourceLoader -> new AnnotatedIndex.TestAnalyzer(injectedAnalyzerCount));
 		IndexServiceBuilder indexServiceBuilder = SearchServer.getInstance().getServiceBuilder();
 		service = indexServiceBuilder.local();
 		remote = indexServiceBuilder.remote(RemoteService.of(BASE_URL).build());
