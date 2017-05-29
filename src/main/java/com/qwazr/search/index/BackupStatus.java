@@ -57,7 +57,7 @@ public class BackupStatus {
 		this.files_count = files_count;
 	}
 
-	static BackupStatus newBackupStatus(final Path backupDir) throws IOException {
+	static BackupStatus newBackupStatus(final Path backupDir, final boolean extractVersion) throws IOException {
 		if (backupDir == null)
 			return null;
 
@@ -76,7 +76,16 @@ public class BackupStatus {
 			count.incrementAndGet();
 		});
 
-		return new BackupStatus(getIndexVersion(dataPath), getIndexVersion(taxoPath),
+		final Long indexVersion;
+		final Long taxonomyVersion;
+		if (extractVersion) {
+			indexVersion = getIndexVersion(dataPath);
+			taxonomyVersion = getIndexVersion(taxoPath);
+		} else {
+			indexVersion = null;
+			taxonomyVersion = null;
+		}
+		return new BackupStatus(indexVersion, taxonomyVersion,
 				new Date(Files.getLastModifiedTime(backupDir).toMillis()), size.get(), count.get());
 	}
 

@@ -545,20 +545,21 @@ public abstract class JsonAbstractTest {
 		return status;
 	}
 
-	private BackupStatus getAndCheckBackup(IndexServiceInterface client, String backupName) {
-		return checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, backupName), backupName);
+	private BackupStatus getAndCheckBackup(IndexServiceInterface client, String backupName,
+			final boolean extractVersion) {
+		return checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, backupName, extractVersion), backupName);
 	}
 
 	@Test
 	public void test250FirstBackup() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
-		Assert.assertTrue(client.getBackups(SCHEMA_NAME, INDEX_DUMMY_NAME, INDEX_BACKUP_NAME1).isEmpty());
+		Assert.assertTrue(client.getBackups(SCHEMA_NAME, INDEX_DUMMY_NAME, INDEX_BACKUP_NAME1, true).isEmpty());
 		final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> results = client.getBackups(
-				SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1);
+				SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1, true);
 		Assert.assertNotNull(results);
 		Assert.assertTrue(results.isEmpty());
 		BackupStatus status1 = doBackup(client, INDEX_BACKUP_NAME1);
-		BackupStatus status2 = getAndCheckBackup(client, INDEX_BACKUP_NAME1);
+		BackupStatus status2 = getAndCheckBackup(client, INDEX_BACKUP_NAME1, false);
 		Assert.assertEquals(status1, status2);
 	}
 
@@ -902,11 +903,13 @@ public abstract class JsonAbstractTest {
 		final IndexServiceInterface client = getClient();
 		BackupStatus status = doBackup(client, INDEX_BACKUP_NAME2);
 		Assert.assertEquals(status,
-				checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME2), INDEX_BACKUP_NAME2));
+				checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME2, false),
+						INDEX_BACKUP_NAME2));
 		// Same backup again
 		status = doBackup(client, INDEX_BACKUP_NAME2);
 		Assert.assertEquals(status,
-				checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME2), INDEX_BACKUP_NAME2));
+				checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME2, false),
+						INDEX_BACKUP_NAME2));
 	}
 
 	private void checkAnalyzerResult(String[] term_results, List<TermDefinition> termList) {
@@ -977,11 +980,12 @@ public abstract class JsonAbstractTest {
 		final IndexServiceInterface client = getClient();
 		final BackupStatus status = doBackup(client, INDEX_BACKUP_NAME3);
 		Assert.assertEquals(status,
-				checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME3), INDEX_BACKUP_NAME3));
+				checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME3, false),
+						INDEX_BACKUP_NAME3));
 		client.doBackup("*", "*", INDEX_BACKUP_NAME3);
-		Assert.assertEquals(status, getAndCheckBackup(client, INDEX_BACKUP_NAME3));
+		Assert.assertEquals(status, getAndCheckBackup(client, INDEX_BACKUP_NAME3, false));
 		final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups = client.getBackups(
-				SCHEMA_NAME, INDEX_MASTER_NAME, "*");
+				SCHEMA_NAME, INDEX_MASTER_NAME, "*", true);
 		Assert.assertNotNull(backups);
 		checkBackup(backups, INDEX_BACKUP_NAME1);
 		checkBackup(backups, INDEX_BACKUP_NAME2);

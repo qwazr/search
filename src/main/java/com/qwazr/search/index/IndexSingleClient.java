@@ -45,11 +45,12 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	private final static String PATH = "/" + IndexServiceInterface.PATH;
 	private final static String PATH_SLASH = PATH + "/";
 
-	public static final ContentType CONTENTTYPE_TEXT_GRAPHVIZ =
-			ContentType.create(MEDIATYPE_TEXT_GRAPHVIZ, (Charset) null);
+	public static final ContentType CONTENTTYPE_TEXT_GRAPHVIZ = ContentType.create(MEDIATYPE_TEXT_GRAPHVIZ,
+			(Charset) null);
 
-	private static final ResponseValidator valid200TextGraphviz =
-			ResponseValidator.create().status(new int[] { 200 }).content(CONTENTTYPE_TEXT_GRAPHVIZ);
+	private static final ResponseValidator valid200TextGraphviz = ResponseValidator.create()
+			.status(new int[] { 200 })
+			.content(CONTENTTYPE_TEXT_GRAPHVIZ);
 
 	@Override
 	public SchemaSettingsDefinition createUpdateSchema(final String schema_name) {
@@ -104,8 +105,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public LinkedHashMap<String, FieldDefinition> getFields(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/fields");
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, FieldDefinition.MapStringFieldTypeRef, valid200Json);
 	}
@@ -113,8 +114,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public LinkedHashMap<String, FieldDefinition> setFields(final String schema_name, final String index_name,
 			final LinkedHashMap<String, FieldDefinition> fields) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/fields");
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, fields, null, FieldDefinition.MapStringFieldTypeRef, valid200Json);
 	}
@@ -122,9 +123,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public List<TermDefinition> doAnalyzeQuery(final String schema_name, final String index_name,
 			final String field_name, final String text) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name,
-						"/analyzer/query");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/fields/", field_name, "/analyzer/query");
 		uriBuilder.setParameter("text", text);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, TermDefinition.ListTermDefinitionRef, valid200Json);
@@ -133,9 +133,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public List<TermDefinition> doAnalyzeIndex(final String schema_name, final String index_name,
 			final String field_name, final String text) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name,
-						"/analyzer/index");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/fields/", field_name, "/analyzer/index");
 		uriBuilder.setParameter("text", text);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, TermDefinition.ListTermDefinitionRef, valid200Json);
@@ -143,9 +142,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public FieldStats getFieldStats(String schema_name, String index_name, String field_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name,
-						"/stats/");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/fields/", field_name, "/stats/");
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, FieldStats.class, valid200Json);
 	}
@@ -159,9 +157,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public List<TermEnumDefinition> doExtractTerms(final String schema_name, final String index_name,
 			final String field_name, final String prefix, final Integer start, final Integer rows) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name,
-						"/terms/", prefix);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/fields/", field_name, "/terms/", prefix);
 		uriBuilder.setParameter("start", start).setParameter("rows", rows);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, TermEnumDefinition.ListTermEnumDefinitionRef, valid200Json);
@@ -169,8 +166,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 
 	@Override
 	public FieldDefinition getField(final String schema_name, final String index_name, final String field_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/fields/", field_name);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, FieldDefinition.class, valid200Json);
 	}
@@ -178,24 +175,24 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public FieldDefinition setField(final String schema_name, final String index_name, final String field_name,
 			final FieldDefinition field) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/fields/", field_name);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, field, null, FieldDefinition.class, valid200Json);
 	}
 
 	@Override
 	public Response deleteField(final String schema_name, final String index_name, final String field_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/fields/", field_name);
 		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, null, null, valid200)).build();
 	}
 
 	@Override
 	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/analyzers");
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, AnalyzerDefinition.MapStringAnalyzerTypeRef, valid200Json);
 	}
@@ -203,9 +200,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public AnalyzerDefinition getAnalyzer(final String schema_name, final String index_name,
 			final String analyzer_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers/",
-						analyzer_name);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/analyzers/", analyzer_name);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, AnalyzerDefinition.class, valid200Json);
 	}
@@ -213,9 +209,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public AnalyzerDefinition setAnalyzer(final String schema_name, final String index_name, final String analyzer_name,
 			final AnalyzerDefinition analyzer) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers/",
-						analyzer_name);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/analyzers/", analyzer_name);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, analyzer, null, AnalyzerDefinition.class, valid200Json);
 	}
@@ -223,17 +218,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String schema_name, final String index_name,
 			final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/analyzers");
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, analyzers, null, AnalyzerDefinition.MapStringAnalyzerTypeRef, valid200Json);
 	}
 
 	@Override
 	public Response deleteAnalyzer(final String schema_name, final String index_name, final String analyzer_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers/",
-						analyzer_name);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/analyzers/", analyzer_name);
 		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, null, null, valid200)).build();
 	}
@@ -241,9 +235,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public List<TermDefinition> testAnalyzer(final String schema_name, final String index_name,
 			final String analyzer_name, final String text) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers/",
-						analyzer_name);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/analyzers/", analyzer_name);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, text, null, TermDefinition.ListTermDefinitionRef, valid200Json);
 	}
@@ -251,9 +244,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public String testAnalyzerDot(final String schema_name, final String index_name, final String analyzer_name,
 			final String text) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers/",
-						analyzer_name + "/dot").setParameter("text", text);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/analyzers/", analyzer_name + "/dot").setParameter("text", text);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeString(request, null, null, valid200TextPlain);
 	}
@@ -268,16 +260,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public IndexStatus mergeIndex(final String schema_name, final String index_name, String merged_index,
 			final Map<String, String> commitUserData) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/merge/", merged_index);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/merge/", merged_index);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, commitUserData, null, IndexStatus.class, valid200Json);
 	}
 
 	@Override
 	public IndexCheckStatus checkIndex(String schema_name, String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/check");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/check");
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, IndexCheckStatus.class, valid200Json);
 	}
@@ -293,25 +285,25 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(final String schema_name,
 			final String index_name, final String backup_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/backup/", backup_name);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/backup/", backup_name);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, MapStringMapStringBackupStatusTypeRef, valid200Json);
 	}
 
 	@Override
 	public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schema_name,
-			final String index_name, final String backup_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/backup/", backup_name);
+			final String index_name, final String backup_name, final Boolean extractVersion) {
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/backup/", backup_name).setParameterObject("extractVersion", extractVersion);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, MapStringMapStringMapStringBackupStatusTypeRef, valid200Json);
 	}
 
 	@Override
 	public Integer deleteBackups(String schema_name, String index_name, String backup_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/backup/", backup_name);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/backup/", backup_name);
 		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, Integer.class, valid200Json);
 	}
@@ -319,18 +311,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public AbstractStreamingOutput replicationObtain(final String schema_name, final String index_name,
 			final String masterUuid, final String sessionID, final String source, final String fileName) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/",
-						masterUuid, "/", sessionID, "/", source, "/", fileName);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/replication/", masterUuid, "/", sessionID, "/", source, "/", fileName);
 		return executeStream(HttpRequest.Get(uriBuilder.buildNoEx()), null, null, valid200Stream);
 	}
 
 	@Override
 	public Response replicationRelease(final String schema_name, final String index_name, final String masterUuid,
 			final String sessionID) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/",
-						masterUuid, "/", sessionID);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/replication/", masterUuid, "/", sessionID);
 		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, null, null, valid200)).build();
 	}
@@ -338,17 +328,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public AbstractStreamingOutput replicationUpdate(final String schema_name, final String index_name,
 			final String masterUuid, final String current_version) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/",
-						masterUuid).setParameter("current_version", current_version);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/replication/", masterUuid).setParameter("current_version", current_version);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeStream(request, null, null, valid200204);
 	}
 
 	@Override
 	public Response replicationCheck(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/replication");
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, null, null, valid200)).build();
 	}
@@ -356,8 +345,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public LinkedHashMap<String, IndexInstance.ResourceInfo> getResources(final String schema_name,
 			final String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/resources");
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, MapStringResourceInfoTypeRef, valid200Json);
 	}
@@ -365,9 +354,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public AbstractStreamingOutput getResource(final String schema_name, final String index_name,
 			final String resourceName) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/",
-						resourceName);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/resources/", resourceName);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeStream(request, null, null, valid200);
 	}
@@ -375,18 +363,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Response postResource(final String schema_name, final String index_name, final String resourceName,
 			final long lastModified, final InputStream inputStream) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/",
-						resourceName).setParameter("lastModified", lastModified);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/resources/", resourceName).setParameter("lastModified", lastModified);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, inputStream, null, valid200)).build();
 	}
 
 	@Override
 	public Response deleteResource(final String schema_name, final String index_name, final String resourceName) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/",
-						resourceName);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/resources/", resourceName);
 		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, null, null, valid200)).build();
 	}
@@ -394,8 +380,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Integer postMappedDocument(final String schema_name, final String index_name,
 			final PostDefinition.Document post) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/doc");
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, post, null, Integer.class, valid200Json);
 	}
@@ -403,8 +389,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Integer postMappedDocuments(final String schema_name, final String index_name,
 			final PostDefinition.Documents post) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/docs");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/docs");
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, post, null, Integer.class, valid200Json);
 	}
@@ -412,8 +398,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Integer updateMappedDocValues(final String schema_name, final String index_name,
 			final PostDefinition.Document post) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc/values");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/doc/values");
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, post, null, Integer.class, valid200Json);
 	}
@@ -421,16 +407,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public Integer updateMappedDocsValues(final String schema_name, final String index_name,
 			final PostDefinition.Documents post) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/docs/values");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/docs/values");
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, post, null, Integer.class, valid200Json);
 	}
 
 	@Override
 	public Response deleteAll(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/docs");
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/docs");
 		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
 		return Response.status(executeStatusCode(request, null, null, valid200)).build();
 	}
@@ -439,8 +425,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public LinkedHashMap<String, Object> getDocument(final String schema_name, final String index_name,
 			final String doc_id) {
 		Objects.requireNonNull(doc_id, "The document must not be empty");
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc/", doc_id);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/doc/", doc_id);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, MapStringObjectTypeRef, valid200Json);
 	}
@@ -448,10 +434,10 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public List<Map<String, Object>> getDocuments(final String schema_name, final String index_name,
 			final Integer start, final Integer rows) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc");
-		uriBuilder.addParameter("start", start == null ? null : start.toString())
-				.addParameter("rows", rows == null ? null : rows.toString());
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/doc");
+		uriBuilder.addParameter("start", start == null ? null : start.toString()).addParameter("rows",
+				rows == null ? null : rows.toString());
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, ListMapStringObjectTypeRef, valid200Json);
 	}
@@ -459,9 +445,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public ResultDefinition.WithMap searchQuery(final String schema_name, final String index_name,
 			final QueryDefinition query, final Boolean delete) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search")
-						.setParameterObject("delete", delete);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/search").setParameterObject("delete", delete);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, query, null, ResultDefinition.WithMap.class, valid200Json);
 	}
@@ -469,18 +454,16 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public ExplainDefinition explainQuery(final String schema_name, final String index_name,
 			final QueryDefinition query, int docId) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search/explain/",
-						Integer.toString(docId));
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/search/explain/", Integer.toString(docId));
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, query, null, ExplainDefinition.class, valid200Json);
 	}
 
 	@Override
 	public String explainQueryText(String schema_name, String index_name, QueryDefinition query, int docId) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search/explain/",
-						Integer.toString(docId));
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/search/explain/", Integer.toString(docId));
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		request.addHeader("Accept", MediaType.TEXT_PLAIN);
 		return executeString(request, query, null, valid200TextPlain);
@@ -489,9 +472,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	@Override
 	public String explainQueryDot(String schemaName, String indexName, QueryDefinition query, int docId,
 			Integer descriptionWrapSize) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", indexName, "/search/explain/",
-						Integer.toString(docId)).setParameter("wrap", descriptionWrapSize);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", indexName,
+				"/search/explain/", Integer.toString(docId)).setParameter("wrap", descriptionWrapSize);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		request.addHeader("Accept", MEDIATYPE_TEXT_GRAPHVIZ);
 		return executeString(request, query, null, valid200TextGraphviz);

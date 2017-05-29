@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -636,7 +636,7 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test850backup() throws IOException, URISyntaxException {
 		final AnnotatedIndexService master = getMaster();
-		SortedMap<String, SortedMap<String, BackupStatus>> globalStatus = master.getBackups("*");
+		SortedMap<String, SortedMap<String, BackupStatus>> globalStatus = master.getBackups("*", true);
 		Assert.assertNotNull(globalStatus);
 		globalStatus = master.doBackup(BACKUP_NAME);
 		Assert.assertNotNull(globalStatus);
@@ -644,7 +644,8 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(schemaStatus);
 		final BackupStatus backupStatus = schemaStatus.get(master.getIndexName());
 		Assert.assertNotNull(backupStatus);
-		Assert.assertNotNull(backupStatus.index_version);
+		Assert.assertNotNull(backupStatus.date);
+		Assert.assertNotNull(backupStatus.files_count);
 	}
 
 	@Test
@@ -738,13 +739,14 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test960DeleteBackup() throws URISyntaxException, IOException {
-		SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups = getMaster().getBackups("*");
+		SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups = getMaster().getBackups("*",
+				true);
 		Assert.assertNotNull(backups);
 		Assert.assertFalse(backups.isEmpty());
 		final Integer count = getMaster().deleteBackups(BACKUP_NAME);
 		Assert.assertNotNull(count);
 		Assert.assertEquals(1, count, 0);
-		backups = getMaster().getBackups("*");
+		backups = getMaster().getBackups("*", true);
 		Assert.assertNotNull(backups);
 		Assert.assertTrue(backups.isEmpty());
 	}

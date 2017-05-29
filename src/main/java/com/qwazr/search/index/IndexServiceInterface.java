@@ -285,7 +285,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(
 			@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-			@PathParam("backup_name") String backup_name);
+			@PathParam("backup_name") String backup_name, @QueryParam("extractVersion") Boolean extractVersion);
 
 	@DELETE
 	@Path("/{schema_name}/{index_name}/backup/{backup_name}")

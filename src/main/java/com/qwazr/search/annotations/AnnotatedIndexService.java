@@ -587,9 +587,10 @@ public class AnnotatedIndexService<T> {
 		return indexService.doAnalyzeQuery(schemaName, indexName, fieldName, text);
 	}
 
-	public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String backupName) {
+	public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String backupName,
+			final boolean extractVersion) {
 		checkParameters();
-		return indexService.getBackups(schemaName, indexName, backupName);
+		return indexService.getBackups(schemaName, indexName, backupName, extractVersion);
 	}
 
 	public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(final String backupName) {

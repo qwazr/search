@@ -347,15 +347,15 @@ final public class IndexInstance implements Closeable {
 					FileUtils.deleteDirectoryQuietly(backupIndexDirectory);
 					throw e;
 				}
-				return BackupStatus.newBackupStatus(backupIndexDirectory);
+				return BackupStatus.newBackupStatus(backupIndexDirectory, false);
 			}
 		}
 	}
 
-	final BackupStatus getBackup(final Path backupIndexDirectory) throws IOException {
+	final BackupStatus getBackup(final Path backupIndexDirectory, final boolean extractVersion) throws IOException {
 		checkIsMaster();
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
-			return BackupStatus.newBackupStatus(backupIndexDirectory);
+			return BackupStatus.newBackupStatus(backupIndexDirectory, extractVersion);
 		}
 	}
 

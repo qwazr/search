@@ -223,8 +223,8 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		}
 	}
 
-	SortedMap<String, SortedMap<String, BackupStatus>> getBackups(final String indexName, final String backupName)
-			throws IOException {
+	SortedMap<String, SortedMap<String, BackupStatus>> getBackups(final String indexName, final String backupName,
+			final boolean extractVersion) throws IOException {
 		return backupLock.readEx(() -> {
 			checkBackupConfig();
 			final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
@@ -237,7 +237,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 					try {
 						final Path backupIndexDirectory = backupDirectory.resolve(idxName);
 						if (Files.exists(backupIndexDirectory) && Files.isDirectory(backupIndexDirectory))
-							backupResults.put(idxName, indexInstance.getBackup(backupIndexDirectory));
+							backupResults.put(idxName, indexInstance.getBackup(backupIndexDirectory, extractVersion));
 					} catch (IOException e) {
 						throw new ServerException(e);
 					}
