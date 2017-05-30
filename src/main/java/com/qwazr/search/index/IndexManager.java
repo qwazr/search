@@ -23,6 +23,7 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.reflection.ConstructorParameters;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.slf4j.Logger;
@@ -61,8 +62,9 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 
 	private final ExecutorService executorService;
 
-	public IndexManager(final Path indexesDirectory, final ExecutorService executorService) throws IOException {
-		super(new ConcurrentHashMap<>());
+	public IndexManager(final Path indexesDirectory, final ExecutorService executorService,
+			final ConstructorParameters constructorParameters) throws IOException {
+		super(constructorParameters == null ? new ConcurrentHashMap<>() : constructorParameters.getMap());
 		this.rootDirectory = indexesDirectory.toFile();
 		this.executorService = executorService;
 
@@ -81,6 +83,10 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 				LOGGER.error(e.getMessage(), e);
 			}
 		}
+	}
+
+	public IndexManager(final Path indexesDirectory, final ExecutorService executorService) throws IOException {
+		this(indexesDirectory, executorService, null);
 	}
 
 	public static Path checkIndexesDirectory(final Path dataDirectory) throws IOException {
