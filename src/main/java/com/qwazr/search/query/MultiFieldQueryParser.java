@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -44,6 +45,10 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	final public Integer fuzzy_prefix_length;
 	final public Integer max_determinized_states;
 	final public Boolean lowercase_expanded_terms;
+	@JsonProperty("auto_generate_multi_term_synonyms_phrase_query")
+	final public Boolean autoGenerateMultiTermSynonymsPhraseQuery;
+	@JsonProperty("split_on_Whitespace")
+	final public Boolean splitOnWhitespace;
 	final public String query_string;
 
 	@JsonCreator
@@ -61,6 +66,8 @@ public class MultiFieldQueryParser extends AbstractQuery {
 		fuzzy_prefix_length = null;
 		max_determinized_states = null;
 		lowercase_expanded_terms = null;
+		autoGenerateMultiTermSynonymsPhraseQuery = null;
+		splitOnWhitespace = null;
 		query_string = null;
 	}
 
@@ -78,6 +85,8 @@ public class MultiFieldQueryParser extends AbstractQuery {
 		this.fuzzy_prefix_length = builder.fuzzy_prefix_length;
 		this.max_determinized_states = builder.max_determinized_states;
 		this.lowercase_expanded_terms = builder.lowercase_expanded_terms;
+		this.autoGenerateMultiTermSynonymsPhraseQuery = builder.autoGenerateMultiTermSynonymsPhraseQuery;
+		this.splitOnWhitespace = builder.splitOnWhitespace;
 		this.query_string = builder.query_string;
 	}
 
@@ -106,7 +115,15 @@ public class MultiFieldQueryParser extends AbstractQuery {
 			parser.setLowercaseExpandedTerms(lowercase_expanded_terms);
 		if (max_determinized_states != null)
 			parser.setMaxDeterminizedStates(max_determinized_states);
+		if (autoGenerateMultiTermSynonymsPhraseQuery != null)
+			parser.setAutoGenerateMultiTermSynonymsPhraseQuery(autoGenerateMultiTermSynonymsPhraseQuery);
+		if (splitOnWhitespace != null)
+			parser.setSplitOnWhitespace(splitOnWhitespace);
 		return parser.parse(query_string);
+	}
+
+	public static Builder of() {
+		return new Builder();
 	}
 
 	public static class Builder {
@@ -124,6 +141,8 @@ public class MultiFieldQueryParser extends AbstractQuery {
 		private Integer fuzzy_prefix_length = null;
 		private Integer max_determinized_states = null;
 		private Boolean lowercase_expanded_terms = null;
+		private Boolean autoGenerateMultiTermSynonymsPhraseQuery = null;
+		private Boolean splitOnWhitespace = null;
 		private String query_string = null;
 
 		public MultiFieldQueryParser build() {
@@ -197,6 +216,16 @@ public class MultiFieldQueryParser extends AbstractQuery {
 
 		public Builder setLowercaseExpandedTerms(Boolean lowercase_expanded_terms) {
 			this.lowercase_expanded_terms = lowercase_expanded_terms;
+			return this;
+		}
+
+		public Builder setAutoGenerateMultiTermSynonymsPhraseQuery(Boolean autoGenerateMultiTermSynonymsPhraseQuery) {
+			this.autoGenerateMultiTermSynonymsPhraseQuery = autoGenerateMultiTermSynonymsPhraseQuery;
+			return this;
+		}
+
+		public Builder setSplitOnWhitespace(Boolean splitOnWhitespace) {
+			this.splitOnWhitespace = splitOnWhitespace;
 			return this;
 		}
 

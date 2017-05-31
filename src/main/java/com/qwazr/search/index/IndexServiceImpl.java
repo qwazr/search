@@ -329,6 +329,16 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
+	final public void refreshAnalyzers(final String schemaName, final String indexName) {
+		try {
+			checkRight(schemaName);
+			indexManager.get(schemaName).get(indexName, false).refreshAnalyzers();
+		} catch (Exception e) {
+			throw ServerException.getJsonException(LOGGER, e);
+		}
+	}
+
+	@Override
 	final public AnalyzerDefinition setAnalyzer(final String schemaName, final String indexName,
 			final String analyzerName, final AnalyzerDefinition analyzer) {
 		try {

@@ -16,49 +16,77 @@
 package com.qwazr.search.test.units;
 
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.SynonymMapBuilder;
+import com.qwazr.search.query.MultiFieldQueryParser;
 import com.qwazr.search.query.PhraseQuery;
-import com.qwazr.utils.CharsetUtils;
-import com.qwazr.utils.IOUtils;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
-import org.apache.lucene.analysis.synonym.SolrSynonymParser;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 
-@FixMethodOrder
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RealTimeSynonymsResourcesTest extends AbstractIndexTest {
 
-	private final static String EN_FR_SYNONYMS = "hello world, bonjour le monde";
-	private final static String EN_FR_DE_SYNONYMS = "hello world, bonjour le monde, hallo welt";
+	private final static String[] EN_FR_SYNONYMS = new String[] { "hello world", "bonjour le monde" };
+	private final static String[] EN_FR_DE_SYNONYMS = new String[] { "hello world", "bonjour le monde", "hallo welt" };
+
+	private final static Analyzer WHITESPACE_ANALYZER = new WhitespaceAnalyzer();
 
 	@BeforeClass
 	public static void setup() throws IOException, ParseException, InterruptedException, URISyntaxException {
 		initIndexManager();
-		indexManager.registerConstructorParameter(SynonymMap.class, getSynonymMap(EN_FR_SYNONYMS));
+		indexManager.registerConstructorParameter(SynonymMap.class, getSynonymMap(WHITESPACE_ANALYZER, EN_FR_SYNONYMS));
 		initIndexService();
 		indexService.postDocument(new IndexRecord("1").textSynonymsField("hello world"));
-		IOUtils.toInputStream("test", CharsetUtils.CharsetUTF8);
-		indexService.postTextResource("synonyms", EN_FR_SYNONYMS);
 	}
 
-	static SynonymMap getSynonymMap(String synonyms) throws IOException, ParseException {
-		SolrSynonymParser parser = new SolrSynonymParser(true, true, new WhitespaceAnalyzer());
-		parser.parse(new StringReader(synonyms));
-		return parser.build();
+	static SynonymMap getSynonymMap(Analyzer analyzer, String[]... synonymsList) throws IOException, ParseException {
+		final SynonymMapBuilder builder = new SynonymMapBuilder(analyzer, true, true);
+		for (String[] synonyms : synonymsList)
+			builder.add(true, synonyms);
+		return builder.build();
 	}
 
 	@Test
-	public void test001_check_en_fr() {
+	public void test001_check_en_fr() throws IOException, org.apache.lucene.queryparser.classic.ParseException {
+		final MultiFieldQueryParser.Builder builder = MultiFieldQueryParser.of()
+				.addField("textSynonymsField")
+				.setSplitOnWhitespace(false);
+
 		Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
-				QueryDefinition.of(new PhraseQuery("textSynonymsField", 1, "hello", "world")).build()).total_hits);
+				QueryDefinition.of(builder.setQueryString("hello world").build()).build()).total_hits);
+		Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
+				QueryDefinition.of(builder.setQueryString("bonjour le monde").build()).build()).total_hits);
 		Assert.assertEquals(Long.valueOf(0), indexService.searchQuery(
 				QueryDefinition.of(new PhraseQuery("textSynonymsField", 1, "hallo", "welt")).build()).total_hits);
+	}
+
+	@Test
+	public void test002_updateSynonymMap() throws IOException, ParseException {
+		indexManager.registerConstructorParameter(SynonymMap.class,
+				getSynonymMap(WHITESPACE_ANALYZER, EN_FR_DE_SYNONYMS));
+		indexService.refreshAnalyzers();
+	}
+
+	@Test
+	public void test003_check_en_fr_de() {
+		final MultiFieldQueryParser.Builder builder = MultiFieldQueryParser.of()
+				.addField("textSynonymsField")
+				.setSplitOnWhitespace(false);
+
+		Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
+				QueryDefinition.of(builder.setQueryString("hello world").build()).build()).total_hits);
+		Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
+				QueryDefinition.of(builder.setQueryString("bonjour le monde").build()).build()).total_hits);
+		Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
+				QueryDefinition.of(builder.setQueryString("hallo welt").build()).build()).total_hits);
 	}
 }

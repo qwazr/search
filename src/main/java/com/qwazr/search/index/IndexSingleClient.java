@@ -207,6 +207,14 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
+	public void refreshAnalyzers(String schema_name, String index_name) {
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,
+				"/analyzers");
+		final HttpRequest request = HttpRequest.Patch(uriBuilder.buildNoEx());
+		execute(request, null, null, valid200);
+	}
+
+	@Override
 	public AnalyzerDefinition setAnalyzer(final String schema_name, final String index_name, final String analyzer_name,
 			final AnalyzerDefinition analyzer) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name,

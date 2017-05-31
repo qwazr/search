@@ -26,6 +26,7 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -153,8 +154,7 @@ public class StandardQueryParser extends AbstractQuery {
 		public Builder addMultiField(final String... fields) {
 			if (multi_fields == null)
 				multi_fields = new LinkedHashSet<>();
-			for (String field : fields)
-				multi_fields.add(field);
+			multi_fields.addAll(Arrays.asList(fields));
 			return this;
 		}
 

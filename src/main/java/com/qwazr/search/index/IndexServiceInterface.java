@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.AbstractStreamingOutput;
+import com.qwazr.server.PATCH;
 import com.qwazr.server.ServiceInterface;
 import com.qwazr.utils.FieldMapWrapper;
 import com.qwazr.utils.FunctionUtils;
@@ -190,6 +191,10 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	Response deleteAnalyzer(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
 			@PathParam("analyzer_name") String analyzer_name);
+
+	@PATCH
+	@Path("/{schema_name}/{index_name}/analyzers")
+	void refreshAnalyzers(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")

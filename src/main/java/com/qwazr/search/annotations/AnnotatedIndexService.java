@@ -252,6 +252,14 @@ public class AnnotatedIndexService<T> {
 		return indexService.setFields(schemaName, indexName, getAnnotatedFields());
 	}
 
+	/**
+	 * Reload the analyzers. Especially for resources reloading (synonyms map, stopwords, ...)
+	 */
+	public void refreshAnalyzers() {
+		checkParameters();
+		indexService.refreshAnalyzers(schemaName, indexName);
+	}
+
 	public enum FieldStatus {
 		NOT_IDENTICAL, EXISTS_ONLY_IN_INDEX, EXISTS_ONLY_IN_ANNOTATION
 	}

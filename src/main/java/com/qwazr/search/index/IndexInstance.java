@@ -226,10 +226,17 @@ final public class IndexInstance implements Closeable {
 		return analyzerDefinitionMap;
 	}
 
-	private void updateLocalAnalyzers() throws IOException {
+	private void updateLocalAnalyzers(boolean writeConfigFile) throws IOException {
 		refreshFieldsAnalyzers();
 		analyzerDefinitionMap = CustomAnalyzer.createDefinitionMap(localAnalyzerFactoryMap);
-		fileSet.writeAnalyzerDefinitionMap(analyzerDefinitionMap);
+		if (writeConfigFile)
+			fileSet.writeAnalyzerDefinitionMap(analyzerDefinitionMap);
+	}
+
+	void refreshAnalyzers() throws IOException {
+		synchronized (localAnalyzerFactoryMap) {
+			updateLocalAnalyzers(false);
+		}
 	}
 
 	void setAnalyzer(final String analyzerName, final AnalyzerDefinition analyzerDefinition) throws IOException {
@@ -237,7 +244,7 @@ final public class IndexInstance implements Closeable {
 		Objects.requireNonNull(analyzerDefinition, () -> "The analyzer definition is missing: " + analyzerName);
 		synchronized (localAnalyzerFactoryMap) {
 			localAnalyzerFactoryMap.put(analyzerName, new CustomAnalyzer.Factory(analyzerDefinition));
-			updateLocalAnalyzers();
+			updateLocalAnalyzers(true);
 		}
 	}
 
@@ -245,7 +252,7 @@ final public class IndexInstance implements Closeable {
 		Objects.requireNonNull(analyzerDefinitionMap, "The analyzer map is null");
 		synchronized (localAnalyzerFactoryMap) {
 			localAnalyzerFactoryMap.putAll(CustomAnalyzer.createFactoryMap(analyzerDefinitionMap, LinkedHashMap::new));
-			updateLocalAnalyzers();
+			updateLocalAnalyzers(true);
 		}
 	}
 
@@ -254,7 +261,7 @@ final public class IndexInstance implements Closeable {
 			if (localAnalyzerFactoryMap.remove(analyzerName) == null)
 				throw new ServerException(Response.Status.NOT_FOUND,
 						() -> "Analyzer not found: " + analyzerName + " - Index: " + indexName);
-			updateLocalAnalyzers();
+			updateLocalAnalyzers(true);
 		}
 	}
 
