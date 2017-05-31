@@ -27,7 +27,12 @@ import java.io.Reader;
 public class SynonymsResourceAnalyzer extends Analyzer {
 
 	private final SynonymMap synonymMap;
-	
+
+	public SynonymsResourceAnalyzer() {
+		//TODO add support of synonyms loaded by resources
+		synonymMap = null;
+	}
+
 	public SynonymsResourceAnalyzer(final SynonymMap synonymMap) {
 		this.synonymMap = synonymMap;
 	}
