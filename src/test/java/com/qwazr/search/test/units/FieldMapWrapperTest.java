@@ -79,8 +79,8 @@ public class FieldMapWrapperTest extends AbstractIndexTest {
 	@Test
 	public void searchQuery() throws ReflectiveOperationException, IOException {
 		IndexRecord indexRecord = documents.get(RandomUtils.nextInt(0, documents.size()));
-		ResultDefinition.WithObject<IndexPartialRecord> results = indexService.searchQuery(
-				QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, indexRecord.id)).build(),
+		ResultDefinition.WithObject<IndexPartialRecord> results = indexService.searchQuery(QueryDefinition.of(
+				new TermQuery(FieldDefinition.ID_FIELD, indexRecord.id)).returnedField("*").build(),
 				IndexPartialRecord.class);
 		Assert.assertNotNull(results);
 		Assert.assertEquals(Long.valueOf(1), results.total_hits);
