@@ -45,9 +45,8 @@ public class PagingTest extends AbstractIndexTest {
 		initIndexService();
 		documents = new LinkedHashMap<>();
 		for (int i = 0; i < RandomUtils.nextInt(201, 299); i++) {
-			final IndexRecord record =
-					new IndexRecord(Integer.toString(i)).sortedDocValues(RandomStringUtils.randomAlphanumeric(5))
-							.facetField(Integer.toString(RandomUtils.nextInt(1, 3)));
+			final IndexRecord record = new IndexRecord(Integer.toString(i)).sortedDocValue(
+					RandomStringUtils.randomAlphanumeric(5)).facetField(Integer.toString(RandomUtils.nextInt(1, 3)));
 			documents.put(record.id, record);
 			indexService.postDocument(record);
 		}
@@ -113,15 +112,17 @@ public class PagingTest extends AbstractIndexTest {
 
 	@Test
 	public void pagingSort() throws URISyntaxException {
-		checkPaging(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*")
-				.sort("sortedDocValues", QueryDefinition.SortEnum.ascending));
+		checkPaging(QueryDefinition.of(new MatchAllDocsQuery())
+				.returnedField("*")
+				.sort("sortedDocValue", QueryDefinition.SortEnum.ascending));
 	}
 
 	@Test
 	public void pagingFacetSort() throws URISyntaxException {
-		checkPaging(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*")
+		checkPaging(QueryDefinition.of(new MatchAllDocsQuery())
+				.returnedField("*")
 				.facet("facetField", new FacetDefinition(10))
-				.sort("sortedDocValues", QueryDefinition.SortEnum.ascending));
+				.sort("sortedDocValue", QueryDefinition.SortEnum.ascending));
 	}
 
 	@Test

@@ -72,8 +72,9 @@ public class SearchIteratorTest extends AbstractIndexTest {
 
 	@Test
 	public void iterateAll() throws ReflectiveOperationException {
-		final Iterator<IndexRecord> iterator =
-				indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
+		final Iterator<IndexRecord> iterator = indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery())
+				.returnedField("*")
+				.build(), IndexRecord.class);
 		Assert.assertNotNull(iterator);
 
 		final Set<String> ids = new HashSet<>();
@@ -86,9 +87,8 @@ public class SearchIteratorTest extends AbstractIndexTest {
 	@Test
 	public void iterateSubSet() throws ReflectiveOperationException {
 
-		final Iterator<IndexRecord> iterator =
-				indexService.searchIterator(QueryDefinition.of(new IntExactQuery("intPoint", 0)).build(),
-						IndexRecord.class);
+		final Iterator<IndexRecord> iterator = indexService.searchIterator(QueryDefinition.of(
+				new IntExactQuery("intPoint", 0)).returnedField("*").build(), IndexRecord.class);
 		Assert.assertNotNull(iterator);
 
 		final Set<String> ids = new HashSet<>();
@@ -102,9 +102,8 @@ public class SearchIteratorTest extends AbstractIndexTest {
 	@Test
 	public void iterateNone() throws ReflectiveOperationException {
 
-		final Iterator<IndexRecord> iterator =
-				indexService.searchIterator(QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, 0)).build(),
-						IndexRecord.class);
+		final Iterator<IndexRecord> iterator = indexService.searchIterator(QueryDefinition.of(
+				new TermQuery(FieldDefinition.ID_FIELD, 0)).returnedField("*").build(), IndexRecord.class);
 		Assert.assertNotNull(iterator);
 		Assert.assertFalse(iterator.hasNext());
 

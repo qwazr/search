@@ -19,14 +19,15 @@ import com.qwazr.utils.FieldMapWrapper;
 import org.apache.lucene.search.ScoreDoc;
 
 import java.util.List;
+import java.util.Set;
 
 final class ResultDocumentsObject<T> extends ResultDocumentsList<ResultDocumentObject<T>> {
 
 	private final FieldMapWrapper<T> wrapper;
 
 	ResultDocumentsObject(final QueryContext context, final QueryDefinition queryDefinition,
-			final FieldMapWrapper<T> wrapper) {
-		super((QueryContextImpl) context, queryDefinition, wrapper.fieldMap.keySet());
+			final Set<String> returnedFields, final FieldMapWrapper<T> wrapper) {
+		super((QueryContextImpl) context, queryDefinition, returnedFields);
 		this.wrapper = wrapper;
 	}
 

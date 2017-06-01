@@ -43,7 +43,7 @@ public class IndexRecord {
 	public String stringField;
 
 	@IndexField(template = FieldDefinition.Template.SortedDocValuesField)
-	public String sortedDocValues;
+	public String sortedDocValue;
 
 	@IndexField(template = FieldDefinition.Template.IntDocValuesField)
 	public Integer intDocValue;
@@ -71,6 +71,9 @@ public class IndexRecord {
 
 	@IndexField(template = FieldDefinition.Template.FacetField)
 	public String facetField;
+
+	@IndexField(template = FieldDefinition.Template.StoredField)
+	public String storedField;
 
 	@Copy(to = { @Copy.To(order = 1, field = "textField") })
 	public String copyText1;
@@ -117,13 +120,18 @@ public class IndexRecord {
 		return this;
 	}
 
-	public IndexRecord sortedDocValues(String sortedDocValues) {
-		this.sortedDocValues = sortedDocValues;
+	public IndexRecord sortedDocValue(String sortedDocValue) {
+		this.sortedDocValue = sortedDocValue;
 		return this;
 	}
 
 	public IndexRecord facetField(String facetField) {
 		this.facetField = facetField;
+		return this;
+	}
+
+	public IndexRecord storedField(String storedField) {
+		this.storedField = storedField;
 		return this;
 	}
 

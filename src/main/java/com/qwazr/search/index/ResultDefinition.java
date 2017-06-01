@@ -24,6 +24,7 @@ import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
@@ -131,6 +132,12 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		return collectors == null ? null : (O) collectors.get(name);
 	}
 
+	final public void forEach(final Consumer<T> consumer) {
+		if (documents != null)
+			for (T document : documents)
+				consumer.accept(document);
+	}
+
 	@JsonInclude(Include.NON_NULL)
 	public static class WithMap extends ResultDefinition<ResultDocumentMap> {
 
@@ -167,7 +174,7 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		Empty(final ResultDocumentsBuilder builder) {
 			super(builder, null);
 		}
-		
+
 	}
 
 	interface Builder<T extends ResultDocumentAbstract> extends Function<ResultDocumentsBuilder, ResultDefinition<T>> {

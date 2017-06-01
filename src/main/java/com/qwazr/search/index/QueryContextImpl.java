@@ -83,8 +83,12 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext {
 	@Override
 	public <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, FieldMapWrapper<T> wrapper)
 			throws IOException {
+		final Set<String> returnedFields =
+				queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
+						wrapper.fieldMap.keySet() :
+						queryDefinition.returned_fields;
 		final ResultDocumentsObject<T> resultDocumentsObject = new ResultDocumentsObject<>(this, queryDefinition,
-				wrapper);
+				returnedFields, wrapper);
 		return (ResultDefinition.WithObject<T>) search(queryDefinition, resultDocumentsObject);
 	}
 
