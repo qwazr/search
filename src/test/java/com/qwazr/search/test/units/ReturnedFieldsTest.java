@@ -47,51 +47,96 @@ public class ReturnedFieldsTest extends AbstractIndexTest {
 
 	@Test
 	public void checkJoker() {
-		withRecord(builder().returnedField("*")).forEach(doc -> {
+		QueryBuilder builder = builder().returnedField("*");
+
+		withRecord(builder).forEach(doc -> {
 			Assert.assertEquals(ID_FIELDS[doc.pos], doc.record.id);
 			Assert.assertEquals(STORED_FIELDS[doc.pos], doc.record.storedField);
 			Assert.assertEquals(SDV_FIELDS[doc.pos], doc.record.sortedDocValue);
 			Assert.assertEquals(DDV_FIELDS[doc.pos], doc.record.doubleDocValue);
 		});
+
+		withMap(builder).forEach(doc -> {
+			Assert.assertEquals(ID_FIELDS[doc.pos], doc.fields.get("$id$"));
+			Assert.assertEquals(STORED_FIELDS[doc.pos], doc.fields.get("storedField"));
+			Assert.assertEquals(SDV_FIELDS[doc.pos], doc.fields.get("sortedDocValue"));
+			Assert.assertEquals(DDV_FIELDS[doc.pos], doc.fields.get("doubleDocValue"));
+		});
 	}
 
 	@Test
 	public void checkNoReturnedField() {
+		QueryBuilder builder = builder();
+
 		withRecord(builder()).forEach(doc -> {
 			Assert.assertNull(doc.record.id);
 			Assert.assertNull(doc.record.storedField);
 			Assert.assertNull(doc.record.sortedDocValue);
 			Assert.assertNull(doc.record.doubleDocValue);
 		});
+
+		withMap(builder).forEach(doc -> {
+			Assert.assertNull(doc.fields.get("$id$"));
+			Assert.assertNull(doc.fields.get("storedField"));
+			Assert.assertNull(doc.fields.get("sortedDocValue"));
+			Assert.assertNull(doc.fields.get("doubleDocValue"));
+		});
 	}
 
 	@Test
 	public void checkOnlyStoredField() {
-		withRecord(builder().returnedField("storedField")).forEach(doc -> {
+		QueryBuilder builder = builder().returnedField("storedField");
+
+		withRecord(builder).forEach(doc -> {
 			Assert.assertNull(doc.record.id);
 			Assert.assertEquals(STORED_FIELDS[doc.pos], doc.record.storedField);
 			Assert.assertNull(doc.record.sortedDocValue);
 			Assert.assertNull(doc.record.doubleDocValue);
 		});
+
+		withMap(builder).forEach(doc -> {
+			Assert.assertNull(doc.fields.get("$id$"));
+			Assert.assertEquals(STORED_FIELDS[doc.pos], doc.fields.get("storedField"));
+			Assert.assertNull(doc.fields.get("sortedDocValue"));
+			Assert.assertNull(doc.fields.get("doubleDocValue"));
+		});
 	}
 
 	@Test
 	public void checkOnlySortedDocValueField() {
-		withRecord(builder().returnedField("sortedDocValue")).forEach(doc -> {
+		QueryBuilder builder = builder().returnedField("sortedDocValue");
+
+		withRecord(builder).forEach(doc -> {
 			Assert.assertNull(doc.record.id);
 			Assert.assertNull(doc.record.storedField);
 			Assert.assertEquals(SDV_FIELDS[doc.pos], doc.record.sortedDocValue);
 			Assert.assertNull(doc.record.doubleDocValue);
 		});
+
+		withMap(builder).forEach(doc -> {
+			Assert.assertNull(doc.fields.get("$id$"));
+			Assert.assertNull(doc.fields.get("storedField"));
+			Assert.assertEquals(SDV_FIELDS[doc.pos], doc.fields.get("sortedDocValue"));
+			Assert.assertNull(doc.fields.get("doubleDocValue"));
+		});
 	}
 
 	@Test
 	public void checkOnlyDoubleDocValueField() {
-		withRecord(builder().returnedField("doubleDocValue")).forEach(doc -> {
+		QueryBuilder builder = builder().returnedField("doubleDocValue");
+
+		withRecord(builder).forEach(doc -> {
 			Assert.assertNull(doc.record.id);
 			Assert.assertNull(doc.record.storedField);
 			Assert.assertNull(doc.record.sortedDocValue);
 			Assert.assertEquals(DDV_FIELDS[doc.pos], doc.record.doubleDocValue);
+		});
+
+		withMap(builder).forEach(doc -> {
+			Assert.assertNull(doc.fields.get("$id$"));
+			Assert.assertNull(doc.fields.get("storedField"));
+			Assert.assertNull(doc.fields.get("sortedDocValue"));
+			Assert.assertEquals(DDV_FIELDS[doc.pos], doc.fields.get("doubleDocValue"));
 		});
 	}
 }
