@@ -39,7 +39,7 @@ Where the payload file (my_payload) contains the settings:
 
 ```json
 {
-    "similarity_class": "org.apache.lucene.search.similarities.DefaultSimilarity"
+    "similarity_class": "org.apache.lucene.search.similarities.ClassicSimilarity"
 }
 ```
 
@@ -50,4 +50,4 @@ Where the payload file (my_payload) contains the settings:
 Possible values are:
 
 * org.apache.lucene.search.similarities.BM25Similarity
-* org.apache.lucene.search.similarities.DefaultSimilarity
+* org.apache.lucene.search.similarities.ClassicSimilarity
