@@ -19,8 +19,8 @@ import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.concurrent.ReadWriteLock;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
@@ -61,7 +61,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	private volatile SchemaSettingsDefinition settingsDefinition;
 	private volatile Path backupRootDirectory;
 
-	private final LockUtils.ReadWriteLock backupLock = new LockUtils.ReadWriteLock();
+	private final ReadWriteLock backupLock = ReadWriteLock.stamped();
 
 	SchemaInstance(final ConstructorParametersImpl instanceFactory,
 			final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap, final IndexServiceInterface service,

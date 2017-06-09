@@ -19,7 +19,7 @@ import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.LockUtils;
+import com.qwazr.utils.concurrent.ReadWriteLock;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.index.CheckIndex;
@@ -37,7 +37,7 @@ import java.util.concurrent.ExecutorService;
 
 class IndexInstanceManager implements Closeable {
 
-	private final LockUtils.ReadWriteLock rwl;
+	private final ReadWriteLock rwl;
 
 	private final IndexInstance.Provider indexProvider;
 	private final ConstructorParametersImpl instanceFactory;
@@ -57,7 +57,7 @@ class IndexInstanceManager implements Closeable {
 			final Path indexDirectory) {
 
 		try {
-			rwl = new LockUtils.ReadWriteLock();
+			rwl = ReadWriteLock.stamped();
 			this.indexProvider = indexProvider;
 			this.instanceFactory = instanceFactory;
 			this.executorService = executorService;
