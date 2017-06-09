@@ -24,6 +24,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 
 @Index(name = "IndexRecord", schema = "TestQueries", enableTaxonomyIndex = true)
 public class IndexRecord {
@@ -74,6 +75,12 @@ public class IndexRecord {
 
 	@IndexField(template = FieldDefinition.Template.StoredField)
 	public String storedField;
+
+	@IndexField(template = FieldDefinition.Template.StoredField)
+	public LinkedHashSet<String> multivaluedStringStoredField;
+
+	@IndexField(template = FieldDefinition.Template.StoredField)
+	public LinkedHashSet<Integer> multivaluedIntegerStoredField;
 
 	@Copy(to = { @Copy.To(order = 1, field = "textField") })
 	public String copyText1;
@@ -132,6 +139,20 @@ public class IndexRecord {
 
 	public IndexRecord storedField(String storedField) {
 		this.storedField = storedField;
+		return this;
+	}
+
+	public IndexRecord multivaluedIntegerStoredField(Integer... storedField) {
+		if (multivaluedIntegerStoredField == null)
+			multivaluedIntegerStoredField = new LinkedHashSet<>();
+		Collections.addAll(multivaluedIntegerStoredField, storedField);
+		return this;
+	}
+
+	public IndexRecord multivaluedStringStoredField(String... storedField) {
+		if (multivaluedStringStoredField == null)
+			multivaluedStringStoredField = new LinkedHashSet<>();
+		Collections.addAll(multivaluedStringStoredField, storedField);
 		return this;
 	}
 
