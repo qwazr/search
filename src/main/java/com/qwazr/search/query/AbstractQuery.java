@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,6 +71,7 @@ import java.io.IOException;
 		@JsonSubTypes.Type(value = PayloadScoreQuery.class),
 		@JsonSubTypes.Type(value = PhraseQuery.class),
 		@JsonSubTypes.Type(value = PrefixQuery.class),
+		@JsonSubTypes.Type(value = QueryParser.class),
 		@JsonSubTypes.Type(value = RegexpQuery.class),
 		@JsonSubTypes.Type(value = SpanContainingQuery.class),
 		@JsonSubTypes.Type(value = SpanFirstQuery.class),

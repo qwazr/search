@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,23 +19,19 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Objects;
 
-public class MultiFieldQueryParser extends AbstractQuery {
+public class QueryParser extends AbstractQuery {
 
 	@JsonIgnore
 	final private Analyzer analyzer;
 
-	final public String[] fields;
-	final public LinkedHashMap<String, Float> boosts;
+	final public String field;
 	final public Boolean allow_leading_wildcard;
 	final public QueryParserOperator default_operator;
 	final public Integer phrase_slop;
@@ -55,10 +51,9 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	final public String query_string;
 
 	@JsonCreator
-	private MultiFieldQueryParser() {
+	private QueryParser() {
 		analyzer = null;
-		fields = null;
-		boosts = null;
+		field = null;
 		allow_leading_wildcard = null;
 		default_operator = null;
 		phrase_slop = null;
@@ -75,10 +70,9 @@ public class MultiFieldQueryParser extends AbstractQuery {
 		query_string = null;
 	}
 
-	public MultiFieldQueryParser(Builder builder) {
+	public QueryParser(Builder builder) {
 		this.analyzer = builder.analyzer;
-		this.fields = ArrayUtils.toArray(Objects.requireNonNull(builder.fields, "The fields are missing"));
-		this.boosts = builder.boosts;
+		this.field = Objects.requireNonNull(builder.field, "The field is missing");
 		this.allow_leading_wildcard = builder.allow_leading_wildcard;
 		this.default_operator = builder.default_operator;
 		this.phrase_slop = builder.phrase_slop;
@@ -97,9 +91,9 @@ public class MultiFieldQueryParser extends AbstractQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
-		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser =
-				new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(fields,
-						analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, boosts);
+		final org.apache.lucene.queryparser.classic.QueryParser parser =
+				new org.apache.lucene.queryparser.classic.QueryParser(field,
+						analyzer == null ? queryContext.getQueryAnalyzer() : analyzer);
 		if (default_operator != null)
 			parser.setDefaultOperator(default_operator.queryParseroperator);
 		if (allow_leading_wildcard != null)
@@ -129,15 +123,14 @@ public class MultiFieldQueryParser extends AbstractQuery {
 		return parser.parse(query_string);
 	}
 
-	public static Builder of() {
-		return new Builder();
+	public static Builder of(String field) {
+		return new Builder().setField(field);
 	}
 
 	public static class Builder {
 
 		private Analyzer analyzer;
-		private LinkedHashSet<String> fields;
-		private LinkedHashMap<String, Float> boosts;
+		private String field;
 		private Boolean allow_leading_wildcard;
 		private QueryParserOperator default_operator;
 		private Integer phrase_slop;
@@ -153,8 +146,8 @@ public class MultiFieldQueryParser extends AbstractQuery {
 		private Boolean splitOnWhitespace;
 		private String query_string;
 
-		public MultiFieldQueryParser build() {
-			return new MultiFieldQueryParser(this);
+		public QueryParser build() {
+			return new QueryParser(this);
 		}
 
 		public Builder setAnalyzer(Analyzer analyzer) {
@@ -162,18 +155,8 @@ public class MultiFieldQueryParser extends AbstractQuery {
 			return this;
 		}
 
-		public Builder addField(String... fieldSet) {
-			if (fields == null)
-				fields = new LinkedHashSet<>();
-			for (String field : fieldSet)
-				fields.add(field);
-			return this;
-		}
-
-		public Builder addBoost(String field, Float boost) {
-			if (boosts == null)
-				boosts = new LinkedHashMap<>();
-			boosts.put(field, boost);
+		public Builder setField(String field) {
+			this.field = field;
 			return this;
 		}
 

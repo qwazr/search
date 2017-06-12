@@ -35,10 +35,10 @@ import java.text.ParseException;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RealTimeSynonymsResourcesTest extends AbstractIndexTest {
 
-	private final static String[] EN_FR_SYNONYMS = new String[] { "hello world", "bonjour le monde" };
-	private final static String[] EN_FR_DE_SYNONYMS = new String[] { "hello world", "bonjour le monde", "hallo welt" };
+	final static String[] EN_FR_SYNONYMS = new String[] { "hello world", "bonjour le monde" };
+	final static String[] EN_FR_DE_SYNONYMS = new String[] { "hello world", "bonjour le monde", "hallo welt" };
 
-	private final static Analyzer WHITESPACE_ANALYZER = new WhitespaceAnalyzer();
+	final static Analyzer WHITESPACE_ANALYZER = new WhitespaceAnalyzer();
 
 	@BeforeClass
 	public static void setup() throws IOException, ParseException, InterruptedException, URISyntaxException {
@@ -89,4 +89,5 @@ public class RealTimeSynonymsResourcesTest extends AbstractIndexTest {
 		Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
 				QueryDefinition.of(builder.setQueryString("hallo welt").build()).build()).total_hits);
 	}
+
 }

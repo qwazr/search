@@ -15,10 +15,8 @@
  */
 package com.qwazr.search.test.units;
 
-import com.qwazr.search.index.ExplainDefinition;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.index.QueryDefinition;
-import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -38,35 +36,24 @@ public class MultiFieldQueryTest extends AbstractIndexTest {
 		indexService.postDocument(new IndexRecord("1").textField("Hello World").stringField("Hello World"));
 	}
 
-	private void checkQuery(QueryDefinition queryDef) {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(queryDef);
-		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
-		ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
-		Assert.assertNotNull(explain);
-	}
-
 	@Test
 	public void testWithDefaultAnalyzer() {
-		QueryDefinition queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.AND, "Hello", 0).boost("textField", 1F)
-						.boost("stringField", 1F)).build();
+		QueryDefinition queryDef = QueryDefinition.of(new MultiFieldQuery(QueryParserOperator.AND, "Hello", 0).boost(
+				"textField", 1F).boost("stringField", 1F)).build();
 		checkQuery(queryDef);
 	}
 
 	@Test
 	public void testWithCustomAnalyzer() {
-		QueryDefinition queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.AND, "Hello", 0, null, new StandardAnalyzer()).boost(
-						"textField", 1F).boost("stringField", 1F)).build();
+		QueryDefinition queryDef = QueryDefinition.of(new MultiFieldQuery(QueryParserOperator.AND, "Hello", 0, null,
+				new StandardAnalyzer()).boost("textField", 1F).boost("stringField", 1F)).build();
 		checkQuery(queryDef);
 	}
 
 	@Test
 	public void luceneQuery() throws IOException, ReflectiveOperationException {
-		Query luceneQuery = new MultiFieldQuery(QueryParserOperator.AND, "Hello World", 0).boost("textField", 1F)
-				.boost("stringField", 1F)
-				.getQuery(QueryContext.DEFAULT);
+		Query luceneQuery = new MultiFieldQuery(QueryParserOperator.AND, "Hello World", 0).boost("textField", 1F).boost(
+				"stringField", 1F).getQuery(QueryContext.DEFAULT);
 		Assert.assertNotNull(luceneQuery);
 	}
 

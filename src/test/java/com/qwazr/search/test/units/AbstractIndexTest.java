@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,9 +16,13 @@
 package com.qwazr.search.test.units;
 
 import com.qwazr.search.annotations.AnnotatedIndexService;
+import com.qwazr.search.index.ExplainDefinition;
 import com.qwazr.search.index.IndexManager;
+import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.utils.FileUtils;
 import org.junit.AfterClass;
+import org.junit.Assert;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -49,6 +53,15 @@ public abstract class AbstractIndexTest {
 		indexService.createUpdateIndex();
 		indexService.createUpdateFields();
 		return indexService;
+	}
+
+	static ResultDefinition.WithObject<IndexRecord> checkQuery(QueryDefinition queryDef) {
+		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(queryDef);
+		Assert.assertNotNull(result);
+		Assert.assertEquals(Long.valueOf(1), result.total_hits);
+		ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
+		Assert.assertNotNull(explain);
+		return result;
 	}
 
 	@AfterClass
