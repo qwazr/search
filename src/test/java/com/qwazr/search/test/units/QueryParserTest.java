@@ -27,7 +27,6 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -68,7 +67,7 @@ public class QueryParserTest extends AbstractIndexTest {
 	}
 
 	@Test
-	public void testWithSynonymsOr()
+	public void testWithGraphSynonymsOperatorOrKeywordsIsOneMultiWordSynonym()
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
 		AbstractQuery query = QueryParser.of("textSynonymsField")
 				.setDefaultOperator(QueryParserOperator.OR)
@@ -79,13 +78,45 @@ public class QueryParserTest extends AbstractIndexTest {
 	}
 
 	@Test
-	@Ignore
-	public void testWithSynonymsAnd()
+	public void testWithGraphSynonymsOperatorOrKeywordsIsContainsMultiWordSynonym()
+			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
+		AbstractQuery query = QueryParser.of("textSynonymsField")
+				.setDefaultOperator(QueryParserOperator.OR)
+				.setSplitOnWhitespace(false)
+				.setQueryString("hello bonjour le monde")
+				.build();
+		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+	}
+
+	@Test
+	public void testWithGraphSynonymsOperatorAndKeywordsIsOneMultiWordSynonym()
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
 		AbstractQuery query = QueryParser.of("textSynonymsField")
 				.setDefaultOperator(QueryParserOperator.AND)
 				.setSplitOnWhitespace(false)
 				.setQueryString("bonjour le monde")
+				.build();
+		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+	}
+
+	@Test
+	public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymLast()
+			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
+		AbstractQuery query = QueryParser.of("textSynonymsField")
+				.setDefaultOperator(QueryParserOperator.AND)
+				.setSplitOnWhitespace(false)
+				.setQueryString("hello bonjour le monde")
+				.build();
+		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+	}
+
+	@Test
+	public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymFirst()
+			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
+		AbstractQuery query = QueryParser.of("textSynonymsField")
+				.setDefaultOperator(QueryParserOperator.AND)
+				.setSplitOnWhitespace(false)
+				.setQueryString("bonjour le monde hello")
 				.build();
 		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
 	}

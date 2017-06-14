@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.search.query.lucene.QueryParserFix;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
@@ -91,9 +92,8 @@ public class QueryParser extends AbstractQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
-		final org.apache.lucene.queryparser.classic.QueryParser parser =
-				new org.apache.lucene.queryparser.classic.QueryParser(field,
-						analyzer == null ? queryContext.getQueryAnalyzer() : analyzer);
+		final org.apache.lucene.queryparser.classic.QueryParser parser = new QueryParserFix(field,
+				analyzer == null ? queryContext.getQueryAnalyzer() : analyzer);
 		if (default_operator != null)
 			parser.setDefaultOperator(default_operator.queryParseroperator);
 		if (allow_leading_wildcard != null)

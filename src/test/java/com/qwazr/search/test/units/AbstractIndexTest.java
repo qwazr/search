@@ -23,6 +23,8 @@ import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.utils.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -34,6 +36,8 @@ public abstract class AbstractIndexTest {
 	private static Path rootDirectory;
 	static IndexManager indexManager;
 	static AnnotatedIndexService<IndexRecord> indexService;
+
+	static final Logger LOGGER = LoggerFactory.getLogger(AbstractIndexTest.class);
 
 	static void initIndexManager() throws IOException, URISyntaxException {
 		rootDirectory = Files.createTempDirectory("qwazr_index_test");
@@ -58,6 +62,8 @@ public abstract class AbstractIndexTest {
 	static ResultDefinition.WithObject<IndexRecord> checkQuery(QueryDefinition queryDef) {
 		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(queryDef);
 		Assert.assertNotNull(result);
+		if (result.query != null)
+			LOGGER.info(result.query);
 		Assert.assertEquals(Long.valueOf(1), result.total_hits);
 		ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
 		Assert.assertNotNull(explain);
