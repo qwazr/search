@@ -56,28 +56,34 @@ public class MultiFieldQueryTest2 extends AbstractIndexTest {
 
 		queryDef = QueryDefinition.of(new MultiFieldQuery2(QueryParserOperator.OR, "Hello", 0).boost("textField", 1F)
 				.boost("stringField", 1F)).queryDebug(true).build();
-		checkQuery(queryDef, 1L, "(textField:hello stringField:Hello~2)");
+		checkQuery(queryDef, 1L, "textField:hello stringField:Hello~2");
 
 		queryDef = QueryDefinition.of(new MultiFieldQuery2(QueryParserOperator.AND, "Hello", 0).boost("textField", 1F)
 				.boost("stringField", 1F)).queryDebug(true).build();
-		checkQuery(queryDef, 1L, "(textField:hello stringField:Hello~2) #((textField:hello stringField:Hello~2)~1)");
+		checkQuery(queryDef, 1L, "textField:hello stringField:Hello~2");
 
 		queryDef = QueryDefinition.of(new MultiFieldQuery2(QueryParserOperator.OR, "Hello world", 0).boost("textField",
 				2F).boost("stringField", 1F)).queryDebug(true).build();
-		checkQuery(queryDef, 1L, "textField:hello textField:world stringField:Hello world~2");
+		checkQuery(queryDef, 1L, "(textField:hello)^2.0 (textField:world)^2.0 stringField:Hello world~2");
 
 		queryDef = QueryDefinition.of(new MultiFieldQuery2(QueryParserOperator.AND, "Hello world", 0).boost("textField",
 				2F).boost("stringField", 1F)).queryDebug(true).build();
-		checkQuery(queryDef, 1L,
-				"((textField:hello textField:world)^2.0 stringField:Hello world~2) #textField:hello #textField:world #stringField:Hello world~2");
+		checkQuery(queryDef, 1L, "+(textField:hello)^2.0 +(textField:world)^2.0 +stringField:Hello world~2");
 	}
 
 	@Test
 	public void testWithMinShouldMatch() {
 		QueryDefinition queryDef = QueryDefinition.of(new MultiFieldQuery2(QueryParserOperator.OR, "Hello world aaaaaa",
-				2).boost("textField", 2F).boost("stringField", 1F)).queryDebug(true).build();
+				2).boost("textField", 3F).boost("stringField", 1F)).queryDebug(true).build();
 		checkQuery(queryDef, 1L,
-				"(textField:hello textField:world textField:aaaaaa stringField:Hello world aaaaaa~2)~2");
+				"((textField:hello)^3.0 (textField:world)^3.0 (textField:aaaaaa)^3.0 stringField:Hello world aaaaaa~2)~2");
+	}
+
+	@Test
+	public void testWithDisjunction() {
+		QueryDefinition queryDef = QueryDefinition.of(new MultiFieldQuery2(QueryParserOperator.AND, "Hello world", null,
+				0.1f).boost("textField", 3F).boost("stringField", 1F)).queryDebug(true).build();
+		checkQuery(queryDef, 1L, "+(textField:hello)^3.0 +(textField:world)^3.0 +stringField:Hello world~2");
 	}
 
 	@Test
@@ -87,16 +93,15 @@ public class MultiFieldQueryTest2 extends AbstractIndexTest {
 
 		queryDef = QueryDefinition.of(new MultiFieldQuery2(QueryParserOperator.OR, "Hello", 0, null, analyzer).boost(
 				"textField", 1F).boost("stringField", 1F)).queryDebug(true).build();
-		checkQuery(queryDef, 1L, "(textField:hello stringField:hello)");
+		checkQuery(queryDef, 1L, "textField:hello stringField:hello");
 
 		queryDef = QueryDefinition.of(new MultiFieldQuery2(QueryParserOperator.AND, "Hello", 0, null, analyzer).boost(
 				"textField", 1F).boost("stringField", 1F)).queryDebug(true).build();
-		checkQuery(queryDef, 1L, "(textField:hello stringField:hello) #((textField:hello stringField:hello)~1)");
+		checkQuery(queryDef, 1L, "textField:hello stringField:hello");
 
 		queryDef = QueryDefinition.of(new MultiFieldQuery2(QueryParserOperator.AND, "Hello zzzzz", 0, null,
 				analyzer).boost("textField", 1F).boost("stringField", 1F)).queryDebug(true).build();
-		checkQuery(queryDef, 0L,
-				"((textField:hello textField:zzzzz~2) (stringField:hello stringField:zzzzz~2)) #((textField:hello stringField:hello)~1) #((textField:zzzzz~2 stringField:zzzzz~2)~1)");
+		checkQuery(queryDef, 0L, "+(textField:hello stringField:hello) +(textField:zzzzz~2 stringField:zzzzz~2)");
 	}
 
 	@Test

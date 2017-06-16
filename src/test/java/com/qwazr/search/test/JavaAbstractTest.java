@@ -535,24 +535,26 @@ public abstract class JavaAbstractTest {
 		fields.put("content", 1.0F);
 		MultiFieldQuery2 query = new MultiFieldQuery2(fields, QueryParserOperator.AND, "title sekond", null);
 		checkMultiField(query,
-				"((title:titl title:sekond~2)^10.0 (titleStd:title titleStd:sekond~2)^5.0 (content:titl content:sekond~2)) #((title:titl titleStd:title content:titl)~1) #((title:sekond~2 titleStd:sekond~2 content:sekond~2)~1)",
+				"+((title:titl)^10.0 (titleStd:title)^5.0 content:titl) +((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2)",
 				1);
 		query = new MultiFieldQuery2(fields, QueryParserOperator.OR, "title sekond", 2);
 		checkMultiField(query,
-				"((title:titl titleStd:title content:titl) (title:sekond~2 titleStd:sekond~2 content:sekond~2))~2", 1);
+				"(((title:titl)^10.0 (titleStd:title)^5.0 content:titl) ((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2))~2",
+				1);
 		query = new MultiFieldQuery2(QueryParserOperator.OR, "title sekond", 1).boost("title", 10.0F).boost("titleStd",
 				5.0F).boost("content", 1.0F);
 		checkMultiField(query,
-				"((title:titl titleStd:title content:titl) (title:sekond~2 titleStd:sekond~2 content:sekond~2))~1", 2);
+				"(((title:titl)^10.0 (titleStd:title)^5.0 content:titl) ((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2))~1",
+				2);
 	}
 
 	@Test
 	public void test710MultiFieldWithDisjunction()
 			throws IOException, ReflectiveOperationException, URISyntaxException {
-		MultiFieldQuery2 query = new MultiFieldQuery2(QueryParserOperator.AND, "title second", null, 0.1F).boost("title",
-				10.0F).boost("titleStd", 5.0F).boost("content", 1.0F);
+		MultiFieldQuery2 query = new MultiFieldQuery2(QueryParserOperator.AND, "title second", null, 0.1F).boost(
+				"title", 10.0F).boost("titleStd", 5.0F).boost("content", 1.0F);
 		checkMultiField(query,
-				"((title:titl title:second)^10.0 | (titleStd:title titleStd:second)^5.0 | (content:titl content:second))~0.1 #((title:titl titleStd:title content:titl)~1) #((title:second titleStd:second content:second)~1)",
+				"+((title:titl)^10.0 | (titleStd:title)^5.0 | content:titl)~0.1 +((title:second)^10.0 | (titleStd:second)^5.0 | content:second)~0.1",
 				1);
 	}
 

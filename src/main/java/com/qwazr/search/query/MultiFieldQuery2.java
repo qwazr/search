@@ -146,13 +146,11 @@ public class MultiFieldQuery2 extends AbstractQuery {
 			});
 		}
 
-		// Create the queryBuilder
-		final Builder queryBuilder =
+		// Execute the query
+		return new Builder(alzr, termsFreq, termsOffsets).parse(queryString,
 				defaultOperator == null || defaultOperator.queryParseroperator == QueryParser.Operator.AND ?
-						new AndBuilder(alzr, termsFreq, termsOffsets) :
-						new OrBuilder(alzr, termsFreq, termsOffsets);
-		// Parse the query
-		return queryBuilder.parse(queryString);
+						BooleanClause.Occur.MUST :
+						BooleanClause.Occur.SHOULD);
 	}
 
 	protected Query getFieldQuery(final List<Query> queries) {
@@ -167,11 +165,27 @@ public class MultiFieldQuery2 extends AbstractQuery {
 		}
 	}
 
+	protected Query getRootQuery(final Integer minNumberShouldMatch, final List<Query> queries,
+			final BooleanClause.Occur defaultOccur) {
+		if (queries.size() == 1)
+			return queries.get(0);
+		final BooleanQuery.Builder builder = new BooleanQuery.Builder();
+		if (minNumberShouldMatch != null)
+			builder.setMinimumNumberShouldMatch(minNumberShouldMatch);
+		queries.forEach(query -> builder.add(new BooleanClause(query, defaultOccur)));
+		return builder.build();
+	}
+
 	protected Query getTermQuery(final int freq, final Term term) {
+		Query query;
 		if (freq > 0)
-			return new org.apache.lucene.search.TermQuery(term);
+			query = new org.apache.lucene.search.TermQuery(term);
 		else
-			return new org.apache.lucene.search.FuzzyQuery(term);
+			query = new org.apache.lucene.search.FuzzyQuery(term);
+		final Float boost = fieldsBoosts.get(term.field());
+		if (boost != null && boost != 1.0F)
+			query = new org.apache.lucene.search.BoostQuery(query, boost);
+		return query;
 	}
 
 	private class TermsWithFreq extends TermConsumer.WithChar {
@@ -231,7 +245,7 @@ public class MultiFieldQuery2 extends AbstractQuery {
 		}
 	}
 
-	abstract class Builder extends QueryBuilderFix {
+	final class Builder extends QueryBuilderFix {
 
 		final Map<String, AtomicInteger> termsFreq;
 		final Map<Offset, List<Query>> perTermQueries;
@@ -249,6 +263,18 @@ public class MultiFieldQuery2 extends AbstractQuery {
 		}
 
 		@Override
+		final protected Query newSynonymQuery(final Term[] terms) {
+			for (Term term : terms) {
+				final Query query = new org.apache.lucene.search.TermQuery(term);
+				final String text = term.text();
+				final Collection<Offset> offset = termsOffset.get(text);
+				if (offset != null)
+					offset.forEach(o -> perTermQueries.computeIfAbsent(o, (k) -> new ArrayList<>()).add(query));
+			}
+			return super.newSynonymQuery(terms);
+		}
+
+		@Override
 		final protected Query newTermQuery(Term term) {
 			final String text = term.text();
 			final AtomicInteger freq = termsFreq.get(term.text());
@@ -259,90 +285,38 @@ public class MultiFieldQuery2 extends AbstractQuery {
 			return termQuery;
 		}
 
+		private String concatTerms(Term[] terms) {
+			final StringBuilder sb = new StringBuilder();
+			boolean start = true;
+			for (final Term term : terms) {
+				if (!start)
+					sb.append(' ');
+				else
+					start = false;
+				sb.append(term.text());
+			}
+			return sb.toString();
+		}
+
 		@Override
 		final protected Query newGraphSynonymQuery(Iterator<Query> queries) {
 			final BooleanQuery query = (BooleanQuery) super.newGraphSynonymQuery(queries);
 			query.clauses().forEach(q -> {
 				final org.apache.lucene.search.PhraseQuery pq = (org.apache.lucene.search.PhraseQuery) q.getQuery();
-				final StringBuilder sb = new StringBuilder();
-				boolean start = true;
-				for (final Term term : pq.getTerms()) {
-					if (!start)
-						sb.append(' ');
-					else
-						start = false;
-					sb.append(term.text());
-				}
-				final String text = sb.toString();
-				final Collection<Offset> offset = termsOffset.get(text);
+				final Collection<Offset> offset = termsOffset.get(concatTerms(pq.getTerms()));
 				if (offset != null)
 					offset.forEach(o -> perTermQueries.computeIfAbsent(o, (k) -> new ArrayList<>()).add(query));
 			});
 			return query;
 		}
 
-		final Query fieldParse(final String queryString) {
-			final List<Query> termQueries = new ArrayList<>();
-			fieldsBoosts.forEach((field, boost) -> {
-				Query query = createBooleanQuery(field, queryString);
-				if (boost != null && boost != 1.0F)
-					query = new org.apache.lucene.search.BoostQuery(query, boost);
-				termQueries.add(query);
-			});
-			return getFieldQuery(termQueries);
-		}
-
-		abstract Query parse(final String queryString);
-	}
-
-	class OrBuilder extends Builder {
-
-		private OrBuilder(Analyzer analyzer, Map<String, AtomicInteger> termsFreq,
-				Map<String, Set<Offset>> termsOffsets) {
-			super(analyzer, termsFreq, termsOffsets);
-		}
-
-		Query parse(final String queryString) {
-			final BooleanQuery.Builder rootBooleanBuilder = new BooleanQuery.Builder();
-			if (minNumberShouldMatch != null)
-				rootBooleanBuilder.setMinimumNumberShouldMatch(minNumberShouldMatch);
-			fieldParse(queryString);
-			perTermQueries.forEach((t, queries) -> {
-				if (queries.size() == 1)
-					rootBooleanBuilder.add(queries.get(0), BooleanClause.Occur.SHOULD);
-				else {
-					final BooleanQuery.Builder termBooleanBuilder = new BooleanQuery.Builder();
-					queries.forEach(q -> termBooleanBuilder.add(q, BooleanClause.Occur.SHOULD));
-					rootBooleanBuilder.add(termBooleanBuilder.build(), BooleanClause.Occur.SHOULD);
-				}
-			});
-			return rootBooleanBuilder.build();
+		final Query parse(final String queryString, final BooleanClause.Occur defaultOperator) {
+			final List<Query> byTermQueries = new ArrayList<>();
+			fieldsBoosts.forEach((field, boost) -> createBooleanQuery(field, queryString));
+			perTermQueries.forEach((t, queries) -> byTermQueries.add(getFieldQuery(queries)));
+			return getRootQuery(minNumberShouldMatch, byTermQueries, defaultOperator);
 		}
 
 	}
 
-	final class AndBuilder extends OrBuilder {
-
-		private AndBuilder(Analyzer analyzer, Map<String, AtomicInteger> termsFreq,
-				Map<String, Set<Offset>> termsOffsets) {
-			super(analyzer, termsFreq, termsOffsets);
-		}
-
-		Query parse(final String queryString) {
-			final BooleanQuery.Builder rootBooleanBuilder = new BooleanQuery.Builder();
-			rootBooleanBuilder.add(fieldParse(queryString), BooleanClause.Occur.SHOULD);
-			perTermQueries.forEach((t, queries) -> {
-				if (queries.size() == 1)
-					rootBooleanBuilder.add(queries.get(0), BooleanClause.Occur.FILTER);
-				else {
-					final BooleanQuery.Builder termBooleanBuilder = new BooleanQuery.Builder();
-					termBooleanBuilder.setDisableCoord(true);
-					termBooleanBuilder.setMinimumNumberShouldMatch(1);
-					queries.forEach(q -> termBooleanBuilder.add(q, BooleanClause.Occur.SHOULD));
-					rootBooleanBuilder.add(termBooleanBuilder.build(), BooleanClause.Occur.FILTER);
-				}
-			});
-			return rootBooleanBuilder.build();
-		}
-	}
 }

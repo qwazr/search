@@ -154,19 +154,22 @@ public class AnnotatedIndexServiceTest {
 		fieldBoosts.put("title", 10F);
 		fieldBoosts.put("content", 1F);
 
-		MultiFieldQuery2 multiFieldQuery =
-				new MultiFieldQuery2(fieldBoosts, QueryParserOperator.AND, "Title terms", null);
+		MultiFieldQuery2 multiFieldQuery = new MultiFieldQuery2(fieldBoosts, QueryParserOperator.AND, "Title terms",
+				null);
 
-		QueryBuilder builder = QueryDefinition.of(multiFieldQuery);
+		QueryBuilder builder = QueryDefinition.of(multiFieldQuery).queryDebug(true);
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
+		Assert.assertEquals(
+				"+(title:title title:titl content:title content:titl) +(title:terms title:term content:terms content:term)",
+				results.query);
 		Assert.assertEquals(Long.valueOf(1), results.total_hits);
 	}
 
 	@Test
 	public void test501query() throws IOException, InterruptedException {
 		Long result = service.query(context -> {
-			ResultDefinition.WithObject<IndexRecord> res =
-					context.searchObject(QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
+			ResultDefinition.WithObject<IndexRecord> res = context.searchObject(
+					QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
 			return res.total_hits + context.getIndexReader().numDocs();
 		});
 		Assert.assertEquals(Long.valueOf(2), result);
