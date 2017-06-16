@@ -28,7 +28,7 @@ import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
-import com.qwazr.search.query.MultiFieldQuery;
+import com.qwazr.search.query.MultiFieldQuery2;
 import com.qwazr.search.query.QueryParserOperator;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseFilter;
@@ -154,8 +154,8 @@ public class AnnotatedIndexServiceTest {
 		fieldBoosts.put("title", 10F);
 		fieldBoosts.put("content", 1F);
 
-		MultiFieldQuery multiFieldQuery =
-				new MultiFieldQuery(fieldBoosts, QueryParserOperator.AND, "Title terms", null);
+		MultiFieldQuery2 multiFieldQuery =
+				new MultiFieldQuery2(fieldBoosts, QueryParserOperator.AND, "Title terms", null);
 
 		QueryBuilder builder = QueryDefinition.of(multiFieldQuery);
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
@@ -174,7 +174,7 @@ public class AnnotatedIndexServiceTest {
 
 	@Test
 	public void test510explain() {
-		MultiFieldQuery mfq = new MultiFieldQuery(QueryParserOperator.AND, "Title terms", null).boost("title", 10F)
+		MultiFieldQuery2 mfq = new MultiFieldQuery2(QueryParserOperator.AND, "Title terms", null).boost("title", 10F)
 				.boost("content", 1.0F);
 		QueryDefinition query = QueryDefinition.of(mfq).build();
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -135,8 +136,8 @@ public class MultiFieldQuery extends AbstractQuery {
 		// Build term queries
 		fieldsBoosts.forEach((field, boost) -> {
 			try (final TokenStream tokenStream = alzr.tokenStream(field, queryString)) {
-				final FieldTermsQuery fieldTermsQuery =
-						new FieldTermsQuery(byPosQueries, tokenStream, field, queryContext.getIndexReader());
+				final FieldTermsQuery fieldTermsQuery = new FieldTermsQuery(byPosQueries, tokenStream, field,
+						queryContext.getIndexReader());
 				fieldTermsQuery.forEachToken();
 				tokenStream.end();
 			} catch (IOException e) {
@@ -184,7 +185,9 @@ public class MultiFieldQuery extends AbstractQuery {
 			return new org.apache.lucene.search.TermQuery(term);
 	}
 
-	private class FieldTermsQuery extends TermConsumer.WithCharPositionIncrement {
+	private class FieldTermsQuery extends TermConsumer.WithChar {
+
+		private final PositionIncrementAttribute posIncAttr;
 
 		private final SortedMap<Integer, List<Query>> byPosQueries;
 		private final String field;
@@ -196,6 +199,7 @@ public class MultiFieldQuery extends AbstractQuery {
 		private FieldTermsQuery(final SortedMap<Integer, List<Query>> byPosQueries, final TokenStream tokenStream,
 				final String field, final IndexReader indexReader) {
 			super(tokenStream);
+			posIncAttr = TermConsumer.getAttribute(tokenStream, PositionIncrementAttribute.class);
 			this.byPosQueries = byPosQueries;
 			this.field = field;
 			final Float b = fieldsBoosts == null ? null : fieldsBoosts.get(field);
@@ -211,8 +215,8 @@ public class MultiFieldQuery extends AbstractQuery {
 			final int freq = indexReader == null ? 0 : indexReader.docFreq(term);
 			minTermFreq = Math.min(freq, minTermFreq);
 			Query termQuery = getTermQuery(minTermFreq, term);
-			byPosQueries.computeIfAbsent(currentPos, ArrayList::new)
-					.add(boost == 1.0F ? termQuery : new org.apache.lucene.search.BoostQuery(termQuery, boost));
+			byPosQueries.computeIfAbsent(currentPos, ArrayList::new).add(
+					boost == 1.0F ? termQuery : new org.apache.lucene.search.BoostQuery(termQuery, boost));
 			currentPos += posIncAttr.getPositionIncrement();
 			return true;
 		}

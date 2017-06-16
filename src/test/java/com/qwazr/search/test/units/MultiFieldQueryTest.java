@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +28,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+@Deprecated
 public class MultiFieldQueryTest extends AbstractIndexTest {
 
 	@BeforeClass

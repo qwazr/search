@@ -59,15 +59,26 @@ public abstract class AbstractIndexTest {
 		return indexService;
 	}
 
-	static ResultDefinition.WithObject<IndexRecord> checkQuery(QueryDefinition queryDef) {
+	static ResultDefinition.WithObject<IndexRecord> checkQuery(QueryDefinition queryDef, Long hitsExpected,
+			String queryDebug) {
 		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(queryDef);
 		Assert.assertNotNull(result);
 		if (result.query != null)
 			LOGGER.info(result.query);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
-		ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
-		Assert.assertNotNull(explain);
+		if (hitsExpected != null) {
+			Assert.assertEquals(hitsExpected, result.total_hits);
+			if (hitsExpected > 0) {
+				ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
+				Assert.assertNotNull(explain);
+			}
+		}
+		if (queryDebug != null)
+			Assert.assertEquals(queryDebug, result.getQuery());
 		return result;
+	}
+
+	static ResultDefinition.WithObject<IndexRecord> checkQuery(QueryDefinition queryDef) {
+		return checkQuery(queryDef, 1L, null);
 	}
 
 	@AfterClass

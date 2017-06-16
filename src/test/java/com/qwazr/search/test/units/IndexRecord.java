@@ -38,7 +38,12 @@ public class IndexRecord {
 	@IndexField(template = FieldDefinition.Template.TextField,
 			queryAnalyzerClass = SynonymsResourceAnalyzer.class,
 			analyzerClass = WhitespaceAnalyzer.class)
-	public String textSynonymsField;
+	public String textSynonymsField1;
+
+	@IndexField(template = FieldDefinition.Template.TextField,
+			queryAnalyzerClass = SynonymsResourceAnalyzer.class,
+			analyzerClass = WhitespaceAnalyzer.class)
+	public String textSynonymsField2;
 
 	@IndexField(template = FieldDefinition.Template.StringField)
 	public String stringField;
@@ -107,8 +112,13 @@ public class IndexRecord {
 		return this;
 	}
 
-	public IndexRecord textSynonymsField(String textSynonymsField) {
-		this.textSynonymsField = textSynonymsField;
+	public IndexRecord textSynonymsField1(String textSynonymsField1) {
+		this.textSynonymsField1 = textSynonymsField1;
+		return this;
+	}
+
+	public IndexRecord textSynonymsField2(String textSynonymsField2) {
+		this.textSynonymsField2 = textSynonymsField2;
 		return this;
 	}
 

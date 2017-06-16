@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.search.query.lucene.MultiFieldQueryParserFix;
 import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -98,7 +99,7 @@ public class MultiFieldQueryParser extends AbstractQuery {
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
 		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser =
-				new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(fields,
+				new MultiFieldQueryParserFix(fields,
 						analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, boosts);
 		if (default_operator != null)
 			parser.setDefaultOperator(default_operator.queryParseroperator);

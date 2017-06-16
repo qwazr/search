@@ -58,18 +58,6 @@ public interface TermConsumer {
 		}
 	}
 
-	abstract class WithCharPositionIncrement extends TermConsumerAbstract {
-
-		protected final CharTermAttribute charTermAttr;
-		protected final PositionIncrementAttribute posIncAttr;
-
-		public WithCharPositionIncrement(final TokenStream tokenStream) {
-			super(tokenStream);
-			charTermAttr = getAttribute(tokenStream, CharTermAttribute.class);
-			posIncAttr = getAttribute(tokenStream, PositionIncrementAttribute.class);
-		}
-	}
-
 	abstract class AllAttributes extends WithChar {
 
 		protected final FlagsAttribute flagsAttr;

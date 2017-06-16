@@ -44,7 +44,7 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest {
 		initIndexService();
 		indexService.postDocument(new IndexRecord("1").textField("Hello")
 				.stringField("world")
-				.textSynonymsField("hello world"));
+				.textSynonymsField1("hello world"));
 	}
 
 	@Test
@@ -85,7 +85,7 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest {
 	public void testWithSynonymsOr()
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
 		AbstractQuery query = MultiFieldQueryParser.of()
-				.addField("textSynonymsField", "textField", "stringField")
+				.addField("textSynonymsField1", "textField", "stringField")
 				.setDefaultOperator(QueryParserOperator.OR)
 				.setSplitOnWhitespace(false)
 				.setQueryString("bonjour le monde")
@@ -98,7 +98,7 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest {
 	public void testWithSynonymsAnd()
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
 		AbstractQuery query = MultiFieldQueryParser.of()
-				.addField("textSynonymsField", "textField", "stringField")
+				.addField("textSynonymsField1", "textSynonymsField2")
 				.setDefaultOperator(QueryParserOperator.AND)
 				.setSplitOnWhitespace(false)
 				.setQueryString("bonjour le monde")

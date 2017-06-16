@@ -41,7 +41,7 @@ public class QueryParserTest extends AbstractIndexTest {
 				RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
 						RealTimeSynonymsResourcesTest.EN_FR_DE_SYNONYMS));
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").textField("Hello world").textSynonymsField("hello world"));
+		indexService.postDocument(new IndexRecord("1").textField("Hello world").textSynonymsField1("hello world"));
 	}
 
 	@Test
@@ -69,7 +69,7 @@ public class QueryParserTest extends AbstractIndexTest {
 	@Test
 	public void testWithGraphSynonymsOperatorOrKeywordsIsOneMultiWordSynonym()
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = QueryParser.of("textSynonymsField")
+		AbstractQuery query = QueryParser.of("textSynonymsField1")
 				.setDefaultOperator(QueryParserOperator.OR)
 				.setSplitOnWhitespace(false)
 				.setQueryString("bonjour le monde")
@@ -80,7 +80,7 @@ public class QueryParserTest extends AbstractIndexTest {
 	@Test
 	public void testWithGraphSynonymsOperatorOrKeywordsIsContainsMultiWordSynonym()
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = QueryParser.of("textSynonymsField")
+		AbstractQuery query = QueryParser.of("textSynonymsField1")
 				.setDefaultOperator(QueryParserOperator.OR)
 				.setSplitOnWhitespace(false)
 				.setQueryString("hello bonjour le monde")
@@ -91,7 +91,7 @@ public class QueryParserTest extends AbstractIndexTest {
 	@Test
 	public void testWithGraphSynonymsOperatorAndKeywordsIsOneMultiWordSynonym()
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = QueryParser.of("textSynonymsField")
+		AbstractQuery query = QueryParser.of("textSynonymsField1")
 				.setDefaultOperator(QueryParserOperator.AND)
 				.setSplitOnWhitespace(false)
 				.setQueryString("bonjour le monde")
@@ -102,7 +102,7 @@ public class QueryParserTest extends AbstractIndexTest {
 	@Test
 	public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymLast()
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = QueryParser.of("textSynonymsField")
+		AbstractQuery query = QueryParser.of("textSynonymsField1")
 				.setDefaultOperator(QueryParserOperator.AND)
 				.setSplitOnWhitespace(false)
 				.setQueryString("hello bonjour le monde")
@@ -113,7 +113,7 @@ public class QueryParserTest extends AbstractIndexTest {
 	@Test
 	public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymFirst()
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = QueryParser.of("textSynonymsField")
+		AbstractQuery query = QueryParser.of("textSynonymsField1")
 				.setDefaultOperator(QueryParserOperator.AND)
 				.setSplitOnWhitespace(false)
 				.setQueryString("bonjour le monde hello")

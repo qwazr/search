@@ -44,7 +44,7 @@ import com.qwazr.search.query.LongMultiRangeQuery;
 import com.qwazr.search.query.LongRangeQuery;
 import com.qwazr.search.query.LongSetQuery;
 import com.qwazr.search.query.MatchAllDocsQuery;
-import com.qwazr.search.query.MultiFieldQuery;
+import com.qwazr.search.query.MultiFieldQuery2;
 import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.query.TermsQuery;
@@ -518,7 +518,7 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(status);
 	}
 
-	private void checkMultiField(final MultiFieldQuery query, final String check, final int size)
+	private void checkMultiField(final MultiFieldQuery2 query, final String check, final int size)
 			throws URISyntaxException, IOException {
 		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
 		final QueryBuilder builder = QueryDefinition.of(query).queryDebug(true);
@@ -533,28 +533,26 @@ public abstract class JavaAbstractTest {
 		fields.put("title", 10.0F);
 		fields.put("titleStd", 5.0F);
 		fields.put("content", 1.0F);
-		MultiFieldQuery query = new MultiFieldQuery(fields, QueryParserOperator.AND, "title sekond", null);
+		MultiFieldQuery2 query = new MultiFieldQuery2(fields, QueryParserOperator.AND, "title sekond", null);
 		checkMultiField(query,
-				"+((title:titl)^10.0 (titleStd:title)^5.0 content:titl~2) +((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2)",
+				"((title:titl title:sekond~2)^10.0 (titleStd:title titleStd:sekond~2)^5.0 (content:titl content:sekond~2)) #((title:titl titleStd:title content:titl)~1) #((title:sekond~2 titleStd:sekond~2 content:sekond~2)~1)",
 				1);
-		query = new MultiFieldQuery(fields, QueryParserOperator.OR, "title sekond", 2);
+		query = new MultiFieldQuery2(fields, QueryParserOperator.OR, "title sekond", 2);
 		checkMultiField(query,
-				"(((title:titl)^10.0 (titleStd:title)^5.0 content:titl~2) ((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2))~2",
-				1);
-		query = new MultiFieldQuery(QueryParserOperator.OR, "title sekond", 1).boost("title", 10.0F).boost("titleStd",
+				"((title:titl titleStd:title content:titl) (title:sekond~2 titleStd:sekond~2 content:sekond~2))~2", 1);
+		query = new MultiFieldQuery2(QueryParserOperator.OR, "title sekond", 1).boost("title", 10.0F).boost("titleStd",
 				5.0F).boost("content", 1.0F);
 		checkMultiField(query,
-				"(((title:titl)^10.0 (titleStd:title)^5.0 content:titl~2) ((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2))~1",
-				2);
+				"((title:titl titleStd:title content:titl) (title:sekond~2 titleStd:sekond~2 content:sekond~2))~1", 2);
 	}
 
 	@Test
 	public void test710MultiFieldWithDisjunction()
 			throws IOException, ReflectiveOperationException, URISyntaxException {
-		MultiFieldQuery query = new MultiFieldQuery(QueryParserOperator.AND, "title second", null, 0.1F).boost("title",
+		MultiFieldQuery2 query = new MultiFieldQuery2(QueryParserOperator.AND, "title second", null, 0.1F).boost("title",
 				10.0F).boost("titleStd", 5.0F).boost("content", 1.0F);
 		checkMultiField(query,
-				"+((title:titl)^10.0 | (titleStd:title)^5.0 | content:titl~2)~0.1 +((title:second)^10.0 | (titleStd:second)^5.0 | content:second~2)~0.1",
+				"((title:titl title:second)^10.0 | (titleStd:title titleStd:second)^5.0 | (content:titl content:second))~0.1 #((title:titl titleStd:title content:titl)~1) #((title:second titleStd:second content:second)~1)",
 				1);
 	}
 
