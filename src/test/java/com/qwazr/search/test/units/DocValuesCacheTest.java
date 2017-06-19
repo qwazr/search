@@ -52,5 +52,7 @@ public class DocValuesCacheTest extends AbstractIndexTest {
 		checkDocValue(1.11d);
 		indexService.postDocument(new IndexRecord("1").doubleDocValue(2.22d));
 		checkDocValue(2.22d);
+		indexService.updateDocumentValues(new IndexRecord("1").doubleDocValue(3.33d));
+		checkDocValue(3.33d);
 	}
 }
