@@ -65,10 +65,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -109,6 +109,7 @@ final public class IndexInstance implements Closeable {
 
 	private volatile FieldMap fieldMap;
 	private volatile Map<String, ValueConverter> docValuesConverters;
+	private volatile IndexSearcher lastIndexSearcher;
 
 	private volatile LinkedHashMap<String, AnalyzerDefinition> analyzerDefinitionMap;
 	private final LinkedHashMap<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap;
@@ -130,7 +131,6 @@ final public class IndexInstance implements Closeable {
 		this.globalAnalyzerFactoryMap = builder.globalAnalyzerFactoryMap;
 		this.fieldMap = builder.fieldMap == null ? null : new FieldMap(builder.fieldMap,
 				builder.settings.sortedSetFacetField);
-		this.docValuesConverters = new HashMap<>();
 		this.writerAndSearcher = builder.writerAndSearcher;
 		this.indexAnalyzer = builder.indexAnalyzer;
 		this.queryAnalyzer = builder.queryAnalyzer;
@@ -195,13 +195,20 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
+	private synchronized Map<String, ValueConverter> refreshDocValuesConverter(IndexSearcher indexSearcher) {
+		if (indexSearcher == lastIndexSearcher)
+			return docValuesConverters;
+		docValuesConverters = indexSearcher == null ? null : new HashMap<>();
+		lastIndexSearcher = indexSearcher;
+		return docValuesConverters;
+	}
+
 	private void refreshFieldsAnalyzers() throws IOException {
 		final AnalyzerContext analyzerContext = new AnalyzerContext(instanceFactory, fileResourceLoader,
 				fieldMap.getFieldDefinitionMap(), true, globalAnalyzerFactoryMap, localAnalyzerFactoryMap);
 		indexAnalyzer.update(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext.queryAnalyzerMap);
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
-		docValuesConverters = new HashMap<>();
 	}
 
 	synchronized void setFields(final LinkedHashMap<String, FieldDefinition> fields)
@@ -316,7 +323,6 @@ final public class IndexInstance implements Closeable {
 		writerAndSearcher.commit();
 		localReplicator.publish(writerAndSearcher.newRevision());
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
-		docValuesConverters = new HashMap<>();
 	}
 
 	final synchronized BackupStatus backup(final Path backupIndexDirectory) throws IOException {
@@ -602,7 +608,8 @@ final public class IndexInstance implements Closeable {
 			final FieldMapWrapper.Cache fieldMapWrappers) throws IOException {
 		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
 		return new QueryContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzer, queryAnalyzer,
-				fieldMap, fieldMapWrappers, facetsState, indexSearcher, taxonomyReader, docValuesConverters);
+				fieldMap, fieldMapWrappers, facetsState, indexSearcher, taxonomyReader,
+				refreshDocValuesConverter(indexSearcher));
 	}
 
 	final <T> T query(final FieldMapWrapper.Cache fieldMapWrappers,
