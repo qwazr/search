@@ -25,6 +25,7 @@ import org.apache.lucene.search.IndexSearcher;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class MultiSearch implements Closeable, AutoCloseable {
@@ -80,11 +81,11 @@ class MultiSearch implements Closeable, AutoCloseable {
 			return null;
 		incRef();
 		try {
-			final SortedSetDocValuesReaderState state =
-					IndexUtils.getNewFacetsState(indexSearcher.getIndexReader(), null);
-			final QueryContextImpl queryContext =
-					new QueryContextImpl(context.indexProvider, null, context.executorService, context.indexAnalyzer,
-							context.queryAnalyzer, context.fieldMap, null, state, indexSearcher, null);
+			final SortedSetDocValuesReaderState state = IndexUtils.getNewFacetsState(indexSearcher.getIndexReader(),
+					null);
+			final QueryContextImpl queryContext = new QueryContextImpl(context.indexProvider, null,
+					context.executorService, context.indexAnalyzer, context.queryAnalyzer, context.fieldMap, null,
+					state, indexSearcher, null, new HashMap<>());
 			return new QueryExecution<T>(queryContext, queryDef).execute(resultDocuments);
 		} finally {
 			decRef();

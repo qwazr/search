@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FieldMapWrapper;
 import org.apache.lucene.analysis.util.ResourceLoader;
@@ -27,6 +28,7 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.IndexSearcher;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
@@ -37,18 +39,21 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext {
 	final TaxonomyReader taxonomyReader;
 	final SortedSetDocValuesReaderState docValueReaderState;
 	final FieldMapWrapper.Cache fieldMapWrappers;
+	final Map<String, ValueConverter> docValuesConverters;
 
 	QueryContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
 			final ExecutorService executorService, final UpdatableAnalyzer indexAnalyzer,
 			final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
 			final FieldMapWrapper.Cache fieldMapWrappers, final SortedSetDocValuesReaderState docValueReaderState,
-			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader) {
+			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
+			final Map<String, ValueConverter> docValuesConverters) {
 		super(indexProvider, resourceLoader, executorService, indexAnalyzer, queryAnalyzer, fieldMap);
 		this.docValueReaderState = docValueReaderState;
 		this.fieldMapWrappers = fieldMapWrappers;
 		this.indexSearcher = indexSearcher;
 		this.indexReader = indexSearcher.getIndexReader();
 		this.taxonomyReader = taxonomyReader;
+		this.docValuesConverters = docValuesConverters;
 	}
 
 	@Override

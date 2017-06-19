@@ -17,14 +17,13 @@ package com.qwazr.search.index;
 
 import org.apache.lucene.search.ScoreDoc;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 final class ResultDocumentsMap extends ResultDocumentsList<ResultDocumentMap> {
 
 	ResultDocumentsMap(final QueryContext context, final QueryDefinition queryDefinition,
-			final Set<String> returnedFields) throws IOException {
+			final Set<String> returnedFields) {
 		super((QueryContextImpl) context, queryDefinition, returnedFields);
 	}
 
