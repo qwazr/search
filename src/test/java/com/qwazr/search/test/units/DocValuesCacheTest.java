@@ -33,12 +33,14 @@ public class DocValuesCacheTest extends AbstractIndexTest {
 		initIndexService();
 	}
 
-	void checkDocValue(Double expectedValue) {
+	void checkDocValue(String id, long expectedHits, Double expectedValue) {
 		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
-				new TermQuery(FieldDefinition.ID_FIELD, "1")).returnedField("*").build());
+				new TermQuery(FieldDefinition.ID_FIELD, id)).returnedField("*").build());
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
-		Assert.assertEquals(1L, result.total_hits, 0);
+		Assert.assertEquals(expectedHits, result.total_hits, 0);
+		if (expectedHits == 0)
+			return;
 		IndexRecord record = result.documents.get(0).record;
 		Assert.assertEquals(expectedValue, record.doubleDocValue);
 	}
@@ -46,13 +48,22 @@ public class DocValuesCacheTest extends AbstractIndexTest {
 	@Test
 	public void checkUpdateDv() throws IOException, InterruptedException {
 		indexService.postDocument(new IndexRecord("1"));
-		checkDocValue(null);
+		checkDocValue("1", 1, null);
 		indexService.postDocument(new IndexRecord("1").doubleDocValue(1.11d));
-		checkDocValue(1.11d);
-		checkDocValue(1.11d);
+		checkDocValue("1", 1, 1.11d);
+		checkDocValue("1", 1, 1.11d);
 		indexService.postDocument(new IndexRecord("1").doubleDocValue(2.22d));
-		checkDocValue(2.22d);
+		checkDocValue("1", 1, 2.22d);
 		indexService.updateDocumentValues(new IndexRecord("1").doubleDocValue(3.33d));
-		checkDocValue(3.33d);
+		checkDocValue("1", 1, 3.33d);
+		indexService.deleteByQuery(QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, "1")).build());
+		checkDocValue("1", 0, null);
+		indexService.postDocument(new IndexRecord("1").doubleDocValue(4.44d));
+		checkDocValue("1", 1, 4.44d);
+		indexService.postDocument(new IndexRecord("2").doubleDocValue(5.55d));
+		checkDocValue("2", 1, 5.55d);
+		indexService.deleteAll();
+		checkDocValue("1", 0, null);
+		checkDocValue("2", 0, null);
 	}
 }
