@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,8 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.field.FieldTypeInterface;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
@@ -22,6 +24,8 @@ import org.apache.lucene.search.ScoreDoc;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
@@ -31,10 +35,11 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 	private final FieldMap fieldMap;
 	private final List<ResultDocumentBuilder<T>> documentsBuilder;
 	private final Set<String> returnedFields;
+	private final Map<String, ValueConverter> returnedFieldsConverter;
 	protected final int start;
 
 	ResultDocumentsList(final QueryContextImpl context, final QueryDefinition queryDefinition,
-			final Set<String> returnedFields) {
+			final Set<String> returnedFields) throws IOException {
 		this.indexReader = context.indexReader;
 		this.fieldMap = context.fieldMap;
 		this.start = queryDefinition.getStartValue();
@@ -43,6 +48,18 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 				queryDefinition.returned_fields != null && !queryDefinition.returned_fields.isEmpty() ?
 						queryDefinition.returned_fields :
 						null;
+		if (this.returnedFields != null && !this.returnedFields.isEmpty()) {
+			this.returnedFieldsConverter = new LinkedHashMap<>();
+			for (String fieldName : this.returnedFields) {
+				final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
+				if (fieldType == null)
+					continue;
+				final ValueConverter converter = fieldType.getConverter(fieldName, indexReader);
+				if (converter != null)
+					returnedFieldsConverter.put(fieldName, converter);
+			}
+		} else
+			this.returnedFieldsConverter = null;
 		this.documentsBuilder = new ArrayList<>();
 	}
 
@@ -59,7 +76,8 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 			return;
 		if (returnedFields != null) {
 			builder.extractStoredReturnedFields(searcher, returnedFields);
-			builder.extractDocValuesReturnedFields(indexReader, fieldMap, returnedFields);
+			if (returnedFieldsConverter != null)
+				builder.extractDocValuesReturnedFields(returnedFieldsConverter);
 		}
 		documentsBuilder.add(builder);
 	}

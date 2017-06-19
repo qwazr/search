@@ -16,9 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.Converters.ValueConverter;
-import com.qwazr.search.field.FieldTypeInterface;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
@@ -38,7 +36,7 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 
 	Map<String, String> highlights;
 
-	protected ResultDocumentBuilder(final int pos, final ScoreDoc scoreDoc) {
+	ResultDocumentBuilder(final int pos, final ScoreDoc scoreDoc) {
 		this.pos = pos;
 		this.scoreDoc = scoreDoc;
 	}
@@ -64,7 +62,7 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 			setStoredField(field.name(), value);
 	}
 
-	private final static Object getValue(final IndexableField field) {
+	private static Object getValue(final IndexableField field) {
 		if (field == null)
 			return null;
 		final Number n = field.numericValue();
@@ -85,17 +83,9 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> implement
 		doc.forEach(this);
 	}
 
-	final void extractDocValuesReturnedFields(@NotNull final IndexReader indexReader, @NotNull final FieldMap fieldMap,
-			@NotNull final Set<String> returnedFields) throws IOException {
-		for (String fieldName : returnedFields) {
-			final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
-			if (fieldType == null)
-				return;
-			final ValueConverter converter = fieldType.getConverter(fieldName, indexReader);
-			if (converter == null)
-				continue;
-			setDocValuesField(fieldName, converter);
-		}
+	final void extractDocValuesReturnedFields(@NotNull final Map<String, ValueConverter> returnedFields)
+			throws IOException {
+		returnedFields.forEach(this::setDocValuesField);
 	}
 
 }
