@@ -20,8 +20,7 @@ import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentsInterface;
 import com.qwazr.search.query.TermQuery;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.RandomUtils;
+import com.qwazr.utils.RandomUtils;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.junit.Assert;
@@ -43,7 +42,7 @@ public class SearchInterfaceTest extends AbstractIndexTest {
 		initIndexService();
 		documents = new ArrayList<>();
 		for (int i = 0; i < RandomUtils.nextInt(1, 10); i++)
-			documents.add(new IndexRecord(RandomStringUtils.randomAlphanumeric(RandomUtils.nextInt(2, 5))).intDocValue(
+			documents.add(new IndexRecord(RandomUtils.alphanumeric(RandomUtils.nextInt(2, 5))).intDocValue(
 					RandomUtils.nextInt(2, 5)));
 		indexService.postDocuments(documents);
 	}

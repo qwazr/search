@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,11 +38,11 @@ public class ConstantScoreAndBoostQueryTest extends AbstractIndexTest {
 
 	@Test
 	public void test() {
-		final Float scoreValue = Float.MAX_VALUE - 1;
+		final float scoreValue = Float.MAX_VALUE - 1;
 		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new BoostQuery(new ConstantScoreQuery(new TermQuery("textField", "hello")), scoreValue)).build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(1), result.total_hits);
-		Assert.assertEquals(scoreValue, result.getDocuments().get(0).getScore());
+		Assert.assertEquals(scoreValue, result.getDocuments().get(0).getScore(), 0);
 	}
 }

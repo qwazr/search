@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +19,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.TermQuery;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.RandomUtils;
+import com.qwazr.utils.RandomUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -39,7 +38,7 @@ public class FieldMapWrapperTest extends AbstractIndexTest {
 		initIndexService();
 		documents = new ArrayList<>();
 		for (int i = 0; i < RandomUtils.nextInt(1, 10); i++)
-			documents.add(new IndexRecord(RandomStringUtils.randomAlphanumeric(RandomUtils.nextInt(2, 5))).intDocValue(
+			documents.add(new IndexRecord(RandomUtils.alphanumeric(RandomUtils.nextInt(2, 5))).intDocValue(
 					RandomUtils.nextInt(2, 5)));
 		indexService.postDocuments(documents);
 	}

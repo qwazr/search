@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +21,7 @@ import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.BooleanQuery;
 import com.qwazr.search.query.FacetPathQuery;
 import com.qwazr.search.query.MatchAllDocsQuery;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.RandomUtils;
+import com.qwazr.utils.RandomUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -173,21 +172,19 @@ public class SortedFacetTest extends AbstractIndexTest {
 
 	@Test
 	public void queryCount() {
-		String facetName = RandomStringUtils.randomAlphabetic(5);
+		String facetName = RandomUtils.alphanumeric(5);
 		String facetTerm1 = getRandomFacetValue();
 		String facetTerm2 = getRandomFacetValue();
-		int expected = facetTerm1.equals(facetTerm2) ?
-				facetTerms.get(facetTerm1).get() :
-				facetTerms.get(facetTerm1).get() + facetTerms.get(facetTerm2).get();
+		int expected = facetTerm1.equals(facetTerm2) ? facetTerms.get(facetTerm1).get() : facetTerms.get(facetTerm1)
+				.get() + facetTerms.get(facetTerm2).get();
 		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
-				.facet("sortedSetDocValuesFacetField", FacetDefinition.of()
-						.query(facetName, BooleanQuery.of()
+				.facet("sortedSetDocValuesFacetField",
+						FacetDefinition.of().query(facetName, BooleanQuery.of()
 								.addClause(BooleanQuery.Occur.should,
 										new FacetPathQuery("sortedSetDocValuesFacetField", facetTerm1))
 								.addClause(BooleanQuery.Occur.should,
 										new FacetPathQuery("sortedSetDocValuesFacetField", facetTerm2))
-								.build())
-						.build())
+								.build()).build())
 				.build());
 		final Map<String, Number> facetResult = checkResult(result);
 		Assert.assertEquals(1, facetResult.size());

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,8 +23,7 @@ import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentMap;
 import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.search.query.MatchAllDocsQuery;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.RandomUtils;
+import com.qwazr.utils.RandomUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -46,7 +45,7 @@ public class PagingTest extends AbstractIndexTest {
 		documents = new LinkedHashMap<>();
 		for (int i = 0; i < RandomUtils.nextInt(201, 299); i++) {
 			final IndexRecord record = new IndexRecord(Integer.toString(i)).sortedDocValue(
-					RandomStringUtils.randomAlphanumeric(5)).facetField(Integer.toString(RandomUtils.nextInt(1, 3)));
+					RandomUtils.alphanumeric(5)).facetField(Integer.toString(RandomUtils.nextInt(1, 3)));
 			documents.put(record.id, record);
 			indexService.postDocument(record);
 		}

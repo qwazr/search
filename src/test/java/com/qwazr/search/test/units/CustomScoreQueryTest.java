@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,12 +58,12 @@ public class CustomScoreQueryTest extends AbstractIndexTest {
 				.longDocValue(3));
 	}
 
-	private void checkFieldSourceResult(ResultDefinition.WithObject<IndexRecord> result, Float... values) {
+	private void checkFieldSourceResult(ResultDefinition.WithObject<IndexRecord> result, float... values) {
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(values.length), result.total_hits);
 		int i = 0;
-		for (Float value : values)
-			Assert.assertEquals(value, result.getDocuments().get(i++).getScore());
+		for (float value : values)
+			Assert.assertEquals(value, result.getDocuments().get(i++).getScore(), 0);
 	}
 
 	@Test

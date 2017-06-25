@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,7 @@
 package com.qwazr.search.test;
 
 import com.qwazr.search.index.BytesRefUtils;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.RandomUtils;
+import com.qwazr.utils.RandomUtils;
 import org.apache.lucene.util.BytesRef;
 import org.junit.Assert;
 import org.junit.Test;
@@ -61,11 +60,11 @@ public class BytesRefUtilsTest {
 
 	@Test
 	public void stringConverter() {
-		checkConverter(RandomStringUtils.random(10), new BytesRefUtils.StringConverter(), true);
+		checkConverter(RandomUtils.alphanumeric(10), new BytesRefUtils.StringConverter(), true);
 	}
 
 	@Test
 	public void byteRefConverter() {
-		checkConverter(new BytesRef(RandomStringUtils.random(10)), new BytesRefUtils.BytesRefConverter(), true);
+		checkConverter(new BytesRef(RandomUtils.alphanumeric(10)), new BytesRefUtils.BytesRefConverter(), true);
 	}
 }
