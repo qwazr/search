@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,13 +19,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.LoggerUtils;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexNotFoundException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.NoLockFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,11 +33,13 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class BackupStatus {
 
-	final private static Logger LOGGER = LoggerFactory.getLogger(BackupStatus.class);
+	final private static Logger LOGGER = LoggerUtils.getLogger(BackupStatus.class);
 
 	final public Long index_version;
 	final public Long taxonomy_version;
@@ -100,7 +101,7 @@ public class BackupStatus {
 			try (final DirectoryReader indexReader = DirectoryReader.open(indexDir)) {
 				return indexReader.getVersion();
 			} catch (IndexNotFoundException e) {
-				LOGGER.warn(e.getMessage(), e);
+				LOGGER.log(Level.WARNING, e, e::getMessage);
 				return null;
 			}
 		}

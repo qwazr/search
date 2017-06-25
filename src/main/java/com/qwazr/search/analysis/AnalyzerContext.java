@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,22 +18,23 @@ package com.qwazr.search.analysis;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ClassLoaderUtils;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.util.ResourceLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AnalyzerContext {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(AnalyzerContext.class);
+	private final static Logger LOGGER = LoggerUtils.getLogger(AnalyzerContext.class);
 
 	public final Map<String, Analyzer> indexAnalyzerMap;
 	public final Map<String, Analyzer> queryAnalyzerMap;
@@ -55,8 +56,8 @@ public class AnalyzerContext {
 
 		fields.forEach((fieldName, fieldDef) -> {
 			try {
-				final Analyzer indexAnalyzer =
-						StringUtils.isEmpty(fieldDef.analyzer) ? null : builder.findAnalyzer(fieldDef.analyzer);
+				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ? null : builder.findAnalyzer(
+						fieldDef.analyzer);
 				if (indexAnalyzer != null)
 					indexAnalyzerMap.put(fieldName, indexAnalyzer);
 
@@ -70,8 +71,7 @@ public class AnalyzerContext {
 				final String msg = "Analyzer class " + fieldDef.analyzer + " not known for the field " + fieldName;
 				if (failOnException)
 					throw new ServerException(Response.Status.NOT_ACCEPTABLE, msg, e);
-				else if (LOGGER.isWarnEnabled())
-					LOGGER.warn(msg, e);
+				LOGGER.log(Level.WARNING, msg, e);
 			}
 		});
 	}

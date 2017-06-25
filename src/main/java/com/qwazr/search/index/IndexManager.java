@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,12 +22,11 @@ import com.qwazr.server.GenericServer;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.reflection.ConstructorParameters;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response.Status;
 import java.io.Closeable;
@@ -45,12 +44,14 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class IndexManager extends ConstructorParametersImpl implements Closeable {
 
 	public final static String INDEXES_DIRECTORY = "index";
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(IndexManager.class);
+	private static final Logger LOGGER = LoggerUtils.getLogger(IndexManager.class);
 
 	private final ConcurrentHashMap<String, SchemaInstance> schemaMap;
 
@@ -72,7 +73,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 		schemaMap = new ConcurrentHashMap<>();
 		analyzerFactoryMap = new ConcurrentHashMap<>();
 
-		File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
+		final File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
 		if (directories == null)
 			return;
 		for (File schemaDirectory : directories) {
@@ -80,7 +81,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 				schemaMap.put(schemaDirectory.getName(),
 						new SchemaInstance(this, analyzerFactoryMap, service, schemaDirectory, executorService));
 			} catch (ServerException | IOException | ReflectiveOperationException | URISyntaxException e) {
-				LOGGER.error(e.getMessage(), e);
+				LOGGER.log(Level.SEVERE, e, e::getMessage);
 			}
 		}
 	}

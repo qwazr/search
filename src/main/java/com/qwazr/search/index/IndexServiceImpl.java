@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,14 +22,13 @@ import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FieldMapWrapper;
+import com.qwazr.utils.LoggerUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.SessionToken;
 import org.apache.lucene.search.MatchAllDocsQuery;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
@@ -50,10 +49,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.logging.Logger;
 
 final class IndexServiceImpl extends AbstractServiceImpl implements IndexServiceInterface, AnnotatedServiceInterface {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(IndexServiceImpl.class);
+	private static final Logger LOGGER = LoggerUtils.getLogger(IndexServiceImpl.class);
 
 	private static final String QWAZR_INDEX_ROOT_USER;
 
@@ -67,7 +67,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			v = System.getenv("QWAZR_ROOT_USER");
 		QWAZR_INDEX_ROOT_USER = v;
 		if (QWAZR_INDEX_ROOT_USER != null)
-			LOGGER.info("QWAZR_ROOT_USER: " + QWAZR_INDEX_ROOT_USER);
+			LOGGER.info(() -> "QWAZR_ROOT_USER: " + QWAZR_INDEX_ROOT_USER);
 	}
 
 	@Context

@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.server.RemoteService;
 
@@ -27,18 +29,25 @@ public class RemoteIndex extends RemoteService {
 	final public String schema;
 	final public String index;
 
-	public RemoteIndex() {
-		schema = null;
-		index = null;
-	}
-
-	public RemoteIndex(final String schema, final String index) {
+	@JsonCreator
+	RemoteIndex(@JsonProperty("scheme") String scheme, @JsonProperty("host") String host,
+			@JsonProperty("port") Integer port, @JsonProperty("path") String path,
+			@JsonProperty("timeout") Integer timeout, @JsonProperty("username") String username,
+			@JsonProperty("password") String password, @JsonProperty("schema") String schema,
+			@JsonProperty("index") String index) {
+		super(scheme, host, port, path, timeout, username, password);
 		this.schema = schema;
 		this.index = index;
 	}
 
 	public RemoteIndex(final RemoteService.Builder builder, final String schema, final String index) {
 		super(builder);
+		this.schema = schema;
+		this.index = index;
+	}
+
+	RemoteIndex(String schema, String index) {
+		super(null, null, null, null, null, null, null);
 		this.schema = schema;
 		this.index = index;
 	}
@@ -52,6 +61,7 @@ public class RemoteIndex extends RemoteService {
 	 * @return an array of RemoteIndex
 	 * @throws URISyntaxException if the URI syntax is not correct
 	 */
+
 	public static RemoteIndex build(final String remoteIndexUrl) throws URISyntaxException {
 
 		if (StringUtils.isEmpty(remoteIndexUrl))
@@ -65,8 +75,8 @@ public class RemoteIndex extends RemoteService {
 
 		if (schema == null || index == null || !IndexServiceInterface.PATH.equals(path))
 			throw new URISyntaxException(builder.getInitialURI().toString(),
-					"The URL form should be: /" + IndexServiceInterface.PATH + "/{schema}/{index}?" + TIMEOUT_PARAMETER
-							+ "={timeout}");
+					"The URL form should be: /" + IndexServiceInterface.PATH + "/{schema}/{index}?" +
+							TIMEOUT_PARAMETER + "={timeout}");
 
 		builder.setPath(null);
 		return new RemoteIndex(builder, schema, index);

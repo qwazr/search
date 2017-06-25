@@ -21,15 +21,15 @@ import com.qwazr.search.index.IndexManager;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.utils.FileUtils;
+import com.qwazr.utils.LoggerUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.logging.Logger;
 
 public abstract class AbstractIndexTest {
 
@@ -37,7 +37,7 @@ public abstract class AbstractIndexTest {
 	static IndexManager indexManager;
 	static AnnotatedIndexService<IndexRecord> indexService;
 
-	static final Logger LOGGER = LoggerFactory.getLogger(AbstractIndexTest.class);
+	static final Logger LOGGER = LoggerUtils.getLogger(AbstractIndexTest.class);
 
 	static void initIndexManager() throws IOException, URISyntaxException {
 		rootDirectory = Files.createTempDirectory("qwazr_index_test");

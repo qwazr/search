@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.FileUtils;
+import com.qwazr.utils.LoggerUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.DocValuesType;
@@ -38,8 +39,6 @@ import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.LRUQueryCache;
 import org.apache.lucene.search.QueryCache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,11 +52,13 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexStatus {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(IndexStatus.class);
+	private final static Logger LOGGER = LoggerUtils.getLogger(IndexStatus.class);
 
 	final public Long num_docs;
 	final public Long num_deleted_docs;
@@ -184,7 +185,7 @@ public class IndexStatus {
 				return null;
 			return SegmentInfos.readCommit(indexCommit.getDirectory(), indexCommit.getSegmentsFileName());
 		} catch (IOException e) {
-			LOGGER.warn("Fail while extracting Segment information", e);
+			LOGGER.log(Level.WARNING, "Error while extracting Segment information", e);
 			return null;
 		}
 	}
@@ -200,7 +201,7 @@ public class IndexStatus {
 				segmentInfoStatuses.add(status);
 				totalBytesSize.addAndGet(status.sizeInBytes);
 			} catch (IOException e) {
-				LOGGER.warn("Fail while extracting Segment information", e);
+				LOGGER.log(Level.WARNING, "Fail while extracting Segment information", e);
 			}
 		}
 		return segmentInfoStatuses;
