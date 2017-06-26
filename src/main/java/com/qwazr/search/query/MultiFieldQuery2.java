@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -255,9 +254,6 @@ public class MultiFieldQuery2 extends AbstractQuery {
 				Map<String, Set<Offset>> termsOffsets) {
 			super(analyzer);
 			this.termsFreq = termsFreq;
-			setEnableGraphQueries(true);
-			setEnablePositionIncrements(true);
-			setAutoGenerateMultiTermSynonymsPhraseQuery(true);
 			this.perTermQueries = new LinkedHashMap<>();
 			this.termsOffset = termsOffsets;
 		}
@@ -283,31 +279,6 @@ public class MultiFieldQuery2 extends AbstractQuery {
 			if (offset != null)
 				offset.forEach(o -> perTermQueries.computeIfAbsent(o, (k) -> new ArrayList<>()).add(termQuery));
 			return termQuery;
-		}
-
-		private String concatTerms(Term[] terms) {
-			final StringBuilder sb = new StringBuilder();
-			boolean start = true;
-			for (final Term term : terms) {
-				if (!start)
-					sb.append(' ');
-				else
-					start = false;
-				sb.append(term.text());
-			}
-			return sb.toString();
-		}
-
-		@Override
-		final protected Query newGraphSynonymQuery(Iterator<Query> queries) {
-			final BooleanQuery query = (BooleanQuery) super.newGraphSynonymQuery(queries);
-			query.clauses().forEach(q -> {
-				final org.apache.lucene.search.PhraseQuery pq = (org.apache.lucene.search.PhraseQuery) q.getQuery();
-				final Collection<Offset> offset = termsOffset.get(concatTerms(pq.getTerms()));
-				if (offset != null)
-					offset.forEach(o -> perTermQueries.computeIfAbsent(o, (k) -> new ArrayList<>()).add(query));
-			});
-			return query;
 		}
 
 		final Query parse(final String queryString, final BooleanClause.Occur defaultOperator) {
