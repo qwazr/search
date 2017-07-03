@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,12 @@
  */
 package com.qwazr.search.field.Converters;
 
-
-import com.qwazr.utils.ReflectiveUtils;
+import com.qwazr.binder.setter.FieldSetter;
 import org.apache.lucene.index.BinaryDocValues;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
-
-import java.lang.reflect.Field;
 
 public abstract class SingleDVConverter<T, V> extends ValueConverter<T, V> {
 
@@ -31,24 +28,7 @@ public abstract class SingleDVConverter<T, V> extends ValueConverter<T, V> {
 		super(source);
 	}
 
-	@Override
-	final public void fillCollection(final Object record, final Field field, final Class<?> fieldClass, final int docId)
-			throws ReflectiveOperationException {
-		final V value = convert(docId);
-		if (value == null)
-			return;
-		ReflectiveUtils.<V>getCollection(record, field, fieldClass).add(value);
-	}
-
-	final public void fillSingleValue(final Object record, final Field field, final int docId)
-			throws ReflectiveOperationException {
-		final V value = convert(docId);
-		if (value == null)
-			return;
-		field.set(record, value);
-	}
-
-	public static class DoubleDVConverter extends SingleDVConverter<NumericDocValues, Double> {
+	final public static class DoubleDVConverter extends SingleDVConverter<NumericDocValues, Double> {
 
 		public DoubleDVConverter(final NumericDocValues source) {
 			super(source);
@@ -58,9 +38,14 @@ public abstract class SingleDVConverter<T, V> extends ValueConverter<T, V> {
 		final public Double convert(final int docId) {
 			return NumericUtils.sortableLongToDouble(source.get(docId));
 		}
+
+		@Override
+		public void fill(Object record, FieldSetter fieldSetter, int docId) {
+			fieldSetter.fromDouble(NumericUtils.sortableLongToDouble(source.get(docId)), record);
+		}
 	}
 
-	public static class FloatDVConverter extends SingleDVConverter<NumericDocValues, Float> {
+	final public static class FloatDVConverter extends SingleDVConverter<NumericDocValues, Float> {
 
 		public FloatDVConverter(final NumericDocValues source) {
 			super(source);
@@ -70,9 +55,14 @@ public abstract class SingleDVConverter<T, V> extends ValueConverter<T, V> {
 		final public Float convert(final int docId) {
 			return NumericUtils.sortableIntToFloat((int) source.get(docId));
 		}
+
+		@Override
+		public void fill(Object record, FieldSetter fieldSetter, int docId) {
+			fieldSetter.fromFloat(NumericUtils.sortableIntToFloat((int) source.get(docId)), record);
+		}
 	}
 
-	public static class LongDVConverter extends SingleDVConverter<NumericDocValues, Long> {
+	final public static class LongDVConverter extends SingleDVConverter<NumericDocValues, Long> {
 
 		public LongDVConverter(final NumericDocValues source) {
 			super(source);
@@ -82,9 +72,14 @@ public abstract class SingleDVConverter<T, V> extends ValueConverter<T, V> {
 		final public Long convert(int docId) {
 			return source.get(docId);
 		}
+
+		@Override
+		public void fill(Object record, FieldSetter fieldSetter, int docId) {
+			fieldSetter.fromLong(source.get(docId), record);
+		}
 	}
 
-	public static class IntegerDVConverter extends SingleDVConverter<NumericDocValues, Integer> {
+	final public static class IntegerDVConverter extends SingleDVConverter<NumericDocValues, Integer> {
 
 		public IntegerDVConverter(final NumericDocValues source) {
 			super(source);
@@ -94,9 +89,14 @@ public abstract class SingleDVConverter<T, V> extends ValueConverter<T, V> {
 		final public Integer convert(final int docId) {
 			return (int) source.get(docId);
 		}
+
+		@Override
+		public void fill(Object record, FieldSetter fieldSetter, int docId) {
+			fieldSetter.fromInteger((int) source.get(docId), record);
+		}
 	}
 
-	public static class BinaryDVConverter extends SingleDVConverter<BinaryDocValues, String> {
+	final public static class BinaryDVConverter extends SingleDVConverter<BinaryDocValues, String> {
 
 		public BinaryDVConverter(final BinaryDocValues source) {
 			super(source);
@@ -109,9 +109,14 @@ public abstract class SingleDVConverter<T, V> extends ValueConverter<T, V> {
 				return null;
 			return bytesRef.utf8ToString();
 		}
+
+		@Override
+		public void fill(final Object record, final FieldSetter fieldSetter, final int docId) {
+			fieldSetter.fromString(convert(docId), record);
+		}
 	}
 
-	public static class SortedDVConverter extends SingleDVConverter<SortedDocValues, String> {
+	final public static class SortedDVConverter extends SingleDVConverter<SortedDocValues, String> {
 
 		public SortedDVConverter(final SortedDocValues source) {
 			super(source);
@@ -123,6 +128,11 @@ public abstract class SingleDVConverter<T, V> extends ValueConverter<T, V> {
 			if (bytesRef == null)
 				return null;
 			return bytesRef.utf8ToString();
+		}
+
+		@Override
+		public void fill(final Object record, final FieldSetter fieldSetter, final int docId) {
+			fieldSetter.fromString(convert(docId), record);
 		}
 	}
 }

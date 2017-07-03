@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.utils.FieldMapWrapper;
+import com.qwazr.binder.FieldMapWrapper;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;

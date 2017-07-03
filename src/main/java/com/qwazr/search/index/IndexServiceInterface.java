@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.PATCH;
 import com.qwazr.server.ServiceInterface;
-import com.qwazr.utils.FieldMapWrapper;
+import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.utils.FunctionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 

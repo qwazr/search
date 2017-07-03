@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@ package com.qwazr.search.index;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.FieldMapWrapper;
+import com.qwazr.binder.FieldMapWrapper;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +38,7 @@ import com.qwazr.search.index.TermEnumDefinition;
 import com.qwazr.utils.AnnotationsUtils;
 import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.CharsetUtils;
-import com.qwazr.utils.FieldMapWrapper;
+import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import org.apache.commons.lang3.NotImplementedException;

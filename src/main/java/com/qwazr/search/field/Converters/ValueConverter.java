@@ -15,11 +15,18 @@
  */
 package com.qwazr.search.field.Converters;
 
+import com.qwazr.binder.setter.FieldSetter;
 import com.qwazr.search.field.FieldDefinition;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.BinaryDocValues;
+import org.apache.lucene.index.DocValuesType;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiDocValues;
+import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.SortedDocValues;
+import org.apache.lucene.index.SortedNumericDocValues;
+import org.apache.lucene.index.SortedSetDocValues;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 
 public abstract class ValueConverter<T, V> {
 
@@ -34,11 +41,7 @@ public abstract class ValueConverter<T, V> {
 
 	public abstract V convert(final int docId);
 
-	public abstract void fillCollection(final Object record, final Field field, final Class<?> fieldClass,
-			final int docId) throws ReflectiveOperationException;
-
-	public abstract void fillSingleValue(final Object record, final Field field, final int docId)
-			throws ReflectiveOperationException;
+	public abstract void fill(final Object record, final FieldSetter fieldSetter, final int docId);
 
 	private final static ValueConverter newNumericConverter(FieldDefinition fieldDef, NumericDocValues numericDocValues)
 			throws IOException {
@@ -137,8 +140,8 @@ public abstract class ValueConverter<T, V> {
 				return null;
 			return newNumericConverter(fieldDef, numericDocValues);
 		case SORTED_NUMERIC:
-			final SortedNumericDocValues sortedNumericDocValues =
-					MultiDocValues.getSortedNumericValues(reader, fieldName);
+			final SortedNumericDocValues sortedNumericDocValues = MultiDocValues.getSortedNumericValues(reader,
+					fieldName);
 			if (sortedNumericDocValues == null)
 				return null;
 			return newSortedNumericConverter(fieldDef, sortedNumericDocValues);

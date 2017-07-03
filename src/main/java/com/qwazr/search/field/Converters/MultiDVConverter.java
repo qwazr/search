@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,9 @@
  */
 package com.qwazr.search.field.Converters;
 
-
-import com.qwazr.utils.ReflectiveUtils;
+import com.qwazr.binder.setter.FieldSetter;
 import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.util.NumericUtils;
-
-import java.lang.reflect.Field;
-import java.util.Collection;
 
 public abstract class MultiDVConverter<T extends SortedNumericDocValues, V, A> extends ValueConverter<T, A> {
 
@@ -29,43 +25,29 @@ public abstract class MultiDVConverter<T extends SortedNumericDocValues, V, A> e
 		super(source);
 	}
 
-	protected abstract V valueAt(int pos);
+	protected abstract void fillFirst(FieldSetter fieldSetter, Object record);
+
+	protected abstract void fillAll(int count, FieldSetter fieldSetter, Object record);
 
 	@Override
-	final public void fillCollection(final Object record, final Field field, final Class<?> fieldClass, final int docId)
-			throws ReflectiveOperationException {
+	final public void fill(final Object record, final FieldSetter fieldSetter, final int docId) {
 		source.setDocument(docId);
 		final int count = source.count();
-		if (count == 0)
+		if (count == 0) {
+			fieldSetter.fromNull(record);
 			return;
-		Collection<V> collection = ReflectiveUtils.getCollection(record, field, fieldClass);
-		for (int i = 0; i < count; i++)
-			collection.add(valueAt(i));
+		}
+		if (count == 1) {
+			fillFirst(fieldSetter, record);
+			return;
+		}
+		fillAll(count, fieldSetter, record);
 	}
 
-	final public void fillSingleValue(final Object record, final Field field, final int docId)
-			throws ReflectiveOperationException {
-		source.setDocument(docId);
-		final int count = source.count();
-		if (count == 0)
-			return;
-		if (count > 1)
-			throw new RuntimeException(
-					"Cannot fill several values on this field. It should be a collection: " +
-							field.getName());
-		field.set(record, valueAt(0));
-	}
-
-
-	public static class DoubleSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Double, double[]> {
+	final public static class DoubleSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Double, double[]> {
 
 		public DoubleSetDVConverter(final SortedNumericDocValues source) {
 			super(source);
-		}
-
-		@Override
-		final protected Double valueAt(int pos) {
-			return NumericUtils.sortableLongToDouble(source.valueAt(pos));
 		}
 
 		@Override
@@ -76,17 +58,26 @@ public abstract class MultiDVConverter<T extends SortedNumericDocValues, V, A> e
 				set[i] = NumericUtils.sortableLongToDouble(source.valueAt(i));
 			return set;
 		}
-	}
 
-	public static class FloatSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Float, float[]> {
-
-		public FloatSetDVConverter(final SortedNumericDocValues source) {
-			super(source);
+		@Override
+		protected void fillFirst(final FieldSetter fieldSetter, final Object record) {
+			fieldSetter.fromDouble(NumericUtils.sortableLongToDouble(source.valueAt(0)), record);
 		}
 
 		@Override
-		final protected Float valueAt(int pos) {
-			return NumericUtils.sortableIntToFloat((int) source.valueAt(pos));
+		protected void fillAll(int count, FieldSetter fieldSetter, Object record) {
+			final double[] set = new double[source.count()];
+			for (int i = 0; i < set.length; i++)
+				set[i] = NumericUtils.sortableLongToDouble(source.valueAt(i));
+			fieldSetter.fromDouble(set, record);
+		}
+
+	}
+
+	final public static class FloatSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Float, float[]> {
+
+		public FloatSetDVConverter(final SortedNumericDocValues source) {
+			super(source);
 		}
 
 		@Override
@@ -97,17 +88,25 @@ public abstract class MultiDVConverter<T extends SortedNumericDocValues, V, A> e
 				set[i] = NumericUtils.sortableIntToFloat((int) source.valueAt(i));
 			return set;
 		}
-	}
 
-	public static class LongSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Long, long[]> {
-
-		public LongSetDVConverter(final SortedNumericDocValues source) {
-			super(source);
+		@Override
+		protected void fillFirst(final FieldSetter fieldSetter, final Object record) {
+			fieldSetter.fromFloat(NumericUtils.sortableIntToFloat((int) source.valueAt(0)), record);
 		}
 
 		@Override
-		final protected Long valueAt(int pos) {
-			return source.valueAt(pos);
+		protected void fillAll(final int count, final FieldSetter fieldSetter, final Object record) {
+			final float[] set = new float[count];
+			for (int i = 0; i < set.length; i++)
+				set[i] = NumericUtils.sortableIntToFloat((int) source.valueAt(i));
+			fieldSetter.fromFloat(set, record);
+		}
+	}
+
+	final public static class LongSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Long, long[]> {
+
+		public LongSetDVConverter(final SortedNumericDocValues source) {
+			super(source);
 		}
 
 		@Override
@@ -118,17 +117,25 @@ public abstract class MultiDVConverter<T extends SortedNumericDocValues, V, A> e
 				set[i] = source.valueAt(i);
 			return set;
 		}
-	}
 
-	public static class IntegerSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Integer, int[]> {
-
-		public IntegerSetDVConverter(final SortedNumericDocValues source) {
-			super(source);
+		@Override
+		protected void fillFirst(final FieldSetter fieldSetter, final Object record) {
+			fieldSetter.fromLong(source.valueAt(0), record);
 		}
 
 		@Override
-		final protected Integer valueAt(int pos) {
-			return (int) source.valueAt(pos);
+		protected void fillAll(final int count, final FieldSetter fieldSetter, final Object record) {
+			final long[] set = new long[count];
+			for (int i = 0; i < set.length; i++)
+				set[i] = source.valueAt(i);
+			fieldSetter.fromLong(set, record);
+		}
+	}
+
+	final public static class IntegerSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Integer, int[]> {
+
+		public IntegerSetDVConverter(final SortedNumericDocValues source) {
+			super(source);
 		}
 
 		@Override
@@ -139,6 +146,19 @@ public abstract class MultiDVConverter<T extends SortedNumericDocValues, V, A> e
 				set[i] = (int) source.valueAt(i);
 			return set;
 		}
+
+		@Override
+		protected void fillFirst(final FieldSetter fieldSetter, final Object record) {
+			fieldSetter.fromInteger((int) source.valueAt(0), record);
+		}
+
+		@Override
+		protected void fillAll(final int count, final FieldSetter fieldSetter, final Object record) {
+			final int[] set = new int[count];
+			for (int i = 0; i < set.length; i++)
+				set[i] = (int) source.valueAt(i);
+			fieldSetter.fromInteger(set, record);
+		}
 	}
-	
+
 }

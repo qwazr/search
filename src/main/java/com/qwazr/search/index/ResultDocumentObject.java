@@ -15,17 +15,16 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.binder.FieldMapWrapper;
+import com.qwazr.binder.setter.FieldSetter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.FieldMapWrapper;
 import com.qwazr.utils.SerializationUtils;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.Collection;
 import java.util.Map;
 
 public class ResultDocumentObject<T> extends ResultDocumentAbstract {
@@ -50,7 +49,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 
 		private final FieldMapWrapper<T> wrapper;
 		private final T record;
-		private final Map<String, Field> fieldMap;
+		private final Map<String, FieldSetter> fieldMap;
 
 		Builder(final int pos, final ScoreDoc scoreDoc, final FieldMapWrapper<T> wrapper) {
 			super(pos, scoreDoc);
@@ -70,37 +69,29 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 
 		@Override
 		void setDocValuesField(final String fieldName, final ValueConverter converter) {
-			final Field field = fieldMap.get(fieldName);
-			if (field == null)
+			final FieldSetter fieldSetter = fieldMap.get(fieldName);
+			if (fieldSetter == null)
 				throw new ServerException(() -> "Unknown field " + fieldName + " for class " + record.getClass());
-			final Class<?> fieldType = field.getType();
-			try {
-				if (Collection.class.isAssignableFrom(fieldType))
-					converter.fillCollection(record, field, fieldType, scoreDoc.doc);
-				else
-					converter.fillSingleValue(record, field, scoreDoc.doc);
-			} catch (ReflectiveOperationException e) {
-				throw new ServerException(e);
-			}
+			converter.fill(record, fieldSetter, scoreDoc.doc);
 		}
 
 		@Override
 		final void setStoredField(final String fieldName, final Object fieldValue) {
-			final Field field = fieldMap.get(fieldName);
-			if (field == null)
+			final FieldSetter fieldSetter = fieldMap.get(fieldName);
+			if (fieldSetter == null)
 				throw new ServerException(() -> "Unknown field " + fieldName + " for class " + record.getClass());
-			final Class<?> fieldType = field.getType();
+			final Class<?> fieldType = fieldSetter.getType();
 			try {
 
 				if (fieldValue instanceof BytesRef) {
 					final BytesRef br = (BytesRef) fieldValue;
 					if (Serializable.class.isAssignableFrom(fieldType)) {
-						field.set(record, SerializationUtils.fromExternalizorBytes(br.bytes,
+						fieldSetter.set(record, SerializationUtils.fromExternalizorBytes(br.bytes,
 								(Class<? extends Serializable>) fieldType));
 						return;
 					}
 				}
-				wrapper.toField(fieldValue, field, record);
+				fieldSetter.setValue(record, fieldValue);
 			} catch (ReflectiveOperationException | IOException e) {
 				throw new ServerException(e);
 			}

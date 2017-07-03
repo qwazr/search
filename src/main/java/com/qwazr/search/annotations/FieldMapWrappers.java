@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,9 @@
  */
 package com.qwazr.search.annotations;
 
+import com.qwazr.binder.FieldMapWrapper;
+import com.qwazr.binder.setter.FieldSetter;
 import com.qwazr.utils.AnnotationsUtils;
-import com.qwazr.utils.FieldMapWrapper;
 import com.qwazr.utils.StringUtils;
 
 import java.lang.reflect.Field;
@@ -47,17 +48,17 @@ class FieldMapWrappers extends FieldMapWrapper.Cache {
 
 	@Override
 	protected <C> FieldMapWrapper<C> newFieldMapWrapper(final Class<C> objectClass) throws NoSuchMethodException {
-		final Map<String, Field> fieldMap = new HashMap<>();
+		final Map<String, FieldSetter> fieldMap = new HashMap<>();
 		AnnotationsUtils.browseFieldsRecursive(objectClass, field -> {
 			if (field.isAnnotationPresent(IndexField.class)) {
 				field.setAccessible(true);
 				final IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
-				fieldMap.put(checkFieldName(indexField.name(), field), field);
+				fieldMap.put(checkFieldName(indexField.name(), field), FieldSetter.of(field));
 			}
 			if (field.isAnnotationPresent(IndexMapping.class)) {
 				field.setAccessible(true);
 				final IndexMapping indexMapping = field.getDeclaredAnnotation(IndexMapping.class);
-				fieldMap.put(checkFieldName(indexMapping.value(), field), field);
+				fieldMap.put(checkFieldName(indexMapping.value(), field), FieldSetter.of(field));
 			}
 		});
 		return new FieldMapWrapper<>(fieldMap, objectClass);
