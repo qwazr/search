@@ -18,10 +18,7 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qwazr.search.field.Converters.ValueConverter;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.util.BytesRef;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -59,27 +56,56 @@ public class ResultDocumentMap extends ResultDocumentAbstract {
 
 		@Override
 		final void setDocValuesField(final String fieldName, final ValueConverter converter) {
-			// TODO optimize for map
-			setStoredField(fieldName, converter.convert(scoreDoc.doc));
+			fields.put(fieldName, converter.convert(scoreDoc.doc));
 		}
 
 		@Override
-		final void setStoredField(final String fieldName, Object fieldValue) {
-			if (fieldValue instanceof BytesRef)
-				fieldValue = ((BytesRef) fieldValue).bytes;
-			final Object oldValue = fields.get(fieldName);
-			if (oldValue == null) {
-				fields.put(fieldName, fieldValue);
-				return;
-			}
-			if (oldValue instanceof Collection<?>) {
-				((Collection<Object>) oldValue).add(fieldValue);
-				return;
-			}
-			final List<Object> list = new ArrayList<>(2);
-			list.add(oldValue);
-			list.add(fieldValue);
-			fields.put(fieldName, list);
+		void setStoredFieldString(String fieldName, List<String> values) {
+			if (values.size() == 1)
+				fields.put(fieldName, values.get(0));
+			else
+				fields.put(fieldName, values);
 		}
+
+		@Override
+		void setStoredFieldBytes(String fieldName, List<byte[]> values) {
+			if (values.size() == 1)
+				fields.put(fieldName, values.get(0));
+			else
+				fields.put(fieldName, values);
+		}
+
+		@Override
+		void setStoredFieldInteger(String fieldName, int[] values) {
+			if (values.length == 1)
+				fields.put(fieldName, values[0]);
+			else
+				fields.put(fieldName, values);
+		}
+
+		@Override
+		void setStoredFieldLong(String fieldName, long[] values) {
+			if (values.length == 1)
+				fields.put(fieldName, values[0]);
+			else
+				fields.put(fieldName, values);
+		}
+
+		@Override
+		void setStoredFieldFloat(String fieldName, float[] values) {
+			if (values.length == 1)
+				fields.put(fieldName, values[0]);
+			else
+				fields.put(fieldName, values);
+		}
+
+		@Override
+		void setStoredFieldDouble(String fieldName, double[] values) {
+			if (values.length == 1)
+				fields.put(fieldName, values[0]);
+			else
+				fields.put(fieldName, values);
+		}
+
 	}
 }

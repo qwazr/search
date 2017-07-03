@@ -142,14 +142,14 @@ public class ReturnedFieldsTest extends AbstractIndexTest {
 	}
 
 	@Test
-	public void checkMultiStringSortedDocValueField() {
+	public void checkMultiStringStoredField() {
 		QueryBuilder builder = builder().returnedField("multivaluedStringStoredField");
 		withRecord(builder).forEach(doc -> Assert.assertArrayEquals(MULTI_STRING_STORED_FIELDS[doc.pos],
 				doc.record.multivaluedStringStoredField.toArray()));
 	}
 
 	@Test
-	public void checkMultiIntegerSortedDocValueField() {
+	public void checkMultiIntegerStoredField() {
 		QueryBuilder builder = builder().returnedField("multivaluedIntegerStoredField");
 		withRecord(builder).forEach(doc -> Assert.assertArrayEquals(MULTI_INTEGER_STORED_FIELDS[doc.pos],
 				doc.record.multivaluedIntegerStoredField.toArray()));
