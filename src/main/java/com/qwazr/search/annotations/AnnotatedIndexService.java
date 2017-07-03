@@ -351,6 +351,29 @@ public class AnnotatedIndexService<T> {
 	}
 
 	/**
+	 * Add a documents to the index
+	 *
+	 * @param row            the document to index
+	 * @param commitUserData the optional user data
+	 * @throws IOException          if any I/O error occurs
+	 * @throws InterruptedException if the process is interrupted
+	 */
+	public void addDocuments(final Collection<T> row, final Map<String, String> commitUserData)
+			throws IOException, InterruptedException {
+		checkParameters();
+		Objects.requireNonNull(row, "The document (row) cannot be null");
+		if (annotatedService != null)
+			annotatedService.addDocuments(schemaName, indexName, fieldMap, row, commitUserData);
+		else
+			indexService.postMappedDocuments(schemaName, indexName,
+					PostDefinition.of(schemaFieldMapWrapper.newMapCollection(row), commitUserData, false));
+	}
+
+	public void addDocuments(final Collection<T> documents) throws IOException, InterruptedException {
+		addDocuments(documents, null);
+	}
+
+	/**
 	 * Post a document to the index
 	 *
 	 * @param row            the document to index
