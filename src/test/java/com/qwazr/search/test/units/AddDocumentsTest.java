@@ -19,7 +19,7 @@ import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
-import org.apache.commons.lang3.RandomStringUtils;
+import com.qwazr.utils.RandomUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -112,7 +112,7 @@ public class AddDocumentsTest extends AbstractIndexTest {
 
 	private Map<String, String> getCommitData() {
 		final Map<String, String> map = new HashMap<>();
-		map.put(RandomStringUtils.randomAlphanumeric(10), RandomStringUtils.randomAlphanumeric(10));
+		map.put(RandomUtils.alphanumeric(10), RandomUtils.alphanumeric(10));
 		return map;
 	}
 
