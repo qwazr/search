@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.search.index;
 
 import com.qwazr.utils.StringUtils;
@@ -58,7 +58,7 @@ class ResultDocumentsBuilder {
 
 				highlighters.forEach((name, highlighter) -> {
 					try {
-						final String[] snippetsByDoc = highlighter.highlights(luceneQuery, indexSearcher, topDocs);
+						final String[] snippetsByDoc = highlighter.highlights(luceneQuery, topDocs);
 						int pos2 = 0;
 						for (String snippet : snippetsByDoc)
 							resultDocuments.highlight(pos2++, name, snippet);

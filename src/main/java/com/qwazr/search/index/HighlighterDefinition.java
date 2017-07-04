@@ -1,5 +1,5 @@
-/**
- * Copyright 2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2016-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -25,6 +25,10 @@ public class HighlighterDefinition {
 	final public Integer max_passages;
 
 	final public Integer max_length;
+
+	final public Boolean highlight_phrases_strictly;
+
+	final public Integer max_no_highlight_passages;
 
 	final public String multivalued_separator;
 
@@ -62,6 +66,8 @@ public class HighlighterDefinition {
 	public HighlighterDefinition() {
 		field = null;
 		max_length = null;
+		highlight_phrases_strictly = null;
+		max_no_highlight_passages = null;
 		max_passages = null;
 		multivalued_separator = null;
 		pre_tag = null;
@@ -74,6 +80,8 @@ public class HighlighterDefinition {
 	private HighlighterDefinition(Builder builder) {
 		this.field = builder.field;
 		this.max_length = builder.maxLength;
+		this.highlight_phrases_strictly = builder.highlightPhrasesStrictly;
+		this.max_no_highlight_passages = builder.maxNoHighlightPassages;
 		this.max_passages = builder.maxPassages;
 		this.multivalued_separator = Character.toString(builder.multivaluedSeparator);
 		this.pre_tag = builder.preTag;
@@ -85,21 +93,25 @@ public class HighlighterDefinition {
 
 	public static class Builder {
 
-		private String field = null;
+		private String field;
 
-		private Integer maxPassages = null;
+		private Integer maxPassages;
 
-		private Integer maxLength = null;
+		private Integer maxLength;
+
+		private Boolean highlightPhrasesStrictly;
+
+		private Integer maxNoHighlightPassages;
 
 		private char multivaluedSeparator = ' ';
 
-		private String preTag = null;
+		private String preTag;
 
-		private String postTag = null;
+		private String postTag;
 
-		private String ellipsis = null;
+		private String ellipsis;
 
-		private Boolean escape = null;
+		private Boolean escape;
 
 		private BreakIteratorDefinition breakIterator = null;
 
@@ -134,6 +146,16 @@ public class HighlighterDefinition {
 		 */
 		public Builder setMaxLength(int maxLength) {
 			this.maxLength = maxLength;
+			return this;
+		}
+
+		public Builder setHighlightPhrasesStrictly(boolean highlightPhrasesStrictly) {
+			this.highlightPhrasesStrictly = highlightPhrasesStrictly;
+			return this;
+		}
+
+		public Builder setMaxNoHighlightPassages(int maxNoHighlightPassages) {
+			this.maxNoHighlightPassages = maxNoHighlightPassages;
 			return this;
 		}
 

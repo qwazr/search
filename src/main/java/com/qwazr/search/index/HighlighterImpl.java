@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,40 +12,46 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.search.index;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.postingshighlight.DefaultPassageFormatter;
-import org.apache.lucene.search.postingshighlight.PassageFormatter;
-import org.apache.lucene.search.postingshighlight.PostingsHighlighter;
 import org.apache.lucene.search.postingshighlight.WholeBreakIterator;
+import org.apache.lucene.search.uhighlight.DefaultPassageFormatter;
+import org.apache.lucene.search.uhighlight.PassageFormatter;
+import org.apache.lucene.search.uhighlight.UnifiedHighlighter;
 
 import java.io.IOException;
 import java.text.BreakIterator;
 import java.util.Locale;
 
-class HighlighterImpl extends PostingsHighlighter {
+class HighlighterImpl extends UnifiedHighlighter {
 
 	private final HighlighterDefinition definition;
 
-	private final char separator;
+	//private final char separator;
 
 	private final Locale locale;
 
 	private final Analyzer analyzer;
 
-	HighlighterImpl(HighlighterDefinition definition, Analyzer analyzer) {
-		super(definition.max_length == null ? PostingsHighlighter.DEFAULT_MAX_LENGTH : definition.max_length);
+	HighlighterImpl(HighlighterDefinition definition, IndexSearcher searcher, Analyzer analyzer) {
+		super(searcher, analyzer);
+		if (definition.max_length != null)
+			setMaxLength(definition.max_length);
+		if (definition.highlight_phrases_strictly != null)
+			setHighlightPhrasesStrictly(definition.highlight_phrases_strictly);
+		if (definition.max_no_highlight_passages != null)
+			setMaxNoHighlightPassages(definition.max_no_highlight_passages);
 		this.definition = definition;
 		this.analyzer = analyzer;
 
-		separator = definition.multivalued_separator == null || definition.multivalued_separator.isEmpty() ?
+		/*separator = definition.multivalued_separator == null || definition.multivalued_separator.isEmpty() ?
 				' ' :
-				definition.multivalued_separator.charAt(0);
+				definition.multivalued_separator.charAt(0);*/
 
 		if (definition.break_iterator != null && definition.break_iterator.language != null)
 			locale = Locale.forLanguageTag(definition.break_iterator.language);
@@ -78,21 +84,10 @@ class HighlighterImpl extends PostingsHighlighter {
 		}
 	}
 
-	@Override
-	protected Analyzer getIndexAnalyzer(String field) {
-		return analyzer;
-	}
-
-	@Override
-	protected char getMultiValuedSeparator(String field) {
-		return separator;
-	}
-
-	String[] highlights(final Query query, final IndexSearcher indexSearcher, final TopDocs topDocs)
-			throws IOException {
-		return highlightFields(new String[] { definition.field }, query, indexSearcher, topDocs,
-				definition.max_passages == null ? new int[] { 1 } : new int[] { definition.max_passages })
-				.get(definition.field);
+	String[] highlights(final Query query, final TopDocs topDocs) throws IOException {
+		return highlightFields(new String[] { definition.field }, query, topDocs,
+				definition.max_passages == null ? new int[] { 1 } : new int[] { definition.max_passages }).get(
+				definition.field);
 
 	}
 }
