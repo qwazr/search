@@ -29,6 +29,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,19 +43,24 @@ public class SortedFacetTest extends AbstractIndexTest {
 	public static LinkedHashMap<String, AtomicInteger> facetTerms;
 	public static List<String> facetValues;
 
+	public static IndexRecord getNewRandomDocumentsWithFacets(String id,
+			LinkedHashMap<String, AtomicInteger> facetTerms, Collection<IndexRecord> records)
+			throws IOException, InterruptedException {
+		final IndexRecord record = new IndexRecord(id).sortedSetDocValuesFacetField(
+				Integer.toString(RandomUtils.nextInt(18, 22)));
+		records.add(record);
+		facetTerms.computeIfAbsent(record.sortedSetDocValuesFacetField, key -> new AtomicInteger(0)).incrementAndGet();
+		return record;
+	}
+
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
 		documents = new ArrayList<>();
 		facetTerms = new LinkedHashMap<>();
-		for (int i = 0; i < RandomUtils.nextInt(50, 100); i++) {
-			final IndexRecord record = new IndexRecord(Integer.toString(i)).sortedSetDocValuesFacetField(
-					Integer.toString(RandomUtils.nextInt(18, 22)));
-			documents.add(record);
-			indexService.postDocument(record);
-			facetTerms.computeIfAbsent(record.sortedSetDocValuesFacetField, key -> new AtomicInteger(0))
-					.incrementAndGet();
-		}
+		for (int i = 0; i < RandomUtils.nextInt(50, 100); i++)
+			getNewRandomDocumentsWithFacets(Integer.toString(i), facetTerms, documents);
+		indexService.postDocuments(documents);
 		facetValues = new ArrayList<>(facetTerms.keySet());
 	}
 
