@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@ import org.apache.lucene.document.TextField;
 class TextFieldType extends StorableFieldType {
 
 	TextFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.STRING);
+		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.STRING);
 	}
 
 	@Override

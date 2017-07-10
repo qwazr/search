@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,10 @@ import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.search.SortField;
 
-class CustomFieldType extends FieldTypeAbstract {
+class CustomFieldType extends FieldTypeAbstract<CustomFieldDefinition> {
 
 	CustomFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, getConverter(definition));
+		super(wildcardMatcher, (CustomFieldDefinition) definition, getConverter(definition));
 	}
 
 	@Override
@@ -94,11 +94,12 @@ class CustomFieldType extends FieldTypeAbstract {
 	}
 
 	static BytesRefUtils.Converter getConverter(final FieldDefinition definition) {
-		if (definition == null)
+		if (definition == null || !(definition instanceof CustomFieldDefinition))
 			return null;
-		if (definition.numeric_type == null)
+		final CustomFieldDefinition customDef = (CustomFieldDefinition) definition;
+		if (customDef.numeric_type == null)
 			return BytesRefUtils.Converter.STRING;
-		switch (definition.numeric_type) {
+		switch (customDef.numeric_type) {
 		case DOUBLE:
 			return BytesRefUtils.Converter.DOUBLE;
 		case FLOAT:

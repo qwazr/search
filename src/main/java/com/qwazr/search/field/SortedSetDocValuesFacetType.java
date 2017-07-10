@@ -25,7 +25,7 @@ import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 class SortedSetDocValuesFacetType extends StorableFieldType {
 
 	SortedSetDocValuesFacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.STRING);
+		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.STRING);
 	}
 
 	@Override

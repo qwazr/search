@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,11 +44,13 @@ public class FieldMap {
 		wildcardMap = new HashMap<>();
 
 		fieldDefinitionMap.forEach((name, definition) -> {
+			final FieldDefinition.Template template =
+					definition.template == null ? FieldDefinition.Template.NONE : definition.template;
 			if (name.indexOf('*') != -1 || name.indexOf('?') != -1) {
 				final WildcardMatcher wildcardMatcher = new WildcardMatcher(name);
-				wildcardMap.put(wildcardMatcher, FieldTypeInterface.getInstance(wildcardMatcher, definition));
+				wildcardMap.put(wildcardMatcher, template.builder.build(wildcardMatcher, definition));
 			} else {
-				final FieldTypeInterface fieldType = FieldTypeInterface.getInstance(null, definition);
+				final FieldTypeInterface fieldType = template.builder.build(null, definition);
 				nameDefMap.put(name, fieldType);
 			}
 		});
@@ -57,9 +59,9 @@ public class FieldMap {
 		final HashMap<String, FieldTypeInterface> newFields = new HashMap<>();
 		nameDefMap.forEach((name, fieldType) -> {
 			final FieldDefinition definition = fieldType.getDefinition();
-			if (definition.copy_from == null)
+			if (definition.copyFrom == null)
 				return;
-			for (FieldDefinition.CopyFrom copyFrom : definition.copy_from) {
+			for (FieldDefinition.CopyFrom copyFrom : definition.copyFrom) {
 				final FieldTypeInterface fieldDest;
 				if (nameDefMap.containsKey(copyFrom.field))
 					fieldDest = nameDefMap.get(copyFrom.field);
@@ -114,16 +116,8 @@ public class FieldMap {
 		case FloatAssociatedField:
 			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD);
 			break;
-		case StringAssociatedField:
-			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_STRING_ASSOC_FACET_FIELD);
-			break;
 		}
-		if (definition.facet_multivalued != null)
-			facetsConfig.setMultiValued(fieldName, definition.facet_multivalued);
-		if (definition.facet_hierarchical != null)
-			facetsConfig.setHierarchical(fieldName, definition.facet_hierarchical);
-		if (definition.facet_require_dim_count != null)
-			facetsConfig.setRequireDimCount(fieldName, definition.facet_require_dim_count);
+		definition.setFacetsConfig(fieldName, facetsConfig);
 	}
 
 	final public FacetsConfig getFacetsConfig(final Collection<String> concreteFieldNames) {

@@ -56,19 +56,19 @@ public class AnalyzerContext {
 
 		fields.forEach((fieldName, fieldDef) -> {
 			try {
-				final Analyzer indexAnalyzer = StringUtils.isEmpty(fieldDef.analyzer) ? null : builder.findAnalyzer(
-						fieldDef.analyzer);
-				if (indexAnalyzer != null)
-					indexAnalyzerMap.put(fieldName, indexAnalyzer);
+				fieldDef.setIndexAnalyzer(fieldName, (field, analyzerDescriptor) -> {
+					final Analyzer analyzer = builder.findAnalyzer(analyzerDescriptor);
+					if (analyzer != null)
+						indexAnalyzerMap.put(field, analyzer);
+				});
+				fieldDef.setQueryAnalyzer(fieldName, (field, analyzerDescriptor) -> {
+					final Analyzer analyzer = builder.findAnalyzer(analyzerDescriptor);
+					if (analyzer != null)
+						indexAnalyzerMap.put(field, analyzer);
+				});
 
-				final Analyzer queryAnalyzer = StringUtils.isEmpty(fieldDef.query_analyzer) ?
-						indexAnalyzer :
-						builder.findAnalyzer(fieldDef.query_analyzer);
-				if (queryAnalyzer != null)
-					queryAnalyzerMap.put(fieldName, queryAnalyzer);
-
-			} catch (ReflectiveOperationException | InterruptedException | IOException e) {
-				final String msg = "Analyzer class " + fieldDef.analyzer + " not known for the field " + fieldName;
+			} catch (ReflectiveOperationException | IOException e) {
+				final String msg = "Analyzer class " + fieldDef + " not known for the field " + fieldName;
 				if (failOnException)
 					throw new ServerException(Response.Status.NOT_ACCEPTABLE, msg, e);
 				LOGGER.log(Level.WARNING, msg, e);
@@ -76,9 +76,15 @@ public class AnalyzerContext {
 		});
 	}
 
+	@FunctionalInterface
+	public interface Builder {
+
+		void add(String fieldName, String analyzerName) throws ReflectiveOperationException, IOException;
+	}
+
 	final static String[] analyzerClassPrefixes = { StringUtils.EMPTY, "org.apache.lucene.analysis." };
 
-	final static class AnalyzerMapBuilder {
+	public final static class AnalyzerMapBuilder {
 
 		private final ConstructorParametersImpl instanceFactory;
 		private final ResourceLoader resourceLoader;
@@ -93,8 +99,7 @@ public class AnalyzerContext {
 			this.analyzerSingletonMap = new HashMap<>();
 		}
 
-		Analyzer findAnalyzer(final String analyzerName)
-				throws InterruptedException, ReflectiveOperationException, IOException {
+		public Analyzer findAnalyzer(final String analyzerName) throws ReflectiveOperationException, IOException {
 			Analyzer analyzer = analyzerSingletonMap.get(analyzerName);
 			if (analyzer != null)
 				return analyzer;

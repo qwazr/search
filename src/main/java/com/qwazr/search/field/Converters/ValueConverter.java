@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package com.qwazr.search.field.Converters;
 
 import com.qwazr.binder.setter.FieldSetter;
+import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.index.BinaryDocValues;
 import org.apache.lucene.index.DocValuesType;
@@ -43,8 +44,8 @@ public abstract class ValueConverter<T, V> {
 
 	public abstract void fill(final Object record, final FieldSetter fieldSetter, final int docId);
 
-	private final static ValueConverter newNumericConverter(FieldDefinition fieldDef, NumericDocValues numericDocValues)
-			throws IOException {
+	private final static ValueConverter newNumericConverter(CustomFieldDefinition fieldDef,
+			NumericDocValues numericDocValues) throws IOException {
 		if (fieldDef.numeric_type == null) {
 			if (fieldDef.template == null)
 				return null;
@@ -76,7 +77,7 @@ public abstract class ValueConverter<T, V> {
 		return null;
 	}
 
-	private final static ValueConverter newSortedNumericConverter(FieldDefinition fieldDef,
+	private final static ValueConverter newSortedNumericConverter(CustomFieldDefinition fieldDef,
 			SortedNumericDocValues sortedNumericDocValues) throws IOException {
 		if (fieldDef.numeric_type == null) {
 			if (fieldDef.template == null)
@@ -109,10 +110,11 @@ public abstract class ValueConverter<T, V> {
 		return null;
 	}
 
-	public static ValueConverter newConverter(String fieldName, final FieldDefinition fieldDef,
+	public static ValueConverter newConverter(String fieldName, final FieldDefinition fieldDefinition,
 			final IndexReader reader) throws IOException {
-		if (fieldDef == null)
+		if (fieldDefinition == null || !(fieldDefinition instanceof CustomFieldDefinition))
 			return null;
+		final CustomFieldDefinition fieldDef = (CustomFieldDefinition) fieldDefinition;
 		final DocValuesType type = fieldDef.docvalues_type;
 		if (type != null && type != DocValuesType.NONE)
 			return newDocValueConverter(reader, fieldName, fieldDef, type);
@@ -120,7 +122,7 @@ public abstract class ValueConverter<T, V> {
 	}
 
 	static ValueConverter newDocValueConverter(final IndexReader reader, final String fieldName,
-			final FieldDefinition fieldDef, final DocValuesType type) throws IOException {
+			final CustomFieldDefinition fieldDef, final DocValuesType type) throws IOException {
 		switch (type) {
 		case BINARY:
 			final BinaryDocValues binaryDocValue = MultiDocValues.getBinaryValues(reader, fieldName);

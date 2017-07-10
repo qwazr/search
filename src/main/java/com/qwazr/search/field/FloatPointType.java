@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,14 +25,14 @@ import org.apache.lucene.document.StoredField;
 class FloatPointType extends StorableFieldType {
 
 	FloatPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.FLOAT_POINT);
+		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.FLOAT_POINT);
 	}
 
 	@Override
 	final public void fillValue(final String fieldName, final Object value, final Float boost,
 			final FieldConsumer consumer) {
-		final float floatValue =
-				value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(value.toString());
+		final float floatValue = value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(
+				value.toString());
 		consumer.accept(fieldName, new DoublePoint(fieldName, floatValue), boost);
 		if (store == Field.Store.YES)
 			consumer.accept(fieldName, new StoredField(fieldName, floatValue), boost);

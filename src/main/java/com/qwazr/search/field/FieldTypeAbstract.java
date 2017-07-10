@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,14 +30,14 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-abstract class FieldTypeAbstract implements FieldTypeInterface {
+abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldTypeInterface {
 
 	final private WildcardMatcher wildcardMatcher;
-	final protected FieldDefinition definition;
+	final protected T definition;
 	final protected BytesRefUtils.Converter bytesRefConverter;
 	final private Map<FieldTypeInterface, String> copyToFields;
 
-	protected FieldTypeAbstract(final WildcardMatcher wildcardMatcher, final FieldDefinition definition,
+	protected FieldTypeAbstract(final WildcardMatcher wildcardMatcher, final T definition,
 			final BytesRefUtils.Converter bytesRefConverter) {
 		this.wildcardMatcher = wildcardMatcher;
 		this.definition = definition;

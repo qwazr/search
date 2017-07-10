@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,14 +25,14 @@ import org.apache.lucene.document.StoredField;
 class DoublePointType extends StorableFieldType {
 
 	DoublePointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.DOUBLE_POINT);
+		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.DOUBLE_POINT);
 	}
 
 	@Override
 	final public void fillValue(final String fieldName, final Object value, final Float boost,
 			final FieldConsumer consumer) {
-		final double doubleValue =
-				value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString());
+		final double doubleValue = value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(
+				value.toString());
 		consumer.accept(fieldName, new DoublePoint(fieldName, doubleValue), boost);
 		if (store == Field.Store.YES)
 			consumer.accept(fieldName, new StoredField(fieldName, doubleValue), boost);

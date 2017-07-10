@@ -16,6 +16,7 @@
 package com.qwazr.search.test;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.BackupStatus;
 import com.qwazr.search.index.ExplainDefinition;
@@ -395,9 +396,10 @@ public abstract class JsonAbstractTest {
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(() -> client.getField(SCHEMA_NAME, INDEX_MASTER_NAME, DUMMY_FIELD_NAME), 404);
 		FIELDS_JSON.forEach((fieldName, fieldDefinition) -> {
-			FieldDefinition fieldDef = client.getField(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName);
+			CustomFieldDefinition fieldDef = (CustomFieldDefinition) client.getField(SCHEMA_NAME, INDEX_MASTER_NAME,
+					fieldName);
 			Assert.assertEquals(fieldDef.template, fieldDefinition.template);
-			Assert.assertEquals(fieldDef.analyzer, fieldDefinition.analyzer);
+			Assert.assertEquals(fieldDef.analyzer, ((CustomFieldDefinition) fieldDefinition).analyzer);
 		});
 
 	}

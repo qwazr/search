@@ -16,6 +16,7 @@
 package com.qwazr.search.annotations;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.AnnotatedServiceInterface;
 import com.qwazr.search.index.BackupStatus;
@@ -237,8 +238,8 @@ public class AnnotatedIndexService<T> {
 	private LinkedHashMap<String, FieldDefinition> getAnnotatedFields() {
 		final LinkedHashMap<String, FieldDefinition> indexFields = new LinkedHashMap<>();
 		if (indexFieldMap != null)
-			indexFieldMap.forEach(
-					(name, propertyField) -> indexFields.put(name, new FieldDefinition(name, propertyField, copyMap)));
+			indexFieldMap.forEach((name, propertyField) -> indexFields.put(name,
+					new CustomFieldDefinition(name, propertyField, copyMap)));
 		return indexFields;
 	}
 

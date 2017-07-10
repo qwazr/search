@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,10 +21,10 @@ import org.apache.lucene.document.LatLonPoint;
 
 import java.util.Map;
 
-class LatLonPointType extends FieldTypeAbstract {
+class LatLonPointType extends FieldTypeAbstract<CustomFieldDefinition> {
 
 	LatLonPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, null);
+		super(wildcardMatcher, (CustomFieldDefinition) definition, null);
 	}
 
 	@Override

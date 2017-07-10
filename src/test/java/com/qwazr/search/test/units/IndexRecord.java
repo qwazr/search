@@ -25,6 +25,9 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 @Index(name = "IndexRecord", schema = "TestQueries", enableTaxonomyIndex = true)
 public class IndexRecord {
@@ -74,6 +77,11 @@ public class IndexRecord {
 
 	@IndexField(template = FieldDefinition.Template.SortedSetDocValuesFacetField, facetMultivalued = false)
 	public String sortedSetDocValuesFacetField;
+
+	@IndexField(name = "dynamic_facets_*",
+			template = FieldDefinition.Template.SortedSetDocValuesFacetField,
+			facetMultivalued = true)
+	public Map<String, List<String>> dynamicFacets;
 
 	@IndexField(template = FieldDefinition.Template.FacetField)
 	public String facetField;
@@ -209,6 +217,13 @@ public class IndexRecord {
 
 	public IndexRecord sortedSetDocValuesFacetField(String sortedSetDocValuesFacetField) {
 		this.sortedSetDocValuesFacetField = sortedSetDocValuesFacetField;
+		return this;
+	}
+
+	public IndexRecord dynamicFacets(String fieldName, String value) {
+		if (dynamicFacets == null)
+			dynamicFacets = new LinkedHashMap<>();
+		dynamicFacets.computeIfAbsent(fieldName, f -> new ArrayList<>()).add(value);
 		return this;
 	}
 

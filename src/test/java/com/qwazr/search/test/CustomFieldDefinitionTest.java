@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.test;
 
+import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.commons.lang3.RandomUtils;
@@ -32,20 +33,20 @@ import java.util.List;
 import java.util.Map;
 
 @FixMethodOrder
-public class FieldDefinitionTest {
+public class CustomFieldDefinitionTest {
 
 	private static List<FieldDefinition> fields;
-	private static FieldDefinition.Builder builder;
+	private static CustomFieldDefinition.Builder builder;
 	private static Map<String, Object> map;
 
 	@BeforeClass
 	public static void before() {
 		fields = new ArrayList<>();
-		builder = FieldDefinition.of();
+		builder = CustomFieldDefinition.of();
 		map = new LinkedHashMap<>();
 	}
 
-	public void checkFields(FieldDefinition.Builder builder, String key, Object value) throws IOException {
+	public void checkFields(CustomFieldDefinition.Builder builder, String key, Object value) throws IOException {
 		map.put(key, value);
 		String jsonString = JsonMapper.MAPPER.writeValueAsString(map);
 		final FieldDefinition fieldBuilder = builder.build();

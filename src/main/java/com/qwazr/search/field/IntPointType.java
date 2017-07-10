@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,7 @@ import org.apache.lucene.document.StoredField;
 class IntPointType extends StorableFieldType {
 
 	IntPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.INT_POINT);
+		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.INT_POINT);
 	}
 
 	@Override

@@ -21,6 +21,7 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.collector.MaxNumericCollector;
 import com.qwazr.search.collector.MinNumericCollector;
+import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.BackupStatus;
 import com.qwazr.search.index.FacetDefinition;
@@ -166,14 +167,15 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService service = getMaster();
 		LinkedHashMap<String, FieldDefinition> fields = service.createUpdateFields();
 		Assert.assertNotNull(fields);
-		FieldDefinition field;
-		Assert.assertNotNull("The Title field is not present", field = fields.get("title"));
+		CustomFieldDefinition field;
+		Assert.assertNotNull("The Title field is not present", field = (CustomFieldDefinition) fields.get("title"));
 		Assert.assertEquals("en.EnglishAnalyzer", field.analyzer);
-		Assert.assertNotNull("The Content field is not present", field = fields.get("content"));
+		Assert.assertNotNull("The Content field is not present", field = (CustomFieldDefinition) fields.get("content"));
 		Assert.assertEquals(EnglishAnalyzer.class.getName(), field.analyzer);
-		Assert.assertNotNull("The Category field is not present", field = fields.get("category"));
+		Assert.assertNotNull("The Category field is not present",
+				field = (CustomFieldDefinition) fields.get("category"));
 		Assert.assertEquals(FieldDefinition.Template.SortedSetDocValuesFacetField, field.template);
-		Assert.assertNotNull("The Price field is not present", field = fields.get("price"));
+		Assert.assertNotNull("The Price field is not present", field = (CustomFieldDefinition) fields.get("price"));
 		Assert.assertEquals(FieldDefinition.Template.DoubleDocValuesField, field.template);
 	}
 
@@ -184,10 +186,10 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(fields);
 		Assert.assertFalse(fields.isEmpty());
 		fields.forEach((fieldName, fieldDefinition) -> {
-			FieldDefinition fieldDef = service.getField(fieldName);
+			CustomFieldDefinition fieldDef = (CustomFieldDefinition) service.getField(fieldName);
 			Assert.assertNotNull(fieldDef);
 			Assert.assertEquals(fieldDef.template, fieldDefinition.template);
-			Assert.assertEquals(fieldDef.analyzer, fieldDefinition.analyzer);
+			Assert.assertEquals(fieldDef.analyzer, ((CustomFieldDefinition) fieldDefinition).analyzer);
 		});
 	}
 

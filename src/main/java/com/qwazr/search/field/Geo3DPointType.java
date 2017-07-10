@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,10 +21,10 @@ import org.apache.lucene.spatial3d.Geo3DPoint;
 
 import java.util.Map;
 
-class Geo3DPointType extends FieldTypeAbstract {
+class Geo3DPointType extends FieldTypeAbstract<CustomFieldDefinition> {
 
 	Geo3DPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, null);
+		super(wildcardMatcher, (CustomFieldDefinition) definition, null);
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@ import org.apache.lucene.search.SortField;
 class LongPointType extends StorableFieldType {
 
 	LongPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.LONG_POINT);
+		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.LONG_POINT);
 	}
 
 	@Override
