@@ -44,7 +44,7 @@ public class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefini
 				builder.definition.analyzer :
 				builder.definition.queryAnalyzer;
 		if (!StringUtils.isEmpty(analyzerDescriptor))
-			builder.indexAnalyzerConfig(
+			builder.queryAnalyzerConfig(
 					(fieldName, analyzerBuilder) -> analyzerBuilder.add(fieldName, analyzerDescriptor));
 
 		return builder;

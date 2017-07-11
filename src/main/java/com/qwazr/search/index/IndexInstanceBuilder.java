@@ -64,17 +64,16 @@ class IndexInstanceBuilder {
 	final FileResourceLoader fileResourceLoader;
 	final UUID indexUuid;
 
-	Directory dataDirectory = null;
-	Directory taxonomyDirectory = null;
+	Directory dataDirectory;
+	Directory taxonomyDirectory;
 
-	private IndexWriter indexWriter = null;
-	private SnapshotDirectoryTaxonomyWriter taxonomyWriter = null;
+	private IndexWriter indexWriter;
+	private SnapshotDirectoryTaxonomyWriter taxonomyWriter;
 
 	final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap;
-	LinkedHashMap<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap = null;
+	LinkedHashMap<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap;
 
 	FieldMap fieldMap = null;
-	LinkedHashMap<String, FieldDefinition> fieldMapDefinition = null;
 
 	UpdatableAnalyzer indexAnalyzer;
 	UpdatableAnalyzer queryAnalyzer;
@@ -84,8 +83,8 @@ class IndexInstanceBuilder {
 	LocalReplicator localReplicator = null;
 	IndexReplicator indexReplicator = null;
 
-	Similarity similarity = null;
-	SearcherFactory searcherFactory = null;
+	private Similarity similarity;
+	private SearcherFactory searcherFactory;
 
 	IndexInstanceBuilder(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
 			final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
@@ -111,7 +110,7 @@ class IndexInstanceBuilder {
 		searcherFactory = MultiThreadSearcherFactory.of(executorService, similarity);
 
 		localAnalyzerFactoryMap = fileSet.loadAnalyzerDefinitionMap();
-		fieldMapDefinition = fileSet.loadFieldMap();
+		final LinkedHashMap<String, FieldDefinition> fieldMapDefinition = fileSet.loadFieldMap();
 
 		fieldMap = fieldMapDefinition == null ? null : new FieldMap(fieldMapDefinition, settings.sortedSetFacetField);
 
