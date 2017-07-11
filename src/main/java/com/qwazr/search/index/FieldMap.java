@@ -61,12 +61,12 @@ public class FieldMap {
 			final FieldDefinition definition = fieldType.getDefinition();
 			if (definition.copyFrom == null)
 				return;
-			for (FieldDefinition.CopyFrom copyFrom : definition.copyFrom) {
+			for (String copyFrom : definition.copyFrom) {
 				final FieldTypeInterface fieldDest;
-				if (nameDefMap.containsKey(copyFrom.field))
-					fieldDest = nameDefMap.get(copyFrom.field);
+				if (nameDefMap.containsKey(copyFrom))
+					fieldDest = nameDefMap.get(copyFrom);
 				else
-					fieldDest = newFields.computeIfAbsent(copyFrom.field, n -> new CopyToFieldType());
+					fieldDest = newFields.computeIfAbsent(copyFrom, n -> new CopyToFieldType());
 				fieldDest.copyTo(name, fieldType);
 			}
 		});

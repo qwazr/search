@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.annotations.Copy;
@@ -40,6 +41,10 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
+		include = JsonTypeInfo.As.PROPERTY,
+		property = "type",
+		defaultImpl = CustomFieldDefinition.class)
 public abstract class FieldDefinition {
 
 	public enum Template {
@@ -90,11 +95,11 @@ public abstract class FieldDefinition {
 	public final Template template;
 
 	@JsonProperty("copy_from")
-	public final CopyFrom[] copyFrom;
+	public final String[] copyFrom;
 
 	@JsonCreator
 	FieldDefinition(@JsonProperty("template") final Template template,
-			@JsonProperty("copy_crom") final CopyFrom[] copyFrom) {
+			@JsonProperty("copy_from") final String[] copyFrom) {
 		this.template = template;
 		this.copyFrom = copyFrom;
 	}
@@ -102,12 +107,12 @@ public abstract class FieldDefinition {
 	FieldDefinition(final AbstractBuilder builder) {
 		this.template = builder.template;
 		this.copyFrom = builder.copyFrom == null || builder.copyFrom.isEmpty() ? null : builder.copyFrom.toArray(
-				new CopyFrom[builder.copyFrom.size()]);
+				new String[builder.copyFrom.size()]);
 	}
 
 	FieldDefinition(final String fieldName, final IndexField indexField, final Map<String, Copy> copyMap) {
 		template = indexField.template();
-		copyFrom = CopyFrom.from(fieldName, copyMap);
+		copyFrom = from(fieldName, copyMap);
 	}
 
 	public abstract void setFacetsConfig(String fieldName, FacetsConfig facetsConfig);
@@ -172,36 +177,25 @@ public abstract class FieldDefinition {
 				fieldMapFile, FieldDefinition.MapStringFieldTypeRef) : defaultMap == null ? null : defaultMap.get();
 	}
 
-	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	final static public class CopyFrom {
+	private static String[] from(final String fieldName, final Map<String, Copy> copyMap) {
+		if (copyMap == null || copyMap.isEmpty())
+			return null;
+		final TreeMap<Integer, List<String>> map = new TreeMap<>();
+		copyMap.forEach((name, copy) -> {
+			for (Copy.To to : copy.to())
+				if (fieldName.equals(to.field()))
+					map.computeIfAbsent(to.order(), order -> new ArrayList<>()).add(name);
+		});
 
-		public final String field;
-
-		@JsonCreator
-		private CopyFrom(@JsonProperty("field") final String field) {
-			this.field = field;
-		}
-
-		private static CopyFrom[] from(final String fieldName, final Map<String, Copy> copyMap) {
-			if (copyMap == null || copyMap.isEmpty())
-				return null;
-			final TreeMap<Integer, List<CopyFrom>> map = new TreeMap<>();
-			copyMap.forEach((name, copy) -> {
-				for (Copy.To to : copy.to())
-					if (fieldName.equals(to.field()))
-						map.computeIfAbsent(to.order(), order -> new ArrayList<>()).add(new CopyFrom(name));
-			});
-
-			final List<CopyFrom> globalCopyFromList = new ArrayList<>();
-			map.forEach((order, copyFromList) -> globalCopyFromList.addAll(copyFromList));
-			return globalCopyFromList.toArray(new CopyFrom[globalCopyFromList.size()]);
-		}
+		final List<String> globalCopyFromList = new ArrayList<>();
+		map.forEach((order, copyFromList) -> globalCopyFromList.addAll(copyFromList));
+		return globalCopyFromList.toArray(new String[globalCopyFromList.size()]);
 	}
 
 	abstract static class AbstractBuilder {
 
 		private Template template;
-		private LinkedHashSet<CopyFrom> copyFrom;
+		private LinkedHashSet<String> copyFrom;
 
 		AbstractBuilder template(Template template) {
 			this.template = template;
@@ -211,7 +205,7 @@ public abstract class FieldDefinition {
 		AbstractBuilder copyFrom(String field) {
 			if (copyFrom == null)
 				copyFrom = new LinkedHashSet<>();
-			copyFrom.add(new CopyFrom(field));
+			copyFrom.add(field);
 			return this;
 		}
 

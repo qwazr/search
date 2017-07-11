@@ -64,7 +64,7 @@ public class AnalyzerContext {
 				fieldDef.setQueryAnalyzer(fieldName, (field, analyzerDescriptor) -> {
 					final Analyzer analyzer = builder.findAnalyzer(analyzerDescriptor);
 					if (analyzer != null)
-						indexAnalyzerMap.put(field, analyzer);
+						queryAnalyzerMap.put(field, analyzer);
 				});
 
 			} catch (ReflectiveOperationException | IOException e) {

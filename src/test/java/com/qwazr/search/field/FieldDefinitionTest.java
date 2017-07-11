@@ -13,26 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.units;
+package com.qwazr.search.field;
 
-import com.qwazr.search.index.QueryContext;
-import com.qwazr.search.query.DrillDownQuery;
-import com.qwazr.search.query.MatchAllDocsQuery;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.search.Query;
+import com.qwazr.utils.json.JsonMapper;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Map;
 
-public class DrillDownQueryTest extends AbstractIndexTest {
+public class FieldDefinitionTest {
 
 	@Test
-	public void luceneQuery() throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
-		Query luceneQuery =
-				new DrillDownQuery(new MatchAllDocsQuery(), true).add("dim", "value").getQuery(QueryContext.DEFAULT);
-		Assert.assertNotNull(luceneQuery);
+	public void readFieldDefinitionTest() throws IOException {
+		Map<String, FieldDefinition> fields = JsonMapper.MAPPER.readValue(
+				com.qwazr.search.test.JavaTest.class.getResourceAsStream("fields.json"),
+				FieldDefinition.MapStringFieldTypeRef);
+		Assert.assertNotNull(fields);
+		fields.forEach((name, field) -> Assert.assertTrue(field instanceof CustomFieldDefinition));
 	}
-
 }
