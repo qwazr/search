@@ -72,12 +72,14 @@ class IndexInstanceBuilder {
 
 	final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap;
 	LinkedHashMap<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap = null;
-	LinkedHashMap<String, FieldDefinition> fieldMap = null;
+
+	FieldMap fieldMap = null;
+	LinkedHashMap<String, FieldDefinition> fieldMapDefinition = null;
+
+	UpdatableAnalyzer indexAnalyzer;
+	UpdatableAnalyzer queryAnalyzer;
 
 	WriterAndSearcher writerAndSearcher = null;
-
-	UpdatableAnalyzer indexAnalyzer = null;
-	UpdatableAnalyzer queryAnalyzer = null;
 
 	LocalReplicator localReplicator = null;
 	IndexReplicator indexReplicator = null;
@@ -109,30 +111,29 @@ class IndexInstanceBuilder {
 		searcherFactory = MultiThreadSearcherFactory.of(executorService, similarity);
 
 		localAnalyzerFactoryMap = fileSet.loadAnalyzerDefinitionMap();
-		fieldMap = fileSet.loadFieldMap();
+		fieldMapDefinition = fileSet.loadFieldMap();
 
-		final AnalyzerContext context =
-				new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, false, globalAnalyzerFactoryMap,
-						localAnalyzerFactoryMap);
+		fieldMap = fieldMapDefinition == null ? null : new FieldMap(fieldMapDefinition, settings.sortedSetFacetField);
+
+		final AnalyzerContext context = new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, false,
+				globalAnalyzerFactoryMap, localAnalyzerFactoryMap);
 		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
 		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
 
 		// Open and lock the index directories
 		dataDirectory = getDirectory(settings, fileSet.dataDirectory);
-		taxonomyDirectory = IndexSettingsDefinition.useTaxonomyIndex(settings) ?
-				getDirectory(settings, fileSet.taxonomyDirectory) :
-				null;
+		taxonomyDirectory = IndexSettingsDefinition.useTaxonomyIndex(settings) ? getDirectory(settings,
+				fileSet.taxonomyDirectory) : null;
 	}
 
 	static Directory getDirectory(IndexSettingsDefinition settings, File dataDirectory) throws IOException {
-		return settings == null || settings.directoryType == null
-				|| settings.directoryType == IndexSettingsDefinition.Type.FSDirectory ?
-				FSDirectory.open(dataDirectory.toPath()) :
-				new RAMDirectory();
+		return settings == null || settings.directoryType == null ||
+				settings.directoryType == IndexSettingsDefinition.Type.FSDirectory ? FSDirectory.open(
+				dataDirectory.toPath()) : new RAMDirectory();
 	}
 
-	private final static int MERGE_SCHEDULER_SSD_THREADS =
-			Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() / 2));
+	private final static int MERGE_SCHEDULER_SSD_THREADS = Math.max(1,
+			Math.min(4, Runtime.getRuntime().availableProcessors() / 2));
 
 	private void openOrCreateDataIndex() throws IOException {
 
@@ -173,8 +174,8 @@ class IndexInstanceBuilder {
 			}
 		}
 
-		final SnapshotDeletionPolicy snapshotDeletionPolicy =
-				new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
+		final SnapshotDeletionPolicy snapshotDeletionPolicy = new SnapshotDeletionPolicy(
+				indexWriterConfig.getIndexDeletionPolicy());
 		indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
 
 		indexWriter = checkCommit(new IndexWriter(dataDirectory, indexWriterConfig));
@@ -197,8 +198,8 @@ class IndexInstanceBuilder {
 				taxonomyDirectory, fileSet.replWorkPath, () -> false);
 
 		if (taxonomyDirectory != null) {
-			if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0
-					|| SegmentInfos.getLastCommitGeneration(taxonomyDirectory) < 0)
+			if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0 || SegmentInfos.getLastCommitGeneration(
+					taxonomyDirectory) < 0)
 				indexReplicator.updateNow();
 		} else {
 			if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0) {

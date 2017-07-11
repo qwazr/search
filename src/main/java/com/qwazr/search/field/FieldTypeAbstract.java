@@ -15,12 +15,14 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.WildcardMatcher;
 import jdk.nashorn.api.scripting.JSObject;
+import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.BytesRef;
 
@@ -28,6 +30,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldTypeInterface {
@@ -35,14 +38,47 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 	final private WildcardMatcher wildcardMatcher;
 	final protected T definition;
 	final protected BytesRefUtils.Converter bytesRefConverter;
+	final private FieldTypeInterface.Facet[] facetConfig;
+	final private FieldTypeInterface.Analyzer[] indexAnalyzerConfig;
+	final private FieldTypeInterface.Analyzer[] queryAnalyzerConfig;
 	final private Map<FieldTypeInterface, String> copyToFields;
 
-	protected FieldTypeAbstract(final WildcardMatcher wildcardMatcher, final T definition,
-			final BytesRefUtils.Converter bytesRefConverter) {
-		this.wildcardMatcher = wildcardMatcher;
-		this.definition = definition;
-		this.bytesRefConverter = bytesRefConverter;
+	protected FieldTypeAbstract(final Builder<T> builder) {
+		this.wildcardMatcher = builder.wildcardMatcher;
+		this.definition = builder.definition;
+		this.bytesRefConverter = builder.bytesRefConverter;
+		this.facetConfig =
+				builder.facetConfig == null || builder.facetConfig.isEmpty() ? null : builder.facetConfig.toArray(
+						new FieldTypeInterface.Facet[builder.facetConfig.size()]);
+		this.indexAnalyzerConfig = builder.indexAnalyzerConfig == null || builder.indexAnalyzerConfig.isEmpty() ?
+				null :
+				builder.indexAnalyzerConfig.toArray(
+						new FieldTypeInterface.Analyzer[builder.indexAnalyzerConfig.size()]);
+		this.queryAnalyzerConfig = builder.queryAnalyzerConfig == null || builder.queryAnalyzerConfig.isEmpty() ?
+				null :
+				builder.queryAnalyzerConfig.toArray(
+						new FieldTypeInterface.Analyzer[builder.queryAnalyzerConfig.size()]);
 		this.copyToFields = new LinkedHashMap<>();
+	}
+
+	public final void setFacetsConfig(String fieldName, FacetsConfig facetsConfig) {
+		if (facetConfig != null)
+			for (FieldTypeInterface.Facet config : facetConfig)
+				config.config(fieldName, facetsConfig);
+	}
+
+	public final void setIndexAnalyzer(String fieldName, AnalyzerContext.Builder builder)
+			throws ReflectiveOperationException, IOException {
+		if (indexAnalyzerConfig != null)
+			for (FieldTypeInterface.Analyzer config : indexAnalyzerConfig)
+				config.config(fieldName, builder);
+	}
+
+	public final void setQueryAnalyzer(String fieldName, AnalyzerContext.Builder builder)
+			throws ReflectiveOperationException, IOException {
+		if (queryAnalyzerConfig != null)
+			for (FieldTypeInterface.Analyzer config : queryAnalyzerConfig)
+				config.config(fieldName, builder);
 	}
 
 	@Override
@@ -180,4 +216,49 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 		return bytesRef == null ? null : bytesRefConverter == null ? null : bytesRefConverter.to(bytesRef);
 	}
 
+	static <T extends FieldDefinition> Builder<T> of(WildcardMatcher wildcardMatcher, T definition) {
+		return new Builder<>(wildcardMatcher, definition);
+	}
+
+	static class Builder<T extends FieldDefinition> {
+
+		final T definition;
+		private final WildcardMatcher wildcardMatcher;
+		private BytesRefUtils.Converter bytesRefConverter;
+		private LinkedHashSet<Facet> facetConfig;
+		private LinkedHashSet<FieldTypeInterface.Analyzer> indexAnalyzerConfig;
+		private LinkedHashSet<FieldTypeInterface.Analyzer> queryAnalyzerConfig;
+
+		Builder(WildcardMatcher wildcardMatcher, T definition) {
+			this.wildcardMatcher = wildcardMatcher;
+			this.definition = definition;
+		}
+
+		Builder<T> bytesRefConverter(BytesRefUtils.Converter bytesRefConverter) {
+			this.bytesRefConverter = bytesRefConverter;
+			return this;
+		}
+
+		Builder<T> facetConfig(FieldTypeInterface.Facet facetConfig) {
+			if (this.facetConfig == null)
+				this.facetConfig = new LinkedHashSet<>();
+			this.facetConfig.add(facetConfig);
+			return this;
+		}
+
+		Builder<T> indexAnalyzerConfig(FieldTypeInterface.Analyzer indexAnalyzerConfig) {
+			if (this.indexAnalyzerConfig == null)
+				this.indexAnalyzerConfig = new LinkedHashSet<>();
+			this.indexAnalyzerConfig.add(indexAnalyzerConfig);
+			return this;
+		}
+
+		Builder<T> queryAnalyzerConfig(FieldTypeInterface.Analyzer queryAnalyzerConfig) {
+			if (this.queryAnalyzerConfig == null)
+				this.queryAnalyzerConfig = new LinkedHashSet<>();
+			this.queryAnalyzerConfig.add(queryAnalyzerConfig);
+			return this;
+		}
+
+	}
 }

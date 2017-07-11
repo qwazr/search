@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@ import com.qwazr.search.index.FieldConsumer;
 public class CopyToFieldType extends FieldTypeAbstract {
 
 	public CopyToFieldType() {
-		super(null, null, null);
+		super(of(null, null));
 	}
 
 	protected void fill(final String fieldName, final Object value, final Float boost,

@@ -25,7 +25,8 @@ import org.apache.lucene.document.StoredField;
 class IntPointType extends StorableFieldType {
 
 	IntPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.INT_POINT);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.INT_POINT));
 	}
 
 	@Override

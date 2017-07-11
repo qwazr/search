@@ -21,10 +21,10 @@ import org.apache.lucene.spatial3d.Geo3DPoint;
 
 import java.util.Map;
 
-class Geo3DPointType extends FieldTypeAbstract<CustomFieldDefinition> {
+class Geo3DPointType extends CustomFieldTypeAbstract {
 
 	Geo3DPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, (CustomFieldDefinition) definition, null);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition));
 	}
 
 	@Override

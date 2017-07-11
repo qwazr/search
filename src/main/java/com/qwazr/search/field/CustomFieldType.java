@@ -22,84 +22,134 @@ import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.search.SortField;
 
-class CustomFieldType extends FieldTypeAbstract<CustomFieldDefinition> {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+class CustomFieldType extends CustomFieldTypeAbstract {
+
+	private final Consumer<FieldType>[] typeSetters;
+
+	@FunctionalInterface
+	interface SortFieldProvider {
+
+		SortField provide(final String fieldName, final QueryDefinition.SortEnum sortEnum);
+
+	}
+
+	private final SortFieldProvider sortFieldProvider;
 
 	CustomFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, (CustomFieldDefinition) definition, getConverter(definition));
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(getConverter(definition)));
+		final CustomFieldDefinition customFieldDefinition = (CustomFieldDefinition) definition;
+		typeSetters = buildTypeSetters(customFieldDefinition);
+		sortFieldProvider = buildSortFieldProvider(customFieldDefinition);
+	}
+
+	private static Consumer<FieldType>[] buildTypeSetters(CustomFieldDefinition definition) {
+		final List<Consumer<FieldType>> ts = new ArrayList<>();
+		if (definition.stored != null)
+			ts.add(type -> type.setStored(definition.stored));
+		if (definition.tokenized != null)
+			ts.add(type -> type.setTokenized(definition.tokenized));
+		if (definition.storeTermVectors != null)
+			ts.add(type -> type.setStoreTermVectors(definition.storeTermVectors));
+		if (definition.storeTermVectorOffsets != null)
+			ts.add(type -> type.setStoreTermVectorOffsets(definition.storeTermVectorOffsets));
+		if (definition.storeTermVectorPositions != null)
+			ts.add(type -> type.setStoreTermVectorPositions(definition.storeTermVectorPositions));
+		if (definition.storeTermVectorPayloads != null)
+			ts.add(type -> type.setStoreTermVectorPayloads(definition.storeTermVectorPayloads));
+		if (definition.omitNorms != null)
+			ts.add(type -> type.setOmitNorms(definition.omitNorms));
+		if (definition.numericType != null)
+			ts.add(type -> type.setNumericType(definition.numericType));
+		if (definition.indexOptions != null)
+			ts.add(type -> type.setIndexOptions(definition.indexOptions));
+		if (definition.docValuesType != null)
+			ts.add(type -> type.setDocValuesType(definition.docValuesType));
+		if (definition.dimensionCount != null && definition.dimensionNumBytes != null)
+			ts.add(type -> type.setDimensions(definition.dimensionCount, definition.dimensionNumBytes));
+		return ts.isEmpty() ? null : ts.toArray(new Consumer[ts.size()]);
+	}
+
+	private static SortFieldProvider buildSortFieldProvider(CustomFieldDefinition definition) {
+		if (definition.indexOptions == null)
+			return null;
+		if (definition.numericType != null) {
+			switch (definition.numericType) {
+			case DOUBLE:
+				return (fieldName, sortEnum) -> {
+					final SortField sortField = new SortField(fieldName, SortField.Type.DOUBLE,
+							SortUtils.sortReverse(sortEnum));
+					SortUtils.sortDoubleMissingValue(sortEnum, sortField);
+					return sortField;
+				};
+			case FLOAT:
+				return (fieldName, sortEnum) -> {
+					final SortField sortField = new SortField(fieldName, SortField.Type.FLOAT,
+							SortUtils.sortReverse(sortEnum));
+					SortUtils.sortFloatMissingValue(sortEnum, sortField);
+					return sortField;
+				};
+			case INT:
+				return (fieldName, sortEnum) -> {
+					final SortField sortField = new SortField(fieldName, SortField.Type.INT,
+							SortUtils.sortReverse(sortEnum));
+					SortUtils.sortIntMissingValue(sortEnum, sortField);
+					return sortField;
+				};
+			case LONG:
+				return (fieldName, sortEnum) -> {
+					final SortField sortField = new SortField(fieldName, SortField.Type.LONG,
+							SortUtils.sortReverse(sortEnum));
+					SortUtils.sortLongMissingValue(sortEnum, sortField);
+					return sortField;
+				};
+			default:
+				return (fieldName, sortEnum) -> {
+					final SortField sortField = new SortField(fieldName, SortField.Type.STRING,
+							SortUtils.sortReverse(sortEnum));
+					SortUtils.sortStringMissingValue(sortEnum, sortField);
+					return sortField;
+				};
+			}
+		} else {
+			return (fieldName, sortEnum) -> {
+				final SortField sortField = new SortField(fieldName, SortField.Type.STRING,
+						SortUtils.sortReverse(sortEnum));
+				SortUtils.sortStringMissingValue(sortEnum, sortField);
+				return sortField;
+			};
+		}
 	}
 
 	@Override
 	final public void fillValue(final String fieldName, final Object value, final Float boost,
 			final FieldConsumer consumer) {
 		final FieldType type = new FieldType();
-		if (definition.stored != null)
-			type.setStored(definition.stored);
-		if (definition.tokenized != null)
-			type.setTokenized(definition.tokenized);
-		if (definition.store_termvectors != null)
-			type.setStoreTermVectors(definition.store_termvectors);
-		if (definition.store_termvector_offsets != null)
-			type.setStoreTermVectorOffsets(definition.store_termvector_offsets);
-		if (definition.store_termvector_positions != null)
-			type.setStoreTermVectorPositions(definition.store_termvector_positions);
-		if (definition.store_termvector_payloads != null)
-			type.setStoreTermVectorPayloads(definition.store_termvector_payloads);
-		if (definition.omit_norms != null)
-			type.setOmitNorms(definition.omit_norms);
-		if (definition.numeric_type != null)
-			type.setNumericType(definition.numeric_type);
-		if (definition.index_options != null)
-			type.setIndexOptions(definition.index_options);
-		if (definition.docvalues_type != null)
-			type.setDocValuesType(definition.docvalues_type);
+		if (typeSetters != null)
+			for (Consumer<FieldType> ts : typeSetters)
+				ts.accept(type);
 		consumer.accept(fieldName, new CustomField(fieldName, type, value), boost);
 	}
 
 	@Override
 	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		if (definition.index_options == null)
+		if (sortFieldProvider == null)
 			throw new IllegalArgumentException("A not indexed field cannot be used in sorting: " + fieldName);
 		if (fieldName == FieldDefinition.SCORE_FIELD)
 			return new SortField(fieldName, SortField.Type.SCORE);
-		final boolean reverse = SortUtils.sortReverse(sortEnum);
-		final SortField sortField;
-		if (definition.numeric_type != null) {
-			switch (definition.numeric_type) {
-			case DOUBLE:
-				sortField = new SortField(fieldName, SortField.Type.DOUBLE, reverse);
-				SortUtils.sortDoubleMissingValue(sortEnum, sortField);
-				break;
-			case FLOAT:
-				sortField = new SortField(fieldName, SortField.Type.FLOAT, reverse);
-				SortUtils.sortFloatMissingValue(sortEnum, sortField);
-				break;
-			case INT:
-				sortField = new SortField(fieldName, SortField.Type.INT, reverse);
-				SortUtils.sortIntMissingValue(sortEnum, sortField);
-				break;
-			case LONG:
-				sortField = new SortField(fieldName, SortField.Type.LONG, reverse);
-				SortUtils.sortLongMissingValue(sortEnum, sortField);
-				break;
-			default:
-				sortField = new SortField(fieldName, SortField.Type.STRING, reverse);
-				SortUtils.sortStringMissingValue(sortEnum, sortField);
-				break;
-			}
-		} else {
-			sortField = new SortField(fieldName, SortField.Type.STRING, reverse);
-			SortUtils.sortStringMissingValue(sortEnum, sortField);
-		}
-		return sortField;
+		return sortFieldProvider.provide(fieldName, sortEnum);
 	}
 
 	static BytesRefUtils.Converter getConverter(final FieldDefinition definition) {
 		if (definition == null || !(definition instanceof CustomFieldDefinition))
 			return null;
 		final CustomFieldDefinition customDef = (CustomFieldDefinition) definition;
-		if (customDef.numeric_type == null)
+		if (customDef.numericType == null)
 			return BytesRefUtils.Converter.STRING;
-		switch (customDef.numeric_type) {
+		switch (customDef.numericType) {
 		case DOUBLE:
 			return BytesRefUtils.Converter.DOUBLE;
 		case FLOAT:

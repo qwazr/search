@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,7 @@ import java.io.IOException;
 class SortedFloatDocValuesType extends FieldTypeAbstract {
 
 	SortedFloatDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.FLOAT);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.FLOAT));
 	}
 
 	@Override
@@ -50,8 +50,8 @@ class SortedFloatDocValuesType extends FieldTypeAbstract {
 
 	@Override
 	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField =
-				new SortedNumericSortField(fieldName, SortField.Type.FLOAT, SortUtils.sortReverse(sortEnum));
+		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.FLOAT,
+				SortUtils.sortReverse(sortEnum));
 		SortUtils.sortFloatMissingValue(sortEnum, sortField);
 		return sortField;
 	}

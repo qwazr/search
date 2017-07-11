@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,10 +30,10 @@ import org.apache.lucene.search.SortedNumericSortField;
 
 import java.io.IOException;
 
-class SortedLongDocValuesType extends FieldTypeAbstract {
+class SortedLongDocValuesType extends CustomFieldTypeAbstract {
 
 	SortedLongDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.LONG);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.LONG));
 	}
 
 	@Override
@@ -48,8 +48,8 @@ class SortedLongDocValuesType extends FieldTypeAbstract {
 
 	@Override
 	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField =
-				new SortedNumericSortField(fieldName, SortField.Type.LONG, SortUtils.sortReverse(sortEnum));
+		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.LONG,
+				SortUtils.sortReverse(sortEnum));
 		SortUtils.sortLongMissingValue(sortEnum, sortField);
 		return sortField;
 	}

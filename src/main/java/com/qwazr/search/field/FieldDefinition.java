@@ -20,9 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.annotations.Copy;
-import com.qwazr.search.annotations.IndexField;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.json.JsonMapper;
@@ -77,7 +75,7 @@ public abstract class FieldDefinition {
 		IntAssociatedField(IntAssociationFacetType::new),
 		FloatAssociatedField(FloatAssociationFacetType::new),
 		SortedSetDocValuesFacetField(SortedSetDocValuesFacetType::new),
-		SmartField(SmartField::new);
+		SmartField(SmartFieldType::new);
 
 		public final FieldBuilder builder;
 
@@ -89,7 +87,7 @@ public abstract class FieldDefinition {
 
 	@FunctionalInterface
 	public interface FieldBuilder {
-		FieldTypeInterface build(final WildcardMatcher wildcardMatcher, final FieldDefinition fieldDefinition);
+		FieldTypeInterface build(final WildcardMatcher wildcardMatcher, final FieldDefinition definition);
 	}
 
 	public final Template template;
@@ -104,24 +102,11 @@ public abstract class FieldDefinition {
 		this.copyFrom = copyFrom;
 	}
 
-	FieldDefinition(final AbstractBuilder builder) {
+	FieldDefinition(final Builder builder) {
 		this.template = builder.template;
 		this.copyFrom = builder.copyFrom == null || builder.copyFrom.isEmpty() ? null : builder.copyFrom.toArray(
 				new String[builder.copyFrom.size()]);
 	}
-
-	FieldDefinition(final String fieldName, final IndexField indexField, final Map<String, Copy> copyMap) {
-		template = indexField.template();
-		copyFrom = from(fieldName, copyMap);
-	}
-
-	public abstract void setFacetsConfig(String fieldName, FacetsConfig facetsConfig);
-
-	public abstract void setIndexAnalyzer(String fieldName, AnalyzerContext.Builder builder)
-			throws ReflectiveOperationException, IOException;
-
-	public abstract void setQueryAnalyzer(String fieldName, AnalyzerContext.Builder builder)
-			throws ReflectiveOperationException, IOException;
 
 	@Override
 	public boolean equals(final Object o) {
@@ -177,7 +162,7 @@ public abstract class FieldDefinition {
 				fieldMapFile, FieldDefinition.MapStringFieldTypeRef) : defaultMap == null ? null : defaultMap.get();
 	}
 
-	private static String[] from(final String fieldName, final Map<String, Copy> copyMap) {
+	protected static String[] from(final String fieldName, final Map<String, Copy> copyMap) {
 		if (copyMap == null || copyMap.isEmpty())
 			return null;
 		final TreeMap<Integer, List<String>> map = new TreeMap<>();
@@ -192,17 +177,21 @@ public abstract class FieldDefinition {
 		return globalCopyFromList.toArray(new String[globalCopyFromList.size()]);
 	}
 
-	abstract static class AbstractBuilder {
+	static Builder of(Template template) {
+		return new Builder().template(template);
+	}
+
+	static class Builder {
 
 		private Template template;
 		private LinkedHashSet<String> copyFrom;
 
-		AbstractBuilder template(Template template) {
+		Builder template(Template template) {
 			this.template = template;
 			return this;
 		}
 
-		AbstractBuilder copyFrom(String field) {
+		Builder copyFrom(String field) {
 			if (copyFrom == null)
 				copyFrom = new LinkedHashSet<>();
 			copyFrom.add(field);

@@ -27,7 +27,8 @@ import org.apache.lucene.search.SortField;
 class LongPointType extends StorableFieldType {
 
 	LongPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.LONG_POINT);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.LONG_POINT));
 	}
 
 	@Override

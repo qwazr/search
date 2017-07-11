@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,10 +24,11 @@ import org.apache.lucene.facet.taxonomy.IntAssociationFacetField;
 import javax.ws.rs.core.Response;
 import java.util.Objects;
 
-class IntAssociationFacetType extends FieldTypeAbstract {
+class IntAssociationFacetType extends CustomFieldTypeAbstract {
 
 	IntAssociationFacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.INT_FACET);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.INT_FACET));
 	}
 
 	@Override

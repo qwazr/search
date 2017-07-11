@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 public class FieldMap {
 
@@ -78,6 +79,14 @@ public class FieldMap {
 
 	}
 
+	public final boolean isEmpty() {
+		return fieldDefinitionMap.isEmpty();
+	}
+
+	public final void forEach(final BiConsumer<String, FieldTypeInterface> consumer) {
+		nameDefMap.forEach(consumer);
+	}
+
 	final public FieldTypeInterface getFieldType(final String fieldName) {
 		if (fieldName == null || fieldName.isEmpty())
 			throw new IllegalArgumentException("Empty fieldname is not allowed");
@@ -100,6 +109,7 @@ public class FieldMap {
 		final FieldTypeInterface fieldType = getFieldType(fieldName);
 		if (fieldType == null)
 			return;
+		fieldType.setFacetsConfig(fieldName, facetsConfig);
 		final FieldDefinition definition = fieldType.getDefinition();
 		if (definition == null || definition.template == null)
 			return;
@@ -117,7 +127,6 @@ public class FieldMap {
 			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD);
 			break;
 		}
-		definition.setFacetsConfig(fieldName, facetsConfig);
 	}
 
 	final public FacetsConfig getFacetsConfig(final Collection<String> concreteFieldNames) {

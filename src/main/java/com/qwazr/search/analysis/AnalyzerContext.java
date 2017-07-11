@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.analysis;
 
-import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.LoggerUtils;
@@ -40,10 +40,10 @@ public class AnalyzerContext {
 	public final Map<String, Analyzer> queryAnalyzerMap;
 
 	public AnalyzerContext(final ConstructorParametersImpl instanceFactory, final ResourceLoader resourceLoader,
-			final Map<String, FieldDefinition> fields, final boolean failOnException,
+			final FieldMap fieldMap, final boolean failOnException,
 			final Map<String, ? extends AnalyzerFactory>... analyzerFactoryMaps) throws ServerException {
 
-		if (fields == null || fields.size() == 0) {
+		if (fieldMap == null || fieldMap.isEmpty()) {
 			this.indexAnalyzerMap = Collections.emptyMap();
 			this.queryAnalyzerMap = Collections.emptyMap();
 			return;
@@ -54,21 +54,21 @@ public class AnalyzerContext {
 
 		final AnalyzerMapBuilder builder = new AnalyzerMapBuilder(instanceFactory, resourceLoader, analyzerFactoryMaps);
 
-		fields.forEach((fieldName, fieldDef) -> {
+		fieldMap.forEach((fieldName, fieldType) -> {
 			try {
-				fieldDef.setIndexAnalyzer(fieldName, (field, analyzerDescriptor) -> {
+				fieldType.setIndexAnalyzer(fieldName, (field, analyzerDescriptor) -> {
 					final Analyzer analyzer = builder.findAnalyzer(analyzerDescriptor);
 					if (analyzer != null)
 						indexAnalyzerMap.put(field, analyzer);
 				});
-				fieldDef.setQueryAnalyzer(fieldName, (field, analyzerDescriptor) -> {
+				fieldType.setQueryAnalyzer(fieldName, (field, analyzerDescriptor) -> {
 					final Analyzer analyzer = builder.findAnalyzer(analyzerDescriptor);
 					if (analyzer != null)
 						queryAnalyzerMap.put(field, analyzer);
 				});
 
 			} catch (ReflectiveOperationException | IOException e) {
-				final String msg = "Analyzer class " + fieldDef + " not known for the field " + fieldName;
+				final String msg = "Analyzer class not known for the field " + fieldName;
 				if (failOnException)
 					throw new ServerException(Response.Status.NOT_ACCEPTABLE, msg, e);
 				LOGGER.log(Level.WARNING, msg, e);

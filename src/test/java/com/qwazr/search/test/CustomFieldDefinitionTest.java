@@ -36,7 +36,7 @@ import java.util.Map;
 public class CustomFieldDefinitionTest {
 
 	private static List<FieldDefinition> fields;
-	private static CustomFieldDefinition.Builder builder;
+	private static CustomFieldDefinition.CustomBuilder builder;
 	private static Map<String, Object> map;
 
 	@BeforeClass
@@ -46,7 +46,7 @@ public class CustomFieldDefinitionTest {
 		map = new LinkedHashMap<>();
 	}
 
-	public void checkFields(CustomFieldDefinition.Builder builder, String key, Object value) throws IOException {
+	public void checkFields(CustomFieldDefinition.CustomBuilder builder, String key, Object value) throws IOException {
 		map.put(key, value);
 		String jsonString = JsonMapper.MAPPER.writeValueAsString(map);
 		final FieldDefinition fieldBuilder = builder.build();

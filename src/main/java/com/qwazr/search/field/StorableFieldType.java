@@ -15,17 +15,14 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 
-abstract class StorableFieldType extends FieldTypeAbstract<CustomFieldDefinition> {
+abstract class StorableFieldType extends CustomFieldTypeAbstract {
 
 	protected final Field.Store store;
 
-	StorableFieldType(final WildcardMatcher wildcardMatcher, final CustomFieldDefinition definition,
-			final BytesRefUtils.Converter bytesRefConverter) {
-		super(wildcardMatcher, definition, bytesRefConverter);
+	StorableFieldType(final Builder<CustomFieldDefinition> builder) {
+		super(builder);
 		this.store = definition == null ?
 				Field.Store.NO :
 				(definition.stored != null && definition.stored) ? Field.Store.YES : Field.Store.NO;

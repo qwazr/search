@@ -129,8 +129,7 @@ final public class IndexInstance implements Closeable {
 		this.localAnalyzerFactoryMap = builder.localAnalyzerFactoryMap;
 		this.analyzerDefinitionMap = CustomAnalyzer.createDefinitionMap(localAnalyzerFactoryMap);
 		this.globalAnalyzerFactoryMap = builder.globalAnalyzerFactoryMap;
-		this.fieldMap = builder.fieldMap == null ? null : new FieldMap(builder.fieldMap,
-				builder.settings.sortedSetFacetField);
+		this.fieldMap = builder.fieldMap;
 		this.writerAndSearcher = builder.writerAndSearcher;
 		this.indexAnalyzer = builder.indexAnalyzer;
 		this.queryAnalyzer = builder.queryAnalyzer;
@@ -204,8 +203,8 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private void refreshFieldsAnalyzers() throws IOException {
-		final AnalyzerContext analyzerContext = new AnalyzerContext(instanceFactory, fileResourceLoader,
-				fieldMap.getFieldDefinitionMap(), true, globalAnalyzerFactoryMap, localAnalyzerFactoryMap);
+		final AnalyzerContext analyzerContext = new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, true,
+				globalAnalyzerFactoryMap, localAnalyzerFactoryMap);
 		indexAnalyzer.update(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext.queryAnalyzerMap);
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,10 +29,10 @@ import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 
-class BinaryDocValuesType extends FieldTypeAbstract {
+class BinaryDocValuesType extends CustomFieldTypeAbstract {
 
 	BinaryDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, null);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition));
 	}
 
 	@Override

@@ -15,9 +15,11 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
+import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
@@ -39,4 +41,23 @@ public interface FieldTypeInterface {
 	FieldDefinition getDefinition();
 
 	void copyTo(final String fieldName, final FieldTypeInterface fieldType);
+
+	void setFacetsConfig(String fieldName, FacetsConfig facetsConfig);
+
+	void setIndexAnalyzer(String fieldName, AnalyzerContext.Builder builder)
+			throws ReflectiveOperationException, IOException;
+
+	void setQueryAnalyzer(String fieldName, AnalyzerContext.Builder builder)
+			throws ReflectiveOperationException, IOException;
+
+	@FunctionalInterface
+	interface Facet {
+		void config(String fieldName, FacetsConfig facetsConfig);
+	}
+
+	@FunctionalInterface
+	interface Analyzer {
+		void config(String fieldName, AnalyzerContext.Builder builder) throws ReflectiveOperationException, IOException;
+	}
+
 }

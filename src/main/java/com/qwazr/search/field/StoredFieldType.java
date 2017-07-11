@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,10 +23,11 @@ import org.apache.lucene.document.StoredField;
 import java.io.Externalizable;
 import java.io.Serializable;
 
-class StoredFieldType extends FieldTypeAbstract {
+class StoredFieldType extends CustomFieldTypeAbstract {
 
 	StoredFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.STRING);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.STRING));
 	}
 
 	@Override

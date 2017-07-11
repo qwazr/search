@@ -15,18 +15,17 @@
  */
 package com.qwazr.search.field;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.qwazr.search.analysis.AnalyzerContext;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.FieldType;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -34,112 +33,120 @@ import java.util.Objects;
 public class CustomFieldDefinition extends FieldDefinition {
 
 	public final String analyzer;
-	public final String query_analyzer;
+	@JsonProperty("query_analyzer")
+	public final String queryAnalyzer;
 	public final Boolean tokenized;
 	public final Boolean stored;
-	public final Boolean store_termvectors;
-	public final Boolean store_termvector_offsets;
-	public final Boolean store_termvector_positions;
-	public final Boolean store_termvector_payloads;
-	public final Boolean omit_norms;
-	public final Boolean facet_multivalued;
-	public final Boolean facet_hierarchical;
-	public final Boolean facet_require_dim_count;
+	@JsonProperty("store_termvectors")
+	public final Boolean storeTermVectors;
+	@JsonProperty("store_termvector_offsets")
+	public final Boolean storeTermVectorOffsets;
+	@JsonProperty("store_termvector_positions")
+	public final Boolean storeTermVectorPositions;
+	@JsonProperty("store_termvector_payloads")
+	public final Boolean storeTermVectorPayloads;
+	@JsonProperty("omit_norms")
+	public final Boolean omitNorms;
+	@JsonProperty("facet_multivalued")
+	public final Boolean facetMultivalued;
+	@JsonProperty("facet_hierarchical")
+	public final Boolean facetHierarchical;
+	@JsonProperty("facet_require_dim_count")
+	public final Boolean facetRequireDimCount;
 	@Deprecated
-	public final FieldType.LegacyNumericType numeric_type;
-	public final IndexOptions index_options;
-	public final DocValuesType docvalues_type;
-	public final Integer dimension_count;
-	public final Integer dimension_num_bytes;
+	@JsonProperty("numeric_type")
+	public final FieldType.LegacyNumericType numericType;
+	@JsonProperty("index_options")
+	public final IndexOptions indexOptions;
+	@JsonProperty("docvalues_type")
+	public final DocValuesType docValuesType;
+	@JsonProperty("dimension_count")
+	public final Integer dimensionCount;
+	@JsonProperty("dimension_num_bytes")
+	public final Integer dimensionNumBytes;
 
-	public CustomFieldDefinition() {
-		super(null, null);
-		analyzer = null;
-		query_analyzer = null;
-		tokenized = null;
-		stored = null;
-		store_termvectors = null;
-		store_termvector_offsets = null;
-		store_termvector_positions = null;
-		store_termvector_payloads = null;
-		omit_norms = null;
-		numeric_type = null;
-		index_options = null;
-		docvalues_type = null;
-		dimension_count = null;
-		dimension_num_bytes = null;
-		facet_multivalued = null;
-		facet_hierarchical = null;
-		facet_require_dim_count = null;
+	@JsonCreator
+	public CustomFieldDefinition(@JsonProperty("template") final Template template,
+			@JsonProperty("analyzer") final String analyzer, @JsonProperty("query_analyzer") final String queryAnalyzer,
+			@JsonProperty("tokenized") final Boolean tokenized, @JsonProperty("stored") final Boolean stored,
+			@JsonProperty("store_termvectors") final Boolean storeTermVectors,
+			@JsonProperty("store_termvector_offsets") final Boolean storeTermVectorOffsets,
+			@JsonProperty("store_termvector_positions") final Boolean storeTermVectorPositions,
+			@JsonProperty("store_termvector_payloads") final Boolean storeTermVectorPayloads,
+			@JsonProperty("omit_norms") final Boolean omitNorms,
+			@JsonProperty("facet_multivalued") final Boolean facetMultivalued,
+			@JsonProperty("facet_hierarchical") final Boolean facetHierarchical,
+			@JsonProperty("facet_require_dim_count") final Boolean facetRequireDimCount,
+			@JsonProperty("numeric_type")            final FieldType.LegacyNumericType numericType,
+			@JsonProperty("index_options")            final IndexOptions indexOptions,
+			@JsonProperty("docvalues_type")    final DocValuesType docValuesType,
+			@JsonProperty("dimension_count")    final Integer dimensionCount,
+			@JsonProperty("dimension_num_bytes")    final Integer dimensionNumBytes,
+			@JsonProperty("copy_from") String[] copyFrom) {
+		super(template, copyFrom);
+		this.analyzer = analyzer;
+		this.queryAnalyzer = queryAnalyzer;
+		this.tokenized = tokenized;
+		this.stored = stored;
+		this.storeTermVectors = storeTermVectors;
+		this.storeTermVectorOffsets = storeTermVectorOffsets;
+		this.storeTermVectorPositions = storeTermVectorPositions;
+		this.storeTermVectorPayloads = storeTermVectorPayloads;
+		this.omitNorms = omitNorms;
+		this.facetMultivalued = facetMultivalued;
+		this.facetHierarchical = facetHierarchical;
+		this.facetRequireDimCount = facetRequireDimCount;
+		this.numericType = numericType;
+		this.indexOptions = indexOptions;
+		this.docValuesType = docValuesType;
+		this.dimensionCount = dimensionCount;
+		this.dimensionNumBytes = dimensionNumBytes;
 	}
 
-	private CustomFieldDefinition(Builder builder) {
+	private CustomFieldDefinition(CustomBuilder builder) {
 		super(builder);
-		analyzer = builder.analyzer;
-		query_analyzer = builder.query_analyzer;
-		tokenized = builder.tokenized;
-		stored = builder.stored;
-		store_termvectors = builder.store_termvectors;
-		store_termvector_offsets = builder.store_termvector_offsets;
-		store_termvector_positions = builder.store_termvector_positions;
-		store_termvector_payloads = builder.store_termvector_payloads;
-		omit_norms = builder.omit_norms;
-		numeric_type = builder.numeric_type;
-		index_options = builder.index_options;
-		docvalues_type = builder.docvalues_type;
-		dimension_count = builder.dimension_count;
-		dimension_num_bytes = builder.dimension_num_bytes;
-		facet_multivalued = builder.facet_multivalued;
-		facet_hierarchical = builder.facet_hierarchical;
-		facet_require_dim_count = builder.facet_require_dim_count;
+		this.analyzer = builder.analyzer;
+		this.queryAnalyzer = builder.queryAnalyzer;
+		this.tokenized = builder.tokenized;
+		this.stored = builder.stored;
+		this.storeTermVectors = builder.storeTermVectors;
+		this.storeTermVectorOffsets = builder.storeTermVectorOffsets;
+		this.storeTermVectorPositions = builder.storeTermVectorPositions;
+		this.storeTermVectorPayloads = builder.storeTermVectorPayloads;
+		this.omitNorms = builder.omitNorms;
+		this.facetMultivalued = builder.facetMultivalued;
+		this.facetHierarchical = builder.facetHierarchical;
+		this.facetRequireDimCount = builder.facetRequireDimCount;
+		this.numericType = builder.numericType;
+		this.indexOptions = builder.indexOptions;
+		this.docValuesType = builder.docValuesType;
+		this.dimensionCount = builder.dimensionCount;
+		this.dimensionNumBytes = builder.dimensionNumBytes;
 	}
 
 	public CustomFieldDefinition(final String fieldName, final IndexField indexField, final Map<String, Copy> copyMap) {
-		super(fieldName, indexField, copyMap);
+		super(indexField.template(), from(fieldName, copyMap));
 		analyzer = indexField.analyzerClass() != Analyzer.class ?
 				indexField.analyzerClass().getName() :
 				StringUtils.isEmpty(indexField.analyzer()) ? null : indexField.analyzer();
-		query_analyzer = indexField.queryAnalyzerClass() != Analyzer.class ?
+		queryAnalyzer = indexField.queryAnalyzerClass() != Analyzer.class ?
 				indexField.queryAnalyzerClass().getName() :
 				StringUtils.isEmpty(indexField.queryAnalyzer()) ? null : indexField.queryAnalyzer();
 		tokenized = indexField.tokenized();
 		stored = indexField.stored();
-		store_termvectors = indexField.storeTermVectors();
-		store_termvector_offsets = indexField.storeTermVectorOffsets();
-		store_termvector_positions = indexField.storeTermVectorPositions();
-		store_termvector_payloads = indexField.storeTermVectorPayloads();
-		omit_norms = indexField.omitNorms();
-		numeric_type = indexField.numericType().type;
-		index_options = indexField.indexOptions();
-		docvalues_type = indexField.docValuesType();
-		dimension_count = indexField.dimensionCount();
-		dimension_num_bytes = indexField.dimensionNumBytes();
-		facet_multivalued = indexField.facetMultivalued();
-		facet_hierarchical = indexField.facetHierarchical();
-		facet_require_dim_count = indexField.facetRequireDimCount();
-	}
-
-	@Override
-	final public void setFacetsConfig(final String fieldName, final FacetsConfig facetsConfig) {
-		if (facet_multivalued != null)
-			facetsConfig.setMultiValued(fieldName, facet_multivalued);
-		if (facet_hierarchical != null)
-			facetsConfig.setHierarchical(fieldName, facet_hierarchical);
-		if (facet_require_dim_count != null)
-			facetsConfig.setRequireDimCount(fieldName, facet_require_dim_count);
-	}
-
-	final public void setIndexAnalyzer(final String fieldName, final AnalyzerContext.Builder builder)
-			throws ReflectiveOperationException, IOException {
-		if (!StringUtils.isEmpty(analyzer))
-			builder.add(fieldName, analyzer);
-	}
-
-	final public void setQueryAnalyzer(final String fieldName, final AnalyzerContext.Builder builder)
-			throws ReflectiveOperationException, IOException {
-		final String analyzerDescriptor = StringUtils.isEmpty(query_analyzer) ? analyzer : query_analyzer;
-		if (!StringUtils.isEmpty(analyzerDescriptor))
-			builder.add(fieldName, analyzerDescriptor);
+		storeTermVectors = indexField.storeTermVectors();
+		storeTermVectorOffsets = indexField.storeTermVectorOffsets();
+		storeTermVectorPositions = indexField.storeTermVectorPositions();
+		storeTermVectorPayloads = indexField.storeTermVectorPayloads();
+		omitNorms = indexField.omitNorms();
+		numericType = indexField.numericType().type;
+		indexOptions = indexField.indexOptions();
+		docValuesType = indexField.docValuesType();
+		dimensionCount = indexField.dimensionCount();
+		dimensionNumBytes = indexField.dimensionNumBytes();
+		facetMultivalued = indexField.facetMultivalued();
+		facetHierarchical = indexField.facetHierarchical();
+		facetRequireDimCount = indexField.facetRequireDimCount();
 	}
 
 	@Override
@@ -153,159 +160,159 @@ public class CustomFieldDefinition extends FieldDefinition {
 		final CustomFieldDefinition f = (CustomFieldDefinition) o;
 		if (!Objects.equals(analyzer, f.analyzer))
 			return false;
-		if (!Objects.equals(query_analyzer, f.query_analyzer))
+		if (!Objects.equals(queryAnalyzer, f.queryAnalyzer))
 			return false;
 		if (!Objects.equals(tokenized, f.tokenized))
 			return false;
 		if (!Objects.equals(stored, f.stored))
 			return false;
-		if (!Objects.equals(store_termvectors, f.store_termvectors))
+		if (!Objects.equals(storeTermVectors, f.storeTermVectors))
 			return false;
-		if (!Objects.equals(store_termvector_offsets, f.store_termvector_offsets))
+		if (!Objects.equals(storeTermVectorOffsets, f.storeTermVectorOffsets))
 			return false;
-		if (!Objects.equals(store_termvector_positions, f.store_termvector_positions))
+		if (!Objects.equals(storeTermVectorPositions, f.storeTermVectorPositions))
 			return false;
-		if (!Objects.equals(store_termvector_payloads, f.store_termvector_payloads))
+		if (!Objects.equals(storeTermVectorPayloads, f.storeTermVectorPayloads))
 			return false;
-		if (!Objects.equals(omit_norms, f.omit_norms))
+		if (!Objects.equals(omitNorms, f.omitNorms))
 			return false;
-		if (!Objects.equals(numeric_type, f.numeric_type))
+		if (!Objects.equals(numericType, f.numericType))
 			return false;
-		if (!Objects.equals(index_options, f.index_options))
+		if (!Objects.equals(indexOptions, f.indexOptions))
 			return false;
-		if (!Objects.equals(docvalues_type, f.docvalues_type))
+		if (!Objects.equals(docValuesType, f.docValuesType))
 			return false;
-		if (!Objects.equals(dimension_count, f.dimension_count))
+		if (!Objects.equals(dimensionCount, f.dimensionCount))
 			return false;
-		if (!Objects.equals(dimension_num_bytes, f.dimension_num_bytes))
+		if (!Objects.equals(dimensionNumBytes, f.dimensionNumBytes))
 			return false;
-		if (!Objects.equals(facet_multivalued, f.facet_multivalued))
+		if (!Objects.equals(facetMultivalued, f.facetMultivalued))
 			return false;
-		if (!Objects.equals(facet_hierarchical, f.facet_hierarchical))
+		if (!Objects.equals(facetHierarchical, f.facetHierarchical))
 			return false;
-		if (!Objects.equals(facet_require_dim_count, f.facet_require_dim_count))
+		if (!Objects.equals(facetRequireDimCount, f.facetRequireDimCount))
 			return false;
 		return true;
 	}
 
-	public static Builder of() {
-		return new Builder();
+	public static CustomBuilder of() {
+		return new CustomBuilder();
 	}
 
-	public static Builder of(Template template) {
-		return new Builder().template(template);
+	public static CustomBuilder of(Template template) {
+		return of().template(template);
 	}
 
-	public static class Builder extends AbstractBuilder {
+	public static class CustomBuilder extends Builder {
 
-		private String analyzer = null;
-		private String query_analyzer = null;
-		private Boolean tokenized = null;
-		private Boolean stored = null;
-		private Boolean store_termvectors = null;
-		private Boolean store_termvector_offsets = null;
-		private Boolean store_termvector_positions = null;
-		private Boolean store_termvector_payloads = null;
-		private Boolean omit_norms = null;
-		private FieldType.LegacyNumericType numeric_type = null;
-		private IndexOptions index_options = null;
-		private DocValuesType docvalues_type = null;
-		private Integer dimension_count = null;
-		private Integer dimension_num_bytes = null;
-		private Boolean facet_multivalued = null;
-		private Boolean facet_hierarchical = null;
-		private Boolean facet_require_dim_count = null;
+		private String analyzer;
+		private String queryAnalyzer;
+		private Boolean tokenized;
+		private Boolean stored;
+		private Boolean storeTermVectors;
+		private Boolean storeTermVectorOffsets;
+		private Boolean storeTermVectorPositions;
+		private Boolean storeTermVectorPayloads;
+		private Boolean omitNorms;
+		private FieldType.LegacyNumericType numericType;
+		private IndexOptions indexOptions;
+		private DocValuesType docValuesType;
+		private Integer dimensionCount;
+		private Integer dimensionNumBytes;
+		private Boolean facetMultivalued;
+		private Boolean facetHierarchical;
+		private Boolean facetRequireDimCount;
 
-		public Builder template(Template template) {
-			return (Builder) super.template(template);
+		public CustomBuilder template(Template template) {
+			return (CustomBuilder) super.template(template);
 		}
 
-		public Builder copyFrom(String copyFrom) {
-			return (Builder) super.copyFrom(copyFrom);
+		public CustomBuilder copyFrom(String copyFrom) {
+			return (CustomBuilder) super.copyFrom(copyFrom);
 		}
 
-		public Builder analyzer(String analyzer) {
+		public CustomBuilder analyzer(String analyzer) {
 			this.analyzer = analyzer;
 			return this;
 		}
 
-		public Builder queryAnalyzer(String query_analyzer) {
-			this.query_analyzer = query_analyzer;
+		public CustomBuilder queryAnalyzer(String queryAnalyzer) {
+			this.queryAnalyzer = queryAnalyzer;
 			return this;
 		}
 
-		public Builder tokenized(Boolean tokenized) {
+		public CustomBuilder tokenized(Boolean tokenized) {
 			this.tokenized = tokenized;
 			return this;
 		}
 
-		public Builder stored(Boolean stored) {
+		public CustomBuilder stored(Boolean stored) {
 			this.stored = stored;
 			return this;
 		}
 
-		public Builder storeTermVectors(Boolean store_termvectors) {
-			this.store_termvectors = store_termvectors;
+		public CustomBuilder storeTermVectors(Boolean storeTermVectors) {
+			this.storeTermVectors = storeTermVectors;
 			return this;
 		}
 
-		public Builder storeTermVectorOffsets(Boolean store_termvector_offsets) {
-			this.store_termvector_offsets = store_termvector_offsets;
+		public CustomBuilder storeTermVectorOffsets(Boolean storeTermVectorOffsets) {
+			this.storeTermVectorOffsets = storeTermVectorOffsets;
 			return this;
 		}
 
-		public Builder storeTermVectorPositions(Boolean store_termvector_positions) {
-			this.store_termvector_positions = store_termvector_positions;
+		public CustomBuilder storeTermVectorPositions(Boolean storeTermVectorPositions) {
+			this.storeTermVectorPositions = storeTermVectorPositions;
 			return this;
 		}
 
-		public Builder storeTermVectorPayloads(Boolean store_termvector_payloads) {
-			this.store_termvector_payloads = store_termvector_payloads;
+		public CustomBuilder storeTermVectorPayloads(Boolean storeTermVectorPayloads) {
+			this.storeTermVectorPayloads = storeTermVectorPayloads;
 			return this;
 		}
 
-		public Builder omitNorms(Boolean omit_norms) {
-			this.omit_norms = omit_norms;
+		public CustomBuilder omitNorms(Boolean omitNorms) {
+			this.omitNorms = omitNorms;
 			return this;
 		}
 
-		public Builder numericType(FieldType.LegacyNumericType numeric_type) {
-			this.numeric_type = numeric_type;
+		public CustomBuilder numericType(FieldType.LegacyNumericType numericType) {
+			this.numericType = numericType;
 			return this;
 		}
 
-		public Builder indexOptions(IndexOptions index_options) {
-			this.index_options = index_options;
+		public CustomBuilder indexOptions(IndexOptions indexOptions) {
+			this.indexOptions = indexOptions;
 			return this;
 		}
 
-		public Builder docValuesType(DocValuesType docvalues_type) {
-			this.docvalues_type = docvalues_type;
+		public CustomBuilder docValuesType(DocValuesType docValuesType) {
+			this.docValuesType = docValuesType;
 			return this;
 		}
 
-		public Builder dimensionCount(Integer dimension_count) {
-			this.dimension_count = dimension_count;
+		public CustomBuilder dimensionCount(Integer dimensionCount) {
+			this.dimensionCount = dimensionCount;
 			return this;
 		}
 
-		public Builder dimensionNumBytes(Integer dimension_num_bytes) {
-			this.dimension_num_bytes = dimension_num_bytes;
+		public CustomBuilder dimensionNumBytes(Integer dimensionNumBytes) {
+			this.dimensionNumBytes = dimensionNumBytes;
 			return this;
 		}
 
-		public Builder facetMultivalued(Boolean facet_multivalued) {
-			this.facet_multivalued = facet_multivalued;
+		public CustomBuilder facetMultivalued(Boolean facetMultivalued) {
+			this.facetMultivalued = facetMultivalued;
 			return this;
 		}
 
-		public Builder facetHierarchical(Boolean facet_hierarchical) {
-			this.facet_hierarchical = facet_hierarchical;
+		public CustomBuilder facetHierarchical(Boolean facetHierarchical) {
+			this.facetHierarchical = facetHierarchical;
 			return this;
 		}
 
-		public Builder facetRequireDimCount(Boolean facet_require_dim_count) {
-			this.facet_require_dim_count = facet_require_dim_count;
+		public CustomBuilder facetRequireDimCount(Boolean facetRequireDimCount) {
+			this.facetRequireDimCount = facetRequireDimCount;
 			return this;
 		}
 

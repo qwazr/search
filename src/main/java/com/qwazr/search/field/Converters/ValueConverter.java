@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +46,7 @@ public abstract class ValueConverter<T, V> {
 
 	private final static ValueConverter newNumericConverter(CustomFieldDefinition fieldDef,
 			NumericDocValues numericDocValues) throws IOException {
-		if (fieldDef.numeric_type == null) {
+		if (fieldDef.numericType == null) {
 			if (fieldDef.template == null)
 				return null;
 			switch (fieldDef.template) {
@@ -62,9 +62,9 @@ public abstract class ValueConverter<T, V> {
 				return null;
 			}
 		}
-		if (fieldDef.docvalues_type != DocValuesType.NUMERIC)
+		if (fieldDef.docValuesType != DocValuesType.NUMERIC)
 			return null;
-		switch (fieldDef.numeric_type) {
+		switch (fieldDef.numericType) {
 		case DOUBLE:
 			return new SingleDVConverter.DoubleDVConverter(numericDocValues);
 		case FLOAT:
@@ -79,7 +79,7 @@ public abstract class ValueConverter<T, V> {
 
 	private final static ValueConverter newSortedNumericConverter(CustomFieldDefinition fieldDef,
 			SortedNumericDocValues sortedNumericDocValues) throws IOException {
-		if (fieldDef.numeric_type == null) {
+		if (fieldDef.numericType == null) {
 			if (fieldDef.template == null)
 				return null;
 			switch (fieldDef.template) {
@@ -95,9 +95,9 @@ public abstract class ValueConverter<T, V> {
 				return null;
 			}
 		}
-		if (fieldDef.docvalues_type != DocValuesType.SORTED_SET)
+		if (fieldDef.docValuesType != DocValuesType.SORTED_SET)
 			return null;
-		switch (fieldDef.numeric_type) {
+		switch (fieldDef.numericType) {
 		case DOUBLE:
 			return new MultiDVConverter.DoubleSetDVConverter(sortedNumericDocValues);
 		case FLOAT:
@@ -115,7 +115,7 @@ public abstract class ValueConverter<T, V> {
 		if (fieldDefinition == null || !(fieldDefinition instanceof CustomFieldDefinition))
 			return null;
 		final CustomFieldDefinition fieldDef = (CustomFieldDefinition) fieldDefinition;
-		final DocValuesType type = fieldDef.docvalues_type;
+		final DocValuesType type = fieldDef.docValuesType;
 		if (type != null && type != DocValuesType.NONE)
 			return newDocValueConverter(reader, fieldName, fieldDef, type);
 		return null;

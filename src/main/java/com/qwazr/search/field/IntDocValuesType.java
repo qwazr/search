@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,10 +29,10 @@ import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
 
-class IntDocValuesType extends FieldTypeAbstract {
+class IntDocValuesType extends CustomFieldTypeAbstract {
 
 	IntDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, definition, BytesRefUtils.Converter.INT);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.INT));
 	}
 
 	@Override

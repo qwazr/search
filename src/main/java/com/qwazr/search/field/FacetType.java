@@ -27,7 +27,8 @@ import java.util.Arrays;
 class FacetType extends StorableFieldType {
 
 	FacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.STRING);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.STRING));
 	}
 
 	@Override

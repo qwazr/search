@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,8 @@ import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 class SortedSetDocValuesFacetType extends StorableFieldType {
 
 	SortedSetDocValuesFacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.STRING);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.STRING));
 	}
 
 	@Override

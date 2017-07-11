@@ -25,7 +25,8 @@ import org.apache.lucene.search.SortField;
 class StringFieldType extends StorableFieldType {
 
 	StringFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.STRING);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.STRING));
 	}
 
 	@Override

@@ -25,7 +25,8 @@ import org.apache.lucene.document.StoredField;
 class DoublePointType extends StorableFieldType {
 
 	DoublePointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.DOUBLE_POINT);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.DOUBLE_POINT));
 	}
 
 	@Override

@@ -23,7 +23,8 @@ import org.apache.lucene.document.TextField;
 class TextFieldType extends StorableFieldType {
 
 	TextFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.STRING);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.STRING));
 	}
 
 	@Override

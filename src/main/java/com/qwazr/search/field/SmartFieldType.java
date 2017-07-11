@@ -17,9 +17,9 @@ package com.qwazr.search.field;
 
 import com.qwazr.utils.WildcardMatcher;
 
-class SmartField extends FieldTypeAbstract {
+class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 
-	SmartField(WildcardMatcher wildcardMatcher, FieldDefinition definition) {
-		super(wildcardMatcher, definition, null);
+	SmartFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+		super(of(wildcardMatcher, (SmartFieldDefinition) definition));
 	}
 }

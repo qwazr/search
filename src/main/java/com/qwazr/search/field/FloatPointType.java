@@ -25,7 +25,8 @@ import org.apache.lucene.document.StoredField;
 class FloatPointType extends StorableFieldType {
 
 	FloatPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(wildcardMatcher, (CustomFieldDefinition) definition, BytesRefUtils.Converter.FLOAT_POINT);
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.FLOAT_POINT));
 	}
 
 	@Override
