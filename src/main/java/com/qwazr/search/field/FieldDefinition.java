@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.annotations.Copy;
@@ -43,6 +44,11 @@ import java.util.function.Supplier;
 		include = JsonTypeInfo.As.PROPERTY,
 		property = "type",
 		defaultImpl = CustomFieldDefinition.class)
+@JsonSubTypes({ @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "STRING"),
+		@JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "INTEGER"),
+		@JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "LONG"),
+		@JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "FLOAT"),
+		@JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "DOUBLE") })
 public abstract class FieldDefinition {
 
 	public enum Template {

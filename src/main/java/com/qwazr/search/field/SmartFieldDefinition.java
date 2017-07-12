@@ -37,7 +37,7 @@ public class SmartFieldDefinition extends FieldDefinition {
 	final public Boolean autocomplete;
 
 	public enum Type {
-		TEXT, DATETIME, LONG, INTEGER, DOUBLE, FLOAT;
+		TEXT, LONG, INTEGER, DOUBLE, FLOAT
 	}
 
 	@JsonCreator

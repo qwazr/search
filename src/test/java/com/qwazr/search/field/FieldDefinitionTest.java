@@ -25,11 +25,20 @@ import java.util.Map;
 public class FieldDefinitionTest {
 
 	@Test
-	public void readFieldDefinitionTest() throws IOException {
+	public void readCustomFieldDefinitionTest() throws IOException {
 		Map<String, FieldDefinition> fields = JsonMapper.MAPPER.readValue(
 				com.qwazr.search.test.JavaTest.class.getResourceAsStream("fields.json"),
 				FieldDefinition.MapStringFieldTypeRef);
 		Assert.assertNotNull(fields);
 		fields.forEach((name, field) -> Assert.assertTrue(field instanceof CustomFieldDefinition));
+	}
+
+	@Test
+	public void readSmartFieldDefinitionTest() throws IOException {
+		Map<String, FieldDefinition> fields = JsonMapper.MAPPER.readValue(
+				FieldDefinitionTest.class.getResourceAsStream("smart_fields.json"),
+				FieldDefinition.MapStringFieldTypeRef);
+		Assert.assertNotNull(fields);
+		fields.forEach((name, field) -> Assert.assertTrue(field instanceof SmartFieldDefinition));
 	}
 }

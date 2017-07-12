@@ -21,5 +21,6 @@ class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 
 	SmartFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (SmartFieldDefinition) definition));
+
 	}
 }

@@ -1,0 +1,36 @@
+{
+  "$id$": {
+    "type": "STRING"
+  },
+  "name": {
+    "type": "STRING",
+    "fulltext": true,
+    "sort": true,
+    "autocomplete": true
+  },
+  "description": {
+    "type": "STRING",
+    "fulltext": true,
+    "stored": true,
+    "snippet": true
+  },
+  "category": {
+    "type": "STRING",
+    "facet": true,
+    "fulltext": true
+  },
+  "price": {
+    "type": "DOUBLE",
+    "sort": true,
+    "stored": true
+  },
+  "size": {
+    "type": "LONG",
+    "filter": true
+  },
+  "stock": {
+    "type": "INTEGER",
+    "stored": true,
+    "sort": true
+  }
+}
