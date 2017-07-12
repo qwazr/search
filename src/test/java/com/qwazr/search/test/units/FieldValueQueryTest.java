@@ -25,7 +25,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class FieldValueQueryTest extends AbstractIndexTest {
+public class FieldValueQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
@@ -37,8 +37,8 @@ public class FieldValueQueryTest extends AbstractIndexTest {
 
 	@Test
 	public void hasValue() {
-		ResultDefinition result =
-				indexService.searchQuery(QueryDefinition.of(new FieldValueQuery("intDocValue")).build());
+		ResultDefinition result = indexService.searchQuery(
+				QueryDefinition.of(new FieldValueQuery("intDocValue")).build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(2), result.total_hits);
 	}

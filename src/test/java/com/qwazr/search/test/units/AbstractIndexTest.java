@@ -31,24 +31,31 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
-public abstract class AbstractIndexTest {
+public abstract class AbstractIndexTest<T> {
 
 	private static Path rootDirectory;
 	static IndexManager indexManager;
-	static AnnotatedIndexService<IndexRecord> indexService;
 
 	static final Logger LOGGER = LoggerUtils.getLogger(AbstractIndexTest.class);
 
-	static void initIndexManager() throws IOException, URISyntaxException {
+	private final Class<T> recordClass;
+	protected final AnnotatedIndexService<T> indexService;
+
+	protected AbstractIndexTest(Class<T> recordClass) {
+		this.recordClass = recordClass;
+		try {
+			indexService = indexManager == null ? null : indexManager.getService(recordClass);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected static void initIndexManager() throws IOException, URISyntaxException {
 		rootDirectory = Files.createTempDirectory("qwazr_index_test");
 		indexManager = new IndexManager(rootDirectory, null);
 	}
 
-	static void initIndexService() throws IOException, URISyntaxException {
-		indexService = createIndexService(IndexRecord.class);
-	}
-
-	static <T> AnnotatedIndexService<T> createIndexService(Class<T> recordClass)
+	protected static <T> AnnotatedIndexService<T> initIndexService(Class<T> recordClass)
 			throws URISyntaxException, IOException {
 		if (indexManager == null)
 			initIndexManager();
@@ -59,9 +66,8 @@ public abstract class AbstractIndexTest {
 		return indexService;
 	}
 
-	static ResultDefinition.WithObject<IndexRecord> checkQuery(QueryDefinition queryDef, Long hitsExpected,
-			String queryDebug) {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(queryDef);
+	ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef, Long hitsExpected, String queryDebug) {
+		final ResultDefinition.WithObject<T> result = indexService.searchQuery(queryDef);
 		Assert.assertNotNull(result);
 		if (result.query != null)
 			LOGGER.info(result.query);
@@ -77,7 +83,7 @@ public abstract class AbstractIndexTest {
 		return result;
 	}
 
-	static ResultDefinition.WithObject<IndexRecord> checkQuery(QueryDefinition queryDef) {
+	ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef) {
 		return checkQuery(queryDef, 1L, null);
 	}
 
@@ -91,4 +97,16 @@ public abstract class AbstractIndexTest {
 			FileUtils.deleteDirectoryQuietly(rootDirectory);
 	}
 
+	public static abstract class WithIndexRecord extends AbstractIndexTest<IndexRecord> {
+
+		protected static AnnotatedIndexService<IndexRecord> indexService;
+
+		public WithIndexRecord() {
+			super(IndexRecord.class);
+		}
+
+		static void initIndexService() throws URISyntaxException, IOException {
+			indexService = AbstractIndexTest.initIndexService(IndexRecord.class);
+		}
+	}
 }

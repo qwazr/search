@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class SearchInterfaceTest extends AbstractIndexTest {
+public class SearchInterfaceTest extends AbstractIndexTest.WithIndexRecord {
 
 	private static List<IndexRecord> documents;
 

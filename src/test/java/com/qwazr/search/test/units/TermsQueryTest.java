@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 
-public class TermsQueryTest extends AbstractIndexTest {
+public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
@@ -55,8 +55,8 @@ public class TermsQueryTest extends AbstractIndexTest {
 
 	@Test
 	public void testCollection() {
-		QueryDefinition queryDef =
-				QueryDefinition.of(new TermsQuery(FieldDefinition.ID_FIELD, Arrays.asList("1", "2"))).build();
+		QueryDefinition queryDef = QueryDefinition.of(new TermsQuery(FieldDefinition.ID_FIELD, Arrays.asList("1", "2")))
+				.build();
 		checkQuery(queryDef, 2L);
 	}
 

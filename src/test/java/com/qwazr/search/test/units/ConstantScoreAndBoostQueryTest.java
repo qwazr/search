@@ -27,7 +27,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class ConstantScoreAndBoostQueryTest extends AbstractIndexTest {
+public class ConstantScoreAndBoostQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {

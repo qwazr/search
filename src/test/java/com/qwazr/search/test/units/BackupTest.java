@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.qwazr.search.test.units;
 
 import com.qwazr.search.index.IndexServiceInterface;
@@ -30,7 +29,7 @@ import java.nio.file.Path;
 /**
  * Created by ekeller on 29/05/2017.
  */
-public class BackupTest extends AbstractIndexTest {
+public class BackupTest extends AbstractIndexTest.WithIndexRecord {
 
 	private final static String SCHEMA_NAME = "backup_schema";
 

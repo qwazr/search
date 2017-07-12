@@ -25,7 +25,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class MultiPhraseQueryTest extends AbstractIndexTest {
+public class MultiPhraseQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {

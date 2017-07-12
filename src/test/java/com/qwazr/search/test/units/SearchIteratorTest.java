@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-public class SearchIteratorTest extends AbstractIndexTest {
+public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord {
 
 	private static List<IndexRecord> documents;
 	private static List<IndexRecord> subset;

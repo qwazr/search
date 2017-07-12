@@ -25,7 +25,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class DeleteByQueryTest extends AbstractIndexTest {
+public class DeleteByQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {

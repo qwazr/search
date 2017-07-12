@@ -20,16 +20,16 @@ import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.TermQuery;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class DocValuesCacheTest extends AbstractIndexTest {
+public class DocValuesCacheTest extends AbstractIndexTest.WithIndexRecord {
 
-	@Before
-	public void setup() throws IOException, URISyntaxException {
+	@BeforeClass
+	static public void setup() throws IOException, URISyntaxException {
 		initIndexService();
 	}
 

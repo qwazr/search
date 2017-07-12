@@ -26,7 +26,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class ReturnedFieldsTest extends AbstractIndexTest {
+public class ReturnedFieldsTest extends AbstractIndexTest.WithIndexRecord {
 
 	final private static String[] ID_FIELDS = { "1", "2", "3" };
 	final private static String[] STORED_FIELDS = { "doc1", "doc2", "doc3" };

@@ -20,10 +20,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.TermConsumer;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.search.query.lucene.QueryBuilderFix;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -33,12 +34,15 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MultiFieldQuery extends AbstractQuery {
 
@@ -111,7 +115,6 @@ public class MultiFieldQuery extends AbstractQuery {
 			fieldsBoosts.put(field, boost);
 		else
 			fieldsBoosts.put(field, boost);
-
 		return this;
 	}
 
@@ -122,48 +125,31 @@ public class MultiFieldQuery extends AbstractQuery {
 		if (StringUtils.isEmpty(queryString))
 			return new org.apache.lucene.search.MatchNoDocsQuery();
 
-		// Determine the field level occur operator
-		final BooleanClause.Occur defaultOccur =
-				defaultOperator == null || defaultOperator.queryParseroperator == QueryParser.Operator.AND ?
-						BooleanClause.Occur.MUST :
-						BooleanClause.Occur.SHOULD;
-
 		// Select the right analyzer
 		final Analyzer alzr = analyzer != null ? analyzer : queryContext.getQueryAnalyzer();
 
-		new LinkedHashMap<>();
-		final SortedMap<Integer, List<Query>> byPosQueries = new TreeMap<>();
-		// Build term queries
-		fieldsBoosts.forEach((field, boost) -> {
-			try (final TokenStream tokenStream = alzr.tokenStream(field, queryString)) {
-				final FieldTermsQuery fieldTermsQuery = new FieldTermsQuery(byPosQueries, tokenStream, field,
-						queryContext.getIndexReader());
-				fieldTermsQuery.forEachToken();
-				tokenStream.end();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		});
+		// We look for terms frequency
+		final Map<String, AtomicInteger> termsFreq = new HashMap<>();
+		final Map<String, Set<Offset>> termsOffsets = new HashMap<>();
+		final IndexReader indexReader = queryContext.getIndexReader();
+		if (indexReader != null) {
+			// Build term queries
+			fieldsBoosts.forEach((field, boost) -> {
+				try (final TokenStream tokenStream = alzr.tokenStream(field, queryString)) {
+					new TermsWithFreq(tokenStream, queryContext.getIndexReader(), field, termsFreq,
+							termsOffsets).forEachToken();
+					tokenStream.end();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			});
+		}
 
-		// Build pos queries
-		final List<Query> posQueries = new ArrayList<>();
-		byPosQueries.forEach((position, fieldQueries) -> {
-			posQueries.add(getFieldQuery(fieldQueries));
-		});
-
-		// Build the final query
-		return getRootQuery(minNumberShouldMatch, posQueries, defaultOccur);
-	}
-
-	protected Query getRootQuery(final Integer minNumberShouldMatch, final List<Query> queries,
-			final BooleanClause.Occur defaultOccur) {
-		if (queries.size() == 1)
-			return queries.get(0);
-		final BooleanQuery.Builder builder = new BooleanQuery.Builder();
-		if (minNumberShouldMatch != null)
-			builder.setMinimumNumberShouldMatch(minNumberShouldMatch);
-		queries.forEach(query -> builder.add(new BooleanClause(query, defaultOccur)));
-		return builder.build();
+		// Execute the query
+		return new Builder(alzr, termsFreq, termsOffsets).parse(queryString,
+				defaultOperator == null || defaultOperator.queryParseroperator == QueryParser.Operator.AND ?
+						BooleanClause.Occur.MUST :
+						BooleanClause.Occur.SHOULD);
 	}
 
 	protected Query getFieldQuery(final List<Query> queries) {
@@ -178,48 +164,130 @@ public class MultiFieldQuery extends AbstractQuery {
 		}
 	}
 
-	protected Query getTermQuery(final int minTermFreq, final Term term) {
-		if (minTermFreq == 0)
-			return new org.apache.lucene.search.FuzzyQuery(term);
-		else
-			return new org.apache.lucene.search.TermQuery(term);
+	protected Query getRootQuery(final Integer minNumberShouldMatch, final List<Query> queries,
+			final BooleanClause.Occur defaultOccur) {
+		if (queries.size() == 1)
+			return queries.get(0);
+		final BooleanQuery.Builder builder = new BooleanQuery.Builder();
+		if (minNumberShouldMatch != null)
+			builder.setMinimumNumberShouldMatch(minNumberShouldMatch);
+		queries.forEach(query -> builder.add(new BooleanClause(query, defaultOccur)));
+		return builder.build();
 	}
 
-	private class FieldTermsQuery extends TermConsumer.WithChar {
+	protected Query getTermQuery(final int freq, final Term term) {
+		Query query;
+		if (freq > 0)
+			query = new org.apache.lucene.search.TermQuery(term);
+		else
+			query = new org.apache.lucene.search.FuzzyQuery(term);
+		final Float boost = fieldsBoosts.get(term.field());
+		if (boost != null && boost != 1.0F)
+			query = new org.apache.lucene.search.BoostQuery(query, boost);
+		return query;
+	}
 
-		private final PositionIncrementAttribute posIncAttr;
+	private class TermsWithFreq extends TermConsumer.WithChar {
 
-		private final SortedMap<Integer, List<Query>> byPosQueries;
-		private final String field;
-		private final float boost;
+		private final OffsetAttribute offsetAttr;
+
 		private final IndexReader indexReader;
-		private int minTermFreq;
-		private int currentPos;
+		private final String field;
+		private final Map<String, AtomicInteger> termsFreq;
+		private final Map<String, Set<Offset>> termsOffset;
 
-		private FieldTermsQuery(final SortedMap<Integer, List<Query>> byPosQueries, final TokenStream tokenStream,
-				final String field, final IndexReader indexReader) {
+		private TermsWithFreq(final TokenStream tokenStream, final IndexReader indexReader, final String field,
+				final Map<String, AtomicInteger> termsFreq, final Map<String, Set<Offset>> termsOffset) {
 			super(tokenStream);
-			posIncAttr = TermConsumer.getAttribute(tokenStream, PositionIncrementAttribute.class);
-			this.byPosQueries = byPosQueries;
-			this.field = field;
-			final Float b = fieldsBoosts == null ? null : fieldsBoosts.get(field);
-			this.boost = b == null ? 1.0F : b;
+			offsetAttr = TermConsumer.getAttribute(tokenStream, OffsetAttribute.class);
 			this.indexReader = indexReader;
-			this.minTermFreq = Integer.MAX_VALUE;
-			this.currentPos = 0;
+			this.field = field;
+			this.termsFreq = termsFreq;
+			this.termsOffset = termsOffset;
 		}
 
 		@Override
-		public boolean token() throws IOException {
-			final Term term = new Term(field, charTermAttr.toString());
-			final int freq = indexReader == null ? 0 : indexReader.docFreq(term);
-			minTermFreq = Math.min(freq, minTermFreq);
-			Query termQuery = getTermQuery(minTermFreq, term);
-			byPosQueries.computeIfAbsent(currentPos, ArrayList::new).add(
-					boost == 1.0F ? termQuery : new org.apache.lucene.search.BoostQuery(termQuery, boost));
-			currentPos += posIncAttr.getPositionIncrement();
+		final public boolean token() throws IOException {
+			final String text = charTermAttr.toString();
+			final Term term = new Term(field, text);
+			final int freq = indexReader.docFreq(term);
+			if (freq > 0)
+				termsFreq.computeIfAbsent(text, t -> new AtomicInteger()).addAndGet(freq);
+			termsOffset.computeIfAbsent(text, t -> new LinkedHashSet<>()).add(new Offset(offsetAttr));
 			return true;
 		}
+	}
+
+	final class Offset {
+
+		final int start;
+		final int end;
+
+		private Offset(OffsetAttribute offsetAttr) {
+			this.start = offsetAttr.startOffset();
+			this.end = offsetAttr.endOffset();
+		}
+
+		@Override
+		public int hashCode() {
+			return start * 31 + end;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == null || !(o instanceof Offset))
+				return false;
+			if (o == this)
+				return true;
+			final Offset offset = (Offset) o;
+			return start == offset.start && end == offset.end;
+		}
+	}
+
+	final class Builder extends QueryBuilderFix {
+
+		final Map<String, AtomicInteger> termsFreq;
+		final Map<Offset, List<Query>> perTermQueries;
+		final Map<String, Set<Offset>> termsOffset;
+
+		private Builder(Analyzer analyzer, Map<String, AtomicInteger> termsFreq,
+				Map<String, Set<Offset>> termsOffsets) {
+			super(analyzer);
+			this.termsFreq = termsFreq;
+			this.perTermQueries = new LinkedHashMap<>();
+			this.termsOffset = termsOffsets;
+		}
+
+		@Override
+		final protected Query newSynonymQuery(final Term[] terms) {
+			for (Term term : terms) {
+				final Query query = new org.apache.lucene.search.TermQuery(term);
+				final String text = term.text();
+				final Collection<Offset> offset = termsOffset.get(text);
+				if (offset != null)
+					offset.forEach(o -> perTermQueries.computeIfAbsent(o, (k) -> new ArrayList<>()).add(query));
+			}
+			return super.newSynonymQuery(terms);
+		}
+
+		@Override
+		final protected Query newTermQuery(Term term) {
+			final String text = term.text();
+			final AtomicInteger freq = termsFreq.get(term.text());
+			final Query termQuery = getTermQuery(freq == null ? 0 : freq.get(), term);
+			final Collection<Offset> offset = termsOffset.get(text);
+			if (offset != null)
+				offset.forEach(o -> perTermQueries.computeIfAbsent(o, (k) -> new ArrayList<>()).add(termQuery));
+			return termQuery;
+		}
+
+		final Query parse(final String queryString, final BooleanClause.Occur defaultOperator) {
+			final List<Query> byTermQueries = new ArrayList<>();
+			fieldsBoosts.forEach((field, boost) -> createBooleanQuery(field, queryString));
+			perTermQueries.forEach((t, queries) -> byTermQueries.add(getFieldQuery(queries)));
+			return getRootQuery(minNumberShouldMatch, byTermQueries, defaultOperator);
+		}
+
 	}
 
 }

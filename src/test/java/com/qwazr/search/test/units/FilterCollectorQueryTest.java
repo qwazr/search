@@ -28,7 +28,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class FilterCollectorQueryTest extends AbstractIndexTest {
+public class FilterCollectorQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
@@ -45,8 +45,8 @@ public class FilterCollectorQueryTest extends AbstractIndexTest {
 
 	@Test
 	public void test() {
-		QueryDefinition queryDef =
-				QueryDefinition.of(new IntExactQuery("intPoint", 0)).collector("filter", FilterCollector.class).build();
+		QueryDefinition queryDef = QueryDefinition.of(new IntExactQuery("intPoint", 0)).collector("filter",
+				FilterCollector.class).build();
 		FilterCollector.Query filterQuery = indexService.searchQuery(queryDef).getCollector("filter");
 		Assert.assertNotNull(filterQuery);
 		queryDef = QueryDefinition.of(filterQuery).queryDebug(true).build();

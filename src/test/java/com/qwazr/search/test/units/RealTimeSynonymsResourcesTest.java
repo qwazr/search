@@ -33,7 +33,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class RealTimeSynonymsResourcesTest extends AbstractIndexTest {
+public class RealTimeSynonymsResourcesTest extends AbstractIndexTest.WithIndexRecord {
 
 	final static String[] EN_FR_SYNONYMS = new String[] { "hello world", "bonjour le monde" };
 	final static String[] EN_FR_DE_SYNONYMS = new String[] { "hello world", "bonjour le monde", "hallo welt" };

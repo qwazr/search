@@ -35,7 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-public class PagingTest extends AbstractIndexTest {
+public class PagingTest extends AbstractIndexTest.WithIndexRecord {
 
 	private static LinkedHashMap<String, IndexRecord> documents;
 
@@ -44,8 +44,8 @@ public class PagingTest extends AbstractIndexTest {
 		initIndexService();
 		documents = new LinkedHashMap<>();
 		for (int i = 0; i < RandomUtils.nextInt(201, 299); i++) {
-			final IndexRecord record = new IndexRecord(Integer.toString(i)).sortedDocValue(
-					RandomUtils.alphanumeric(5)).facetField(Integer.toString(RandomUtils.nextInt(1, 3)));
+			final IndexRecord record = new IndexRecord(Integer.toString(i)).sortedDocValue(RandomUtils.alphanumeric(5))
+					.facetField(Integer.toString(RandomUtils.nextInt(1, 3)));
 			documents.put(record.id, record);
 			indexService.postDocument(record);
 		}

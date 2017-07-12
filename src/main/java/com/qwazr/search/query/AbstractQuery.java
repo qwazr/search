@@ -66,7 +66,6 @@ import java.io.IOException;
 		@JsonSubTypes.Type(value = MultiPhraseQuery.class),
 		@JsonSubTypes.Type(value = MoreLikeThisQuery.class),
 		@JsonSubTypes.Type(value = MultiFieldQuery.class),
-		@JsonSubTypes.Type(value = MultiFieldQuery2.class),
 		@JsonSubTypes.Type(value = MultiFieldQueryParser.class),
 		@JsonSubTypes.Type(value = NGramPhraseQuery.class),
 		@JsonSubTypes.Type(value = PayloadScoreQuery.class),

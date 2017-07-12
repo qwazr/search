@@ -23,4 +23,5 @@ class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 		super(of(wildcardMatcher, (SmartFieldDefinition) definition));
 
 	}
+
 }

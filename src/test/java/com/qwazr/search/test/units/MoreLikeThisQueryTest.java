@@ -25,7 +25,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class MoreLikeThisQueryTest extends AbstractIndexTest {
+public class MoreLikeThisQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
@@ -38,9 +38,10 @@ public class MoreLikeThisQueryTest extends AbstractIndexTest {
 	@Test
 	public void mltTest() {
 		ResultDefinition.WithObject<IndexRecord> result;
-		result = indexService.searchQuery(
-				QueryDefinition.of(MoreLikeThisQuery.of("hello again", "mlt").minDocFreq(1).minTermFreq(1).build())
-						.build());
+		result = indexService.searchQuery(QueryDefinition.of(MoreLikeThisQuery.of("hello again", "mlt")
+				.minDocFreq(1)
+				.minTermFreq(1)
+				.build()).build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(2), result.total_hits);
 

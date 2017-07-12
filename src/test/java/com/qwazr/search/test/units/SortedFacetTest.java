@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
-public class SortedFacetTest extends AbstractIndexTest {
+public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord {
 
 	public static List<IndexRecord> documents;
 	public static LinkedHashMap<String, AtomicInteger> facetTerms;

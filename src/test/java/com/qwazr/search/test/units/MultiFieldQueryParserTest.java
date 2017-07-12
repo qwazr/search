@@ -33,7 +33,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class MultiFieldQueryParserTest extends AbstractIndexTest {
+public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException, java.text.ParseException {

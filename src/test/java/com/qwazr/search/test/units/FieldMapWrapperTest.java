@@ -29,7 +29,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FieldMapWrapperTest extends AbstractIndexTest {
+public class FieldMapWrapperTest extends AbstractIndexTest.WithIndexRecord {
 
 	private static List<IndexRecord> documents;
 

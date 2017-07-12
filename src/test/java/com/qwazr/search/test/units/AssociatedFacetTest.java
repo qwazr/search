@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-public class AssociatedFacetTest extends AbstractIndexTest {
+public class AssociatedFacetTest extends AbstractIndexTest.WithIndexRecord {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
@@ -54,8 +54,9 @@ public class AssociatedFacetTest extends AbstractIndexTest {
 
 	@Test
 	public void intFacets() {
-		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new MatchAllDocsQuery()).facet("intAssociatedFacet", new FacetDefinition()).build());
+		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
+				.facet("intAssociatedFacet", new FacetDefinition())
+				.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(6), result.total_hits);
 		checkIntFacets(result);

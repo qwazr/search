@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-public class DynamicMultiFieldFacetTest extends AbstractIndexTest {
+public class DynamicMultiFieldFacetTest extends AbstractIndexTest.WithIndexRecord {
 
 	@BeforeClass
 	public static void setup() throws IOException, URISyntaxException {

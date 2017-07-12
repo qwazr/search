@@ -26,12 +26,12 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class DrillDownQueryTest extends AbstractIndexTest {
+public class DrillDownQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void luceneQuery() throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
-		Query luceneQuery =
-				new DrillDownQuery(new MatchAllDocsQuery(), true).add("dim", "value").getQuery(QueryContext.DEFAULT);
+		Query luceneQuery = new DrillDownQuery(new MatchAllDocsQuery(), true).add("dim", "value").getQuery(
+				QueryContext.DEFAULT);
 		Assert.assertNotNull(luceneQuery);
 	}
 
