@@ -15,16 +15,14 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.FloatPoint;
-import org.apache.lucene.document.IntPoint;
-import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.util.BytesRef;
 
 final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 
@@ -186,60 +184,73 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 			return new Term("idx|str|" + fieldName, value.toString());
 		}
 
-		private LongPoint getLongPoint(String fieldName, final Object value) {
-			return new LongPoint("idx|lng|" + fieldName, FieldUtils.getLongValue(value));
+		private String getLongName(String fieldName) {
+			return "idx|lng|" + fieldName;
+		}
+
+		private BytesRef getLongValue(Object value) {
+			return BytesRefUtils.fromLong(FieldUtils.getLongValue(value));
 		}
 
 		@Override
 		void longField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, getLongPoint(fieldName, value));
+			consumer.accept(fieldName, new StringField(getLongName(fieldName), getLongValue(value), Field.Store.NO));
 		}
 
 		Term longTerm(final String fieldName, final Object value) {
-			final LongPoint longPoint = getLongPoint(fieldName, value);
-			return new Term(longPoint.name(), longPoint.binaryValue());
+			return new Term(getLongName(fieldName), getLongValue(value));
 		}
 
-		private IntPoint getIntPoint(String fieldName, final Object value) {
-			return new IntPoint("idx|int|" + fieldName, FieldUtils.getIntValue(value));
+		private String getIntName(String fieldName) {
+			return "idx|int|" + fieldName;
+		}
+
+		private BytesRef getIntValue(Object value) {
+			return BytesRefUtils.fromInteger(FieldUtils.getIntValue(value));
 		}
 
 		@Override
 		void integerField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, getIntPoint(fieldName, value));
+			consumer.accept(fieldName, new StringField(getIntName(fieldName), getIntValue(value), Field.Store.NO));
 		}
 
 		Term integerTerm(final String fieldName, final Object value) {
-			final IntPoint intPoint = getIntPoint(fieldName, value);
-			return new Term(intPoint.name(), intPoint.binaryValue());
+			return new Term(getIntName(fieldName), getIntValue(value));
 		}
 
-		private DoublePoint getDoublePoint(String fieldName, final Object value) {
-			return new DoublePoint("idx|dbl|" + fieldName, FieldUtils.getDoubleValue(value));
+		private String getDoubleName(String fieldName) {
+			return "idx|dbl|" + fieldName;
+		}
+
+		private BytesRef getDoubleValue(Object value) {
+			return BytesRefUtils.fromDouble(FieldUtils.getDoubleValue(value));
 		}
 
 		@Override
 		void doubleField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, getDoublePoint(fieldName, value));
+			consumer.accept(fieldName,
+					new StringField(getDoubleName(fieldName), getDoubleValue(value), Field.Store.NO));
 		}
 
 		Term doubleTerm(final String fieldName, final Object value) {
-			final DoublePoint doublePoint = getDoublePoint(fieldName, value);
-			return new Term(doublePoint.name(), doublePoint.binaryValue());
+			return new Term(getDoubleName(fieldName), getDoubleValue(value));
 		}
 
-		private FloatPoint getFloatPoint(String fieldName, final Object value) {
-			return new FloatPoint("idx|flt|" + fieldName, FieldUtils.getFloatValue(value));
+		private String getFloatName(String fieldName) {
+			return "idx|flt|" + fieldName;
+		}
+
+		private BytesRef getFloatValue(Object value) {
+			return BytesRefUtils.fromFloat(FieldUtils.getFloatValue(value));
 		}
 
 		@Override
 		void floatField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new FloatPoint("idx|flt|" + fieldName, FieldUtils.getFloatValue(value)));
+			consumer.accept(fieldName, new StringField(getFloatName(fieldName), getFloatValue(value), Field.Store.NO));
 		}
 
 		Term floatTerm(final String fieldName, final Object value) {
-			final FloatPoint floatPoint = getFloatPoint(fieldName, value);
-			return new Term(floatPoint.name(), floatPoint.binaryValue());
+			return new Term(getFloatName(fieldName), getFloatValue(value));
 		}
 
 	}

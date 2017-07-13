@@ -85,15 +85,17 @@ public class BytesRefUtils {
 		}
 	}
 
+	public static BytesRef fromInteger(int value) {
+		final BytesRef bytesRef = new BytesRef(new byte[4]);
+		NumericUtils.intToSortableBytes(value, bytesRef.bytes, 0);
+		return bytesRef;
+	}
+
 	final static public class IntegerConverter implements Converter<Integer> {
 
 		@Override
 		final public BytesRef from(final Integer value) {
-			if (value == null)
-				return new BytesRef();
-			final BytesRef bytesRef = new BytesRef(new byte[4]);
-			NumericUtils.intToSortableBytes(value, bytesRef.bytes, 0);
-			return bytesRef;
+			return value == null ? new BytesRef() : fromInteger(value);
 		}
 
 		@Override
@@ -105,15 +107,17 @@ public class BytesRefUtils {
 		}
 	}
 
+	public static BytesRef fromLong(long value) {
+		final BytesRef bytesRef = new BytesRef(new byte[8]);
+		NumericUtils.longToSortableBytes(value, bytesRef.bytes, 0);
+		return bytesRef;
+	}
+
 	final static public class LongConverter implements Converter<Long> {
 
 		@Override
 		final public BytesRef from(final Long value) {
-			if (value == null)
-				return new BytesRef();
-			final BytesRef bytesRef = new BytesRef(new byte[8]);
-			NumericUtils.longToSortableBytes(value, bytesRef.bytes, 0);
-			return bytesRef;
+			return value == null ? new BytesRef() : fromLong(value);
 		}
 
 		@Override
@@ -125,15 +129,17 @@ public class BytesRefUtils {
 		}
 	}
 
+	public static BytesRef fromFloat(float value) {
+		final BytesRef bytesRef = new BytesRef(new byte[4]);
+		NumericUtils.intToSortableBytes(NumericUtils.floatToSortableInt(value), bytesRef.bytes, 0);
+		return bytesRef;
+	}
+
 	final static public class FloatConverter implements Converter<Float> {
 
 		@Override
 		final public BytesRef from(final Float value) {
-			if (value == null)
-				return new BytesRef();
-			final BytesRef bytesRef = new BytesRef(new byte[4]);
-			NumericUtils.intToSortableBytes(NumericUtils.floatToSortableInt(value), bytesRef.bytes, 0);
-			return bytesRef;
+			return value == null ? new BytesRef() : fromFloat(value);
 		}
 
 		@Override
@@ -145,15 +151,17 @@ public class BytesRefUtils {
 		}
 	}
 
+	public static BytesRef fromDouble(double value) {
+		final BytesRef bytesRef = new BytesRef(new byte[8]);
+		NumericUtils.longToSortableBytes(NumericUtils.doubleToSortableLong(value), bytesRef.bytes, 0);
+		return bytesRef;
+	}
+
 	final static public class DoubleConverter implements Converter<Double> {
 
 		@Override
 		final public BytesRef from(final Double value) {
-			if (value == null)
-				return new BytesRef();
-			final BytesRef bytesRef = new BytesRef(new byte[8]);
-			NumericUtils.longToSortableBytes(NumericUtils.doubleToSortableLong(value), bytesRef.bytes, 0);
-			return bytesRef;
+			return value == null ? new BytesRef() : fromDouble(value);
 		}
 
 		@Override

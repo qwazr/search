@@ -22,11 +22,18 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class DrillDownQueryTest extends AbstractIndexTest.WithIndexRecord {
+
+	@BeforeClass
+	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+		initIndexService();
+	}
 
 	@Test
 	public void luceneQuery() throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
