@@ -15,19 +15,7 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.SortedDocValuesField;
-import org.apache.lucene.document.SortedNumericDocValuesField;
-import org.apache.lucene.document.StoredField;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.NumericUtils;
 
 final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 
@@ -38,374 +26,120 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 	@Override
 	Builder<SmartFieldDefinition> setup(Builder<SmartFieldDefinition> builder) {
 		if (builder.definition.stored)
-			StoreFieldProvider.INSTANCE.provider(builder);
+			storeProvider(builder);
 		if (builder.definition.index)
-			IndexFieldProvider.INSTANCE.provider(builder);
+			indexProvider(builder);
 		if (builder.definition.sort)
-			SortedFieldProvider.INSTANCE.provider(builder);
+			sortProvider(builder);
 		if (builder.definition.facet)
-			FacetFieldProvider.INSTANCE.provider(builder);
+			facetProvider(builder);
 		if (builder.definition.snippet)
-			SnippetFieldProvider.INSTANCE.provider(builder);
+			snippetProvider(builder);
 		if (builder.definition.fulltext)
-			FullTextFieldProvider.INSTANCE.provider(builder);
+			fullTextProvider(builder);
 		if (builder.definition.autocomplete)
-			AutoCompleteFieldProvider.INSTANCE.provider(builder);
+			autocompleteProvider(builder);
 		return builder;
 	}
 
-	enum TypePrefix {
-		sto /*Stored*/,
-		idx /*Indexed*/,
-		sdv /*sorteddocvalue*/,
-		fct /*facet*/,
-		ful /*fulltext*/,
-		aut /*autocomplete*/,
-		sni /*snippet*/
-	}
-
-	abstract static class FieldProviderByType {
-
-		private final String textPrefix;
-		private final String longPrefix;
-		private final String intPrefix;
-		private final String doublePrefix;
-		private final String floatPrefix;
-
-		FieldProviderByType(TypePrefix typePrefix) {
-			this.textPrefix = typePrefix.name().concat("|TXT|");
-			this.longPrefix = typePrefix.name().concat("|LNG|");
-			this.intPrefix = typePrefix.name().concat("|INT|");
-			this.doublePrefix = typePrefix.name().concat("|DBL|");
-			this.floatPrefix = typePrefix.name().concat("|FLT|");
-		}
-
-		void provider(Builder<SmartFieldDefinition> builder) {
-			switch (builder.definition.type) {
-			case TEXT:
-				builder.fieldProvider(this::textField);
-				break;
-			case LONG:
-				builder.fieldProvider(this::longField);
-				break;
-			case INTEGER:
-				builder.fieldProvider(this::integerField);
-				break;
-			case DOUBLE:
-				builder.fieldProvider(this::doubleField);
-				break;
-			case FLOAT:
-				builder.fieldProvider(this::floatField);
-				break;
-			default:
-				break;
-			}
-		}
-
-		final String getTextName(final String fieldName) {
-			return textPrefix.concat(fieldName);
-		}
-
-		abstract void textField(final String fieldName, final Object value, final FieldConsumer consumer);
-
-		final String getLongName(final String fieldName) {
-			return longPrefix.concat(fieldName);
-		}
-
-		abstract void longField(final String fieldName, final Object value, final FieldConsumer consumer);
-
-		final String getIntegerName(final String fieldName) {
-			return intPrefix.concat(fieldName);
-		}
-
-		abstract void integerField(final String fieldName, final Object value, final FieldConsumer consumer);
-
-		final String getDoubleName(final String fieldName) {
-			return doublePrefix.concat(fieldName);
-		}
-
-		abstract void doubleField(final String fieldName, final Object value, final FieldConsumer consumer);
-
-		final String getFloatName(final String fieldName) {
-			return floatPrefix.concat(fieldName);
-		}
-
-		abstract void floatField(final String fieldName, final Object value, final FieldConsumer consumer);
-
-	}
-
-	static final class StoreFieldProvider extends FieldProviderByType {
-
-		final static StoreFieldProvider INSTANCE = new StoreFieldProvider();
-
-		StoreFieldProvider() {
-			super(TypePrefix.sto);
-		}
-
-		void provider(Builder<SmartFieldDefinition> builder) {
-			super.provider(builder);
-			switch (builder.definition.type) {
-			case TEXT:
-				builder.storedFieldProvider(this::getTextName);
-				break;
-			case LONG:
-				builder.storedFieldProvider(this::getLongName);
-				break;
-			case INTEGER:
-				builder.storedFieldProvider(this::getIntegerName);
-				break;
-			case DOUBLE:
-				builder.storedFieldProvider(this::getDoubleName);
-				break;
-			case FLOAT:
-				builder.storedFieldProvider(this::getFloatName);
-				break;
-			default:
-				break;
-			}
-		}
-
-		@Override
-		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StoredField(getTextName(fieldName), value.toString()));
-		}
-
-		@Override
-		void longField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StoredField(getLongName(fieldName), FieldUtils.getLongValue(value)));
-		}
-
-		@Override
-		void integerField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StoredField(getIntegerName(fieldName), FieldUtils.getIntValue(value)));
-		}
-
-		@Override
-		void doubleField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StoredField(getDoubleName(fieldName), FieldUtils.getDoubleValue(value)));
-		}
-
-		@Override
-		void floatField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StoredField(getFloatName(fieldName), FieldUtils.getFloatValue(value)));
+	static void storeProvider(final Builder<SmartFieldDefinition> builder) {
+		switch (builder.definition.type) {
+		case TEXT:
+			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::textField);
+			builder.storedFieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getTextName);
+			break;
+		case LONG:
+			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::longField);
+			builder.storedFieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getLongName);
+			break;
+		case INTEGER:
+			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::integerField);
+			builder.storedFieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getIntegerName);
+			break;
+		case DOUBLE:
+			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::doubleField);
+			builder.storedFieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getDoubleName);
+			break;
+		case FLOAT:
+			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::floatField);
+			builder.storedFieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getFloatName);
+			break;
+		default:
+			break;
 		}
 	}
 
-	static final class IndexFieldProvider extends FieldProviderByType {
-
-		final static IndexFieldProvider INSTANCE = new IndexFieldProvider();
-
-		IndexFieldProvider() {
-			super(TypePrefix.idx);
-		}
-
-		void provider(Builder<SmartFieldDefinition> builder) {
-			super.provider(builder);
-			switch (builder.definition.type) {
-			case TEXT:
-				builder.termProvider(this::textTerm);
-				break;
-			case LONG:
-				builder.termProvider(this::longTerm);
-				break;
-			case INTEGER:
-				builder.termProvider(this::integerTerm);
-				break;
-			case DOUBLE:
-				builder.termProvider(this::doubleTerm);
-				break;
-			case FLOAT:
-				builder.termProvider(this::floatTerm);
-				break;
-			default:
-				break;
-			}
-		}
-
-		@Override
-		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StringField(getTextName(fieldName), value.toString(), Field.Store.NO));
-		}
-
-		Term textTerm(final String fieldName, final Object value) {
-			return new Term(getTextName(fieldName), value.toString());
-		}
-
-		private BytesRef getLongValue(Object value) {
-			return BytesRefUtils.fromLong(FieldUtils.getLongValue(value));
-		}
-
-		@Override
-		void longField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StringField(getLongName(fieldName), getLongValue(value), Field.Store.NO));
-		}
-
-		Term longTerm(final String fieldName, final Object value) {
-			return new Term(getLongName(fieldName), getLongValue(value));
-		}
-
-		private BytesRef getIntValue(Object value) {
-			return BytesRefUtils.fromInteger(FieldUtils.getIntValue(value));
-		}
-
-		@Override
-		void integerField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StringField(getIntegerName(fieldName), getIntValue(value), Field.Store.NO));
-		}
-
-		Term integerTerm(final String fieldName, final Object value) {
-			return new Term(getIntegerName(fieldName), getIntValue(value));
-		}
-
-		private BytesRef getDoubleValue(Object value) {
-			return BytesRefUtils.fromDouble(FieldUtils.getDoubleValue(value));
-		}
-
-		@Override
-		void doubleField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName,
-					new StringField(getDoubleName(fieldName), getDoubleValue(value), Field.Store.NO));
-		}
-
-		Term doubleTerm(final String fieldName, final Object value) {
-			return new Term(getDoubleName(fieldName), getDoubleValue(value));
-		}
-
-		private BytesRef getFloatValue(Object value) {
-			return BytesRefUtils.fromFloat(FieldUtils.getFloatValue(value));
-		}
-
-		@Override
-		void floatField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StringField(getFloatName(fieldName), getFloatValue(value), Field.Store.NO));
-		}
-
-		Term floatTerm(final String fieldName, final Object value) {
-			return new Term(getFloatName(fieldName), getFloatValue(value));
-		}
-
-	}
-
-	static final class SortedFieldProvider extends FieldProviderByType {
-
-		final static SortedFieldProvider INSTANCE = new SortedFieldProvider();
-
-		SortedFieldProvider() {
-			super(TypePrefix.sdv);
-		}
-
-		@Override
-		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName,
-					new SortedDocValuesField(getTextName(fieldName), new BytesRef(value.toString())));
-		}
-
-		@Override
-		void longField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName,
-					new SortedNumericDocValuesField(getLongName(fieldName), FieldUtils.getLongValue(value)));
-		}
-
-		@Override
-		void integerField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName,
-					new SortedNumericDocValuesField(getIntegerName(fieldName), FieldUtils.getIntValue(value)));
-		}
-
-		@Override
-		void doubleField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new SortedNumericDocValuesField(getDoubleName(fieldName),
-					NumericUtils.doubleToSortableLong(FieldUtils.getDoubleValue(value))));
-		}
-
-		@Override
-		void floatField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new SortedNumericDocValuesField(getFloatName(fieldName),
-					NumericUtils.floatToSortableInt(FieldUtils.getFloatValue(value))));
+	static void indexProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+		switch (builder.definition.type) {
+		case TEXT:
+			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::textField);
+			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::textTerm);
+			break;
+		case LONG:
+			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::longField);
+			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::longTerm);
+			break;
+		case INTEGER:
+			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::integerField);
+			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::integerTerm);
+			break;
+		case DOUBLE:
+			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::doubleField);
+			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::doubleTerm);
+			break;
+		case FLOAT:
+			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::floatField);
+			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::floatTerm);
+			break;
+		default:
+			break;
 		}
 	}
 
-	static abstract class CommonTextFieldProvider extends FieldProviderByType {
-
-		CommonTextFieldProvider(final TypePrefix typePrefix) {
-			super(typePrefix);
-		}
-
-		@Override
-		final void longField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			textField(fieldName, value, consumer);
-		}
-
-		@Override
-		final void integerField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			textField(fieldName, value, consumer);
-		}
-
-		@Override
-		final void doubleField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			textField(fieldName, value, consumer);
-		}
-
-		@Override
-		final void floatField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			textField(fieldName, value, consumer);
-		}
-	}
-
-	static final class FacetFieldProvider extends CommonTextFieldProvider {
-
-		final static FacetFieldProvider INSTANCE = new FacetFieldProvider();
-
-		FacetFieldProvider() {
-			super(TypePrefix.fct);
-		}
-
-		@Override
-		void textField(String fieldName, Object value, FieldConsumer consumer) {
-			consumer.accept(fieldName, new SortedSetDocValuesFacetField(getTextName(fieldName), value.toString()));
-		}
-
-	}
-
-	static final class FullTextFieldProvider extends CommonTextFieldProvider {
-
-		final static FullTextFieldProvider INSTANCE = new FullTextFieldProvider();
-
-		FullTextFieldProvider() {
-			super(TypePrefix.ful);
-		}
-
-		@Override
-		void textField(String fieldName, Object value, FieldConsumer consumer) {
-			consumer.accept(fieldName, new TextField(getTextName(fieldName), value.toString(), Field.Store.NO));
+	static void sortProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+		switch (builder.definition.type) {
+		case TEXT:
+			builder.fieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::textField);
+			builder.sortFieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::sortTextField);
+			break;
+		case LONG:
+			builder.fieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::longField);
+			builder.sortFieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::sortLongField);
+			break;
+		case INTEGER:
+			builder.fieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::integerField);
+			builder.sortFieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::sortIntegerField);
+			break;
+		case DOUBLE:
+			builder.fieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::doubleField);
+			builder.sortFieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::sortDoubleField);
+			break;
+		case FLOAT:
+			builder.fieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::floatField);
+			builder.sortFieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::sortFloatField);
+			break;
+		default:
+			break;
 		}
 	}
 
-	static final class AutoCompleteFieldProvider extends CommonTextFieldProvider {
-
-		final static AutoCompleteFieldProvider INSTANCE = new AutoCompleteFieldProvider();
-
-		AutoCompleteFieldProvider() {
-			super(TypePrefix.aut);
-		}
-
-		@Override
-		void textField(String fieldName, Object value, FieldConsumer consumer) {
-			consumer.accept(fieldName, new StringField(getTextName(fieldName), value.toString(), Field.Store.YES));
-		}
+	static void facetProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+		builder.fieldProvider(SmartFieldProviders.FacetFieldProvider.INSTANCE::textField);
 	}
 
-	static final class SnippetFieldProvider extends CommonTextFieldProvider {
-
-		final static SnippetFieldProvider INSTANCE = new SnippetFieldProvider();
-
-		SnippetFieldProvider() {
-			super(TypePrefix.sni);
-		}
-
-		@Override
-		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new TextField(getTextName(fieldName), value.toString(), Field.Store.YES));
-		}
+	static void fullTextProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+		builder.fieldProvider(SmartFieldProviders.TextFieldProvider.INSTANCE::textField);
+		builder.fieldProvider(SmartFieldProviders.FullFieldProvider.INSTANCE::textField);
 	}
+
+	static void autocompleteProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+		builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::textField);
+		builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::textField);
+	}
+
+	static void snippetProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+		builder.fieldProvider(SmartFieldProviders.TextFieldProvider.INSTANCE::textField);
+		builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::textField);
+	}
+
 }

@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,10 +119,10 @@ class QueryCollectorsClassic extends QueryCollectors {
 
 		if (queryExecution.useDrillSideways) {
 
-			final DrillSideways.DrillSidewaysResult drillSidewaysResult =
-					new DrillSideways(queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
-							queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState)
-							.search((org.apache.lucene.facet.DrillDownQuery) queryExecution.query, finalCollector);
+			final DrillSideways.DrillSidewaysResult drillSidewaysResult = new DrillSideways(
+					queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
+					queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState).search(
+					(org.apache.lucene.facet.DrillDownQuery) queryExecution.query, finalCollector);
 			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.facetsConfig,
 					queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
 					drillSidewaysResult).build();
@@ -130,11 +130,9 @@ class QueryCollectorsClassic extends QueryCollectors {
 		} else {
 
 			queryExecution.queryContext.indexSearcher.search(queryExecution.query, finalCollector);
-			facetsBuilder = facetsCollector == null ?
-					null :
-					new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
-							queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
-							facetsCollector).build();
+			facetsBuilder = facetsCollector == null ? null : new FacetsBuilder.WithCollectors(
+					queryExecution.queryContext, queryExecution.facetsConfig, queryExecution.queryDef.facets,
+					queryExecution.query, queryExecution.timeTracker, facetsCollector).build();
 
 		}
 

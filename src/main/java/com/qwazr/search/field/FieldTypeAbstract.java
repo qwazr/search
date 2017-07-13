@@ -19,12 +19,14 @@ import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.WildcardMatcher;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
 import javax.ws.rs.core.Response;
@@ -45,6 +47,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 	final private FieldTypeInterface.FieldProvider[] fieldProviders;
 	final private TermProvider termProvider;
 	final private StoredFieldProvider storedFieldProvider;
+	final private SortFieldProvider sortFieldProvider;
 	final private Map<FieldTypeInterface, String> copyToFields;
 
 	protected FieldTypeAbstract(final Builder<T> builder) {
@@ -68,6 +71,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 				builder.fieldProviders.toArray(new FieldTypeInterface.FieldProvider[builder.fieldProviders.size()]);
 		this.termProvider = builder.termProvider;
 		this.storedFieldProvider = builder.storedFieldProvider;
+		this.sortFieldProvider = builder.sortFieldProvider;
 		this.copyToFields = new LinkedHashMap<>();
 	}
 
@@ -101,9 +105,17 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 	}
 
 	@Override
-	public final String getStoredField(String fieldName) {
+	public final String getStoredField(final String fieldName) {
 		if (storedFieldProvider != null)
 			return storedFieldProvider.storedField(fieldName);
+		else
+			return null;
+	}
+
+	@Override
+	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+		if (sortFieldProvider != null)
+			return sortFieldProvider.sortField(fieldName, sortEnum);
 		else
 			return null;
 	}
@@ -250,6 +262,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 		private LinkedHashSet<FieldProvider> fieldProviders;
 		private TermProvider termProvider;
 		private StoredFieldProvider storedFieldProvider;
+		private SortFieldProvider sortFieldProvider;
 
 		Builder(WildcardMatcher wildcardMatcher, T definition) {
 			this.wildcardMatcher = wildcardMatcher;
@@ -296,6 +309,11 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 
 		Builder<T> storedFieldProvider(FieldTypeInterface.StoredFieldProvider storedFieldProvider) {
 			this.storedFieldProvider = storedFieldProvider;
+			return this;
+		}
+
+		Builder<T> sortFieldProvider(FieldTypeInterface.SortFieldProvider sortFieldProvider) {
+			this.sortFieldProvider = sortFieldProvider;
 			return this;
 		}
 

@@ -17,11 +17,9 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.search.SortField;
 
 final class LongPointType extends StorableFieldType {
 
@@ -40,13 +38,6 @@ final class LongPointType extends StorableFieldType {
 	@Override
 	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
 		consumer.accept(fieldName, new LongPoint(fieldName, FieldUtils.getLongValue(value)));
-	}
-
-	@Override
-	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.LONG, SortUtils.sortReverse(sortEnum));
-		SortUtils.sortLongMissingValue(sortEnum, sortField);
-		return sortField;
 	}
 
 }

@@ -31,9 +31,7 @@ public interface FieldTypeInterface {
 
 	void dispatch(final String fieldName, final Object value, final FieldConsumer fieldConsumer);
 
-	default SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		return null;
-	}
+	SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
 
 	ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException;
 
@@ -72,12 +70,17 @@ public interface FieldTypeInterface {
 
 	@FunctionalInterface
 	interface TermProvider {
-		Term term(String fieldName, Object value);
+		Term term(final String fieldName, final Object value);
 	}
 
 	@FunctionalInterface
 	interface StoredFieldProvider {
-		String storedField(String fieldName);
+		String storedField(final String fieldName);
+	}
+
+	@FunctionalInterface
+	interface SortFieldProvider {
+		SortField sortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
 	}
 
 }

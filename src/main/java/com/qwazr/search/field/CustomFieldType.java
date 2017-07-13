@@ -17,7 +17,6 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.search.SortField;
@@ -30,21 +29,12 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 
 	private final Consumer<FieldType>[] typeSetters;
 
-	@FunctionalInterface
-	interface SortFieldProvider {
-
-		SortField provide(final String fieldName, final QueryDefinition.SortEnum sortEnum);
-
-	}
-
-	private final SortFieldProvider sortFieldProvider;
-
 	CustomFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(getConverter(definition))
-				.termProvider(FieldUtils::newStringTerm));
+				.termProvider(FieldUtils::newStringTerm)
+				.sortFieldProvider(buildSortFieldProvider((CustomFieldDefinition) definition)));
 		final CustomFieldDefinition customFieldDefinition = (CustomFieldDefinition) definition;
 		typeSetters = buildTypeSetters(customFieldDefinition);
-		sortFieldProvider = buildSortFieldProvider(customFieldDefinition);
 	}
 
 	private static Consumer<FieldType>[] buildTypeSetters(CustomFieldDefinition definition) {
@@ -77,51 +67,55 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 	private static SortFieldProvider buildSortFieldProvider(CustomFieldDefinition definition) {
 		if (definition.indexOptions == null)
 			return null;
-		if (definition.numericType != null) {
-			switch (definition.numericType) {
-			case DOUBLE:
-				return (fieldName, sortEnum) -> {
-					final SortField sortField = new SortField(fieldName, SortField.Type.DOUBLE,
-							SortUtils.sortReverse(sortEnum));
-					SortUtils.sortDoubleMissingValue(sortEnum, sortField);
-					return sortField;
-				};
-			case FLOAT:
-				return (fieldName, sortEnum) -> {
-					final SortField sortField = new SortField(fieldName, SortField.Type.FLOAT,
-							SortUtils.sortReverse(sortEnum));
-					SortUtils.sortFloatMissingValue(sortEnum, sortField);
-					return sortField;
-				};
-			case INT:
-				return (fieldName, sortEnum) -> {
-					final SortField sortField = new SortField(fieldName, SortField.Type.INT,
-							SortUtils.sortReverse(sortEnum));
-					SortUtils.sortIntMissingValue(sortEnum, sortField);
-					return sortField;
-				};
-			case LONG:
-				return (fieldName, sortEnum) -> {
-					final SortField sortField = new SortField(fieldName, SortField.Type.LONG,
-							SortUtils.sortReverse(sortEnum));
-					SortUtils.sortLongMissingValue(sortEnum, sortField);
-					return sortField;
-				};
-			default:
-				return (fieldName, sortEnum) -> {
-					final SortField sortField = new SortField(fieldName, SortField.Type.STRING,
-							SortUtils.sortReverse(sortEnum));
-					SortUtils.sortStringMissingValue(sortEnum, sortField);
-					return sortField;
-				};
-			}
-		} else {
+		if (definition.numericType == null) {
 			return (fieldName, sortEnum) -> {
+				if (FieldDefinition.SCORE_FIELD.equals(fieldName))
+					return new SortField(fieldName, SortField.Type.SCORE);
 				final SortField sortField = new SortField(fieldName, SortField.Type.STRING,
 						SortUtils.sortReverse(sortEnum));
 				SortUtils.sortStringMissingValue(sortEnum, sortField);
 				return sortField;
 			};
+		}
+		switch (definition.numericType) {
+		case DOUBLE:
+			return (fieldName, sortEnum) -> {
+				if (FieldDefinition.SCORE_FIELD.equals(fieldName))
+					return new SortField(fieldName, SortField.Type.SCORE);
+				final SortField sortField = new SortField(fieldName, SortField.Type.DOUBLE,
+						SortUtils.sortReverse(sortEnum));
+				SortUtils.sortDoubleMissingValue(sortEnum, sortField);
+				return sortField;
+			};
+		case FLOAT:
+			return (fieldName, sortEnum) -> {
+				if (FieldDefinition.SCORE_FIELD.equals(fieldName))
+					return new SortField(fieldName, SortField.Type.SCORE);
+				final SortField sortField = new SortField(fieldName, SortField.Type.FLOAT,
+						SortUtils.sortReverse(sortEnum));
+				SortUtils.sortFloatMissingValue(sortEnum, sortField);
+				return sortField;
+			};
+		case INT:
+			return (fieldName, sortEnum) -> {
+				if (FieldDefinition.SCORE_FIELD.equals(fieldName))
+					return new SortField(fieldName, SortField.Type.SCORE);
+				final SortField sortField = new SortField(fieldName, SortField.Type.INT,
+						SortUtils.sortReverse(sortEnum));
+				SortUtils.sortIntMissingValue(sortEnum, sortField);
+				return sortField;
+			};
+		case LONG:
+			return (fieldName, sortEnum) -> {
+				if (FieldDefinition.SCORE_FIELD.equals(fieldName))
+					return new SortField(fieldName, SortField.Type.SCORE);
+				final SortField sortField = new SortField(fieldName, SortField.Type.LONG,
+						SortUtils.sortReverse(sortEnum));
+				SortUtils.sortLongMissingValue(sortEnum, sortField);
+				return sortField;
+			};
+		default:
+			return null;
 		}
 	}
 
@@ -132,15 +126,6 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 			for (Consumer<FieldType> ts : typeSetters)
 				ts.accept(type);
 		fieldConsumer.accept(fieldName, new CustomField(fieldName, type, value));
-	}
-
-	@Override
-	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		if (sortFieldProvider == null)
-			throw new IllegalArgumentException("A not indexed field cannot be used in sorting: " + fieldName);
-		if (fieldName == FieldDefinition.SCORE_FIELD)
-			return new SortField(fieldName, SortField.Type.SCORE);
-		return sortFieldProvider.provide(fieldName, sortEnum);
 	}
 
 	static BytesRefUtils.Converter getConverter(final FieldDefinition definition) {

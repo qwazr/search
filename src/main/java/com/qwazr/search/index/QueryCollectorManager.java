@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,11 +65,9 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 
 			queryExecution.queryContext.indexSearcher.search(queryExecution.query, this);
 			facetsCollector = getFacetsCollector();
-			facetsBuilder = facetsCollector == null ?
-					null :
-					new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
-							queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
-							facetsCollector).build();
+			facetsBuilder = facetsCollector == null ? null : new FacetsBuilder.WithCollectors(
+					queryExecution.queryContext, queryExecution.facetsConfig, queryExecution.queryDef.facets,
+					queryExecution.query, queryExecution.timeTracker, facetsCollector).build();
 		}
 
 		return facetsBuilder;
@@ -161,8 +159,8 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 				if (queryCollectors.userCollectors != null)
 					externalCollectors.add(queryCollectors.userCollectors.get(i));
 			if (!externalCollectors.isEmpty()) {
-				results.put(name,
-						((ConcurrentCollector) externalCollectors.get(0)).getReducedResult(externalCollectors));
+				results.put(name, ((ConcurrentCollector) externalCollectors.get(0)).getReducedResult(
+						externalCollectors));
 			}
 			i++;
 		}

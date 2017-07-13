@@ -17,17 +17,16 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.search.SortField;
 
 final class StringFieldType extends StorableFieldType {
 
 	StringFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.STRING)
-				.termProvider(FieldUtils::newStringTerm));
+				.termProvider(FieldUtils::newStringTerm)
+				.sortFieldProvider(SortUtils::stringSortField));
 	}
 
 	@Override
@@ -38,13 +37,6 @@ final class StringFieldType extends StorableFieldType {
 	@Override
 	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
 		consumer.accept(fieldName, new StringField(fieldName, value.toString(), Field.Store.NO));
-	}
-
-	@Override
-	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.STRING, SortUtils.sortReverse(sortEnum));
-		SortUtils.sortStringMissingValue(sortEnum, sortField);
-		return sortField;
 	}
 
 }

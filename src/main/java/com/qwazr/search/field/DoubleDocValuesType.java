@@ -19,22 +19,20 @@ import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.DoubleDocValuesField;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.NumericDocValues;
-import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
 
 final class DoubleDocValuesType extends CustomFieldTypeAbstract.OneField {
 
 	DoubleDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.DOUBLE));
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.DOUBLE)
+				.sortFieldProvider(SortUtils::doubleSortField));
 	}
 
 	@Override
@@ -45,13 +43,6 @@ final class DoubleDocValuesType extends CustomFieldTypeAbstract.OneField {
 		else
 			field = new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString()));
 		consumer.accept(fieldName, field);
-	}
-
-	@Override
-	final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.DOUBLE, SortUtils.sortReverse(sortEnum));
-		SortUtils.sortDoubleMissingValue(sortEnum, sortField);
-		return sortField;
 	}
 
 	@Override

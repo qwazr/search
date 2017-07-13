@@ -19,13 +19,14 @@ import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortedNumericSortField;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class SortUtils {
 
-	final static boolean sortReverse(QueryDefinition.SortEnum sortEnum) {
+	static boolean sortReverse(QueryDefinition.SortEnum sortEnum) {
 		if (sortEnum == null)
 			return false;
 		switch (sortEnum) {
@@ -37,7 +38,7 @@ public class SortUtils {
 		return true;
 	}
 
-	final static void sortStringMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
+	static void sortStringMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
 		if (sortEnum == null)
 			return;
 		switch (sortEnum) {
@@ -53,7 +54,7 @@ public class SortUtils {
 		}
 	}
 
-	final static void sortDoubleMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
+	static void sortDoubleMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
 		if (sortEnum == null)
 			return;
 		switch (sortEnum) {
@@ -69,7 +70,7 @@ public class SortUtils {
 		}
 	}
 
-	final static void sortLongMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
+	static void sortLongMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
 		if (sortEnum == null)
 			return;
 		switch (sortEnum) {
@@ -85,7 +86,7 @@ public class SortUtils {
 		}
 	}
 
-	final static void sortFloatMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
+	static void sortFloatMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
 		if (sortEnum == null)
 			return;
 		switch (sortEnum) {
@@ -101,7 +102,7 @@ public class SortUtils {
 		}
 	}
 
-	final static void sortIntMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
+	static void sortIntMissingValue(QueryDefinition.SortEnum sortEnum, SortField sortField) {
 		if (sortEnum == null)
 			return;
 		switch (sortEnum) {
@@ -117,7 +118,41 @@ public class SortUtils {
 		}
 	}
 
-	final static SortField buildSortField(final FieldMap fieldMap, final String fieldName,
+	static SortField doubleSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.DOUBLE,
+				SortUtils.sortReverse(sortEnum));
+		SortUtils.sortDoubleMissingValue(sortEnum, sortField);
+		return sortField;
+	}
+
+	static SortField floatSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.FLOAT,
+				SortUtils.sortReverse(sortEnum));
+		SortUtils.sortFloatMissingValue(sortEnum, sortField);
+		return sortField;
+	}
+
+	static SortField integerSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.INT,
+				SortUtils.sortReverse(sortEnum));
+		SortUtils.sortIntMissingValue(sortEnum, sortField);
+		return sortField;
+	}
+
+	static SortField longSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.LONG,
+				SortUtils.sortReverse(sortEnum));
+		SortUtils.sortLongMissingValue(sortEnum, sortField);
+		return sortField;
+	}
+
+	static SortField stringSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+		final SortField sortField = new SortField(fieldName, SortField.Type.STRING, SortUtils.sortReverse(sortEnum));
+		SortUtils.sortStringMissingValue(sortEnum, sortField);
+		return sortField;
+	}
+
+	static SortField buildSortField(final FieldMap fieldMap, final String fieldName,
 			final QueryDefinition.SortEnum sortEnum) {
 
 		// First check the by score and by doc_id sorting
@@ -136,8 +171,7 @@ public class SortUtils {
 		return sortField;
 	}
 
-	final public static Sort buildSort(final FieldMap fieldMap,
-			final LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
+	public static Sort buildSort(final FieldMap fieldMap, final LinkedHashMap<String, QueryDefinition.SortEnum> sorts) {
 		if (sorts.isEmpty())
 			return null;
 		final SortField[] sortFields = new SortField[sorts.size()];

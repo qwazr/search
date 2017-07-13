@@ -18,13 +18,11 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.BinaryDocValuesField;
 import org.apache.lucene.index.BinaryDocValues;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
-import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
@@ -38,11 +36,6 @@ final class BinaryDocValuesType extends CustomFieldTypeAbstract.OneField {
 	@Override
 	final protected void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
 		consumer.accept(fieldName, new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
-	}
-
-	@Override
-	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		return null;
 	}
 
 	@Override

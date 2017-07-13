@@ -19,21 +19,20 @@ import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.NumericDocValues;
-import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
 
 final class LongDocValuesType extends CustomFieldTypeAbstract.OneField {
 
 	LongDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.LONG));
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.LONG)
+				.sortFieldProvider(SortUtils::longSortField));
 	}
 
 	@Override
@@ -44,13 +43,6 @@ final class LongDocValuesType extends CustomFieldTypeAbstract.OneField {
 		else
 			field = new NumericDocValuesField(fieldName, Long.parseLong(value.toString()));
 		consumer.accept(fieldName, field);
-	}
-
-	@Override
-	public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortField(fieldName, SortField.Type.LONG, SortUtils.sortReverse(sortEnum));
-		SortUtils.sortLongMissingValue(sortEnum, sortField);
-		return sortField;
 	}
 
 	@Override
