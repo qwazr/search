@@ -18,13 +18,12 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.facet.FacetField;
 
 import java.util.Arrays;
 
-class FacetType extends StorableFieldType {
+final class FacetType extends StorableFieldType {
 
 	FacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
@@ -32,23 +31,32 @@ class FacetType extends StorableFieldType {
 	}
 
 	@Override
-	final protected void fillArray(final String fieldName, final String[] values, final Float boost,
-			final FieldConsumer consumer) {
-		consumer.accept(fieldName, new FacetField(fieldName, values), boost);
-		if (store != null && store == Field.Store.YES)
-			consumer.accept(fieldName, new StoredField(fieldName, Arrays.toString(values)), boost);
+	final protected void fillArray(final String fieldName, final String[] values, final FieldConsumer consumer) {
+		consumer.accept(fieldName, new FacetField(fieldName, values));
+		if (store)
+			consumer.accept(fieldName, new StoredField(fieldName, Arrays.toString(values)));
+	}
+
+	private String getStringValue(Object value) {
+		if (value == null)
+			return null;
+		final String stringValue = value.toString();
+		return stringValue == null || stringValue.isEmpty() ? null : stringValue;
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
-		if (value == null)
+	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
+		final String stringValue = getStringValue(value);
+		if (stringValue == null)
 			return;
-		final String stringValue = value.toString();
-		if (stringValue == null || stringValue.isEmpty())
-			return;
-		consumer.accept(fieldName, new FacetField(fieldName, stringValue), boost);
-		if (store != null && store == Field.Store.YES)
-			consumer.accept(fieldName, new StoredField(fieldName, stringValue), boost);
+		consumer.accept(fieldName, new FacetField(fieldName, stringValue));
+		consumer.accept(fieldName, new StoredField(fieldName, stringValue));
+	}
+
+	@Override
+	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
+		final String stringValue = getStringValue(value);
+		if (stringValue != null)
+			consumer.accept(fieldName, new FacetField(fieldName, stringValue));
 	}
 }

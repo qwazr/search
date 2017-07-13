@@ -19,10 +19,9 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.DoublePoint;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
 
-class DoublePointType extends StorableFieldType {
+final class DoublePointType extends StorableFieldType {
 
 	DoublePointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
@@ -30,13 +29,15 @@ class DoublePointType extends StorableFieldType {
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
-		final double doubleValue = value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(
-				value.toString());
-		consumer.accept(fieldName, new DoublePoint(fieldName, doubleValue), boost);
-		if (store == Field.Store.YES)
-			consumer.accept(fieldName, new StoredField(fieldName, doubleValue), boost);
+	void newFieldNoStore(final String fieldName, final Object value, final FieldConsumer consumer) {
+		consumer.accept(fieldName, new DoublePoint(fieldName, FieldUtils.getDoubleValue(value)));
+	}
+
+	@Override
+	void newFieldWithStore(final String fieldName, final Object value, final FieldConsumer consumer) {
+		final double doubleValue = FieldUtils.getDoubleValue(value);
+		consumer.accept(fieldName, new DoublePoint(fieldName, doubleValue));
+		consumer.accept(fieldName, new StoredField(fieldName, doubleValue));
 	}
 
 }

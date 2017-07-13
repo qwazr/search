@@ -24,6 +24,7 @@ import com.qwazr.utils.WildcardMatcher;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.util.BytesRef;
 
 import javax.ws.rs.core.Response;
@@ -36,16 +37,20 @@ import java.util.Map;
 abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldTypeInterface {
 
 	final private WildcardMatcher wildcardMatcher;
-	final protected T definition;
+	final private T definition;
 	final protected BytesRefUtils.Converter bytesRefConverter;
 	final private FieldTypeInterface.Facet[] facetConfig;
 	final private FieldTypeInterface.Analyzer[] indexAnalyzerConfig;
 	final private FieldTypeInterface.Analyzer[] queryAnalyzerConfig;
+	final private FieldTypeInterface.FieldProvider[] fieldProviders;
+	final private TermProvider termProvider;
+	final private StoredFieldProvider storedFieldProvider;
 	final private Map<FieldTypeInterface, String> copyToFields;
 
 	protected FieldTypeAbstract(final Builder<T> builder) {
 		this.wildcardMatcher = builder.wildcardMatcher;
 		this.definition = builder.definition;
+		setup(builder);
 		this.bytesRefConverter = builder.bytesRefConverter;
 		this.facetConfig =
 				builder.facetConfig == null || builder.facetConfig.isEmpty() ? null : builder.facetConfig.toArray(
@@ -58,8 +63,15 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 				null :
 				builder.queryAnalyzerConfig.toArray(
 						new FieldTypeInterface.Analyzer[builder.queryAnalyzerConfig.size()]);
+		this.fieldProviders = builder.fieldProviders == null || builder.fieldProviders.isEmpty() ?
+				null :
+				builder.fieldProviders.toArray(new FieldTypeInterface.FieldProvider[builder.fieldProviders.size()]);
+		this.termProvider = builder.termProvider;
+		this.storedFieldProvider = builder.storedFieldProvider;
 		this.copyToFields = new LinkedHashMap<>();
 	}
+
+	abstract Builder<T> setup(Builder<T> builder);
 
 	public final void setFacetsConfig(String fieldName, FacetsConfig facetsConfig) {
 		if (facetConfig != null)
@@ -81,6 +93,21 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 				config.config(fieldName, builder);
 	}
 
+	public final Term term(String fieldName, Object value) {
+		if (termProvider != null)
+			return termProvider.term(fieldName, value);
+		else
+			throw new ServerException("Term not supported by the field: " + fieldName);
+	}
+
+	@Override
+	public final String getStoredField(String fieldName) {
+		if (storedFieldProvider != null)
+			return storedFieldProvider.storedField(fieldName);
+		else
+			return null;
+	}
+
 	@Override
 	final public void copyTo(final String fieldName, final FieldTypeInterface fieldType) {
 		copyToFields.put(fieldType, fieldName);
@@ -91,118 +118,110 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 		return definition;
 	}
 
-	protected void fillArray(final String fieldName, final int[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final int[] values, final FieldConsumer consumer) {
 		for (int value : values)
-			fill(fieldName, value, boost, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillArray(final String fieldName, final long[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final long[] values, final FieldConsumer consumer) {
 		for (long value : values)
-			fill(fieldName, value, boost, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillArray(final String fieldName, final double[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final double[] values, final FieldConsumer consumer) {
 		for (double value : values)
-			fill(fieldName, value, boost, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillArray(final String fieldName, final float[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final float[] values, final FieldConsumer consumer) {
 		for (float value : values)
-			fill(fieldName, value, boost, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillArray(final String fieldName, final Object[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
 		for (Object value : values)
-			fill(fieldName, value, boost, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillArray(final String fieldName, final String[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final String[] values, final FieldConsumer consumer) {
 		for (String value : values)
-			fill(fieldName, value, boost, consumer);
+			fill(fieldName, value, consumer);
 	}
 
-	protected void fillCollection(final String fieldName, final Collection<Object> values, final Float boost,
+	protected void fillCollection(final String fieldName, final Collection<Object> values,
 			final FieldConsumer consumer) {
 		values.forEach(value -> {
 			if (value != null)
-				fill(fieldName, value, boost, consumer);
+				fill(fieldName, value, consumer);
 		});
 	}
 
-	protected void fillMap(final String fieldName, final Map<Object, Object> values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillMap(final String fieldName, final Map<Object, Object> values, final FieldConsumer consumer) {
 		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 				() -> "Map is not asupported type for the field: " + fieldName);
 	}
 
-	protected void fillJSObject(final String fieldName, final JSObject values, final Float boost,
-			final FieldConsumer consumer) {
-		fillCollection(fieldName, values.values(), boost, consumer);
+	protected void fillJSObject(final String fieldName, final JSObject values, final FieldConsumer consumer) {
+		fillCollection(fieldName, values.values(), consumer);
 	}
 
-	protected void fillWildcardMatcher(final String wildcardName, final Object value, final Float boost,
+	protected void fillWildcardMatcher(final String wildcardName, final Object value,
 			final FieldConsumer fieldConsumer) {
 		if (value instanceof Map) {
 			((Map<String, Object>) value).forEach((fieldName, valueObject) -> {
 				if (!wildcardMatcher.match(fieldName))
 					throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 							() -> "The field name does not match the field pattern: " + wildcardName);
-				fill(fieldName, valueObject, boost, fieldConsumer);
+				fill(fieldName, valueObject, fieldConsumer);
 			});
 		} else
-			fill(wildcardName, value, boost, fieldConsumer);
+			fill(wildcardName, value, fieldConsumer);
 	}
 
-	protected void fill(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer fieldConsumer) {
+	protected void fill(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
 		if (value == null)
 			return;
 		if (value instanceof String[])
-			fillArray(fieldName, (String[]) value, boost, fieldConsumer);
+			fillArray(fieldName, (String[]) value, fieldConsumer);
 		else if (value instanceof int[])
-			fillArray(fieldName, (int[]) value, boost, fieldConsumer);
+			fillArray(fieldName, (int[]) value, fieldConsumer);
 		else if (value instanceof long[])
-			fillArray(fieldName, (long[]) value, boost, fieldConsumer);
+			fillArray(fieldName, (long[]) value, fieldConsumer);
 		else if (value instanceof double[])
-			fillArray(fieldName, (double[]) value, boost, fieldConsumer);
+			fillArray(fieldName, (double[]) value, fieldConsumer);
 		else if (value instanceof float[])
-			fillArray(fieldName, (float[]) value, boost, fieldConsumer);
+			fillArray(fieldName, (float[]) value, fieldConsumer);
 		else if (value instanceof Object[])
-			fillArray(fieldName, (Object[]) value, boost, fieldConsumer);
+			fillArray(fieldName, (Object[]) value, fieldConsumer);
 		else if (value instanceof Collection)
-			fillCollection(fieldName, (Collection) value, boost, fieldConsumer);
+			fillCollection(fieldName, (Collection) value, fieldConsumer);
 		else if (value instanceof JSObject)
-			fillJSObject(fieldName, (JSObject) value, boost, fieldConsumer);
+			fillJSObject(fieldName, (JSObject) value, fieldConsumer);
 		else if (value instanceof Map)
-			fillMap(fieldName, (Map) value, boost, fieldConsumer);
+			fillMap(fieldName, (Map) value, fieldConsumer);
 		else
-			fillValue(fieldName, value, boost, fieldConsumer);
+			fillValue(fieldName, value, fieldConsumer);
 	}
 
-	protected void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer fieldConsumer) {
-		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-				() -> "Not supported type for the field: " + fieldName + ": " + value.getClass());
+	final protected void fillValue(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
+		if (fieldProviders != null) {
+			for (FieldProvider fieldProvider : fieldProviders)
+				fieldProvider.fillValue(fieldName, value, fieldConsumer);
+		} else
+			throw new ServerException("Unsupported value type for field \"" + fieldName + "\" : " + value.getClass());
 	}
 
 	@Override
-	final public void dispatch(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer fieldConsumer) {
+	final public void dispatch(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
 		if (value == null)
 			return;
 		if (wildcardMatcher != null)
-			fillWildcardMatcher(fieldName, value, boost, fieldConsumer);
+			fillWildcardMatcher(fieldName, value, fieldConsumer);
 		else {
-			fill(fieldName, value, boost, fieldConsumer);
+			fill(fieldName, value, fieldConsumer);
 			if (!copyToFields.isEmpty())
 				copyToFields.forEach(
-						(fieldType, copyFieldName) -> fieldType.dispatch(copyFieldName, value, null, fieldConsumer));
+						(fieldType, copyFieldName) -> fieldType.dispatch(copyFieldName, value, fieldConsumer));
 		}
 	}
 
@@ -228,6 +247,9 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 		private LinkedHashSet<Facet> facetConfig;
 		private LinkedHashSet<FieldTypeInterface.Analyzer> indexAnalyzerConfig;
 		private LinkedHashSet<FieldTypeInterface.Analyzer> queryAnalyzerConfig;
+		private LinkedHashSet<FieldProvider> fieldProviders;
+		private TermProvider termProvider;
+		private StoredFieldProvider storedFieldProvider;
 
 		Builder(WildcardMatcher wildcardMatcher, T definition) {
 			this.wildcardMatcher = wildcardMatcher;
@@ -257,6 +279,23 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 			if (this.queryAnalyzerConfig == null)
 				this.queryAnalyzerConfig = new LinkedHashSet<>();
 			this.queryAnalyzerConfig.add(queryAnalyzerConfig);
+			return this;
+		}
+
+		Builder<T> fieldProvider(FieldTypeInterface.FieldProvider fieldProvider) {
+			if (this.fieldProviders == null)
+				this.fieldProviders = new LinkedHashSet<>();
+			this.fieldProviders.add(fieldProvider);
+			return this;
+		}
+
+		Builder<T> termProvider(FieldTypeInterface.TermProvider termProvider) {
+			this.termProvider = termProvider;
+			return this;
+		}
+
+		Builder<T> storedFieldProvider(FieldTypeInterface.StoredFieldProvider storedFieldProvider) {
+			this.storedFieldProvider = storedFieldProvider;
 			return this;
 		}
 

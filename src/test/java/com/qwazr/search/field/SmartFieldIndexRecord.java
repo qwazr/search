@@ -52,12 +52,12 @@ public class SmartFieldIndexRecord extends AbstractIndexTest<SmartFieldIndexReco
 	}
 
 	@Index(name = "SmartField", schema = "TestQueries")
-	static class Record {
+	static public class Record {
 
-		@SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.INTEGER)
-		final Integer id;
+		@SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.TEXT, index = true, stored = true)
+		final public Integer id;
 
-		Record() {
+		public Record() {
 			id = null;
 		}
 

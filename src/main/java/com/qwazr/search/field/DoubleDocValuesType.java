@@ -22,6 +22,7 @@ import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.DoubleDocValuesField;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.NumericDocValues;
@@ -29,7 +30,7 @@ import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
 
-class DoubleDocValuesType extends CustomFieldTypeAbstract {
+final class DoubleDocValuesType extends CustomFieldTypeAbstract.OneField {
 
 	DoubleDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
@@ -37,14 +38,13 @@ class DoubleDocValuesType extends CustomFieldTypeAbstract {
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
-		final DoubleDocValuesField field;
+	final protected void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		final Field field;
 		if (value instanceof Number)
 			field = new DoubleDocValuesField(fieldName, ((Number) value).doubleValue());
 		else
 			field = new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString()));
-		consumer.accept(fieldName, field, boost);
+		consumer.accept(fieldName, field);
 	}
 
 	@Override

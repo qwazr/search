@@ -150,9 +150,8 @@ interface RecordsPoster {
 
 	static MapDocument create(final FieldMap fieldMap, final IndexWriter indexWriter,
 			final TaxonomyWriter taxonomyWriter, final boolean update) throws IOException {
-		return update ?
-				new UpdateMapDocument(fieldMap, indexWriter, taxonomyWriter) :
-				new AddMapDocument(fieldMap, indexWriter, taxonomyWriter);
+		return update ? new UpdateMapDocument(fieldMap, indexWriter, taxonomyWriter) : new AddMapDocument(fieldMap,
+				indexWriter, taxonomyWriter);
 	}
 
 	interface ObjectDocument extends RecordsPoster, FunctionUtils.ConsumerEx<Object, IOException> {
@@ -168,8 +167,8 @@ interface RecordsPoster {
 
 		@Override
 		final public void accept(final Object record) throws IOException {
-			final RecordBuilder.ForObject recordBuilder =
-					new RecordBuilder.ForObject(fieldMap, documentBuilder, record);
+			final RecordBuilder.ForObject recordBuilder = new RecordBuilder.ForObject(fieldMap, documentBuilder,
+					record);
 			fields.forEach(recordBuilder);
 			updateDocument(recordBuilder.id);
 		}
@@ -184,8 +183,8 @@ interface RecordsPoster {
 
 		@Override
 		final public void accept(final Object record) throws IOException {
-			final RecordBuilder.ForObject recordBuilder =
-					new RecordBuilder.ForObject(fieldMap, documentBuilder, record);
+			final RecordBuilder.ForObject recordBuilder = new RecordBuilder.ForObject(fieldMap, documentBuilder,
+					record);
 			fields.forEach(recordBuilder);
 			addDocument();
 		}
@@ -194,9 +193,8 @@ interface RecordsPoster {
 	static ObjectDocument create(final Map<String, Field> fields, final FieldMap fieldMap,
 			final IndexWriter indexWriter, final TaxonomyWriter taxonomyWriter, final boolean update)
 			throws IOException {
-		return update ?
-				new UpdateObjectDocument(fields, fieldMap, indexWriter, taxonomyWriter) :
-				new AddObjectDocument(fields, fieldMap, indexWriter, taxonomyWriter);
+		return update ? new UpdateObjectDocument(fields, fieldMap, indexWriter, taxonomyWriter) : new AddObjectDocument(
+				fields, fieldMap, indexWriter, taxonomyWriter);
 	}
 
 	final class UpdateMapDocValues extends DocValues implements MapDocument {
@@ -223,8 +221,8 @@ interface RecordsPoster {
 
 		@Override
 		final public void accept(final Object record) throws IOException {
-			final RecordBuilder.ForObject recordBuilder =
-					new RecordBuilder.ForObject(fieldMap, documentBuilder, record);
+			final RecordBuilder.ForObject recordBuilder = new RecordBuilder.ForObject(fieldMap, documentBuilder,
+					record);
 			fields.forEach(recordBuilder);
 			updateDocValues(recordBuilder.id);
 		}

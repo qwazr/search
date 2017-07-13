@@ -32,6 +32,10 @@ public interface QueryContext extends IndexContext {
 		return null;
 	}
 
+	default FieldMap getFieldMap() {
+		return null;
+	}
+
 	default ResultDefinition.WithMap searchMap(QueryDefinition queryDefinition) throws IOException {
 		throw new NotImplementedException("Not available");
 	}

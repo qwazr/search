@@ -21,6 +21,7 @@ import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
@@ -28,7 +29,7 @@ import java.io.IOException;
 
 public interface FieldTypeInterface {
 
-	void dispatch(final String fieldName, final Object value, final Float boost, final FieldConsumer fieldConsumer);
+	void dispatch(final String fieldName, final Object value, final FieldConsumer fieldConsumer);
 
 	default SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
 		return null;
@@ -37,6 +38,8 @@ public interface FieldTypeInterface {
 	ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException;
 
 	Object toTerm(final BytesRef bytesRef);
+
+	String getStoredField(String fieldName);
 
 	FieldDefinition getDefinition();
 
@@ -50,6 +53,8 @@ public interface FieldTypeInterface {
 	void setQueryAnalyzer(String fieldName, AnalyzerContext.Builder builder)
 			throws ReflectiveOperationException, IOException;
 
+	Term term(String fieldName, Object value);
+
 	@FunctionalInterface
 	interface Facet {
 		void config(String fieldName, FacetsConfig facetsConfig);
@@ -58,6 +63,21 @@ public interface FieldTypeInterface {
 	@FunctionalInterface
 	interface Analyzer {
 		void config(String fieldName, AnalyzerContext.Builder builder) throws ReflectiveOperationException, IOException;
+	}
+
+	@FunctionalInterface
+	interface FieldProvider {
+		void fillValue(final String fieldName, final Object value, final FieldConsumer consumer);
+	}
+
+	@FunctionalInterface
+	interface TermProvider {
+		Term term(String fieldName, Object value);
+	}
+
+	@FunctionalInterface
+	interface StoredFieldProvider {
+		String storedField(String fieldName);
 	}
 
 }

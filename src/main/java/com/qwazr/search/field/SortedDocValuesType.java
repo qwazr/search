@@ -30,7 +30,7 @@ import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 
-class SortedDocValuesType extends CustomFieldTypeAbstract {
+final class SortedDocValuesType extends CustomFieldTypeAbstract.OneField {
 
 	SortedDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
@@ -38,9 +38,8 @@ class SortedDocValuesType extends CustomFieldTypeAbstract {
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
-		consumer.accept(fieldName, new SortedDocValuesField(fieldName, new BytesRef(value.toString())), boost);
+	protected void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		consumer.accept(fieldName, new SortedDocValuesField(fieldName, new BytesRef(value.toString())));
 	}
 
 	@Override

@@ -18,37 +18,37 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
 
 import java.io.Externalizable;
 import java.io.Serializable;
 
-class StoredFieldType extends CustomFieldTypeAbstract {
+final class StoredFieldType extends CustomFieldTypeAbstract.OneField {
 
 	StoredFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.STRING));
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.STRING)
+				.storedFieldProvider(FieldUtils::storedField));
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
+	final void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		final Field field;
 		if (value instanceof String)
-			consumer.accept(fieldName, new StoredField(fieldName, (String) value), boost);
+			field = new StoredField(fieldName, (String) value);
 		else if (value instanceof Integer)
-			consumer.accept(fieldName, new StoredField(fieldName, (int) value), boost);
+			field = new StoredField(fieldName, (int) value);
 		else if (value instanceof Long)
-			consumer.accept(fieldName, new StoredField(fieldName, (long) value), boost);
+			field = new StoredField(fieldName, (long) value);
 		else if (value instanceof Float)
-			consumer.accept(fieldName, new StoredField(fieldName, (float) value), boost);
+			field = new StoredField(fieldName, (float) value);
 		else if (value instanceof Externalizable)
-			consumer.accept(fieldName, new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Externalizable) value)),
-					boost);
+			field = new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Externalizable) value));
 		else if (value instanceof Serializable)
-			consumer.accept(fieldName, new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Serializable) value)),
-					boost);
+			field = new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Serializable) value));
 		else
-			consumer.accept(fieldName, new StoredField(fieldName, value.toString()), boost);
+			field = new StoredField(fieldName, value.toString());
+		consumer.accept(fieldName, field);
 	}
 
 }

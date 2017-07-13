@@ -18,10 +18,11 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.util.BytesRef;
 
-class SortedSetDocValuesType extends FieldTypeAbstract {
+final class SortedSetDocValuesType extends CustomFieldTypeAbstract.OneField {
 
 	SortedSetDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
@@ -29,12 +30,13 @@ class SortedSetDocValuesType extends FieldTypeAbstract {
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
+	final void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		final Field field;
 		if (value instanceof BytesRef)
-			consumer.accept(fieldName, new SortedSetDocValuesField(fieldName, (BytesRef) value), boost);
+			field = new SortedSetDocValuesField(fieldName, (BytesRef) value);
 		else
-			consumer.accept(fieldName, new SortedSetDocValuesField(fieldName, new BytesRef(value.toString())), boost);
+			field = new SortedSetDocValuesField(fieldName, new BytesRef(value.toString()));
+		consumer.accept(fieldName, field);
 	}
 
 }

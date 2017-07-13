@@ -29,21 +29,20 @@ import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
 
-class FloatDocValuesType extends CustomFieldTypeAbstract {
+final class FloatDocValuesType extends CustomFieldTypeAbstract.OneField {
 
 	FloatDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.FLOAT));
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
+	void newField(String fieldName, Object value, FieldConsumer consumer) {
 		final FloatDocValuesField field;
 		if (value instanceof Number)
 			field = new FloatDocValuesField(fieldName, ((Number) value).floatValue());
 		else
 			field = new FloatDocValuesField(fieldName, Float.parseFloat(value.toString()));
-		consumer.accept(fieldName, field, boost);
+		consumer.accept(fieldName, field);
 	}
 
 	@Override
@@ -60,4 +59,5 @@ class FloatDocValuesType extends CustomFieldTypeAbstract {
 			return super.getConverter(fieldName, reader);
 		return new SingleDVConverter.FloatDVConverter(docValues);
 	}
+
 }

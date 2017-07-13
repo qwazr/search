@@ -690,8 +690,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	private QueryDefinition getDocumentQuery(final Object id) {
-		final QueryBuilder builder = QueryDefinition.of(
-				new TermQuery(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id)));
+		final QueryBuilder builder = QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, id));
 		builder.rows(1);
 		builder.returnedField("*");
 		return builder.build();

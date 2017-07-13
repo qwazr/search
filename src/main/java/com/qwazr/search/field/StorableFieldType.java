@@ -15,17 +15,32 @@
  */
 package com.qwazr.search.field;
 
-import org.apache.lucene.document.Field;
+import com.qwazr.search.index.FieldConsumer;
 
 abstract class StorableFieldType extends CustomFieldTypeAbstract {
 
-	protected final Field.Store store;
+	final boolean store;
 
 	StorableFieldType(final Builder<CustomFieldDefinition> builder) {
 		super(builder);
-		this.store = definition == null ?
-				Field.Store.NO :
-				(definition.stored != null && definition.stored) ? Field.Store.YES : Field.Store.NO;
+		store = getStore(builder.definition);
 	}
+
+	private static boolean getStore(CustomFieldDefinition definition) {
+		return definition != null && definition.stored != null ? definition.stored : false;
+	}
+
+	@Override
+	final void setupFields(Builder<CustomFieldDefinition> builder) {
+		if (getStore(builder.definition)) {
+			builder.fieldProvider(this::newFieldWithStore);
+			builder.storedFieldProvider(FieldUtils::storedField);
+		} else
+			builder.fieldProvider(this::newFieldNoStore);
+	}
+
+	abstract void newFieldWithStore(final String fieldName, final Object value, final FieldConsumer consumer);
+
+	abstract void newFieldNoStore(final String fieldName, final Object value, final FieldConsumer consumer);
 
 }

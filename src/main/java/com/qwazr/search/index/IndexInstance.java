@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.AnalyzerFactory;
@@ -25,7 +26,6 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
 import com.qwazr.server.ServerException;
-import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
@@ -65,10 +65,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;

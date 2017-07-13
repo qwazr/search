@@ -18,11 +18,10 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.document.DoublePoint;
-import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.StoredField;
 
-class FloatPointType extends StorableFieldType {
+final class FloatPointType extends StorableFieldType {
 
 	FloatPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
@@ -30,13 +29,15 @@ class FloatPointType extends StorableFieldType {
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
-		final float floatValue = value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(
-				value.toString());
-		consumer.accept(fieldName, new DoublePoint(fieldName, floatValue), boost);
-		if (store == Field.Store.YES)
-			consumer.accept(fieldName, new StoredField(fieldName, floatValue), boost);
+	void newFieldNoStore(final String fieldName, final Object value, final FieldConsumer consumer) {
+		consumer.accept(fieldName, new FloatPoint(fieldName, FieldUtils.getFloatValue(value)));
+	}
+
+	@Override
+	void newFieldWithStore(final String fieldName, final Object value, final FieldConsumer consumer) {
+		final float floatValue = FieldUtils.getFloatValue(value);
+		consumer.accept(fieldName, new FloatPoint(fieldName, floatValue));
+		consumer.accept(fieldName, new StoredField(fieldName, floatValue));
 	}
 
 }

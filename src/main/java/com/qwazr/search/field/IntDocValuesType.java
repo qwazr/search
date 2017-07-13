@@ -21,6 +21,7 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
@@ -29,19 +30,20 @@ import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
 
-class IntDocValuesType extends CustomFieldTypeAbstract {
+final class IntDocValuesType extends CustomFieldTypeAbstract.OneField {
 
 	IntDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.INT));
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
+	final public void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		final Field field;
 		if (value instanceof Number)
-			consumer.accept(fieldName, new NumericDocValuesField(fieldName, ((Number) value).intValue()), boost);
+			field = new NumericDocValuesField(fieldName, ((Number) value).intValue());
 		else
-			consumer.accept(fieldName, new NumericDocValuesField(fieldName, Integer.parseInt(value.toString())), boost);
+			field = new NumericDocValuesField(fieldName, Integer.parseInt(value.toString()));
+		consumer.accept(fieldName, field);
 	}
 
 	@Override

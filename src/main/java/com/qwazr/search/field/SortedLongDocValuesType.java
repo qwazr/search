@@ -30,20 +30,18 @@ import org.apache.lucene.search.SortedNumericSortField;
 
 import java.io.IOException;
 
-class SortedLongDocValuesType extends CustomFieldTypeAbstract {
+final class SortedLongDocValuesType extends CustomFieldTypeAbstract.OneField {
 
 	SortedLongDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.LONG));
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
+	final void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
 		if (value instanceof Number)
-			consumer.accept(fieldName, new SortedNumericDocValuesField(fieldName, ((Number) value).longValue()), boost);
+			consumer.accept(fieldName, new SortedNumericDocValuesField(fieldName, ((Number) value).longValue()));
 		else
-			consumer.accept(fieldName, new SortedNumericDocValuesField(fieldName, Long.parseLong(value.toString())),
-					boost);
+			consumer.accept(fieldName, new SortedNumericDocValuesField(fieldName, Long.parseLong(value.toString())));
 	}
 
 	@Override

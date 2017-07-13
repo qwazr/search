@@ -21,48 +21,44 @@ import org.apache.lucene.spatial3d.Geo3DPoint;
 
 import java.util.Map;
 
-class Geo3DPointType extends CustomFieldTypeAbstract {
+final class Geo3DPointType extends CustomFieldTypeAbstract.NoField {
 
 	Geo3DPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition));
 	}
 
 	@Override
-	protected void fillArray(final String fieldName, final double[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final double[] values, final FieldConsumer consumer) {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even double values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]), boost);
+			consumer.accept(fieldName, new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
 	}
 
 	@Override
-	protected void fillArray(final String fieldName, final float[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final float[] values, final FieldConsumer consumer) {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even float values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]), boost);
+			consumer.accept(fieldName, new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
 	}
 
 	@Override
-	protected void fillArray(final String fieldName, final Object[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even number values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
 			consumer.accept(fieldName, new Geo3DPoint(fieldName, ((Number) values[i++]).doubleValue(),
-					((Number) values[i++]).doubleValue(), ((Number) values[i++]).doubleValue()), boost);
+					((Number) values[i++]).doubleValue(), ((Number) values[i++]).doubleValue()));
 	}
 
 	@Override
-	protected void fillMap(final String fieldName, final Map<Object, Object> values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillMap(final String fieldName, final Map<Object, Object> values, final FieldConsumer consumer) {
 		final Number lat = (Number) values.get("lat");
 		if (lat != null) {
 			final Number lon = (Number) values.get("lon");
 			TypeUtils.notNull(lon, fieldName, "The longitude (lon) parameter is missing");
-			consumer.accept(fieldName, new Geo3DPoint(fieldName, lat.doubleValue(), lon.doubleValue()), boost);
+			consumer.accept(fieldName, new Geo3DPoint(fieldName, lat.doubleValue(), lon.doubleValue()));
 			return;
 		}
 		final Number x = (Number) values.get("x");
@@ -71,14 +67,7 @@ class Geo3DPointType extends CustomFieldTypeAbstract {
 		TypeUtils.notNull(y, fieldName, "The y parameter is missing");
 		final Number z = (Number) values.get("z");
 		TypeUtils.notNull(z, fieldName, "The z parameter is missing");
-		consumer.accept(fieldName, new Geo3DPoint(fieldName, x.doubleValue(), y.doubleValue(), z.doubleValue()), boost);
-	}
-
-	@Override
-	public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer fieldConsumer) {
-		throw new RuntimeException(
-				"Unsupported value type for GeoPoint: " + value.getClass() + ". An array of numbers is expected.");
+		consumer.accept(fieldName, new Geo3DPoint(fieldName, x.doubleValue(), y.doubleValue(), z.doubleValue()));
 	}
 
 }

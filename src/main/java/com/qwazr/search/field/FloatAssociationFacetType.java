@@ -24,7 +24,7 @@ import org.apache.lucene.facet.taxonomy.FloatAssociationFacetField;
 import javax.ws.rs.core.Response;
 import java.util.Objects;
 
-class FloatAssociationFacetType extends CustomFieldTypeAbstract {
+final class FloatAssociationFacetType extends CustomFieldTypeAbstract.NoField {
 
 	FloatAssociationFacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
@@ -32,15 +32,14 @@ class FloatAssociationFacetType extends CustomFieldTypeAbstract {
 	}
 
 	@Override
-	protected void fillArray(final String fieldName, final Object[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
 		Objects.requireNonNull(values, "The value array is empty");
 		if (values.length < 2)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					() -> "Expected at least 2 values - Field: " + fieldName);
 		final float assoc = TypeUtils.getFloatNumber(fieldName, values[0]);
 		final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
-		consumer.accept(fieldName, new FloatAssociationFacetField(assoc, fieldName, path), boost);
+		consumer.accept(fieldName, new FloatAssociationFacetField(assoc, fieldName, path));
 	}
 
 }

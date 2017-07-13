@@ -19,20 +19,25 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.search.SortField;
 
-class StringFieldType extends StorableFieldType {
+final class StringFieldType extends StorableFieldType {
 
 	StringFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.STRING));
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.STRING)
+				.termProvider(FieldUtils::newStringTerm));
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
-		consumer.accept(fieldName, new StringField(fieldName, value.toString(), store), boost);
+	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
+		consumer.accept(fieldName, new StringField(fieldName, value.toString(), Field.Store.YES));
+	}
+
+	@Override
+	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
+		consumer.accept(fieldName, new StringField(fieldName, value.toString(), Field.Store.NO));
 	}
 
 	@Override

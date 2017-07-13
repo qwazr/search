@@ -35,7 +35,7 @@ public @interface SmartField {
 
 	boolean facet() default false;
 
-	boolean filter() default false;
+	boolean index() default false;
 
 	boolean sort() default false;
 

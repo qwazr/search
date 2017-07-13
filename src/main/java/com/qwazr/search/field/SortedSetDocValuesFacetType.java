@@ -18,28 +18,36 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 
-class SortedSetDocValuesFacetType extends StorableFieldType {
+final class SortedSetDocValuesFacetType extends StorableFieldType {
 
 	SortedSetDocValuesFacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
 				BytesRefUtils.Converter.STRING));
 	}
 
-	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
+	private String getStringValue(Object value) {
 		if (value == null)
-			return;
+			return null;
 		final String stringValue = value.toString();
-		if (stringValue == null || stringValue.isEmpty())
-			return;
-		consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue), boost);
-		if (store == Field.Store.YES)
-			consumer.accept(fieldName, new StoredField(fieldName, stringValue), boost);
+		return stringValue == null || stringValue.isEmpty() ? null : stringValue;
 	}
 
+	@Override
+	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
+		final String stringValue = getStringValue(value);
+		if (stringValue == null)
+			return;
+		consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
+		consumer.accept(fieldName, new StoredField(fieldName, stringValue));
+	}
+
+	@Override
+	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
+		final String stringValue = getStringValue(value);
+		if (stringValue != null)
+			consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
+	}
 }

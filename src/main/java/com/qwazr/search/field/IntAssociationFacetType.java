@@ -24,7 +24,7 @@ import org.apache.lucene.facet.taxonomy.IntAssociationFacetField;
 import javax.ws.rs.core.Response;
 import java.util.Objects;
 
-class IntAssociationFacetType extends CustomFieldTypeAbstract {
+class IntAssociationFacetType extends CustomFieldTypeAbstract.NoField {
 
 	IntAssociationFacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
@@ -32,15 +32,14 @@ class IntAssociationFacetType extends CustomFieldTypeAbstract {
 	}
 
 	@Override
-	protected void fillArray(final String fieldName, final Object[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
 		Objects.requireNonNull(values, "The value array is empty");
 		if (values.length < 2)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					() -> "Expected at least 2 values - Field: " + fieldName);
 		final int assoc = TypeUtils.getIntNumber(fieldName, values[0]);
 		final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
-		consumer.accept(fieldName, new IntAssociationFacetField(assoc, fieldName, path), boost);
+		consumer.accept(fieldName, new IntAssociationFacetField(assoc, fieldName, path));
 	}
 
 }

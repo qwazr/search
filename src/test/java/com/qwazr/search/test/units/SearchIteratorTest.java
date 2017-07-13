@@ -103,7 +103,7 @@ public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord {
 	public void iterateNone() throws ReflectiveOperationException {
 
 		final Iterator<IndexRecord> iterator = indexService.searchIterator(QueryDefinition.of(
-				new TermQuery(FieldDefinition.ID_FIELD, 0)).returnedField("*").build(), IndexRecord.class);
+				new TermQuery(FieldDefinition.ID_FIELD, -1)).returnedField("*").build(), IndexRecord.class);
 		Assert.assertNotNull(iterator);
 		Assert.assertFalse(iterator.hasNext());
 

@@ -17,14 +17,18 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
 
-public class CopyToFieldType extends FieldTypeAbstract {
+final public class CopyToFieldType extends FieldTypeAbstract {
 
 	public CopyToFieldType() {
 		super(of(null, null));
 	}
 
-	protected void fill(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer fieldConsumer) {
-		// Nothing to do
+	@Override
+	final Builder setup(Builder builder) {
+		return builder.fieldProvider(this::doNothing);
 	}
+
+	final void doNothing(final String fieldName, final Object value, final FieldConsumer consumer) {
+	}
+
 }

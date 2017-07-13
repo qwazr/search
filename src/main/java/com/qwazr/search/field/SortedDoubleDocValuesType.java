@@ -21,6 +21,7 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
@@ -31,7 +32,7 @@ import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
 
-class SortedDoubleDocValuesType extends FieldTypeAbstract {
+final class SortedDoubleDocValuesType extends CustomFieldTypeAbstract.OneField {
 
 	SortedDoubleDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
@@ -39,15 +40,15 @@ class SortedDoubleDocValuesType extends FieldTypeAbstract {
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
+	final void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		final Field field;
 		if (value instanceof Number)
-			consumer.accept(fieldName, new SortedNumericDocValuesField(fieldName,
-					NumericUtils.doubleToSortableLong(((Number) value).doubleValue())), boost);
+			field = new SortedNumericDocValuesField(fieldName,
+					NumericUtils.doubleToSortableLong(((Number) value).doubleValue()));
 		else
-			consumer.accept(fieldName, new SortedNumericDocValuesField(fieldName,
-					NumericUtils.doubleToSortableLong(Double.parseDouble(value.toString()))), boost);
-
+			field = new SortedNumericDocValuesField(fieldName,
+					NumericUtils.doubleToSortableLong(Double.parseDouble(value.toString())));
+		consumer.accept(fieldName, field);
 	}
 
 	@Override

@@ -40,6 +40,7 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext {
 	final SortedSetDocValuesReaderState docValueReaderState;
 	final FieldMapWrapper.Cache fieldMapWrappers;
 	final Map<String, ValueConverter> docValuesConverters;
+	final FieldMap fieldMap;
 
 	QueryContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
 			final ExecutorService executorService, final UpdatableAnalyzer indexAnalyzer,
@@ -49,6 +50,7 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext {
 			final Map<String, ValueConverter> docValuesConverters) {
 		super(indexProvider, resourceLoader, executorService, indexAnalyzer, queryAnalyzer, fieldMap);
 		this.docValueReaderState = docValueReaderState;
+		this.fieldMap = fieldMap;
 		this.fieldMapWrappers = fieldMapWrappers;
 		this.indexSearcher = indexSearcher;
 		this.indexReader = indexSearcher.getIndexReader();
@@ -64,6 +66,11 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext {
 	@Override
 	public IndexSearcher getIndexSearcher() {
 		return indexSearcher;
+	}
+
+	@Override
+	public FieldMap getFieldMap() {
+		return fieldMap;
 	}
 
 	private <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDefinition,

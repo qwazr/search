@@ -55,6 +55,11 @@ class FieldMapWrappers extends FieldMapWrapper.Cache {
 				final IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
 				fieldMap.put(checkFieldName(indexField.name(), field), FieldSetter.of(field));
 			}
+			if (field.isAnnotationPresent(SmartField.class)) {
+				field.setAccessible(true);
+				final SmartField smartField = field.getDeclaredAnnotation(SmartField.class);
+				fieldMap.put(checkFieldName(smartField.name(), field), FieldSetter.of(field));
+			}
 			if (field.isAnnotationPresent(IndexMapping.class)) {
 				field.setAccessible(true);
 				final IndexMapping indexMapping = field.getDeclaredAnnotation(IndexMapping.class);

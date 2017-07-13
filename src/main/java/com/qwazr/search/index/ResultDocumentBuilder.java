@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 
@@ -73,15 +72,15 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 	}
 
 	final void extractStoredReturnedFields(@NotNull final IndexSearcher searcher,
-			@NotNull final Set<String> returnedFields) throws IOException {
-		final Visitor visitor = new Visitor(returnedFields);
+			@NotNull final Map<String, String> storedFields) throws IOException {
+		final Visitor visitor = new Visitor(storedFields);
 		searcher.doc(scoreDoc.doc, visitor);
 		visitor.extract();
 	}
 
 	private class Visitor extends StoredFieldVisitor {
 
-		private final Set<String> returnedFields;
+		private final Map<String, String> storedFields;
 		private Map<String, List<String>> stringFields;
 		private Map<String, List<byte[]>> bytesFields;
 		private Map<String, long[]> longFields;
@@ -89,35 +88,40 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 		private Map<String, float[]> floatFields;
 		private Map<String, double[]> doubleFields;
 
-		private Visitor(Set<String> returnedFields) {
-			this.returnedFields = returnedFields;
+		private Visitor(Map<String, String> storedFields) {
+			this.storedFields = storedFields;
 		}
 
 		@Override
 		public Status needsField(FieldInfo fieldInfo) throws IOException {
-			return returnedFields.contains(fieldInfo.name) ? Status.YES : Status.NO;
+			return storedFields.containsKey(fieldInfo.name) ? Status.YES : Status.NO;
+		}
+
+		private String getReturnedField(String fieldInfoName) {
+			return storedFields.get(fieldInfoName);
 		}
 
 		@Override
 		public void binaryField(FieldInfo fieldInfo, byte[] value) throws IOException {
 			if (bytesFields == null)
 				bytesFields = new HashMap<>();
-			bytesFields.computeIfAbsent(fieldInfo.name, name -> new ArrayList<>()).add(value);
+			bytesFields.computeIfAbsent(getReturnedField(fieldInfo.name), name -> new ArrayList<>()).add(value);
 		}
 
 		@Override
 		public void stringField(FieldInfo fieldInfo, byte[] value) throws IOException {
 			if (stringFields == null)
 				stringFields = new HashMap<>();
-			stringFields.computeIfAbsent(fieldInfo.name, name -> new ArrayList<>()).add(
+			stringFields.computeIfAbsent(getReturnedField(fieldInfo.name), name -> new ArrayList<>()).add(
 					new String(value, StandardCharsets.UTF_8));
 		}
 
 		@Override
 		public void intField(FieldInfo fieldInfo, int value) throws IOException {
+			final String fieldName = getReturnedField(fieldInfo.name);
 			if (intFields == null)
 				intFields = new HashMap<>();
-			int[] array = intFields.get(fieldInfo.name);
+			int[] array = intFields.get(fieldName);
 			if (array == null) {
 				array = new int[1];
 			} else {
@@ -126,14 +130,15 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 				array = newArray;
 			}
 			array[array.length - 1] = value;
-			intFields.put(fieldInfo.name, array);
+			intFields.put(fieldName, array);
 		}
 
 		@Override
 		public void longField(FieldInfo fieldInfo, long value) throws IOException {
+			final String fieldName = getReturnedField(fieldInfo.name);
 			if (longFields == null)
 				longFields = new HashMap<>();
-			long[] array = longFields.get(fieldInfo.name);
+			long[] array = longFields.get(fieldName);
 			if (array == null) {
 				array = new long[1];
 			} else {
@@ -142,14 +147,15 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 				array = newArray;
 			}
 			array[array.length - 1] = value;
-			longFields.put(fieldInfo.name, array);
+			longFields.put(fieldName, array);
 		}
 
 		@Override
 		public void floatField(FieldInfo fieldInfo, float value) throws IOException {
+			final String fieldName = getReturnedField(fieldInfo.name);
 			if (floatFields == null)
 				floatFields = new HashMap<>();
-			float[] array = floatFields.get(fieldInfo.name);
+			float[] array = floatFields.get(fieldName);
 			if (array == null) {
 				array = new float[1];
 			} else {
@@ -158,14 +164,15 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 				array = newArray;
 			}
 			array[array.length - 1] = value;
-			floatFields.put(fieldInfo.name, array);
+			floatFields.put(fieldName, array);
 		}
 
 		@Override
 		public void doubleField(FieldInfo fieldInfo, double value) throws IOException {
+			final String fieldName = getReturnedField(fieldInfo.name);
 			if (doubleFields == null)
 				doubleFields = new HashMap<>();
-			double[] array = doubleFields.get(fieldInfo.name);
+			double[] array = doubleFields.get(fieldName);
 			if (array == null) {
 				array = new double[1];
 			} else {
@@ -174,7 +181,7 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 				array = newArray;
 			}
 			array[array.length - 1] = value;
-			doubleFields.put(fieldInfo.name, array);
+			doubleFields.put(fieldName, array);
 		}
 
 		void extract() {

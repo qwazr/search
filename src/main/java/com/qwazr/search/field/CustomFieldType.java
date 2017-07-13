@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-class CustomFieldType extends CustomFieldTypeAbstract {
+final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 
 	private final Consumer<FieldType>[] typeSetters;
 
@@ -40,7 +40,8 @@ class CustomFieldType extends CustomFieldTypeAbstract {
 	private final SortFieldProvider sortFieldProvider;
 
 	CustomFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(getConverter(definition)));
+		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(getConverter(definition))
+				.termProvider(FieldUtils::newStringTerm));
 		final CustomFieldDefinition customFieldDefinition = (CustomFieldDefinition) definition;
 		typeSetters = buildTypeSetters(customFieldDefinition);
 		sortFieldProvider = buildSortFieldProvider(customFieldDefinition);
@@ -125,13 +126,12 @@ class CustomFieldType extends CustomFieldTypeAbstract {
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
+	final protected void newField(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
 		final FieldType type = new FieldType();
 		if (typeSetters != null)
 			for (Consumer<FieldType> ts : typeSetters)
 				ts.accept(type);
-		consumer.accept(fieldName, new CustomField(fieldName, type, value), boost);
+		fieldConsumer.accept(fieldName, new CustomField(fieldName, type, value));
 	}
 
 	@Override

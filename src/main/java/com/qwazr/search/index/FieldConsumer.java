@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
@@ -27,7 +27,7 @@ public interface FieldConsumer {
 
 	void reset();
 
-	void accept(final String fieldName, final Field field, final Float boost);
+	void accept(final String fieldName, final Field field);
 
 	final class ForDocument implements FieldConsumer {
 
@@ -41,9 +41,7 @@ public interface FieldConsumer {
 		}
 
 		@Override
-		final public void accept(final String fieldName, final Field field, final Float boost) {
-			if (boost != null && boost != 1.0F)
-				field.setBoost(boost);
+		final public void accept(final String fieldName, final Field field) {
 			document.add(field);
 			fieldNameSet.add(fieldName);
 		}
@@ -59,12 +57,10 @@ public interface FieldConsumer {
 		}
 
 		@Override
-		final public void accept(final String fieldName, final Field field, final Float boost) {
+		final public void accept(final String fieldName, final Field field) {
 			// We will not update the internal ID of the document
 			if (FieldDefinition.ID_FIELD.equals(field.name()))
 				return;
-			if (boost != null && boost != 1.0F)
-				field.setBoost(boost);
 			fieldList.add(field);
 		}
 

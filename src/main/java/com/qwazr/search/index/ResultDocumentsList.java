@@ -24,6 +24,7 @@ import org.apache.lucene.search.ScoreDoc;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 	private final FieldMap fieldMap;
 	private final List<ResultDocumentBuilder<T>> documentsBuilder;
 	private final Set<String> returnedFields;
+	private final Map<String, String> storedFields;
 	private final Map<String, ValueConverter> returnedFieldsConverter;
 	protected final int start;
 
@@ -50,11 +52,15 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 						queryDefinition.returned_fields :
 						null;
 		if (this.returnedFields != null && !this.returnedFields.isEmpty()) {
+			this.storedFields = new HashMap<>();
 			this.returnedFieldsConverter = new LinkedHashMap<>();
 			for (String fieldName : this.returnedFields) {
 				final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
 				if (fieldType == null)
 					continue;
+				final String storedFieldName = fieldType.getStoredField(fieldName);
+				if (storedFieldName != null)
+					storedFields.put(storedFieldName, fieldName);
 				final ValueConverter converter = context.docValuesConverters.computeIfAbsent(fieldName, f -> {
 					try {
 						return fieldType.getConverter(fieldName, indexReader);
@@ -65,8 +71,10 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 				if (converter != null)
 					returnedFieldsConverter.put(fieldName, converter);
 			}
-		} else
+		} else {
+			this.storedFields = null;
 			this.returnedFieldsConverter = null;
+		}
 		this.documentsBuilder = new ArrayList<>();
 	}
 
@@ -81,11 +89,10 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 		final ResultDocumentBuilder<T> builder = newResultDocumentBuilder(start + pos, scoreDoc);
 		if (builder == null)
 			return;
-		if (returnedFields != null) {
-			builder.extractStoredReturnedFields(searcher, returnedFields);
-			if (returnedFieldsConverter != null)
-				builder.extractDocValuesReturnedFields(returnedFieldsConverter);
-		}
+		if (storedFields != null && !storedFields.isEmpty())
+			builder.extractStoredReturnedFields(searcher, storedFields);
+		if (returnedFieldsConverter != null && !returnedFieldsConverter.isEmpty())
+			builder.extractDocValuesReturnedFields(returnedFieldsConverter);
 		documentsBuilder.add(builder);
 	}
 

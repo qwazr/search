@@ -21,55 +21,44 @@ import org.apache.lucene.document.LatLonPoint;
 
 import java.util.Map;
 
-class LatLonPointType extends CustomFieldTypeAbstract {
+final class LatLonPointType extends CustomFieldTypeAbstract.NoField {
 
 	LatLonPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition));
 	}
 
 	@Override
-	protected void fillArray(final String fieldName, final double[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final double[] values, final FieldConsumer consumer) {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even double values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new LatLonPoint(fieldName, values[i++], values[i++]), boost);
+			consumer.accept(fieldName, new LatLonPoint(fieldName, values[i++], values[i++]));
 	}
 
 	@Override
-	protected void fillArray(final String fieldName, final float[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final float[] values, final FieldConsumer consumer) {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even float values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new LatLonPoint(fieldName, values[i++], values[i++]), boost);
+			consumer.accept(fieldName, new LatLonPoint(fieldName, values[i++], values[i++]));
 	}
 
 	@Override
-	protected void fillArray(final String fieldName, final Object[] values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even number values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
 			consumer.accept(fieldName, new LatLonPoint(fieldName, ((Number) values[i++]).doubleValue(),
-					((Number) values[i++]).doubleValue()), boost);
+					((Number) values[i++]).doubleValue()));
 	}
 
 	@Override
-	protected void fillMap(final String fieldName, final Map<Object, Object> values, final Float boost,
-			final FieldConsumer consumer) {
+	protected void fillMap(final String fieldName, final Map<Object, Object> values, final FieldConsumer consumer) {
 		final Number latitude = (Number) values.get("lat");
 		TypeUtils.notNull(latitude, fieldName, "The latitude parameter (lat) is missing");
 		final Number longitude = (Number) values.get("lon");
 		TypeUtils.notNull(longitude, fieldName, "The longitude parameter (lon) is missing");
-		consumer.accept(fieldName, new LatLonPoint(fieldName, latitude.doubleValue(), longitude.doubleValue()), boost);
-	}
-
-	@Override
-	public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer fieldConsumer) {
-		throw new RuntimeException(
-				"Unsupported value type for GeoPoint: " + value.getClass() + ". An array of numbers is expected.");
+		consumer.accept(fieldName, new LatLonPoint(fieldName, latitude.doubleValue(), longitude.doubleValue()));
 	}
 
 }

@@ -15,9 +15,11 @@
  */
 package com.qwazr.search.annotations;
 
+import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.SmartFieldDefinition;
 import com.qwazr.search.index.AnnotatedServiceInterface;
 import com.qwazr.search.index.BackupStatus;
 import com.qwazr.search.index.ExplainDefinition;
@@ -39,7 +41,6 @@ import com.qwazr.search.index.TermEnumDefinition;
 import com.qwazr.utils.AnnotationsUtils;
 import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.CharsetUtils;
-import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -74,15 +75,13 @@ public class AnnotatedIndexService<T> {
 
 	protected final IndexSettingsDefinition settings;
 
-	private final Map<String, IndexField> indexFieldMap;
-
-	private final Map<String, Copy> copyMap;
-
 	private final FieldMapWrappers fieldMapWrappers;
 
 	private final FieldMapWrapper<T> schemaFieldMapWrapper;
 
 	private final LinkedHashMap<String, Field> fieldMap;
+
+	private final LinkedHashMap<String, FieldDefinition> fieldDefinitions;
 
 	/**
 	 * Create a new index service. A class with Index and IndexField annotations.
@@ -110,14 +109,23 @@ public class AnnotatedIndexService<T> {
 		this.settings = settings != null ? settings : IndexSettingsDefinition.of(index).build();
 
 		this.fieldMap = new LinkedHashMap<>();
-		indexFieldMap = new LinkedHashMap<>();
-		copyMap = new LinkedHashMap<>();
+		this.fieldDefinitions = new LinkedHashMap<>();
+		final Map<String, IndexField> indexFieldMap = new LinkedHashMap<>();
+		final Map<String, SmartField> smartFieldMap = new LinkedHashMap<>();
+		final Map<String, Copy> copyMap = new LinkedHashMap<>();
 		AnnotationsUtils.browseFieldsRecursive(indexDefinitionClass, field -> {
 			if (field.isAnnotationPresent(IndexField.class)) {
 				field.setAccessible(true);
 				final IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
 				final String fieldName = FieldMapWrappers.getFieldName(indexField.name(), field);
 				indexFieldMap.put(fieldName, indexField);
+				fieldMap.put(fieldName, field);
+			}
+			if (field.isAnnotationPresent(SmartField.class)) {
+				field.setAccessible(true);
+				final SmartField smartField = field.getDeclaredAnnotation(SmartField.class);
+				final String fieldName = FieldMapWrappers.getFieldName(smartField.name(), field);
+				smartFieldMap.put(fieldName, smartField);
 				fieldMap.put(fieldName, field);
 			}
 			if (field.isAnnotationPresent(Copy.class)) {
@@ -128,7 +136,10 @@ public class AnnotatedIndexService<T> {
 				fieldMap.put(fieldName, field);
 			}
 		});
-
+		smartFieldMap.forEach((name, propertyField) -> fieldDefinitions.put(name,
+				new SmartFieldDefinition(name, propertyField, copyMap)));
+		indexFieldMap.forEach((name, propertyField) -> fieldDefinitions.put(name,
+				new CustomFieldDefinition(name, propertyField, copyMap)));
 		this.fieldMapWrappers = new FieldMapWrappers(fieldMap.keySet());
 		this.schemaFieldMapWrapper = fieldMapWrappers.get(indexDefinitionClass);
 	}
@@ -235,14 +246,6 @@ public class AnnotatedIndexService<T> {
 		checkHttpResponse(indexService.deleteIndex(schemaName, indexName), 200);
 	}
 
-	private LinkedHashMap<String, FieldDefinition> getAnnotatedFields() {
-		final LinkedHashMap<String, FieldDefinition> indexFields = new LinkedHashMap<>();
-		if (indexFieldMap != null)
-			indexFieldMap.forEach((name, propertyField) -> indexFields.put(name,
-					new CustomFieldDefinition(name, propertyField, copyMap)));
-		return indexFields;
-	}
-
 	/**
 	 * Set a collection of fields by reading the annotated fields.
 	 *
@@ -250,7 +253,7 @@ public class AnnotatedIndexService<T> {
 	 */
 	public LinkedHashMap<String, FieldDefinition> createUpdateFields() {
 		checkParameters();
-		return indexService.setFields(schemaName, indexName, getAnnotatedFields());
+		return indexService.setFields(schemaName, indexName, fieldDefinitions);
 	}
 
 	/**
@@ -272,22 +275,19 @@ public class AnnotatedIndexService<T> {
 	 */
 	public Map<String, FieldStatus> getFieldChanges() {
 		checkParameters();
-		final LinkedHashMap<String, FieldDefinition> annotatedFields = getAnnotatedFields();
 		final LinkedHashMap<String, FieldDefinition> indexFields = indexService.getFields(schemaName, indexName);
 		final HashMap<String, FieldStatus> fieldChanges = new HashMap<>();
-		if (indexFieldMap != null) {
-			indexFieldMap.forEach((name, propertyField) -> {
-				final FieldDefinition annotatedField = annotatedFields.get(name);
-				final FieldDefinition indexField = indexFields == null ? null : indexFields.get(name);
-				if (indexField == null)
-					fieldChanges.put(name, FieldStatus.EXISTS_ONLY_IN_ANNOTATION);
-				else if (!indexField.equals(annotatedField))
-					fieldChanges.put(name, FieldStatus.NOT_IDENTICAL);
-			});
-		}
+		fieldMap.forEach((name, propertyField) -> {
+			final FieldDefinition annotatedField = fieldDefinitions.get(name);
+			final FieldDefinition indexField = indexFields == null ? null : indexFields.get(name);
+			if (indexField == null)
+				fieldChanges.put(name, FieldStatus.EXISTS_ONLY_IN_ANNOTATION);
+			else if (!indexField.equals(annotatedField))
+				fieldChanges.put(name, FieldStatus.NOT_IDENTICAL);
+		});
 		if (indexFields != null) {
 			indexFields.forEach((name, indexField) -> {
-				if (!annotatedFields.containsKey(name))
+				if (!fieldDefinitions.containsKey(name))
 					fieldChanges.put(name, FieldStatus.EXISTS_ONLY_IN_INDEX);
 			});
 		}

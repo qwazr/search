@@ -15,15 +15,17 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.StringUtils;
 
-public class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefinition> {
+abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefinition> {
 
 	protected CustomFieldTypeAbstract(final Builder<CustomFieldDefinition> builder) {
-		super(setup(builder));
+		super(builder);
 	}
 
-	private static Builder<CustomFieldDefinition> setup(Builder<CustomFieldDefinition> builder) {
+	@Override
+	final Builder<CustomFieldDefinition> setup(Builder<CustomFieldDefinition> builder) {
 
 		// Setup facets
 		if (builder.definition.facetMultivalued != null)
@@ -47,7 +49,39 @@ public class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefini
 			builder.queryAnalyzerConfig(
 					(fieldName, analyzerBuilder) -> analyzerBuilder.add(fieldName, analyzerDescriptor));
 
+		setupFields(builder);
+		if (builder.definition.stored != null && builder.definition.stored)
+			builder.storedFieldProvider(FieldUtils::storedField);
+
 		return builder;
+	}
+
+	abstract void setupFields(Builder<CustomFieldDefinition> builder);
+
+	static abstract class OneField extends CustomFieldTypeAbstract {
+
+		protected OneField(Builder<CustomFieldDefinition> builder) {
+			super(builder);
+		}
+
+		@Override
+		final void setupFields(Builder<CustomFieldDefinition> builder) {
+			builder.fieldProvider(this::newField);
+		}
+
+		abstract void newField(final String fieldName, final Object value, final FieldConsumer consumer);
+	}
+
+	static abstract class NoField extends CustomFieldTypeAbstract {
+
+		protected NoField(Builder<CustomFieldDefinition> builder) {
+			super(builder);
+		}
+
+		@Override
+		final void setupFields(Builder<CustomFieldDefinition> builder) {
+		}
+
 	}
 
 }

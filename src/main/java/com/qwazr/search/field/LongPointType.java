@@ -19,12 +19,11 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.search.SortField;
 
-class LongPointType extends StorableFieldType {
+final class LongPointType extends StorableFieldType {
 
 	LongPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
@@ -32,12 +31,15 @@ class LongPointType extends StorableFieldType {
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
-		long longValue = value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString());
-		consumer.accept(fieldName, new LongPoint(fieldName, longValue), boost);
-		if (store == Field.Store.YES)
-			consumer.accept(fieldName, new StoredField(fieldName, longValue), boost);
+	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
+		final long longValue = FieldUtils.getLongValue(value);
+		consumer.accept(fieldName, new LongPoint(fieldName, longValue));
+		consumer.accept(fieldName, new StoredField(fieldName, longValue));
+	}
+
+	@Override
+	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
+		consumer.accept(fieldName, new LongPoint(fieldName, FieldUtils.getLongValue(value)));
 	}
 
 	@Override

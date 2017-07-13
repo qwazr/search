@@ -1,6 +1,7 @@
 {
   "$id$": {
-    "type": "STRING"
+    "type": "STRING",
+    "index": true
   },
   "name": {
     "type": "STRING",
@@ -26,7 +27,7 @@
   },
   "size": {
     "type": "LONG",
-    "filter": true
+    "index": true
   },
   "stock": {
     "type": "INTEGER",

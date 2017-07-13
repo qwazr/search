@@ -18,11 +18,10 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
 
-class IntPointType extends StorableFieldType {
+final class IntPointType extends StorableFieldType {
 
 	IntPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
@@ -30,12 +29,14 @@ class IntPointType extends StorableFieldType {
 	}
 
 	@Override
-	final public void fillValue(final String fieldName, final Object value, final Float boost,
-			final FieldConsumer consumer) {
-		int intValue = value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
-		consumer.accept(fieldName, new IntPoint(fieldName, intValue), boost);
-		if (store == Field.Store.YES)
-			consumer.accept(fieldName, new StoredField(fieldName, intValue), boost);
+	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
+		final int intValue = FieldUtils.getIntValue(value);
+		consumer.accept(fieldName, new IntPoint(fieldName, intValue));
+		consumer.accept(fieldName, new StoredField(fieldName, intValue));
 	}
 
+	@Override
+	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
+		consumer.accept(fieldName, new IntPoint(fieldName, FieldUtils.getIntValue(value)));
+	}
 }

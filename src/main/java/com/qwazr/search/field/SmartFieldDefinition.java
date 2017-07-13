@@ -30,7 +30,7 @@ public class SmartFieldDefinition extends FieldDefinition {
 	final public Type type;
 	final public Boolean fulltext;
 	final public Boolean facet;
-	final public Boolean filter;
+	final public Boolean index;
 	final public Boolean sort;
 	final public Boolean stored;
 	final public Boolean snippet;
@@ -42,7 +42,7 @@ public class SmartFieldDefinition extends FieldDefinition {
 
 	@JsonCreator
 	SmartFieldDefinition(@JsonProperty("type") Type type, @JsonProperty("fulltext") Boolean fulltext,
-			@JsonProperty("facet") Boolean facet, @JsonProperty("filter") Boolean filter,
+			@JsonProperty("facet") Boolean facet, @JsonProperty("index") Boolean index,
 			@JsonProperty("sort") Boolean sort, @JsonProperty("stored") Boolean stored,
 			@JsonProperty("snippet") Boolean snippet, @JsonProperty("autocomplete") Boolean autocomplete,
 			@JsonProperty("copy_from") String[] copyFrom) {
@@ -50,7 +50,7 @@ public class SmartFieldDefinition extends FieldDefinition {
 		this.type = type;
 		this.fulltext = fulltext;
 		this.facet = facet;
-		this.filter = filter;
+		this.index = index;
 		this.sort = sort;
 		this.stored = stored;
 		this.snippet = snippet;
@@ -62,7 +62,7 @@ public class SmartFieldDefinition extends FieldDefinition {
 		type = builder.type;
 		fulltext = builder.fulltext;
 		facet = builder.facet;
-		filter = builder.filter;
+		index = builder.index;
 		sort = builder.sort;
 		stored = builder.stored;
 		snippet = builder.snippet;
@@ -74,7 +74,7 @@ public class SmartFieldDefinition extends FieldDefinition {
 		type = smartField.type();
 		fulltext = smartField.fulltext();
 		facet = smartField.facet();
-		filter = smartField.filter();
+		index = smartField.index();
 		sort = smartField.sort();
 		stored = smartField.stored();
 		snippet = smartField.snippet();
@@ -96,7 +96,7 @@ public class SmartFieldDefinition extends FieldDefinition {
 			return false;
 		if (!Objects.equals(facet, f.facet))
 			return false;
-		if (!Objects.equals(filter, f.filter))
+		if (!Objects.equals(index, f.index))
 			return false;
 		if (!Objects.equals(sort, f.sort))
 			return false;
@@ -118,7 +118,7 @@ public class SmartFieldDefinition extends FieldDefinition {
 		public Type type;
 		public Boolean fulltext;
 		public Boolean facet;
-		public Boolean filter;
+		public Boolean index;
 		public Boolean sort;
 		public Boolean stored;
 		public Boolean snippet;
@@ -143,8 +143,8 @@ public class SmartFieldDefinition extends FieldDefinition {
 			return this;
 		}
 
-		public SmartBuilder filter(Boolean filter) {
-			this.filter = filter;
+		public SmartBuilder index(Boolean index) {
+			this.index = index;
 			return this;
 		}
 
