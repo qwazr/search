@@ -91,8 +91,8 @@ public class SmartFieldDefinition extends FieldDefinition {
 		return true;
 	}
 
-	public static Builder of(Type type) {
-		return new SmartBuilder().type(type);
+	public static SmartBuilder of() {
+		return new SmartBuilder();
 	}
 
 	public static class SmartBuilder extends Builder {
@@ -102,20 +102,18 @@ public class SmartFieldDefinition extends FieldDefinition {
 		public Boolean index;
 		public Boolean sort;
 		public Boolean stored;
-		public Boolean snippet;
-		public Boolean autocomplete;
 
 		public SmartBuilder type(Type type) {
 			this.type = type;
 			return this;
 		}
 
-		public CustomFieldDefinition.CustomBuilder analyzer(String analyzer) {
-			return (CustomFieldDefinition.CustomBuilder) super.analyzer(analyzer);
+		public SmartBuilder analyzer(String analyzer) {
+			return (SmartBuilder) super.analyzer(analyzer);
 		}
 
-		public CustomFieldDefinition.CustomBuilder queryAnalyzer(String queryAnalyzer) {
-			return (CustomFieldDefinition.CustomBuilder) super.queryAnalyzer(queryAnalyzer);
+		public SmartBuilder queryAnalyzer(String queryAnalyzer) {
+			return (SmartBuilder) super.queryAnalyzer(queryAnalyzer);
 		}
 
 		public SmartBuilder copyFrom(String copyFrom) {

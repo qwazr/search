@@ -41,4 +41,46 @@ public class FieldDefinitionTest {
 		Assert.assertNotNull(fields);
 		fields.forEach((name, field) -> Assert.assertTrue(field instanceof SmartFieldDefinition));
 	}
+
+	void checkFieldDef(SmartFieldDefinition.SmartBuilder builder, SmartFieldDefinition.Type type, Boolean facet,
+			Boolean index, Boolean sort, Boolean stored, final String analyzer, final String queryAnalyzer) {
+		final SmartFieldDefinition fieldDef = builder.build();
+		Assert.assertNotNull(fieldDef);
+		Assert.assertEquals(type, fieldDef.type);
+		Assert.assertEquals(facet, fieldDef.facet);
+		Assert.assertEquals(index, fieldDef.index);
+		Assert.assertEquals(sort, fieldDef.sort);
+		Assert.assertEquals(stored, fieldDef.stored);
+		Assert.assertEquals(analyzer, fieldDef.analyzer);
+		Assert.assertEquals(queryAnalyzer, fieldDef.queryAnalyzer);
+	}
+
+	@Test
+	public void smartFieldBuilderTest() {
+		final SmartFieldDefinition.SmartBuilder builder = SmartFieldDefinition.of();
+
+		checkFieldDef(builder, null, null, null, null, null, null, null);
+
+		builder.type(SmartFieldDefinition.Type.DOUBLE);
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, null, null, null, null, null, null);
+
+		builder.facet(true);
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, null, null, null, null, null);
+
+		builder.index(true);
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, null, null, null, null);
+
+		builder.sort(true);
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, null, null, null);
+
+		builder.stored(true);
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, null, null);
+
+		builder.analyzer("analyzer");
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", null);
+
+		builder.queryAnalyzer("queryAnalyzer");
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "queryAnalyzer");
+
+	}
 }
