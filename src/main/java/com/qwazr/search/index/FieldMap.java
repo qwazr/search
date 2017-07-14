@@ -134,19 +134,22 @@ public class FieldMap {
 		}
 	}
 
+	final public String resolveQueryFieldName(final String field) {
+		return Objects.requireNonNull(nameDefMap.get(field), "Indexed field not found: " + field).getQueryFieldName(
+				field);
+	}
+
 	final public String[] resolveQueryFieldNames(final String[] fields) {
 		final String[] resolvedFields = new String[fields.length];
 		int i = 0;
 		for (String f : fields)
-			resolvedFields[i++] = Objects.requireNonNull(nameDefMap.get(f), "Field not found: " + f).getQueryFieldName(
-					f);
+			resolvedFields[i++] = resolveQueryFieldName(f);
 		return resolvedFields;
 	}
 
 	final public <T> Map<String, T> resolveQueryFieldNames(final Map<String, T> fields,
 			final Map<String, T> resolvedFields) {
-		fields.forEach((f, t) -> resolvedFields.put(
-				Objects.requireNonNull(nameDefMap.get(f), "Field not found: " + f).getQueryFieldName(f), t));
+		fields.forEach((f, t) -> resolvedFields.put(resolveQueryFieldName(f), t));
 		return resolvedFields;
 	}
 

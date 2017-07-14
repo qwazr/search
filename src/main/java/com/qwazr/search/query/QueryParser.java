@@ -27,12 +27,11 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.Objects;
 
-public class QueryParser extends AbstractQuery {
+public class QueryParser extends AbstractFieldQuery {
 
 	@JsonIgnore
 	final private Analyzer analyzer;
 
-	final public String field;
 	final public Boolean allow_leading_wildcard;
 	final public QueryParserOperator default_operator;
 	final public Integer phrase_slop;
@@ -52,7 +51,8 @@ public class QueryParser extends AbstractQuery {
 	final public String query_string;
 
 	@JsonCreator
-	private QueryParser() {
+	private QueryParser(@JsonProperty("field") String field) {
+		super(field);
 		analyzer = null;
 		field = null;
 		allow_leading_wildcard = null;
@@ -72,8 +72,8 @@ public class QueryParser extends AbstractQuery {
 	}
 
 	public QueryParser(Builder builder) {
+		super(builder.field);
 		this.analyzer = builder.analyzer;
-		this.field = Objects.requireNonNull(builder.field, "The field is missing");
 		this.allow_leading_wildcard = builder.allow_leading_wildcard;
 		this.default_operator = builder.default_operator;
 		this.phrase_slop = builder.phrase_slop;
@@ -92,7 +92,8 @@ public class QueryParser extends AbstractQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
-		final org.apache.lucene.queryparser.classic.QueryParser parser = new QueryParserFix(field,
+		final org.apache.lucene.queryparser.classic.QueryParser parser = new QueryParserFix(
+				resolveField(queryContext.getFieldMap()),
 				analyzer == null ? queryContext.getQueryAnalyzer() : analyzer);
 		if (default_operator != null)
 			parser.setDefaultOperator(default_operator.queryParseroperator);
@@ -120,7 +121,7 @@ public class QueryParser extends AbstractQuery {
 			parser.setEnableGraphQueries(enableGraphQueries);
 		if (splitOnWhitespace != null)
 			parser.setSplitOnWhitespace(splitOnWhitespace);
-		return parser.parse(query_string);
+		return parser.parse(Objects.requireNonNull(query_string, "The query string is missing"));
 	}
 
 	public static Builder of(String field) {

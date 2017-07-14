@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,6 +43,7 @@ public class Geo3DDistanceQuery extends AbstractFieldQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return Geo3DPoint.newDistanceQuery(field, latitude, longitude, radius_meters);
+		return Geo3DPoint.newDistanceQuery(resolveField(queryContext.getFieldMap()), latitude, longitude,
+				radius_meters);
 	}
 }

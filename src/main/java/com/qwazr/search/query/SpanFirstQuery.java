@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,18 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
 
-public class SpanFirstQuery extends AbstractQuery {
+public class SpanFirstQuery extends AbstractSpanQuery {
 
 	final public AbstractSpanQuery spanQuery;
 	final public Integer end;
-
-	public SpanFirstQuery(final AbstractSpanQuery spanQuery) {
-		this(spanQuery, null);
-	}
 
 	@JsonCreator
 	public SpanFirstQuery(@JsonProperty("spanQuery") final AbstractSpanQuery spanQuery,
@@ -41,7 +37,7 @@ public class SpanFirstQuery extends AbstractQuery {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext)
+	final public SpanQuery getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		return new org.apache.lucene.search.spans.SpanFirstQuery(spanQuery.getQuery(queryContext),
 				end == null ? 0 : end);

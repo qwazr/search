@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,14 +33,6 @@ public class SpanNotQuery extends AbstractSpanQuery {
 	final public Integer pre;
 	final public Integer post;
 
-	public SpanNotQuery(final AbstractSpanQuery include, final AbstractSpanQuery exclude) {
-		this(include, exclude, null, null, null);
-	}
-
-	public SpanNotQuery(final AbstractSpanQuery include, final AbstractSpanQuery exclude, final Integer dist) {
-		this(include, exclude, null, null, dist);
-	}
-
 	@JsonCreator
 	public SpanNotQuery(@JsonProperty("include") final AbstractSpanQuery include,
 			@JsonProperty("exclude") final AbstractSpanQuery exclude, @JsonProperty("pre") final Integer pre,
@@ -62,7 +54,8 @@ public class SpanNotQuery extends AbstractSpanQuery {
 		if (dist != null)
 			return new org.apache.lucene.search.spans.SpanNotQuery(includeQuery, excludeQuery, dist);
 		else if (pre != null || post != null)
-			return new org.apache.lucene.search.spans.SpanNotQuery(includeQuery, excludeQuery, pre, post);
+			return new org.apache.lucene.search.spans.SpanNotQuery(includeQuery, excludeQuery, pre == null ? 0 : pre,
+					post == null ? 0 : post);
 		return new org.apache.lucene.search.spans.SpanNotQuery(includeQuery, excludeQuery);
 	}
 }

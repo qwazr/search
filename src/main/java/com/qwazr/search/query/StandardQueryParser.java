@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -27,6 +28,7 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -101,11 +103,15 @@ public class StandardQueryParser extends AbstractQuery {
 	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException {
 
+		final FieldMap fieldMap = queryContext.getFieldMap();
+
 		final org.apache.lucene.queryparser.flexible.standard.StandardQueryParser parser =
 				new org.apache.lucene.queryparser.flexible.standard.StandardQueryParser(
 						analyzer != null ? analyzer : queryContext.getQueryAnalyzer());
+
 		if (fields_boost != null)
-			parser.setFieldsBoost(fields_boost);
+			parser.setFieldsBoost(
+					fieldMap == null ? fields_boost : fieldMap.resolveQueryFieldNames(fields_boost, new HashMap<>()));
 		if (default_operator != null)
 			parser.setDefaultOperator(default_operator.queryConfigHandlerOperator);
 		if (allow_leading_wildcard != null)
@@ -121,12 +127,17 @@ public class StandardQueryParser extends AbstractQuery {
 		if (lowercase_expanded_terms != null)
 			parser.setLowercaseExpandedTerms(lowercase_expanded_terms);
 		if (multi_fields != null)
-			parser.setMultiFields(multi_fields);
-		return parser.parse(query_string, default_field);
+			parser.setMultiFields(fieldMap == null ? multi_fields : fieldMap.resolveQueryFieldNames(multi_fields));
+		return parser.parse(query_string,
+				fieldMap == null ? default_field : fieldMap.resolveQueryFieldName(default_field));
 	}
 
 	public static Builder of() {
 		return new Builder();
+	}
+
+	public static Builder of(String defaultField) {
+		return of().setDefaultField(defaultField);
 	}
 
 	public static class Builder {
@@ -175,8 +186,13 @@ public class StandardQueryParser extends AbstractQuery {
 			return this;
 		}
 
+		@Deprecated
 		public Builder setQueryParserOperator(final QueryParserOperator default_operator) {
-			this.default_operator = default_operator;
+			return setDefaultOperator(default_operator);
+		}
+
+		public Builder setDefaultOperator(final QueryParserOperator defaultOperator) {
+			this.default_operator = defaultOperator;
 			return this;
 		}
 

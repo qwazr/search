@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +35,6 @@ public class IntSetQuery extends AbstractFieldQuery {
 
 	@Override
 	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return IntPoint.newSetQuery(field, values);
+		return IntPoint.newSetQuery(resolveField(queryContext.getFieldMap()), values);
 	}
 }

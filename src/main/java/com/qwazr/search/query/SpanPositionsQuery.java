@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,10 +48,11 @@ public class SpanPositionsQuery extends AbstractFieldQuery {
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
 
 		final BooleanQuery.Builder builder = new BooleanQuery.Builder();
-		try (final TokenStream tokenStream = queryContext.getQueryAnalyzer().tokenStream(field, query_string)) {
+		final String resolvedField = resolveField(queryContext.getFieldMap());
+		try (final TokenStream tokenStream = queryContext.getQueryAnalyzer().tokenStream(resolvedField, query_string)) {
 			final CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
-			final PositionIncrementAttribute pocincrAttribute =
-					tokenStream.getAttribute(PositionIncrementAttribute.class);
+			final PositionIncrementAttribute pocincrAttribute = tokenStream.getAttribute(
+					PositionIncrementAttribute.class);
 			tokenStream.reset();
 			int pos = 0;
 			while (tokenStream.incrementToken()) {
@@ -63,7 +64,7 @@ public class SpanPositionsQuery extends AbstractFieldQuery {
 				for (int i = start; i < end; i++) {
 					final float dist = Math.abs(i - pos) + 1;
 					final float boost = 1 / dist;
-					final SpanTermQuery spanTermQuery = new SpanTermQuery(new Term(field, charTerm));
+					final SpanTermQuery spanTermQuery = new SpanTermQuery(new Term(resolvedField, charTerm));
 					Query query = new BoostQuery(new SpanPositionRangeQuery(spanTermQuery, i, i + 1), boost);
 					builder.add(new BooleanClause(query, BooleanClause.Occur.SHOULD));
 				}

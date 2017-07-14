@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,6 +44,7 @@ public class LatLonPointDistanceQuery extends AbstractFieldQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return LatLonPoint.newDistanceQuery(field, center_latitude, center_longitude, radius_meters);
+		return LatLonPoint.newDistanceQuery(resolveField(queryContext.getFieldMap()), center_latitude, center_longitude,
+				radius_meters);
 	}
 }

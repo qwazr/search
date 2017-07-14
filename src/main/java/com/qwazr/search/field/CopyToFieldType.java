@@ -15,8 +15,6 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.index.FieldConsumer;
-
 final public class CopyToFieldType extends FieldTypeAbstract {
 
 	public CopyToFieldType() {
@@ -25,10 +23,8 @@ final public class CopyToFieldType extends FieldTypeAbstract {
 
 	@Override
 	final Builder setup(Builder builder) {
-		return builder.fieldProvider(this::doNothing);
+		return builder.fieldProvider((f, v, c) -> {
+		});
 	}
 
-	final void doNothing(final String fieldName, final Object value, final FieldConsumer consumer) {
-	}
-	
 }

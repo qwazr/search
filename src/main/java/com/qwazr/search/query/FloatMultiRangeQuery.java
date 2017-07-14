@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,7 @@ public class FloatMultiRangeQuery extends AbstractMultiRangeQuery {
 
 	@Override
 	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return FloatPoint.newRangeQuery(field, lower_values, upper_values);
+		return FloatPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_values, upper_values);
 	}
 
 	public static class Builder extends AbstractBuilder<Float> {

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 
@@ -48,9 +49,11 @@ public class PhraseQuery extends AbstractFieldQuery {
 		org.apache.lucene.search.PhraseQuery.Builder builder = new org.apache.lucene.search.PhraseQuery.Builder();
 		if (slop != null)
 			builder.setSlop(slop);
-		if (terms != null)
+		if (terms != null) {
+			final String resolvedField = resolveField(queryContext.getFieldMap());
 			for (String term : terms)
-				builder.add(new Term(field, term));
+				builder.add(new Term(resolvedField, term));
+		}
 		return builder.build();
 	}
 }

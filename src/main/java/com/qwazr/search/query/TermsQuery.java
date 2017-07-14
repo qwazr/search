@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,7 +69,7 @@ public class TermsQuery extends AbstractMultiTermQuery {
 			terms.forEach(term -> bytesRefs.add(BytesRefUtils.fromAny(term)));
 		} else
 			bytesRefs = bytesRefCollection;
-		return new TermInSetQuery(field, bytesRefs);
+		return new TermInSetQuery(resolveField(queryContext.getFieldMap()), bytesRefs);
 	}
 
 	public static Builder of(final String field) {

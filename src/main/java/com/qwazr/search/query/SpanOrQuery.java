@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,7 @@ public class SpanOrQuery extends AbstractSpanQuery {
 		Objects.requireNonNull(clauses);
 		final SpanQuery[] spanQueries = new SpanQuery[clauses.size()];
 		int i = 0;
-		for (AbstractSpanQuery query : clauses)
+		for (final AbstractSpanQuery query : clauses)
 			spanQueries[i++] = query.getQuery(queryContext);
 		return new org.apache.lucene.search.spans.SpanOrQuery(spanQueries);
 	}

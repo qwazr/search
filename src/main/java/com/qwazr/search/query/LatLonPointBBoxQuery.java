@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,6 +36,7 @@ public class LatLonPointBBoxQuery extends AbstractGeoBoxQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return LatLonPoint.newBoxQuery(field, min_latitude, max_latitude, min_longitude, max_longitude);
+		return LatLonPoint.newBoxQuery(resolveField(queryContext.getFieldMap()), min_latitude, max_latitude,
+				min_longitude, max_longitude);
 	}
 }

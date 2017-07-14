@@ -43,7 +43,8 @@ public class FieldDefinitionTest {
 	}
 
 	void checkFieldDef(SmartFieldDefinition.SmartBuilder builder, SmartFieldDefinition.Type type, Boolean facet,
-			Boolean index, Boolean sort, Boolean stored, final String analyzer, final String queryAnalyzer) {
+			Boolean index, Boolean sort, Boolean stored, final String analyzer, final String queryAnalyzer,
+			final String[] copyFrom) {
 		final SmartFieldDefinition fieldDef = builder.build();
 		Assert.assertNotNull(fieldDef);
 		Assert.assertEquals(type, fieldDef.type);
@@ -53,34 +54,40 @@ public class FieldDefinitionTest {
 		Assert.assertEquals(stored, fieldDef.stored);
 		Assert.assertEquals(analyzer, fieldDef.analyzer);
 		Assert.assertEquals(queryAnalyzer, fieldDef.queryAnalyzer);
+		Assert.assertArrayEquals(copyFrom, fieldDef.copyFrom);
 	}
 
 	@Test
 	public void smartFieldBuilderTest() {
 		final SmartFieldDefinition.SmartBuilder builder = SmartFieldDefinition.of();
 
-		checkFieldDef(builder, null, null, null, null, null, null, null);
+		checkFieldDef(builder, null, null, null, null, null, null, null, null);
 
 		builder.type(SmartFieldDefinition.Type.DOUBLE);
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, null, null, null, null, null, null);
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, null, null, null, null, null, null, null);
 
 		builder.facet(true);
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, null, null, null, null, null);
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, null, null, null, null, null, null);
 
 		builder.index(true);
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, null, null, null, null);
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, null, null, null, null, null);
 
 		builder.sort(true);
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, null, null, null);
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, null, null, null, null);
 
 		builder.stored(true);
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, null, null);
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, null, null, null);
 
 		builder.analyzer("analyzer");
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", null);
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", null, null);
 
 		builder.queryAnalyzer("queryAnalyzer");
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "queryAnalyzer");
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "queryAnalyzer",
+				null);
+
+		builder.copyFrom("field");
+		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "queryAnalyzer",
+				new String[] { "field" });
 
 	}
 }

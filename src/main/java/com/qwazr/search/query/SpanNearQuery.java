@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,28 +25,18 @@ import org.apache.lucene.search.spans.SpanQuery;
 import java.io.IOException;
 import java.util.List;
 
-public class SpanNearQuery extends AbstractSpanQuery {
+public class SpanNearQuery extends AbstractFieldSpanQuery {
 
 	final public List<AbstractSpanQuery> clauses;
-	final public String field;
 	final public Boolean in_order;
 	final public Integer slop;
-
-	public SpanNearQuery(List<AbstractSpanQuery> clauses, String field) {
-		this(clauses, field, null);
-
-	}
-
-	public SpanNearQuery(List<AbstractSpanQuery> clauses, String field, Boolean in_order) {
-		this(clauses, field, in_order, null);
-	}
 
 	@JsonCreator
 	public SpanNearQuery(@JsonProperty("clauses") final List<AbstractSpanQuery> clauses,
 			@JsonProperty("field") final String field, @JsonProperty("in_order") final Boolean in_order,
 			@JsonProperty("slop") final Integer slop) {
+		super(field);
 		this.clauses = clauses;
-		this.field = field;
 		this.in_order = in_order;
 		this.slop = slop;
 	}
@@ -55,11 +45,12 @@ public class SpanNearQuery extends AbstractSpanQuery {
 	final public SpanQuery getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		final org.apache.lucene.search.spans.SpanNearQuery.Builder builder =
-				new org.apache.lucene.search.spans.SpanNearQuery.Builder(field, in_order == null ? false : in_order);
+				new org.apache.lucene.search.spans.SpanNearQuery.Builder(resolveField(queryContext.getFieldMap()),
+						in_order == null ? false : in_order);
 		if (slop != null)
 			builder.setSlop(slop);
 		if (clauses != null)
-			for (AbstractSpanQuery clause : clauses)
+			for (final AbstractSpanQuery clause : clauses)
 				builder.addClause(clause.getQuery(queryContext));
 		return builder.build();
 	}

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
@@ -91,13 +92,16 @@ public class MoreLikeThisQuery extends AbstractQuery {
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
 
+		final FieldMap fieldMap = queryContext.getFieldMap();
+
 		final MoreLikeThis mlt = new MoreLikeThis(queryContext.getIndexReader());
 		if (is_boost != null)
 			mlt.setBoost(is_boost);
 		if (boost_factor != null)
 			mlt.setBoostFactor(boost_factor);
+
 		if (fieldnames != null)
-			mlt.setFieldNames(fieldnames);
+			mlt.setFieldNames(fieldMap == null ? fieldnames : fieldMap.resolveQueryFieldNames(fieldnames));
 		if (max_doc_freq != null)
 			mlt.setMaxDocFreq(max_doc_freq);
 		if (max_doc_freq_pct != null)
@@ -123,8 +127,8 @@ public class MoreLikeThisQuery extends AbstractQuery {
 		if (StringUtils.isEmpty(like_text) || StringUtils.isEmpty(fieldname))
 			throw new ParseException("Either doc_num or like_text/fieldname are missing");
 
-		final org.apache.lucene.search.BooleanQuery bq =
-				(org.apache.lucene.search.BooleanQuery) mlt.like(fieldname, new StringReader(like_text));
+		final org.apache.lucene.search.BooleanQuery bq = (org.apache.lucene.search.BooleanQuery) mlt.like(
+				AbstractFieldQuery.resolveField(fieldMap, fieldname), new StringReader(like_text));
 		final org.apache.lucene.search.BooleanQuery.Builder newBq = new org.apache.lucene.search.BooleanQuery.Builder();
 		newBq.setDisableCoord(bq.isCoordDisabled());
 		for (BooleanClause clause : bq)

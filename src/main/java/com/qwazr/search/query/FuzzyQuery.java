@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,7 +47,7 @@ public class FuzzyQuery extends AbstractMultiTermQuery {
 
 	@Override
 	final public MultiTermQuery getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.search.FuzzyQuery(new Term(field, text),
+		return new org.apache.lucene.search.FuzzyQuery(new Term(resolveField(queryContext.getFieldMap()), text),
 				max_edits == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxEdits : max_edits,
 				prefix_length == null ? org.apache.lucene.search.FuzzyQuery.defaultPrefixLength : prefix_length,
 				max_expansions == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxExpansions : max_expansions,

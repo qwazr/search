@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,6 +34,6 @@ public class FieldValueQuery extends AbstractFieldQuery {
 	@Override
 	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		return new org.apache.lucene.search.FieldValueQuery(field);
+		return new org.apache.lucene.search.FieldValueQuery(resolveField(queryContext.getFieldMap()));
 	}
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,6 +59,7 @@ public class MultiPhraseQuery extends AbstractFieldQuery {
 	final public org.apache.lucene.search.MultiPhraseQuery getQuery(final QueryContext queryContext)
 			throws IOException {
 		Objects.requireNonNull(field, "The field property should not be null");
+		final String resolvedField = resolveField(queryContext.getFieldMap());
 		final org.apache.lucene.search.MultiPhraseQuery.Builder builder =
 				new org.apache.lucene.search.MultiPhraseQuery.Builder();
 		if (slop != null)
@@ -66,22 +67,22 @@ public class MultiPhraseQuery extends AbstractFieldQuery {
 		if (terms != null) {
 			if (positions == null || positions.isEmpty()) {
 				for (String[] term : terms)
-					builder.add(toTerms(term));
+					builder.add(toTerms(resolvedField, term));
 			} else {
 				int i = 0;
 				for (String[] term : terms) {
-					builder.add(toTerms(term), positions.get(i++));
+					builder.add(toTerms(resolvedField, term), positions.get(i++));
 				}
 			}
 		}
 		return builder.build();
 	}
 
-	private Term[] toTerms(final String[] termArray) {
+	private Term[] toTerms(final String resolvedField, final String[] termArray) {
 		final Term[] terms = new Term[termArray.length];
 		int i = 0;
 		for (String term : termArray)
-			terms[i++] = new Term(field, term);
+			terms[i++] = new Term(resolvedField, term);
 		return terms;
 	}
 }

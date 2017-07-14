@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,8 @@ public class TermRangeQuery extends AbstractFieldQuery {
 
 	@Override
 	final public MultiTermQuery getQuery(final QueryContext queryContext) throws IOException {
-		return org.apache.lucene.search.TermRangeQuery.newStringRange(field, lower_term, upper_term,
-				include_lower == null ? true : include_lower, include_upper == null ? true : include_upper);
+		return org.apache.lucene.search.TermRangeQuery.newStringRange(resolveField(queryContext.getFieldMap()),
+				lower_term, upper_term, include_lower == null ? true : include_lower,
+				include_upper == null ? true : include_upper);
 	}
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,6 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.automaton.Operations;
 import org.apache.lucene.util.automaton.RegExp;
@@ -47,7 +46,8 @@ public class RegexpQuery extends AbstractFieldQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.search.RegexpQuery(new Term(field, text), flags == null ? RegExp.ALL : flags,
+		return new org.apache.lucene.search.RegexpQuery(getResolvedTerm(queryContext.getFieldMap(), text),
+				flags == null ? RegExp.ALL : flags,
 				max_determinized_states == null ? Operations.DEFAULT_MAX_DETERMINIZED_STATES : max_determinized_states);
 	}
 }

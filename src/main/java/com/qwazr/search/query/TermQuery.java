@@ -34,7 +34,7 @@ public class TermQuery extends AbstractFieldQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.search.TermQuery(queryContext.getFieldMap().getFieldType(field).term(field, term));
+		return new org.apache.lucene.search.TermQuery(getResolvedTerm(queryContext.getFieldMap(), term));
 	}
 
 }

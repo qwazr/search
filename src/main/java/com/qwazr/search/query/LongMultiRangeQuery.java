@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,10 +45,11 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery {
 
 	@Override
 	public Query getQuery(final QueryContext queryContext) throws IOException {
+		final String resolvedField = resolveField(queryContext.getFieldMap());
 		if (lower_values.length == 1)
-			return LongPoint.newRangeQuery(field, lower_values[0], upper_values[0]);
+			return LongPoint.newRangeQuery(resolvedField, lower_values[0], upper_values[0]);
 		else
-			return LongPoint.newRangeQuery(field, lower_values, upper_values);
+			return LongPoint.newRangeQuery(resolvedField, lower_values, upper_values);
 	}
 
 	public static class Builder extends AbstractBuilder<Long> {

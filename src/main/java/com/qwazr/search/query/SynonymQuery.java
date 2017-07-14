@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,11 +65,12 @@ public class SynonymQuery extends AbstractMultiTermQuery {
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		final Term[] ta;
+		final String resolvedField = resolveField(queryContext.getFieldMap());
 		if (termArray == null) {
 			ta = new Term[terms.size()];
 			int i = 0;
 			for (Object t : terms)
-				ta[i++] = new Term(field, BytesRefUtils.fromAny(t));
+				ta[i++] = new Term(resolvedField, BytesRefUtils.fromAny(t));
 		} else
 			ta = termArray;
 		return new org.apache.lucene.search.SynonymQuery(ta);

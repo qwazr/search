@@ -33,5 +33,16 @@
     "type": "INTEGER",
     "stored": true,
     "sort": true
+  },
+  "full": {
+    "type": "STRING",
+    "index": true,
+    "analyzer": "StandardAnalyzer",
+    "copy_from": [
+      "name",
+      "description",
+      "category",
+      "price"
+    ]
   }
 }

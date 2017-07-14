@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,7 +67,7 @@ public class LatLonPointPolygonQuery extends AbstractFieldQuery {
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		if (lucenePolygons == null)
 			lucenePolygons = toPolygons(polygons);
-		return LatLonPoint.newPolygonQuery(field, lucenePolygons);
+		return LatLonPoint.newPolygonQuery(resolveField(queryContext.getFieldMap()), lucenePolygons);
 	}
 
 	public static Polygon[] toPolygons(final GeoPolygon... geoPolygons) {

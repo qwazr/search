@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -119,8 +119,8 @@ public class CustomScoreQuery extends AbstractQuery {
 
 	private Class<? extends CustomScoreProvider> getProviderClass()
 			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
-		Class<? extends CustomScoreProvider> customScoreProviderClass =
-				ClassLoaderUtils.findClass(customScoreProviderClassName);
+		Class<? extends CustomScoreProvider> customScoreProviderClass = ClassLoaderUtils.findClass(
+				customScoreProviderClassName);
 		Objects.requireNonNull(customScoreProviderClass, "Cannot find the class for " + customScoreProviderClassName);
 		return customScoreProviderClass;
 	}

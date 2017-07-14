@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2016 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,10 @@
 
 package com.qwazr.search.query;
 
+import com.qwazr.search.index.BytesRefUtils;
+import com.qwazr.search.index.FieldMap;
+import org.apache.lucene.index.Term;
+
 import java.util.Objects;
 
 public abstract class AbstractFieldQuery extends AbstractQuery {
@@ -28,6 +32,23 @@ public abstract class AbstractFieldQuery extends AbstractQuery {
 
 	protected AbstractFieldQuery(final AbstractFieldBuilder builder) {
 		this(builder.field);
+	}
+
+	static String resolveField(final FieldMap fieldMap, final String field) {
+		return fieldMap == null ? field : fieldMap.resolveQueryFieldName(field);
+	}
+
+	final protected String resolveField(final FieldMap fieldMap) {
+		return resolveField(fieldMap, field);
+	}
+
+	static Term getResolvedTerm(final FieldMap fieldMap, final String field, final Object value) {
+		return fieldMap == null ? new Term(field, BytesRefUtils.fromAny(value)) : fieldMap.getFieldType(field).term(
+				field, value);
+	}
+
+	final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {
+		return getResolvedTerm(fieldMap, field, value);
 	}
 
 	public static abstract class AbstractFieldBuilder {

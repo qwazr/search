@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,60 +16,24 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
 
-public class SpanTermQuery extends AbstractSpanQuery {
+public class SpanTermQuery extends AbstractFieldSpanQuery {
 
-	final public String field;
 	final public Object value;
 
-	@JsonIgnore
-	private final Term term;
-
-	private SpanTermQuery(final String field, final Object value, final Term term) {
-		this.field = field;
-		this.value = value;
-		this.term = term;
-	}
-
 	@JsonCreator
-	private SpanTermQuery(@JsonProperty("field") final String field, @JsonProperty("value") final Object value) {
-		this(field, value, new Term(field, BytesRefUtils.fromAny(value)));
-	}
-
-	public SpanTermQuery(final Term term) {
-		this(null, null, term);
-	}
-
-	public SpanTermQuery(final String field, final String value) {
-		this(field, value, new Term(field, value));
-	}
-
-	public SpanTermQuery(final String field, final Long value) {
-		this(field, value, new Term(field, BytesRefUtils.Converter.LONG.from(value)));
-	}
-
-	public SpanTermQuery(final String field, final Double value) {
-		this(field, value, new Term(field, BytesRefUtils.Converter.DOUBLE.from(value)));
-	}
-
-	public SpanTermQuery(final String field, final Integer value) {
-		this(field, value, new Term(field, BytesRefUtils.Converter.INT.from(value)));
-	}
-
-	public SpanTermQuery(final String field, final Float value) {
-		this(field, value, new Term(field, BytesRefUtils.Converter.FLOAT.from(value)));
+	public SpanTermQuery(@JsonProperty("field") final String field, @JsonProperty("value") final Object value) {
+		super(field);
+		this.value = value;
 	}
 
 	@Override
 	final public SpanQuery getQuery(final QueryContext queryContext) throws IOException {
-		return new org.apache.lucene.search.spans.SpanTermQuery(term);
+		return new org.apache.lucene.search.spans.SpanTermQuery(getResolvedTerm(queryContext.getFieldMap(), value));
 	}
 }

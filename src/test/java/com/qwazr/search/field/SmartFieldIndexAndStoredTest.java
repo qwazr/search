@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Objects;
 
-public class SmartFieldIndexTest extends AbstractIndexTest {
+public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
 	@BeforeClass
 	public static void setup() throws IOException, URISyntaxException {

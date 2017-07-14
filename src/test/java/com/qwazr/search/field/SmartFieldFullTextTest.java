@@ -17,12 +17,16 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.annotations.AnnotatedIndexService;
+import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.SmartField;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
+import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.query.MultiFieldQueryParser;
+import com.qwazr.search.query.QueryParser;
 import com.qwazr.search.query.QueryParserOperator;
+import com.qwazr.search.query.StandardQueryParser;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.LoggerUtils;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -32,6 +36,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class SmartFieldFullTextTest extends AbstractIndexTest {
@@ -49,55 +54,80 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
 				new String[] { "tag2", "tag1and2" }));
 	}
 
-	ResultDefinition.WithObject<Record> fullTextSeach(String queryString, String queryExplain, long... expectedIds)
+	ResultDefinition.WithObject<Record> checkResult(AbstractQuery query, String queryExplain, long... expectedIds)
 			throws IOException, ReflectiveOperationException {
-		final ResultDefinition.WithObject<Record> result = indexService.searchQuery(QueryDefinition.of(
-				MultiFieldQueryParser.of().setDefaultOperator(QueryParserOperator.AND).addField("title", "content",
-						"tags").setQueryString(queryString).build()).returnedField("*").queryDebug(true).build(),
-				Record.class);
-		if (expectedIds == null)
-			Assert.assertEquals(0, result.total_hits, 0);
-		else
-			Assert.assertEquals(expectedIds.length, result.total_hits, 0);
+		final ResultDefinition.WithObject<Record> result = indexService.searchQuery(QueryDefinition.of(query)
+				.returnedField("*")
+				.queryDebug(true)
+				.build(), Record.class);
 		if (queryExplain != null)
 			Assert.assertEquals(queryExplain, result.query);
 		else
 			LOGGER.info(result.query);
+		if (expectedIds == null)
+			Assert.assertEquals(0, result.total_hits, 0);
+		else
+			Assert.assertEquals(expectedIds.length, result.total_hits, 0);
 		return result;
+	}
+
+	void fullSearch(String queryString, String queryExplain, long... expectedIds)
+			throws IOException, ReflectiveOperationException {
+		checkResult(StandardQueryParser.of("full")
+				.setDefaultOperator(QueryParserOperator.AND)
+				.setQueryString(queryString)
+				.build(), queryExplain, expectedIds);
+		checkResult(QueryParser.of("full")
+				.setDefaultOperator(QueryParserOperator.AND)
+				.setQueryString(queryString)
+				.build(), queryExplain, expectedIds);
+	}
+
+	ResultDefinition.WithObject<Record> multiSearch(String queryString, String queryExplain, long... expectedIds)
+			throws IOException, ReflectiveOperationException {
+		return checkResult(MultiFieldQueryParser.of().setDefaultOperator(QueryParserOperator.AND).addField("title",
+				"content", "tags").setQueryString(queryString).build(), queryExplain, expectedIds);
 	}
 
 	@Test
 	public void searchTitleTest() throws IOException, ReflectiveOperationException {
-		fullTextSeach("first news",
+		multiSearch("first news",
 				"+(tt€title:first tt€content:first tt€tags:first) +(tt€title:news tt€content:news tt€tags:news)", 1);
-		fullTextSeach("second article",
+		fullSearch("first news", "+tt€full:first +tt€full:news", 1);
+		multiSearch("second article",
 				"+(tt€title:second tt€content:second tt€tags:second) +(tt€title:article tt€content:article tt€tags:article)",
 				2);
+		fullSearch("second article", "+tt€full:second +tt€full:article", 2);
 	}
 
 	@Test
 	public void searchContentTest() throws IOException, ReflectiveOperationException {
-		fullTextSeach("first sentence",
+		multiSearch("first sentence",
 				"+(tt€title:first tt€content:first tt€tags:first) +(tt€title:sentence tt€content:sentence tt€tags:sentence)",
 				1);
-		fullTextSeach("third sentence",
+		fullSearch("first sentence", "+tt€full:first +tt€full:sentence", 1);
+		multiSearch("third sentence",
 				"+(tt€title:third tt€content:third tt€tags:third) +(tt€title:sentence tt€content:sentence tt€tags:sentence)",
 				2);
+		fullSearch("third sentence", "+tt€full:third +tt€full:sentence", 2);
 	}
 
 	@Test
 	public void searchManyTest() throws IOException, ReflectiveOperationException {
-		fullTextSeach("sentence", "tt€title:sentence tt€content:sentence tt€tags:sentence", 1, 2);
+		multiSearch("sentence", "tt€title:sentence tt€content:sentence tt€tags:sentence", 1, 2);
+		fullSearch("sentence", "tt€full:sentence", 1, 2);
 	}
 
 	@Test
 	public void searchCrossFields() throws IOException, ReflectiveOperationException {
-		fullTextSeach("news sentence",
+		multiSearch("news sentence",
 				"+(tt€title:news tt€content:news tt€tags:news) +(tt€title:sentence tt€content:sentence tt€tags:sentence)",
 				1);
-		fullTextSeach("article sentence",
+		fullSearch("news sentence", "+tt€full:news +tt€full:sentence", 1);
+		multiSearch("article sentence",
 				"+(tt€title:article tt€content:article tt€tags:article) +(tt€title:sentence tt€content:sentence tt€tags:sentence)",
 				2);
+		fullSearch("article sentence", "+tt€full:article +tt€full:sentence", 2);
 	}
 
 	@Index(name = "SmartFieldSorted", schema = "TestQueries")
@@ -107,22 +137,29 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
 		final public long id;
 
 		@SmartField(type = SmartFieldDefinition.Type.TEXT, index = true, analyzerClass = StandardAnalyzer.class)
+		@Copy(to = { @Copy.To(order = 1, field = "full"), @Copy.To(order = 1, field = "autocomplete") })
 		final public String title;
 
 		@SmartField(type = SmartFieldDefinition.Type.TEXT, index = true, analyzerClass = StandardAnalyzer.class)
+		@Copy(to = { @Copy.To(order = 2, field = "full") })
 		final public String[] content;
 
 		@SmartField(type = SmartFieldDefinition.Type.TEXT, index = true, analyzerClass = StandardAnalyzer.class)
+		@Copy(to = { @Copy.To(order = 3, field = "full") })
 		final public String[] tags;
 
 		@SmartField(type = SmartFieldDefinition.Type.TEXT, index = true)
 		final public String nonFullTextTitle;
+
+		@SmartField(type = SmartFieldDefinition.Type.TEXT, index = true, analyzerClass = StandardAnalyzer.class)
+		final public List<String> full;
 
 		Record(long id, String title, String[] content, String[] tags) {
 			this.id = id;
 			this.title = this.nonFullTextTitle = title;
 			this.content = content;
 			this.tags = tags;
+			this.full = null;
 		}
 
 		public Record() {
