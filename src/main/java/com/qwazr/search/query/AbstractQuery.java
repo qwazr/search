@@ -73,6 +73,7 @@ import java.io.IOException;
 		@JsonSubTypes.Type(value = PrefixQuery.class),
 		@JsonSubTypes.Type(value = QueryParser.class),
 		@JsonSubTypes.Type(value = RegexpQuery.class),
+		@JsonSubTypes.Type(value = SimpleQueryParser.class),
 		@JsonSubTypes.Type(value = SpanContainingQuery.class),
 		@JsonSubTypes.Type(value = SpanFirstQuery.class),
 		@JsonSubTypes.Type(value = SpanNearQuery.class),

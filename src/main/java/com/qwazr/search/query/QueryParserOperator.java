@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfi
 
 public enum QueryParserOperator {
 
-	and(QueryParser.Operator.AND, StandardQueryConfigHandler.Operator.AND),
-	AND(QueryParser.Operator.AND, StandardQueryConfigHandler.Operator.AND),
-	or(QueryParser.Operator.OR, StandardQueryConfigHandler.Operator.OR),
-	OR(QueryParser.Operator.OR, StandardQueryConfigHandler.Operator.OR);
+	and(QueryParser.Operator.AND, StandardQueryConfigHandler.Operator.AND), AND(QueryParser.Operator.AND,
+			StandardQueryConfigHandler.Operator.AND), or(QueryParser.Operator.OR,
+			StandardQueryConfigHandler.Operator.OR), OR(QueryParser.Operator.OR,
+			StandardQueryConfigHandler.Operator.OR);
 
 	@JsonIgnore
 	final QueryParser.Operator queryParseroperator;
@@ -33,7 +33,7 @@ public enum QueryParserOperator {
 	final StandardQueryConfigHandler.Operator queryConfigHandlerOperator;
 
 	QueryParserOperator(QueryParser.Operator queryParseroperator,
-					StandardQueryConfigHandler.Operator queryConfigHandlerOperator) {
+			StandardQueryConfigHandler.Operator queryConfigHandlerOperator) {
 		this.queryParseroperator = queryParseroperator;
 		this.queryConfigHandlerOperator = queryConfigHandlerOperator;
 	}
