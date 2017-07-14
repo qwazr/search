@@ -20,8 +20,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.IndexField;
-import com.qwazr.utils.StringUtils;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
@@ -32,9 +30,8 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CustomFieldDefinition extends FieldDefinition {
 
-	public final String analyzer;
-	@JsonProperty("query_analyzer")
-	public final String queryAnalyzer;
+	public final Template template;
+
 	public final Boolean tokenized;
 	public final Boolean stored;
 	@JsonProperty("store_termvectors")
@@ -83,9 +80,8 @@ public class CustomFieldDefinition extends FieldDefinition {
 			@JsonProperty("dimension_count")    final Integer dimensionCount,
 			@JsonProperty("dimension_num_bytes")    final Integer dimensionNumBytes,
 			@JsonProperty("copy_from") String[] copyFrom) {
-		super(template, copyFrom);
-		this.analyzer = analyzer;
-		this.queryAnalyzer = queryAnalyzer;
+		super(analyzer, queryAnalyzer, copyFrom);
+		this.template = template;
 		this.tokenized = tokenized;
 		this.stored = stored;
 		this.storeTermVectors = storeTermVectors;
@@ -105,8 +101,7 @@ public class CustomFieldDefinition extends FieldDefinition {
 
 	private CustomFieldDefinition(CustomBuilder builder) {
 		super(builder);
-		this.analyzer = builder.analyzer;
-		this.queryAnalyzer = builder.queryAnalyzer;
+		this.template = builder.template;
 		this.tokenized = builder.tokenized;
 		this.stored = builder.stored;
 		this.storeTermVectors = builder.storeTermVectors;
@@ -125,13 +120,9 @@ public class CustomFieldDefinition extends FieldDefinition {
 	}
 
 	public CustomFieldDefinition(final String fieldName, final IndexField indexField, final Map<String, Copy> copyMap) {
-		super(indexField.template(), from(fieldName, copyMap));
-		analyzer = indexField.analyzerClass() != Analyzer.class ?
-				indexField.analyzerClass().getName() :
-				StringUtils.isEmpty(indexField.analyzer()) ? null : indexField.analyzer();
-		queryAnalyzer = indexField.queryAnalyzerClass() != Analyzer.class ?
-				indexField.queryAnalyzerClass().getName() :
-				StringUtils.isEmpty(indexField.queryAnalyzer()) ? null : indexField.queryAnalyzer();
+		super(from(indexField.analyzer(), indexField.analyzerClass()),
+				from(indexField.queryAnalyzer(), indexField.queryAnalyzerClass()), from(fieldName, copyMap));
+		template = indexField.template();
 		tokenized = indexField.tokenized();
 		stored = indexField.stored();
 		storeTermVectors = indexField.storeTermVectors();
@@ -158,9 +149,7 @@ public class CustomFieldDefinition extends FieldDefinition {
 		if (!super.equals(o))
 			return false;
 		final CustomFieldDefinition f = (CustomFieldDefinition) o;
-		if (!Objects.equals(analyzer, f.analyzer))
-			return false;
-		if (!Objects.equals(queryAnalyzer, f.queryAnalyzer))
+		if (!Objects.equals(template, f.template))
 			return false;
 		if (!Objects.equals(tokenized, f.tokenized))
 			return false;
@@ -199,14 +188,13 @@ public class CustomFieldDefinition extends FieldDefinition {
 		return new CustomBuilder();
 	}
 
-	public static CustomBuilder of(Template template) {
-		return of().template(template);
+	static CustomBuilder of(Template template) {
+		return new CustomBuilder().template(template);
 	}
 
 	public static class CustomBuilder extends Builder {
 
-		private String analyzer;
-		private String queryAnalyzer;
+		private Template template;
 		private Boolean tokenized;
 		private Boolean stored;
 		private Boolean storeTermVectors;
@@ -223,21 +211,20 @@ public class CustomFieldDefinition extends FieldDefinition {
 		private Boolean facetHierarchical;
 		private Boolean facetRequireDimCount;
 
-		public CustomBuilder template(Template template) {
-			return (CustomBuilder) super.template(template);
-		}
-
 		public CustomBuilder copyFrom(String copyFrom) {
 			return (CustomBuilder) super.copyFrom(copyFrom);
 		}
 
 		public CustomBuilder analyzer(String analyzer) {
-			this.analyzer = analyzer;
-			return this;
+			return (CustomBuilder) super.analyzer(analyzer);
 		}
 
 		public CustomBuilder queryAnalyzer(String queryAnalyzer) {
-			this.queryAnalyzer = queryAnalyzer;
+			return (CustomBuilder) super.queryAnalyzer(queryAnalyzer);
+		}
+
+		public CustomBuilder template(Template template) {
+			this.template = template;
 			return this;
 		}
 

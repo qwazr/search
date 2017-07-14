@@ -398,7 +398,7 @@ public abstract class JsonAbstractTest {
 		FIELDS_JSON.forEach((fieldName, fieldDefinition) -> {
 			CustomFieldDefinition fieldDef = (CustomFieldDefinition) client.getField(SCHEMA_NAME, INDEX_MASTER_NAME,
 					fieldName);
-			Assert.assertEquals(fieldDef.template, fieldDefinition.template);
+			Assert.assertEquals(fieldDef.template, ((CustomFieldDefinition) fieldDefinition).template);
 			Assert.assertEquals(fieldDef.analyzer, ((CustomFieldDefinition) fieldDefinition).analyzer);
 		});
 

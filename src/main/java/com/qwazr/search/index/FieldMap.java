@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.CopyToFieldType;
+import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.WildcardMatcher;
@@ -25,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -45,13 +47,11 @@ public class FieldMap {
 		wildcardMap = new HashMap<>();
 
 		fieldDefinitionMap.forEach((name, definition) -> {
-			final FieldDefinition.Template template =
-					definition.template == null ? FieldDefinition.Template.NONE : definition.template;
 			if (name.indexOf('*') != -1 || name.indexOf('?') != -1) {
 				final WildcardMatcher wildcardMatcher = new WildcardMatcher(name);
-				wildcardMap.put(wildcardMatcher, template.builder.build(wildcardMatcher, definition));
+				wildcardMap.put(wildcardMatcher, FieldTypeInterface.build(wildcardMatcher, definition));
 			} else {
-				final FieldTypeInterface fieldType = template.builder.build(null, definition);
+				final FieldTypeInterface fieldType = FieldTypeInterface.build(null, definition);
 				nameDefMap.put(name, fieldType);
 			}
 		});
@@ -111,22 +111,43 @@ public class FieldMap {
 			return;
 		fieldType.setFacetsConfig(fieldName, facetsConfig);
 		final FieldDefinition definition = fieldType.getDefinition();
-		if (definition == null || definition.template == null)
+		if (definition == null)
 			return;
-		switch (definition.template) {
-		case SortedSetDocValuesFacetField:
-			facetsConfig.setIndexFieldName(fieldName, sortedSetFacetField);
-			break;
-		case FacetField:
-			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_FACET_FIELD);
-			break;
-		case IntAssociatedField:
-			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD);
-			break;
-		case FloatAssociatedField:
-			facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD);
-			break;
+		if (definition instanceof CustomFieldDefinition) {
+			final CustomFieldDefinition customDef = (CustomFieldDefinition) definition;
+			final FieldDefinition.Template template =
+					customDef.template == null ? FieldDefinition.Template.NONE : customDef.template;
+			switch (template) {
+			case SortedSetDocValuesFacetField:
+				facetsConfig.setIndexFieldName(fieldName, sortedSetFacetField);
+				break;
+			case FacetField:
+				facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_FACET_FIELD);
+				break;
+			case IntAssociatedField:
+				facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD);
+				break;
+			case FloatAssociatedField:
+				facetsConfig.setIndexFieldName(fieldName, FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD);
+				break;
+			}
 		}
+	}
+
+	final public String[] resolveQueryFieldNames(final String[] fields) {
+		final String[] resolvedFields = new String[fields.length];
+		int i = 0;
+		for (String f : fields)
+			resolvedFields[i++] = Objects.requireNonNull(nameDefMap.get(f), "Field not found: " + f).getQueryFieldName(
+					f);
+		return resolvedFields;
+	}
+
+	final public <T> Map<String, T> resolveQueryFieldNames(final Map<String, T> fields,
+			final Map<String, T> resolvedFields) {
+		fields.forEach((f, t) -> resolvedFields.put(
+				Objects.requireNonNull(nameDefMap.get(f), "Field not found: " + f).getQueryFieldName(f), t));
+		return resolvedFields;
 	}
 
 	final public FacetsConfig getFacetsConfig(final Collection<String> concreteFieldNames) {

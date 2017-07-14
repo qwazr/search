@@ -28,57 +28,45 @@ import java.util.Objects;
 public class SmartFieldDefinition extends FieldDefinition {
 
 	final public Type type;
-	final public Boolean fulltext;
-	final public Boolean facet;
 	final public Boolean index;
+	final public Boolean facet;
 	final public Boolean sort;
 	final public Boolean stored;
-	final public Boolean snippet;
-	final public Boolean autocomplete;
 
 	public enum Type {
 		TEXT, LONG, INTEGER, DOUBLE, FLOAT
 	}
 
 	@JsonCreator
-	SmartFieldDefinition(@JsonProperty("type") Type type, @JsonProperty("fulltext") Boolean fulltext,
-			@JsonProperty("facet") Boolean facet, @JsonProperty("index") Boolean index,
-			@JsonProperty("sort") Boolean sort, @JsonProperty("stored") Boolean stored,
-			@JsonProperty("snippet") Boolean snippet, @JsonProperty("autocomplete") Boolean autocomplete,
-			@JsonProperty("copy_from") String[] copyFrom) {
-		super(Template.SmartField, copyFrom);
+	SmartFieldDefinition(@JsonProperty("type") Type type, @JsonProperty("facet") Boolean facet,
+			@JsonProperty("index") Boolean index, @JsonProperty("analyzer") final String analyzer,
+			@JsonProperty("query_analyzer") final String queryAnalyzer, @JsonProperty("sort") Boolean sort,
+			@JsonProperty("stored") Boolean stored, @JsonProperty("copy_from") String[] copyFrom) {
+		super(analyzer, queryAnalyzer, copyFrom);
 		this.type = type;
-		this.fulltext = fulltext;
 		this.facet = facet;
 		this.index = index;
 		this.sort = sort;
 		this.stored = stored;
-		this.snippet = snippet;
-		this.autocomplete = autocomplete;
 	}
 
 	private SmartFieldDefinition(SmartBuilder builder) {
 		super(builder);
 		type = builder.type;
-		fulltext = builder.fulltext;
 		facet = builder.facet;
 		index = builder.index;
 		sort = builder.sort;
 		stored = builder.stored;
-		snippet = builder.snippet;
-		autocomplete = builder.autocomplete;
 	}
 
 	public SmartFieldDefinition(final String fieldName, final SmartField smartField, final Map<String, Copy> copyMap) {
-		super(Template.SmartField, from(fieldName, copyMap));
+		super(from(smartField.analyzer(), smartField.analyzerClass()),
+				from(smartField.queryAnalyzer(), smartField.queryAnalyzerClass()), from(fieldName, copyMap));
 		type = smartField.type();
-		fulltext = smartField.fulltext();
 		facet = smartField.facet();
 		index = smartField.index();
 		sort = smartField.sort();
 		stored = smartField.stored();
-		snippet = smartField.snippet();
-		autocomplete = smartField.autocomplete();
 	}
 
 	@Override
@@ -92,8 +80,6 @@ public class SmartFieldDefinition extends FieldDefinition {
 		final SmartFieldDefinition f = (SmartFieldDefinition) o;
 		if (!Objects.equals(type, f.type))
 			return false;
-		if (!Objects.equals(fulltext, f.fulltext))
-			return false;
 		if (!Objects.equals(facet, f.facet))
 			return false;
 		if (!Objects.equals(index, f.index))
@@ -101,10 +87,6 @@ public class SmartFieldDefinition extends FieldDefinition {
 		if (!Objects.equals(sort, f.sort))
 			return false;
 		if (!Objects.equals(stored, f.stored))
-			return false;
-		if (!Objects.equals(snippet, f.snippet))
-			return false;
-		if (!Objects.equals(autocomplete, f.autocomplete))
 			return false;
 		return true;
 	}
@@ -116,7 +98,6 @@ public class SmartFieldDefinition extends FieldDefinition {
 	public static class SmartBuilder extends Builder {
 
 		public Type type;
-		public Boolean fulltext;
 		public Boolean facet;
 		public Boolean index;
 		public Boolean sort;
@@ -129,13 +110,16 @@ public class SmartFieldDefinition extends FieldDefinition {
 			return this;
 		}
 
-		public SmartBuilder copyFrom(String copyFrom) {
-			return (SmartBuilder) super.copyFrom(copyFrom);
+		public CustomFieldDefinition.CustomBuilder analyzer(String analyzer) {
+			return (CustomFieldDefinition.CustomBuilder) super.analyzer(analyzer);
 		}
 
-		public SmartBuilder fulltext(Boolean fulltext) {
-			this.fulltext = fulltext;
-			return this;
+		public CustomFieldDefinition.CustomBuilder queryAnalyzer(String queryAnalyzer) {
+			return (CustomFieldDefinition.CustomBuilder) super.queryAnalyzer(queryAnalyzer);
+		}
+
+		public SmartBuilder copyFrom(String copyFrom) {
+			return (SmartBuilder) super.copyFrom(copyFrom);
 		}
 
 		public SmartBuilder facet(Boolean facet) {
@@ -155,16 +139,6 @@ public class SmartFieldDefinition extends FieldDefinition {
 
 		public SmartBuilder stored(Boolean stored) {
 			this.stored = stored;
-			return this;
-		}
-
-		public SmartBuilder snippet(Boolean snippet) {
-			this.snippet = snippet;
-			return this;
-		}
-
-		public SmartBuilder autocomplete(Boolean autocomplete) {
-			this.autocomplete = autocomplete;
 			return this;
 		}
 

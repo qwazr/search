@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.WildcardMatcher;
 
 final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
@@ -27,18 +28,17 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 	Builder<SmartFieldDefinition> setup(Builder<SmartFieldDefinition> builder) {
 		if (builder.definition.stored)
 			storeProvider(builder);
-		if (builder.definition.index)
-			indexProvider(builder);
+		if (builder.definition.index) {
+			if (StringUtils.isEmpty(builder.definition.analyzer) && StringUtils.isEmpty(
+					builder.definition.queryAnalyzer))
+				indexProvider(builder);
+			else
+				fullTextProvider(builder);
+		}
 		if (builder.definition.sort)
 			sortProvider(builder);
 		if (builder.definition.facet)
 			facetProvider(builder);
-		if (builder.definition.snippet)
-			snippetProvider(builder);
-		if (builder.definition.fulltext)
-			fullTextProvider(builder);
-		if (builder.definition.autocomplete)
-			autocompleteProvider(builder);
 		return builder;
 	}
 
@@ -46,23 +46,23 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 		switch (builder.definition.type) {
 		case TEXT:
 			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::textField);
-			builder.storedFieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getTextName);
+			builder.storedFieldNameProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getTextName);
 			break;
 		case LONG:
 			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::longField);
-			builder.storedFieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getLongName);
+			builder.storedFieldNameProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getLongName);
 			break;
 		case INTEGER:
 			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::integerField);
-			builder.storedFieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getIntegerName);
+			builder.storedFieldNameProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getIntegerName);
 			break;
 		case DOUBLE:
 			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::doubleField);
-			builder.storedFieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getDoubleName);
+			builder.storedFieldNameProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getDoubleName);
 			break;
 		case FLOAT:
 			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::floatField);
-			builder.storedFieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getFloatName);
+			builder.storedFieldNameProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getFloatName);
 			break;
 		default:
 			break;
@@ -74,22 +74,27 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 		case TEXT:
 			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::textField);
 			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::textTerm);
+			builder.queryFieldNameProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::getTextName);
 			break;
 		case LONG:
 			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::longField);
+			builder.queryFieldNameProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::getLongName);
 			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::longTerm);
 			break;
 		case INTEGER:
 			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::integerField);
 			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::integerTerm);
+			builder.queryFieldNameProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::getIntegerName);
 			break;
 		case DOUBLE:
 			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::doubleField);
 			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::doubleTerm);
+			builder.queryFieldNameProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::getDoubleName);
 			break;
 		case FLOAT:
 			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::floatField);
 			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::floatTerm);
+			builder.queryFieldNameProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::getFloatName);
 			break;
 		default:
 			break;
@@ -129,17 +134,11 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 
 	static void fullTextProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
 		builder.fieldProvider(SmartFieldProviders.TextFieldProvider.INSTANCE::textField);
-		builder.fieldProvider(SmartFieldProviders.FullFieldProvider.INSTANCE::textField);
+		builder.queryFieldNameProvider(SmartFieldProviders.TextFieldProvider.INSTANCE::getTextName);
 	}
 
-	static void autocompleteProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
-		builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::textField);
-		builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::textField);
+	public static FieldTypeInterface build(final WildcardMatcher wildcardMatcher,
+			final SmartFieldDefinition definition) {
+		return new SmartFieldType(wildcardMatcher, definition);
 	}
-
-	static void snippetProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
-		builder.fieldProvider(SmartFieldProviders.TextFieldProvider.INSTANCE::textField);
-		builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::textField);
-	}
-
 }

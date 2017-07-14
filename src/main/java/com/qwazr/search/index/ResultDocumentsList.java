@@ -58,7 +58,7 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 				final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
 				if (fieldType == null)
 					continue;
-				final String storedFieldName = fieldType.getStoredField(fieldName);
+				final String storedFieldName = fieldType.getStoredFieldName(fieldName);
 				if (storedFieldName != null)
 					storedFields.put(storedFieldName, fieldName);
 				final ValueConverter converter = context.docValuesConverters.computeIfAbsent(fieldName, f -> {

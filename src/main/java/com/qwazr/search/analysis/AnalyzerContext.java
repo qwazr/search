@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.analysis;
 
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ClassLoaderUtils;
@@ -56,16 +57,25 @@ public class AnalyzerContext {
 
 		fieldMap.forEach((fieldName, fieldType) -> {
 			try {
-				fieldType.setIndexAnalyzer(fieldName, (field, analyzerDescriptor) -> {
-					final Analyzer analyzer = builder.findAnalyzer(analyzerDescriptor);
-					if (analyzer != null)
-						indexAnalyzerMap.put(field, analyzer);
-				});
-				fieldType.setQueryAnalyzer(fieldName, (field, analyzerDescriptor) -> {
-					final Analyzer analyzer = builder.findAnalyzer(analyzerDescriptor);
-					if (analyzer != null)
-						queryAnalyzerMap.put(field, analyzer);
-				});
+				final String queryFieldName = fieldType.getQueryFieldName(fieldName);
+				if (queryFieldName == null)
+					return;
+				final FieldDefinition fieldDefinition = fieldType.getDefinition();
+
+				if (fieldDefinition.analyzer != null) {
+					final Analyzer indexAnalyzer = builder.findAnalyzer(fieldDefinition.analyzer);
+					if (indexAnalyzer != null)
+						indexAnalyzerMap.put(queryFieldName, indexAnalyzer);
+				}
+
+				final String queryAnalyzerName = fieldDefinition.queryAnalyzer == null ?
+						fieldDefinition.analyzer :
+						fieldDefinition.queryAnalyzer;
+				if (queryAnalyzerName != null) {
+					final Analyzer queryAnalyzer = builder.findAnalyzer(queryAnalyzerName);
+					if (queryAnalyzer != null)
+						queryAnalyzerMap.put(queryFieldName, queryAnalyzer);
+				}
 
 			} catch (ReflectiveOperationException | IOException e) {
 				final String msg = "Analyzer class not known for the field " + fieldName;

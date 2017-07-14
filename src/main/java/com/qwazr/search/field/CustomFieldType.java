@@ -148,4 +148,71 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 		}
 
 	}
+
+	public static FieldTypeInterface build(WildcardMatcher wildcardMatcher, CustomFieldDefinition definition) {
+		final FieldDefinition.Template template =
+				definition.template == null ? FieldDefinition.Template.NONE : definition.template;
+		switch (template) {
+		case NONE:
+			return new CustomFieldType(wildcardMatcher, definition);
+		case DoublePoint:
+			return new DoublePointType(wildcardMatcher, definition);
+		case FloatPoint:
+			return new FloatPointType(wildcardMatcher, definition);
+		case IntPoint:
+			return new IntPointType(wildcardMatcher, definition);
+		case LongPoint:
+			return new LongPointType(wildcardMatcher, definition);
+		case DoubleField:
+			return new DoublePointType(wildcardMatcher, definition);
+		case FloatField:
+			return new FloatPointType(wildcardMatcher, definition);
+		case IntField:
+			return new IntPointType(wildcardMatcher, definition);
+		case LongField:
+			return new LongPointType(wildcardMatcher, definition);
+		case LongDocValuesField:
+			return new LongDocValuesType(wildcardMatcher, definition);
+		case IntDocValuesField:
+			return new IntDocValuesType(wildcardMatcher, definition);
+		case FloatDocValuesField:
+			return new FloatDocValuesType(wildcardMatcher, definition);
+		case DoubleDocValuesField:
+			return new DoubleDocValuesType(wildcardMatcher, definition);
+		case LatLonPoint:
+			return new LatLonPointType(wildcardMatcher, definition);
+		case Geo3DPoint:
+			return new Geo3DPointType(wildcardMatcher, definition);
+		case SortedDocValuesField:
+			return new SortedDocValuesType(wildcardMatcher, definition);
+		case SortedLongDocValuesField:
+			return new SortedLongDocValuesType(wildcardMatcher, definition);
+		case SortedIntDocValuesField:
+			return new SortedIntDocValuesType(wildcardMatcher, definition);
+		case SortedDoubleDocValuesField:
+			return new SortedDoubleDocValuesType(wildcardMatcher, definition);
+		case SortedFloatDocValuesField:
+			return new SortedFloatDocValuesType(wildcardMatcher, definition);
+		case SortedSetDocValuesField:
+			return new SortedSetDocValuesType(wildcardMatcher, definition);
+		case BinaryDocValuesField:
+			return new BinaryDocValuesType(wildcardMatcher, definition);
+		case StoredField:
+			return new StoredFieldType(wildcardMatcher, definition);
+		case StringField:
+			return new StringFieldType(wildcardMatcher, definition);
+		case TextField:
+			return new TextFieldType(wildcardMatcher, definition);
+		case FacetField:
+			return new FacetType(wildcardMatcher, definition);
+		case IntAssociatedField:
+			return new IntAssociationFacetType(wildcardMatcher, definition);
+		case FloatAssociatedField:
+			return new FloatAssociationFacetType(wildcardMatcher, definition);
+		case SortedSetDocValuesFacetField:
+			return new SortedSetDocValuesFacetType(wildcardMatcher, definition);
+		}
+		return null;
+	}
+
 }

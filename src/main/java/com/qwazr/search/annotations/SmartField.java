@@ -17,6 +17,7 @@ package com.qwazr.search.annotations;
 
 import com.qwazr.search.field.SmartFieldDefinition;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.analysis.Analyzer;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -31,18 +32,20 @@ public @interface SmartField {
 
 	SmartFieldDefinition.Type type() default SmartFieldDefinition.Type.TEXT;
 
-	boolean fulltext() default false;
-
 	boolean facet() default false;
 
 	boolean index() default false;
 
+	String analyzer() default StringUtils.EMPTY;
+
+	String queryAnalyzer() default StringUtils.EMPTY;
+
+	Class<? extends Analyzer> analyzerClass() default Analyzer.class;
+
+	Class<? extends Analyzer> queryAnalyzerClass() default Analyzer.class;
+
 	boolean sort() default false;
 
 	boolean stored() default false;
-
-	boolean snippet() default false;
-
-	boolean autocomplete() default false;
 
 }

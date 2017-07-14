@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.query.lucene.MultiFieldQueryParserFix;
 import com.qwazr.utils.ArrayUtils;
@@ -26,8 +27,10 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
 
 public class MultiFieldQueryParser extends AbstractQuery {
@@ -98,9 +101,14 @@ public class MultiFieldQueryParser extends AbstractQuery {
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
-		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser =
-				new MultiFieldQueryParserFix(fields,
-						analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, boosts);
+		final FieldMap fieldMap = queryContext.getFieldMap();
+		final String[] resolvedFields = fields != null && fieldMap != null ?
+				fieldMap.resolveQueryFieldNames(fields) :
+				fields;
+		final Map<String, Float> resolvedBoosts = boosts != null && fieldMap != null ? fieldMap.resolveQueryFieldNames(
+				boosts, new HashMap<>()) : boosts;
+		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser = new MultiFieldQueryParserFix(
+				resolvedFields, analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, resolvedBoosts);
 		if (default_operator != null)
 			parser.setDefaultOperator(default_operator.queryParseroperator);
 		if (allow_leading_wildcard != null)

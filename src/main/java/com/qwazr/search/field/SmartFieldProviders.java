@@ -19,7 +19,6 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
-import com.qwazr.utils.StringUtils;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.SortedNumericDocValuesField;
@@ -36,22 +35,22 @@ class SmartFieldProviders {
 
 	enum FieldPrefix {
 
-		storedField("sto"), stringField("str"), facetField("fct"), docValues("dvl"), textField("txt"), fullField("ful");
+		storedField('r'), stringField('s'), facetField('f'), docValues('d'), textField('t');
 
-		final String prefix;
+		final char prefix;
 
-		FieldPrefix(String prefix) {
+		FieldPrefix(char prefix) {
 			this.prefix = prefix;
 		}
 	}
 
 	enum TypePrefix {
 
-		textType("|TXT|"), longType("|LNG|"), intType("|INT|"), doubleType("|DBL|"), floatType("|FLT|");
+		textType('t'), longType('l'), intType('i'), doubleType('d'), floatType('f');
 
-		final String prefix;
+		final char prefix;
 
-		TypePrefix(String prefix) {
+		TypePrefix(char prefix) {
 			this.prefix = prefix;
 		}
 	}
@@ -65,7 +64,7 @@ class SmartFieldProviders {
 		}
 
 		final String getTextName(String fieldName) {
-			return fieldPrefix.prefix + TypePrefix.textType.prefix + fieldName;
+			return String.valueOf(new char[] { fieldPrefix.prefix, TypePrefix.textType.prefix, '€' }).concat(fieldName);
 		}
 
 		final String getLongName(String fieldName) {
@@ -258,19 +257,6 @@ class SmartFieldProviders {
 
 		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
 			consumer.accept(fieldName, new TextField(getTextName(fieldName), value.toString(), Field.Store.NO));
-		}
-	}
-
-	static final class FullFieldProvider extends FieldProviderByType {
-
-		final static FullFieldProvider INSTANCE = new FullFieldProvider();
-
-		private FullFieldProvider() {
-			super(FieldPrefix.fullField);
-		}
-
-		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new TextField(getTextName(StringUtils.EMPTY), value.toString(), Field.Store.NO));
 		}
 	}
 

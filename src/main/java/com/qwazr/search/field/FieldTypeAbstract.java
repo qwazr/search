@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
@@ -42,11 +41,10 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 	final private T definition;
 	final protected BytesRefUtils.Converter bytesRefConverter;
 	final private FieldTypeInterface.Facet[] facetConfig;
-	final private FieldTypeInterface.Analyzer[] indexAnalyzerConfig;
-	final private FieldTypeInterface.Analyzer[] queryAnalyzerConfig;
 	final private FieldTypeInterface.FieldProvider[] fieldProviders;
 	final private TermProvider termProvider;
-	final private StoredFieldProvider storedFieldProvider;
+	final private FieldNameProvider storedFieldNameProvider;
+	final private FieldNameProvider queryFieldNameProvider;
 	final private SortFieldProvider sortFieldProvider;
 	final private Map<FieldTypeInterface, String> copyToFields;
 
@@ -58,19 +56,12 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 		this.facetConfig =
 				builder.facetConfig == null || builder.facetConfig.isEmpty() ? null : builder.facetConfig.toArray(
 						new FieldTypeInterface.Facet[builder.facetConfig.size()]);
-		this.indexAnalyzerConfig = builder.indexAnalyzerConfig == null || builder.indexAnalyzerConfig.isEmpty() ?
-				null :
-				builder.indexAnalyzerConfig.toArray(
-						new FieldTypeInterface.Analyzer[builder.indexAnalyzerConfig.size()]);
-		this.queryAnalyzerConfig = builder.queryAnalyzerConfig == null || builder.queryAnalyzerConfig.isEmpty() ?
-				null :
-				builder.queryAnalyzerConfig.toArray(
-						new FieldTypeInterface.Analyzer[builder.queryAnalyzerConfig.size()]);
 		this.fieldProviders = builder.fieldProviders == null || builder.fieldProviders.isEmpty() ?
 				null :
 				builder.fieldProviders.toArray(new FieldTypeInterface.FieldProvider[builder.fieldProviders.size()]);
 		this.termProvider = builder.termProvider;
-		this.storedFieldProvider = builder.storedFieldProvider;
+		this.storedFieldNameProvider = builder.storedFieldNameProvider;
+		this.queryFieldNameProvider = builder.queryFieldNameProvider;
 		this.sortFieldProvider = builder.sortFieldProvider;
 		this.copyToFields = new LinkedHashMap<>();
 	}
@@ -83,20 +74,6 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 				config.config(fieldName, facetsConfig);
 	}
 
-	public final void setIndexAnalyzer(String fieldName, AnalyzerContext.Builder builder)
-			throws ReflectiveOperationException, IOException {
-		if (indexAnalyzerConfig != null)
-			for (FieldTypeInterface.Analyzer config : indexAnalyzerConfig)
-				config.config(fieldName, builder);
-	}
-
-	public final void setQueryAnalyzer(String fieldName, AnalyzerContext.Builder builder)
-			throws ReflectiveOperationException, IOException {
-		if (queryAnalyzerConfig != null)
-			for (FieldTypeInterface.Analyzer config : queryAnalyzerConfig)
-				config.config(fieldName, builder);
-	}
-
 	public final Term term(String fieldName, Object value) {
 		if (termProvider != null)
 			return termProvider.term(fieldName, value);
@@ -105,9 +82,17 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 	}
 
 	@Override
-	public final String getStoredField(final String fieldName) {
-		if (storedFieldProvider != null)
-			return storedFieldProvider.storedField(fieldName);
+	public final String getStoredFieldName(final String fieldName) {
+		if (storedFieldNameProvider != null)
+			return storedFieldNameProvider.fieldName(fieldName);
+		else
+			return null;
+	}
+
+	@Override
+	public final String getQueryFieldName(final String fieldName) {
+		if (queryFieldNameProvider != null)
+			return queryFieldNameProvider.fieldName(fieldName);
 		else
 			return null;
 	}
@@ -257,11 +242,10 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 		private final WildcardMatcher wildcardMatcher;
 		private BytesRefUtils.Converter bytesRefConverter;
 		private LinkedHashSet<Facet> facetConfig;
-		private LinkedHashSet<FieldTypeInterface.Analyzer> indexAnalyzerConfig;
-		private LinkedHashSet<FieldTypeInterface.Analyzer> queryAnalyzerConfig;
 		private LinkedHashSet<FieldProvider> fieldProviders;
 		private TermProvider termProvider;
-		private StoredFieldProvider storedFieldProvider;
+		private FieldNameProvider storedFieldNameProvider;
+		private FieldNameProvider queryFieldNameProvider;
 		private SortFieldProvider sortFieldProvider;
 
 		Builder(WildcardMatcher wildcardMatcher, T definition) {
@@ -281,20 +265,6 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 			return this;
 		}
 
-		Builder<T> indexAnalyzerConfig(FieldTypeInterface.Analyzer indexAnalyzerConfig) {
-			if (this.indexAnalyzerConfig == null)
-				this.indexAnalyzerConfig = new LinkedHashSet<>();
-			this.indexAnalyzerConfig.add(indexAnalyzerConfig);
-			return this;
-		}
-
-		Builder<T> queryAnalyzerConfig(FieldTypeInterface.Analyzer queryAnalyzerConfig) {
-			if (this.queryAnalyzerConfig == null)
-				this.queryAnalyzerConfig = new LinkedHashSet<>();
-			this.queryAnalyzerConfig.add(queryAnalyzerConfig);
-			return this;
-		}
-
 		Builder<T> fieldProvider(FieldTypeInterface.FieldProvider fieldProvider) {
 			if (this.fieldProviders == null)
 				this.fieldProviders = new LinkedHashSet<>();
@@ -307,8 +277,13 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 			return this;
 		}
 
-		Builder<T> storedFieldProvider(FieldTypeInterface.StoredFieldProvider storedFieldProvider) {
-			this.storedFieldProvider = storedFieldProvider;
+		Builder<T> storedFieldNameProvider(FieldTypeInterface.FieldNameProvider fieldNameProvider) {
+			this.storedFieldNameProvider = fieldNameProvider;
+			return this;
+		}
+
+		Builder<T> queryFieldNameProvider(FieldTypeInterface.FieldNameProvider fieldNameProvider) {
+			this.queryFieldNameProvider = fieldNameProvider;
 			return this;
 		}
 

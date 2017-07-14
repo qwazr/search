@@ -23,8 +23,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.json.JsonMapper;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.FacetsConfig;
 
 import java.io.File;
@@ -51,65 +51,58 @@ import java.util.function.Supplier;
 		@JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "DOUBLE") })
 public abstract class FieldDefinition {
 
+	/* Used by CustomFieldDefinition */
 	public enum Template {
-		NONE(CustomFieldType::new),
-		DoublePoint(DoublePointType::new),
-		FloatPoint(FloatPointType::new),
-		IntPoint(IntPointType::new),
-		LongPoint(LongPointType::new),
-		DoubleField(DoublePointType::new),
-		FloatField(FloatPointType::new),
-		IntField(IntPointType::new),
-		LongField(LongPointType::new),
-		LongDocValuesField(LongDocValuesType::new),
-		IntDocValuesField(IntDocValuesType::new),
-		FloatDocValuesField(FloatDocValuesType::new),
-		DoubleDocValuesField(DoubleDocValuesType::new),
-		LatLonPoint(LatLonPointType::new),
-		Geo3DPoint(Geo3DPointType::new),
-		SortedDocValuesField(SortedDocValuesType::new),
-		SortedLongDocValuesField(SortedLongDocValuesType::new),
-		SortedIntDocValuesField(SortedIntDocValuesType::new),
-		SortedDoubleDocValuesField(SortedDoubleDocValuesType::new),
-		SortedFloatDocValuesField(SortedFloatDocValuesType::new),
-		SortedSetDocValuesField(SortedSetDocValuesType::new),
-		BinaryDocValuesField(BinaryDocValuesType::new),
-		StoredField(StoredFieldType::new),
-		StringField(StringFieldType::new),
-		TextField(TextFieldType::new),
-		FacetField(FacetType::new),
-		IntAssociatedField(IntAssociationFacetType::new),
-		FloatAssociatedField(FloatAssociationFacetType::new),
-		SortedSetDocValuesFacetField(SortedSetDocValuesFacetType::new),
-		SmartField(SmartFieldType::new);
-
-		public final FieldBuilder builder;
-
-		Template(FieldBuilder builder) {
-			this.builder = builder;
-		}
-
+		NONE,
+		DoublePoint,
+		FloatPoint,
+		IntPoint,
+		LongPoint,
+		DoubleField,
+		FloatField,
+		IntField,
+		LongField,
+		LongDocValuesField,
+		IntDocValuesField,
+		FloatDocValuesField,
+		DoubleDocValuesField,
+		LatLonPoint,
+		Geo3DPoint,
+		SortedDocValuesField,
+		SortedLongDocValuesField,
+		SortedIntDocValuesField,
+		SortedDoubleDocValuesField,
+		SortedFloatDocValuesField,
+		SortedSetDocValuesField,
+		BinaryDocValuesField,
+		StoredField,
+		StringField,
+		TextField,
+		FacetField,
+		IntAssociatedField,
+		FloatAssociatedField,
+		SortedSetDocValuesFacetField
 	}
 
-	@FunctionalInterface
-	public interface FieldBuilder {
-		FieldTypeInterface build(final WildcardMatcher wildcardMatcher, final FieldDefinition definition);
-	}
-
-	public final Template template;
+	public final String analyzer;
+	@JsonProperty("query_analyzer")
+	public final String queryAnalyzer;
 
 	@JsonProperty("copy_from")
 	public final String[] copyFrom;
 
 	@JsonCreator
-	FieldDefinition(@JsonProperty("template") final Template template,
+	FieldDefinition(@JsonProperty("analyzer") final String analyzer,
+			@JsonProperty("query_analyzer") final String queryAnalyzer,
 			@JsonProperty("copy_from") final String[] copyFrom) {
-		this.template = template;
+		this.analyzer = analyzer;
+		this.queryAnalyzer = queryAnalyzer;
 		this.copyFrom = copyFrom;
 	}
 
 	FieldDefinition(final Builder builder) {
-		this.template = builder.template;
+		this.analyzer = builder.analyzer;
+		this.queryAnalyzer = builder.queryAnalyzer;
 		this.copyFrom = builder.copyFrom == null || builder.copyFrom.isEmpty() ? null : builder.copyFrom.toArray(
 				new String[builder.copyFrom.size()]);
 	}
@@ -121,7 +114,11 @@ public abstract class FieldDefinition {
 		if (o == this)
 			return true;
 		final FieldDefinition f = (FieldDefinition) o;
-		return Objects.equals(template, f.template);
+		if (!Objects.equals(analyzer, f.analyzer))
+			return false;
+		if (!Objects.equals(queryAnalyzer, f.queryAnalyzer))
+			return false;
+		return true;
 	}
 
 	public final static TypeReference<LinkedHashMap<String, FieldDefinition>> MapStringFieldTypeRef =
@@ -168,6 +165,12 @@ public abstract class FieldDefinition {
 				fieldMapFile, FieldDefinition.MapStringFieldTypeRef) : defaultMap == null ? null : defaultMap.get();
 	}
 
+	protected static String from(String analyzerName, Class<? extends Analyzer> analyzerClass) {
+		return analyzerClass != Analyzer.class ? analyzerClass.getName() : StringUtils.isEmpty(analyzerName) ?
+				null :
+				analyzerName;
+	}
+
 	protected static String[] from(final String fieldName, final Map<String, Copy> copyMap) {
 		if (copyMap == null || copyMap.isEmpty())
 			return null;
@@ -183,17 +186,19 @@ public abstract class FieldDefinition {
 		return globalCopyFromList.toArray(new String[globalCopyFromList.size()]);
 	}
 
-	static Builder of(Template template) {
-		return new Builder().template(template);
-	}
-
 	static class Builder {
 
-		private Template template;
+		private String analyzer;
+		private String queryAnalyzer;
 		private LinkedHashSet<String> copyFrom;
 
-		Builder template(Template template) {
-			this.template = template;
+		public Builder analyzer(String analyzer) {
+			this.analyzer = analyzer;
+			return this;
+		}
+
+		public Builder queryAnalyzer(String queryAnalyzer) {
+			this.queryAnalyzer = queryAnalyzer;
 			return this;
 		}
 

@@ -40,8 +40,4 @@ class FieldUtils {
 		return new Term(fieldName, value.toString());
 	}
 
-	static String storedField(String fieldName) {
-		return fieldName;
-	}
-
 }

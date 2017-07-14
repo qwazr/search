@@ -15,10 +15,10 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -37,7 +37,9 @@ public interface FieldTypeInterface {
 
 	Object toTerm(final BytesRef bytesRef);
 
-	String getStoredField(String fieldName);
+	String getQueryFieldName(String fieldName);
+
+	String getStoredFieldName(String fieldName);
 
 	FieldDefinition getDefinition();
 
@@ -45,22 +47,11 @@ public interface FieldTypeInterface {
 
 	void setFacetsConfig(String fieldName, FacetsConfig facetsConfig);
 
-	void setIndexAnalyzer(String fieldName, AnalyzerContext.Builder builder)
-			throws ReflectiveOperationException, IOException;
-
-	void setQueryAnalyzer(String fieldName, AnalyzerContext.Builder builder)
-			throws ReflectiveOperationException, IOException;
-
 	Term term(String fieldName, Object value);
 
 	@FunctionalInterface
 	interface Facet {
 		void config(String fieldName, FacetsConfig facetsConfig);
-	}
-
-	@FunctionalInterface
-	interface Analyzer {
-		void config(String fieldName, AnalyzerContext.Builder builder) throws ReflectiveOperationException, IOException;
 	}
 
 	@FunctionalInterface
@@ -74,13 +65,21 @@ public interface FieldTypeInterface {
 	}
 
 	@FunctionalInterface
-	interface StoredFieldProvider {
-		String storedField(final String fieldName);
+	interface FieldNameProvider {
+		String fieldName(final String fieldName);
 	}
 
 	@FunctionalInterface
 	interface SortFieldProvider {
 		SortField sortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
+	}
+
+	static FieldTypeInterface build(WildcardMatcher wildcardMatcher, FieldDefinition definition) {
+		if (definition instanceof CustomFieldDefinition)
+			return CustomFieldType.build(wildcardMatcher, (CustomFieldDefinition) definition);
+		if (definition instanceof SmartFieldDefinition)
+			return SmartFieldType.build(wildcardMatcher, (SmartFieldDefinition) definition);
+		return null;
 	}
 
 }

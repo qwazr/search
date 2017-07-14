@@ -16,7 +16,6 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.FieldConsumer;
-import com.qwazr.utils.StringUtils;
 
 abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefinition> {
 
@@ -38,20 +37,11 @@ abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefi
 			builder.facetConfig(((fieldName, facetsConfig) -> facetsConfig.setRequireDimCount(fieldName,
 					builder.definition.facetRequireDimCount)));
 
-		// Setup analyzers
-		if (!StringUtils.isEmpty(builder.definition.analyzer))
-			builder.indexAnalyzerConfig(
-					(fieldName, analyzerBuilder) -> analyzerBuilder.add(fieldName, builder.definition.analyzer));
-		final String analyzerDescriptor = StringUtils.isEmpty(builder.definition.queryAnalyzer) ?
-				builder.definition.analyzer :
-				builder.definition.queryAnalyzer;
-		if (!StringUtils.isEmpty(analyzerDescriptor))
-			builder.queryAnalyzerConfig(
-					(fieldName, analyzerBuilder) -> analyzerBuilder.add(fieldName, analyzerDescriptor));
-
 		setupFields(builder);
 		if (builder.definition.stored != null && builder.definition.stored)
-			builder.storedFieldProvider(FieldUtils::storedField);
+			builder.storedFieldNameProvider(f -> f);
+
+		builder.queryFieldNameProvider(f -> f);
 
 		return builder;
 	}

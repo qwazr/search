@@ -5,20 +5,20 @@
   },
   "name": {
     "type": "STRING",
-    "fulltext": true,
+    "index": true,
     "sort": true,
-    "autocomplete": true
+    "analyzer": "StandardAnalyzer"
   },
   "description": {
     "type": "STRING",
-    "fulltext": true,
+    "index": true,
     "stored": true,
-    "snippet": true
+    "analyzer": "StandardAnalyzer"
   },
   "category": {
     "type": "STRING",
     "facet": true,
-    "fulltext": true
+    "index": true
   },
   "price": {
     "type": "DOUBLE",

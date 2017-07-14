@@ -34,7 +34,7 @@ abstract class StorableFieldType extends CustomFieldTypeAbstract {
 	final void setupFields(Builder<CustomFieldDefinition> builder) {
 		if (getStore(builder.definition)) {
 			builder.fieldProvider(this::newFieldWithStore);
-			builder.storedFieldProvider(FieldUtils::storedField);
+			builder.storedFieldNameProvider(f -> f);
 		} else
 			builder.fieldProvider(this::newFieldNoStore);
 	}

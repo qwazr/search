@@ -188,7 +188,7 @@ public abstract class JavaAbstractTest {
 		fields.forEach((fieldName, fieldDefinition) -> {
 			CustomFieldDefinition fieldDef = (CustomFieldDefinition) service.getField(fieldName);
 			Assert.assertNotNull(fieldDef);
-			Assert.assertEquals(fieldDef.template, fieldDefinition.template);
+			Assert.assertEquals(fieldDef.template, ((CustomFieldDefinition) fieldDefinition).template);
 			Assert.assertEquals(fieldDef.analyzer, ((CustomFieldDefinition) fieldDefinition).analyzer);
 		});
 	}

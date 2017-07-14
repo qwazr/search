@@ -27,6 +27,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -93,6 +94,12 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
 				(r1, r2) -> Assert.assertTrue(r1.doubleSort.compareTo(r2.doubleSort) <= 0));
 	}
 
+	@Test(expected = WebApplicationException.class)
+	public void testNonSortable() {
+		indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery()).sort("nonSortable",
+				QueryDefinition.SortEnum.ascending).returnedField("*").build(), Record.class);
+	}
+
 	@Index(name = "SmartFieldSorted", schema = "TestQueries")
 	static public class Record {
 
@@ -111,12 +118,15 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
 		@SmartField(type = SmartFieldDefinition.Type.TEXT, sort = true, stored = true)
 		final public String stringSort;
 
+		@SmartField(type = SmartFieldDefinition.Type.TEXT, index = true)
+		final public String nonSortable;
+
 		Record(boolean random) {
 			longSort = random ? RandomUtils.nextLong() : null;
 			intSort = random ? RandomUtils.nextInt() : null;
 			floatSort = random ? RandomUtils.nextFloat() : null;
 			doubleSort = random ? RandomUtils.nextDouble() : null;
-			stringSort = random ? RandomUtils.alphanumeric(5) : null;
+			stringSort = nonSortable = random ? RandomUtils.alphanumeric(5) : null;
 		}
 
 		public Record() {

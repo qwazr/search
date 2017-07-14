@@ -28,7 +28,7 @@ final class StoredFieldType extends CustomFieldTypeAbstract.OneField {
 
 	StoredFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
 		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.STRING)
-				.storedFieldProvider(FieldUtils::storedField));
+				.storedFieldNameProvider(f -> f));
 	}
 
 	@Override

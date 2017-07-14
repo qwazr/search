@@ -30,5 +30,5 @@ final public class CopyToFieldType extends FieldTypeAbstract {
 
 	final void doNothing(final String fieldName, final Object value, final FieldConsumer consumer) {
 	}
-
+	
 }
