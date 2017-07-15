@@ -26,24 +26,28 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 
 	@Override
 	Builder<SmartFieldDefinition> setup(Builder<SmartFieldDefinition> builder) {
-		if (builder.definition.stored)
+		if (builder.definition.stored != null && builder.definition.stored)
 			storeProvider(builder);
-		if (builder.definition.index) {
+		if (builder.definition.index != null && builder.definition.index) {
 			if (StringUtils.isEmpty(builder.definition.analyzer) && StringUtils.isEmpty(
 					builder.definition.queryAnalyzer))
 				indexProvider(builder);
 			else
 				fullTextProvider(builder);
 		}
-		if (builder.definition.sort)
+		if (builder.definition.sort != null && builder.definition.sort)
 			sortProvider(builder);
-		if (builder.definition.facet)
+		if (builder.definition.facet != null && builder.definition.facet)
 			facetProvider(builder);
 		return builder;
 	}
 
+	private static SmartFieldDefinition.Type getType(final Builder<SmartFieldDefinition> builder) {
+		return builder.definition.type == null ? SmartFieldDefinition.Type.TEXT : builder.definition.type;
+	}
+
 	static void storeProvider(final Builder<SmartFieldDefinition> builder) {
-		switch (builder.definition.type) {
+		switch (getType(builder)) {
 		case TEXT:
 			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::textField);
 			builder.storedFieldNameProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getTextName);
@@ -70,7 +74,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 	}
 
 	static void indexProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
-		switch (builder.definition.type) {
+		switch (getType(builder)) {
 		case TEXT:
 			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::textField);
 			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::textTerm);
@@ -102,7 +106,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 	}
 
 	static void sortProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
-		switch (builder.definition.type) {
+		switch (getType(builder)) {
 		case TEXT:
 			builder.fieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::textField);
 			builder.sortFieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::sortTextField);

@@ -34,7 +34,7 @@ import java.util.logging.Logger;
 public abstract class AbstractIndexTest {
 
 	private static Path rootDirectory;
-	static IndexManager indexManager;
+	protected static IndexManager indexManager;
 
 	static final Logger LOGGER = LoggerUtils.getLogger(AbstractIndexTest.class);
 
