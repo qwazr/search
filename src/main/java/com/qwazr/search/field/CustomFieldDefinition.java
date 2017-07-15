@@ -211,14 +211,17 @@ public class CustomFieldDefinition extends FieldDefinition {
 		private Boolean facetHierarchical;
 		private Boolean facetRequireDimCount;
 
+		@Override
 		public CustomBuilder copyFrom(String copyFrom) {
 			return (CustomBuilder) super.copyFrom(copyFrom);
 		}
 
+		@Override
 		public CustomBuilder analyzer(String analyzer) {
 			return (CustomBuilder) super.analyzer(analyzer);
 		}
 
+		@Override
 		public CustomBuilder queryAnalyzer(String queryAnalyzer) {
 			return (CustomBuilder) super.queryAnalyzer(queryAnalyzer);
 		}

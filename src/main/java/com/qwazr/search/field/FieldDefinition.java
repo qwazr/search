@@ -210,17 +210,17 @@ public abstract class FieldDefinition {
 			return this;
 		}
 
-		public Builder analyzer(String analyzer) {
+		protected Builder analyzer(String analyzer) {
 			this.analyzer = analyzer;
 			return this;
 		}
 
-		public Builder queryAnalyzer(String queryAnalyzer) {
+		protected Builder queryAnalyzer(String queryAnalyzer) {
 			this.queryAnalyzer = queryAnalyzer;
 			return this;
 		}
 
-		Builder copyFrom(String field) {
+		protected Builder copyFrom(String field) {
 			if (copyFrom == null)
 				copyFrom = new LinkedHashSet<>();
 			copyFrom.add(field);
