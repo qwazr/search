@@ -27,7 +27,6 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class SmartFieldDefinition extends FieldDefinition {
 
-	final public Type type;
 	final public Boolean index;
 	final public Boolean facet;
 	final public Boolean sort;
@@ -42,8 +41,7 @@ public class SmartFieldDefinition extends FieldDefinition {
 			@JsonProperty("index") Boolean index, @JsonProperty("analyzer") final String analyzer,
 			@JsonProperty("query_analyzer") final String queryAnalyzer, @JsonProperty("sort") Boolean sort,
 			@JsonProperty("stored") Boolean stored, @JsonProperty("copy_from") String[] copyFrom) {
-		super(analyzer, queryAnalyzer, copyFrom);
-		this.type = type;
+		super(type, analyzer, queryAnalyzer, copyFrom);
 		this.facet = facet;
 		this.index = index;
 		this.sort = sort;
@@ -52,7 +50,6 @@ public class SmartFieldDefinition extends FieldDefinition {
 
 	private SmartFieldDefinition(SmartBuilder builder) {
 		super(builder);
-		type = builder.type;
 		facet = builder.facet;
 		index = builder.index;
 		sort = builder.sort;
@@ -60,9 +57,8 @@ public class SmartFieldDefinition extends FieldDefinition {
 	}
 
 	public SmartFieldDefinition(final String fieldName, final SmartField smartField, final Map<String, Copy> copyMap) {
-		super(from(smartField.analyzer(), smartField.analyzerClass()),
+		super(smartField.type(), from(smartField.analyzer(), smartField.analyzerClass()),
 				from(smartField.queryAnalyzer(), smartField.queryAnalyzerClass()), from(fieldName, copyMap));
-		type = smartField.type();
 		facet = smartField.facet();
 		index = smartField.index();
 		sort = smartField.sort();
@@ -78,8 +74,6 @@ public class SmartFieldDefinition extends FieldDefinition {
 		if (!super.equals(o))
 			return false;
 		final SmartFieldDefinition f = (SmartFieldDefinition) o;
-		if (!Objects.equals(type, f.type))
-			return false;
 		if (!Objects.equals(facet, f.facet))
 			return false;
 		if (!Objects.equals(index, f.index))
@@ -97,25 +91,28 @@ public class SmartFieldDefinition extends FieldDefinition {
 
 	public static class SmartBuilder extends Builder {
 
-		public Type type;
 		public Boolean facet;
 		public Boolean index;
 		public Boolean sort;
 		public Boolean stored;
 
+		@Override
 		public SmartBuilder type(Type type) {
-			this.type = type;
+			super.type(type);
 			return this;
 		}
 
+		@Override
 		public SmartBuilder analyzer(String analyzer) {
 			return (SmartBuilder) super.analyzer(analyzer);
 		}
 
+		@Override
 		public SmartBuilder queryAnalyzer(String queryAnalyzer) {
 			return (SmartBuilder) super.queryAnalyzer(queryAnalyzer);
 		}
 
+		@Override
 		public SmartBuilder copyFrom(String copyFrom) {
 			return (SmartBuilder) super.copyFrom(copyFrom);
 		}

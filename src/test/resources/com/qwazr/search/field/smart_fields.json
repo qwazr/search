@@ -1,22 +1,22 @@
 {
   "$id$": {
-    "type": "STRING",
+    "type": "TEXT",
     "index": true
   },
   "name": {
-    "type": "STRING",
+    "type": "TEXT",
     "index": true,
     "sort": true,
     "analyzer": "StandardAnalyzer"
   },
   "description": {
-    "type": "STRING",
+    "type": "TEXT",
     "index": true,
     "stored": true,
     "analyzer": "StandardAnalyzer"
   },
   "category": {
-    "type": "STRING",
+    "type": "TEXT",
     "facet": true,
     "index": true
   },
@@ -35,7 +35,7 @@
     "sort": true
   },
   "full": {
-    "type": "STRING",
+    "type": "TEXT",
     "index": true,
     "analyzer": "StandardAnalyzer",
     "copy_from": [

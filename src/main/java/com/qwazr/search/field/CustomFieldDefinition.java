@@ -80,7 +80,7 @@ public class CustomFieldDefinition extends FieldDefinition {
 			@JsonProperty("dimension_count")    final Integer dimensionCount,
 			@JsonProperty("dimension_num_bytes")    final Integer dimensionNumBytes,
 			@JsonProperty("copy_from") String[] copyFrom) {
-		super(analyzer, queryAnalyzer, copyFrom);
+		super(null, analyzer, queryAnalyzer, copyFrom);
 		this.template = template;
 		this.tokenized = tokenized;
 		this.stored = stored;
@@ -120,7 +120,7 @@ public class CustomFieldDefinition extends FieldDefinition {
 	}
 
 	public CustomFieldDefinition(final String fieldName, final IndexField indexField, final Map<String, Copy> copyMap) {
-		super(from(indexField.analyzer(), indexField.analyzerClass()),
+		super(null, from(indexField.analyzer(), indexField.analyzerClass()),
 				from(indexField.queryAnalyzer(), indexField.queryAnalyzerClass()), from(fieldName, copyMap));
 		template = indexField.template();
 		tokenized = indexField.tokenized();

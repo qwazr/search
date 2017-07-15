@@ -39,6 +39,13 @@ public class FieldDefinitionTest {
 				FieldDefinitionTest.class.getResourceAsStream("smart_fields.json"),
 				FieldDefinition.MapStringFieldTypeRef);
 		Assert.assertNotNull(fields);
+		fields.forEach((name, field) -> {
+			Assert.assertTrue(field instanceof SmartFieldDefinition);
+			Assert.assertNotNull(((SmartFieldDefinition) field).type);
+		});
+
+		String json = JsonMapper.MAPPER.writeValueAsString(fields);
+		fields = JsonMapper.MAPPER.readValue(json, FieldDefinition.MapStringFieldTypeRef);
 		fields.forEach((name, field) -> Assert.assertTrue(field instanceof SmartFieldDefinition));
 	}
 

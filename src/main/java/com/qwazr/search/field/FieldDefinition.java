@@ -41,14 +41,16 @@ import java.util.function.Supplier;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
-		include = JsonTypeInfo.As.PROPERTY,
+		include = JsonTypeInfo.As.EXISTING_PROPERTY,
+		visible = true,
 		property = "type",
 		defaultImpl = CustomFieldDefinition.class)
-@JsonSubTypes({ @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "STRING"),
+@JsonSubTypes({ @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "TEXT"),
 		@JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "INTEGER"),
 		@JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "LONG"),
 		@JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "FLOAT"),
 		@JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "DOUBLE") })
+//@JsonDeserialize(using = FieldDefinition.FieldDeserializer.class)
 public abstract class FieldDefinition {
 
 	/* Used by CustomFieldDefinition */
@@ -85,6 +87,12 @@ public abstract class FieldDefinition {
 	}
 
 	public final String analyzer;
+
+	/**
+	 * This property is present for polymorphism
+	 */
+	public final SmartFieldDefinition.Type type;
+
 	@JsonProperty("query_analyzer")
 	public final String queryAnalyzer;
 
@@ -92,15 +100,17 @@ public abstract class FieldDefinition {
 	public final String[] copyFrom;
 
 	@JsonCreator
-	FieldDefinition(@JsonProperty("analyzer") final String analyzer,
-			@JsonProperty("query_analyzer") final String queryAnalyzer,
+	FieldDefinition(@JsonProperty("type") SmartFieldDefinition.Type type,
+			@JsonProperty("analyzer") final String analyzer, @JsonProperty("query_analyzer") final String queryAnalyzer,
 			@JsonProperty("copy_from") final String[] copyFrom) {
+		this.type = type;
 		this.analyzer = analyzer;
 		this.queryAnalyzer = queryAnalyzer;
 		this.copyFrom = copyFrom;
 	}
 
 	FieldDefinition(final Builder builder) {
+		this.type = builder.type;
 		this.analyzer = builder.analyzer;
 		this.queryAnalyzer = builder.queryAnalyzer;
 		this.copyFrom = builder.copyFrom == null || builder.copyFrom.isEmpty() ? null : builder.copyFrom.toArray(
@@ -114,6 +124,8 @@ public abstract class FieldDefinition {
 		if (o == this)
 			return true;
 		final FieldDefinition f = (FieldDefinition) o;
+		if (!Objects.equals(type, f.type))
+			return false;
 		if (!Objects.equals(analyzer, f.analyzer))
 			return false;
 		if (!Objects.equals(queryAnalyzer, f.queryAnalyzer))
@@ -188,9 +200,15 @@ public abstract class FieldDefinition {
 
 	static class Builder {
 
+		private SmartFieldDefinition.Type type;
 		private String analyzer;
 		private String queryAnalyzer;
 		private LinkedHashSet<String> copyFrom;
+
+		protected Builder type(SmartFieldDefinition.Type type) {
+			this.type = type;
+			return this;
+		}
 
 		public Builder analyzer(String analyzer) {
 			this.analyzer = analyzer;
