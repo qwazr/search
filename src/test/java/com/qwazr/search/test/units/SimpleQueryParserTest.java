@@ -51,9 +51,9 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord {
 	public void testWithDefaultAnalyzer() {
 		QueryDefinition queryDef = QueryDefinition.of(SimpleQueryParser.of()
 				.setDefaultOperator(QueryParserOperator.AND)
-				.setQueryString("Hello")
 				.addBoost("textField", 1F)
 				.addBoost("stringField", 1F)
+				.setQueryString("Hello")
 				.build()).build();
 		checkQuery(queryDef);
 	}
@@ -62,10 +62,10 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord {
 	public void testWithCustomAnalyzer() {
 		QueryDefinition queryDef = QueryDefinition.of(SimpleQueryParser.of()
 				.setDefaultOperator(QueryParserOperator.AND)
-				.setQueryString("Hello World")
-				.setAnalyzer(new StandardAnalyzer())
 				.addBoost("textField", 1F)
 				.addBoost("stringField", 1F)
+				.setAnalyzer(new StandardAnalyzer())
+				.setQueryString("Hello World")
 				.build()).
 				build();
 		checkQuery(queryDef);
@@ -73,9 +73,9 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException {
-		Query luceneQuery = SimpleQueryParser.of().setDefaultOperator(QueryParserOperator.AND).setQueryString(
-				"Hello World").
-				addBoost("textField", 1F).addBoost("stringField", 1F).build().getQuery(QueryContext.DEFAULT);
+		Query luceneQuery = SimpleQueryParser.of().setDefaultOperator(QueryParserOperator.AND).
+				addBoost("textField", 1F).addBoost("stringField", 1F).setQueryString("Hello World").build().getQuery(
+				QueryContext.DEFAULT);
 		Assert.assertNotNull(luceneQuery);
 	}
 

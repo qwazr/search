@@ -57,7 +57,7 @@ public class RealTimeSynonymsResourcesTest extends AbstractIndexTest.WithIndexRe
 
 	@Test
 	public void test001_check_en_fr() throws IOException, org.apache.lucene.queryparser.classic.ParseException {
-		final MultiFieldQueryParser.Builder builder = MultiFieldQueryParser.of()
+		final MultiFieldQueryParser.Builder builder = (MultiFieldQueryParser.Builder) MultiFieldQueryParser.of()
 				.addField("textSynonymsField1")
 				.setSplitOnWhitespace(false);
 
@@ -78,7 +78,7 @@ public class RealTimeSynonymsResourcesTest extends AbstractIndexTest.WithIndexRe
 
 	@Test
 	public void test003_check_en_fr_de() {
-		final MultiFieldQueryParser.Builder builder = MultiFieldQueryParser.of()
+		final MultiFieldQueryParser.Builder builder = (MultiFieldQueryParser.Builder) MultiFieldQueryParser.of()
 				.addField("textSynonymsField1")
 				.setSplitOnWhitespace(false);
 

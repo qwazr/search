@@ -52,9 +52,9 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
 		QueryDefinition queryDef = QueryDefinition.of(MultiFieldQueryParser.of()
 				.addField("textField", "stringField")
 				.setDefaultOperator(QueryParserOperator.AND)
-				.setQueryString("Hello")
 				.addBoost("textField", 1F)
 				.addBoost("stringField", 1F)
+				.setQueryString("Hello")
 				.build()).build();
 		checkQuery(queryDef);
 	}
@@ -64,20 +64,21 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
 		QueryDefinition queryDef = QueryDefinition.of(MultiFieldQueryParser.of()
 				.addField("textField", "stringField")
 				.setDefaultOperator(QueryParserOperator.AND)
-				.setQueryString("Hello World")
-				.setAnalyzer(new StandardAnalyzer())
 				.addBoost("textField", 1F)
 				.addBoost("stringField", 1F)
+				.setQueryString("Hello World")
+				.setAnalyzer(new StandardAnalyzer())
 				.build()).
 				build();
 		checkQuery(queryDef);
 	}
 
 	@Test
-	public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException {
+	public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
 		Query luceneQuery = MultiFieldQueryParser.of().addField("textField", "stringField").setDefaultOperator(
-				QueryParserOperator.AND).setQueryString("Hello World").
-				addBoost("textField", 1F).addBoost("stringField", 1F).build().getQuery(QueryContext.DEFAULT);
+				QueryParserOperator.AND).
+				addBoost("textField", 1F).addBoost("stringField", 1F).setQueryString("Hello World").build().getQuery(
+				QueryContext.DEFAULT);
 		Assert.assertNotNull(luceneQuery);
 	}
 

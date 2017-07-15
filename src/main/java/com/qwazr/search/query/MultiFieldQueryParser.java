@@ -16,244 +16,44 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.query.lucene.MultiFieldQueryParserFix;
-import com.qwazr.utils.ArrayUtils;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Objects;
 
-public class MultiFieldQueryParser extends AbstractQuery {
-
-	@JsonIgnore
-	final private Analyzer analyzer;
-
-	final public String[] fields;
-	final public LinkedHashMap<String, Float> boosts;
-	final public Boolean allow_leading_wildcard;
-	final public QueryParserOperator default_operator;
-	final public Integer phrase_slop;
-	final public Boolean enable_position_increments;
-	final public Boolean auto_generate_phrase_query;
-	final public Boolean analyzer_range_terms;
-	final public Float fuzzy_min_sim;
-	final public Integer fuzzy_prefix_length;
-	final public Integer max_determinized_states;
-	final public Boolean lowercase_expanded_terms;
-	@JsonProperty("auto_generate_multi_term_synonyms_phrase_query")
-	final public Boolean autoGenerateMultiTermSynonymsPhraseQuery;
-	@JsonProperty("enable_graph_queries")
-	final public Boolean enableGraphQueries;
-	@JsonProperty("split_on_whitespace")
-	final public Boolean splitOnWhitespace;
-	final public String query_string;
+public class MultiFieldQueryParser extends AbstractClassicQueryParser {
 
 	@JsonCreator
 	private MultiFieldQueryParser() {
-		analyzer = null;
-		fields = null;
-		boosts = null;
-		allow_leading_wildcard = null;
-		default_operator = null;
-		phrase_slop = null;
-		enable_position_increments = null;
-		auto_generate_phrase_query = null;
-		analyzer_range_terms = null;
-		fuzzy_min_sim = null;
-		fuzzy_prefix_length = null;
-		max_determinized_states = null;
-		lowercase_expanded_terms = null;
-		autoGenerateMultiTermSynonymsPhraseQuery = null;
-		enableGraphQueries = null;
-		splitOnWhitespace = null;
-		query_string = null;
 	}
 
 	public MultiFieldQueryParser(Builder builder) {
-		this.analyzer = builder.analyzer;
-		this.fields = ArrayUtils.toArray(Objects.requireNonNull(builder.fields, "The fields are missing"));
-		this.boosts = builder.boosts;
-		this.allow_leading_wildcard = builder.allow_leading_wildcard;
-		this.default_operator = builder.default_operator;
-		this.phrase_slop = builder.phrase_slop;
-		this.enable_position_increments = builder.enable_position_increments;
-		this.auto_generate_phrase_query = builder.auto_generate_phrase_query;
-		this.analyzer_range_terms = builder.analyzer_range_terms;
-		this.fuzzy_min_sim = builder.fuzzy_min_sim;
-		this.fuzzy_prefix_length = builder.fuzzy_prefix_length;
-		this.max_determinized_states = builder.max_determinized_states;
-		this.lowercase_expanded_terms = builder.lowercase_expanded_terms;
-		this.autoGenerateMultiTermSynonymsPhraseQuery = builder.autoGenerateMultiTermSynonymsPhraseQuery;
-		this.splitOnWhitespace = builder.splitOnWhitespace;
-		this.enableGraphQueries = builder.enableGraphQueries;
-		this.query_string = builder.query_string;
+		super(builder);
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
 		final FieldMap fieldMap = queryContext.getFieldMap();
-		final String[] resolvedFields = fields != null && fieldMap != null ?
-				fieldMap.resolveQueryFieldNames(fields) :
-				fields;
-		final Map<String, Float> resolvedBoosts = boosts != null && fieldMap != null ? fieldMap.resolveQueryFieldNames(
-				boosts, new HashMap<>()) : boosts;
 		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser = new MultiFieldQueryParserFix(
-				resolvedFields, analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, resolvedBoosts);
-		if (default_operator != null)
-			parser.setDefaultOperator(default_operator.queryParseroperator);
-		if (allow_leading_wildcard != null)
-			parser.setAllowLeadingWildcard(allow_leading_wildcard);
-		if (phrase_slop != null)
-			parser.setPhraseSlop(phrase_slop);
-		if (enable_position_increments != null)
-			parser.setEnablePositionIncrements(enable_position_increments);
-		if (auto_generate_phrase_query != null)
-			parser.setAutoGeneratePhraseQueries(auto_generate_phrase_query);
-		if (analyzer_range_terms != null)
-			parser.setAnalyzeRangeTerms(analyzer_range_terms);
-		if (fuzzy_min_sim != null)
-			parser.setFuzzyMinSim(fuzzy_min_sim);
-		if (fuzzy_prefix_length != null)
-			parser.setFuzzyPrefixLength(fuzzy_prefix_length);
-		if (lowercase_expanded_terms != null)
-			parser.setLowercaseExpandedTerms(lowercase_expanded_terms);
-		if (max_determinized_states != null)
-			parser.setMaxDeterminizedStates(max_determinized_states);
-		if (autoGenerateMultiTermSynonymsPhraseQuery != null)
-			parser.setAutoGenerateMultiTermSynonymsPhraseQuery(autoGenerateMultiTermSynonymsPhraseQuery);
-		if (enableGraphQueries != null)
-			parser.setEnableGraphQueries(enableGraphQueries);
-		if (splitOnWhitespace != null)
-			parser.setSplitOnWhitespace(splitOnWhitespace);
-		return parser.parse(query_string);
+				resolveFields(fieldMap), resolveAnalyzer(queryContext), resolvedBoosts(fieldMap));
+		setParserParameters(parser);
+		return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
 	}
 
 	public static Builder of() {
 		return new Builder();
 	}
 
-	public static class Builder {
+	public static class Builder extends AbstractParserBuilder<MultiFieldQueryParser> {
 
-		private Analyzer analyzer;
-		private LinkedHashSet<String> fields;
-		private LinkedHashMap<String, Float> boosts;
-		private Boolean allow_leading_wildcard;
-		private QueryParserOperator default_operator;
-		private Integer phrase_slop;
-		private Boolean enable_position_increments;
-		private Boolean auto_generate_phrase_query;
-		private Boolean analyzer_range_terms;
-		private Float fuzzy_min_sim;
-		private Integer fuzzy_prefix_length;
-		private Integer max_determinized_states;
-		private Boolean lowercase_expanded_terms;
-		private Boolean autoGenerateMultiTermSynonymsPhraseQuery;
-		private Boolean enableGraphQueries;
-		private Boolean splitOnWhitespace;
-		private String query_string;
-
+		@Override
 		public MultiFieldQueryParser build() {
 			return new MultiFieldQueryParser(this);
 		}
 
-		public Builder setAnalyzer(Analyzer analyzer) {
-			this.analyzer = analyzer;
-			return this;
-		}
-
-		public Builder addField(String... fieldSet) {
-			if (fields == null)
-				fields = new LinkedHashSet<>();
-			for (String field : fieldSet)
-				fields.add(field);
-			return this;
-		}
-
-		public Builder addBoost(String field, Float boost) {
-			if (boosts == null)
-				boosts = new LinkedHashMap<>();
-			boosts.put(field, boost);
-			return this;
-		}
-
-		public Builder setAllowLeadingWildcard(Boolean allow_leading_wildcard) {
-			this.allow_leading_wildcard = allow_leading_wildcard;
-			return this;
-		}
-
-		public Builder setDefaultOperator(QueryParserOperator default_operator) {
-			this.default_operator = default_operator;
-			return this;
-		}
-
-		public Builder setPhraseSlop(Integer phrase_slop) {
-			this.phrase_slop = phrase_slop;
-			return this;
-		}
-
-		public Builder setEnablePositionIncrements(Boolean enable_position_increments) {
-			this.enable_position_increments = enable_position_increments;
-			return this;
-		}
-
-		public Builder setAutoGeneratePhraseQuery(Boolean auto_generate_phrase_query) {
-			this.auto_generate_phrase_query = auto_generate_phrase_query;
-			return this;
-		}
-
-		public Builder setAnalyzerRangeTerms(Boolean analyzer_range_terms) {
-			this.analyzer_range_terms = analyzer_range_terms;
-			return this;
-		}
-
-		public Builder setFuzzyMinSim(Float fuzzy_min_sim) {
-			this.fuzzy_min_sim = fuzzy_min_sim;
-			return this;
-		}
-
-		public Builder setFuzzyPrefixLength(Integer fuzzy_prefix_length) {
-			this.fuzzy_prefix_length = fuzzy_prefix_length;
-			return this;
-		}
-
-		public Builder setMaxDeterminizedStates(Integer max_determinized_states) {
-			this.max_determinized_states = max_determinized_states;
-			return this;
-		}
-
-		public Builder setLowercaseExpandedTerms(Boolean lowercase_expanded_terms) {
-			this.lowercase_expanded_terms = lowercase_expanded_terms;
-			return this;
-		}
-
-		public Builder setAutoGenerateMultiTermSynonymsPhraseQuery(Boolean autoGenerateMultiTermSynonymsPhraseQuery) {
-			this.autoGenerateMultiTermSynonymsPhraseQuery = autoGenerateMultiTermSynonymsPhraseQuery;
-			return this;
-		}
-
-		public Builder setEnableGraphQueries(Boolean enableGraphQueries) {
-			this.enableGraphQueries = enableGraphQueries;
-			return this;
-		}
-
-		public Builder setSplitOnWhitespace(Boolean splitOnWhitespace) {
-			this.splitOnWhitespace = splitOnWhitespace;
-			return this;
-		}
-
-		public Builder setQueryString(String queryString) {
-			this.query_string = queryString;
-			return this;
-		}
 	}
 }

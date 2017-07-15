@@ -22,7 +22,7 @@ Where the payload file (my_payload) contains the query:
 ```json
 {
   "query": {
-    "query": "StandardQueryParser",
+    "query": "QueryParser",
     "default_field": "name",
     "query_string": "name"
   },

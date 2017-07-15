@@ -26,7 +26,6 @@ import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.query.MultiFieldQueryParser;
 import com.qwazr.search.query.QueryParser;
 import com.qwazr.search.query.QueryParserOperator;
-import com.qwazr.search.query.StandardQueryParser;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.LoggerUtils;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -73,10 +72,6 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
 
 	void fullSearch(String queryString, String queryExplain, long... expectedIds)
 			throws IOException, ReflectiveOperationException {
-		checkResult(StandardQueryParser.of("full")
-				.setDefaultOperator(QueryParserOperator.AND)
-				.setQueryString(queryString)
-				.build(), queryExplain, expectedIds);
 		checkResult(QueryParser.of("full")
 				.setDefaultOperator(QueryParserOperator.AND)
 				.setQueryString(queryString)

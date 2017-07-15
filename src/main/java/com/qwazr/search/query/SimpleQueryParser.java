@@ -17,27 +17,27 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.analysis.Analyzer;
+import com.qwazr.search.query.lucene.SimpleQueryParserFix;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
-public class SimpleQueryParser extends AbstractQuery {
-
-	@JsonIgnore
-	final private Analyzer analyzer;
+public class SimpleQueryParser extends AbstractQueryBuilder {
 
 	final public LinkedHashMap<String, Float> weights;
 
-	final public QueryParserOperator default_operator;
+	@JsonProperty("default_operator")
+	final public QueryParserOperator defaultOperator;
+
 	final public Boolean and_operator;
 	final public Boolean escape_operator;
 	final public Boolean fuzzy_operator;
@@ -49,16 +49,13 @@ public class SimpleQueryParser extends AbstractQuery {
 	final public Boolean prefix_operator;
 	final public Boolean whitespace_operator;
 
-	final public String query_string;
-
 	@JsonIgnore
 	private final int flags;
 
 	@JsonCreator
 	private SimpleQueryParser() {
-		analyzer = null;
 		weights = null;
-		default_operator = null;
+		defaultOperator = null;
 		and_operator = null;
 		escape_operator = null;
 		fuzzy_operator = null;
@@ -69,18 +66,15 @@ public class SimpleQueryParser extends AbstractQuery {
 		precedence_operators = null;
 		prefix_operator = null;
 		whitespace_operator = null;
-		query_string = null;
 
 		flags = -2;
 	}
 
 	private SimpleQueryParser(Builder builder) {
-
-		this.analyzer = builder.analyzer;
+		super(builder);
 		this.weights = builder.weights;
-		this.default_operator = builder.defaultOperator;
+		this.defaultOperator = builder.defaultOperator;
 		this.flags = builder.flags;
-		this.query_string = builder.queryString;
 
 		and_operator = (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.AND_OPERATOR) != 0;
 		escape_operator = (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.ESCAPE_OPERATOR) != 0;
@@ -125,50 +119,43 @@ public class SimpleQueryParser extends AbstractQuery {
 
 		final FieldMap fieldMap = queryContext.getFieldMap();
 
-		final Map<String, Float> boosts = fieldMap == null ? weights : fieldMap.resolveQueryFieldNames(weights,
+		final Map<String, Float> resolvedBoosts = fieldMap == null ? weights : fieldMap.resolveQueryFieldNames(weights,
 				new HashMap<>());
 
 		final int fl = flags == -2 ? computeTag() : flags;
 
-		final org.apache.lucene.queryparser.simple.SimpleQueryParser parser =
-				new org.apache.lucene.queryparser.simple.SimpleQueryParser(
-						analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, boosts, fl);
+		final org.apache.lucene.queryparser.simple.SimpleQueryParser parser = new SimpleQueryParserFix(
+				analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, resolvedBoosts, fl);
 
-		if (default_operator != null)
-			parser.setDefaultOperator(default_operator == QueryParserOperator.AND ?
-					BooleanClause.Occur.MUST :
-					BooleanClause.Occur.SHOULD);
+		setQueryBuilderParameters(parser);
 
-		return parser.parse(Objects.requireNonNull(query_string, "The query string is missing"));
+		if (defaultOperator != null)
+			parser.setDefaultOperator(
+					defaultOperator == QueryParserOperator.AND ? BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD);
+
+		return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
 	}
 
 	public static Builder of() {
 		return new Builder().setFlags(-1);
 	}
 
-	public static class Builder {
+	public static class Builder extends AbstractBuilder<SimpleQueryParser> {
 
-		public Analyzer analyzer;
-		public LinkedHashMap<String, Float> weights;
-		public QueryParserOperator defaultOperator;
-		public int flags;
-		public String queryString;
+		private LinkedHashMap<String, Float> weights;
+		private QueryParserOperator defaultOperator;
+		private int flags;
 
-		public Builder setAnalyzer(Analyzer analyzer) {
-			this.analyzer = analyzer;
+		public Builder addField(String... fieldSet) {
+			for (String field : fieldSet)
+				addBoost(field, 1.0f);
 			return this;
 		}
 
-		public Builder addBoost(String field, Float weight) {
+		public Builder addBoost(String field, Float boost) {
 			if (weights == null)
 				weights = new LinkedHashMap<>();
-			weights.put(field, weight);
-			return this;
-		}
-
-		public Builder addField(String... fields) {
-			for (String field : fields)
-				addBoost(field, 1.0f);
+			weights.put(field, boost);
 			return this;
 		}
 
@@ -182,11 +169,7 @@ public class SimpleQueryParser extends AbstractQuery {
 			return this;
 		}
 
-		public Builder setQueryString(final String queryString) {
-			this.queryString = queryString;
-			return this;
-		}
-
+		@Override
 		public SimpleQueryParser build() {
 			return new SimpleQueryParser(this);
 		}

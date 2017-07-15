@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.BytesRefUtils;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 
@@ -40,8 +41,9 @@ public class BlendedTermQuery extends AbstractQuery {
 			this.boost = boost;
 		}
 
-		private void add(org.apache.lucene.search.BlendedTermQuery.Builder builder) {
-			final org.apache.lucene.index.Term term = BytesRefUtils.toTerm(field, value);
+		private void add(FieldMap fieldMap, org.apache.lucene.search.BlendedTermQuery.Builder builder) {
+			final org.apache.lucene.index.Term term = BytesRefUtils.toTerm(
+					fieldMap == null ? field : fieldMap.resolveQueryFieldName(field), value);
 			if (boost == null)
 				builder.add(term);
 			else
@@ -70,7 +72,7 @@ public class BlendedTermQuery extends AbstractQuery {
 		org.apache.lucene.search.BlendedTermQuery.Builder builder =
 				new org.apache.lucene.search.BlendedTermQuery.Builder();
 		if (terms != null)
-			terms.forEach(term -> term.add(builder));
+			terms.forEach(term -> term.add(queryContext.getFieldMap(), builder));
 		return builder.build();
 	}
 

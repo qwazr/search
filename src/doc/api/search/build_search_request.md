@@ -22,7 +22,7 @@ It includes:
             {
                 "occur": "must",
                 "query": {
-                    "query": "StandardQueryParser",
+                    "query": "QueryParser",
                     "default_field": "name",
                     "query_string": "name"
                 }

@@ -1,6 +1,6 @@
 {
   "query": {
-    "query": "StandardQueryParser",
+    "query": "QueryParser",
     "default_field": "description",
     "default_operator": "AND",
     "query_string": "search engine"

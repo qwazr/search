@@ -60,7 +60,7 @@ public class QueryParserTest extends AbstractIndexTest.WithIndexRecord {
 	}
 
 	@Test
-	public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException {
+	public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
 		Query luceneQuery = QueryParser.of("textField").setDefaultOperator(QueryParserOperator.AND).setQueryString(
 				"Hello World").build().getQuery(QueryContext.DEFAULT);
 		Assert.assertNotNull(luceneQuery);
