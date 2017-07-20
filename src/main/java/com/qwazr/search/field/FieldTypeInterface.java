@@ -17,6 +17,7 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.facet.FacetsConfig;
@@ -45,13 +46,13 @@ public interface FieldTypeInterface {
 
 	void copyTo(final String fieldName, final FieldTypeInterface fieldType);
 
-	void setFacetsConfig(String fieldName, FacetsConfig facetsConfig);
+	void setFacetsConfig(final String fieldName, final FieldMap fieldMap, final FacetsConfig facetsConfig);
 
 	Term term(String fieldName, Object value);
 
 	@FunctionalInterface
 	interface Facet {
-		void config(String fieldName, FacetsConfig facetsConfig);
+		void config(String fieldName, FieldMap fieldMap, FacetsConfig facetsConfig);
 	}
 
 	@FunctionalInterface

@@ -36,7 +36,7 @@ public class FieldMap {
 	private final HashMap<String, FieldTypeInterface> nameDefMap;
 	private final HashMap<WildcardMatcher, FieldTypeInterface> wildcardMap;
 	private final FacetsConfig facetsConfig;
-	private final String sortedSetFacetField;
+	public final String sortedSetFacetField;
 
 	FieldMap(final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap, final String sortedSetFacetField) {
 
@@ -109,7 +109,7 @@ public class FieldMap {
 		final FieldTypeInterface fieldType = getFieldType(fieldName);
 		if (fieldType == null)
 			return;
-		fieldType.setFacetsConfig(fieldName, facetsConfig);
+		fieldType.setFacetsConfig(fieldName, this, facetsConfig);
 		final FieldDefinition definition = fieldType.getDefinition();
 		if (definition == null)
 			return;

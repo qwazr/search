@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.WildcardMatcher;
@@ -68,10 +69,11 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 
 	abstract Builder<T> setup(Builder<T> builder);
 
-	public final void setFacetsConfig(String fieldName, FacetsConfig facetsConfig) {
+	public final void setFacetsConfig(final String fieldName, final FieldMap fieldMap,
+			final FacetsConfig facetsConfig) {
 		if (facetConfig != null)
 			for (FieldTypeInterface.Facet config : facetConfig)
-				config.config(fieldName, facetsConfig);
+				config.config(fieldName, fieldMap, facetsConfig);
 	}
 
 	public final Term term(String fieldName, Object value) {

@@ -133,7 +133,13 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 	}
 
 	static void facetProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+		builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> {
+			final String resolvedFieldName = SmartFieldProviders.FacetFieldProvider.INSTANCE.getTextName(fieldName);
+			facetsConfig.setMultiValued(resolvedFieldName, true);
+			facetsConfig.setIndexFieldName(resolvedFieldName, fieldMap.sortedSetFacetField);
+		}));
 		builder.fieldProvider(SmartFieldProviders.FacetFieldProvider.INSTANCE::textField);
+		builder.queryFieldNameProvider(SmartFieldProviders.FacetFieldProvider.INSTANCE::getTextName);
 	}
 
 	static void fullTextProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {

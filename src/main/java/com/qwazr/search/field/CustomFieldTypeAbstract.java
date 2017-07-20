@@ -28,13 +28,13 @@ abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefi
 
 		// Setup facets
 		if (builder.definition.facetMultivalued != null)
-			builder.facetConfig(((fieldName, facetsConfig) -> facetsConfig.setMultiValued(fieldName,
+			builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setMultiValued(fieldName,
 					builder.definition.facetMultivalued)));
 		if (builder.definition.facetHierarchical != null)
-			builder.facetConfig(((fieldName, facetsConfig) -> facetsConfig.setHierarchical(fieldName,
+			builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setHierarchical(fieldName,
 					builder.definition.facetHierarchical)));
 		if (builder.definition.facetRequireDimCount != null)
-			builder.facetConfig(((fieldName, facetsConfig) -> facetsConfig.setRequireDimCount(fieldName,
+			builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setRequireDimCount(fieldName,
 					builder.definition.facetRequireDimCount)));
 
 		setupFields(builder);

@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.Term;
@@ -40,8 +41,11 @@ public class FacetPathQuery extends AbstractQuery {
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		Objects.requireNonNull(dimension, "The dimension is missing");
-		final String indexFieldName = queryContext.getFacetsConfig(dimension).getDimConfig(dimension).indexFieldName;
-		final Term term = new Term(indexFieldName, FacetsConfig.pathToString(dimension, path));
+		final FieldMap fieldMap = queryContext.getFieldMap();
+		final String resolvedDimension = fieldMap == null ? dimension : fieldMap.resolveQueryFieldName(dimension);
+		final String indexFieldName = queryContext.getFacetsConfig(dimension).getDimConfig(
+				resolvedDimension).indexFieldName;
+		final Term term = new Term(indexFieldName, FacetsConfig.pathToString(resolvedDimension, path));
 		return new org.apache.lucene.search.TermQuery(term);
 	}
 }

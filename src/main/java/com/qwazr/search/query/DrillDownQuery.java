@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -38,7 +39,7 @@ public class DrillDownQuery extends AbstractQuery {
 
 	@JsonCreator
 	public DrillDownQuery(@JsonProperty("baseQuery") final AbstractQuery baseQuery,
-			@JsonProperty("useDrillSideways")    final boolean useDrillSideways,
+			@JsonProperty("useDrillSideways") final boolean useDrillSideways,
 			@JsonProperty("dimPath") final List<LinkedHashMap<String, String[]>> dimPath) {
 		this.baseQuery = baseQuery;
 		this.useDrillSideways = useDrillSideways;
@@ -68,7 +69,9 @@ public class DrillDownQuery extends AbstractQuery {
 			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig);
 		else
 			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig, baseQuery.getQuery(queryContext));
-		dimPath.forEach(dimPath -> dimPath.forEach(drillDownQuery::add));
+		final FieldMap fieldMap = queryContext.getFieldMap();
+		dimPath.forEach(dimPath -> dimPath.forEach(
+				(dim, path) -> drillDownQuery.add(fieldMap == null ? dim : fieldMap.resolveQueryFieldName(dim), path)));
 		return drillDownQuery;
 	}
 
