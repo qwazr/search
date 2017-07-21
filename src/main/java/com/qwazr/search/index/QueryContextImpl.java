@@ -15,10 +15,10 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.UpdatableAnalyzer;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.server.ServerException;
-import com.qwazr.binder.FieldMapWrapper;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;

@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -89,14 +88,14 @@ public class FieldMap {
 
 	final public FieldTypeInterface getFieldType(final String fieldName) {
 		if (fieldName == null || fieldName.isEmpty())
-			throw new IllegalArgumentException("Empty fieldname is not allowed");
+			return null;
 		final FieldTypeInterface fieldType = nameDefMap.get(fieldName);
 		if (fieldType != null)
 			return fieldType;
 		for (Map.Entry<WildcardMatcher, FieldTypeInterface> entry : wildcardMap.entrySet())
 			if (entry.getKey().match(fieldName))
 				return entry.getValue();
-		throw new IllegalArgumentException("No field definition for the field: " + fieldName);
+		return null;
 	}
 
 	final LinkedHashMap<String, FieldDefinition> getFieldDefinitionMap() {
@@ -134,9 +133,11 @@ public class FieldMap {
 		}
 	}
 
-	final public String resolveQueryFieldName(final String field) {
-		return Objects.requireNonNull(nameDefMap.get(field), "Indexed field not found: " + field).getQueryFieldName(
-				field);
+	final public String resolveQueryFieldName(final String fieldName) {
+		final FieldTypeInterface fieldType = getFieldType(fieldName);
+		if (fieldType == null)
+			return null;
+		return fieldType.getQueryFieldName(fieldName);
 	}
 
 	final public String[] resolveQueryFieldNames(final String[] fields) {

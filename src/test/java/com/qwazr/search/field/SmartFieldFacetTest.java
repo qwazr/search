@@ -31,7 +31,6 @@ import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.LoggerUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -84,7 +83,6 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
 		checkResult(new FacetPathQuery("tags", "tag1and2"), "$facets$sdv:ft€tags\u001Ftag1and2", 1, 2);
 	}
 
-	@Ignore
 	@Test
 	public void computeFacetsTest() throws IOException, ReflectiveOperationException {
 		checkResult(new MatchAllDocsQuery(), "*:*", 1, 2);

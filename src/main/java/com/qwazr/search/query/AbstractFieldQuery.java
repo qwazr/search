@@ -43,8 +43,8 @@ public abstract class AbstractFieldQuery extends AbstractQuery {
 	}
 
 	static Term getResolvedTerm(final FieldMap fieldMap, final String field, final Object value) {
-		return fieldMap == null ? new Term(field, BytesRefUtils.fromAny(value)) : fieldMap.getFieldType(field).term(
-				field, value);
+		return fieldMap == null ? new Term(field, BytesRefUtils.fromAny(value)) : Objects.requireNonNull(
+				fieldMap.getFieldType(field), "Unknown field: " + field).term(field, value);
 	}
 
 	final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {

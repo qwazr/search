@@ -50,7 +50,7 @@ abstract class FacetsBuilder {
 	protected final QueryContextImpl queryContext;
 	protected final String sortedSetFacetField;
 	private final LinkedHashMap<String, FacetDefinition> facetsDef;
-	private final HashMap<String, String> resolvedDimensions;
+	protected final HashMap<String, String> resolvedDimensions;
 	private final Query searchQuery;
 	private final TimeTracker timeTracker;
 
@@ -70,17 +70,18 @@ abstract class FacetsBuilder {
 
 	final FacetsBuilder build() throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
 		for (Map.Entry<String, FacetDefinition> entry : facetsDef.entrySet()) {
-			final String dim = entry.getKey();
+			final String dimension = entry.getKey();
+			final String resolvedDimension = resolvedDimensions.get(dimension);
 			final FacetDefinition facet = entry.getValue();
 			final FacetBuilder facetBuilder = new FacetBuilder(facet);
 			final boolean isQueries = MapUtils.isNotEmpty(facet.queries);
 			final boolean isSpecificValues = CollectionUtils.isNotEmpty(facet.specific_values);
 			final Integer top = facet.top != null ? facet.top : (isQueries || isSpecificValues) ? null : DEFAULT_TOP;
 			if (isSpecificValues || top != null)
-				buildFacetState(dim, top, facet.specific_values, facetBuilder);
+				buildFacetState(resolvedDimension, top, facet.specific_values, facetBuilder);
 			if (isQueries)
 				buildFacetQueries(facet.queries, facetBuilder);
-			results.put(dim, facetBuilder.build());
+			results.put(dimension, facetBuilder.build());
 		}
 
 		if (timeTracker != null)
@@ -90,20 +91,20 @@ abstract class FacetsBuilder {
 
 	protected abstract Facets getFacets(final String dim) throws IOException;
 
-	private void buildFacetState(final String dim, final Integer top, final Set<String[]> specificValues,
+	private void buildFacetState(final String resolvedDimension, final Integer top, final Set<String[]> specificValues,
 			final FacetBuilder facetBuilder) throws IOException {
-		final Facets facets = getFacets(dim);
+		final Facets facets = getFacets(resolvedDimension);
 		if (facets == null)
 			return;
 		if (top != null && top > 0) {
-			final FacetResult facetResult = facets.getTopChildren(top, dim);
+			final FacetResult facetResult = facets.getTopChildren(top, resolvedDimension);
 			if (facetResult != null && facetResult.labelValues != null)
 				for (LabelAndValue lv : facetResult.labelValues)
 					facetBuilder.put(lv);
 		}
 		if (specificValues != null) {
 			for (String[] path : specificValues) {
-				final Number count = facets.getSpecificValue(dim, path);
+				final Number count = facets.getSpecificValue(resolvedDimension, path);
 				facetBuilder.put(new LabelAndValue(StringUtils.join(path, '/'),
 						count == null || count.longValue() <= 0 ? 0 : count));
 			}
@@ -173,7 +174,10 @@ abstract class FacetsBuilder {
 				final LinkedHashMap<String, FacetDefinition> facetsDef) {
 			int flag = 0;
 			for (String dimName : facetsDef.keySet()) {
-				final String indexField = facetsConfig.getDimConfig(dimName).indexFieldName;
+				final String resolvedDimension = resolvedDimensions.get(dimName);
+				if (resolvedDimension == null)
+					continue;
+				final String indexField = facetsConfig.getDimConfig(resolvedDimension).indexFieldName;
 				if (indexField == null)
 					continue;
 				if (indexField.equals(sortedSetFacetField)) {
@@ -196,13 +200,13 @@ abstract class FacetsBuilder {
 		}
 
 		@Override
-		final protected Facets getFacets(final String dim) throws IOException {
-			final String indexFieldName = facetsConfig.getDimConfig(dim).indexFieldName;
+		final protected Facets getFacets(final String dimension) throws IOException {
+			final String indexFieldName = facetsConfig.getDimConfig(dimension).indexFieldName;
 			if (indexFieldName == null)
 				return null;
 			if (indexFieldName.equals(sortedSetFacetField)) {
 				if (queryContext.docValueReaderState != null)
-					if (queryContext.docValueReaderState.getOrdRange(dim) != null)
+					if (queryContext.docValueReaderState.getOrdRange(dimension) != null)
 						return sortedSetCounts;
 			} else {
 				switch (indexFieldName) {
@@ -233,11 +237,11 @@ abstract class FacetsBuilder {
 		}
 
 		@Override
-		final protected Facets getFacets(final String dim) throws IOException {
-			if (sortedSetFacetField.equals(facetsConfig.getDimConfig(dim).indexFieldName)) {
+		final protected Facets getFacets(final String dimension) throws IOException {
+			if (sortedSetFacetField.equals(facetsConfig.getDimConfig(dimension).indexFieldName)) {
 				if (queryContext.docValueReaderState == null)
 					return null;
-				if (queryContext.docValueReaderState.getOrdRange(dim) == null)
+				if (queryContext.docValueReaderState.getOrdRange(dimension) == null)
 					return null;
 			}
 			return results.facets;
