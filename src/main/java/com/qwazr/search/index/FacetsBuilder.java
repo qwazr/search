@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
@@ -39,6 +39,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -49,6 +50,7 @@ abstract class FacetsBuilder {
 	protected final QueryContextImpl queryContext;
 	protected final String sortedSetFacetField;
 	private final LinkedHashMap<String, FacetDefinition> facetsDef;
+	private final HashMap<String, String> resolvedDimensions;
 	private final Query searchQuery;
 	private final TimeTracker timeTracker;
 
@@ -61,6 +63,7 @@ abstract class FacetsBuilder {
 		this.facetsDef = facetsDef;
 		this.queryContext = queryContext;
 		this.sortedSetFacetField = queryContext.fieldMap.getSortedSetFacetField();
+		this.resolvedDimensions = queryContext.fieldMap.resolveQueryFieldNames(facetsDef.keySet());
 		this.searchQuery = searchQuery;
 		this.timeTracker = timeTracker;
 	}
@@ -147,20 +150,18 @@ abstract class FacetsBuilder {
 			int facetFlag = checkFacetTypeFlags(facetsConfig, facetsDef);
 			this.sortedSetCounts = queryContext.docValueReaderState == null ?
 					null :
-					(facetFlag & FACET_IS_SORTED) == FACET_IS_SORTED ?
-							new SortedSetDocValuesFacetCounts(queryContext.docValueReaderState, facetsCollector) :
-							null;
-			this.taxonomyCounts = (facetFlag & FACET_IS_TAXO) == FACET_IS_TAXO ?
-					new FastTaxonomyFacetCounts(queryContext.taxonomyReader, facetsConfig, facetsCollector) :
-					null;
-			this.floatTaxonomyCounts = (facetFlag & FACET_IS_TAXO_FLOAT) == FACET_IS_TAXO_FLOAT ?
-					new TaxonomyFacetSumFloatAssociations(FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD,
-							queryContext.taxonomyReader, facetsConfig, facetsCollector) :
-					null;
-			this.intTaxonomyCounts = (facetFlag & FACET_IS_TAXO_INT) == FACET_IS_TAXO_INT ?
-					new TaxonomyFacetSumIntAssociations(FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD,
-							queryContext.taxonomyReader, facetsConfig, facetsCollector) :
-					null;
+					(facetFlag & FACET_IS_SORTED) == FACET_IS_SORTED ? new SortedSetDocValuesFacetCounts(
+							queryContext.docValueReaderState, facetsCollector) : null;
+			this.taxonomyCounts = (facetFlag & FACET_IS_TAXO) == FACET_IS_TAXO ? new FastTaxonomyFacetCounts(
+					queryContext.taxonomyReader, facetsConfig, facetsCollector) : null;
+			this.floatTaxonomyCounts =
+					(facetFlag & FACET_IS_TAXO_FLOAT) == FACET_IS_TAXO_FLOAT ? new TaxonomyFacetSumFloatAssociations(
+							FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD, queryContext.taxonomyReader, facetsConfig,
+							facetsCollector) : null;
+			this.intTaxonomyCounts =
+					(facetFlag & FACET_IS_TAXO_INT) == FACET_IS_TAXO_INT ? new TaxonomyFacetSumIntAssociations(
+							FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD, queryContext.taxonomyReader, facetsConfig,
+							facetsCollector) : null;
 		}
 
 		private static int FACET_IS_SORTED = 1;

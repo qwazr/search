@@ -24,11 +24,10 @@ import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
 
-abstract class AbstractSpanQuery extends AbstractQuery {
+public abstract class AbstractSpanQuery extends AbstractQuery {
 
 	@JsonIgnore
 	public abstract SpanQuery getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException;
-
 
 }

@@ -53,9 +53,7 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 		if (queryExecution.useDrillSideways) {
 
 			final DrillSideways.ConcurrentDrillSidewaysResult<QueryCollectors> drillSidewaysResult =
-					new MixedDrillSideways(queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
-							queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState,
-							queryExecution.queryContext.executorService).search(
+					new MixedDrillSideways(queryExecution).search(
 							(org.apache.lucene.facet.DrillDownQuery) queryExecution.query, this);
 			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.facetsConfig,
 					queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,

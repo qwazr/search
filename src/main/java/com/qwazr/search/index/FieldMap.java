@@ -153,6 +153,12 @@ public class FieldMap {
 		return resolvedFields;
 	}
 
+	public HashMap<String, String> resolveQueryFieldNames(Set<String> fields) {
+		final HashMap<String, String> resolvedFieldNames = new HashMap<>();
+		fields.forEach((name) -> resolvedFieldNames.put(name, resolveQueryFieldName(name)));
+		return resolvedFieldNames;
+	}
+
 	final public FacetsConfig getFacetsConfig(final Collection<String> concreteFieldNames) {
 		concreteFieldNames.forEach(this::checkFacetConfig);
 		return facetsConfig;

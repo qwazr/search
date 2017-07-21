@@ -20,6 +20,7 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.SmartField;
+import com.qwazr.search.index.FacetDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.AbstractQuery;
@@ -30,6 +31,7 @@ import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.LoggerUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -54,6 +56,7 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
 		final ResultDefinition.WithObject<Record> result = indexService.searchQuery(QueryDefinition.of(query)
 				.returnedField("*")
 				.queryDebug(true)
+				.facet("tags", FacetDefinition.of().build())
 				.build(), Record.class);
 		if (queryExplain != null)
 			Assert.assertEquals(queryExplain, result.query);
@@ -79,6 +82,12 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
 	public void facetPathQueryTest() throws IOException, ReflectiveOperationException {
 		checkResult(new FacetPathQuery("tags", "tag1"), "$facets$sdv:ft€tags\u001Ftag1", 1);
 		checkResult(new FacetPathQuery("tags", "tag1and2"), "$facets$sdv:ft€tags\u001Ftag1and2", 1, 2);
+	}
+
+	@Ignore
+	@Test
+	public void computeFacetsTest() throws IOException, ReflectiveOperationException {
+		checkResult(new MatchAllDocsQuery(), "*:*", 1, 2);
 	}
 
 	@Index(name = "SmartFieldSorted", schema = "TestQueries")

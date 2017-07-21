@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,34 +12,32 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.search.index;
 
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.MultiFacets;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
-import org.apache.lucene.facet.taxonomy.TaxonomyReader;
-import org.apache.lucene.search.IndexSearcher;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 class MixedDrillSideways extends DrillSideways {
 
 	private final String stateIndexField;
+	private final FieldMap fieldMap;
 
-	MixedDrillSideways(IndexSearcher searcher, FacetsConfig config, TaxonomyReader taxoReader,
-			SortedSetDocValuesReaderState state, ExecutorService executor) {
-		super(searcher, config, taxoReader, state, executor);
+	MixedDrillSideways(QueryExecution queryExecution) {
+		super(queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
+				queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState,
+				queryExecution.queryContext.executorService);
+		this.fieldMap = queryExecution.queryContext.fieldMap;
 		this.stateIndexField = state == null ? null : state.getField();
 	}
 
@@ -48,17 +46,19 @@ class MixedDrillSideways extends DrillSideways {
 
 		final Map<String, Facets> drillSidewaysFacets = new HashMap<>();
 
-		final FastTaxonomyFacetCounts fastTaxonomyFacets =
-				taxoReader == null ? null : new FastTaxonomyFacetCounts(taxoReader, config, drillDowns);
+		final FastTaxonomyFacetCounts fastTaxonomyFacets = taxoReader == null ? null : new FastTaxonomyFacetCounts(
+				taxoReader, config, drillDowns);
 
-		final SortedSetDocValuesFacetCounts docValuesFacets =
-				state == null ? null : new SortedSetDocValuesFacetCounts(state, drillDowns);
+		final SortedSetDocValuesFacetCounts docValuesFacets = state == null ? null : new SortedSetDocValuesFacetCounts(
+				state, drillDowns);
 
 		if (drillSideways != null) {
+			final String[] resolvedDims = fieldMap.resolveQueryFieldNames(drillSidewaysDims);
 			for (int i = 0; i < drillSideways.length; i++) {
 				final String dim = drillSidewaysDims[i];
+				final String resolvedDim = resolvedDims[i];
 				final Facets facets;
-				final String indexFieldName = config.getDimConfig(dim).indexFieldName;
+				final String indexFieldName = config.getDimConfig(resolvedDim).indexFieldName;
 				if (state != null && stateIndexField.equals(indexFieldName)) {
 					facets = new SortedSetDocValuesFacetCounts(state, drillSideways[i]);
 				} else if (taxoReader != null) {
