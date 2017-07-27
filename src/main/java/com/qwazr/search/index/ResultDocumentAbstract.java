@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
 
@@ -23,32 +25,29 @@ public abstract class ResultDocumentAbstract {
 
 	final public float score;
 	final public int pos;
-	final private int doc;
-	final private int shard_index;
+	final public int doc;
+	@JsonProperty("shard_index")
+	final public int shardIndex;
 	final public Map<String, String> highlights;
 
-	public ResultDocumentAbstract() {
-		score = 1.0F;
-		highlights = null;
-		doc = -1;
-		shard_index = -1;
-		pos = -1;
+	@JsonCreator
+	ResultDocumentAbstract(@JsonProperty("score") Float score, @JsonProperty("pos") Integer pos,
+			@JsonProperty("doc") Integer doc, @JsonProperty("shard_index") Integer shardIndex,
+			@JsonProperty("highlights") Map<String, String> highlights) {
+		this.score = score == null ? 1.0F : score;
+		this.pos = pos == null ? -1 : pos;
+		this.highlights = highlights;
+		this.doc = doc == null ? -1 : doc;
+		this.shardIndex = shardIndex == null ? -1 : shardIndex;
 	}
 
 	protected ResultDocumentAbstract(final ResultDocumentBuilder builder) {
-		this.score = builder.scoreDoc.score;
-		highlights = builder.highlights;
-		this.doc = builder.scoreDoc.doc;
-		this.pos = builder.pos;
-		this.shard_index = builder.scoreDoc.shardIndex;
+		this(builder.scoreDoc.score, builder.pos, builder.scoreDoc.doc, builder.scoreDoc.shardIndex,
+				builder.highlights);
 	}
 
 	protected ResultDocumentAbstract(final ResultDocumentAbstract src) {
-		this.score = src.score;
-		this.pos = src.pos;
-		highlights = src.highlights;
-		this.doc = src.doc;
-		this.shard_index = src.shard_index;
+		this(src.score, src.pos, src.doc, src.shardIndex, src.highlights);
 	}
 
 	final public float getScore() {
@@ -64,15 +63,20 @@ public abstract class ResultDocumentAbstract {
 	}
 
 	final public int getShard_index() {
-		return shard_index;
+		return shardIndex;
 	}
 
 	@JsonIgnore
 	final public int getShardIndex() {
-		return shard_index;
+		return shardIndex;
 	}
 
 	final public Map<String, String> getHighlights() {
+		return highlights;
+	}
+
+	@JsonIgnore
+	final public Map<String, String> getSnippets() {
 		return highlights;
 	}
 

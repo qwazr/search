@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,9 +48,8 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	public static final ContentType CONTENTTYPE_TEXT_GRAPHVIZ = ContentType.create(MEDIATYPE_TEXT_GRAPHVIZ,
 			(Charset) null);
 
-	private static final ResponseValidator valid200TextGraphviz = ResponseValidator.create()
-			.status(new int[] { 200 })
-			.content(CONTENTTYPE_TEXT_GRAPHVIZ);
+	private static final ResponseValidator valid200TextGraphviz = ResponseValidator.create().status(200).content(
+			CONTENTTYPE_TEXT_GRAPHVIZ);
 
 	@Override
 	public SchemaSettingsDefinition createUpdateSchema(final String schema_name) {

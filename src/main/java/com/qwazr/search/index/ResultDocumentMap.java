@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,23 +12,31 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.field.Converters.ValueConverter;
 import org.apache.lucene.search.ScoreDoc;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ResultDocumentMap extends ResultDocumentAbstract {
 
 	final public LinkedHashMap<String, Object> fields;
 
-	public ResultDocumentMap() {
-		fields = null;
+	@JsonCreator
+	public ResultDocumentMap(@JsonProperty("score") Float score, @JsonProperty("pos") Integer pos,
+			@JsonProperty("doc") Integer doc, @JsonProperty("shard_index") Integer shardIndex,
+			@JsonProperty("highlights") Map<String, String> highlights,
+			@JsonProperty("fields") LinkedHashMap<String, Object> fields) {
+		super(score, pos, doc, shardIndex, highlights);
+		this.fields = fields;
 	}
 
 	ResultDocumentMap(Builder builder) {

@@ -30,6 +30,7 @@ import org.junit.Test;
 import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.Objects;
 
 public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
@@ -63,6 +64,13 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 		Assert.assertEquals(record, indexService.searchQuery(QueryDefinition.of(new TermQuery("id2", record.getId()))
 				.returnedField("*")
 				.build()).getDocuments().get(0).record);
+
+		// Find it on map
+		Assert.assertEquals(record, indexService.searchQueryWithMap(QueryDefinition.of(
+				new TermQuery(FieldDefinition.ID_FIELD, record.getId())).returnedField("*").build())
+				.getDocuments()
+				.get(0)
+				.getFields());
 	}
 
 	@Test
@@ -122,10 +130,17 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
 		@Override
 		public boolean equals(Object o) {
-			if (o == null || !(o instanceof Record))
+			if (o == null)
 				return false;
-			final Record r = (Record) o;
-			return Objects.equals(getId(), r.getId()) && Objects.equals(getStoredId(), r.getStoredId());
+			if (o instanceof Record) {
+				final Record r = (Record) o;
+				return Objects.equals(getId(), r.getId()) && Objects.equals(getStoredId(), r.getStoredId());
+			} else if (o instanceof Map) {
+				final Map m = (Map) o;
+				return Objects.equals(getId(), m.get(FieldDefinition.ID_FIELD)) && Objects.equals(getStoredId(),
+						m.get("storedId"));
+			}
+			return false;
 		}
 	}
 
