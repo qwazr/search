@@ -29,19 +29,23 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 public abstract class AbstractIndexTest {
 
 	private static Path rootDirectory;
 	protected static IndexManager indexManager;
+	private static ExecutorService executor;
 
 	static final Logger LOGGER = LoggerUtils.getLogger(AbstractIndexTest.class);
 
 	protected static void initIndexManager() {
 		try {
+			executor = Executors.newCachedThreadPool();
 			rootDirectory = Files.createTempDirectory("qwazr_index_test");
-			indexManager = new IndexManager(rootDirectory, null);
+			indexManager = new IndexManager(rootDirectory, executor);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -88,6 +92,10 @@ public abstract class AbstractIndexTest {
 		}
 		if (rootDirectory != null)
 			FileUtils.deleteDirectoryQuietly(rootDirectory);
+		if (executor != null) {
+			executor.shutdown();
+			executor = null;
+		}
 	}
 
 	public static abstract class WithIndexRecord extends AbstractIndexTest {

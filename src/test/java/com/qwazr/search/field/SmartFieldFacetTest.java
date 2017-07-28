@@ -75,6 +75,12 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
 		checkResult(new DrillDownQuery(null, false).add("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
 		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).add("tags", "tag1and2"),
 				"+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
+
+		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).add("tags", "tag1"),
+				"+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
+		checkResult(new DrillDownQuery(null, true).add("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
+		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).add("tags", "tag1and2"),
+				"+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
 	}
 
 	@Test
