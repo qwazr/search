@@ -48,6 +48,10 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 		indexService.postDocument(record);
 		Assert.assertEquals(last + 1, indexService.getIndexStatus().num_docs, 0);
 
+		// Second insert, shoudl replace the precious one
+		indexService.postDocument(record);
+		Assert.assertEquals(last + 1, indexService.getIndexStatus().num_docs, 0);
+
 		// We check that we found it
 		T record2 = indexService.getDocument(record.getId());
 		Assert.assertEquals(record, record2);

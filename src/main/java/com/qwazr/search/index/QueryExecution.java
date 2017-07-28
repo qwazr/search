@@ -148,8 +148,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 		if (queryDef.highlighters != null && topDocs != null) {
 			highlighters = new LinkedHashMap<>();
 			queryDef.highlighters.forEach((name, highlighterDefinition) -> highlighters.put(name,
-					new HighlighterImpl(highlighterDefinition, queryContext.indexSearcher,
-							queryContext.indexAnalyzer.getWrappedAnalyzer(highlighterDefinition.field))));
+					new HighlighterImpl(highlighterDefinition, queryContext)));
 		} else
 			highlighters = null;
 

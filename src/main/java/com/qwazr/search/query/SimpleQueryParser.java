@@ -119,8 +119,8 @@ public class SimpleQueryParser extends AbstractQueryBuilder {
 
 		final FieldMap fieldMap = queryContext.getFieldMap();
 
-		final Map<String, Float> resolvedBoosts = fieldMap == null ? weights : fieldMap.resolveQueryFieldNames(weights,
-				new HashMap<>());
+		final Map<String, Float> resolvedBoosts = fieldMap == null ? weights : fieldMap.resolveFieldNames(weights,
+				new HashMap<>(), fieldMap::resolveQueryFieldName);
 
 		final int fl = flags == -2 ? computeTag() : flags;
 

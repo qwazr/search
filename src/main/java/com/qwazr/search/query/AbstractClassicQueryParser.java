@@ -102,11 +102,13 @@ public abstract class AbstractClassicQueryParser extends AbstractQueryBuilder {
 	}
 
 	protected Map<String, Float> resolvedBoosts(final FieldMap fieldMap) {
-		return boosts != null && fieldMap != null ? fieldMap.resolveQueryFieldNames(boosts, new HashMap<>()) : boosts;
+		return boosts != null && fieldMap != null ? fieldMap.resolveFieldNames(boosts, new HashMap<>(),
+				fieldMap::resolveQueryFieldName) : boosts;
 	}
 
 	protected String[] resolveFields(final FieldMap fieldMap) {
-		return fields != null && fieldMap != null ? fieldMap.resolveQueryFieldNames(fields) : fields;
+		return fields != null && fieldMap != null ? fieldMap.resolveFieldNames(fields,
+				fieldMap::resolveQueryFieldName) : fields;
 	}
 
 	protected Analyzer resolveAnalyzer(final QueryContext queryContext) {

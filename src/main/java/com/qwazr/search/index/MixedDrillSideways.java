@@ -53,7 +53,8 @@ class MixedDrillSideways extends DrillSideways {
 				state, drillDowns);
 
 		if (drillSideways != null) {
-			final String[] resolvedDims = fieldMap.resolveQueryFieldNames(drillSidewaysDims);
+			final String[] resolvedDims = fieldMap.resolveFieldNames(drillSidewaysDims,
+					fieldMap::resolveQueryFieldName);
 			for (int i = 0; i < drillSideways.length; i++) {
 				final String dim = drillSidewaysDims[i];
 				final String resolvedDim = resolvedDims[i];

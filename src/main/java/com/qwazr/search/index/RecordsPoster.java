@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
@@ -72,12 +72,11 @@ interface RecordsPoster {
 			return facetsConfig.build(taxonomyWriter, documentBuilder.document);
 		}
 
-		void updateDocument(Object id) throws IOException {
-			if (id == null)
+		void updateDocument(Term termId) throws IOException {
+			if (termId == null)
 				throw new ServerException(Response.Status.BAD_REQUEST,
 						() -> "The field " + FieldDefinition.ID_FIELD + " is missing - Index: " +
 								indexWriter.getDirectory());
-			final Term termId = new Term(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id));
 			indexWriter.updateDocument(termId, getFacetedDoc());
 			count++;
 			documentBuilder.reset();
@@ -101,11 +100,10 @@ interface RecordsPoster {
 			documentBuilder = new FieldConsumer.ForDocValues();
 		}
 
-		final void updateDocValues(final Object id) throws IOException {
-			if (id == null)
+		final void updateDocValues(final Term termId) throws IOException {
+			if (termId == null)
 				throw new ServerException(Response.Status.BAD_REQUEST,
 						() -> "The field " + FieldDefinition.ID_FIELD + " is missing - Index: " + indexWriter);
-			final Term termId = new Term(FieldDefinition.ID_FIELD, BytesRefUtils.fromAny(id));
 			indexWriter.updateDocValues(termId, documentBuilder.fieldList.toArray(
 					new org.apache.lucene.document.Field[documentBuilder.fieldList.size()]));
 			count++;
@@ -128,7 +126,7 @@ interface RecordsPoster {
 		final public void accept(final Map<String, Object> document) throws IOException {
 			final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(fieldMap, documentBuilder);
 			document.forEach(recordBuilder);
-			updateDocument(recordBuilder.id);
+			updateDocument(recordBuilder.termId);
 		}
 
 	}
@@ -170,7 +168,7 @@ interface RecordsPoster {
 			final RecordBuilder.ForObject recordBuilder = new RecordBuilder.ForObject(fieldMap, documentBuilder,
 					record);
 			fields.forEach(recordBuilder);
-			updateDocument(recordBuilder.id);
+			updateDocument(recordBuilder.termId);
 		}
 	}
 
@@ -208,7 +206,7 @@ interface RecordsPoster {
 		final public void accept(final Map<String, Object> document) throws IOException {
 			final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(fieldMap, documentBuilder);
 			document.forEach(recordBuilder);
-			updateDocValues(recordBuilder.id);
+			updateDocValues(recordBuilder.termId);
 		}
 	}
 
@@ -224,7 +222,7 @@ interface RecordsPoster {
 			final RecordBuilder.ForObject recordBuilder = new RecordBuilder.ForObject(fieldMap, documentBuilder,
 					record);
 			fields.forEach(recordBuilder);
-			updateDocValues(recordBuilder.id);
+			updateDocValues(recordBuilder.termId);
 		}
 	}
 }

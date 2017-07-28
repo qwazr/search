@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 public class FieldMap {
 
@@ -133,30 +134,34 @@ public class FieldMap {
 		}
 	}
 
-	final public String resolveQueryFieldName(final String fieldName) {
+	final public String resolveStoredFieldName(final String fieldName) {
 		final FieldTypeInterface fieldType = getFieldType(fieldName);
-		if (fieldType == null)
-			return null;
-		return fieldType.getQueryFieldName(fieldName);
+		return fieldType == null ? null : fieldType.getStoredFieldName(fieldName);
 	}
 
-	final public String[] resolveQueryFieldNames(final String[] fields) {
+	final public String resolveQueryFieldName(final String fieldName) {
+		final FieldTypeInterface fieldType = getFieldType(fieldName);
+		return fieldType == null ? null : fieldType.getQueryFieldName(fieldName);
+	}
+
+	final public String[] resolveFieldNames(final String[] fields, final Function<String, String> resolver) {
 		final String[] resolvedFields = new String[fields.length];
 		int i = 0;
 		for (String f : fields)
-			resolvedFields[i++] = resolveQueryFieldName(f);
+			resolvedFields[i++] = resolver.apply(f);
 		return resolvedFields;
 	}
 
-	final public <T> Map<String, T> resolveQueryFieldNames(final Map<String, T> fields,
-			final Map<String, T> resolvedFields) {
-		fields.forEach((f, t) -> resolvedFields.put(resolveQueryFieldName(f), t));
+	final public <T> Map<String, T> resolveFieldNames(final Map<String, T> fields, final Map<String, T> resolvedFields,
+			final Function<String, String> resolver) {
+		fields.forEach((f, t) -> resolvedFields.put(resolver.apply(f), t));
 		return resolvedFields;
 	}
 
-	public HashMap<String, String> resolveQueryFieldNames(Set<String> fields) {
+	public HashMap<String, String> resolveFieldNames(final Set<String> fields,
+			final Function<String, String> resolver) {
 		final HashMap<String, String> resolvedFieldNames = new HashMap<>();
-		fields.forEach((name) -> resolvedFieldNames.put(name, resolveQueryFieldName(name)));
+		fields.forEach((name) -> resolvedFieldNames.put(name, resolver.apply(name)));
 		return resolvedFieldNames;
 	}
 

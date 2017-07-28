@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2016 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
-import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.index.Term;
 
 import java.util.function.BiConsumer;
 
@@ -26,12 +26,12 @@ abstract class RecordBuilder {
 	private final FieldConsumer fieldConsumer;
 	private final FieldMap fieldMap;
 
-	volatile BytesRef id;
+	volatile Term termId;
 
 	RecordBuilder(final FieldMap fieldMap, final FieldConsumer fieldConsumer) {
 		this.fieldMap = fieldMap;
 		this.fieldConsumer = fieldConsumer;
-		this.id = null;
+		this.termId = null;
 	}
 
 	final void addFieldValue(final String fieldName, final Object fieldValue) {
@@ -44,7 +44,7 @@ abstract class RecordBuilder {
 		fieldType.dispatch(fieldName, fieldValue, fieldConsumer);
 
 		if (FieldDefinition.ID_FIELD.equals(fieldName))
-			id = BytesRefUtils.fromAny(fieldValue);
+			termId = fieldType.term(fieldName, fieldValue);
 	}
 
 	final static class ForMap extends RecordBuilder implements BiConsumer<String, Object> {

@@ -15,8 +15,7 @@
  */
 package com.qwazr.search.index;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.postingshighlight.WholeBreakIterator;
@@ -26,20 +25,21 @@ import org.apache.lucene.search.uhighlight.UnifiedHighlighter;
 
 import java.io.IOException;
 import java.text.BreakIterator;
+import java.util.List;
 import java.util.Locale;
 
 class HighlighterImpl extends UnifiedHighlighter {
 
 	private final HighlighterDefinition definition;
 
-	//private final char separator;
-
 	private final Locale locale;
 
-	private final Analyzer analyzer;
+	private final String[] indexFields;
 
-	HighlighterImpl(HighlighterDefinition definition, IndexSearcher searcher, Analyzer analyzer) {
-		super(searcher, analyzer);
+	private final String[] storedFields;
+
+	HighlighterImpl(HighlighterDefinition definition, QueryContextImpl queryContext) {
+		super(queryContext.indexSearcher, queryContext.queryAnalyzer);
 		if (definition.max_length != null)
 			setMaxLength(definition.max_length);
 		if (definition.highlight_phrases_strictly != null)
@@ -47,23 +47,24 @@ class HighlighterImpl extends UnifiedHighlighter {
 		if (definition.max_no_highlight_passages != null)
 			setMaxNoHighlightPassages(definition.max_no_highlight_passages);
 		this.definition = definition;
-		this.analyzer = analyzer;
-
-		/*separator = definition.multivalued_separator == null || definition.multivalued_separator.isEmpty() ?
-				' ' :
-				definition.multivalued_separator.charAt(0);*/
-
+		this.indexFields = new String[] { queryContext.fieldMap.resolveQueryFieldName(definition.field) };
+		this.storedFields = new String[] { queryContext.fieldMap.resolveStoredFieldName(definition.field) };
 		if (definition.break_iterator != null && definition.break_iterator.language != null)
 			locale = Locale.forLanguageTag(definition.break_iterator.language);
 		else
 			locale = Locale.ROOT;
 	}
 
+	protected List<CharSequence[]> loadFieldValues(String[] fields, DocIdSetIterator docIter, int cacheCharsThreshold)
+			throws IOException {
+		return super.loadFieldValues(storedFields, docIter, cacheCharsThreshold);
+	}
+
 	@Override
 	protected PassageFormatter getFormatter(String field) {
 		return new DefaultPassageFormatter(definition.pre_tag == null ? "<b>" : definition.pre_tag,
 				definition.post_tag == null ? "</b>" : definition.post_tag,
-				definition.ellipsis == null ? "... " : definition.ellipsis,
+				definition.ellipsis == null ? "… " : definition.ellipsis,
 				definition.escape == null ? false : definition.escape);
 	}
 
@@ -85,9 +86,9 @@ class HighlighterImpl extends UnifiedHighlighter {
 	}
 
 	String[] highlights(final Query query, final TopDocs topDocs) throws IOException {
-		return highlightFields(new String[] { definition.field }, query, topDocs,
+		return highlightFields(indexFields, query, topDocs,
 				definition.max_passages == null ? new int[] { 1 } : new int[] { definition.max_passages }).get(
-				definition.field);
+				indexFields[0]);
 
 	}
 }

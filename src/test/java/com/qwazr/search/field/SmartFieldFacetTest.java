@@ -91,7 +91,7 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
 	@Index(name = "SmartFieldSorted", schema = "TestQueries")
 	static public class Record {
 
-		@SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.LONG, stored = true)
+		@SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.LONG, index = true, stored = true)
 		final public long id;
 
 		@SmartField(type = SmartFieldDefinition.Type.TEXT, facet = true)

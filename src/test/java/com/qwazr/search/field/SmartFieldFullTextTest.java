@@ -20,6 +20,7 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.SmartField;
+import com.qwazr.search.index.HighlighterDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.AbstractQuery;
@@ -125,17 +126,31 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
 		fullSearch("article sentence", "+tt€full:article +tt€full:sentence", 2);
 	}
 
+	@Test
+	public void searchHighlights() throws IOException, ReflectiveOperationException {
+		final ResultDefinition.WithObject<Record> result = indexService.searchQuery(QueryDefinition.of(QueryParser.of(
+				"title").setQueryString("article").build()).returnedField("*").highlighter("title",
+				HighlighterDefinition.of("title").build()).queryDebug(true).build(), Record.class);
+		Assert.assertNotNull(result);
+	}
+
 	@Index(name = "SmartFieldSorted", schema = "TestQueries")
 	static public class Record {
 
-		@SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.LONG, stored = true)
+		@SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.LONG, index = true, stored = true)
 		final public long id;
 
-		@SmartField(type = SmartFieldDefinition.Type.TEXT, index = true, analyzerClass = StandardAnalyzer.class)
+		@SmartField(type = SmartFieldDefinition.Type.TEXT,
+				index = true,
+				analyzerClass = StandardAnalyzer.class,
+				stored = true)
 		@Copy(to = { @Copy.To(order = 1, field = "full"), @Copy.To(order = 1, field = "autocomplete") })
 		final public String title;
 
-		@SmartField(type = SmartFieldDefinition.Type.TEXT, index = true, analyzerClass = StandardAnalyzer.class)
+		@SmartField(type = SmartFieldDefinition.Type.TEXT,
+				index = true,
+				analyzerClass = StandardAnalyzer.class,
+				stored = true)
 		@Copy(to = { @Copy.To(order = 2, field = "full") })
 		final public String[] content;
 

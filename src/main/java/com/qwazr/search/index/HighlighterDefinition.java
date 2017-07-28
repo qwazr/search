@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class HighlighterDefinition {
@@ -50,12 +52,8 @@ public class HighlighterDefinition {
 
 		final public String language;
 
-		public BreakIteratorDefinition() {
-			type = null;
-			language = null;
-		}
-
-		public BreakIteratorDefinition(Type type, String language) {
+		@JsonCreator
+		public BreakIteratorDefinition(@JsonProperty("type") Type type, @JsonProperty("language") String language) {
 			this.type = type == null ? Type.sentence : type;
 			this.language = language;
 		}
@@ -63,18 +61,27 @@ public class HighlighterDefinition {
 
 	final public BreakIteratorDefinition break_iterator;
 
-	public HighlighterDefinition() {
-		field = null;
-		max_length = null;
-		highlight_phrases_strictly = null;
-		max_no_highlight_passages = null;
-		max_passages = null;
-		multivalued_separator = null;
-		pre_tag = null;
-		post_tag = null;
-		ellipsis = null;
-		escape = null;
-		break_iterator = null;
+	@JsonCreator
+	HighlighterDefinition(@JsonProperty("field") final String field,
+			@JsonProperty("max_passages") final Integer max_passages,
+			@JsonProperty("max_length") final Integer max_length,
+			@JsonProperty("highlight_phrases_strictly") final Boolean highlight_phrases_strictly,
+			@JsonProperty("max_no_highlight_passages") final Integer max_no_highlight_passages,
+			@JsonProperty("multivalued_separator") final String multivalued_separator,
+			@JsonProperty("pre_tag") final String pre_tag, @JsonProperty("post_tag") final String post_tag,
+			@JsonProperty("ellipsis") final String ellipsis, @JsonProperty("escape") final Boolean escape,
+			@JsonProperty("break_iterator") final BreakIteratorDefinition break_iterator) {
+		this.field = field;
+		this.max_length = max_length;
+		this.highlight_phrases_strictly = highlight_phrases_strictly;
+		this.max_no_highlight_passages = max_no_highlight_passages;
+		this.max_passages = max_passages;
+		this.multivalued_separator = multivalued_separator;
+		this.pre_tag = pre_tag;
+		this.post_tag = post_tag;
+		this.ellipsis = ellipsis;
+		this.escape = escape;
+		this.break_iterator = break_iterator;
 	}
 
 	private HighlighterDefinition(Builder builder) {
@@ -89,6 +96,14 @@ public class HighlighterDefinition {
 		this.ellipsis = builder.ellipsis;
 		this.escape = builder.escape;
 		this.break_iterator = builder.breakIterator;
+	}
+
+	public static Builder of() {
+		return new Builder();
+	}
+
+	public static Builder of(String field) {
+		return of().setField(field);
 	}
 
 	public static class Builder {
@@ -114,9 +129,6 @@ public class HighlighterDefinition {
 		private Boolean escape;
 
 		private BreakIteratorDefinition breakIterator = null;
-
-		public Builder() {
-		}
 
 		public HighlighterDefinition build() {
 			return new HighlighterDefinition(this);

@@ -63,7 +63,8 @@ abstract class FacetsBuilder {
 		this.facetsDef = facetsDef;
 		this.queryContext = queryContext;
 		this.sortedSetFacetField = queryContext.fieldMap.getSortedSetFacetField();
-		this.resolvedDimensions = queryContext.fieldMap.resolveQueryFieldNames(facetsDef.keySet());
+		this.resolvedDimensions = queryContext.fieldMap.resolveFieldNames(facetsDef.keySet(),
+				queryContext.fieldMap::resolveQueryFieldName);
 		this.searchQuery = searchQuery;
 		this.timeTracker = timeTracker;
 	}
