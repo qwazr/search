@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +21,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.query.AbstractQuery;
+import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.json.JsonMapper;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
@@ -124,7 +124,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 	public static QueryDefinition newQuery(final String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
-		return JsonMapper.MAPPER.readValue(jsonString, QueryDefinition.class);
+		return ObjectMappers.JSON.readValue(jsonString, QueryDefinition.class);
 	}
 
 }

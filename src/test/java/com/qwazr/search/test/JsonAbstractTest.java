@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,6 +38,7 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.commons.io.output.NullOutputStream;
@@ -233,13 +234,10 @@ public abstract class JsonAbstractTest {
 	}
 
 	private static IndexSettingsDefinition getIndexSettings(String res) {
-		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
-		try {
-			return JsonMapper.MAPPER.readValue(is, IndexSettingsDefinition.class);
+		try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
+			return ObjectMappers.JSON.readValue(is, IndexSettingsDefinition.class);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		} finally {
-			IOUtils.close(is);
 		}
 	}
 
@@ -470,7 +468,7 @@ public abstract class JsonAbstractTest {
 
 	public static PostDefinition.Documents getDocs(String res) {
 		try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-			return JsonMapper.MAPPER.readValue(is, PostDefinition.Documents.class);
+			return ObjectMappers.JSON.readValue(is, PostDefinition.Documents.class);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -478,7 +476,7 @@ public abstract class JsonAbstractTest {
 
 	private static PostDefinition.Document getDoc(String res) {
 		try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-			return JsonMapper.MAPPER.readValue(is, PostDefinition.Document.class);
+			return ObjectMappers.JSON.readValue(is, PostDefinition.Document.class);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

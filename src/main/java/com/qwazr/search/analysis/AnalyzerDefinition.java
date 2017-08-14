@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,8 @@ package com.qwazr.search.analysis;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.json.JsonMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,18 +58,17 @@ public class AnalyzerDefinition {
 	public static LinkedHashMap<String, AnalyzerDefinition> newAnalyzerMap(String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
-		return JsonMapper.MAPPER.readValue(jsonString, MapStringAnalyzerTypeRef);
+		return ObjectMappers.JSON.readValue(jsonString, MapStringAnalyzerTypeRef);
 	}
 
 	public static AnalyzerDefinition newAnalyzer(String jsonString) throws IOException {
-		return JsonMapper.MAPPER.readValue(jsonString, AnalyzerDefinition.class);
+		return ObjectMappers.JSON.readValue(jsonString, AnalyzerDefinition.class);
 	}
 
 	public static LinkedHashMap<String, AnalyzerDefinition> loadMap(final File mapFile,
 			final Supplier<LinkedHashMap<String, AnalyzerDefinition>> defaultMap) throws IOException {
-		return mapFile != null && mapFile.exists() && mapFile.isFile() ?
-				JsonMapper.MAPPER.readValue(mapFile, AnalyzerDefinition.MapStringAnalyzerTypeRef) :
-				defaultMap == null ? null : defaultMap.get();
+		return mapFile != null && mapFile.exists() && mapFile.isFile() ? ObjectMappers.JSON.readValue(mapFile,
+				AnalyzerDefinition.MapStringAnalyzerTypeRef) : defaultMap == null ? null : defaultMap.get();
 	}
 
 	public static void saveMap(final LinkedHashMap<String, AnalyzerDefinition> definitionMap, final File mapFile)
@@ -77,6 +76,6 @@ public class AnalyzerDefinition {
 		if (definitionMap == null)
 			Files.deleteIfExists(mapFile.toPath());
 		else
-			JsonMapper.MAPPER.writeValue(mapFile, definitionMap);
+			ObjectMappers.JSON.writeValue(mapFile, definitionMap);
 	}
 }

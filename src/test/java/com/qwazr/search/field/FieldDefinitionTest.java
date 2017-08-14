@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.utils.json.JsonMapper;
+import com.qwazr.utils.ObjectMappers;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,7 +26,7 @@ public class FieldDefinitionTest {
 
 	@Test
 	public void readCustomFieldDefinitionTest() throws IOException {
-		Map<String, FieldDefinition> fields = JsonMapper.MAPPER.readValue(
+		Map<String, FieldDefinition> fields = ObjectMappers.JSON.readValue(
 				com.qwazr.search.test.JavaTest.class.getResourceAsStream("fields.json"),
 				FieldDefinition.MapStringFieldTypeRef);
 		Assert.assertNotNull(fields);
@@ -35,7 +35,7 @@ public class FieldDefinitionTest {
 
 	@Test
 	public void readSmartFieldDefinitionTest() throws IOException {
-		Map<String, FieldDefinition> fields = JsonMapper.MAPPER.readValue(
+		Map<String, FieldDefinition> fields = ObjectMappers.JSON.readValue(
 				FieldDefinitionTest.class.getResourceAsStream("smart_fields.json"),
 				FieldDefinition.MapStringFieldTypeRef);
 		Assert.assertNotNull(fields);
@@ -44,8 +44,8 @@ public class FieldDefinitionTest {
 			Assert.assertNotNull(((SmartFieldDefinition) field).type);
 		});
 
-		String json = JsonMapper.MAPPER.writeValueAsString(fields);
-		fields = JsonMapper.MAPPER.readValue(json, FieldDefinition.MapStringFieldTypeRef);
+		String json = ObjectMappers.JSON.writeValueAsString(fields);
+		fields = ObjectMappers.JSON.readValue(json, FieldDefinition.MapStringFieldTypeRef);
 		fields.forEach((name, field) -> Assert.assertTrue(field instanceof SmartFieldDefinition));
 	}
 

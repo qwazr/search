@@ -17,7 +17,7 @@ package com.qwazr.search.test;
 
 import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.utils.json.JsonMapper;
+import com.qwazr.utils.ObjectMappers;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
@@ -48,7 +48,7 @@ public class CustomFieldDefinitionTest {
 
 	public void checkFields(CustomFieldDefinition.CustomBuilder builder, String key, Object value) throws IOException {
 		map.put(key, value);
-		String jsonString = JsonMapper.MAPPER.writeValueAsString(map);
+		String jsonString = ObjectMappers.JSON.writeValueAsString(map);
 		final FieldDefinition fieldBuilder = builder.build();
 		final FieldDefinition fieldJson = FieldDefinition.newField(jsonString);
 		Assert.assertEquals(fieldBuilder, fieldJson);

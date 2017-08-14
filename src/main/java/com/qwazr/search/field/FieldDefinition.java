@@ -22,8 +22,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.annotations.Copy;
+import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.json.JsonMapper;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.FacetsConfig;
 
@@ -140,11 +140,11 @@ public abstract class FieldDefinition {
 	public static LinkedHashMap<String, FieldDefinition> newFieldMap(final String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
-		return JsonMapper.MAPPER.readValue(jsonString, MapStringFieldTypeRef);
+		return ObjectMappers.JSON.readValue(jsonString, MapStringFieldTypeRef);
 	}
 
 	public static FieldDefinition newField(final String jsonString) throws IOException {
-		return JsonMapper.MAPPER.readValue(jsonString, FieldDefinition.class);
+		return ObjectMappers.JSON.readValue(jsonString, FieldDefinition.class);
 	}
 
 	public final static String ID_FIELD = "$id$";
@@ -168,12 +168,12 @@ public abstract class FieldDefinition {
 		if (fieldDefinitionMap == null)
 			Files.deleteIfExists(fieldMapFile.toPath());
 		else
-			JsonMapper.MAPPER.writeValue(fieldMapFile, fieldDefinitionMap);
+			ObjectMappers.JSON.writeValue(fieldMapFile, fieldDefinitionMap);
 	}
 
 	static public LinkedHashMap<String, FieldDefinition> loadMap(final File fieldMapFile,
 			final Supplier<LinkedHashMap<String, FieldDefinition>> defaultMap) throws IOException {
-		return fieldMapFile != null && fieldMapFile.exists() && fieldMapFile.isFile() ? JsonMapper.MAPPER.readValue(
+		return fieldMapFile != null && fieldMapFile.exists() && fieldMapFile.isFile() ? ObjectMappers.JSON.readValue(
 				fieldMapFile, FieldDefinition.MapStringFieldTypeRef) : defaultMap == null ? null : defaultMap.get();
 	}
 

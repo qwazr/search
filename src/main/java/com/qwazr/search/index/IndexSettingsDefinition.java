@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +18,8 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Index;
+import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.json.JsonMapper;
 import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.File;
@@ -104,7 +104,7 @@ public class IndexSettingsDefinition {
 	public static IndexSettingsDefinition newSettings(final String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
-		return JsonMapper.MAPPER.readValue(jsonString, IndexSettingsDefinition.class);
+		return ObjectMappers.JSON.readValue(jsonString, IndexSettingsDefinition.class);
 	}
 
 	public static boolean useTaxonomyIndex(final IndexSettingsDefinition settings) {
@@ -261,16 +261,15 @@ public class IndexSettingsDefinition {
 
 	static IndexSettingsDefinition load(final File settingsFile,
 			final Supplier<IndexSettingsDefinition> defaultSettings) throws IOException {
-		return settingsFile != null && settingsFile.exists() && settingsFile.isFile() ?
-				JsonMapper.MAPPER.readValue(settingsFile, IndexSettingsDefinition.class) :
-				defaultSettings == null ? null : defaultSettings.get();
+		return settingsFile != null && settingsFile.exists() && settingsFile.isFile() ? ObjectMappers.JSON.readValue(
+				settingsFile, IndexSettingsDefinition.class) : defaultSettings == null ? null : defaultSettings.get();
 	}
 
 	static void save(final IndexSettingsDefinition settings, final File settingsFile) throws IOException {
 		if (settings == null)
 			Files.deleteIfExists(settingsFile.toPath());
 		else
-			JsonMapper.MAPPER.writeValue(settingsFile, settings);
+			ObjectMappers.JSON.writeValue(settingsFile, settings);
 	}
 
 }

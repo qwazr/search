@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +19,10 @@ import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteLock;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
-import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 
 import javax.ws.rs.core.Response;
@@ -81,7 +81,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		indexMap = new ConcurrentHashMap<>();
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
-		settingsDefinition = settingsFile.exists() ? JsonMapper.MAPPER.readValue(settingsFile,
+		settingsDefinition = settingsFile.exists() ? ObjectMappers.JSON.readValue(settingsFile,
 				SchemaSettingsDefinition.class) : SchemaSettingsDefinition.EMPTY;
 		checkSettings();
 
@@ -302,7 +302,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 			settings = SchemaSettingsDefinition.EMPTY;
 			settingsFile.delete();
 		} else
-			JsonMapper.MAPPER.writeValue(settingsFile, settings);
+			ObjectMappers.JSON.writeValue(settingsFile, settings);
 		this.settingsDefinition = settings;
 		checkSettings();
 	}
