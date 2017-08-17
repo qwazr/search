@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -29,11 +30,6 @@ public abstract class PostDefinition {
 
 	final public Boolean update;
 
-	public PostDefinition() {
-		commitUserData = null;
-		update = null;
-	}
-
 	PostDefinition(Map<String, String> commitUserData, Boolean update) {
 		this.commitUserData = commitUserData;
 		this.update = update;
@@ -42,13 +38,12 @@ public abstract class PostDefinition {
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	public static class Document extends PostDefinition {
 
-		final public Map<String, Object> document;
+		final public Map<String, ?> document;
 
-		public Document() {
-			document = null;
-		}
-
-		Document(final Map<String, Object> document, final Map<String, String> commitUserData, final Boolean update) {
+		@JsonCreator
+		Document(@JsonProperty("document") final Map<String, ?> document,
+				@JsonProperty("commit_user_data") final Map<String, String> commitUserData,
+				@JsonProperty("update") final Boolean update) {
 			super(commitUserData, update);
 			this.document = document;
 		}
@@ -57,34 +52,32 @@ public abstract class PostDefinition {
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	public static class Documents extends PostDefinition {
 
-		final public List<Map<String, Object>> documents;
+		final public List<Map<String, ?>> documents;
 
-		public Documents() {
-			documents = null;
-		}
-
-		Documents(final List<Map<String, Object>> documents, final Map<String, String> commitUserData,
-				final Boolean update) {
+		@JsonCreator
+		Documents(@JsonProperty("documents") final List<Map<String, ?>> documents,
+				@JsonProperty("commit_user_data") final Map<String, String> commitUserData,
+				@JsonProperty("update") final Boolean update) {
 			super(commitUserData, update);
 			this.documents = documents;
 		}
 	}
 
-	public static Document of(final Map<String, Object> document, final Map<String, String> commitUserData,
+	public static Document of(final Map<String, ?> document, final Map<String, String> commitUserData,
 			final Boolean update) {
 		return new PostDefinition.Document(document, commitUserData, update);
 	}
 
-	public static Document of(final Map<String, Object> document, final Map<String, String> commitUserData) {
+	public static Document of(final Map<String, ?> document, final Map<String, String> commitUserData) {
 		return of(document, commitUserData, null);
 	}
 
-	public static Documents of(final List<Map<String, Object>> documents, final Map<String, String> commitUserData,
+	public static Documents of(final List<Map<String, ?>> documents, final Map<String, String> commitUserData,
 			final Boolean update) {
 		return new PostDefinition.Documents(documents, commitUserData, update);
 	}
 
-	public static Documents of(final List<Map<String, Object>> documents, final Map<String, String> commitUserData) {
+	public static Documents of(final List<Map<String, ?>> documents, final Map<String, String> commitUserData) {
 		return of(documents, commitUserData, null);
 	}
 }

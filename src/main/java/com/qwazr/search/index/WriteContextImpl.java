@@ -106,7 +106,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
 	@Override
 	public int postMappedDocs(final RecordsPoster.MapDocument poster, final PostDefinition.Documents post)
 			throws IOException {
-		for (final Map<String, Object> doc : post.documents)
+		for (final Map<String, ?> doc : post.documents)
 			poster.accept(doc);
 		if (post.commitUserData != null)
 			setLiveCommitData(post.commitUserData, true);
