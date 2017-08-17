@@ -445,24 +445,24 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 	}
 
 	@Override
-	public LinkedHashMap<String, ?> getDocument(final String schema_name, final String index_name,
+	public LinkedHashMap<String, Object> getDocument(final String schema_name, final String index_name,
 			final String doc_id) {
 		Objects.requireNonNull(doc_id, "The document must not be empty");
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc/", doc_id);
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, MapStringCaptureTypeRef, valid200Json);
+		return executeJson(request, null, null, MapStringObjectTypeRef, valid200Json);
 	}
 
 	@Override
-	public List<Map<String, ?>> getDocuments(final String schema_name, final String index_name, final Integer start,
-			final Integer rows) {
+	public List<Map<String, Object>> getDocuments(final String schema_name, final String index_name,
+			final Integer start, final Integer rows) {
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc");
 		uriBuilder.addParameter("start", start == null ? null : start.toString())
 				.addParameter("rows", rows == null ? null : rows.toString());
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, ListMapStringCaptureTypeRef, valid200Json);
+		return executeJson(request, null, null, ListMapStringObjectTypeRef, valid200Json);
 	}
 
 	@Override

@@ -721,7 +721,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public LinkedHashMap<String, ?> getDocument(final String schemaName, final String indexName,
+	final public LinkedHashMap<String, Object> getDocument(final String schemaName, final String indexName,
 			final String id) {
 		try {
 			if (id != null) {
@@ -741,14 +741,14 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public List<Map<String, ?>> getDocuments(final String schemaName, final String indexName, final Integer start,
-			final Integer rows) {
+	final public List<Map<String, Object>> getDocuments(final String schemaName, final String indexName,
+			final Integer start, final Integer rows) {
 		try {
 			final ResultDefinition result = doSearchMap(schemaName, indexName, getMatchAllDocQuery(start, rows, null));
 			if (result == null)
 				throw new ServerException(Response.Status.NOT_FOUND,
 						() -> "No document found" + " - Schema/index: " + schemaName + '/' + indexName);
-			final List<Map<String, ?>> documents = new ArrayList<>();
+			final List<Map<String, Object>> documents = new ArrayList<>();
 			final List<ResultDocumentMap> docs = result.getDocuments();
 			if (docs != null)
 				docs.forEach(resultDocument -> documents.add(resultDocument.fields));

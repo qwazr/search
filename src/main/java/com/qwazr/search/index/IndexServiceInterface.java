@@ -240,7 +240,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Path("/{schema_name}/{index_name}/doc")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	List<Map<String, ?>> getDocuments(@PathParam("schema_name") String schema_name,
+	List<Map<String, Object>> getDocuments(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, @QueryParam("start") Integer start,
 			@QueryParam("rows") Integer rows);
 
@@ -248,8 +248,8 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@Path("/{schema_name}/{index_name}/doc/{id}")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Map<String, ?> getDocument(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-			@PathParam("id") String doc_id);
+	Map<String, Object> getDocument(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name, @PathParam("id") String doc_id);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/doc")
@@ -387,12 +387,13 @@ public interface IndexServiceInterface extends ServiceInterface {
 			new TypeReference<LinkedHashMap<String, IndexInstance.ResourceInfo>>() {
 			};
 
-	TypeReference<ArrayList<Map<String, ?>>> ListMapStringCaptureTypeRef =
-			new TypeReference<ArrayList<Map<String, ?>>>() {
+	TypeReference<ArrayList<Map<String, Object>>> ListMapStringObjectTypeRef =
+			new TypeReference<ArrayList<Map<String, Object>>>() {
 			};
 
-	TypeReference<LinkedHashMap<String, ?>> MapStringCaptureTypeRef = new TypeReference<LinkedHashMap<String, ?>>() {
-	};
+	TypeReference<LinkedHashMap<String, Object>> MapStringObjectTypeRef =
+			new TypeReference<LinkedHashMap<String, Object>>() {
+			};
 
 	@FunctionalInterface
 	interface QueryActions<T> extends FunctionUtils.FunctionEx<QueryContext, T, IOException> {

@@ -658,7 +658,7 @@ public abstract class JsonAbstractTest {
 	public void test412GetDocuments() throws URISyntaxException, IOException {
 		final IndexServiceInterface client = getClient();
 		checkErrorStatusCode(() -> client.getDocuments(SCHEMA_NAME, INDEX_DUMMY_NAME, 0, 10), 404);
-		final List<Map<String, ?>> docs = client.getDocuments(SCHEMA_NAME, INDEX_MASTER_NAME, 0, 10);
+		final List<Map<String, Object>> docs = client.getDocuments(SCHEMA_NAME, INDEX_MASTER_NAME, 0, 10);
 		Assert.assertNotNull(docs);
 		Assert.assertEquals(5L, docs.size());
 	}
