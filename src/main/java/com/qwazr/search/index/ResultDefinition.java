@@ -116,6 +116,16 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 	}
 
 	@JsonIgnore
+	public boolean isAnyFacet() {
+		if (facets == null)
+			return false;
+		for (final Map<String, Number> facet : facets.values())
+			if (!facet.isEmpty())
+				return true;
+		return false;
+	}
+
+	@JsonIgnore
 	public Map<String, Number> getFacet(String facetName) {
 		return facets == null ? Collections.emptyMap() : facets.get(facetName);
 	}

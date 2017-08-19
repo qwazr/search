@@ -46,8 +46,8 @@ public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord {
 	public static IndexRecord getNewRandomDocumentsWithFacets(String id,
 			LinkedHashMap<String, AtomicInteger> facetTerms, Collection<IndexRecord> records)
 			throws IOException, InterruptedException {
-		final IndexRecord record = new IndexRecord(id).sortedSetDocValuesFacetField(
-				Integer.toString(RandomUtils.nextInt(18, 22)));
+		final IndexRecord record =
+				new IndexRecord(id).sortedSetDocValuesFacetField(Integer.toString(RandomUtils.nextInt(18, 22)));
 		records.add(record);
 		facetTerms.computeIfAbsent(record.sortedSetDocValuesFacetField, key -> new AtomicInteger(0)).incrementAndGet();
 		return record;
@@ -70,6 +70,7 @@ public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord {
 		Assert.assertNotNull(result.facets);
 		final Map<String, Number> facet = result.getFacet("sortedSetDocValuesFacetField");
 		Assert.assertNotNull(facet);
+		Assert.assertTrue(result.isAnyFacet());
 		return facet;
 	}
 
@@ -181,16 +182,18 @@ public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord {
 		String facetName = RandomUtils.alphanumeric(5);
 		String facetTerm1 = getRandomFacetValue();
 		String facetTerm2 = getRandomFacetValue();
-		int expected = facetTerm1.equals(facetTerm2) ? facetTerms.get(facetTerm1).get() : facetTerms.get(facetTerm1)
-				.get() + facetTerms.get(facetTerm2).get();
+		int expected = facetTerm1.equals(facetTerm2) ?
+				facetTerms.get(facetTerm1).get() :
+				facetTerms.get(facetTerm1).get() + facetTerms.get(facetTerm2).get();
 		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
-				.facet("sortedSetDocValuesFacetField",
-						FacetDefinition.of().query(facetName, BooleanQuery.of()
+				.facet("sortedSetDocValuesFacetField", FacetDefinition.of()
+						.query(facetName, BooleanQuery.of()
 								.addClause(BooleanQuery.Occur.should,
 										new FacetPathQuery("sortedSetDocValuesFacetField", facetTerm1))
 								.addClause(BooleanQuery.Occur.should,
 										new FacetPathQuery("sortedSetDocValuesFacetField", facetTerm2))
-								.build()).build())
+								.build())
+						.build())
 				.build());
 		final Map<String, Number> facetResult = checkResult(result);
 		Assert.assertEquals(1, facetResult.size());

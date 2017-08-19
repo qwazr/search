@@ -54,9 +54,8 @@ public class AssociatedFacetTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void intFacets() {
-		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
-				.facet("intAssociatedFacet", new FacetDefinition())
-				.build());
+		ResultDefinition result = indexService.searchQuery(
+				QueryDefinition.of(new MatchAllDocsQuery()).facet("intAssociatedFacet", new FacetDefinition()).build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(6), result.total_hits);
 		checkIntFacets(result);
@@ -64,6 +63,7 @@ public class AssociatedFacetTest extends AbstractIndexTest.WithIndexRecord {
 
 	private void checkFloatFacets(ResultDefinition result, String... expectedKeys) {
 		Assert.assertNotNull(result.facets);
+		Assert.assertTrue(result.isAnyFacet());
 		Map<String, Number> facet = (Map<String, Number>) result.getFacets().get("floatAssociatedFacet");
 		Assert.assertNotNull(facet);
 		for (String key : expectedKeys)
