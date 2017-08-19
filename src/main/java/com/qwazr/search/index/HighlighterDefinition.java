@@ -19,24 +19,33 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Objects;
+
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class HighlighterDefinition {
 
 	final public String field;
 
-	final public Integer max_passages;
+	@JsonProperty("max_passages")
+	final public Integer maxPassages;
 
-	final public Integer max_length;
+	@JsonProperty("max_length")
+	final public Integer maxLength;
 
-	final public Boolean highlight_phrases_strictly;
+	@JsonProperty("highlight_phrases_strictly")
+	final public Boolean highlightPhrasesStrictly;
 
-	final public Integer max_no_highlight_passages;
+	@JsonProperty("max_no_highlight_passages")
+	final public Integer maxNoHighlightPassages;
 
-	final public String multivalued_separator;
+	@JsonProperty("multivalued_separator")
+	final public String multivaluedSeparator;
 
-	final public String pre_tag;
+	@JsonProperty("pre_tag")
+	final public String preTag;
 
-	final public String post_tag;
+	@JsonProperty("post_tag")
+	final public String postTag;
 
 	final public String ellipsis;
 
@@ -57,45 +66,72 @@ public class HighlighterDefinition {
 			this.type = type == null ? Type.sentence : type;
 			this.language = language;
 		}
+
+		@Override
+		public boolean equals(final Object o) {
+			if (o == null || !(o instanceof BreakIteratorDefinition))
+				return false;
+			if (o == this)
+				return true;
+			final BreakIteratorDefinition b = (BreakIteratorDefinition) o;
+			return Objects.equals(type, b.type) && Objects.equals(language, b.language);
+		}
 	}
 
-	final public BreakIteratorDefinition break_iterator;
+	@JsonProperty("break_iterator")
+	final public BreakIteratorDefinition breakIterator;
 
 	@JsonCreator
 	HighlighterDefinition(@JsonProperty("field") final String field,
-			@JsonProperty("max_passages") final Integer max_passages,
-			@JsonProperty("max_length") final Integer max_length,
-			@JsonProperty("highlight_phrases_strictly") final Boolean highlight_phrases_strictly,
-			@JsonProperty("max_no_highlight_passages") final Integer max_no_highlight_passages,
-			@JsonProperty("multivalued_separator") final String multivalued_separator,
-			@JsonProperty("pre_tag") final String pre_tag, @JsonProperty("post_tag") final String post_tag,
+			@JsonProperty("max_passages") final Integer maxPassages,
+			@JsonProperty("max_length") final Integer maxLength,
+			@JsonProperty("highlight_phrases_strictly") final Boolean highlightPhrasesStrictly,
+			@JsonProperty("max_no_highlight_passages") final Integer maxNoHighlightPassages,
+			@JsonProperty("multivalued_separator") final String multivaluedSeparator,
+			@JsonProperty("pre_tag") final String preTag, @JsonProperty("post_tag") final String postTag,
 			@JsonProperty("ellipsis") final String ellipsis, @JsonProperty("escape") final Boolean escape,
-			@JsonProperty("break_iterator") final BreakIteratorDefinition break_iterator) {
+			@JsonProperty("break_iterator") final BreakIteratorDefinition breakIterator) {
 		this.field = field;
-		this.max_length = max_length;
-		this.highlight_phrases_strictly = highlight_phrases_strictly;
-		this.max_no_highlight_passages = max_no_highlight_passages;
-		this.max_passages = max_passages;
-		this.multivalued_separator = multivalued_separator;
-		this.pre_tag = pre_tag;
-		this.post_tag = post_tag;
+		this.maxLength = maxLength;
+		this.highlightPhrasesStrictly = highlightPhrasesStrictly;
+		this.maxNoHighlightPassages = maxNoHighlightPassages;
+		this.maxPassages = maxPassages;
+		this.multivaluedSeparator = multivaluedSeparator;
+		this.preTag = preTag;
+		this.postTag = postTag;
 		this.ellipsis = ellipsis;
 		this.escape = escape;
-		this.break_iterator = break_iterator;
+		this.breakIterator = breakIterator;
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if (o == null || !(o instanceof HighlighterDefinition))
+			return false;
+		if (o == this)
+			return true;
+		final HighlighterDefinition h = (HighlighterDefinition) o;
+		return Objects.equals(field, h.field) && Objects.equals(maxLength, h.maxLength) &&
+				Objects.equals(highlightPhrasesStrictly, h.highlightPhrasesStrictly) &&
+				Objects.equals(maxNoHighlightPassages, h.maxNoHighlightPassages) &&
+				Objects.equals(maxPassages, h.maxPassages) &&
+				Objects.equals(multivaluedSeparator, h.multivaluedSeparator) && Objects.equals(preTag, h.preTag) &&
+				Objects.equals(postTag, h.postTag) && Objects.equals(ellipsis, h.ellipsis) &&
+				Objects.equals(escape, h.escape) && Objects.equals(breakIterator, h.breakIterator);
 	}
 
 	private HighlighterDefinition(Builder builder) {
 		this.field = builder.field;
-		this.max_length = builder.maxLength;
-		this.highlight_phrases_strictly = builder.highlightPhrasesStrictly;
-		this.max_no_highlight_passages = builder.maxNoHighlightPassages;
-		this.max_passages = builder.maxPassages;
-		this.multivalued_separator = Character.toString(builder.multivaluedSeparator);
-		this.pre_tag = builder.preTag;
-		this.post_tag = builder.postTag;
+		this.maxLength = builder.maxLength;
+		this.highlightPhrasesStrictly = builder.highlightPhrasesStrictly;
+		this.maxNoHighlightPassages = builder.maxNoHighlightPassages;
+		this.maxPassages = builder.maxPassages;
+		this.multivaluedSeparator = Character.toString(builder.multivaluedSeparator);
+		this.preTag = builder.preTag;
+		this.postTag = builder.postTag;
 		this.ellipsis = builder.ellipsis;
 		this.escape = builder.escape;
-		this.break_iterator = builder.breakIterator;
+		this.breakIterator = builder.breakIterator;
 	}
 
 	public static Builder of() {

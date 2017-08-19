@@ -135,9 +135,8 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 
 		final ResultDocumentsInterface resultDocumentsInterface = resultDocuments.getResultDocuments();
 
-		final QueryCollectors queryCollectors = isConcurrent ?
-				new QueryCollectorManager(this) :
-				new QueryCollectorsClassic(this);
+		final QueryCollectors queryCollectors =
+				isConcurrent ? new QueryCollectorManager(this) : new QueryCollectorsClassic(this);
 
 		final FacetsBuilder facetsBuilder = queryCollectors.execute();
 
@@ -148,15 +147,16 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 		if (queryDef.highlighters != null && topDocs != null) {
 			highlighters = new LinkedHashMap<>();
 			queryDef.highlighters.forEach((name, highlighterDefinition) -> highlighters.put(name,
-					new HighlighterImpl(highlighterDefinition, queryContext)));
+					new HighlighterImpl(name, highlighterDefinition, queryContext)));
 		} else
 			highlighters = null;
 
 		timeTracker.next("search_query");
 
-		final ResultDocumentsBuilder resultBuilder = new ResultDocumentsBuilder(queryDef, topDocs,
-				queryContext.indexSearcher, query, highlighters, queryCollectors.getExternalResults(), timeTracker,
-				facetsBuilder, totalHits == null ? 0 : totalHits, resultDocumentsInterface);
+		final ResultDocumentsBuilder resultBuilder =
+				new ResultDocumentsBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
+						queryCollectors.getExternalResults(), timeTracker, facetsBuilder,
+						totalHits == null ? 0 : totalHits, resultDocumentsInterface);
 
 		return resultDocuments.apply(resultBuilder);
 	}

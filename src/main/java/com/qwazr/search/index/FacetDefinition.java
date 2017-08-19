@@ -15,8 +15,11 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.query.AbstractQuery;
+import com.qwazr.utils.CollectionsUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.lucene.facet.LabelAndValue;
@@ -24,6 +27,7 @@ import org.apache.lucene.facet.LabelAndValue;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class FacetDefinition {
@@ -32,7 +36,8 @@ public class FacetDefinition {
 
 	final public LinkedHashMap<String, AbstractQuery> queries;
 
-	final public LinkedHashSet<String[]> specific_values;
+	@JsonProperty("specific_values")
+	final public LinkedHashSet<String[]> specificValues;
 
 	final public String prefix;
 
@@ -73,18 +78,32 @@ public class FacetDefinition {
 		this(top, prefix, sort, null, null);
 	}
 
-	public FacetDefinition(Integer top, String prefix, Sort sort, LinkedHashMap<String, AbstractQuery> queries,
-			LinkedHashSet<String[]> specificValues) {
+	@JsonCreator
+	public FacetDefinition(@JsonProperty("top") Integer top, @JsonProperty("prefix") String prefix,
+			@JsonProperty("sort") Sort sort, @JsonProperty("queries") LinkedHashMap<String, AbstractQuery> queries,
+			@JsonProperty("specific_values") LinkedHashSet<String[]> specificValues) {
 		this.top = top;
 		this.prefix = prefix;
 		this.sort = sort;
 		this.queries = queries;
-		this.specific_values = specificValues;
+		this.specificValues = specificValues;
 	}
 
 	private FacetDefinition(final Builder builder) {
 		this(builder.top, builder.prefix, builder.sort, MapUtils.isEmpty(builder.queries) ? null : builder.queries,
 				CollectionUtils.isEmpty(builder.specificValues) ? null : builder.specificValues);
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if (o == null || !(o instanceof FacetDefinition))
+			return false;
+		if (o == this)
+			return true;
+		final FacetDefinition f = (FacetDefinition) o;
+		return Objects.equals(top, f.top) && CollectionsUtils.equals(queries, f.queries) &&
+				CollectionsUtils.equals(specificValues, f.specificValues) && Objects.equals(prefix, f.prefix) &&
+				Objects.equals(sort, f.sort);
 	}
 
 	public static Builder of() {

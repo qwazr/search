@@ -76,10 +76,10 @@ abstract class FacetsBuilder {
 			final FacetDefinition facet = entry.getValue();
 			final FacetBuilder facetBuilder = new FacetBuilder(facet);
 			final boolean isQueries = MapUtils.isNotEmpty(facet.queries);
-			final boolean isSpecificValues = CollectionUtils.isNotEmpty(facet.specific_values);
+			final boolean isSpecificValues = CollectionUtils.isNotEmpty(facet.specificValues);
 			final Integer top = facet.top != null ? facet.top : (isQueries || isSpecificValues) ? null : DEFAULT_TOP;
 			if (isSpecificValues || top != null)
-				buildFacetState(resolvedDimension, top, facet.specific_values, facetBuilder);
+				buildFacetState(resolvedDimension, top, facet.specificValues, facetBuilder);
 			if (isQueries)
 				buildFacetQueries(facet.queries, facetBuilder);
 			results.put(dimension, facetBuilder.build());
@@ -152,18 +152,20 @@ abstract class FacetsBuilder {
 			int facetFlag = checkFacetTypeFlags(facetsConfig, facetsDef);
 			this.sortedSetCounts = queryContext.docValueReaderState == null ?
 					null :
-					(facetFlag & FACET_IS_SORTED) == FACET_IS_SORTED ? new SortedSetDocValuesFacetCounts(
-							queryContext.docValueReaderState, facetsCollector) : null;
-			this.taxonomyCounts = (facetFlag & FACET_IS_TAXO) == FACET_IS_TAXO ? new FastTaxonomyFacetCounts(
-					queryContext.taxonomyReader, facetsConfig, facetsCollector) : null;
-			this.floatTaxonomyCounts =
-					(facetFlag & FACET_IS_TAXO_FLOAT) == FACET_IS_TAXO_FLOAT ? new TaxonomyFacetSumFloatAssociations(
-							FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD, queryContext.taxonomyReader, facetsConfig,
-							facetsCollector) : null;
-			this.intTaxonomyCounts =
-					(facetFlag & FACET_IS_TAXO_INT) == FACET_IS_TAXO_INT ? new TaxonomyFacetSumIntAssociations(
-							FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD, queryContext.taxonomyReader, facetsConfig,
-							facetsCollector) : null;
+					(facetFlag & FACET_IS_SORTED) == FACET_IS_SORTED ?
+							new SortedSetDocValuesFacetCounts(queryContext.docValueReaderState, facetsCollector) :
+							null;
+			this.taxonomyCounts = (facetFlag & FACET_IS_TAXO) == FACET_IS_TAXO ?
+					new FastTaxonomyFacetCounts(queryContext.taxonomyReader, facetsConfig, facetsCollector) :
+					null;
+			this.floatTaxonomyCounts = (facetFlag & FACET_IS_TAXO_FLOAT) == FACET_IS_TAXO_FLOAT ?
+					new TaxonomyFacetSumFloatAssociations(FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD,
+							queryContext.taxonomyReader, facetsConfig, facetsCollector) :
+					null;
+			this.intTaxonomyCounts = (facetFlag & FACET_IS_TAXO_INT) == FACET_IS_TAXO_INT ?
+					new TaxonomyFacetSumIntAssociations(FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD,
+							queryContext.taxonomyReader, facetsConfig, facetsCollector) :
+					null;
 		}
 
 		private static int FACET_IS_SORTED = 1;
