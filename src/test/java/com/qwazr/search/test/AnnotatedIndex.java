@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexSettingsDefinition;
+import com.qwazr.utils.RandomUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordTokenizer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
@@ -26,12 +27,15 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexOptions;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntFunction;
 
 import static com.qwazr.search.field.FieldDefinition.Template.SortedDocValuesField;
 import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValuesFacetField;
@@ -183,6 +187,17 @@ public class AnnotatedIndex {
 		if (!Objects.equals(price, record.price))
 			return false;
 		return true;
+	}
+
+	static List<AnnotatedIndex> randomList(final int count, final IntFunction<Integer> idSupplier) {
+		final List<AnnotatedIndex> records = new ArrayList<>();
+		for (int i = 0; i < count; i++) {
+			records.add(
+					new AnnotatedIndex(idSupplier.apply(i), RandomUtils.alphanumeric(10), RandomUtils.alphanumeric(10),
+							RandomUtils.nextDouble(0, 100), RandomUtils.nextLong(0, 100), true, false,
+							RandomUtils.alphanumeric(5), RandomUtils.alphanumeric(5)));
+		}
+		return records;
 	}
 
 	public static class ExternalTest implements Serializable {

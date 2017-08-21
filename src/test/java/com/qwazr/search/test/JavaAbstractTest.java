@@ -135,8 +135,8 @@ public abstract class JavaAbstractTest {
 		final SchemaSettingsDefinition settings2 = service.createUpdateSchema(settings1);
 		Assert.assertNotNull(settings2);
 		Assert.assertEquals(settings1, settings2);
-		final SchemaSettingsDefinition settings = SchemaSettingsDefinition.of().backupDirectoryPath(
-				backupDir.getAbsolutePath()).build();
+		final SchemaSettingsDefinition settings =
+				SchemaSettingsDefinition.of().backupDirectoryPath(backupDir.getAbsolutePath()).build();
 		final SchemaSettingsDefinition settings3 = service.createUpdateSchema(settings);
 		Assert.assertEquals(settings, settings3);
 	}
@@ -226,13 +226,13 @@ public abstract class JavaAbstractTest {
 		checkTermDef(service.doAnalyzeQuery("content", "Please analyzer this text"), 3);
 	}
 
-	private final static AnnotatedIndex record1 = new AnnotatedIndex(1, "First article title",
-			"Content of the first article", 0d, 10L, true, false, "news", "economy").multiFacet("cat", "news",
-			"economy");
+	private final static AnnotatedIndex record1 =
+			new AnnotatedIndex(1, "First article title", "Content of the first article", 0d, 10L, true, false, "news",
+					"economy").multiFacet("cat", "news", "economy");
 
-	private final static AnnotatedIndex record2 = new AnnotatedIndex(2, "Second article title",
-			"Content of the second article", 0d, 20L, true, false, "news", "science").multiFacet("cat", "news",
-			"science");
+	private final static AnnotatedIndex record2 =
+			new AnnotatedIndex(2, "Second article title", "Content of the second article", 0d, 20L, true, false, "news",
+					"science").multiFacet("cat", "news", "science");
 
 	private AnnotatedIndex checkRecord(AnnotatedIndex refRecord)
 			throws URISyntaxException, ReflectiveOperationException, IOException {
@@ -427,48 +427,66 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test500sortByTitleDescAndScore() throws URISyntaxException, IOException {
 		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
-		builder.sort("titleSort", QueryDefinition.SortEnum.descending_missing_first).sort(FieldDefinition.SCORE_FIELD,
-				QueryDefinition.SortEnum.descending).returnedField("title").start(0).rows(100);
+		builder.sort("titleSort", QueryDefinition.SortEnum.descending_missing_first)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.returnedField("title")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.title.compareTo(doc2.title) > 0);
 	}
 
 	@Test
 	public void test500sortByTitleAscAndScore() throws URISyntaxException, IOException {
-		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).sort("titleSort",
-				QueryDefinition.SortEnum.ascending_missing_last).sort(FieldDefinition.SCORE_FIELD,
-				QueryDefinition.SortEnum.descending).returnedField("title").start(0).rows(100);
+		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery())
+				.sort("titleSort", QueryDefinition.SortEnum.ascending_missing_last)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.returnedField("title")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.title.compareTo(doc2.title) < 0);
 	}
 
 	@Test
 	public void test500sortByLongAsc() throws URISyntaxException, IOException {
-		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).sort("dvQty",
-				QueryDefinition.SortEnum.ascending_missing_last).sort(FieldDefinition.SCORE_FIELD,
-				QueryDefinition.SortEnum.ascending).returnedField("dvQty").start(0).rows(100);
+		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery())
+				.sort("dvQty", QueryDefinition.SortEnum.ascending_missing_last)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
+				.returnedField("dvQty")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.dvQty.compareTo(doc2.dvQty) < 0);
 	}
 
 	@Test
 	public void test500sortByLongDesc() throws URISyntaxException, IOException {
-		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).sort("dvQty",
-				QueryDefinition.SortEnum.descending_missing_last).sort(FieldDefinition.SCORE_FIELD,
-				QueryDefinition.SortEnum.descending).returnedField("dvQty").start(0).rows(100);
+		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery())
+				.sort("dvQty", QueryDefinition.SortEnum.descending_missing_last)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.returnedField("dvQty")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.dvQty.compareTo(doc2.dvQty) > 0);
 	}
 
 	@Test
 	public void test500sortByDoubleAsc() throws URISyntaxException, IOException {
-		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).sort("price",
-				QueryDefinition.SortEnum.ascending_missing_last).sort(FieldDefinition.SCORE_FIELD,
-				QueryDefinition.SortEnum.ascending).returnedField("price").start(0).rows(100);
+		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery())
+				.sort("price", QueryDefinition.SortEnum.ascending_missing_last)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
+				.returnedField("price")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.price.compareTo(doc2.price) < 0);
 	}
 
 	@Test
 	public void test500sortByDoubleDesc() throws URISyntaxException, IOException {
-		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).sort("price",
-				QueryDefinition.SortEnum.descending_missing_last).sort(FieldDefinition.SCORE_FIELD,
-				QueryDefinition.SortEnum.descending).returnedField("price").start(0).rows(100);
+		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery())
+				.sort("price", QueryDefinition.SortEnum.descending_missing_last)
+				.sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
+				.returnedField("price")
+				.start(0)
+				.rows(100);
 		testSort(builder, 2, (doc1, doc2) -> doc1.price.compareTo(doc2.price) > 0);
 	}
 
@@ -543,8 +561,9 @@ public abstract class JavaAbstractTest {
 		checkMultiField(query,
 				"(((title:titl)^10.0 (titleStd:title)^5.0 content:titl) ((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2))~2",
 				1);
-		query = new MultiFieldQuery(QueryParserOperator.OR, "title sekond", 1).boost("title", 10.0F).boost("titleStd",
-				5.0F).boost("content", 1.0F);
+		query = new MultiFieldQuery(QueryParserOperator.OR, "title sekond", 1).boost("title", 10.0F)
+				.boost("titleStd", 5.0F)
+				.boost("content", 1.0F);
 		checkMultiField(query,
 				"(((title:titl)^10.0 (titleStd:title)^5.0 content:titl) ((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2))~1",
 				2);
@@ -553,8 +572,10 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test710MultiFieldWithDisjunction()
 			throws IOException, ReflectiveOperationException, URISyntaxException {
-		MultiFieldQuery query = new MultiFieldQuery(QueryParserOperator.AND, "title second", null, 0.1F).boost("title",
-				10.0F).boost("titleStd", 5.0F).boost("content", 1.0F);
+		MultiFieldQuery query =
+				new MultiFieldQuery(QueryParserOperator.AND, "title second", null, 0.1F).boost("title", 10.0F)
+						.boost("titleStd", 5.0F)
+						.boost("content", 1.0F);
 		checkMultiField(query,
 				"+((title:titl)^10.0 | (titleStd:title)^5.0 | content:titl)~0.1 +((title:second)^10.0 | (titleStd:second)^5.0 | content:second)~0.1",
 				1);
@@ -574,8 +595,9 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService slave = getSlave();
 
 		// Let's first create an empty index (without master)
-		final IndexStatus nonSlaveStatus = getIndexService().createUpdateIndex(slave.getSchemaName(),
-				slave.getIndexName(), IndexSettingsDefinition.of().enableTaxonomyIndex(false).build());
+		final IndexStatus nonSlaveStatus =
+				getIndexService().createUpdateIndex(slave.getSchemaName(), slave.getIndexName(),
+						IndexSettingsDefinition.of().enableTaxonomyIndex(false).build());
 		Assert.assertNotNull(nonSlaveStatus);
 		Assert.assertNull(nonSlaveStatus.master_uuid);
 		Assert.assertNotNull(nonSlaveStatus.settings);
@@ -583,10 +605,12 @@ public abstract class JavaAbstractTest {
 
 		// Then we set a wrong master node
 		try {
-			final IndexStatus wrongMasterStatus = getIndexService().createUpdateIndex(slave.getSchemaName(),
-					slave.getIndexName(), IndexSettingsDefinition.of()
-							.master(new RemoteIndex(RemoteService.of("http://localhost:9092"), "dummy", "dummy"))
-							.build());
+			final IndexStatus wrongMasterStatus =
+					getIndexService().createUpdateIndex(slave.getSchemaName(), slave.getIndexName(),
+							IndexSettingsDefinition.of()
+									.master(new RemoteIndex(RemoteService.of("http://localhost:9092"), "dummy",
+											"dummy"))
+									.build());
 			Assert.fail("The exception has not been thrown");
 		} catch (WebApplicationException e) {
 			Assert.assertEquals(500, e.getResponse().getStatus());
@@ -741,8 +765,8 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test960DeleteBackup() throws URISyntaxException, IOException {
-		SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups = getMaster().getBackups("*",
-				true);
+		SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups =
+				getMaster().getBackups("*", true);
 		Assert.assertNotNull(backups);
 		Assert.assertFalse(backups.isEmpty());
 		final Integer count = getMaster().deleteBackups(BACKUP_NAME);

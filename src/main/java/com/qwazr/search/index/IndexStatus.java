@@ -43,7 +43,6 @@ import org.apache.lucene.search.QueryCache;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -122,19 +121,19 @@ public class IndexStatus {
 
 	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final IndexSearcher indexSearcher,
 			final IndexWriter indexWriter, final IndexSettingsDefinition settings, final Set<String> analyzers,
-			final Set<String> fields) {
+			final Set<String> fields) throws IOException {
 		final IndexReader indexReader = indexSearcher.getIndexReader();
 		num_docs = (long) indexReader.numDocs();
 		num_deleted_docs = (long) indexReader.numDeletedDocs();
 		field_infos = new TreeMap<>();
 		fillFieldInfos(field_infos, indexReader.leaves());
+
 		if (indexWriter == null) {
 			merge_policy = null;
 			has_pending_merges = null;
 			has_uncommitted_changes = null;
 			has_deletions = null;
 			ram_buffer_size_mb = null;
-			commit_user_data = null;
 		} else {
 			final LiveIndexWriterConfig config = indexWriter.getConfig();
 			final MergePolicy mergePolicy = config.getMergePolicy();
@@ -143,22 +142,29 @@ public class IndexStatus {
 			has_uncommitted_changes = indexWriter.hasUncommittedChanges();
 			has_deletions = indexWriter.hasDeletions();
 			ram_buffer_size_mb = config.getRAMBufferSizeMB();
-			final Iterable<Map.Entry<String, String>> commitData = indexWriter.getLiveCommitData();
-			if (commitData != null) {
-				commit_user_data = new LinkedHashMap<>();
-				commitData.forEach(entry -> commit_user_data.put(entry.getKey(), entry.getValue()));
-			} else
-				commit_user_data = null;
 		}
 
-		this.index_uuid = indexUuid == null ? null : indexUuid.toString();
-		this.master_uuid = masterUuid == null ? null : masterUuid.toString();
-		this.version = indexReader instanceof DirectoryReader ? ((DirectoryReader) indexReader).getVersion() : null;
-		this.settings = settings;
-		this.analyzers = analyzers;
-		this.fields = fields;
+		final DirectoryReader directoryReader =
+				indexReader instanceof DirectoryReader ? (DirectoryReader) indexReader : null;
 
-		final SegmentInfos segmentInfos = getSegmentInfos(indexReader);
+		final IndexCommit indexCommit;
+		if (directoryReader != null) {
+			indexCommit = directoryReader.getIndexCommit();
+			version = directoryReader.getVersion();
+		} else {
+			indexCommit = null;
+			version = null;
+		}
+
+		final SegmentInfos segmentInfos;
+		if (indexCommit != null) {
+			commit_user_data = indexCommit.getUserData();
+			segmentInfos = SegmentInfos.readCommit(indexCommit.getDirectory(), indexCommit.getSegmentsFileName());
+		} else {
+			commit_user_data = null;
+			segmentInfos = null;
+		}
+
 		if (segmentInfos != null) {
 			number_of_segment = segmentInfos.size();
 			final AtomicLong segmentsBytesSize = new AtomicLong();
@@ -171,23 +177,17 @@ public class IndexStatus {
 			segments_bytes_size = null;
 			segments_size = null;
 		}
-		final QueryCache queryCache = indexSearcher.getQueryCache();
-		this.query_cache = queryCache != null && queryCache instanceof LRUQueryCache ? new QueryCacheStats(
-				(LRUQueryCache) queryCache) : null;
-	}
 
-	private static SegmentInfos getSegmentInfos(final IndexReader indexReader) {
-		if (!(indexReader instanceof DirectoryReader))
-			return null;
-		try {
-			final IndexCommit indexCommit = ((DirectoryReader) indexReader).getIndexCommit();
-			if (indexCommit == null)
-				return null;
-			return SegmentInfos.readCommit(indexCommit.getDirectory(), indexCommit.getSegmentsFileName());
-		} catch (IOException e) {
-			LOGGER.log(Level.WARNING, "Error while extracting Segment information", e);
-			return null;
-		}
+		this.index_uuid = indexUuid == null ? null : indexUuid.toString();
+		this.master_uuid = masterUuid == null ? null : masterUuid.toString();
+		this.settings = settings;
+		this.analyzers = analyzers;
+		this.fields = fields;
+
+		final QueryCache queryCache = indexSearcher.getQueryCache();
+		this.query_cache = queryCache != null && queryCache instanceof LRUQueryCache ?
+				new QueryCacheStats((LRUQueryCache) queryCache) :
+				null;
 	}
 
 	private static ArrayList<SegmentInfoStatus> getSegmentsInfoStatus(final SegmentInfos segmentInfos,
@@ -216,8 +216,8 @@ public class IndexStatus {
 			if (fieldInfos == null)
 				return;
 			fieldInfos.forEach(fieldInfo -> {
-				final Set<FieldInfoStatus> set = field_infos.computeIfAbsent(fieldInfo.name,
-						s -> new LinkedHashSet<>());
+				final Set<FieldInfoStatus> set =
+						field_infos.computeIfAbsent(fieldInfo.name, s -> new LinkedHashSet<>());
 				set.add(new FieldInfoStatus(fieldInfo));
 			});
 		});
