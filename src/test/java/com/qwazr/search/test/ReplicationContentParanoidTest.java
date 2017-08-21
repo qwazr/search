@@ -90,7 +90,7 @@ public class ReplicationContentParanoidTest {
 	}
 
 	final private static int ITERATION_COUNT = 5;
-	final private static int BATCH_SIZE = 1_000;
+	final private static int BATCH_SIZE = 5_000;
 	final private static int ID_RANGE = 10_000;
 
 	private static long timeTracker(final Runnable runnable) {
