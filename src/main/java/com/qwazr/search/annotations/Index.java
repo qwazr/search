@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,4 +54,6 @@ public @interface Index {
 	boolean enableTaxonomyIndex() default false;
 
 	String sortedSetFacetField() default FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD;
+
+	boolean indexReaderWarmer() default true;
 }

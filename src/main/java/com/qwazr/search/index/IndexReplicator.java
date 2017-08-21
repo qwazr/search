@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -99,8 +99,8 @@ class IndexReplicator implements Replicator {
 		}
 		if (!Objects.equals(remoteMasterUuid, masterUuid))
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"The local master index UUID and the remote index UUID does not match: " + masterUuid + " <> "
-							+ remoteMasterUuid);
+					"The local master index UUID and the remote index UUID does not match: " + masterUuid + " <> " +
+							remoteMasterUuid);
 		return masterUuidString;
 	}
 

@@ -73,6 +73,9 @@ public class IndexSettingsDefinition {
 	@JsonProperty("sorted_set_facet_field")
 	final public String sortedSetFacetField;
 
+	@JsonProperty("index_reader_warmer")
+	final public Boolean indexReaderWarmer;
+
 	public IndexSettingsDefinition() {
 		directoryType = null;
 		mergeScheduler = null;
@@ -84,6 +87,7 @@ public class IndexSettingsDefinition {
 		segmentsPerTier = null;
 		enableTaxonomyIndex = null;
 		sortedSetFacetField = null;
+		indexReaderWarmer = null;
 	}
 
 	private IndexSettingsDefinition(final Builder builder) {
@@ -97,6 +101,7 @@ public class IndexSettingsDefinition {
 		this.segmentsPerTier = builder.segmentsPerTier;
 		this.enableTaxonomyIndex = builder.enableTaxonomyIndex;
 		this.sortedSetFacetField = builder.sortedSetFacetField;
+		this.indexReaderWarmer = builder.indexReaderWarmer;
 	}
 
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
@@ -136,6 +141,8 @@ public class IndexSettingsDefinition {
 			return false;
 		if (!Objects.equals(sortedSetFacetField, s.sortedSetFacetField))
 			return false;
+		if (!Objects.equals(indexReaderWarmer, s.indexReaderWarmer))
+			return false;
 		return true;
 	}
 
@@ -163,6 +170,7 @@ public class IndexSettingsDefinition {
 		private Double segmentsPerTier;
 		private Boolean enableTaxonomyIndex;
 		private String sortedSetFacetField;
+		private Boolean indexReaderWarmer;
 
 		private Builder() {
 		}
@@ -178,6 +186,7 @@ public class IndexSettingsDefinition {
 			segmentsPerTier(annotatedIndex.segmentsPerTier());
 			enableTaxonomyIndex = annotatedIndex.enableTaxonomyIndex();
 			sortedSetFacetField = annotatedIndex.sortedSetFacetField();
+			indexReaderWarmer = annotatedIndex.indexReaderWarmer();
 		}
 
 		private Builder(final IndexSettingsDefinition settings) {
@@ -191,6 +200,7 @@ public class IndexSettingsDefinition {
 			this.segmentsPerTier = settings.segmentsPerTier;
 			this.enableTaxonomyIndex = settings.enableTaxonomyIndex;
 			this.sortedSetFacetField = settings.sortedSetFacetField;
+			this.indexReaderWarmer = settings.indexReaderWarmer;
 		}
 
 		public Builder type(final Type directoryType) {
@@ -254,6 +264,11 @@ public class IndexSettingsDefinition {
 			return this;
 		}
 
+		public Builder indexReaderWarmer(final Boolean indexReaderWarmer) {
+			this.indexReaderWarmer = indexReaderWarmer;
+			return this;
+		}
+
 		public IndexSettingsDefinition build() {
 			return new IndexSettingsDefinition(this);
 		}
@@ -261,8 +276,9 @@ public class IndexSettingsDefinition {
 
 	static IndexSettingsDefinition load(final File settingsFile,
 			final Supplier<IndexSettingsDefinition> defaultSettings) throws IOException {
-		return settingsFile != null && settingsFile.exists() && settingsFile.isFile() ? ObjectMappers.JSON.readValue(
-				settingsFile, IndexSettingsDefinition.class) : defaultSettings == null ? null : defaultSettings.get();
+		return settingsFile != null && settingsFile.exists() && settingsFile.isFile() ?
+				ObjectMappers.JSON.readValue(settingsFile, IndexSettingsDefinition.class) :
+				defaultSettings == null ? null : defaultSettings.get();
 	}
 
 	static void save(final IndexSettingsDefinition settings, final File settingsFile) throws IOException {

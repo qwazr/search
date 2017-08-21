@@ -108,7 +108,8 @@ class IndexInstanceBuilder {
 		if (settings.similarityClass != null && !settings.similarityClass.isEmpty())
 			similarity = IndexUtils.findSimilarity(settings.similarityClass);
 
-		searcherFactory = MultiThreadSearcherFactory.of(executorService, similarity);
+		searcherFactory = MultiThreadSearcherFactory.of(executorService,
+				settings.indexReaderWarmer == null ? true : settings.indexReaderWarmer, similarity);
 
 		localAnalyzerFactoryMap = fileSet.loadAnalyzerDefinitionMap();
 		final LinkedHashMap<String, FieldDefinition> fieldMapDefinition = fileSet.loadFieldMap();

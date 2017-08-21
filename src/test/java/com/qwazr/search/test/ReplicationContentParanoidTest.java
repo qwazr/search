@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ReplicationContentParanoidTest {
@@ -45,29 +46,40 @@ public class ReplicationContentParanoidTest {
 
 	private final static String SCHEMA = "repli-content";
 
-	private static AnnotatedIndexService<AnnotatedIndex> masterService;
-	private static AnnotatedIndexService<AnnotatedIndex> slaveService;
+	private static AnnotatedIndexService<AnnotatedIndex> master;
+	private static AnnotatedIndexService<AnnotatedIndex> slave1;
+	private static AnnotatedIndexService<AnnotatedIndex> slave2;
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
+
+		LOGGER.setLevel(Level.INFO);
+
 		TestServer.startServer();
 
 		// Get the master service
-		masterService =
-				new AnnotatedIndexService<>(TestServer.service, AnnotatedIndex.class, SCHEMA, "replication-master",
-						IndexSettingsDefinition.of()
-								.mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
-								.build());
-		masterService.createUpdateSchema();
-		masterService.createUpdateIndex();
-		masterService.createUpdateFields();
+		master = new AnnotatedIndexService<>(TestServer.service, AnnotatedIndex.class, SCHEMA, "replication-master",
+				IndexSettingsDefinition.of()
+						.mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
+						.indexReaderWarmer(true)
+						.build());
+		master.createUpdateSchema();
+		master.createUpdateIndex();
+		master.createUpdateFields();
 
-		slaveService =
-				new AnnotatedIndexService<>(TestServer.service, AnnotatedIndex.class, SCHEMA, "replication-slave",
-						IndexSettingsDefinition.of()
-								.master(masterService.getSchemaName(), masterService.getIndexName())
-								.build());
-		slaveService.createUpdateIndex();
+		slave1 = new AnnotatedIndexService<>(TestServer.service, AnnotatedIndex.class, SCHEMA, "replication-slave1",
+				IndexSettingsDefinition.of()
+						.master(master.getSchemaName(), master.getIndexName())
+						.indexReaderWarmer(false)
+						.build());
+		slave1.createUpdateIndex();
+
+		slave2 = new AnnotatedIndexService<>(TestServer.service, AnnotatedIndex.class, SCHEMA, "replication-slave2",
+				IndexSettingsDefinition.of()
+						.master(master.getSchemaName(), master.getIndexName())
+						.indexReaderWarmer(true)
+						.build());
+		slave2.createUpdateIndex();
 
 	}
 
@@ -77,32 +89,53 @@ public class ReplicationContentParanoidTest {
 		return commitData;
 	}
 
-	final private static int ITERATION_COUNT = 1000;
+	final private static int ITERATION_COUNT = 5;
+	final private static int BATCH_SIZE = 1_000;
+	final private static int ID_RANGE = 10_000;
+
+	private static long timeTracker(final Runnable runnable) {
+		long t = System.currentTimeMillis();
+		runnable.run();
+		return System.currentTimeMillis() - t;
+	}
+
+	private static IndexStatus replicationAndCheck(final IndexStatus masterStatus,
+			final AnnotatedIndexService<AnnotatedIndex> slave) {
+		// Do the replication
+		slave.replicationCheck();
+		// Check we have the same status and commit data
+		final IndexStatus slaveStatus = slave.getIndexStatus();
+		Assert.assertTrue(CollectionsUtils.equals(masterStatus.commit_user_data, slaveStatus.commit_user_data));
+		Assert.assertEquals(masterStatus.num_docs, slaveStatus.num_docs);
+		Assert.assertEquals(masterStatus.num_deleted_docs, slaveStatus.num_deleted_docs);
+		Assert.assertEquals(masterStatus.number_of_segment, slaveStatus.number_of_segment);
+		return slaveStatus;
+	}
 
 	@Test
 	public void contentTest() throws IOException, URISyntaxException, InterruptedException {
 
-		Assert.assertNotNull(masterService);
-		Assert.assertNotNull(slaveService);
+		Assert.assertNotNull(master);
+		Assert.assertNotNull(slave1);
+		Assert.assertNotNull(slave2);
 
-		for (int i = 0; i < 15; i++) {
+		long masterTotalQueryTime = 0;
+		long slave1TotalQueryTime = 0;
+		long slave2TotalQueryTime = 0;
+
+		for (int i = 0; i < ITERATION_COUNT; i++) {
 
 			// Post the documents
 			final List<AnnotatedIndex> records =
-					AnnotatedIndex.randomList(ITERATION_COUNT, val -> RandomUtils.nextInt(0, ITERATION_COUNT));
+					AnnotatedIndex.randomList(BATCH_SIZE, val -> RandomUtils.nextInt(0, ID_RANGE));
 			final Map<String, String> commitData = getCommitData(HashUtils.newTimeBasedUUID());
-			masterService.postDocuments(records, commitData);
-			final IndexStatus masterStatus = masterService.getIndexStatus();
+			master.postDocuments(records, commitData);
+			final IndexStatus masterStatus = master.getIndexStatus();
 			Assert.assertTrue(CollectionsUtils.equals(commitData, masterStatus.commit_user_data));
 
 			// Do the replication
-			slaveService.replicationCheck();
-			// Check we have the same status and commit data
-			final IndexStatus slaveStatus = slaveService.getIndexStatus();
-			Assert.assertTrue(CollectionsUtils.equals(commitData, slaveStatus.commit_user_data));
-			Assert.assertEquals(masterStatus.num_docs, slaveStatus.num_docs);
-			Assert.assertEquals(masterStatus.num_deleted_docs, slaveStatus.num_deleted_docs);
-			Assert.assertEquals(masterStatus.number_of_segment, slaveStatus.number_of_segment);
+			final IndexStatus slave1Status = replicationAndCheck(masterStatus, slave1);
+			final IndexStatus slave2Status = replicationAndCheck(masterStatus, slave2);
 
 			// Compare content
 
@@ -110,28 +143,42 @@ public class ReplicationContentParanoidTest {
 					.returnedField(FieldDefinition.ID_FIELD, "title")
 					.build();
 
-			final Iterator<AnnotatedIndex> masterIterator =
-					masterService.searchIterator(queryIterator, AnnotatedIndex.class);
-			final Iterator<AnnotatedIndex> slaveIterator =
-					slaveService.searchIterator(queryIterator, AnnotatedIndex.class);
+			masterTotalQueryTime += timeTracker(() -> master.searchQuery(queryIterator));
+			slave1TotalQueryTime += timeTracker(() -> slave1.searchQuery(queryIterator));
+			slave2TotalQueryTime += timeTracker(() -> slave2.searchQuery(queryIterator));
+
+			final Iterator<AnnotatedIndex> masterIterator = master.searchIterator(queryIterator, AnnotatedIndex.class);
+			final Iterator<AnnotatedIndex> slave1Iterator = slave1.searchIterator(queryIterator, AnnotatedIndex.class);
+			final Iterator<AnnotatedIndex> slave2Iterator = slave2.searchIterator(queryIterator, AnnotatedIndex.class);
 
 			masterIterator.forEachRemaining(masterRecord -> {
-				final AnnotatedIndex slaveRecord = slaveIterator.next();
+				final AnnotatedIndex slave1Record = slave1Iterator.next();
+				final AnnotatedIndex slave2Record = slave2Iterator.next();
 				Assert.assertNotNull(masterRecord.id);
 				Assert.assertNotNull(masterRecord.title);
-				Assert.assertEquals(masterRecord.id, slaveRecord.id);
-				Assert.assertEquals(masterRecord.title, slaveRecord.title);
+				Assert.assertEquals(masterRecord.id, slave1Record.id);
+				Assert.assertEquals(masterRecord.title, slave1Record.title);
+				Assert.assertEquals(masterRecord.id, slave2Record.id);
+				Assert.assertEquals(masterRecord.title, slave2Record.title);
 			});
 
 			LOGGER.info(() -> "num_docs: " + masterStatus.num_docs + " - num_deleted_docs: " +
 					masterStatus.num_deleted_docs + " - number_of_segments: " + masterStatus.number_of_segment);
 
-			if (!Objects.equals(masterStatus.version, slaveStatus.version))
-				LOGGER.warning(
-						() -> "Master version: " + masterStatus.version + " - Slave version: " + slaveStatus.version);
+			if (!Objects.equals(masterStatus.version, slave1Status.version))
+				LOGGER.warning(() -> "Master version: " + masterStatus.version + " - Slave 1 version: " +
+						slave1Status.version);
+			if (!Objects.equals(masterStatus.version, slave2Status.version))
+				LOGGER.warning(() -> "Master version: " + masterStatus.version + " - Slave 2 version: " +
+						slave2Status.version);
 
+			LOGGER.info("Master first Query total time: " + masterTotalQueryTime + "ms");
+			LOGGER.info("Slave 1  first Query total time: " + slave1TotalQueryTime + "ms");
+			LOGGER.info("Slave 2W first Query total time: " + slave2TotalQueryTime + "ms");
 		}
 
+		Assert.assertTrue(masterTotalQueryTime > slave1TotalQueryTime);
+		Assert.assertTrue(slave1TotalQueryTime > slave2TotalQueryTime);
 	}
 
 }
