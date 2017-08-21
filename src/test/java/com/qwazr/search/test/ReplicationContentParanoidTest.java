@@ -89,9 +89,9 @@ public class ReplicationContentParanoidTest {
 		return commitData;
 	}
 
-	final private static int ITERATION_COUNT = 5;
-	final private static int BATCH_SIZE = 5_000;
-	final private static int ID_RANGE = 10_000;
+	final private static int ITERATION_COUNT = 10;
+	final private static int BATCH_SIZE = 10_000;
+	final private static int ID_RANGE = 50_000;
 
 	private static long timeTracker(final Runnable runnable) {
 		long t = System.currentTimeMillis();
