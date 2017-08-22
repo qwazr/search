@@ -29,7 +29,6 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.MergeScheduler;
 import org.apache.lucene.index.NoMergeScheduler;
-import org.apache.lucene.index.PersistentSnapshotDeletionPolicy;
 import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
@@ -179,7 +178,7 @@ class IndexInstanceBuilder {
 		}
 
 		final SnapshotDeletionPolicy snapshotDeletionPolicy =
-				new PersistentSnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy(), dataDirectory);
+				new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
 		indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
 
 		indexWriter = checkCommit(new IndexWriter(dataDirectory, indexWriterConfig));
