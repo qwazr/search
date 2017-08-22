@@ -132,18 +132,15 @@ public class MultiFieldQuery extends AbstractQuery {
 		final Map<String, AtomicInteger> termsFreq = new HashMap<>();
 		final Map<String, Set<Offset>> termsOffsets = new HashMap<>();
 		final IndexReader indexReader = queryContext.getIndexReader();
-		if (indexReader != null) {
-			// Build term queries
-			fieldsBoosts.forEach((field, boost) -> {
-				try (final TokenStream tokenStream = alzr.tokenStream(field, queryString)) {
-					new TermsWithFreq(tokenStream, queryContext.getIndexReader(), field, termsFreq,
-							termsOffsets).forEachToken();
-					tokenStream.end();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			});
-		}
+		// Build term queries
+		fieldsBoosts.forEach((field, boost) -> {
+			try (final TokenStream tokenStream = alzr.tokenStream(field, queryString)) {
+				new TermsWithFreq(tokenStream, indexReader, field, termsFreq, termsOffsets).forEachToken();
+				tokenStream.end();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
 
 		// Execute the query
 		return new Builder(alzr, termsFreq, termsOffsets).parse(queryString,
@@ -210,7 +207,7 @@ public class MultiFieldQuery extends AbstractQuery {
 		final public boolean token() throws IOException {
 			final String text = charTermAttr.toString();
 			final Term term = new Term(field, text);
-			final int freq = indexReader.docFreq(term);
+			final int freq = indexReader == null ? 0 : indexReader.docFreq(term);
 			if (freq > 0)
 				termsFreq.computeIfAbsent(text, t -> new AtomicInteger()).addAndGet(freq);
 			termsOffset.computeIfAbsent(text, t -> new LinkedHashSet<>()).add(new Offset(offsetAttr));
