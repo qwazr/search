@@ -56,4 +56,6 @@ public @interface Index {
 	String sortedSetFacetField() default FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD;
 
 	boolean indexReaderWarmer() default true;
+
+	boolean mergedSegmentWarmer() default true;
 }

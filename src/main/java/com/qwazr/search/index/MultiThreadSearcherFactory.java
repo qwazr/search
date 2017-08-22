@@ -15,12 +15,16 @@
  */
 package com.qwazr.search.index;
 
+import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SimpleMergedSegmentWarmer;
+import org.apache.lucene.index.StoredFieldVisitor;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.SearcherFactory;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.util.InfoStream;
 
@@ -29,14 +33,13 @@ import java.util.concurrent.ExecutorService;
 
 class MultiThreadSearcherFactory extends SearcherFactory {
 
-	final private static IndexWriter.IndexReaderWarmer INDEX_READER_WARMER =
-			new SimpleMergedSegmentWarmer(InfoStream.getDefault());
-
 	static MultiThreadSearcherFactory of(ExecutorService executorService, boolean useWarmer, Similarity similarity) {
 		return similarity == null ?
 				new MultiThreadSearcherFactory(executorService, useWarmer) :
 				new WithSimilarity(executorService, useWarmer, similarity);
 	}
+
+	private static final SimpleMergedSegmentWarmer WARMER = new SimpleMergedSegmentWarmer(InfoStream.getDefault());
 
 	protected final ExecutorService executorService;
 	private final boolean useWarmer;
@@ -46,11 +49,30 @@ class MultiThreadSearcherFactory extends SearcherFactory {
 		this.useWarmer = useWarmer;
 	}
 
+	protected IndexSearcher warm(final IndexReader indexReader, final IndexSearcher indexSearcher) throws IOException {
+		if (!useWarmer)
+			return indexSearcher;
+
+		for (final LeafReaderContext context : indexReader.leaves())
+			WARMER.warm(context.reader());
+
+		final StoredFieldVisitor allFields = new StoredFieldVisitor() {
+			@Override
+			public StoredFieldVisitor.Status needsField(FieldInfo fieldInfo) throws IOException {
+				return StoredFieldVisitor.Status.YES;
+			}
+		};
+
+		final TopDocs topDocs = indexSearcher.search(new MatchAllDocsQuery(), 10);
+		if (topDocs != null && topDocs.scoreDocs != null)
+			for (final ScoreDoc scoreDoc : topDocs.scoreDocs)
+				indexSearcher.doc(scoreDoc.doc, allFields);
+
+		return indexSearcher;
+	}
+
 	public IndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader) throws IOException {
-		if (useWarmer)
-			for (LeafReaderContext context : reader.leaves())
-				INDEX_READER_WARMER.warm(context.reader());
-		return new IndexSearcher(reader, executorService);
+		return warm(reader, new IndexSearcher(reader, executorService));
 	}
 
 	static class WithSimilarity extends MultiThreadSearcherFactory {
@@ -63,11 +85,11 @@ class MultiThreadSearcherFactory extends SearcherFactory {
 			this.similarity = similarity;
 		}
 
-		final public IndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader)
+		public IndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader)
 				throws IOException {
-			final IndexSearcher searcher = super.newSearcher(reader, previousReader);
+			final IndexSearcher searcher = new IndexSearcher(reader, executorService);
 			searcher.setSimilarity(similarity);
-			return searcher;
+			return warm(reader, searcher);
 		}
 	}
 }

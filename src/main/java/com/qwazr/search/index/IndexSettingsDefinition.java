@@ -76,6 +76,9 @@ public class IndexSettingsDefinition {
 	@JsonProperty("index_reader_warmer")
 	final public Boolean indexReaderWarmer;
 
+	@JsonProperty("merged_segment_warmer")
+	final public Boolean mergedSegmentWarmer;
+
 	public IndexSettingsDefinition() {
 		directoryType = null;
 		mergeScheduler = null;
@@ -88,6 +91,7 @@ public class IndexSettingsDefinition {
 		enableTaxonomyIndex = null;
 		sortedSetFacetField = null;
 		indexReaderWarmer = null;
+		mergedSegmentWarmer = null;
 	}
 
 	private IndexSettingsDefinition(final Builder builder) {
@@ -102,6 +106,7 @@ public class IndexSettingsDefinition {
 		this.enableTaxonomyIndex = builder.enableTaxonomyIndex;
 		this.sortedSetFacetField = builder.sortedSetFacetField;
 		this.indexReaderWarmer = builder.indexReaderWarmer;
+		this.mergedSegmentWarmer = builder.mergedSegmentWarmer;
 	}
 
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
@@ -143,6 +148,8 @@ public class IndexSettingsDefinition {
 			return false;
 		if (!Objects.equals(indexReaderWarmer, s.indexReaderWarmer))
 			return false;
+		if (!Objects.equals(mergedSegmentWarmer, s.mergedSegmentWarmer))
+			return false;
 		return true;
 	}
 
@@ -171,6 +178,7 @@ public class IndexSettingsDefinition {
 		private Boolean enableTaxonomyIndex;
 		private String sortedSetFacetField;
 		private Boolean indexReaderWarmer;
+		private Boolean mergedSegmentWarmer;
 
 		private Builder() {
 		}
@@ -187,6 +195,7 @@ public class IndexSettingsDefinition {
 			enableTaxonomyIndex = annotatedIndex.enableTaxonomyIndex();
 			sortedSetFacetField = annotatedIndex.sortedSetFacetField();
 			indexReaderWarmer = annotatedIndex.indexReaderWarmer();
+			mergedSegmentWarmer = annotatedIndex.mergedSegmentWarmer();
 		}
 
 		private Builder(final IndexSettingsDefinition settings) {
@@ -201,6 +210,7 @@ public class IndexSettingsDefinition {
 			this.enableTaxonomyIndex = settings.enableTaxonomyIndex;
 			this.sortedSetFacetField = settings.sortedSetFacetField;
 			this.indexReaderWarmer = settings.indexReaderWarmer;
+			this.mergedSegmentWarmer = settings.mergedSegmentWarmer;
 		}
 
 		public Builder type(final Type directoryType) {
@@ -266,6 +276,11 @@ public class IndexSettingsDefinition {
 
 		public Builder indexReaderWarmer(final Boolean indexReaderWarmer) {
 			this.indexReaderWarmer = indexReaderWarmer;
+			return this;
+		}
+
+		public Builder mergedSegmentWarmer(final Boolean mergedSegmentWarmer) {
+			this.mergedSegmentWarmer = mergedSegmentWarmer;
 			return this;
 		}
 

@@ -61,7 +61,8 @@ public class ReplicationContentParanoidTest {
 		master = new AnnotatedIndexService<>(TestServer.service, AnnotatedIndex.class, SCHEMA, "replication-master",
 				IndexSettingsDefinition.of()
 						.mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
-						.indexReaderWarmer(true)
+						.mergedSegmentWarmer(true)
+						.indexReaderWarmer(false)
 						.build());
 		master.createUpdateSchema();
 		master.createUpdateIndex();
@@ -112,6 +113,20 @@ public class ReplicationContentParanoidTest {
 		return slaveStatus;
 	}
 
+	int indexMinTime(long... values) {
+		int winner = 0;
+		long current = Long.MAX_VALUE;
+		int idx = 0;
+		for (long value : values) {
+			idx++;
+			if (value < current) {
+				current = value;
+				winner = idx;
+			}
+		}
+		return winner;
+	}
+
 	@Test
 	public void contentTest() throws IOException, URISyntaxException, InterruptedException {
 
@@ -119,9 +134,13 @@ public class ReplicationContentParanoidTest {
 		Assert.assertNotNull(slave1);
 		Assert.assertNotNull(slave2);
 
-		long masterTotalQueryTime = 0;
-		long slave1TotalQueryTime = 0;
-		long slave2TotalQueryTime = 0;
+		Assert.assertEquals(true, master.getIndexStatus().settings.mergedSegmentWarmer);
+		Assert.assertEquals(false, slave1.getIndexStatus().settings.indexReaderWarmer);
+		Assert.assertEquals(true, slave2.getIndexStatus().settings.indexReaderWarmer);
+
+		int masterTotalQueryTimeWins = 0;
+		int slave1TotalQueryTimeWins = 0;
+		int slave2TotalQueryTimeWins = 0;
 
 		for (int i = 0; i < ITERATION_COUNT; i++) {
 
@@ -143,9 +162,19 @@ public class ReplicationContentParanoidTest {
 					.returnedField(FieldDefinition.ID_FIELD, "title")
 					.build();
 
-			masterTotalQueryTime += timeTracker(() -> master.searchQuery(queryIterator));
-			slave1TotalQueryTime += timeTracker(() -> slave1.searchQuery(queryIterator));
-			slave2TotalQueryTime += timeTracker(() -> slave2.searchQuery(queryIterator));
+			switch (indexMinTime(timeTracker(() -> master.searchQuery(queryIterator)),
+					timeTracker(() -> slave1.searchQuery(queryIterator)),
+					timeTracker(() -> slave2.searchQuery(queryIterator)))) {
+			case 1:
+				masterTotalQueryTimeWins++;
+				break;
+			case 2:
+				slave1TotalQueryTimeWins++;
+				break;
+			case 3:
+				slave2TotalQueryTimeWins++;
+				break;
+			}
 
 			final Iterator<AnnotatedIndex> masterIterator = master.searchIterator(queryIterator, AnnotatedIndex.class);
 			final Iterator<AnnotatedIndex> slave1Iterator = slave1.searchIterator(queryIterator, AnnotatedIndex.class);
@@ -172,9 +201,9 @@ public class ReplicationContentParanoidTest {
 				LOGGER.warning(() -> "Master version: " + masterStatus.version + " - Slave 2 version: " +
 						slave2Status.version);
 
-			LOGGER.info("Master first Query total time: " + masterTotalQueryTime + "ms");
-			LOGGER.info("Slave 1  first Query total time: " + slave1TotalQueryTime + "ms");
-			LOGGER.info("Slave 2W first Query total time: " + slave2TotalQueryTime + "ms");
+			LOGGER.info("Master first Query wins: " + masterTotalQueryTimeWins);
+			LOGGER.info("Slave 1 first Query wins: " + slave1TotalQueryTimeWins);
+			LOGGER.info("Slave 2 first Query wins: " + slave2TotalQueryTimeWins);
 		}
 
 		//Assert.assertTrue(masterTotalQueryTime > slave1TotalQueryTime);

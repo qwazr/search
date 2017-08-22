@@ -31,6 +31,7 @@ import org.apache.lucene.index.MergeScheduler;
 import org.apache.lucene.index.NoMergeScheduler;
 import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.index.SerialMergeScheduler;
+import org.apache.lucene.index.SimpleMergedSegmentWarmer;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.replicator.LocalReplicator;
@@ -39,6 +40,7 @@ import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.util.InfoStream;
 
 import java.io.File;
 import java.io.IOException;
@@ -156,6 +158,9 @@ class IndexInstanceBuilder {
 			if (settings.segmentsPerTier != null)
 				mergePolicy.setSegmentsPerTier(settings.segmentsPerTier);
 			indexWriterConfig.setMergePolicy(mergePolicy);
+
+			if (settings.mergedSegmentWarmer != null && settings.mergedSegmentWarmer)
+				indexWriterConfig.setMergedSegmentWarmer(new SimpleMergedSegmentWarmer(InfoStream.getDefault()));
 
 			final MergeScheduler mergeScheduler;
 			if (settings.mergeScheduler != null) {
