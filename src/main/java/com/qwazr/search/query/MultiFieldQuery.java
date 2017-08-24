@@ -172,16 +172,18 @@ public class MultiFieldQuery extends AbstractQuery {
 		return builder.build();
 	}
 
+	protected Query applyBoost(String field, Query query) {
+		final Float boost = fieldsBoosts.get(field);
+		return boost != null && boost != 1.0F ? new org.apache.lucene.search.BoostQuery(query, boost) : query;
+	}
+
 	protected Query getTermQuery(final int freq, final Term term) {
 		Query query;
 		if (freq > 0)
 			query = new org.apache.lucene.search.TermQuery(term);
 		else
 			query = new org.apache.lucene.search.FuzzyQuery(term);
-		final Float boost = fieldsBoosts.get(term.field());
-		if (boost != null && boost != 1.0F)
-			query = new org.apache.lucene.search.BoostQuery(query, boost);
-		return query;
+		return applyBoost(term.field(), query);
 	}
 
 	private class TermsWithFreq extends TermConsumer.WithChar {
