@@ -29,7 +29,7 @@ import java.nio.file.Path;
 /**
  * Created by ekeller on 29/05/2017.
  */
-public class BackupTest extends AbstractIndexTest.WithIndexRecord {
+public class BackupTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
 	private final static String SCHEMA_NAME = "backup_schema";
 

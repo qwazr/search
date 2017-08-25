@@ -33,7 +33,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord {
+public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException, java.text.ParseException {
@@ -42,7 +42,7 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord {
 				RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
 						RealTimeSynonymsResourcesTest.EN_FR_DE_SYNONYMS));
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").textField("Hello")
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello")
 				.stringField("world")
 				.textSynonymsField1("hello world"));
 	}
@@ -73,9 +73,14 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException {
-		Query luceneQuery = SimpleQueryParser.of().setDefaultOperator(QueryParserOperator.AND).
-				addBoost("textField", 1F).addBoost("stringField", 1F).setQueryString("Hello World").build().getQuery(
-				QueryContext.DEFAULT);
+		Query luceneQuery = SimpleQueryParser.of()
+				.setDefaultOperator(QueryParserOperator.AND)
+				.
+						addBoost("textField", 1F)
+				.addBoost("stringField", 1F)
+				.setQueryString("Hello World")
+				.build()
+				.getQuery(QueryContext.DEFAULT);
 		Assert.assertNotNull(luceneQuery);
 	}
 

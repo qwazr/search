@@ -15,13 +15,13 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
-import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.utils.LoggerUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -30,7 +30,6 @@ import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.SessionToken;
 import org.apache.lucene.search.MatchAllDocsQuery;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
@@ -57,7 +56,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	private static final String QWAZR_INDEX_ROOT_USER;
 
-	private IndexManager indexManager;
+	private final IndexManager indexManager;
 
 	static {
 		String v = System.getProperty("QWAZR_INDEX_ROOT_USER");
@@ -76,16 +75,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	@Context
 	private HttpServletResponse response;
 
-	public IndexServiceImpl() {
-	}
-
 	IndexServiceImpl(final IndexManager indexManager) {
 		this.indexManager = indexManager;
-	}
-
-	@PostConstruct
-	public void init() {
-		indexManager = getContextAttribute(IndexManager.class);
 	}
 
 	/**

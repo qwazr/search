@@ -24,12 +24,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 
-public class TermEnumTest extends AbstractIndexTest.WithIndexRecord {
+public class TermEnumTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").textField("v"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("v"));
 	}
 
 	@Test

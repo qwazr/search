@@ -26,19 +26,20 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
-public class BlendedTermQueryTest extends AbstractIndexTest.WithIndexRecord {
+public class BlendedTermQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").textField("Hello World"));
-		indexService.postDocument(new IndexRecord("2").textField("How are you ?"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?"));
 	}
 
 	@Test
 	public void test() {
-		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new BlendedTermQuery(
-				new ArrayList<>()).term("textField", "hello", 2.0F).term("textField", "world")).build());
+		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(
+				new BlendedTermQuery(new ArrayList<>()).term("textField", "hello", 2.0F).term("textField", "world"))
+				.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(1), result.total_hits);
 	}

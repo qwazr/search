@@ -28,7 +28,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class DrillDownQueryTest extends AbstractIndexTest.WithIndexRecord {
+public class DrillDownQueryTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
@@ -37,8 +37,8 @@ public class DrillDownQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void luceneQuery() throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
-		Query luceneQuery = new DrillDownQuery(new MatchAllDocsQuery(), true).add("dim", "value").getQuery(
-				QueryContext.DEFAULT);
+		Query luceneQuery =
+				new DrillDownQuery(new MatchAllDocsQuery(), true).add("dim", "value").getQuery(QueryContext.DEFAULT);
 		Assert.assertNotNull(luceneQuery);
 	}
 

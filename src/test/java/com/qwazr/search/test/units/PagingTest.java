@@ -35,7 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-public class PagingTest extends AbstractIndexTest.WithIndexRecord {
+public class PagingTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
 	private static LinkedHashMap<String, IndexRecord> documents;
 
@@ -44,8 +44,9 @@ public class PagingTest extends AbstractIndexTest.WithIndexRecord {
 		initIndexService();
 		documents = new LinkedHashMap<>();
 		for (int i = 0; i < RandomUtils.nextInt(201, 299); i++) {
-			final IndexRecord record = new IndexRecord(Integer.toString(i)).sortedDocValue(RandomUtils.alphanumeric(5))
-					.facetField(Integer.toString(RandomUtils.nextInt(1, 3)));
+			final IndexRecord.WithTaxonomy record =
+					new IndexRecord.WithTaxonomy(Integer.toString(i)).sortedDocValue(RandomUtils.alphanumeric(5))
+							.facetField(Integer.toString(RandomUtils.nextInt(1, 3)));
 			documents.put(record.id, record);
 			indexService.postDocument(record);
 		}
@@ -73,12 +74,13 @@ public class PagingTest extends AbstractIndexTest.WithIndexRecord {
 			final QueryDefinition queryDef = builder.start(start).rows(rows).build();
 
 			// Check Object
-			final ResultDefinition.WithObject<IndexRecord> resultObject = indexService.searchQuery(queryDef);
-			List<ResultDocumentObject<IndexRecord>> objectDocs = resultObject.getDocuments();
+			final ResultDefinition.WithObject<IndexRecord.WithTaxonomy> resultObject =
+					indexService.searchQuery(queryDef);
+			List<ResultDocumentObject<IndexRecord.WithTaxonomy>> objectDocs = resultObject.getDocuments();
 			Assert.assertEquals(expectedRows, objectDocs.size());
 			int i = 0;
-			for (ResultDocumentObject<IndexRecord> objectDoc : objectDocs) {
-				ResultDocumentObject<IndexRecord> objectDoc2 = objectDocs.get(i);
+			for (ResultDocumentObject<IndexRecord.WithTaxonomy> objectDoc : objectDocs) {
+				ResultDocumentObject<IndexRecord.WithTaxonomy> objectDoc2 = objectDocs.get(i);
 				Assert.assertEquals(objectDoc, objectDoc2);
 				Assert.assertEquals(i + start, objectDoc.getPos());
 				idSetObject.add(objectDoc.record.id);

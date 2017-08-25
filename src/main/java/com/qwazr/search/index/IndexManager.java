@@ -139,8 +139,9 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 		synchronized (schemaMap) {
 			SchemaInstance schemaInstance = schemaMap.get(schemaName);
 			if (schemaInstance == null) {
-				schemaInstance = new SchemaInstance(this, analyzerFactoryMap, service,
-						new File(rootDirectory, schemaName), executorService);
+				schemaInstance =
+						new SchemaInstance(this, analyzerFactoryMap, service, new File(rootDirectory, schemaName),
+								executorService);
 				schemaMap.put(schemaName, schemaInstance);
 			}
 			if (settings != null)
@@ -194,7 +195,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 		final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
 		schemaIterator(schemaName, (schName, schemaInstance) -> {
 			synchronized (results) {
-				if ("*".equals(schemaName) && StringUtils.isEmpty(schemaInstance.getSettings().backup_directory_path))
+				if ("*".equals(schemaName) && StringUtils.isEmpty(schemaInstance.getSettings().backupDirectoryPath))
 					return;
 				final SortedMap<String, BackupStatus> schemaResults = schemaInstance.backups(indexName, backupName);
 				if (schemaResults != null && !schemaResults.isEmpty())
@@ -209,8 +210,8 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 		final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> results = new TreeMap<>();
 		schemaIterator(schemaName, (schName, schemaInstance) -> {
 			synchronized (results) {
-				final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults = schemaInstance.getBackups(
-						indexName, backupName, extractVersion);
+				final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults =
+						schemaInstance.getBackups(indexName, backupName, extractVersion);
 				if (schemaResults != null && !schemaResults.isEmpty())
 					results.put(schName, schemaResults);
 			}

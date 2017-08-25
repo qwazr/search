@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,20 +24,24 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class SchemaSettingsDefinition {
 
-	final public Integer max_simultaneous_write;
-	final public Integer max_simultaneous_read;
-	final public Long max_size;
-	final public String backup_directory_path;
+	@JsonProperty("max_simultaneous_write")
+	final public Integer maxSimultaneousWrite;
+	@JsonProperty("max_simultaneous_read")
+	final public Integer maxSimultaneousRead;
+	@JsonProperty("max_size")
+	final public Long maxSize;
+	@JsonProperty("backup_directory_path")
+	final public String backupDirectoryPath;
 
 	@JsonCreator
 	private SchemaSettingsDefinition(@JsonProperty("max_simultaneous_write") final Integer maxSimultaneousWrite,
 			@JsonProperty("max_simultaneous_read") final Integer maxSimultaneousRead,
 			@JsonProperty("max_size") final Long maxSize,
-			@JsonProperty("backupDirectoryPath") final String backupDirectoryPath) {
-		this.max_simultaneous_write = maxSimultaneousWrite;
-		this.max_simultaneous_read = maxSimultaneousRead;
-		this.max_size = maxSize;
-		this.backup_directory_path = backupDirectoryPath;
+			@JsonProperty("backup_directory_path") final String backupDirectoryPath) {
+		this.maxSimultaneousWrite = maxSimultaneousWrite;
+		this.maxSimultaneousRead = maxSimultaneousRead;
+		this.maxSize = maxSize;
+		this.backupDirectoryPath = backupDirectoryPath;
 	}
 
 	private SchemaSettingsDefinition(Builder builder) {
@@ -49,13 +53,13 @@ public class SchemaSettingsDefinition {
 		if (e == null || !(e instanceof SchemaSettingsDefinition))
 			return false;
 		final SchemaSettingsDefinition def = (SchemaSettingsDefinition) e;
-		if (!Objects.equals(max_simultaneous_read, def.max_simultaneous_read))
+		if (!Objects.equals(maxSimultaneousWrite, def.maxSimultaneousWrite))
 			return false;
-		if (!Objects.equals(max_simultaneous_write, def.max_simultaneous_write))
+		if (!Objects.equals(maxSimultaneousRead, def.maxSimultaneousRead))
 			return false;
-		if (!Objects.equals(max_size, def.max_size))
+		if (!Objects.equals(maxSize, def.maxSize))
 			return false;
-		if (!Objects.equals(backup_directory_path, def.backup_directory_path))
+		if (!Objects.equals(backupDirectoryPath, def.backupDirectoryPath))
 			return false;
 		return true;
 	}

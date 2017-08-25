@@ -25,20 +25,20 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class FieldValueQueryTest extends AbstractIndexTest.WithIndexRecord {
+public class FieldValueQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").intDocValue(1));
-		indexService.postDocument(new IndexRecord("2").intDocValue(2));
-		indexService.postDocument(new IndexRecord("3"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").intDocValue(1));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("2").intDocValue(2));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("3"));
 	}
 
 	@Test
 	public void hasValue() {
-		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new FieldValueQuery("intDocValue")).build());
+		ResultDefinition result =
+				indexService.searchQuery(QueryDefinition.of(new FieldValueQuery("intDocValue")).build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(2), result.total_hits);
 	}

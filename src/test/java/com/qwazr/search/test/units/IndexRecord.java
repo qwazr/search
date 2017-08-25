@@ -29,8 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
-@Index(name = "IndexRecord", schema = "TestQueries", enableTaxonomyIndex = true)
-public class IndexRecord {
+public abstract class IndexRecord<T extends IndexRecord> {
 
 	@IndexField(name = FieldDefinition.ID_FIELD, template = FieldDefinition.Template.StringField, stored = true)
 	final public String id;
@@ -115,123 +114,145 @@ public class IndexRecord {
 		this.id = id;
 	}
 
-	public IndexRecord textField(String textField) {
+	public T textField(String textField) {
 		this.textField = textField;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord textSynonymsField1(String textSynonymsField1) {
+	public T textSynonymsField1(String textSynonymsField1) {
 		this.textSynonymsField1 = textSynonymsField1;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord textSynonymsField2(String textSynonymsField2) {
+	public T textSynonymsField2(String textSynonymsField2) {
 		this.textSynonymsField2 = textSynonymsField2;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord copyText1(String copyText) {
+	public T copyText1(String copyText) {
 		this.copyText1 = copyText;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord copyText2(String copyText) {
+	public T copyText2(String copyText) {
 		this.copyText2 = copyText;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord stringField(String stringField) {
+	public T stringField(String stringField) {
 		this.stringField = stringField;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord sortedDocValue(String sortedDocValue) {
+	public T sortedDocValue(String sortedDocValue) {
 		this.sortedDocValue = sortedDocValue;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord facetField(String facetField) {
+	public T facetField(String facetField) {
 		this.facetField = facetField;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord storedField(String storedField) {
+	public T storedField(String storedField) {
 		this.storedField = storedField;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord multivaluedIntegerStoredField(Integer... storedField) {
+	public T multivaluedIntegerStoredField(Integer... storedField) {
 		if (multivaluedIntegerStoredField == null)
 			multivaluedIntegerStoredField = new LinkedHashSet<>();
 		Collections.addAll(multivaluedIntegerStoredField, storedField);
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord multivaluedStringStoredField(String... storedField) {
+	public T multivaluedStringStoredField(String... storedField) {
 		if (multivaluedStringStoredField == null)
 			multivaluedStringStoredField = new LinkedHashSet<>();
 		Collections.addAll(multivaluedStringStoredField, storedField);
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord intDocValue(Integer intDocValue) {
+	public T intDocValue(Integer intDocValue) {
 		this.intDocValue = intDocValue;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord longDocValue(long longDocValue) {
+	public T longDocValue(long longDocValue) {
 		this.longDocValue = longDocValue;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord intPoint(Integer intPoint) {
+	public T intPoint(Integer intPoint) {
 		this.intPoint = intPoint;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord floatDocValue(Float floatDocValue) {
+	public T floatDocValue(Float floatDocValue) {
 		this.floatDocValue = floatDocValue;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord doubleDocValue(Double doubleDocValue) {
+	public T doubleDocValue(Double doubleDocValue) {
 		this.doubleDocValue = doubleDocValue;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord intAssociatedFacet(Integer assoc, String... path) {
+	public T intAssociatedFacet(Integer assoc, String... path) {
 		final Object[] array = new Object[path.length + 1];
 		array[0] = assoc;
 		System.arraycopy(path, 0, array, 1, path.length);
 		this.intAssociatedFacet = array;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord floatAssociatedFacet(Float assoc, String... path) {
+	public T floatAssociatedFacet(Float assoc, String... path) {
 		final Object[] array = new Object[path.length + 1];
 		array[0] = assoc;
 		System.arraycopy(path, 0, array, 1, path.length);
 		this.floatAssociatedFacet = array;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord sortedSetDocValuesFacetField(String sortedSetDocValuesFacetField) {
+	public T sortedSetDocValuesFacetField(String sortedSetDocValuesFacetField) {
 		this.sortedSetDocValuesFacetField = sortedSetDocValuesFacetField;
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord dynamicFacets(String fieldName, String value) {
+	public T dynamicFacets(String fieldName, String value) {
 		if (dynamicFacets == null)
 			dynamicFacets = new LinkedHashMap<>();
 		dynamicFacets.computeIfAbsent(fieldName, f -> new ArrayList<>()).add(value);
-		return this;
+		return (T) this;
 	}
 
-	public IndexRecord mlt(String... mlt) {
+	public T mlt(String... mlt) {
 		if (this.mlt == null)
 			this.mlt = new ArrayList<>();
 		Collections.addAll(this.mlt, mlt);
-		return this;
+		return (T) this;
 	}
 
+	@Index(name = "IndexRecord", schema = "TestQueries", enableTaxonomyIndex = true)
+	public static class WithTaxonomy extends IndexRecord<WithTaxonomy> {
+
+		public WithTaxonomy() {
+		}
+
+		public WithTaxonomy(String id) {
+			super(id);
+		}
+
+	}
+
+	@Index(name = "IndexRecord", schema = "TestQueries", enableTaxonomyIndex = false)
+	public static class NoTaxonomy extends IndexRecord<NoTaxonomy> {
+
+		public NoTaxonomy() {
+		}
+
+		public NoTaxonomy(String id) {
+			super(id);
+		}
+	}
 }

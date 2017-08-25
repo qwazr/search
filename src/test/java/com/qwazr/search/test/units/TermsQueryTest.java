@@ -30,17 +30,18 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 
-public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord {
+public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").textField("Hello World").stringField("Hello World"));
-		indexService.postDocument(new IndexRecord("2").textField("Hello World 2").stringField("Hello World 2"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World").stringField("Hello World"));
+		indexService.postDocument(
+				new IndexRecord.NoTaxonomy("2").textField("Hello World 2").stringField("Hello World 2"));
 	}
 
 	private void checkQuery(QueryDefinition queryDef, Long totalHits) {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(queryDef);
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(queryDef);
 		Assert.assertNotNull(result);
 		Assert.assertEquals(totalHits, result.total_hits);
 		ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
@@ -55,8 +56,8 @@ public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testCollection() {
-		QueryDefinition queryDef = QueryDefinition.of(new TermsQuery(FieldDefinition.ID_FIELD, Arrays.asList("1", "2")))
-				.build();
+		QueryDefinition queryDef =
+				QueryDefinition.of(new TermsQuery(FieldDefinition.ID_FIELD, Arrays.asList("1", "2"))).build();
 		checkQuery(queryDef, 2L);
 	}
 

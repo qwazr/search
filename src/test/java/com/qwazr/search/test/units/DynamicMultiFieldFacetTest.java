@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-public class DynamicMultiFieldFacetTest extends AbstractIndexTest.WithIndexRecord {
+public class DynamicMultiFieldFacetTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, URISyntaxException {
@@ -38,14 +38,15 @@ public class DynamicMultiFieldFacetTest extends AbstractIndexTest.WithIndexRecor
 
 	@Test
 	public void randomTest() throws IOException, InterruptedException {
-		final IndexRecord record = new IndexRecord(RandomUtils.alphanumeric(10));
+		final IndexRecord.WithTaxonomy record = getNewRecord(RandomUtils.alphanumeric(10));
 		for (int i = 0; i < RandomUtils.nextInt(1, 10); i++)
 			record.dynamicFacets("dynamic_facets_" + RandomUtils.nextInt(0, 2), RandomUtils.alphanumeric(10));
 		indexService.postDocument(record);
 		QueryBuilder queryBuilder = QueryDefinition.of(new MatchAllDocsQuery());
 		record.dynamicFacets.keySet().forEach(f -> queryBuilder.facet(f, FacetDefinition.of(10).build()));
 
-		final ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(queryBuilder.build());
+		final ResultDefinition.WithObject<? extends IndexRecord> result =
+				indexService.searchQuery(queryBuilder.build());
 
 		Assert.assertNotNull(result);
 		Assert.assertEquals(1, result.total_hits, 0);

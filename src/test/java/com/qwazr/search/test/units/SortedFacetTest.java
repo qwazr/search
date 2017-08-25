@@ -37,17 +37,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
-public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord {
+public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	public static List<IndexRecord> documents;
+	public static List<IndexRecord.NoTaxonomy> documents;
 	public static LinkedHashMap<String, AtomicInteger> facetTerms;
 	public static List<String> facetValues;
 
-	public static IndexRecord getNewRandomDocumentsWithFacets(String id,
-			LinkedHashMap<String, AtomicInteger> facetTerms, Collection<IndexRecord> records)
+	public static IndexRecord.NoTaxonomy getNewRandomDocumentsWithFacets(String id,
+			LinkedHashMap<String, AtomicInteger> facetTerms, Collection<IndexRecord.NoTaxonomy> records)
 			throws IOException, InterruptedException {
-		final IndexRecord record =
-				new IndexRecord(id).sortedSetDocValuesFacetField(Integer.toString(RandomUtils.nextInt(18, 22)));
+		final IndexRecord.NoTaxonomy record = new IndexRecord.NoTaxonomy(id).sortedSetDocValuesFacetField(
+				Integer.toString(RandomUtils.nextInt(18, 22)));
 		records.add(record);
 		facetTerms.computeIfAbsent(record.sortedSetDocValuesFacetField, key -> new AtomicInteger(0)).incrementAndGet();
 		return record;

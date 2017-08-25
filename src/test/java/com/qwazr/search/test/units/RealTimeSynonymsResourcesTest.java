@@ -33,7 +33,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class RealTimeSynonymsResourcesTest extends AbstractIndexTest.WithIndexRecord {
+public class RealTimeSynonymsResourcesTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	final static String[] EN_FR_SYNONYMS = new String[] { "hello world", "bonjour le monde" };
 	final static String[] EN_FR_DE_SYNONYMS = new String[] { "hello world", "bonjour le monde", "hallo welt" };
@@ -45,7 +45,7 @@ public class RealTimeSynonymsResourcesTest extends AbstractIndexTest.WithIndexRe
 		initIndexManager();
 		indexManager.registerConstructorParameter(SynonymMap.class, getSynonymMap(WHITESPACE_ANALYZER, EN_FR_SYNONYMS));
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").textSynonymsField1("hello world"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textSynonymsField1("hello world"));
 	}
 
 	static SynonymMap getSynonymMap(Analyzer analyzer, String[]... synonymsList) throws IOException, ParseException {

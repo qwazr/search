@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 
-public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord {
+public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException, ParseException {
@@ -44,10 +44,11 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord {
 				RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
 						RealTimeSynonymsResourcesTest.EN_FR_DE_SYNONYMS));
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").textField("Hello World")
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World")
 				.stringField("Hello World")
 				.textSynonymsField1("hello world"));
-		indexService.postDocument(new IndexRecord("2").textField("aaaaaa bbbbbb").stringField("aaaaaa bbbbbb"));
+		indexService.postDocument(
+				new IndexRecord.NoTaxonomy("2").textField("aaaaaa bbbbbb").stringField("aaaaaa bbbbbb"));
 	}
 
 	@Test

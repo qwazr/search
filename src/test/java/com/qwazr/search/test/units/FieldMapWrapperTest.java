@@ -29,16 +29,16 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FieldMapWrapperTest extends AbstractIndexTest.WithIndexRecord {
+public class FieldMapWrapperTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
-	private static List<IndexRecord> documents;
+	private static List<IndexRecord.WithTaxonomy> documents;
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
 		documents = new ArrayList<>();
 		for (int i = 0; i < RandomUtils.nextInt(1, 10); i++)
-			documents.add(new IndexRecord(RandomUtils.alphanumeric(RandomUtils.nextInt(2, 5))).intDocValue(
+			documents.add(new IndexRecord.WithTaxonomy(RandomUtils.alphanumeric(RandomUtils.nextInt(2, 5))).intDocValue(
 					RandomUtils.nextInt(2, 5)));
 		indexService.postDocuments(documents);
 	}
@@ -78,8 +78,8 @@ public class FieldMapWrapperTest extends AbstractIndexTest.WithIndexRecord {
 	@Test
 	public void searchQuery() throws ReflectiveOperationException, IOException {
 		IndexRecord indexRecord = documents.get(RandomUtils.nextInt(0, documents.size()));
-		ResultDefinition.WithObject<IndexPartialRecord> results = indexService.searchQuery(QueryDefinition.of(
-				new TermQuery(FieldDefinition.ID_FIELD, indexRecord.id)).returnedField("*").build(),
+		ResultDefinition.WithObject<IndexPartialRecord> results = indexService.searchQuery(
+				QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, indexRecord.id)).returnedField("*").build(),
 				IndexPartialRecord.class);
 		Assert.assertNotNull(results);
 		Assert.assertEquals(Long.valueOf(1), results.total_hits);

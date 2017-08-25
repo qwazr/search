@@ -32,7 +32,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class QueryParserTest extends AbstractIndexTest.WithIndexRecord {
+public class QueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException, java.text.ParseException {
@@ -41,28 +41,36 @@ public class QueryParserTest extends AbstractIndexTest.WithIndexRecord {
 				RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
 						RealTimeSynonymsResourcesTest.EN_FR_DE_SYNONYMS));
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").textField("Hello world").textSynonymsField1("hello world"));
+		indexService.postDocument(
+				new IndexRecord.NoTaxonomy("1").textField("Hello world").textSynonymsField1("hello world"));
 	}
 
 	@Test
 	public void testWithDefaultAnalyzer() {
-		QueryDefinition queryDef = QueryDefinition.of(QueryParser.of("textField").setDefaultOperator(
-				QueryParserOperator.AND).setQueryString("Hello").build()).build();
+		QueryDefinition queryDef = QueryDefinition.of(
+				QueryParser.of("textField").setDefaultOperator(QueryParserOperator.AND).setQueryString("Hello").build())
+				.build();
 		checkQuery(queryDef);
 	}
 
 	@Test
 	public void testWithCustomAnalyzer() {
-		QueryDefinition queryDef = QueryDefinition.of(QueryParser.of("textField").setDefaultOperator(
-				QueryParserOperator.AND).setQueryString("hello World").setAnalyzer(new StandardAnalyzer()).build()).
+		QueryDefinition queryDef = QueryDefinition.of(QueryParser.of("textField")
+				.setDefaultOperator(QueryParserOperator.AND)
+				.setQueryString("hello World")
+				.setAnalyzer(new StandardAnalyzer())
+				.build()).
 				build();
 		checkQuery(queryDef);
 	}
 
 	@Test
 	public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
-		Query luceneQuery = QueryParser.of("textField").setDefaultOperator(QueryParserOperator.AND).setQueryString(
-				"Hello World").build().getQuery(QueryContext.DEFAULT);
+		Query luceneQuery = QueryParser.of("textField")
+				.setDefaultOperator(QueryParserOperator.AND)
+				.setQueryString("Hello World")
+				.build()
+				.getQuery(QueryContext.DEFAULT);
 		Assert.assertNotNull(luceneQuery);
 	}
 

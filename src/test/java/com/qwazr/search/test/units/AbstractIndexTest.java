@@ -98,29 +98,68 @@ public abstract class AbstractIndexTest {
 		}
 	}
 
-	public static abstract class WithIndexRecord extends AbstractIndexTest {
+	public static abstract class WithIndexRecord<T extends IndexRecord> extends AbstractIndexTest {
 
-		protected static AnnotatedIndexService<IndexRecord> indexService;
+		protected AnnotatedIndexService<T> service;
 
-		public WithIndexRecord() {
+		protected WithIndexRecord(Class<T> indexRecordClass) {
 			try {
-				indexService = indexManager.getService(IndexRecord.class);
+				service = indexManager.getService(indexRecordClass);
 			} catch (URISyntaxException e) {
 				throw new RuntimeException(e);
 			}
 		}
 
-		static void initIndexService() throws URISyntaxException, IOException {
-			indexService = AbstractIndexTest.initIndexService(IndexRecord.class);
+		ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef, Long hitsExpected, String queryDebug) {
+			return checkQuery(service, queryDef, hitsExpected, queryDebug);
 		}
 
-		ResultDefinition.WithObject<IndexRecord> checkQuery(QueryDefinition queryDef, Long hitsExpected,
-				String queryDebug) {
-			return checkQuery(indexService, queryDef, hitsExpected, queryDebug);
-		}
-
-		ResultDefinition.WithObject<IndexRecord> checkQuery(QueryDefinition queryDef) {
+		ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef) {
 			return checkQuery(queryDef, 1L, null);
+		}
+
+		public static abstract class WithTaxonomy extends WithIndexRecord<IndexRecord.WithTaxonomy> {
+
+			public static AnnotatedIndexService<IndexRecord.WithTaxonomy> indexService;
+
+			static void initIndexService() throws IOException, URISyntaxException {
+				indexService = AbstractIndexTest.initIndexService(IndexRecord.WithTaxonomy.class);
+			}
+
+			protected WithTaxonomy() {
+				super(IndexRecord.WithTaxonomy.class);
+				indexService = service;
+			}
+
+			IndexRecord.WithTaxonomy getNewRecord() {
+				return new IndexRecord.WithTaxonomy();
+			}
+
+			IndexRecord.WithTaxonomy getNewRecord(String id) {
+				return new IndexRecord.WithTaxonomy(id);
+			}
+		}
+
+		public static abstract class NoTaxonomy extends WithIndexRecord<IndexRecord.NoTaxonomy> {
+
+			public static AnnotatedIndexService<IndexRecord.NoTaxonomy> indexService;
+
+			static void initIndexService() throws IOException, URISyntaxException {
+				indexService = AbstractIndexTest.initIndexService(IndexRecord.NoTaxonomy.class);
+			}
+
+			protected NoTaxonomy() {
+				super(IndexRecord.NoTaxonomy.class);
+				indexService = service;
+			}
+
+			IndexRecord.NoTaxonomy getNewRecord() {
+				return new IndexRecord.NoTaxonomy();
+			}
+
+			IndexRecord.NoTaxonomy getNewRecord(String id) {
+				return new IndexRecord.NoTaxonomy(id);
+			}
 		}
 	}
 }

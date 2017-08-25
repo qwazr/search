@@ -25,7 +25,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class DeleteByQueryTest extends AbstractIndexTest.WithIndexRecord {
+public class DeleteByQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
@@ -34,8 +34,8 @@ public class DeleteByQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void test() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1").textField("Hello World").stringField("Hello World"));
-		indexService.postDocument(new IndexRecord("2").textField("Hello World 2").stringField("Hello World 2"));
+		indexService.postDocument(getNewRecord("1").textField("Hello World").stringField("Hello World"));
+		indexService.postDocument(getNewRecord("2").textField("Hello World 2").stringField("Hello World 2"));
 		Assert.assertEquals(Long.valueOf(2), indexService.getIndexStatus().num_docs);
 		QueryDefinition queryDef = QueryDefinition.of(new TermsQuery(FieldDefinition.ID_FIELD, "1", "2")).build();
 		indexService.deleteByQuery(queryDef);

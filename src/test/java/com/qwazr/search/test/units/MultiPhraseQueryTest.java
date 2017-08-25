@@ -25,13 +25,13 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class MultiPhraseQueryTest extends AbstractIndexTest.WithIndexRecord {
+public class MultiPhraseQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").textField("Hello World"));
-		indexService.postDocument(new IndexRecord("2").textField("How are you ?"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?"));
 	}
 
 	@Test

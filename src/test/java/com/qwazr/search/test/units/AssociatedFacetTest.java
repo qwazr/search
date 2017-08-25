@@ -27,17 +27,17 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-public class AssociatedFacetTest extends AbstractIndexTest.WithIndexRecord {
+public class AssociatedFacetTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").intAssociatedFacet(111, "int1"));
-		indexService.postDocument(new IndexRecord("2").intAssociatedFacet(222, "int2"));
-		indexService.postDocument(new IndexRecord("3").intAssociatedFacet(333, "int3"));
-		indexService.postDocument(new IndexRecord("4").floatAssociatedFacet(444f, "float4"));
-		indexService.postDocument(new IndexRecord("5").floatAssociatedFacet(555f, "float5"));
-		indexService.postDocument(new IndexRecord("6").floatAssociatedFacet(666f, "float6"));
+		indexService.postDocument(new IndexRecord.WithTaxonomy("1").intAssociatedFacet(111, "int1"));
+		indexService.postDocument(new IndexRecord.WithTaxonomy("2").intAssociatedFacet(222, "int2"));
+		indexService.postDocument(new IndexRecord.WithTaxonomy("3").intAssociatedFacet(333, "int3"));
+		indexService.postDocument(new IndexRecord.WithTaxonomy("4").floatAssociatedFacet(444f, "float4"));
+		indexService.postDocument(new IndexRecord.WithTaxonomy("5").floatAssociatedFacet(555f, "float5"));
+		indexService.postDocument(new IndexRecord.WithTaxonomy("6").floatAssociatedFacet(666f, "float6"));
 	}
 
 	private void checkIntFacets(ResultDefinition result, String... expectedKeys) {

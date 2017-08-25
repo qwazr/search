@@ -81,8 +81,9 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		indexMap = new ConcurrentHashMap<>();
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
-		settingsDefinition = settingsFile.exists() ? ObjectMappers.JSON.readValue(settingsFile,
-				SchemaSettingsDefinition.class) : SchemaSettingsDefinition.EMPTY;
+		settingsDefinition = settingsFile.exists() ?
+				ObjectMappers.JSON.readValue(settingsFile, SchemaSettingsDefinition.class) :
+				SchemaSettingsDefinition.EMPTY;
 		checkSettings();
 
 		Files.list(this.schemaDirectory).filter(path -> Files.isDirectory(path)).forEach(indexPath -> {
@@ -153,7 +154,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	final private static Pattern backupNameMatcher = Pattern.compile("[^a-zA-Z0-9-_]");
 
 	private void checkBackupConfig() {
-		if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backup_directory_path))
+		if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backupDirectoryPath))
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"Backup path not defined in the schema settings - Schema: " + schemaName);
 	}
@@ -317,11 +318,11 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 			readWriteSemaphores.setWriteSize(null);
 			return;
 		}
-		readWriteSemaphores.setReadSize(settingsDefinition.max_simultaneous_read);
-		readWriteSemaphores.setWriteSize(settingsDefinition.max_simultaneous_write);
+		readWriteSemaphores.setReadSize(settingsDefinition.maxSimultaneousRead);
+		readWriteSemaphores.setWriteSize(settingsDefinition.maxSimultaneousWrite);
 
-		if (!StringUtils.isEmpty(settingsDefinition.backup_directory_path))
-			backupRootDirectory = new File(settingsDefinition.backup_directory_path).toPath();
+		if (!StringUtils.isEmpty(settingsDefinition.backupDirectoryPath))
+			backupRootDirectory = new File(settingsDefinition.backupDirectoryPath).toPath();
 		else
 			backupRootDirectory = null;
 	}

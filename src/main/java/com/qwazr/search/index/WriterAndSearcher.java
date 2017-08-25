@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
-
+ */
 package com.qwazr.search.index;
 
 import com.qwazr.utils.IOUtils;
@@ -30,7 +29,6 @@ import org.apache.lucene.store.Directory;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.concurrent.locks.ReentrantLock;
 
 interface WriterAndSearcher extends Closeable {
 
@@ -65,12 +63,9 @@ interface WriterAndSearcher extends Closeable {
 
 	abstract class Common implements WriterAndSearcher {
 
-		protected final ReentrantLock commitLock;
-
 		final IndexWriter indexWriter;
 
 		protected Common(final IndexWriter indexWriter) {
-			commitLock = new ReentrantLock(true);
 			this.indexWriter = indexWriter;
 		}
 
@@ -121,14 +116,9 @@ interface WriterAndSearcher extends Closeable {
 
 		@Override
 		final public void commit() throws IOException {
-			commitLock.lock();
-			try {
-				indexWriter.flush();
-				indexWriter.commit();
-				searcherManager.maybeRefresh();
-			} finally {
-				commitLock.unlock();
-			}
+			indexWriter.flush();
+			indexWriter.commit();
+			searcherManager.maybeRefresh();
 		}
 
 		@Override
@@ -187,16 +177,11 @@ interface WriterAndSearcher extends Closeable {
 
 		@Override
 		final public void commit() throws IOException {
-			commitLock.lock();
-			try {
-				taxonomyWriter.getIndexWriter().flush();
-				taxonomyWriter.commit();
-				indexWriter.flush();
-				indexWriter.commit();
-				searcherTaxonomyManager.maybeRefresh();
-			} finally {
-				commitLock.unlock();
-			}
+			taxonomyWriter.getIndexWriter().flush();
+			taxonomyWriter.commit();
+			indexWriter.flush();
+			indexWriter.commit();
+			searcherTaxonomyManager.maybeRefresh();
 		}
 
 		@Override

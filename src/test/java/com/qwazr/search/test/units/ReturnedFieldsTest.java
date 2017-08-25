@@ -26,7 +26,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class ReturnedFieldsTest extends AbstractIndexTest.WithIndexRecord {
+public class ReturnedFieldsTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	final private static String[] ID_FIELDS = { "1", "2", "3" };
 	final private static String[] STORED_FIELDS = { "doc1", "doc2", "doc3" };
@@ -40,7 +40,7 @@ public class ReturnedFieldsTest extends AbstractIndexTest.WithIndexRecord {
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
 		for (int i = 0; i < ID_FIELDS.length; i++)
-			indexService.postDocument(new IndexRecord(ID_FIELDS[i]).storedField(STORED_FIELDS[i])
+			indexService.postDocument(new IndexRecord.NoTaxonomy(ID_FIELDS[i]).storedField(STORED_FIELDS[i])
 					.sortedDocValue(SDV_FIELDS[i])
 					.doubleDocValue(DDV_FIELDS[i])
 					.multivaluedStringStoredField(MULTI_STRING_STORED_FIELDS[i])
@@ -51,8 +51,9 @@ public class ReturnedFieldsTest extends AbstractIndexTest.WithIndexRecord {
 		return QueryDefinition.of(new MatchAllDocsQuery()).start(0).rows(ID_FIELDS.length);
 	}
 
-	private ResultDefinition.WithObject<IndexRecord> withRecord(QueryBuilder queryBuilder) {
-		final ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(queryBuilder.build());
+	private ResultDefinition.WithObject<? extends IndexRecord> withRecord(QueryBuilder queryBuilder) {
+		final ResultDefinition.WithObject<? extends IndexRecord> result =
+				indexService.searchQuery(queryBuilder.build());
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(ID_FIELDS.length, result.total_hits, 0);
 		return result;

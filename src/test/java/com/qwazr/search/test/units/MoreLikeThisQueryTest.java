@@ -25,23 +25,22 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class MoreLikeThisQueryTest extends AbstractIndexTest.WithIndexRecord {
+public class MoreLikeThisQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").mlt("Hello World"));
-		indexService.postDocument(new IndexRecord("2").mlt("Hello world again"));
-		indexService.postDocument(new IndexRecord("3").mlt("absolutely nothing to match"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").mlt("Hello World"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("2").mlt("Hello world again"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("3").mlt("absolutely nothing to match"));
 	}
 
 	@Test
 	public void mltTest() {
-		ResultDefinition.WithObject<IndexRecord> result;
-		result = indexService.searchQuery(QueryDefinition.of(MoreLikeThisQuery.of("hello again", "mlt")
-				.minDocFreq(1)
-				.minTermFreq(1)
-				.build()).build());
+		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result;
+		result = indexService.searchQuery(
+				QueryDefinition.of(MoreLikeThisQuery.of("hello again", "mlt").minDocFreq(1).minTermFreq(1).build())
+						.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(2), result.total_hits);
 

@@ -34,10 +34,10 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord {
+public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	private static List<IndexRecord> documents;
-	private static List<IndexRecord> subset;
+	private static List<IndexRecord.NoTaxonomy> documents;
+	private static List<IndexRecord.NoTaxonomy> subset;
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
@@ -45,11 +45,11 @@ public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord {
 		documents = new ArrayList<>();
 		subset = new ArrayList<>();
 		for (int i = 0; i < RandomUtils.nextInt(300, 500); i++)
-			documents.add(new IndexRecord(Integer.toString(i)).intPoint(RandomUtils.nextInt(0, 2)));
+			documents.add(new IndexRecord.NoTaxonomy(Integer.toString(i)).intPoint(RandomUtils.nextInt(0, 2)));
 		indexService.postDocuments(documents);
 	}
 
-	void checkIterate(Iterator<IndexRecord> iterator, Set<String> ids) {
+	void checkIterate(Iterator<? extends IndexRecord> iterator, Set<String> ids) {
 		int initialSize = ids.size();
 		int count = 0;
 		while (iterator.hasNext()) {
@@ -72,9 +72,9 @@ public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void iterateAll() throws ReflectiveOperationException {
-		final Iterator<IndexRecord> iterator = indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery())
-				.returnedField("*")
-				.build(), IndexRecord.class);
+		final Iterator<? extends IndexRecord> iterator =
+				indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*").build(),
+						IndexRecord.NoTaxonomy.class);
 		Assert.assertNotNull(iterator);
 
 		final Set<String> ids = new HashSet<>();
@@ -87,8 +87,9 @@ public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord {
 	@Test
 	public void iterateSubSet() throws ReflectiveOperationException {
 
-		final Iterator<IndexRecord> iterator = indexService.searchIterator(QueryDefinition.of(
-				new IntExactQuery("intPoint", 0)).returnedField("*").build(), IndexRecord.class);
+		final Iterator<? extends IndexRecord> iterator = indexService.searchIterator(
+				QueryDefinition.of(new IntExactQuery("intPoint", 0)).returnedField("*").build(),
+				IndexRecord.NoTaxonomy.class);
 		Assert.assertNotNull(iterator);
 
 		final Set<String> ids = new HashSet<>();
@@ -102,8 +103,9 @@ public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord {
 	@Test
 	public void iterateNone() throws ReflectiveOperationException {
 
-		final Iterator<IndexRecord> iterator = indexService.searchIterator(QueryDefinition.of(
-				new TermQuery(FieldDefinition.ID_FIELD, -1)).returnedField("*").build(), IndexRecord.class);
+		final Iterator<? extends IndexRecord> iterator = indexService.searchIterator(
+				QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, -1)).returnedField("*").build(),
+				IndexRecord.NoTaxonomy.class);
 		Assert.assertNotNull(iterator);
 		Assert.assertFalse(iterator.hasNext());
 

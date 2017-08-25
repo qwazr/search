@@ -28,8 +28,10 @@ import com.qwazr.search.query.JoinQuery;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.RandomUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
+import com.qwazr.utils.concurrent.ThreadUtils;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
@@ -45,6 +47,7 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.PerSessionDirectoryFactory;
 import org.apache.lucene.replicator.ReplicationClient;
+import org.apache.lucene.replicator.Revision;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -74,6 +77,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 final public class IndexInstance implements Closeable {
@@ -103,6 +107,7 @@ final public class IndexInstance implements Closeable {
 	private final LocalReplicator localReplicator;
 	private final IndexReplicator indexReplicator;
 	private final ReentrantLock replicationLock;
+	private final ReentrantLock commitLock;
 
 	private final UpdatableAnalyzer indexAnalyzer;
 	private final UpdatableAnalyzer queryAnalyzer;
@@ -141,6 +146,7 @@ final public class IndexInstance implements Closeable {
 		this.localReplicator = builder.localReplicator;
 		this.indexReplicator = builder.indexReplicator;
 		this.replicationLock = new ReentrantLock(true);
+		this.commitLock = new ReentrantLock(true);
 		this.facetsReaderStateCache = null;
 		this.facetsReaderStateCacheLog = new ReentrantLock(true);
 	}
@@ -203,8 +209,9 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private void refreshFieldsAnalyzers() throws IOException {
-		final AnalyzerContext analyzerContext = new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, true,
-				globalAnalyzerFactoryMap, localAnalyzerFactoryMap);
+		final AnalyzerContext analyzerContext =
+				new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, true, globalAnalyzerFactoryMap,
+						localAnalyzerFactoryMap);
 		indexAnalyzer.update(analyzerContext.indexAnalyzerMap);
 		queryAnalyzer.update(analyzerContext.queryAnalyzerMap);
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
@@ -304,9 +311,9 @@ final public class IndexInstance implements Closeable {
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				try {
-					final Query fromQuery =
-							joinQuery.from_query == null ? new MatchAllDocsQuery() : joinQuery.from_query.getQuery(
-									buildQueryContext(indexSearcher, taxonomyReader, null));
+					final Query fromQuery = joinQuery.from_query == null ?
+							new MatchAllDocsQuery() :
+							joinQuery.from_query.getQuery(buildQueryContext(indexSearcher, taxonomyReader, null));
 					return JoinUtil.createJoinQuery(joinQuery.from_field, joinQuery.multiple_values_per_document,
 							joinQuery.to_field, fromQuery, indexSearcher,
 							joinQuery.score_mode == null ? ScoreMode.None : joinQuery.score_mode);
@@ -319,9 +326,14 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private void nrtCommit() throws IOException {
-		writerAndSearcher.commit();
-		localReplicator.publish(writerAndSearcher.newRevision());
-		multiSearchInstances.forEach(MultiSearchInstance::refresh);
+		commitLock.lock();
+		try {
+			writerAndSearcher.commit();
+			localReplicator.publish(writerAndSearcher.newRevision());
+			multiSearchInstances.forEach(MultiSearchInstance::refresh);
+		} finally {
+			commitLock.unlock();
+		}
 	}
 
 	final synchronized BackupStatus backup(final Path backupIndexDirectory) throws IOException {
@@ -353,11 +365,12 @@ final public class IndexInstance implements Closeable {
 
 			// Copy the data using replication
 			try (final Directory dataDir = FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_DATA));
-					final Directory taxoDir = taxonomyDirectory == null ? null : FSDirectory.open(
-							backupIndexDirectory.resolve(IndexFileSet.INDEX_TAXONOMY))) {
+					final Directory taxoDir = taxonomyDirectory == null ?
+							null :
+							FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_TAXONOMY))) {
 
-				final PerSessionDirectoryFactory sourceDirFactory = new PerSessionDirectoryFactory(
-						backupIndexDirectory.resolve(IndexFileSet.REPL_WORK));
+				final PerSessionDirectoryFactory sourceDirFactory =
+						new PerSessionDirectoryFactory(backupIndexDirectory.resolve(IndexFileSet.REPL_WORK));
 				try (final ReplicationClient replicationClient = new ReplicationClient(localReplicator,
 						IndexReplicator.getNewReplicationHandler(dataDir, taxoDir, () -> false), sourceDirFactory)) {
 					replicationClient.updateNow();
@@ -546,8 +559,8 @@ final public class IndexInstance implements Closeable {
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				try {
-					final Query query = queryDefinition.query.getQuery(
-							buildQueryContext(indexSearcher, taxonomyReader, null));
+					final Query query =
+							queryDefinition.query.getQuery(buildQueryContext(indexSearcher, taxonomyReader, null));
 					final IndexWriter indexWriter = writerAndSearcher.getIndexWriter();
 					int docs = indexWriter.numDocs();
 					indexWriter.deleteDocuments(query);

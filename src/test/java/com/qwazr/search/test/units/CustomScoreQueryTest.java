@@ -41,24 +41,24 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
+public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").textField("Hello World")
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World")
 				.floatDocValue(2.0F)
 				.intDocValue(2)
 				.doubleDocValue(2.0d)
 				.longDocValue(2));
-		indexService.postDocument(new IndexRecord("2").textField("How are you ?")
+		indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?")
 				.floatDocValue(3.0F)
 				.intDocValue(3)
 				.doubleDocValue(3.0d)
 				.longDocValue(3));
 	}
 
-	private void checkFieldSourceResult(ResultDefinition.WithObject<IndexRecord> result, float... values) {
+	private void checkFieldSourceResult(ResultDefinition.WithObject<? extends IndexRecord> result, float... values) {
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(values.length), result.total_hits);
 		int i = 0;
@@ -68,7 +68,7 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testFloat() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(new FloatFieldSource("floatDocValue"))))
 				.build());
 		checkFieldSourceResult(result, 3.0F, 2.0F);
@@ -76,7 +76,7 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testDouble() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(),
 						new FunctionQuery(new DoubleFieldSource("doubleDocValue")))).build());
 		checkFieldSourceResult(result, 3.0F, 2.0F);
@@ -84,7 +84,7 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testLong() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(new LongFieldSource("longDocValue"))))
 				.build());
 		checkFieldSourceResult(result, 3.0F, 2.0F);
@@ -92,7 +92,7 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testInt() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(new IntFieldSource("intDocValue"))))
 				.build());
 		checkFieldSourceResult(result, 3.0F, 2.0F);
@@ -100,7 +100,7 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testMax() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(
 						new MaxFloatFunction(new IntFieldSource("intDocValue"), new LongFieldSource("longDocValue")))))
 				.build());
@@ -109,7 +109,7 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testMin() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(
 						new MinFloatFunction(new IntFieldSource("intDocValue"), new LongFieldSource("longDocValue")))))
 				.build());
@@ -118,7 +118,7 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testSum() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(
 						new SumFloatFunction(new FloatFieldSource("floatDocValue"),
 								new DoubleFieldSource("doubleDocValue"))))).build());
@@ -127,7 +127,7 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testPow() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(
 						new PowFloatFunction(new LongFieldSource("longDocValue"), new IntFieldSource("intDocValue")))))
 				.build());
@@ -136,7 +136,7 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testProduct() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(
 						new ProductFloatFunction(new FloatFieldSource("floatDocValue"),
 								new DoubleFieldSource("doubleDocValue"), new LongFieldSource("longDocValue"),
@@ -146,7 +146,7 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testDiv() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(
 						new DivFloatFunction(new LongFieldSource("longDocValue"), new IntFieldSource("intDocValue")))))
 				.build());
@@ -155,7 +155,7 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testConstDouble() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(new DoubleConstValueSource(5.0d))))
 				.build());
 		checkFieldSourceResult(result, 5.0F, 5.0F);
@@ -163,21 +163,21 @@ public class CustomScoreQueryTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void testConstFloat() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(new ConstValueSource(6.0f)))).build());
 		checkFieldSourceResult(result, 6.0F, 6.0F);
 	}
 
 	@Test
 	public void testNumDocs() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(new NumDocsValueSource()))).build());
 		checkFieldSourceResult(result, 2.0F, 2.0F);
 	}
 
 	@Test
 	public void testMaxDocs() {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new CustomScoreQuery(new MatchAllDocsQuery(), new FunctionQuery(new MaxDocValueSource()))).build());
 		checkFieldSourceResult(result, 2.0F, 2.0F);
 	}

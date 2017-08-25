@@ -27,19 +27,19 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class ConstantScoreAndBoostQueryTest extends AbstractIndexTest.WithIndexRecord {
+public class ConstantScoreAndBoostQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
-		indexService.postDocument(new IndexRecord("1").textField("Hello World"));
-		indexService.postDocument(new IndexRecord("2").textField("How are you ?"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?"));
 	}
 
 	@Test
 	public void test() {
 		final float scoreValue = Float.MAX_VALUE - 1;
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
 				new BoostQuery(new ConstantScoreQuery(new TermQuery("textField", "hello")), scoreValue)).build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(1), result.total_hits);

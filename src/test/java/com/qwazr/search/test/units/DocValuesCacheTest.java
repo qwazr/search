@@ -26,7 +26,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class DocValuesCacheTest extends AbstractIndexTest.WithIndexRecord {
+public class DocValuesCacheTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	static public void setup() throws IOException, URISyntaxException {
@@ -34,8 +34,8 @@ public class DocValuesCacheTest extends AbstractIndexTest.WithIndexRecord {
 	}
 
 	void checkDocValue(String id, long expectedHits, Double expectedValue) {
-		ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
-				new TermQuery(FieldDefinition.ID_FIELD, id)).returnedField("*").build());
+		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(
+				QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, id)).returnedField("*").build());
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(expectedHits, result.total_hits, 0);
@@ -47,20 +47,20 @@ public class DocValuesCacheTest extends AbstractIndexTest.WithIndexRecord {
 
 	@Test
 	public void checkUpdateDv() throws IOException, InterruptedException {
-		indexService.postDocument(new IndexRecord("1"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1"));
 		checkDocValue("1", 1, null);
-		indexService.postDocument(new IndexRecord("1").doubleDocValue(1.11d));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").doubleDocValue(1.11d));
 		checkDocValue("1", 1, 1.11d);
 		checkDocValue("1", 1, 1.11d);
-		indexService.postDocument(new IndexRecord("1").doubleDocValue(2.22d));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").doubleDocValue(2.22d));
 		checkDocValue("1", 1, 2.22d);
-		indexService.updateDocumentValues(new IndexRecord("1").doubleDocValue(3.33d));
+		indexService.updateDocumentValues(new IndexRecord.NoTaxonomy("1").doubleDocValue(3.33d));
 		checkDocValue("1", 1, 3.33d);
 		indexService.deleteByQuery(QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, "1")).build());
 		checkDocValue("1", 0, null);
-		indexService.postDocument(new IndexRecord("1").doubleDocValue(4.44d));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").doubleDocValue(4.44d));
 		checkDocValue("1", 1, 4.44d);
-		indexService.postDocument(new IndexRecord("2").doubleDocValue(5.55d));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("2").doubleDocValue(5.55d));
 		checkDocValue("2", 1, 5.55d);
 		indexService.deleteAll();
 		checkDocValue("1", 0, null);

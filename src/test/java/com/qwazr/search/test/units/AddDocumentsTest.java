@@ -33,8 +33,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
-public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord {
+public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	final private static String[] ID_FIELDS = { "1", "2", "3" };
 	final private static String[] STORED_FIELDS = { "doc1", "doc2", "doc3" };
@@ -48,30 +53,32 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord {
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
 		for (int i = 0; i < ID_FIELDS.length; i++)
-			indexService.postDocument(new IndexRecord(ID_FIELDS[i]).storedField(STORED_FIELDS[i])
+			indexService.postDocument(new IndexRecord.NoTaxonomy(ID_FIELDS[i]).storedField(STORED_FIELDS[i])
 					.sortedDocValue(SDV_FIELDS[i])
 					.doubleDocValue(DDV_FIELDS[i])
 					.multivaluedStringStoredField(MULTI_STRING_STORED_FIELDS[i])
 					.multivaluedIntegerStoredField(MULTI_INTEGER_STORED_FIELDS[i]));
 	}
 
-	IndexRecord getSingleDoc(int pos) {
-		return new IndexRecord(ID_FIELDS[pos]).storedField(STORED_FIELDS[pos])
+	IndexRecord.NoTaxonomy getSingleDoc(int pos) {
+		return new IndexRecord.NoTaxonomy(ID_FIELDS[pos]).storedField(STORED_FIELDS[pos])
 				.sortedDocValue(SDV_FIELDS[pos])
 				.doubleDocValue(DDV_FIELDS[pos])
 				.multivaluedStringStoredField(MULTI_STRING_STORED_FIELDS[pos])
 				.multivaluedIntegerStoredField(MULTI_INTEGER_STORED_FIELDS[pos]);
 	}
 
-	Collection<IndexRecord> getDocCollection() {
-		final List<IndexRecord> records = new ArrayList<>();
+	Collection<IndexRecord.NoTaxonomy> getDocCollection() {
+		final List<IndexRecord.NoTaxonomy> records = new ArrayList<>();
 		for (int i = 0; i < ID_FIELDS.length; i++)
 			records.add(getSingleDoc(i));
 		return records;
 	}
 
-	private ResultDefinition.WithObject<IndexRecord> withRecord(QueryBuilder queryBuilder, int expectedSize) {
-		final ResultDefinition.WithObject<IndexRecord> result = indexService.searchQuery(queryBuilder.build());
+	private ResultDefinition.WithObject<IndexRecord.NoTaxonomy> withRecord(QueryBuilder queryBuilder,
+			int expectedSize) {
+		final ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result =
+				indexService.searchQuery(queryBuilder.build());
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(expectedSize, result.total_hits, 0);
 		return result;
@@ -142,6 +149,50 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord {
 		indexService.addDocuments(getDocCollection(), commitData);
 		checkResult(3);
 		Assert.assertTrue(Objects.deepEquals(commitData, indexService.getIndexStatus().commit_user_data));
+	}
+
+	IndexRecord.NoTaxonomy getRandomDoc() {
+		return getSingleDoc(RandomUtils.nextInt(0, ID_FIELDS.length));
+	}
+
+	Collection<IndexRecord.NoTaxonomy> getRandomDocs(int size) {
+		final List<IndexRecord.NoTaxonomy> records = new ArrayList<>(size);
+		for (int i = 0; i < size; i++)
+			records.add(getRandomDoc());
+		return records;
+	}
+
+	@Test
+	public void concurrentAddDocument() throws InterruptedException, ExecutionException {
+
+		final int threadNumberBase = 5;
+		final ExecutorService executor = Executors.newFixedThreadPool(threadNumberBase * 2);
+
+		final List<Future<?>> futures = new ArrayList<>();
+		final long endTime = System.currentTimeMillis() + 1000 * 10;
+		for (int i = 0; i < threadNumberBase; i++) {
+			futures.add(executor.submit(() -> {
+				try {
+					while (System.currentTimeMillis() < endTime)
+						indexService.addDocument(getRandomDoc(), null);
+				} catch (IOException | InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			}));
+			futures.add(executor.submit(() -> {
+				try {
+					while (System.currentTimeMillis() < endTime)
+						indexService.addDocuments(getRandomDocs(10), null);
+				} catch (IOException | InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			}));
+		}
+
+		for (Future future : futures)
+			future.get();
+		executor.shutdown();
+		executor.awaitTermination(1, TimeUnit.HOURS);
 	}
 
 }
