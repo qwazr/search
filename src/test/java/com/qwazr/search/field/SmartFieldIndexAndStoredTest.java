@@ -21,8 +21,8 @@ import com.qwazr.search.annotations.SmartField;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.test.units.AbstractIndexTest;
-import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.RandomUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -65,13 +65,14 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 		}
 
 		// We should also found it using the secondId
-		Assert.assertEquals(record, indexService.searchQuery(QueryDefinition.of(new TermQuery("id2", record.getId()))
-				.returnedField("*")
-				.build()).getDocuments().get(0).record);
+		Assert.assertEquals(record, indexService.searchQuery(
+				QueryDefinition.of(new TermQuery("id2", record.getId())).returnedField("*").build())
+				.getDocuments()
+				.get(0).record);
 
 		// Find it on map
-		Assert.assertEquals(record, indexService.searchQueryWithMap(QueryDefinition.of(
-				new TermQuery(FieldDefinition.ID_FIELD, record.getId())).returnedField("*").build())
+		Assert.assertEquals(record, indexService.searchQueryWithMap(
+				QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, record.getId())).returnedField("*").build())
 				.getDocuments()
 				.get(0)
 				.getFields());
@@ -141,8 +142,8 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 				return Objects.equals(getId(), r.getId()) && Objects.equals(getStoredId(), r.getStoredId());
 			} else if (o instanceof Map) {
 				final Map m = (Map) o;
-				return Objects.equals(getId(), m.get(FieldDefinition.ID_FIELD)) && Objects.equals(getStoredId(),
-						m.get("storedId"));
+				return Objects.equals(getId(), m.get(FieldDefinition.ID_FIELD)) &&
+						Objects.equals(getStoredId(), m.get("storedId"));
 			}
 			return false;
 		}
