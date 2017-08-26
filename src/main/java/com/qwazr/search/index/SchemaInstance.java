@@ -108,7 +108,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	private IndexInstanceManager checkIndexExists(final String indexName,
 			final IndexInstanceManager indexInstanceManager) {
 		if (indexInstanceManager == null)
-			throw new ServerException(Response.Status.NOT_FOUND, () -> "Index not found: " + indexName);
+			throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);
 		return indexInstanceManager;
 	}
 
@@ -125,7 +125,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		try {
 			return ensureWriterOpen ? indexInstanceManager.getIndexInstance() : indexInstanceManager.open();
 		} catch (Exception e) {
-			throw new ServerException(e);
+			throw ServerException.of(e);
 		}
 	}
 
@@ -187,7 +187,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 				try {
 					consumer.accept(name, indexInstanceManager.open());
 				} catch (Exception e) {
-					throw new ServerException(e);
+					throw ServerException.of(e);
 				}
 			});
 		} else
@@ -203,7 +203,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 				try {
 					results.put(idxName, indexInstance.backup(backupDirectory.resolve(idxName)));
 				} catch (IOException e) {
-					throw new ServerException(e);
+					throw ServerException.of(e);
 				}
 			});
 			return results;
@@ -220,7 +220,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 			} else
 				consumer.accept(getBackupDirectory(backupName, false));
 		} catch (IOException e) {
-			throw new ServerException(e);
+			throw ServerException.of(e);
 		}
 	}
 
@@ -240,7 +240,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 						if (Files.exists(backupIndexDirectory) && Files.isDirectory(backupIndexDirectory))
 							backupResults.put(idxName, indexInstance.getBackup(backupIndexDirectory, extractVersion));
 					} catch (IOException e) {
-						throw new ServerException(e);
+						throw ServerException.of(e);
 					}
 				});
 				if (!backupResults.isEmpty())
@@ -260,7 +260,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 				if (Files.exists(backupDirectory))
 					Files.list(backupDirectory).filter(path -> Files.isDirectory(path)).forEach(consumer);
 			} catch (IOException e) {
-				throw new ServerException(e);
+				throw ServerException.of(e);
 			}
 		} else {
 			final Path indexPath = backupDirectory.resolve(indexName);
@@ -282,7 +282,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 						FileUtils.deleteDirectory(backupIndexDirectory);
 						counter.incrementAndGet();
 					} catch (IOException e) {
-						throw new ServerException(e);
+						throw ServerException.of(e);
 					}
 
 					try {
@@ -290,7 +290,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 							if (Files.list(backupDirectory).count() == 0)
 								Files.deleteIfExists(backupDirectory);
 					} catch (IOException e) {
-						throw new ServerException(e);
+						throw ServerException.of(e);
 					}
 				});
 			});

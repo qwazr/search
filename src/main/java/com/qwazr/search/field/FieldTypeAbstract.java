@@ -54,9 +54,9 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 		this.definition = builder.definition;
 		setup(builder);
 		this.bytesRefConverter = builder.bytesRefConverter;
-		this.facetConfig =
-				builder.facetConfig == null || builder.facetConfig.isEmpty() ? null : builder.facetConfig.toArray(
-						new FieldTypeInterface.Facet[builder.facetConfig.size()]);
+		this.facetConfig = builder.facetConfig == null || builder.facetConfig.isEmpty() ?
+				null :
+				builder.facetConfig.toArray(new FieldTypeInterface.Facet[builder.facetConfig.size()]);
 		this.fieldProviders = builder.fieldProviders == null || builder.fieldProviders.isEmpty() ?
 				null :
 				builder.fieldProviders.toArray(new FieldTypeInterface.FieldProvider[builder.fieldProviders.size()]);
@@ -157,7 +157,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 
 	protected void fillMap(final String fieldName, final Map<Object, Object> values, final FieldConsumer consumer) {
 		throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-				() -> "Map is not asupported type for the field: " + fieldName);
+				"Map is not asupported type for the field: " + fieldName);
 	}
 
 	protected void fillJSObject(final String fieldName, final JSObject values, final FieldConsumer consumer) {
@@ -170,7 +170,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 			((Map<String, Object>) value).forEach((fieldName, valueObject) -> {
 				if (!wildcardMatcher.match(fieldName))
 					throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-							() -> "The field name does not match the field pattern: " + wildcardName);
+							"The field name does not match the field pattern: " + wildcardName);
 				fill(fieldName, valueObject, fieldConsumer);
 			});
 		} else

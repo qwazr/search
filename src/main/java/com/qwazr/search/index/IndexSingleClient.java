@@ -21,6 +21,7 @@ import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.JsonClientAbstract;
 import com.qwazr.server.response.ResponseValidator;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpRequest;
 import org.apache.http.entity.ContentType;
@@ -35,11 +36,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.logging.Logger;
 
 public class IndexSingleClient extends JsonClientAbstract implements IndexServiceInterface {
 
+	private final static Logger LOGGER = LoggerUtils.getLogger(IndexSingleClient.class);
+
 	public IndexSingleClient(final RemoteService remote) {
-		super(remote);
+		super(remote, LOGGER);
 	}
 
 	private final static String PATH = "/" + IndexServiceInterface.PATH;

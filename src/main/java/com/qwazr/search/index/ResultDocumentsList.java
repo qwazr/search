@@ -65,7 +65,7 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 					try {
 						return fieldType.getConverter(fieldName, indexReader);
 					} catch (IOException e) {
-						throw new ServerException(e);
+						throw ServerException.of(e);
 					}
 				});
 				if (converter != null)

@@ -78,7 +78,7 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext {
 		try {
 			return new QueryExecution<T>(this, queryDefinition).execute(resultDocuments);
 		} catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
-			throw new ServerException(e);
+			throw ServerException.of(e);
 		}
 	}
 
@@ -99,8 +99,8 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext {
 				queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
 						wrapper.fieldMap.keySet() :
 						queryDefinition.returned_fields;
-		final ResultDocumentsObject<T> resultDocumentsObject = new ResultDocumentsObject<>(this, queryDefinition,
-				returnedFields, wrapper);
+		final ResultDocumentsObject<T> resultDocumentsObject =
+				new ResultDocumentsObject<>(this, queryDefinition, returnedFields, wrapper);
 		return (ResultDefinition.WithObject<T>) search(queryDefinition, resultDocumentsObject);
 	}
 

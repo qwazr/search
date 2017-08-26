@@ -55,7 +55,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 			try {
 				this.record = wrapper.constructor.newInstance();
 			} catch (ReflectiveOperationException e) {
-				throw new ServerException(e);
+				throw ServerException.of(e);
 			}
 			this.fieldMap = wrapper.fieldMap;
 		}
@@ -69,14 +69,14 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		void setDocValuesField(final String fieldName, final ValueConverter converter) {
 			final FieldSetter fieldSetter = fieldMap.get(fieldName);
 			if (fieldSetter == null)
-				throw new ServerException(() -> "Unknown field " + fieldName + " for class " + record.getClass());
+				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
 			converter.fill(record, fieldSetter, scoreDoc.doc);
 		}
 
 		private FieldSetter checkFieldSetter(final String fieldName) {
 			final FieldSetter fieldSetter = fieldMap.get(fieldName);
 			if (fieldSetter == null)
-				throw new ServerException(() -> "Unknown field " + fieldName + " for class " + record.getClass());
+				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
 			return fieldSetter;
 		}
 
@@ -94,8 +94,8 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 					fieldSetter.set(record, SerializationUtils.fromExternalizorBytes(values.get(0),
 							(Class<? extends Serializable>) fieldType));
 				} catch (IOException | ReflectiveOperationException e) {
-					throw new ServerException(
-							() -> "Deserialization failure " + fieldName + " for class " + record.getClass(), e);
+					throw ServerException.of("Deserialization failure " + fieldName + " for class " + record.getClass(),
+							e);
 				}
 			} else
 				fieldSetter.setValue(record, values);

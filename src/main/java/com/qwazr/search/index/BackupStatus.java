@@ -72,7 +72,7 @@ public class BackupStatus {
 			try {
 				size.addAndGet(Files.size(path));
 			} catch (IOException e) {
-				throw new ServerException(e);
+				throw ServerException.of(e);
 			}
 			count.incrementAndGet();
 		});

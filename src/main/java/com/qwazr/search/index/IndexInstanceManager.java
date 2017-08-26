@@ -70,7 +70,7 @@ class IndexInstanceManager implements Closeable {
 			settings = fileSet.loadSettings();
 
 		} catch (IOException e) {
-			throw new ServerException(e);
+			throw ServerException.of(e);
 		}
 	}
 
@@ -105,7 +105,7 @@ class IndexInstanceManager implements Closeable {
 				if (isNewMaster(newSettings)) {
 					if (indexInstance.getStatus().num_docs > 0)
 						throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-								() -> "This index already contains document - Index: " + fileSet.mainDirectory);
+								"This index already contains document - Index: " + fileSet.mainDirectory);
 					indexInstance.close();
 					indexInstance = null;
 					FileUtils.deleteDirectoryQuietly(fileSet.mainDirectory.toPath());
