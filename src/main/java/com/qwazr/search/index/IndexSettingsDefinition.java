@@ -43,6 +43,8 @@ public class IndexSettingsDefinition {
 	public static final int DEFAULT_MAX_MERGE_AT_ONCE = 10;
 	public static final int DEFAULT_SEGMENTS_PER_TIER = 10;
 	public static final double DEFAULT_MAX_MERGED_SEGMENT_MB = 5 * 1024 * 1024;
+	public static final double DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB = 5;
+	public static final double DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB = 60;
 
 	@JsonProperty("similarity_class")
 	final public String similarityClass;
@@ -79,6 +81,12 @@ public class IndexSettingsDefinition {
 	@JsonProperty("merged_segment_warmer")
 	final public Boolean mergedSegmentWarmer;
 
+	@JsonProperty("nrt_caching_directory_max_merge_size_mb")
+	final public Double nrtCachingDirectoryMaxMergeSizeMB;
+
+	@JsonProperty("nrt_caching_directory_max_cached_mb")
+	final public Double nrtCachingDirectoryMaxCachedMB;
+
 	public IndexSettingsDefinition() {
 		directoryType = null;
 		mergeScheduler = null;
@@ -92,6 +100,8 @@ public class IndexSettingsDefinition {
 		sortedSetFacetField = null;
 		indexReaderWarmer = null;
 		mergedSegmentWarmer = null;
+		nrtCachingDirectoryMaxMergeSizeMB = null;
+		nrtCachingDirectoryMaxCachedMB = null;
 	}
 
 	private IndexSettingsDefinition(final Builder builder) {
@@ -107,6 +117,8 @@ public class IndexSettingsDefinition {
 		this.sortedSetFacetField = builder.sortedSetFacetField;
 		this.indexReaderWarmer = builder.indexReaderWarmer;
 		this.mergedSegmentWarmer = builder.mergedSegmentWarmer;
+		this.nrtCachingDirectoryMaxMergeSizeMB = builder.nrtCachingDirectoryMaxMergeSizeMB;
+		this.nrtCachingDirectoryMaxCachedMB = builder.nrtCachingDirectoryMaxCachedMB;
 	}
 
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
@@ -150,6 +162,10 @@ public class IndexSettingsDefinition {
 			return false;
 		if (!Objects.equals(mergedSegmentWarmer, s.mergedSegmentWarmer))
 			return false;
+		if (!Objects.equals(nrtCachingDirectoryMaxMergeSizeMB, s.nrtCachingDirectoryMaxMergeSizeMB))
+			return false;
+		if (!Objects.equals(nrtCachingDirectoryMaxCachedMB, s.nrtCachingDirectoryMaxCachedMB))
+			return false;
 		return true;
 	}
 
@@ -179,6 +195,8 @@ public class IndexSettingsDefinition {
 		private String sortedSetFacetField;
 		private Boolean indexReaderWarmer;
 		private Boolean mergedSegmentWarmer;
+		private Double nrtCachingDirectoryMaxMergeSizeMB;
+		private Double nrtCachingDirectoryMaxCachedMB;
 
 		private Builder() {
 		}
@@ -196,6 +214,8 @@ public class IndexSettingsDefinition {
 			sortedSetFacetField = annotatedIndex.sortedSetFacetField();
 			indexReaderWarmer = annotatedIndex.indexReaderWarmer();
 			mergedSegmentWarmer = annotatedIndex.mergedSegmentWarmer();
+			nrtCachingDirectoryMaxMergeSizeMB = annotatedIndex.nrtCachingDirectoryMaxMergeSizeMB();
+			nrtCachingDirectoryMaxCachedMB = annotatedIndex.nrtCachingDirectoryMaxCachedMB();
 		}
 
 		private Builder(final IndexSettingsDefinition settings) {
@@ -211,6 +231,8 @@ public class IndexSettingsDefinition {
 			this.sortedSetFacetField = settings.sortedSetFacetField;
 			this.indexReaderWarmer = settings.indexReaderWarmer;
 			this.mergedSegmentWarmer = settings.mergedSegmentWarmer;
+			this.nrtCachingDirectoryMaxMergeSizeMB = settings.nrtCachingDirectoryMaxMergeSizeMB;
+			this.nrtCachingDirectoryMaxCachedMB = settings.nrtCachingDirectoryMaxCachedMB;
 		}
 
 		public Builder type(final Type directoryType) {
@@ -281,6 +303,16 @@ public class IndexSettingsDefinition {
 
 		public Builder mergedSegmentWarmer(final Boolean mergedSegmentWarmer) {
 			this.mergedSegmentWarmer = mergedSegmentWarmer;
+			return this;
+		}
+
+		public Builder nrtCachingDirectoryMaxMergeSizeMB(final Double nrtCachingDirectoryMaxMergeSizeMB) {
+			this.nrtCachingDirectoryMaxMergeSizeMB = nrtCachingDirectoryMaxMergeSizeMB;
+			return this;
+		}
+
+		public Builder nrtCachingDirectoryMaxCachedMB(final Double nrtCachingDirectoryMaxCachedMB) {
+			this.nrtCachingDirectoryMaxCachedMB = nrtCachingDirectoryMaxCachedMB;
 			return this;
 		}
 

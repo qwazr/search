@@ -528,6 +528,7 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(indexStatus.segments_bytes_size);
 		Assert.assertNotNull(indexStatus.segments_size);
 		Assert.assertNotNull(indexStatus.query_cache);
+		Assert.assertNotNull(indexStatus.directory_cached_ram_used);
 	}
 
 	@Test

@@ -39,6 +39,8 @@ import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.LRUQueryCache;
 import org.apache.lucene.search.QueryCache;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.NRTCachingDirectory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -79,6 +81,8 @@ public class IndexStatus {
 	final public MergePolicyStatus merge_policy;
 	final public QueryCacheStats query_cache;
 	final public Map<String, String> commit_user_data;
+	final public String[] directory_cached_files;
+	final public String directory_cached_ram_used;
 
 	@JsonCreator
 	IndexStatus(@JsonProperty("num_docs") Long num_docs, @JsonProperty("num_deleted_docs") Long num_deleted_docs,
@@ -96,7 +100,9 @@ public class IndexStatus {
 			@JsonProperty("segments_size") String segments_size,
 			@JsonProperty("merge_policy") MergePolicyStatus merge_policy,
 			@JsonProperty("query_cache") QueryCacheStats query_cache,
-			@JsonProperty("commit_user_data") Map<String, String> commit_user_data) {
+			@JsonProperty("commit_user_data") Map<String, String> commit_user_data,
+			@JsonProperty("directory_cached_files") String[] directory_cached_files,
+			@JsonProperty("directory_cached_ram_used") String directory_cached_ram_used) {
 		this.num_docs = num_docs;
 		this.num_deleted_docs = num_deleted_docs;
 		this.merge_policy = merge_policy;
@@ -117,11 +123,13 @@ public class IndexStatus {
 		this.segments_size = segments_size;
 		this.query_cache = query_cache;
 		this.commit_user_data = commit_user_data;
+		this.directory_cached_files = directory_cached_files;
+		this.directory_cached_ram_used = directory_cached_ram_used;
 	}
 
-	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final IndexSearcher indexSearcher,
-			final IndexWriter indexWriter, final IndexSettingsDefinition settings, final Set<String> analyzers,
-			final Set<String> fields) throws IOException {
+	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final Directory directory,
+			final IndexSearcher indexSearcher, final IndexWriter indexWriter, final IndexSettingsDefinition settings,
+			final Set<String> analyzers, final Set<String> fields) throws IOException {
 		final IndexReader indexReader = indexSearcher.getIndexReader();
 		num_docs = (long) indexReader.numDocs();
 		num_deleted_docs = (long) indexReader.numDeletedDocs();
@@ -188,6 +196,15 @@ public class IndexStatus {
 		this.query_cache = queryCache != null && queryCache instanceof LRUQueryCache ?
 				new QueryCacheStats((LRUQueryCache) queryCache) :
 				null;
+
+		if (directory != null && directory instanceof NRTCachingDirectory) {
+			final NRTCachingDirectory nrtCachingDirectory = (NRTCachingDirectory) directory;
+			directory_cached_files = nrtCachingDirectory.listCachedFiles();
+			directory_cached_ram_used = FileUtils.byteCountToDisplaySize(nrtCachingDirectory.ramBytesUsed());
+		} else {
+			directory_cached_files = null;
+			directory_cached_ram_used = null;
+		}
 	}
 
 	private static ArrayList<SegmentInfoStatus> getSegmentsInfoStatus(final SegmentInfos segmentInfos,

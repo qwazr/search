@@ -58,4 +58,8 @@ public @interface Index {
 	boolean indexReaderWarmer() default true;
 
 	boolean mergedSegmentWarmer() default true;
+
+	double nrtCachingDirectoryMaxMergeSizeMB() default IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB;
+
+	double nrtCachingDirectoryMaxCachedMB() default IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB;
 }

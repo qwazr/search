@@ -39,6 +39,7 @@ import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.NRTCachingDirectory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.InfoStream;
 
@@ -131,10 +132,19 @@ class IndexInstanceBuilder {
 	}
 
 	static Directory getDirectory(IndexSettingsDefinition settings, File dataDirectory) throws IOException {
-		return settings == null || settings.directoryType == null ||
+		final Directory directory = settings == null || settings.directoryType == null ||
 				settings.directoryType == IndexSettingsDefinition.Type.FSDirectory ?
 				FSDirectory.open(dataDirectory.toPath()) :
 				new RAMDirectory();
+		final double maxMergeSizeMB = settings == null || settings.nrtCachingDirectoryMaxMergeSizeMB == null ?
+				IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB :
+				settings.nrtCachingDirectoryMaxMergeSizeMB;
+		final double maxCacheMB = settings == null || settings.nrtCachingDirectoryMaxCachedMB == null ?
+				IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB :
+				settings.nrtCachingDirectoryMaxCachedMB;
+		if (maxMergeSizeMB == 0 || maxCacheMB == 0)
+			return directory;
+		return new NRTCachingDirectory(directory, maxMergeSizeMB, maxCacheMB);
 	}
 
 	private final static int MERGE_SCHEDULER_SSD_THREADS =
