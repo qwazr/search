@@ -17,7 +17,6 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import org.apache.lucene.replicator.IndexAndTaxonomyReplicationHandler;
@@ -38,9 +37,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -54,8 +51,6 @@ class IndexReplicator implements Replicator {
 
 	private final ReplicationClient replicationClient;
 
-	private final Set<InputStream> inputStreams;
-
 	IndexReplicator(final IndexServiceInterface localService, final RemoteIndex master, final File masterUuidFile,
 			final Directory indexDirectory, final Directory taxonomyDirectory, final Path replWorkPath,
 			final Callable<Boolean> callback) throws URISyntaxException, IOException {
@@ -67,8 +62,6 @@ class IndexReplicator implements Replicator {
 			this.masterUuidString = masterUuid.toString();
 		} else
 			checkRemoteMasterUuid();
-
-		this.inputStreams = new LinkedHashSet<>();
 
 		final ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(replWorkPath);
 		this.replicationClient =
@@ -90,7 +83,14 @@ class IndexReplicator implements Replicator {
 	}
 
 	final String checkRemoteMasterUuid() throws IOException {
-		final UUID remoteMasterUuid = UUID.fromString(checkService().getIndex(master.schema, master.index).index_uuid);
+		final UUID remoteMasterUuid;
+		try {
+			remoteMasterUuid = UUID.fromString(checkService().getIndex(master.schema, master.index).index_uuid);
+		} catch (Exception e) {
+			throw ServerException.of(
+					"Wrong status from replication master " + master.schema + '/' + master.index + " " + e.getMessage(),
+					e);
+		}
 		if (masterUuid == null) {
 			masterUuid = remoteMasterUuid;
 			masterUuidString = masterUuid.toString();
@@ -125,7 +125,7 @@ class IndexReplicator implements Replicator {
 	}
 
 	final InputStream getResource(final String resourceName) throws IOException {
-		return checkService().getResource(master.schema, master.index, resourceName).getInputStream();
+		return checkService().getResource(master.schema, master.index, resourceName);
 	}
 
 	@Override
@@ -136,12 +136,11 @@ class IndexReplicator implements Replicator {
 
 	@Override
 	public SessionToken checkForUpdate(final String currVersion) throws IOException {
-		final AbstractStreamingOutput streamingOutput =
-				checkService().replicationUpdate(master.schema, master.index, masterUuidString, currVersion);
-		if (streamingOutput == null)
-			return null;
-		try (final InputStream inputStream = streamingOutput.getInputStream()) {
+		try (final InputStream inputStream = checkService().replicationUpdate(master.schema, master.index,
+				masterUuidString, currVersion)) {
 			if (inputStream == null)
+				return null;
+			if (inputStream.available() == 0)
 				return null;
 			final DataInput input = new DataInputStream(inputStream);
 			return new SessionToken(input);
@@ -156,22 +155,16 @@ class IndexReplicator implements Replicator {
 	@Override
 	final public InputStream obtainFile(final String sessionID, final String source, final String fileName)
 			throws IOException {
-		final InputStream stream =
-				checkService().replicationObtain(master.schema, master.index, masterUuidString, sessionID, source,
-						fileName).getInputStream();
-		inputStreams.add(stream);
-		return stream;
+		return checkService().replicationObtain(master.schema, master.index, masterUuidString, sessionID, source,
+				fileName);
 	}
 
 	@Override
 	final public void close() throws IOException {
-		inputStreams.forEach(IOUtils::closeQuietly);
-		IOUtils.closeQuietly(replicationClient);
+		replicationClient.close();
 	}
 
 	final void updateNow() throws IOException {
 		replicationClient.updateNow();
-		inputStreams.forEach(IOUtils::closeQuietly);
-		inputStreams.clear();
 	}
 }

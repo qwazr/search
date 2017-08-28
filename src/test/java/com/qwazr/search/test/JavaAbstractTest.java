@@ -51,7 +51,6 @@ import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.query.TermsQuery;
 import com.qwazr.search.query.WildcardQuery;
 import com.qwazr.server.RemoteService;
-import com.qwazr.server.ServerException;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import org.apache.http.conn.HttpHostConnectException;
@@ -614,7 +613,10 @@ public abstract class JavaAbstractTest {
 			Assert.fail("The exception has not been thrown");
 		} catch (WebApplicationException e) {
 			Assert.assertEquals(500, e.getResponse().getStatus());
-			Assert.assertTrue(e.getCause() instanceof ServerException);
+			String message = e.getMessage();
+			if (!e.getMessage().contains("dummy"))
+				message = e.getResponse().readEntity(String.class);
+			Assert.assertTrue(message.contains("dummy"));
 		} catch (HttpHostConnectException e) {
 			//OK
 		} catch (HttpResponseEntityException e) {

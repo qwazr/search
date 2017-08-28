@@ -26,18 +26,18 @@ public class FieldDefinitionTest {
 
 	@Test
 	public void readCustomFieldDefinitionTest() throws IOException {
-		Map<String, FieldDefinition> fields = ObjectMappers.JSON.readValue(
-				com.qwazr.search.test.JavaTest.class.getResourceAsStream("fields.json"),
-				FieldDefinition.MapStringFieldTypeRef);
+		Map<String, FieldDefinition> fields =
+				ObjectMappers.JSON.readValue(com.qwazr.search.test.JavaTest.class.getResourceAsStream("fields.json"),
+						FieldDefinition.mapStringFieldTypeRef);
 		Assert.assertNotNull(fields);
 		fields.forEach((name, field) -> Assert.assertTrue(field instanceof CustomFieldDefinition));
 	}
 
 	@Test
 	public void readSmartFieldDefinitionTest() throws IOException {
-		Map<String, FieldDefinition> fields = ObjectMappers.JSON.readValue(
-				FieldDefinitionTest.class.getResourceAsStream("smart_fields.json"),
-				FieldDefinition.MapStringFieldTypeRef);
+		Map<String, FieldDefinition> fields =
+				ObjectMappers.JSON.readValue(FieldDefinitionTest.class.getResourceAsStream("smart_fields.json"),
+						FieldDefinition.mapStringFieldTypeRef);
 		Assert.assertNotNull(fields);
 		fields.forEach((name, field) -> {
 			Assert.assertTrue(field instanceof SmartFieldDefinition);
@@ -45,7 +45,7 @@ public class FieldDefinitionTest {
 		});
 
 		String json = ObjectMappers.JSON.writeValueAsString(fields);
-		fields = ObjectMappers.JSON.readValue(json, FieldDefinition.MapStringFieldTypeRef);
+		fields = ObjectMappers.JSON.readValue(json, FieldDefinition.mapStringFieldTypeRef);
 		fields.forEach((name, field) -> Assert.assertTrue(field instanceof SmartFieldDefinition));
 	}
 

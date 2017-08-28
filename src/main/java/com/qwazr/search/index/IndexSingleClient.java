@@ -174,7 +174,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("fields")
-				.path(fieldName)
+				.path(fieldName == null ? StringUtils.EMPTY : fieldName)
 				.request(MediaType.APPLICATION_JSON)
 				.get(FieldDefinition.class);
 	}
@@ -185,7 +185,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("fields")
-				.path(fieldName)
+				.path(fieldName == null ? StringUtils.EMPTY : fieldName)
 				.request(MediaType.APPLICATION_JSON)
 				.post(Entity.json(field), FieldDefinition.class);
 	}
@@ -195,7 +195,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("fields")
-				.path(fieldName)
+				.path(fieldName == null ? StringUtils.EMPTY : fieldName)
 				.request()
 				.delete(Boolean.class);
 	}
