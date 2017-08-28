@@ -15,13 +15,11 @@
  */
 package com.qwazr.search.index;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.PATCH;
 import com.qwazr.server.ServiceInterface;
-import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.utils.FunctionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -34,8 +32,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -73,7 +71,8 @@ public interface IndexServiceInterface extends ServiceInterface {
 
 	@DELETE
 	@Path("/{schema_name}")
-	Response deleteSchema(@PathParam("schema_name") String schema_name);
+	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
+	boolean deleteSchema(@PathParam("schema_name") String schema_name);
 
 	@GET
 	@Path("/{schema_name}")
@@ -155,8 +154,8 @@ public interface IndexServiceInterface extends ServiceInterface {
 
 	@DELETE
 	@Path("/{schema_name}/{index_name}/fields/{field_name}")
-	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Response deleteField(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
+	boolean deleteField(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
 			@PathParam("field_name") String field_name);
 
 	@GET
@@ -188,8 +187,8 @@ public interface IndexServiceInterface extends ServiceInterface {
 
 	@DELETE
 	@Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")
-	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Response deleteAnalyzer(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
+	boolean deleteAnalyzer(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
 			@PathParam("analyzer_name") String analyzer_name);
 
 	@PATCH
@@ -229,12 +228,13 @@ public interface IndexServiceInterface extends ServiceInterface {
 
 	@DELETE
 	@Path("/{schema_name}/{index_name}")
-	Response deleteIndex(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
+	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
+	boolean deleteIndex(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
 	@DELETE
 	@Path("/{schema_name}/{index_name}/docs")
-	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Response deleteAll(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
+	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
+	boolean deleteAll(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/doc")
@@ -301,26 +301,27 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/{schema_name}/{index_name}/replication/{master_uuid}/{session_id}/{source}/{filename}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	AbstractStreamingOutput replicationObtain(@PathParam("schema_name") String schema_name,
+	InputStream replicationObtain(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, @PathParam("master_uuid") String masterUuid,
 			@PathParam("session_id") String sessionID, @PathParam("source") String source,
 			@PathParam("filename") String fileName);
 
 	@DELETE
 	@Path("/{schema_name}/{index_name}/replication/{master_uuid}/{session_id}")
-	Response replicationRelease(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, @PathParam("master_uuid") String masterUuid,
-			@PathParam("session_id") String sessionID);
+	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
+	boolean replicationRelease(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			@PathParam("master_uuid") String masterUuid, @PathParam("session_id") String sessionID);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/replication/{master_uuid}")
-	AbstractStreamingOutput replicationUpdate(@PathParam("schema_name") String schema_name,
+	InputStream replicationUpdate(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, @PathParam("master_uuid") String masterUuid,
 			@QueryParam("current_version") String current_version);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/replication")
-	Response replicationCheck(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
+	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
+	boolean replicationCheck(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/resources")
@@ -329,18 +330,20 @@ public interface IndexServiceInterface extends ServiceInterface {
 
 	@GET
 	@Path("/{schema_name}/{index_name}/resources/{resource_name}")
-	AbstractStreamingOutput getResource(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, @PathParam("resource_name") String resourceName);
+	InputStream getResource(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			@PathParam("resource_name") String resourceName);
 
 	@POST
 	@Path("/{schema_name}/{index_name}/resources/{resource_name}")
-	Response postResource(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-			@PathParam("resource_name") String resourceName, @QueryParam("lastModified") long lastModified,
+	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
+	boolean postResource(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+			@PathParam("resource_name") String resourceName, @QueryParam("lastModified") Long lastModified,
 			InputStream inputStream);
 
 	@DELETE
 	@Path("/{schema_name}/{index_name}/resources/{resource_name}")
-	Response deleteResource(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
+	boolean deleteResource(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
 			@PathParam("resource_name") String resourceName);
 
 	@POST
@@ -371,28 +374,41 @@ public interface IndexServiceInterface extends ServiceInterface {
 	String explainQueryDot(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
 			QueryDefinition query, @PathParam("doc") int docId, @QueryParam("wrap") final Integer descriptionWrapSize);
 
-	TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
+	GenericType<Set<String>> setStringType = new GenericType<Set<String>>() {
 	};
 
-	TypeReference<SortedMap<String, SortedMap<String, BackupStatus>>> MapStringMapStringBackupStatusTypeRef =
-			new TypeReference<SortedMap<String, SortedMap<String, BackupStatus>>>() {
+	GenericType<SortedMap<String, SortedMap<String, BackupStatus>>> mapStringMapStringBackupStatusType =
+			new GenericType<SortedMap<String, SortedMap<String, BackupStatus>>>() {
 			};
 
-	TypeReference<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>
-			MapStringMapStringMapStringBackupStatusTypeRef =
-			new TypeReference<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>() {
+	GenericType<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>
+			mapStringMapStringMapStringBackupStatusType =
+			new GenericType<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>() {
 			};
 
-	TypeReference<LinkedHashMap<String, IndexInstance.ResourceInfo>> MapStringResourceInfoTypeRef =
-			new TypeReference<LinkedHashMap<String, IndexInstance.ResourceInfo>>() {
+	GenericType<LinkedHashMap<String, IndexInstance.ResourceInfo>> mapStringResourceInfoType =
+			new GenericType<LinkedHashMap<String, IndexInstance.ResourceInfo>>() {
 			};
 
-	TypeReference<ArrayList<Map<String, Object>>> ListMapStringObjectTypeRef =
-			new TypeReference<ArrayList<Map<String, Object>>>() {
+	GenericType<ArrayList<Map<String, Object>>> listMapStringObjectType =
+			new GenericType<ArrayList<Map<String, Object>>>() {
 			};
 
-	TypeReference<LinkedHashMap<String, Object>> MapStringObjectTypeRef =
-			new TypeReference<LinkedHashMap<String, Object>>() {
+	GenericType<LinkedHashMap<String, Object>> mapStringObjectType = new GenericType<LinkedHashMap<String, Object>>() {
+	};
+
+	GenericType<LinkedHashMap<String, FieldDefinition>> mapStringFieldType =
+			new GenericType<LinkedHashMap<String, FieldDefinition>>() {
+			};
+
+	GenericType<List<TermDefinition>> listTermDefinitionType = new GenericType<List<TermDefinition>>() {
+	};
+
+	GenericType<List<TermEnumDefinition>> listTermEnumDefinitionType = new GenericType<List<TermEnumDefinition>>() {
+	};
+
+	GenericType<LinkedHashMap<String, AnalyzerDefinition>> mapStringAnalyzerType =
+			new GenericType<LinkedHashMap<String, AnalyzerDefinition>>() {
 			};
 
 	@FunctionalInterface

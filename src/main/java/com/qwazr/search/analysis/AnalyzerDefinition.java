@@ -51,14 +51,14 @@ public class AnalyzerDefinition {
 		this.filters = filters;
 	}
 
-	public final static TypeReference<LinkedHashMap<String, AnalyzerDefinition>> MapStringAnalyzerTypeRef =
+	public final static TypeReference<LinkedHashMap<String, AnalyzerDefinition>> mapStringAnalyzerTypeRef =
 			new TypeReference<LinkedHashMap<String, AnalyzerDefinition>>() {
 			};
 
 	public static LinkedHashMap<String, AnalyzerDefinition> newAnalyzerMap(String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
-		return ObjectMappers.JSON.readValue(jsonString, MapStringAnalyzerTypeRef);
+		return ObjectMappers.JSON.readValue(jsonString, mapStringAnalyzerTypeRef);
 	}
 
 	public static AnalyzerDefinition newAnalyzer(String jsonString) throws IOException {
@@ -67,8 +67,9 @@ public class AnalyzerDefinition {
 
 	public static LinkedHashMap<String, AnalyzerDefinition> loadMap(final File mapFile,
 			final Supplier<LinkedHashMap<String, AnalyzerDefinition>> defaultMap) throws IOException {
-		return mapFile != null && mapFile.exists() && mapFile.isFile() ? ObjectMappers.JSON.readValue(mapFile,
-				AnalyzerDefinition.MapStringAnalyzerTypeRef) : defaultMap == null ? null : defaultMap.get();
+		return mapFile != null && mapFile.exists() && mapFile.isFile() ?
+				ObjectMappers.JSON.readValue(mapFile, AnalyzerDefinition.mapStringAnalyzerTypeRef) :
+				defaultMap == null ? null : defaultMap.get();
 	}
 
 	public static void saveMap(final LinkedHashMap<String, AnalyzerDefinition> definitionMap, final File mapFile)

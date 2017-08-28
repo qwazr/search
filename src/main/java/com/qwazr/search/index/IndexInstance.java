@@ -689,13 +689,14 @@ final public class IndexInstance implements Closeable {
 
 	}
 
-	final void postResource(final String resourceName, final long lastModified, final InputStream inputStream)
+	final void postResource(final String resourceName, final Long lastModified, final InputStream inputStream)
 			throws IOException {
 		if (!fileSet.resourcesDirectory.exists())
 			fileSet.resourcesDirectory.mkdir();
 		final File resourceFile = fileResourceLoader.checkResourceName(resourceName);
 		IOUtils.copy(inputStream, resourceFile);
-		resourceFile.setLastModified(lastModified);
+		if (lastModified != null)
+			resourceFile.setLastModified(lastModified);
 		refreshFieldsAnalyzers();
 	}
 

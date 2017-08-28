@@ -17,15 +17,16 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.RemoteService;
-import com.qwazr.server.client.JsonClientAbstract;
+import com.qwazr.server.ServerException;
+import com.qwazr.server.client.JsonClient;
 import com.qwazr.server.response.ResponseValidator;
-import com.qwazr.utils.LoggerUtils;
-import com.qwazr.utils.UBuilder;
-import com.qwazr.utils.http.HttpRequest;
+import org.apache.commons.io.input.AutoCloseInputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
@@ -33,21 +34,17 @@ import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.logging.Logger;
 
-public class IndexSingleClient extends JsonClientAbstract implements IndexServiceInterface {
+public class IndexSingleClient extends JsonClient implements IndexServiceInterface {
 
-	private final static Logger LOGGER = LoggerUtils.getLogger(IndexSingleClient.class);
+	private final WebTarget indexTarget;
 
 	public IndexSingleClient(final RemoteService remote) {
-		super(remote, LOGGER);
+		super(remote);
+		indexTarget = client.target(remote.serviceAddress).path(IndexServiceInterface.PATH);
 	}
-
-	private final static String PATH = "/" + IndexServiceInterface.PATH;
-	private final static String PATH_SLASH = PATH + "/";
 
 	public static final ContentType CONTENTTYPE_TEXT_GRAPHVIZ =
 			ContentType.create(MEDIATYPE_TEXT_GRAPHVIZ, (Charset) null);
@@ -56,458 +53,504 @@ public class IndexSingleClient extends JsonClientAbstract implements IndexServic
 			ResponseValidator.create().status(200).content(CONTENTTYPE_TEXT_GRAPHVIZ);
 
 	@Override
-	public SchemaSettingsDefinition createUpdateSchema(final String schema_name) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, SchemaSettingsDefinition.class, valid200Json);
+	public SchemaSettingsDefinition createUpdateSchema(final String schemaName) {
+		return createUpdateSchema(schemaName, null);
 	}
 
 	@Override
-	public SchemaSettingsDefinition createUpdateSchema(final String schema_name,
+	public SchemaSettingsDefinition createUpdateSchema(final String schemaName,
 			final SchemaSettingsDefinition settings) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, settings, null, SchemaSettingsDefinition.class, valid200Json);
+		return indexTarget.path(schemaName)
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(settings), SchemaSettingsDefinition.class);
 	}
 
 	@Override
 	public Set<String> getSchemas() {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, SetStringTypeRef, valid200Json);
+		return indexTarget.request(MediaType.APPLICATION_JSON).get(setStringType);
 	}
 
 	@Override
-	public Response deleteSchema(final String schema_name) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name);
-		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
-		return Response.status(executeStatusCode(request, null, null, valid200)).build();
+	public boolean deleteSchema(final String schemaName) {
+		return indexTarget.path(schemaName).request(MediaType.TEXT_PLAIN).delete(boolean.class);
 	}
 
 	@Override
-	public Set<String> getIndexes(final String schema_name) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, SetStringTypeRef, valid200Json);
+	public Set<String> getIndexes(final String schemaName) {
+		return indexTarget.path(schemaName).request(MediaType.APPLICATION_JSON).get(setStringType);
 	}
 
 	@Override
-	public IndexStatus createUpdateIndex(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, IndexStatus.class, valid200Json);
+	public IndexStatus createUpdateIndex(final String schemaName, final String indexName) {
+		return createUpdateIndex(schemaName, indexName, null);
 	}
 
 	@Override
-	public IndexStatus createUpdateIndex(final String schema_name, final String index_name,
+	public IndexStatus createUpdateIndex(final String schemaName, final String indexName,
 			final IndexSettingsDefinition settings) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, settings, null, IndexStatus.class, valid200Json);
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(settings), IndexStatus.class);
 	}
 
 	@Override
-	public LinkedHashMap<String, FieldDefinition> getFields(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields");
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, FieldDefinition.MapStringFieldTypeRef, valid200Json);
+	public LinkedHashMap<String, FieldDefinition> getFields(final String schemaName, final String indexName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("fields")
+				.request(MediaType.APPLICATION_JSON)
+				.get(mapStringFieldType);
 	}
 
 	@Override
-	public LinkedHashMap<String, FieldDefinition> setFields(final String schema_name, final String index_name,
+	public LinkedHashMap<String, FieldDefinition> setFields(final String schemaName, final String indexName,
 			final LinkedHashMap<String, FieldDefinition> fields) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields");
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, fields, null, FieldDefinition.MapStringFieldTypeRef, valid200Json);
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("fields")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(fields), mapStringFieldType);
 	}
 
 	@Override
-	public List<TermDefinition> doAnalyzeQuery(final String schema_name, final String index_name,
-			final String field_name, final String text) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name,
-						"/analyzer/query");
-		uriBuilder.setParameter("text", text);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, TermDefinition.ListTermDefinitionRef, valid200Json);
-	}
-
-	@Override
-	public List<TermDefinition> doAnalyzeIndex(final String schema_name, final String index_name,
-			final String field_name, final String text) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name,
-						"/analyzer/index");
-		uriBuilder.setParameter("text", text);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, TermDefinition.ListTermDefinitionRef, valid200Json);
-	}
-
-	@Override
-	public FieldStats getFieldStats(String schema_name, String index_name, String field_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name,
-						"/stats/");
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, FieldStats.class, valid200Json);
-	}
-
-	@Override
-	public List<TermEnumDefinition> doExtractTerms(final String schema_name, final String index_name,
-			final String field_name, final Integer start, final Integer rows) {
-		return this.doExtractTerms(schema_name, index_name, field_name, null, start, rows);
-	}
-
-	@Override
-	public List<TermEnumDefinition> doExtractTerms(final String schema_name, final String index_name,
-			final String field_name, final String prefix, final Integer start, final Integer rows) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name,
-						"/terms/", prefix);
-		uriBuilder.setParameter("start", start).setParameter("rows", rows);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, TermEnumDefinition.ListTermEnumDefinitionRef, valid200Json);
-	}
-
-	@Override
-	public FieldDefinition getField(final String schema_name, final String index_name, final String field_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, FieldDefinition.class, valid200Json);
-	}
-
-	@Override
-	public FieldDefinition setField(final String schema_name, final String index_name, final String field_name,
-			final FieldDefinition field) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, field, null, FieldDefinition.class, valid200Json);
-	}
-
-	@Override
-	public Response deleteField(final String schema_name, final String index_name, final String field_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/fields/", field_name);
-		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
-		return Response.status(executeStatusCode(request, null, null, valid200)).build();
-	}
-
-	@Override
-	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers");
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, AnalyzerDefinition.MapStringAnalyzerTypeRef, valid200Json);
-	}
-
-	@Override
-	public AnalyzerDefinition getAnalyzer(final String schema_name, final String index_name,
-			final String analyzer_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers/",
-						analyzer_name);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, AnalyzerDefinition.class, valid200Json);
-	}
-
-	@Override
-	public void refreshAnalyzers(String schema_name, String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers");
-		final HttpRequest request = HttpRequest.Patch(uriBuilder.buildNoEx());
-		execute(request, null, null, valid200);
-	}
-
-	@Override
-	public AnalyzerDefinition setAnalyzer(final String schema_name, final String index_name, final String analyzer_name,
-			final AnalyzerDefinition analyzer) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers/",
-						analyzer_name);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, analyzer, null, AnalyzerDefinition.class, valid200Json);
-	}
-
-	@Override
-	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String schema_name, final String index_name,
-			final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers");
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, analyzers, null, AnalyzerDefinition.MapStringAnalyzerTypeRef, valid200Json);
-	}
-
-	@Override
-	public Response deleteAnalyzer(final String schema_name, final String index_name, final String analyzer_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers/",
-						analyzer_name);
-		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
-		return Response.status(executeStatusCode(request, null, null, valid200)).build();
-	}
-
-	@Override
-	public List<TermDefinition> testAnalyzer(final String schema_name, final String index_name,
-			final String analyzer_name, final String text) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers/",
-						analyzer_name);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, text, null, TermDefinition.ListTermDefinitionRef, valid200Json);
-	}
-
-	@Override
-	public String testAnalyzerDot(final String schema_name, final String index_name, final String analyzer_name,
+	public List<TermDefinition> doAnalyzeQuery(final String schemaName, final String indexName, final String fieldName,
 			final String text) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/analyzers/",
-						analyzer_name + "/dot").setParameter("text", text);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeString(request, null, null, valid200TextPlain);
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("fields")
+				.path(fieldName)
+				.path("analyzer/query")
+				.queryParam("text", text == null ? StringUtils.EMPTY : text)
+				.request(MediaType.APPLICATION_JSON)
+				.get(listTermDefinitionType);
 	}
 
 	@Override
-	public IndexStatus getIndex(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, IndexStatus.class, valid200Json);
+	public List<TermDefinition> doAnalyzeIndex(final String schemaName, final String indexName, final String fieldName,
+			final String text) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("fields")
+				.path(fieldName)
+				.path("analyzer/index")
+				.queryParam("text", text == null ? StringUtils.EMPTY : text)
+				.request(MediaType.APPLICATION_JSON)
+				.get(listTermDefinitionType);
 	}
 
 	@Override
-	public IndexStatus mergeIndex(final String schema_name, final String index_name, String merged_index,
+	public FieldStats getFieldStats(final String schemaName, final String indexName, final String fieldName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("fields")
+				.path(fieldName)
+				.path("stats")
+				.request(MediaType.APPLICATION_JSON)
+				.get(FieldStats.class);
+	}
+
+	@Override
+	public List<TermEnumDefinition> doExtractTerms(final String schemaName, final String indexName,
+			final String fieldName, final Integer start, final Integer rows) {
+		return doExtractTerms(schemaName, indexName, fieldName, null, start, rows);
+	}
+
+	@Override
+	public List<TermEnumDefinition> doExtractTerms(final String schemaName, final String indexName,
+			final String fieldName, final String prefix, final Integer start, final Integer rows) {
+		WebTarget target = indexTarget.path(schemaName).path(indexName).path("fields").path(fieldName).path("terms");
+		if (prefix != null)
+			target = target.path(prefix);
+		if (start != null)
+			target = target.queryParam("start", start);
+		if (rows != null)
+			target = target.queryParam("rows", rows);
+		return target.request(MediaType.APPLICATION_JSON).get(listTermEnumDefinitionType);
+	}
+
+	@Override
+	public FieldDefinition getField(final String schemaName, final String indexName, final String fieldName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("fields")
+				.path(fieldName)
+				.request(MediaType.APPLICATION_JSON)
+				.get(FieldDefinition.class);
+	}
+
+	@Override
+	public FieldDefinition setField(final String schemaName, final String indexName, final String fieldName,
+			final FieldDefinition field) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("fields")
+				.path(fieldName)
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(field), FieldDefinition.class);
+	}
+
+	@Override
+	public boolean deleteField(final String schemaName, final String indexName, final String fieldName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("fields")
+				.path(fieldName)
+				.request()
+				.delete(Boolean.class);
+	}
+
+	@Override
+	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(final String schemaName, final String indexName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("analyzers")
+				.request(MediaType.APPLICATION_JSON)
+				.get(mapStringAnalyzerType);
+	}
+
+	@Override
+	public AnalyzerDefinition getAnalyzer(final String schemaName, final String indexName, final String analyzerName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("analyzers")
+				.path(analyzerName)
+				.request(MediaType.APPLICATION_JSON)
+				.get(AnalyzerDefinition.class);
+	}
+
+	@Override
+	public void refreshAnalyzers(String schemaName, String indexName) {
+		final Response.StatusType statusType = indexTarget.path(schemaName)
+				.path(indexName)
+				.path("analyzers")
+				.request()
+				.method("PATCH")
+				.getStatusInfo();
+		if (statusType.getFamily() != Response.Status.Family.SUCCESSFUL)
+			throw new ServerException("Analyzer refresh failed: " + statusType.getReasonPhrase());
+	}
+
+	@Override
+	public AnalyzerDefinition setAnalyzer(final String schemaName, final String indexName, final String analyzerName,
+			final AnalyzerDefinition analyzer) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("analyzers")
+				.path(analyzerName)
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(analyzer), AnalyzerDefinition.class);
+	}
+
+	@Override
+	public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String schemaName, final String indexName,
+			final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("analyzers")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(analyzers), mapStringAnalyzerType);
+	}
+
+	@Override
+	public boolean deleteAnalyzer(final String schemaName, final String indexName, final String analyzerName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("analyzers")
+				.path(analyzerName)
+				.request()
+				.delete(Boolean.class);
+	}
+
+	@Override
+	public List<TermDefinition> testAnalyzer(final String schemaName, final String indexName, final String analyzerName,
+			final String text) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("analyzers")
+				.path(analyzerName)
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.text(text == null ? StringUtils.EMPTY : text), listTermDefinitionType);
+	}
+
+	@Override
+	public String testAnalyzerDot(final String schemaName, final String indexName, final String analyzerName,
+			final String text) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("analyzers")
+				.path(analyzerName)
+				.path("dot")
+				.queryParam("text", text == null ? StringUtils.EMPTY : text)
+				.request(MediaType.TEXT_PLAIN)
+				.get(String.class);
+	}
+
+	@Override
+	public IndexStatus getIndex(final String schemaName, final String indexName) {
+		return indexTarget.path(schemaName).path(indexName).request(MediaType.APPLICATION_JSON).get(IndexStatus.class);
+	}
+
+	@Override
+	public IndexStatus mergeIndex(final String schemaName, final String indexName, String mergedIndex,
 			final Map<String, String> commitUserData) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/merge/", merged_index);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, commitUserData, null, IndexStatus.class, valid200Json);
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("merge")
+				.path(mergedIndex)
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(commitUserData), IndexStatus.class);
 	}
 
 	@Override
-	public IndexCheckStatus checkIndex(String schema_name, String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/check");
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, IndexCheckStatus.class, valid200Json);
+	public IndexCheckStatus checkIndex(final String schemaName, final String indexName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("check")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(null), IndexCheckStatus.class);
 	}
 
 	@Override
-	public Response deleteIndex(final String schema_name, final String index_name) {
-
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name);
-		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
-		return Response.status(executeStatusCode(request, null, null, valid200)).build();
+	public boolean deleteIndex(final String schemaName, final String indexName) {
+		return indexTarget.path(schemaName).path(indexName).request(MediaType.TEXT_PLAIN).delete(boolean.class);
 	}
 
 	@Override
-	public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(final String schema_name,
-			final String index_name, final String backup_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/backup/", backup_name);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, MapStringMapStringBackupStatusTypeRef, valid200Json);
+	public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(final String schemaName, final String indexName,
+			final String backupName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("backup")
+				.path(backupName)
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(null), mapStringMapStringBackupStatusType);
 	}
 
 	@Override
-	public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schema_name,
-			final String index_name, final String backup_name, final Boolean extractVersion) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/backup/", backup_name)
-						.setParameterObject("extractVersion", extractVersion);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, MapStringMapStringMapStringBackupStatusTypeRef, valid200Json);
+	public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
+			final String indexName, final String backupName, final Boolean extractVersion) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("backup")
+				.path(backupName)
+				.queryParam("extractVersion", extractVersion == null ? false : extractVersion)
+				.request(MediaType.APPLICATION_JSON)
+				.get(mapStringMapStringMapStringBackupStatusType);
 	}
 
 	@Override
-	public Integer deleteBackups(String schema_name, String index_name, String backup_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/backup/", backup_name);
-		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, Integer.class, valid200Json);
+	public Integer deleteBackups(final String schemaName, final String indexName, final String backupName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("backup")
+				.path(backupName)
+				.request(MediaType.APPLICATION_JSON)
+				.delete(Integer.class);
 	}
 
 	@Override
-	public AbstractStreamingOutput replicationObtain(final String schema_name, final String index_name,
-			final String masterUuid, final String sessionID, final String source, final String fileName) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/",
-						masterUuid, "/", sessionID, "/", source, "/", fileName);
-		return executeStream(HttpRequest.Get(uriBuilder.buildNoEx()), null, null, valid200Stream);
+	public InputStream replicationObtain(final String schemaName, final String indexName, final String masterUuid,
+			final String sessionID, final String source, final String fileName) {
+		return new AutoCloseInputStream(indexTarget.path(schemaName)
+				.path(indexName)
+				.path("replication")
+				.path(masterUuid)
+				.path(sessionID)
+				.path(source)
+				.path(fileName)
+				.request(MediaType.APPLICATION_OCTET_STREAM)
+				.get(InputStream.class));
 	}
 
 	@Override
-	public Response replicationRelease(final String schema_name, final String index_name, final String masterUuid,
+	public boolean replicationRelease(final String schemaName, final String indexName, final String masterUuid,
 			final String sessionID) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/",
-						masterUuid, "/", sessionID);
-		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
-		return Response.status(executeStatusCode(request, null, null, valid200)).build();
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("replication")
+				.path(masterUuid)
+				.path(sessionID)
+				.request(MediaType.TEXT_PLAIN)
+				.delete(boolean.class);
 	}
 
 	@Override
-	public AbstractStreamingOutput replicationUpdate(final String schema_name, final String index_name,
-			final String masterUuid, final String current_version) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication/",
-						masterUuid).setParameter("current_version", current_version);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeStream(request, null, null, valid200204);
+	public InputStream replicationUpdate(final String schemaName, final String indexName, final String masterUuid,
+			final String currentVersion) {
+		return new AutoCloseInputStream(indexTarget.path(schemaName)
+				.path(indexName)
+				.path("replication")
+				.path(masterUuid)
+				.queryParam("current_version", currentVersion)
+				.request(MediaType.APPLICATION_OCTET_STREAM)
+				.get(InputStream.class));
 	}
 
 	@Override
-	public Response replicationCheck(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/replication");
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return Response.status(executeStatusCode(request, null, null, valid200)).build();
+	public boolean replicationCheck(final String schemaName, final String indexName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("replication")
+				.request(MediaType.TEXT_PLAIN)
+				.get(boolean.class);
 	}
 
 	@Override
-	public LinkedHashMap<String, IndexInstance.ResourceInfo> getResources(final String schema_name,
-			final String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources");
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, MapStringResourceInfoTypeRef, valid200Json);
+	public LinkedHashMap<String, IndexInstance.ResourceInfo> getResources(final String schemaName,
+			final String indexName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("resources")
+				.request(MediaType.APPLICATION_JSON)
+				.get(mapStringResourceInfoType);
 	}
 
 	@Override
-	public AbstractStreamingOutput getResource(final String schema_name, final String index_name,
-			final String resourceName) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/",
-						resourceName);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeStream(request, null, null, valid200);
+	public InputStream getResource(final String schemaName, final String indexName, final String resourceName) {
+		return new AutoCloseInputStream(indexTarget.path(schemaName)
+				.path(indexName)
+				.path("resources")
+				.path(resourceName)
+				.request(MediaType.APPLICATION_OCTET_STREAM)
+				.get(InputStream.class));
 	}
 
 	@Override
-	public Response postResource(final String schema_name, final String index_name, final String resourceName,
-			final long lastModified, final InputStream inputStream) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/",
-						resourceName).setParameter("lastModified", lastModified);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return Response.status(executeStatusCode(request, inputStream, null, valid200)).build();
+	public boolean postResource(final String schemaName, final String indexName, final String resourceName,
+			final Long lastModified, final InputStream inputStream) {
+		WebTarget target = indexTarget.path(schemaName).path(indexName).path("resources").path(resourceName);
+		if (lastModified != null)
+			target = target.queryParam("lastModified", lastModified);
+		return target.request(MediaType.TEXT_PLAIN).post(Entity.text(inputStream), boolean.class);
 	}
 
 	@Override
-	public Response deleteResource(final String schema_name, final String index_name, final String resourceName) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/resources/",
-						resourceName);
-		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
-		return Response.status(executeStatusCode(request, null, null, valid200)).build();
+	public boolean deleteResource(final String schemaName, final String indexName, final String resourceName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("resources")
+				.path(resourceName)
+				.request(MediaType.TEXT_PLAIN)
+				.delete(boolean.class);
 	}
 
 	@Override
-	public Integer postMappedDocument(final String schema_name, final String index_name,
+	public Integer postMappedDocument(final String schemaName, final String indexName,
 			final PostDefinition.Document post) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc");
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, post, null, Integer.class, valid200Json);
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("doc")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(post), Integer.class);
 	}
 
 	@Override
-	public Integer postMappedDocuments(final String schema_name, final String index_name,
+	public Integer postMappedDocuments(final String schemaName, final String indexName,
 			final PostDefinition.Documents post) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/docs");
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, post, null, Integer.class, valid200Json);
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("docs")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(post), Integer.class);
 	}
 
 	@Override
-	public Integer updateMappedDocValues(final String schema_name, final String index_name,
+	public Integer updateMappedDocValues(final String schemaName, final String indexName,
 			final PostDefinition.Document post) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc/values");
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, post, null, Integer.class, valid200Json);
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("doc")
+				.path("values")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(post), Integer.class);
 	}
 
 	@Override
-	public Integer updateMappedDocsValues(final String schema_name, final String index_name,
+	public Integer updateMappedDocsValues(final String schemaName, final String indexName,
 			final PostDefinition.Documents post) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/docs/values");
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, post, null, Integer.class, valid200Json);
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("docs")
+				.path("values")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(post), Integer.class);
 	}
 
 	@Override
-	public Response deleteAll(final String schema_name, final String index_name) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/docs");
-		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
-		return Response.status(executeStatusCode(request, null, null, valid200)).build();
+	public boolean deleteAll(final String schemaName, final String indexName) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("docs")
+				.request(MediaType.TEXT_PLAIN)
+				.delete(boolean.class);
 	}
 
 	@Override
-	public LinkedHashMap<String, Object> getDocument(final String schema_name, final String index_name,
-			final String doc_id) {
-		Objects.requireNonNull(doc_id, "The document must not be empty");
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc/", doc_id);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, MapStringObjectTypeRef, valid200Json);
+	public LinkedHashMap<String, Object> getDocument(final String schemaName, final String indexName,
+			final String docId) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("doc")
+				.path(docId)
+				.request(MediaType.APPLICATION_JSON)
+				.get(mapStringObjectType);
 	}
 
 	@Override
-	public List<Map<String, Object>> getDocuments(final String schema_name, final String index_name,
-			final Integer start, final Integer rows) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/doc");
-		uriBuilder.addParameter("start", start == null ? null : start.toString())
-				.addParameter("rows", rows == null ? null : rows.toString());
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, ListMapStringObjectTypeRef, valid200Json);
+	public List<Map<String, Object>> getDocuments(final String schemaName, final String indexName, final Integer start,
+			final Integer rows) {
+		WebTarget target = indexTarget.path(schemaName).path(indexName).path("doc");
+		if (start != null)
+			target = target.queryParam("start", start);
+		if (rows != null)
+			target = target.queryParam("rows", rows);
+		return target.request(MediaType.APPLICATION_JSON).get(listMapStringObjectType);
 	}
 
 	@Override
-	public ResultDefinition.WithMap searchQuery(final String schema_name, final String index_name,
+	public ResultDefinition.WithMap searchQuery(final String schemaName, final String indexName,
 			final QueryDefinition query, final Boolean delete) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search")
-						.setParameterObject("delete", delete);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, query, null, ResultDefinition.WithMap.class, valid200Json);
+		WebTarget target = indexTarget.path(schemaName).path(indexName).path("search");
+		if (delete != null)
+			target = target.queryParam("delete", delete);
+		return target.request(MediaType.APPLICATION_JSON).post(Entity.json(query), ResultDefinition.WithMap.class);
 	}
 
 	@Override
-	public ExplainDefinition explainQuery(final String schema_name, final String index_name,
-			final QueryDefinition query, int docId) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search/explain/",
-						Integer.toString(docId));
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, query, null, ExplainDefinition.class, valid200Json);
+	public ExplainDefinition explainQuery(final String schemaName, final String indexName, final QueryDefinition query,
+			int docId) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("search")
+				.path("explain")
+				.path(Integer.toString(docId))
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(query), ExplainDefinition.class);
 	}
 
 	@Override
-	public String explainQueryText(String schema_name, String index_name, QueryDefinition query, int docId) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schema_name, "/", index_name, "/search/explain/",
-						Integer.toString(docId));
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		request.addHeader("Accept", MediaType.TEXT_PLAIN);
-		return executeString(request, query, null, valid200TextPlain);
+	public String explainQueryText(String schemaName, String indexName, QueryDefinition query, int docId) {
+		return indexTarget.path(schemaName)
+				.path(indexName)
+				.path("search")
+				.path("explain")
+				.path(Integer.toString(docId))
+				.request(MediaType.TEXT_PLAIN)
+				.post(Entity.json(query), String.class);
 	}
 
 	@Override
 	public String explainQueryDot(String schemaName, String indexName, QueryDefinition query, int docId,
 			Integer descriptionWrapSize) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", indexName, "/search/explain/",
-						Integer.toString(docId)).setParameter("wrap", descriptionWrapSize);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		request.addHeader("Accept", MEDIATYPE_TEXT_GRAPHVIZ);
-		return executeString(request, query, null, valid200TextGraphviz);
+		WebTarget target = indexTarget.path(schemaName)
+				.path(indexName)
+				.path("search")
+				.path("explain")
+				.path(Integer.toString(docId));
+		if (descriptionWrapSize != null)
+			target = target.queryParam("wrap", descriptionWrapSize);
+		return target.request(MEDIATYPE_TEXT_GRAPHVIZ).post(Entity.json(query), String.class);
 	}
 
 }

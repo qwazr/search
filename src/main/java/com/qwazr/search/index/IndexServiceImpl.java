@@ -20,9 +20,9 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.server.AbstractServiceImpl;
-import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.LoggerUtils;
+import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -144,11 +144,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public Response deleteSchema(final String schemaName) {
+	final public boolean deleteSchema(final String schemaName) {
 		try {
 			checkRight(null);
 			indexManager.delete(schemaName);
-			return Response.ok().build();
+			return true;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -280,11 +280,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public Response deleteField(final String schemaName, final String indexName, final String fieldName) {
+	final public boolean deleteField(final String schemaName, final String indexName, final String fieldName) {
 		try {
 			checkRight(schemaName);
 			indexManager.get(schemaName).get(indexName, false).deleteField(fieldName);
-			return Response.ok().build();
+			return true;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -352,11 +352,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public Response deleteAnalyzer(final String schemaName, final String indexName, final String analyzerName) {
+	final public boolean deleteAnalyzer(final String schemaName, final String indexName, final String analyzerName) {
 		try {
 			checkRight(schemaName);
 			indexManager.get(schemaName).get(indexName, false).deleteAnalyzer(analyzerName);
-			return Response.ok().build();
+			return true;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -417,11 +417,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public Response deleteIndex(final String schemaName, final String indexName) {
+	final public boolean deleteIndex(final String schemaName, final String indexName) {
 		try {
 			checkRight(schemaName);
 			indexManager.get(schemaName).delete(indexName);
-			return Response.ok().build();
+			return true;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -552,8 +552,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public AbstractStreamingOutput replicationObtain(final String schemaName, final String indexName,
-			final String masterUuid, final String sessionID, final String source, final String fileName) {
+	final public InputStream replicationObtain(final String schemaName, final String indexName, final String masterUuid,
+			final String sessionID, final String source, final String fileName) {
 		try {
 			checkRight(null);
 			final LocalReplicator localReplicator =
@@ -562,27 +562,27 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			if (input == null)
 				throw new ServerException(Response.Status.NOT_FOUND,
 						"File not found: " + fileName + " - Schema/index: " + schemaName + '/' + indexName);
-			return AbstractStreamingOutput.with(input);
+			return new AutoCloseInputStream(input);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
 	@Override
-	final public Response replicationRelease(final String schemaName, final String indexName, final String masterUuid,
+	final public boolean replicationRelease(final String schemaName, final String indexName, final String masterUuid,
 			final String sessionID) {
 		try {
 			checkRight(null);
 			indexManager.get(schemaName).get(indexName, false).getLocalReplicator(masterUuid).release(sessionID);
-			return Response.ok().build();
+			return true;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
 	@Override
-	final public AbstractStreamingOutput replicationUpdate(final String schemaName, final String indexName,
-			final String masterUuid, final String currentVersion) {
+	final public InputStream replicationUpdate(final String schemaName, final String indexName, final String masterUuid,
+			final String currentVersion) {
 		try {
 			checkRight(null);
 
@@ -599,7 +599,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 					dataOutput.flush();
 				}
 				outputStream.flush();
-				return AbstractStreamingOutput.with(new ByteArrayInputStream(outputStream.toByteArray()));
+				return new AutoCloseInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			}
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -607,11 +607,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public Response replicationCheck(final String schemaName, final String indexName) {
+	final public boolean replicationCheck(final String schemaName, final String indexName) {
 		try {
 			checkRight(null);
 			indexManager.get(schemaName).get(indexName, false).replicationCheck();
-			return Response.ok().build();
+			return true;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -629,49 +629,48 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	public AbstractStreamingOutput getResource(final String schemaName, final String indexName,
-			final String resourceName) {
+	public InputStream getResource(final String schemaName, final String indexName, final String resourceName) {
 		try {
 			checkRight(null);
 			final InputStream input = indexManager.get(schemaName).get(indexName, false).getResource(resourceName);
 			if (input == null)
 				throw new ServerException(Response.Status.NOT_FOUND,
 						"Resource not found: " + resourceName + " - Schema/index: " + schemaName + '/' + indexName);
-			return AbstractStreamingOutput.with(input);
+			return new AutoCloseInputStream(input);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
 	@Override
-	public Response postResource(final String schemaName, final String indexName, final String resourceName,
-			final long lastModified, final InputStream inputStream) {
+	public boolean postResource(final String schemaName, final String indexName, final String resourceName,
+			final Long lastModified, final InputStream inputStream) {
 		try {
 			checkRight(null);
 			indexManager.get(schemaName).get(indexName, false).postResource(resourceName, lastModified, inputStream);
-			return Response.ok().build();
+			return true;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
 	@Override
-	public Response deleteResource(final String schemaName, final String indexName, final String resourceName) {
+	public boolean deleteResource(final String schemaName, final String indexName, final String resourceName) {
 		try {
 			checkRight(null);
 			indexManager.get(schemaName).get(indexName, false).deleteResource(resourceName);
-			return Response.ok().build();
+			return true;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
 	@Override
-	final public Response deleteAll(final String schemaName, final String indexName) {
+	final public boolean deleteAll(final String schemaName, final String indexName) {
 		try {
 			checkRight(schemaName);
 			indexManager.get(schemaName).get(indexName, false).deleteAll(null);
-			return Response.ok().build();
+			return true;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}

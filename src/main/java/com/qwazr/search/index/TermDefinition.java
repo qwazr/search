@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,16 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.analysis.TermConsumer;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.*;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.FlagsAttribute;
+import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
+import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
+import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -91,10 +96,6 @@ public class TermDefinition {
 		}
 		return termList;
 	}
-
-	public final static TypeReference<List<TermDefinition>> ListTermDefinitionRef =
-			new TypeReference<List<TermDefinition>>() {
-			};
 
 	private final static String[] DOT_PREFIX = { "digraph G {",
 			"rankdir = LR;",

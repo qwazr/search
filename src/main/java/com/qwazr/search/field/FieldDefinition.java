@@ -113,8 +113,9 @@ public abstract class FieldDefinition {
 		this.type = builder.type;
 		this.analyzer = builder.analyzer;
 		this.queryAnalyzer = builder.queryAnalyzer;
-		this.copyFrom = builder.copyFrom == null || builder.copyFrom.isEmpty() ? null : builder.copyFrom.toArray(
-				new String[builder.copyFrom.size()]);
+		this.copyFrom = builder.copyFrom == null || builder.copyFrom.isEmpty() ?
+				null :
+				builder.copyFrom.toArray(new String[builder.copyFrom.size()]);
 	}
 
 	@Override
@@ -133,14 +134,14 @@ public abstract class FieldDefinition {
 		return true;
 	}
 
-	public final static TypeReference<LinkedHashMap<String, FieldDefinition>> MapStringFieldTypeRef =
+	public final static TypeReference<LinkedHashMap<String, FieldDefinition>> mapStringFieldTypeRef =
 			new TypeReference<LinkedHashMap<String, FieldDefinition>>() {
 			};
 
 	public static LinkedHashMap<String, FieldDefinition> newFieldMap(final String jsonString) throws IOException {
 		if (StringUtils.isEmpty(jsonString))
 			return null;
-		return ObjectMappers.JSON.readValue(jsonString, MapStringFieldTypeRef);
+		return ObjectMappers.JSON.readValue(jsonString, mapStringFieldTypeRef);
 	}
 
 	public static FieldDefinition newField(final String jsonString) throws IOException {
@@ -173,14 +174,15 @@ public abstract class FieldDefinition {
 
 	static public LinkedHashMap<String, FieldDefinition> loadMap(final File fieldMapFile,
 			final Supplier<LinkedHashMap<String, FieldDefinition>> defaultMap) throws IOException {
-		return fieldMapFile != null && fieldMapFile.exists() && fieldMapFile.isFile() ? ObjectMappers.JSON.readValue(
-				fieldMapFile, FieldDefinition.MapStringFieldTypeRef) : defaultMap == null ? null : defaultMap.get();
+		return fieldMapFile != null && fieldMapFile.exists() && fieldMapFile.isFile() ?
+				ObjectMappers.JSON.readValue(fieldMapFile, FieldDefinition.mapStringFieldTypeRef) :
+				defaultMap == null ? null : defaultMap.get();
 	}
 
 	protected static String from(String analyzerName, Class<? extends Analyzer> analyzerClass) {
-		return analyzerClass != Analyzer.class ? analyzerClass.getName() : StringUtils.isEmpty(analyzerName) ?
-				null :
-				analyzerName;
+		return analyzerClass != Analyzer.class ?
+				analyzerClass.getName() :
+				StringUtils.isEmpty(analyzerName) ? null : analyzerName;
 	}
 
 	protected static String[] from(final String fieldName, final Map<String, Copy> copyMap) {

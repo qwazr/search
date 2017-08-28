@@ -40,7 +40,6 @@ import com.qwazr.search.index.TermDefinition;
 import com.qwazr.search.index.TermEnumDefinition;
 import com.qwazr.utils.AnnotationsUtils;
 import com.qwazr.utils.ArrayUtils;
-import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -53,6 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -203,7 +203,7 @@ public class AnnotatedIndexService<T> {
 				if (entity instanceof HttpEntity)
 					message = EntityUtils.toString((HttpEntity) entity);
 				else if (entity instanceof InputStream)
-					message = IOUtils.toString((InputStream) entity, CharsetUtils.CharsetUTF8);
+					message = IOUtils.toString((InputStream) entity, StandardCharsets.UTF_8);
 			} catch (IOException e) {
 				message = null;
 			}
@@ -218,7 +218,7 @@ public class AnnotatedIndexService<T> {
 	 */
 	public void deleteSchema() {
 		checkParameters();
-		checkHttpResponse(indexService.deleteSchema(schemaName), 200);
+		indexService.deleteSchema(schemaName);
 	}
 
 	/**
@@ -243,7 +243,7 @@ public class AnnotatedIndexService<T> {
 
 	public void deleteIndex() {
 		checkParameters();
-		checkHttpResponse(indexService.deleteIndex(schemaName, indexName), 200);
+		indexService.deleteIndex(schemaName, indexName);
 	}
 
 	/**
@@ -300,19 +300,19 @@ public class AnnotatedIndexService<T> {
 	}
 
 	public void postTextResource(final String resourceName, final String text) throws IOException {
-		try (final InputStream input = IOUtils.toInputStream(text, CharsetUtils.CharsetUTF8)) {
+		try (final InputStream input = IOUtils.toInputStream(text, StandardCharsets.UTF_8)) {
 			postResource(resourceName, input);
 		}
 	}
 
 	public InputStream getResource(final String resourceName) throws IOException {
 		checkParameters();
-		return indexService.getResource(schemaName, indexName, resourceName).getInputStream();
+		return indexService.getResource(schemaName, indexName, resourceName);
 	}
 
 	public String getTextResource(final String resourceName) throws IOException {
 		try (final InputStream input = getResource(resourceName)) {
-			return IOUtils.toString(input, CharsetUtils.CharsetUTF8);
+			return IOUtils.toString(input, StandardCharsets.UTF_8);
 		}
 	}
 
@@ -760,10 +760,7 @@ public class AnnotatedIndexService<T> {
 	}
 
 	public void replicationCheck() {
-		final Response response = indexService.replicationCheck(schemaName, indexName);
-		Objects.requireNonNull(response, "The response is null");
-		if (response.getStatus() != 200)
-			throw new WebApplicationException(response);
+		indexService.replicationCheck(schemaName, indexName);
 	}
 
 	private <C> ResultDefinition.WithObject<C> toRecords(final ResultDefinition<?> result,
