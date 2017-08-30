@@ -42,7 +42,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
 	public IndexSingleClient(final RemoteService remote) {
 		super(remote);
-		indexTarget = client.target(remote.serviceAddress);
+		indexTarget = client.target(remote.serviceAddress).path(IndexServiceInterface.PATH);
 	}
 
 	public static final ContentType CONTENTTYPE_TEXT_GRAPHVIZ =

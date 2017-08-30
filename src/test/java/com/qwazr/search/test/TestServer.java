@@ -30,7 +30,7 @@ public class TestServer {
 	static IndexServiceInterface service;
 	static IndexServiceInterface remote;
 
-	static final String BASE_URL = "http://localhost:9091/indexes";
+	static final String BASE_URL = "http://localhost:9091";
 
 	static final File dataDir = Files.createTempDir();
 

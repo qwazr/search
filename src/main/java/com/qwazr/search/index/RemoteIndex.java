@@ -36,7 +36,7 @@ public class RemoteIndex extends RemoteService {
 			@JsonProperty("timeout") Integer timeout, @JsonProperty("username") String username,
 			@JsonProperty("password") String password, @JsonProperty("schema") String schema,
 			@JsonProperty("index") String index) {
-		super(scheme, host, port, path == null ? IndexServiceInterface.PATH : path, timeout, username, password);
+		super(scheme, host, port, path, timeout, username, password);
 		this.schema = schema;
 		this.index = index;
 	}
@@ -48,7 +48,7 @@ public class RemoteIndex extends RemoteService {
 	}
 
 	RemoteIndex(String schema, String index) {
-		super(null, null, null, IndexServiceInterface.PATH, null, null, null);
+		super(null, null, null, null, null, null, null);
 		this.schema = schema;
 		this.index = index;
 	}
@@ -79,6 +79,7 @@ public class RemoteIndex extends RemoteService {
 								TIMEOUT_PARAMETER + "={timeout}");
 
 			final RemoteService.Builder builder = RemoteService.of(uri);
+			builder.setPath(null);
 			return new RemoteIndex(builder, paths[1], paths[2]);
 		} else {
 			final String[] paths = StringUtils.split(remoteIndexPattern, '/');

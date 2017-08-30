@@ -31,7 +31,7 @@ public class RemoteIndexTest {
 		Assert.assertEquals("my_schema", remoteIndex.schema);
 		Assert.assertEquals("my_index", remoteIndex.index);
 		Assert.assertEquals("http://localhost:9091", remoteIndex.serverAddress);
-		Assert.assertEquals("http://localhost:9091/indexes", remoteIndex.serviceAddress);
+		Assert.assertEquals("http://localhost:9091/", remoteIndex.serviceAddress);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -46,7 +46,7 @@ public class RemoteIndexTest {
 		Assert.assertEquals("my_schema", remoteIndex.schema);
 		Assert.assertEquals("my_index", remoteIndex.index);
 		Assert.assertEquals("http://birdie:1234", remoteIndex.serverAddress);
-		Assert.assertEquals("http://birdie:1234/indexes", remoteIndex.serviceAddress);
+		Assert.assertEquals("http://birdie:1234/", remoteIndex.serviceAddress);
 	}
 
 	@Test(expected = URISyntaxException.class)

@@ -82,7 +82,7 @@ public class JavaTest {
 	static {
 		try {
 			remoteSlaveSettings = IndexSettingsDefinition.of()
-					.master(TestServer.BASE_URL + "/testSchema/testIndexMaster")
+					.master(TestServer.BASE_URL + "/indexes/testSchema/testIndexMaster")
 					.enableTaxonomyIndex(false)
 					.build();
 		} catch (URISyntaxException e) {
