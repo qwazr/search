@@ -30,7 +30,7 @@ public class TestServer {
 	static IndexServiceInterface service;
 	static IndexServiceInterface remote;
 
-	static final String BASE_URL = "http://localhost:9091";
+	static final String BASE_URL = "http://localhost:9091/indexes";
 
 	static final File dataDir = Files.createTempDir();
 
@@ -44,8 +44,10 @@ public class TestServer {
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
 		SearchServer.main();
-		SearchServer.getInstance().getIndexManager().registerAnalyzerFactory(AnnotatedIndex.INJECTED_ANALYZER_NAME,
-				resourceLoader -> new AnnotatedIndex.TestAnalyzer(injectedAnalyzerCount));
+		SearchServer.getInstance()
+				.getIndexManager()
+				.registerAnalyzerFactory(AnnotatedIndex.INJECTED_ANALYZER_NAME,
+						resourceLoader -> new AnnotatedIndex.TestAnalyzer(injectedAnalyzerCount));
 		IndexServiceBuilder indexServiceBuilder = SearchServer.getInstance().getServiceBuilder();
 		service = indexServiceBuilder.local();
 		remote = indexServiceBuilder.remote(RemoteService.of(BASE_URL).build());

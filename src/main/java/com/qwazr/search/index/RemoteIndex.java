@@ -18,9 +18,10 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.utils.StringUtils;
 import com.qwazr.server.RemoteService;
+import com.qwazr.utils.StringUtils;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -35,7 +36,7 @@ public class RemoteIndex extends RemoteService {
 			@JsonProperty("timeout") Integer timeout, @JsonProperty("username") String username,
 			@JsonProperty("password") String password, @JsonProperty("schema") String schema,
 			@JsonProperty("index") String index) {
-		super(scheme, host, port, path, timeout, username, password);
+		super(scheme, host, port, path == null ? IndexServiceInterface.PATH : path, timeout, username, password);
 		this.schema = schema;
 		this.index = index;
 	}
@@ -47,7 +48,7 @@ public class RemoteIndex extends RemoteService {
 	}
 
 	RemoteIndex(String schema, String index) {
-		super(null, null, null, null, null, null, null);
+		super(null, null, null, IndexServiceInterface.PATH, null, null, null);
 		this.schema = schema;
 		this.index = index;
 	}
@@ -57,29 +58,35 @@ public class RemoteIndex extends RemoteService {
 	 * The form of the URL should be:
 	 * {protocol}://{username:password@}{host}:{port}/indexes/{schema}/{index}?timeout={timeout}
 	 *
-	 * @param remoteIndexUrl the URL of the remote index
+	 * @param remoteIndexPattern the URL of the remote index
 	 * @return an array of RemoteIndex
 	 * @throws URISyntaxException if the URI syntax is not correct
 	 */
 
-	public static RemoteIndex build(final String remoteIndexUrl) throws URISyntaxException {
+	public static RemoteIndex build(final String remoteIndexPattern) throws URISyntaxException {
 
-		if (StringUtils.isEmpty(remoteIndexUrl))
+		if (StringUtils.isEmpty(remoteIndexPattern))
 			return null;
 
-		final RemoteService.Builder builder = RemoteService.of(remoteIndexUrl);
+		if (remoteIndexPattern.contains("://") || remoteIndexPattern.startsWith("//")) {
 
-		final String path = builder.getPathSegment(0);
-		final String schema = builder.getPathSegment(1);
-		final String index = builder.getPathSegment(2);
+			final URI uri = URI.create(remoteIndexPattern);
 
-		if (schema == null || index == null || !IndexServiceInterface.PATH.equals(path))
-			throw new URISyntaxException(builder.getInitialURI().toString(),
-					"The URL form should be: /" + IndexServiceInterface.PATH + "/{schema}/{index}?" +
-							TIMEOUT_PARAMETER + "={timeout}");
+			final String[] paths = StringUtils.split(uri.getPath(), '/');
+			if (paths.length != 3 || !IndexServiceInterface.PATH.equals(paths[0]))
+				throw new URISyntaxException(remoteIndexPattern,
+						"The URL form should be: http://hostname/" + IndexServiceInterface.PATH + "/{schema}/{index}?" +
+								TIMEOUT_PARAMETER + "={timeout}");
 
-		builder.setPath(null);
-		return new RemoteIndex(builder, schema, index);
+			final RemoteService.Builder builder = RemoteService.of(uri);
+			return new RemoteIndex(builder, paths[1], paths[2]);
+		} else {
+			final String[] paths = StringUtils.split(remoteIndexPattern, '/');
+			if (paths.length == 2)
+				return new RemoteIndex(paths[0], paths[1]);
+		}
+		throw new IllegalArgumentException(
+				"The index pattern should be in the local form {schema}/{index}, or using an URL");
 	}
 
 }

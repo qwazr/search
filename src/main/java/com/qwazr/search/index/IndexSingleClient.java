@@ -20,7 +20,6 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServerException;
 import com.qwazr.server.client.JsonClient;
-import com.qwazr.server.response.ResponseValidator;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
@@ -43,14 +42,11 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
 	public IndexSingleClient(final RemoteService remote) {
 		super(remote);
-		indexTarget = client.target(remote.serviceAddress).path(IndexServiceInterface.PATH);
+		indexTarget = client.target(remote.serviceAddress);
 	}
 
 	public static final ContentType CONTENTTYPE_TEXT_GRAPHVIZ =
 			ContentType.create(MEDIATYPE_TEXT_GRAPHVIZ, (Charset) null);
-
-	private static final ResponseValidator valid200TextGraphviz =
-			ResponseValidator.create().status(200).content(CONTENTTYPE_TEXT_GRAPHVIZ);
 
 	@Override
 	public SchemaSettingsDefinition createUpdateSchema(final String schemaName) {

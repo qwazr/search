@@ -253,6 +253,8 @@ public class IndexSettingsDefinition {
 		public Builder master(final String master) throws URISyntaxException {
 			if (master != null)
 				master(RemoteIndex.build(master));
+			else
+				this.master = null;
 			return this;
 		}
 
