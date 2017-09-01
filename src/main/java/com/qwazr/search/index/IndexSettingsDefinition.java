@@ -60,6 +60,9 @@ public class IndexSettingsDefinition {
 	@JsonProperty("ram_buffer_size")
 	final public Double ramBufferSize;
 
+	@JsonProperty("use_compound_file")
+	final public Boolean useCompoundFile;
+
 	@JsonProperty("max_merge_at_once")
 	final public Integer maxMergeAtOnce;
 
@@ -93,6 +96,7 @@ public class IndexSettingsDefinition {
 		similarityClass = null;
 		master = null;
 		ramBufferSize = null;
+		useCompoundFile = null;
 		maxMergeAtOnce = null;
 		maxMergedSegmentMB = null;
 		segmentsPerTier = null;
@@ -110,6 +114,7 @@ public class IndexSettingsDefinition {
 		this.similarityClass = builder.similarityClass;
 		this.master = builder.master;
 		this.ramBufferSize = builder.ramBufferSize;
+		this.useCompoundFile = builder.useCompoundFile;
 		this.maxMergeAtOnce = builder.maxMergeAtOnce;
 		this.maxMergedSegmentMB = builder.maxMergedSegmentMB;
 		this.segmentsPerTier = builder.segmentsPerTier;
@@ -147,6 +152,8 @@ public class IndexSettingsDefinition {
 		if (!Objects.equals(master, s.master))
 			return false;
 		if (!Objects.equals(ramBufferSize, s.ramBufferSize))
+			return false;
+		if (!Objects.equals(useCompoundFile, s.useCompoundFile))
 			return false;
 		if (!Objects.equals(maxMergeAtOnce, s.maxMergeAtOnce))
 			return false;
@@ -188,6 +195,7 @@ public class IndexSettingsDefinition {
 		private String similarityClass;
 		private RemoteIndex master;
 		private Double ramBufferSize;
+		private Boolean useCompoundFile;
 		private Integer maxMergeAtOnce;
 		private Double maxMergedSegmentMB;
 		private Double segmentsPerTier;
@@ -207,6 +215,7 @@ public class IndexSettingsDefinition {
 			similarityClass(annotatedIndex.similarityClass());
 			master(annotatedIndex.replicationMaster());
 			ramBufferSize(annotatedIndex.ramBufferSize());
+			useCompoundFile(annotatedIndex.useCompoundFile());
 			maxMergeAtOnce(annotatedIndex.maxMergeAtOnce());
 			maxMergedSegmentMB(annotatedIndex.maxMergedSegmentMB());
 			segmentsPerTier(annotatedIndex.segmentsPerTier());
@@ -224,6 +233,7 @@ public class IndexSettingsDefinition {
 			this.similarityClass = settings.similarityClass;
 			this.master = settings.master;
 			this.ramBufferSize = settings.ramBufferSize;
+			this.useCompoundFile = settings.useCompoundFile;
 			this.maxMergeAtOnce = settings.maxMergeAtOnce;
 			this.maxMergedSegmentMB = settings.maxMergedSegmentMB;
 			this.segmentsPerTier = settings.segmentsPerTier;
@@ -270,6 +280,11 @@ public class IndexSettingsDefinition {
 
 		public Builder ramBufferSize(final Double ramBufferSize) {
 			this.ramBufferSize = ramBufferSize;
+			return this;
+		}
+
+		public Builder useCompoundFile(final Boolean useCompoundFile) {
+			this.useCompoundFile = useCompoundFile;
 			return this;
 		}
 

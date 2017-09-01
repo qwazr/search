@@ -45,6 +45,8 @@ public @interface Index {
 
 	double ramBufferSize() default IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
 
+	boolean useCompoundFile() default IndexWriterConfig.DEFAULT_USE_COMPOUND_FILE_SYSTEM;
+
 	int maxMergeAtOnce() default IndexSettingsDefinition.DEFAULT_MAX_MERGE_AT_ONCE;
 
 	double maxMergedSegmentMB() default IndexSettingsDefinition.DEFAULT_MAX_MERGED_SEGMENT_MB;

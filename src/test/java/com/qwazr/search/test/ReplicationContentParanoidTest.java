@@ -63,6 +63,7 @@ public class ReplicationContentParanoidTest {
 						.mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
 						.mergedSegmentWarmer(true)
 						.indexReaderWarmer(false)
+						.useCompoundFile(false)
 						.build());
 		master.createUpdateSchema();
 		master.createUpdateIndex();

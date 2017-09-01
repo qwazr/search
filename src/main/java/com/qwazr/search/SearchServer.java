@@ -53,8 +53,7 @@ public class SearchServer implements BaseServer {
 		final ApplicationBuilder webServices = ApplicationBuilder.of("/*").classes(RestApplication.JSON_CLASSES).
 				singletons(new WelcomeShutdownService());
 
-		clusterManager = new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
-				.registerProtocolListener(builder, services)
+		clusterManager = new ClusterManager(executorService, configuration).registerProtocolListener(builder, services)
 				.registerContextAttribute(builder)
 				.registerWebService(webServices);
 

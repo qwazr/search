@@ -159,6 +159,8 @@ class IndexInstanceBuilder {
 				indexWriterConfig.setSimilarity(similarity);
 			if (settings.ramBufferSize != null)
 				indexWriterConfig.setRAMBufferSizeMB(settings.ramBufferSize);
+			if (settings.useCompoundFile != null)
+				indexWriterConfig.setUseCompoundFile(settings.useCompoundFile);
 
 			final TieredMergePolicy mergePolicy = new TieredMergePolicy();
 			if (settings.maxMergeAtOnce != null)

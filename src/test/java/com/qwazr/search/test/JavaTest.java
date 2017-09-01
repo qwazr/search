@@ -48,6 +48,7 @@ public class JavaTest {
 					.mergeScheduler(IndexSettingsDefinition.MergeScheduler.NO)
 					.master("testSchema", "testIndexMaster")
 					.ramBufferSize(32d)
+					.useCompoundFile(false)
 					.enableTaxonomyIndex(false)
 					.build());
 		}
