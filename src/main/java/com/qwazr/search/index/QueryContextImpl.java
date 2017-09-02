@@ -16,7 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.binder.FieldMapWrapper;
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.server.ServerException;
 import org.apache.lucene.analysis.util.ResourceLoader;
@@ -27,12 +27,13 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.IndexSearcher;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-final class QueryContextImpl extends IndexContextImpl implements QueryContext {
+final class QueryContextImpl extends IndexContextImpl implements QueryContext, Closeable {
 
 	final IndexSearcher indexSearcher;
 	final IndexReader indexReader;
@@ -43,12 +44,12 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext {
 	final FieldMap fieldMap;
 
 	QueryContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
-			final ExecutorService executorService, final UpdatableAnalyzer indexAnalyzer,
-			final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap,
+			final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
+			final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap,
 			final FieldMapWrapper.Cache fieldMapWrappers, final SortedSetDocValuesReaderState docValueReaderState,
 			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
 			final Map<String, ValueConverter> docValuesConverters) {
-		super(indexProvider, resourceLoader, executorService, indexAnalyzer, queryAnalyzer, fieldMap);
+		super(indexProvider, resourceLoader, executorService, indexAnalyzers, queryAnalyzers, fieldMap);
 		this.docValueReaderState = docValueReaderState;
 		this.fieldMap = fieldMap;
 		this.fieldMapWrappers = fieldMapWrappers;
@@ -116,5 +117,5 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext {
 		final ResultDocumentsEmpty resultDocumentEmpty = new ResultDocumentsEmpty(resultDocuments);
 		return (ResultDefinition.Empty) search(queryDefinition, resultDocumentEmpty);
 	}
-
+	
 }

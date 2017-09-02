@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.server.ServerException;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
@@ -34,10 +34,10 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
 	final TaxonomyWriter taxonomyWriter;
 
 	WriteContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
-			final ExecutorService executorService, final UpdatableAnalyzer indexAnalyzer,
-			final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap, final IndexWriter indexWriter,
+			final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
+			final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap, final IndexWriter indexWriter,
 			final TaxonomyWriter taxonomyWriter) {
-		super(indexProvider, resourceLoader, executorService, indexAnalyzer, queryAnalyzer, fieldMap);
+		super(indexProvider, resourceLoader, executorService, indexAnalyzers, queryAnalyzers, fieldMap);
 		this.indexWriter = indexWriter;
 		this.taxonomyWriter = taxonomyWriter;
 	}

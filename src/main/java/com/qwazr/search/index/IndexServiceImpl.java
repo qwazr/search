@@ -21,6 +21,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.LoggerUtils;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.lucene.analysis.Analyzer;
@@ -209,15 +210,19 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	private List<TermDefinition> doAnalyzer(final String schemaName, final String indexName, final String fieldName,
-			final String text, final boolean index) throws ServerException, IOException {
+			final String text, final boolean index) throws IOException {
 		checkRight(schemaName);
-		IndexInstance indexInstance = indexManager.get(schemaName).get(indexName, false);
-		final Analyzer analyzer =
-				index ? indexInstance.getIndexAnalyzer(fieldName) : indexInstance.getQueryAnalyzer(fieldName);
-		if (analyzer == null)
-			throw new ServerException(
-					"No analyzer found for " + fieldName + " - Schema/index: " + schemaName + '/' + indexName);
-		return TermDefinition.buildTermList(analyzer, fieldName, text);
+		final IndexInstance indexInstance = indexManager.get(schemaName).get(indexName, false);
+		final FunctionUtils.FunctionEx<Analyzer, List<TermDefinition>, IOException> analyzerFunction = analyzer -> {
+			if (analyzer == null)
+				throw new ServerException(
+						"No analyzer found for " + fieldName + " - Schema/index: " + schemaName + '/' + indexName);
+			return TermDefinition.buildTermList(analyzer, fieldName, text);
+		};
+		return index ?
+				indexInstance.useIndexAnalyzer(fieldName, analyzerFunction) :
+				indexInstance.useQueryAnalyzer(fieldName, analyzerFunction);
+
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,31 +15,33 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.analysis.UpdatableAnalyzers;
+import com.qwazr.utils.IOUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.FacetsConfig;
 
+import java.io.Closeable;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
-class IndexContextImpl implements IndexContext {
+class IndexContextImpl implements IndexContext, Closeable {
 
 	final ExecutorService executorService;
-	final UpdatableAnalyzer queryAnalyzer;
-	final UpdatableAnalyzer indexAnalyzer;
+	final Analyzer queryAnalyzers;
+	final Analyzer indexAnalyzers;
 	final FieldMap fieldMap;
 	final ResourceLoader resourceLoader;
 	final IndexInstance.Provider indexProvider;
 
 	IndexContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
-			final ExecutorService executorService, final UpdatableAnalyzer indexAnalyzer,
-			final UpdatableAnalyzer queryAnalyzer, final FieldMap fieldMap) {
+			final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
+			final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap) {
 		this.indexProvider = indexProvider;
 		this.resourceLoader = resourceLoader;
 		this.executorService = executorService;
-		this.queryAnalyzer = queryAnalyzer;
-		this.indexAnalyzer = indexAnalyzer;
+		this.queryAnalyzers = queryAnalyzers == null ? null : queryAnalyzers.getAnalyzers();
+		this.indexAnalyzers = indexAnalyzers == null ? null : indexAnalyzers.getAnalyzers();
 		this.fieldMap = fieldMap;
 	}
 
@@ -50,12 +52,12 @@ class IndexContextImpl implements IndexContext {
 
 	@Override
 	final public Analyzer getQueryAnalyzer() {
-		return queryAnalyzer;
+		return queryAnalyzers;
 	}
 
 	@Override
 	final public Analyzer getIndexAnalyzer() {
-		return indexAnalyzer;
+		return indexAnalyzers;
 	}
 
 	@Override
@@ -68,4 +70,8 @@ class IndexContextImpl implements IndexContext {
 		return fieldMap.getFacetsConfig(fieldSet);
 	}
 
+	@Override
+	public void close() {
+		IOUtils.closeQuietly(queryAnalyzers, indexAnalyzers);
+	}
 }

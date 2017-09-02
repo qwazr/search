@@ -40,7 +40,7 @@ class HighlighterImpl extends UnifiedHighlighter {
 
 	HighlighterImpl(final String highlightName, final HighlighterDefinition definition,
 			final QueryContextImpl queryContext) {
-		super(queryContext.indexSearcher, queryContext.queryAnalyzer);
+		super(queryContext.indexSearcher, queryContext.queryAnalyzers);
 		if (definition.maxLength != null)
 			setMaxLength(definition.maxLength);
 		if (definition.highlightPhrasesStrictly != null)

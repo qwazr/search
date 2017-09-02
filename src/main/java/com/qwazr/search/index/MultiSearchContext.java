@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerFactory;
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -42,8 +41,8 @@ final class MultiSearchContext implements Closeable, AutoCloseable {
 	final IndexReader[] indexReaders;
 	final FieldMap fieldMap;
 	final Map<String, AnalyzerFactory> analyzers;
-	final UpdatableAnalyzer indexAnalyzer;
-	final UpdatableAnalyzer queryAnalyzer;
+	final UpdatableAnalyzers indexAnalyzers;
+	final UpdatableAnalyzers queryAnalyzers;
 
 	MultiSearchContext(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
 			final Map<String, AnalyzerFactory> analyzers, final ExecutorService executorService,
@@ -54,8 +53,8 @@ final class MultiSearchContext implements Closeable, AutoCloseable {
 		this.executorService = executorService;
 		if (indexInstances.isEmpty()) {
 			indexReaders = null;
-			indexAnalyzer = null;
-			queryAnalyzer = null;
+			indexAnalyzers = null;
+			queryAnalyzers = null;
 			fieldMap = null;
 			return;
 		}
@@ -71,10 +70,10 @@ final class MultiSearchContext implements Closeable, AutoCloseable {
 			resourceLoader = indexInstance.newResourceLoader(resourceLoader);
 		}
 		fieldMap = new FieldMap(fieldDefinitionMap, null);
-		final AnalyzerContext analyzerContext = new AnalyzerContext(instanceFactory, resourceLoader, fieldMap,
-				failOnException, analyzerMap, analyzers);
-		indexAnalyzer = new UpdatableAnalyzer(analyzerContext.indexAnalyzerMap);
-		queryAnalyzer = new UpdatableAnalyzer(analyzerContext.queryAnalyzerMap);
+		final AnalyzerContext analyzerContext =
+				new AnalyzerContext(instanceFactory, resourceLoader, fieldMap, failOnException, analyzerMap, analyzers);
+		indexAnalyzers = new UpdatableAnalyzers(analyzerContext.indexAnalyzerMap);
+		queryAnalyzers = new UpdatableAnalyzers(analyzerContext.queryAnalyzerMap);
 	}
 
 	final <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDef,
@@ -84,7 +83,8 @@ final class MultiSearchContext implements Closeable, AutoCloseable {
 	}
 
 	@Override
-	final public void close() throws IOException {
-		IOUtils.close(queryAnalyzer, indexAnalyzer);
+	final public void close() {
+		queryAnalyzers.close();
+		indexAnalyzers.close();
 	}
 }

@@ -18,7 +18,7 @@ package com.qwazr.search.index;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.search.analysis.CustomAnalyzer;
-import com.qwazr.search.analysis.UpdatableAnalyzer;
+import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
@@ -78,8 +78,8 @@ class IndexInstanceBuilder {
 
 	FieldMap fieldMap = null;
 
-	UpdatableAnalyzer indexAnalyzer;
-	UpdatableAnalyzer queryAnalyzer;
+	UpdatableAnalyzers indexAnalyzers;
+	UpdatableAnalyzers queryAnalyzers;
 
 	WriterAndSearcher writerAndSearcher = null;
 
@@ -121,8 +121,8 @@ class IndexInstanceBuilder {
 		final AnalyzerContext context =
 				new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, false, globalAnalyzerFactoryMap,
 						localAnalyzerFactoryMap);
-		indexAnalyzer = new UpdatableAnalyzer(context.indexAnalyzerMap);
-		queryAnalyzer = new UpdatableAnalyzer(context.queryAnalyzerMap);
+		indexAnalyzers = new UpdatableAnalyzers(context.indexAnalyzerMap);
+		queryAnalyzers = new UpdatableAnalyzers(context.queryAnalyzerMap);
 
 		// Open and lock the index directories
 		dataDirectory = getDirectory(settings, fileSet.dataDirectory);
@@ -152,7 +152,7 @@ class IndexInstanceBuilder {
 
 	private void openOrCreateDataIndex() throws IOException {
 
-		final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzer);
+		final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzers);
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 		if (settings != null) {
 			if (similarity != null)
@@ -247,7 +247,7 @@ class IndexInstanceBuilder {
 	}
 
 	private void abort() {
-		IOUtils.closeQuietly(indexReplicator, writerAndSearcher, indexAnalyzer, queryAnalyzer, localReplicator);
+		IOUtils.closeQuietly(indexReplicator, writerAndSearcher, indexAnalyzers, queryAnalyzers, localReplicator);
 
 		if (taxonomyWriter != null) {
 			IOUtils.closeQuietly(taxonomyWriter);
