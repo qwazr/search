@@ -50,9 +50,11 @@ final public class UpdatableAnalyzers extends AnalyzerWrapper {
 
 	@Override
 	public synchronized void close() {
-		if (analyzers != null)
+		if (analyzers != null) {
 			analyzers.close();
-		analyzers = null;
+			analyzers = null;
+		}
+		activeAnalyzers.clear();
 		super.close();
 	}
 
