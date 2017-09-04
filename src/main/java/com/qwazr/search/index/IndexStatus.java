@@ -83,6 +83,8 @@ public class IndexStatus {
 	final public Map<String, String> commit_user_data;
 	final public String[] directory_cached_files;
 	final public String directory_cached_ram_used;
+	final public Integer active_index_analyzers;
+	final public Integer active_query_analyzers;
 
 	@JsonCreator
 	IndexStatus(@JsonProperty("num_docs") Long num_docs, @JsonProperty("num_deleted_docs") Long num_deleted_docs,
@@ -102,7 +104,9 @@ public class IndexStatus {
 			@JsonProperty("query_cache") QueryCacheStats query_cache,
 			@JsonProperty("commit_user_data") Map<String, String> commit_user_data,
 			@JsonProperty("directory_cached_files") String[] directory_cached_files,
-			@JsonProperty("directory_cached_ram_used") String directory_cached_ram_used) {
+			@JsonProperty("directory_cached_ram_used") String directory_cached_ram_used,
+			@JsonProperty("active_index_analyzers") Integer active_index_analyzers,
+			@JsonProperty("active_query_analyzers") Integer active_query_analyzers) {
 		this.num_docs = num_docs;
 		this.num_deleted_docs = num_deleted_docs;
 		this.merge_policy = merge_policy;
@@ -125,11 +129,14 @@ public class IndexStatus {
 		this.commit_user_data = commit_user_data;
 		this.directory_cached_files = directory_cached_files;
 		this.directory_cached_ram_used = directory_cached_ram_used;
+		this.active_index_analyzers = active_index_analyzers;
+		this.active_query_analyzers = active_query_analyzers;
 	}
 
 	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final Directory directory,
 			final IndexSearcher indexSearcher, final IndexWriter indexWriter, final IndexSettingsDefinition settings,
-			final Set<String> analyzers, final Set<String> fields) throws IOException {
+			final Set<String> analyzers, final Set<String> fields, final int activeIndexAnalyzers,
+			final int activeQueryAnalyzers) throws IOException {
 		final IndexReader indexReader = indexSearcher.getIndexReader();
 		num_docs = (long) indexReader.numDocs();
 		num_deleted_docs = (long) indexReader.numDeletedDocs();
@@ -190,6 +197,8 @@ public class IndexStatus {
 		this.master_uuid = masterUuid == null ? null : masterUuid.toString();
 		this.settings = settings;
 		this.analyzers = analyzers;
+		this.active_index_analyzers = activeIndexAnalyzers;
+		this.active_query_analyzers = activeQueryAnalyzers;
 		this.fields = fields;
 
 		final QueryCache queryCache = indexSearcher.getQueryCache();
@@ -260,6 +269,10 @@ public class IndexStatus {
 		if (!Objects.deepEquals(analyzers, s.analyzers))
 			return false;
 		if (!Objects.deepEquals(fields, s.fields))
+			return false;
+		if (!Objects.equals(active_index_analyzers, s.active_index_analyzers))
+			return false;
+		if (!Objects.equals(active_query_analyzers, s.active_query_analyzers))
 			return false;
 		return true;
 	}

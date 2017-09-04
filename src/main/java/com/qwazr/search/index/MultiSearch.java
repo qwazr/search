@@ -84,11 +84,11 @@ class MultiSearch implements Closeable, AutoCloseable {
 		try {
 			final SortedSetDocValuesReaderState state =
 					IndexUtils.getNewFacetsState(indexSearcher.getIndexReader(), null);
-			final QueryContextImpl queryContext =
-					new QueryContextImpl(context.indexProvider, null, context.executorService, context.indexAnalyzers,
-							context.queryAnalyzers, context.fieldMap, null, state, indexSearcher, null,
-							new HashMap<>());
-			return new QueryExecution<T>(queryContext, queryDef).execute(resultDocuments);
+			try (final QueryContextImpl queryContext = new QueryContextImpl(context.indexProvider, null,
+					context.executorService, context.indexAnalyzers, context.queryAnalyzers, context.fieldMap, null,
+					state, indexSearcher, null, new HashMap<>())) {
+				return new QueryExecution<T>(queryContext, queryDef).execute(resultDocuments);
+			}
 		} finally {
 			decRef();
 		}

@@ -38,9 +38,7 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.ObjectMappers;
-import com.qwazr.utils.http.HttpClients;
 import org.apache.commons.io.output.NullOutputStream;
-import org.apache.http.pool.PoolStats;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -1149,6 +1147,17 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
+	public void test970checkUpdatableAnalyzers() throws IOException, URISyntaxException {
+		final IndexServiceInterface client = getClient();
+		IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
+		Assert.assertEquals(1, indexStatus.active_query_analyzers, 0);
+		Assert.assertEquals(1, indexStatus.active_index_analyzers, 0);
+		indexStatus = indexStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		Assert.assertEquals(1, indexStatus.active_query_analyzers, 0);
+		Assert.assertEquals(1, indexStatus.active_index_analyzers, 0);
+	}
+
+	@Test
 	public void test980DeleteIndex() throws URISyntaxException {
 		checkDelete(INDEX_SLAVE_NAME);
 		checkDelete(INDEX_MASTER_NAME);
@@ -1167,14 +1176,6 @@ public abstract class JsonAbstractTest {
 		Set<String> schemas = client.getSchemas();
 		Assert.assertNotNull(schemas);
 		Assert.assertFalse(schemas.contains(SCHEMA_NAME));
-	}
-
-	@Test
-	public void test999httpClient() {
-		final PoolStats stats = HttpClients.CNX_MANAGER.getTotalStats();
-		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
-		Assert.assertEquals(0, stats.getPending());
-		Assert.assertTrue(stats.getLeased() == 0 || stats.getAvailable() > 0);
 	}
 
 }

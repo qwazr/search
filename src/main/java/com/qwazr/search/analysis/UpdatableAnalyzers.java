@@ -22,8 +22,11 @@ import org.apache.lucene.analysis.AnalyzerWrapper;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 final public class UpdatableAnalyzers extends AnalyzerWrapper {
+
+	private final AtomicInteger activeAnalyzers = new AtomicInteger();
 
 	private volatile Analyzers analyzers;
 
@@ -33,10 +36,16 @@ final public class UpdatableAnalyzers extends AnalyzerWrapper {
 	}
 
 	final public synchronized void update(final Map<String, Analyzer> analyzerMap) throws ServerException {
+		if (analyzers != null && analyzerMap == analyzers.analyzerMap)
+			return;
 		final Analyzers oldAnalyzers = analyzers;
 		analyzers = new Analyzers(analyzerMap).acquire();
 		if (oldAnalyzers != null)
 			oldAnalyzers.close();
+	}
+
+	public int getActiveAnalyzers() {
+		return activeAnalyzers.get();
 	}
 
 	@Override
@@ -72,6 +81,7 @@ final public class UpdatableAnalyzers extends AnalyzerWrapper {
 			super(PER_FIELD_REUSE_STRATEGY);
 			refCounter = new ReferenceCounter.Impl();
 			this.analyzerMap = analyzerMap;
+			activeAnalyzers.incrementAndGet();
 		}
 
 		private Analyzers acquire() {
@@ -83,6 +93,7 @@ final public class UpdatableAnalyzers extends AnalyzerWrapper {
 		public void close() {
 			if (refCounter.release() > 0)
 				return;
+			activeAnalyzers.decrementAndGet();
 			if (analyzerMap != null)
 				analyzerMap.forEach((s, analyzer) -> analyzer.close());
 		}

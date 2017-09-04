@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,9 +19,10 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.facet.FacetsConfig;
 
+import java.io.Closeable;
 import java.util.Collection;
 
-public interface IndexContext {
+public interface IndexContext extends Closeable {
 
 	default IndexInstance getIndex(String indexName) {
 		return null;

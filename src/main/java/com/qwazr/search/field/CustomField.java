@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,10 +27,10 @@ final class CustomField extends Field {
 
 		if (!type.stored() && type.indexOptions() == IndexOptions.NONE)
 			throw new IllegalArgumentException(
-					"it doesn't make sense to have a field that " + "is neither indexed nor stored");
+					"it doesn't make sense to have a field that is neither indexed nor stored: " + name);
 
 		if (value == null)
-			throw new IllegalArgumentException("value cannot be null");
+			throw new IllegalArgumentException("value cannot be null: " + name);
 
 		this.fieldsData = value;
 	}

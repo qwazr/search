@@ -55,7 +55,7 @@ public interface QueryContext extends IndexContext {
 		throw new NotImplementedException("Not available");
 	}
 
-	QueryContext DEFAULT = new QueryContext() {
+	QueryContext DEFAULT = () -> {
 	};
 
 }

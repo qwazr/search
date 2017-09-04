@@ -51,10 +51,8 @@ import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.query.TermsQuery;
 import com.qwazr.search.query.WildcardQuery;
 import com.qwazr.server.RemoteService;
-import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import org.apache.http.conn.HttpHostConnectException;
-import org.apache.http.pool.PoolStats;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.search.join.ScoreMode;
 import org.junit.Assert;
@@ -791,6 +789,16 @@ public abstract class JavaAbstractTest {
 	}
 
 	@Test
+	public void test970checkUpdatableAnalyzers() throws IOException, URISyntaxException {
+		IndexStatus indexStatus = getMaster().getIndexStatus();
+		Assert.assertEquals(1, indexStatus.active_query_analyzers, 0);
+		Assert.assertEquals(1, indexStatus.active_index_analyzers, 0);
+		indexStatus = getSlave().getIndexStatus();
+		Assert.assertEquals(1, indexStatus.active_query_analyzers, 0);
+		Assert.assertEquals(1, indexStatus.active_index_analyzers, 0);
+	}
+
+	@Test
 	public void test980DeleteIndex() throws URISyntaxException, IOException {
 		File indexSlave = getIndexDir(AnnotatedIndex.INDEX_NAME_SLAVE);
 		Assert.assertTrue(indexSlave.exists());
@@ -810,14 +818,6 @@ public abstract class JavaAbstractTest {
 		Assert.assertTrue(getSchemaDir().exists());
 		getMaster().deleteSchema();
 		Assert.assertFalse(getSchemaDir().exists());
-	}
-
-	@Test
-	public void test999httpClient() {
-		final PoolStats stats = HttpClients.CNX_MANAGER.getTotalStats();
-		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
-		Assert.assertEquals(0, stats.getPending());
-		Assert.assertTrue(stats.getLeased() == 0 || stats.getAvailable() > 0);
 	}
 
 }

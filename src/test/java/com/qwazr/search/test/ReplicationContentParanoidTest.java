@@ -111,6 +111,10 @@ public class ReplicationContentParanoidTest {
 		Assert.assertEquals(masterStatus.num_docs, slaveStatus.num_docs);
 		Assert.assertEquals(masterStatus.num_deleted_docs, slaveStatus.num_deleted_docs);
 		Assert.assertEquals(masterStatus.number_of_segment, slaveStatus.number_of_segment);
+		Assert.assertEquals(1, slaveStatus.active_query_analyzers, 0);
+		Assert.assertEquals(1, slaveStatus.active_index_analyzers, 0);
+		Assert.assertEquals(1, masterStatus.active_query_analyzers, 0);
+		Assert.assertEquals(1, masterStatus.active_index_analyzers, 0);
 		return slaveStatus;
 	}
 
