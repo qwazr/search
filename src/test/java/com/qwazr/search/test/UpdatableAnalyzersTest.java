@@ -107,6 +107,8 @@ public class UpdatableAnalyzersTest {
 
 		// At the end, we should only have 1 active analyzer
 		Assert.assertEquals(1, updatableAnalyzers.getActiveAnalyzers());
+		updatableAnalyzers.close();
+		Assert.assertEquals(0, updatableAnalyzers.getActiveAnalyzers());
 	}
 
 	@Index(name = "index", schema = "schema")

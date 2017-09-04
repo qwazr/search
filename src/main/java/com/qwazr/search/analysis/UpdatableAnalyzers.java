@@ -22,11 +22,12 @@ import org.apache.lucene.analysis.AnalyzerWrapper;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 final public class UpdatableAnalyzers extends AnalyzerWrapper {
 
-	private final AtomicInteger activeAnalyzers = new AtomicInteger();
+	private final Set<Analyzers> activeAnalyzers = ConcurrentHashMap.newKeySet();
 
 	private volatile Analyzers analyzers;
 
@@ -36,20 +37,19 @@ final public class UpdatableAnalyzers extends AnalyzerWrapper {
 	}
 
 	final public synchronized void update(final Map<String, Analyzer> analyzerMap) throws ServerException {
-		if (analyzers != null && analyzerMap == analyzers.analyzerMap)
-			return;
 		final Analyzers oldAnalyzers = analyzers;
 		analyzers = new Analyzers(analyzerMap).acquire();
 		if (oldAnalyzers != null)
-			oldAnalyzers.close();
+			if (activeAnalyzers.add(oldAnalyzers))
+				oldAnalyzers.close();
 	}
 
 	public int getActiveAnalyzers() {
-		return activeAnalyzers.get();
+		return activeAnalyzers.size() + (analyzers != null ? 1 : 0);
 	}
 
 	@Override
-	public void close() {
+	public synchronized void close() {
 		if (analyzers != null)
 			analyzers.close();
 		analyzers = null;
@@ -81,7 +81,6 @@ final public class UpdatableAnalyzers extends AnalyzerWrapper {
 			super(PER_FIELD_REUSE_STRATEGY);
 			refCounter = new ReferenceCounter.Impl();
 			this.analyzerMap = analyzerMap;
-			activeAnalyzers.incrementAndGet();
 		}
 
 		private Analyzers acquire() {
@@ -90,12 +89,14 @@ final public class UpdatableAnalyzers extends AnalyzerWrapper {
 		}
 
 		@Override
-		public void close() {
-			if (refCounter.release() > 0)
+		public synchronized void close() {
+			final int ref = refCounter.release();
+			if (ref > 0)
 				return;
-			activeAnalyzers.decrementAndGet();
+			assert ref == 0;
 			if (analyzerMap != null)
 				analyzerMap.forEach((s, analyzer) -> analyzer.close());
+			activeAnalyzers.remove(this);
 		}
 
 		@Override
