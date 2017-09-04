@@ -40,6 +40,10 @@ public class IndexSettingsDefinition {
 		NO, CONCURRENT, SERIAL
 	}
 
+	public enum Replication {
+		FILES, NRT
+	}
+
 	public static final int DEFAULT_MAX_MERGE_AT_ONCE = 10;
 	public static final int DEFAULT_SEGMENTS_PER_TIER = 10;
 	public static final double DEFAULT_MAX_MERGED_SEGMENT_MB = 5 * 1024 * 1024;
@@ -50,6 +54,8 @@ public class IndexSettingsDefinition {
 	final public String similarityClass;
 
 	final public RemoteIndex master;
+
+	final public Replication replication;
 
 	@JsonProperty("directory_type")
 	final public Type directoryType;
@@ -95,6 +101,7 @@ public class IndexSettingsDefinition {
 		mergeScheduler = null;
 		similarityClass = null;
 		master = null;
+		replication = null;
 		ramBufferSize = null;
 		useCompoundFile = null;
 		maxMergeAtOnce = null;
@@ -113,6 +120,7 @@ public class IndexSettingsDefinition {
 		this.mergeScheduler = builder.mergeScheduler;
 		this.similarityClass = builder.similarityClass;
 		this.master = builder.master;
+		this.replication = builder.replication;
 		this.ramBufferSize = builder.ramBufferSize;
 		this.useCompoundFile = builder.useCompoundFile;
 		this.maxMergeAtOnce = builder.maxMergeAtOnce;
@@ -150,6 +158,8 @@ public class IndexSettingsDefinition {
 		if (!Objects.equals(similarityClass, s.similarityClass))
 			return false;
 		if (!Objects.equals(master, s.master))
+			return false;
+		if (!Objects.equals(replication, s.replication))
 			return false;
 		if (!Objects.equals(ramBufferSize, s.ramBufferSize))
 			return false;
@@ -194,6 +204,7 @@ public class IndexSettingsDefinition {
 		private MergeScheduler mergeScheduler;
 		private String similarityClass;
 		private RemoteIndex master;
+		private Replication replication;
 		private Double ramBufferSize;
 		private Boolean useCompoundFile;
 		private Integer maxMergeAtOnce;
@@ -214,6 +225,7 @@ public class IndexSettingsDefinition {
 			mergeScheduler = annotatedIndex.mergeScheduler();
 			similarityClass(annotatedIndex.similarityClass());
 			master(annotatedIndex.replicationMaster());
+			replication(annotatedIndex.replicationType());
 			ramBufferSize(annotatedIndex.ramBufferSize());
 			useCompoundFile(annotatedIndex.useCompoundFile());
 			maxMergeAtOnce(annotatedIndex.maxMergeAtOnce());
@@ -232,6 +244,7 @@ public class IndexSettingsDefinition {
 			this.mergeScheduler = settings.mergeScheduler;
 			this.similarityClass = settings.similarityClass;
 			this.master = settings.master;
+			this.replication = settings.replication;
 			this.ramBufferSize = settings.ramBufferSize;
 			this.useCompoundFile = settings.useCompoundFile;
 			this.maxMergeAtOnce = settings.maxMergeAtOnce;
@@ -275,6 +288,11 @@ public class IndexSettingsDefinition {
 
 		public Builder master(final String schema, final String index) {
 			this.master = new RemoteIndex(schema, index);
+			return this;
+		}
+
+		public Builder replication(final Replication replication) {
+			this.replication = replication;
 			return this;
 		}
 

@@ -35,6 +35,8 @@ import org.apache.lucene.index.SimpleMergedSegmentWarmer;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.replicator.LocalReplicator;
+import org.apache.lucene.replicator.nrt.PrimaryNode;
+import org.apache.lucene.replicator.nrt.ReplicaNode;
 import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
@@ -83,8 +85,13 @@ class IndexInstanceBuilder {
 
 	WriterAndSearcher writerAndSearcher = null;
 
+	// Default replication strategy
 	LocalReplicator localReplicator = null;
 	IndexReplicator indexReplicator = null;
+
+	// NRT replication strategy
+	PrimaryNode primaryNode = null;
+	ReplicaNode replicaNode = null;
 
 	private Similarity similarity;
 	private SearcherFactory searcherFactory;
