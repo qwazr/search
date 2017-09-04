@@ -64,6 +64,7 @@ public class ReplicationContentParanoidTest {
 						.mergedSegmentWarmer(true)
 						.indexReaderWarmer(false)
 						.useCompoundFile(false)
+						//.replication(IndexSettingsDefinition.Replication.NRT)
 						.build());
 		master.createUpdateSchema();
 		master.createUpdateIndex();
@@ -73,6 +74,7 @@ public class ReplicationContentParanoidTest {
 				IndexSettingsDefinition.of()
 						.master(master.getSchemaName(), master.getIndexName())
 						.indexReaderWarmer(false)
+						//.replication(IndexSettingsDefinition.Replication.NRT)
 						.build());
 		slave1.createUpdateIndex();
 
@@ -80,6 +82,7 @@ public class ReplicationContentParanoidTest {
 				IndexSettingsDefinition.of()
 						.master(master.getSchemaName(), master.getIndexName())
 						.indexReaderWarmer(true)
+						//.replication(IndexSettingsDefinition.Replication.NRT)
 						.build());
 		slave2.createUpdateIndex();
 

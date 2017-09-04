@@ -39,6 +39,8 @@ public @interface Index {
 
 	String replicationMaster() default StringUtils.EMPTY;
 
+	IndexSettingsDefinition.Replication replicationType() default IndexSettingsDefinition.Replication.FILES;
+
 	IndexSettingsDefinition.Type type() default IndexSettingsDefinition.Type.FSDirectory;
 
 	IndexSettingsDefinition.MergeScheduler mergeScheduler() default IndexSettingsDefinition.MergeScheduler.CONCURRENT;

@@ -34,9 +34,6 @@ import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.SimpleMergedSegmentWarmer;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
-import org.apache.lucene.replicator.LocalReplicator;
-import org.apache.lucene.replicator.nrt.PrimaryNode;
-import org.apache.lucene.replicator.nrt.ReplicaNode;
 import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
@@ -84,14 +81,6 @@ class IndexInstanceBuilder {
 	UpdatableAnalyzers queryAnalyzers;
 
 	WriterAndSearcher writerAndSearcher = null;
-
-	// Default replication strategy
-	LocalReplicator localReplicator = null;
-	IndexReplicator indexReplicator = null;
-
-	// NRT replication strategy
-	PrimaryNode primaryNode = null;
-	ReplicaNode replicaNode = null;
 
 	private Similarity similarity;
 	private SearcherFactory searcherFactory;
@@ -219,42 +208,68 @@ class IndexInstanceBuilder {
 		checkCommit(taxonomyWriter.getIndexWriter());
 	}
 
+	private long replicaCreateIfNotExistAndGetGen() throws IOException {
+		long gen = SegmentInfos.getLastCommitGeneration(dataDirectory);
+		if (gen >= 0)
+			return gen;
+		openOrCreateDataIndex();
+		IOUtils.closeQuietly(indexWriter);
+		indexWriter = null;
+		return SegmentInfos.getLastCommitGeneration(dataDirectory);
+	}
+
 	private void buildSlave() throws IOException, URISyntaxException {
 
-		indexReplicator = new IndexReplicator(indexService, settings.master, fileSet.uuidMasterFile, dataDirectory,
-				taxonomyDirectory, fileSet.replWorkPath, () -> false);
+		final boolean withTaxo = IndexSettingsDefinition.useTaxonomyIndex(settings);
 
-		if (taxonomyDirectory != null) {
-			if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0 ||
-					SegmentInfos.getLastCommitGeneration(taxonomyDirectory) < 0)
-				indexReplicator.updateNow();
-		} else {
-			if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0) {
-				openOrCreateDataIndex();
-				IOUtils.closeQuietly(indexWriter);
-				indexWriter = null;
+		switch (IndexSettingsDefinition.getReplicationType(settings)) {
+		case FILES:
+			if (withTaxo) {
+				writerAndSearcher =
+						new ReplicationFiles.SlaveWithTaxo(indexService, settings.master, fileSet, dataDirectory,
+								taxonomyDirectory, searcherFactory);
+			} else {
+				replicaCreateIfNotExistAndGetGen();
+				writerAndSearcher =
+						new ReplicationFiles.SlaveNoTaxo(indexService, settings.master, fileSet, dataDirectory,
+								searcherFactory);
 			}
+			break;
+		case NRT:
+			if (withTaxo)
+				throw new ServerException("the NRT replication does not support Taxonomy secondary index");
+			final long currentGen = replicaCreateIfNotExistAndGetGen();
+			writerAndSearcher = ReplicationNrt.slave(dataDirectory, currentGen, searcherFactory);
+			break;
 		}
 
-		writerAndSearcher = WriterAndSearcher.of(dataDirectory, taxonomyDirectory, searcherFactory);
 	}
 
 	private void buildMaster() throws IOException {
 
 		openOrCreateDataIndex();
-		if (IndexSettingsDefinition.useTaxonomyIndex(settings))
+
+		final boolean withTaxo = IndexSettingsDefinition.useTaxonomyIndex(settings);
+		if (withTaxo)
 			openOrCreateTaxonomyIndex();
 
-		// Finally we build the SearcherManager
-		writerAndSearcher = WriterAndSearcher.of(indexWriter, taxonomyWriter, searcherFactory);
-
-		// Manage the master replication (revision publishing)
-		localReplicator = new LocalReplicator();
-		localReplicator.publish(writerAndSearcher.newRevision());
+		// Manage the master replication
+		switch (IndexSettingsDefinition.getReplicationType(settings)) {
+		case FILES:
+			writerAndSearcher = withTaxo ?
+					new ReplicationFiles.MasterWithTaxo(indexWriter, taxonomyWriter, searcherFactory) :
+					new ReplicationFiles.MasterNoTaxo(indexWriter, searcherFactory);
+			break;
+		case NRT:
+			if (withTaxo)
+				throw new ServerException("the NRT replication does not support Taxonomy secondary index");
+			writerAndSearcher = ReplicationNrt.master(indexWriter, searcherFactory);
+			break;
+		}
 	}
 
 	private void abort() {
-		IOUtils.closeQuietly(indexReplicator, writerAndSearcher, indexAnalyzers, queryAnalyzers, localReplicator);
+		IOUtils.closeQuietly(writerAndSearcher, indexAnalyzers, queryAnalyzers);
 
 		if (taxonomyWriter != null) {
 			IOUtils.closeQuietly(taxonomyWriter);

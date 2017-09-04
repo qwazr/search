@@ -146,6 +146,12 @@ public class IndexSettingsDefinition {
 		return settings != null && (settings.enableTaxonomyIndex == null ? false : settings.enableTaxonomyIndex);
 	}
 
+	public static Replication getReplicationType(final IndexSettingsDefinition settings) {
+		return settings != null ?
+				settings.replication != null ? settings.replication : Replication.FILES :
+				Replication.FILES;
+	}
+
 	@Override
 	public final boolean equals(final Object o) {
 		if (o == null || !(o instanceof IndexSettingsDefinition))

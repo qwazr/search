@@ -101,8 +101,6 @@ final public class IndexInstance implements Closeable {
 	private final FileResourceLoader fileResourceLoader;
 	private final Provider indexProvider;
 
-	private final LocalReplicator localReplicator;
-	private final IndexReplicator indexReplicator;
 	private final ReentrantLock replicationLock;
 	private final ReentrantLock commitLock;
 
@@ -119,6 +117,9 @@ final public class IndexInstance implements Closeable {
 
 	private volatile Pair<IndexReader, SortedSetDocValuesReaderState> facetsReaderStateCache;
 	private final ReentrantLock facetsReaderStateCacheLog;
+
+	private final IndexReplicator indexReplicator;
+	private final LocalReplicator localReplicator;
 
 	IndexInstance(final IndexInstanceBuilder builder) {
 		this.readWriteSemaphores = builder.readWriteSemaphores;
@@ -140,12 +141,16 @@ final public class IndexInstance implements Closeable {
 		this.executorService = builder.executorService;
 		this.instanceFactory = builder.instanceFactory;
 		this.fileResourceLoader = builder.fileResourceLoader;
-		this.localReplicator = builder.localReplicator;
-		this.indexReplicator = builder.indexReplicator;
 		this.replicationLock = new ReentrantLock(true);
 		this.commitLock = new ReentrantLock(true);
 		this.facetsReaderStateCache = null;
 		this.facetsReaderStateCacheLog = new ReentrantLock(true);
+		this.indexReplicator = writerAndSearcher instanceof ReplicationFiles.Slave ?
+				((ReplicationFiles.Slave) writerAndSearcher).getIndexReplicator() :
+				null;
+		this.localReplicator = writerAndSearcher instanceof ReplicationFiles.Master ?
+				((ReplicationFiles.Master) writerAndSearcher).getLocalReplicator() :
+				null;
 	}
 
 	public IndexSettingsDefinition getSettings() {
@@ -154,7 +159,7 @@ final public class IndexInstance implements Closeable {
 
 	@Override
 	public void close() {
-		IOUtils.closeQuietly(indexReplicator, writerAndSearcher, indexAnalyzers, queryAnalyzers, localReplicator);
+		IOUtils.closeQuietly(writerAndSearcher, indexAnalyzers, queryAnalyzers);
 
 		if (taxonomyDirectory != null)
 			IOUtils.closeQuietly(taxonomyDirectory);
@@ -337,7 +342,6 @@ final public class IndexInstance implements Closeable {
 		commitLock.lock();
 		try {
 			writerAndSearcher.commit();
-			localReplicator.publish(writerAndSearcher.newRevision());
 			multiSearchInstances.forEach(MultiSearchInstance::refresh);
 		} finally {
 			commitLock.unlock();

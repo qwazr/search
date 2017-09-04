@@ -20,12 +20,8 @@ import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.replicator.IndexAndTaxonomyRevision;
-import org.apache.lucene.replicator.IndexRevision;
-import org.apache.lucene.replicator.Revision;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.SearcherFactory;
-import org.apache.lucene.search.SearcherManager;
-import org.apache.lucene.store.Directory;
+import org.apache.lucene.search.ReferenceManager;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -34,8 +30,6 @@ interface WriterAndSearcher extends Closeable {
 
 	void refresh() throws IOException;
 
-	Revision newRevision() throws IOException;
-
 	<T> T search(final SearchAction<T> action) throws IOException;
 
 	<T> T write(final WriteAction<T> action) throws IOException;
@@ -43,23 +37,6 @@ interface WriterAndSearcher extends Closeable {
 	void commit() throws IOException;
 
 	IndexWriter getIndexWriter();
-
-	static WriterAndSearcher of(final Directory dataDirectory, final Directory taxonomyDirectory,
-			final SearcherFactory searcherFactory) throws IOException {
-		if (taxonomyDirectory == null)
-			return new WithoutTaxo(dataDirectory, searcherFactory);
-		else
-			return new WithTaxo(dataDirectory, taxonomyDirectory, searcherFactory);
-	}
-
-	static WriterAndSearcher of(final IndexWriter indexWriter,
-			final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter,
-			final SearcherFactory searcherFactory) throws IOException {
-		if (taxonomyWriter == null)
-			return new WithoutTaxo(indexWriter, searcherFactory);
-		else
-			return new WithTaxo(indexWriter, taxonomyWriter, searcherFactory);
-	}
 
 	abstract class Common implements WriterAndSearcher {
 
@@ -75,28 +52,19 @@ interface WriterAndSearcher extends Closeable {
 		}
 	}
 
-	final class WithoutTaxo extends Common {
+	class NoTaxo extends Common {
 
-		final SearcherManager searcherManager;
+		final ReferenceManager<IndexSearcher> searcherManager;
 
-		WithoutTaxo(final IndexWriter indexWriter, final SearcherFactory searcherFactory) throws IOException {
+		NoTaxo(final IndexWriter indexWriter, final ReferenceManager<IndexSearcher> searcherManager)
+				throws IOException {
 			super(indexWriter);
-			this.searcherManager = new SearcherManager(indexWriter, searcherFactory);
-		}
-
-		WithoutTaxo(final Directory dataDirectory, final SearcherFactory searcherFactory) throws IOException {
-			super(null);
-			searcherManager = new SearcherManager(dataDirectory, searcherFactory);
+			this.searcherManager = searcherManager;
 		}
 
 		@Override
 		final public void refresh() throws IOException {
 			searcherManager.maybeRefresh();
-		}
-
-		@Override
-		final public IndexRevision newRevision() throws IOException {
-			return new IndexRevision(indexWriter);
 		}
 
 		@Override
@@ -115,7 +83,7 @@ interface WriterAndSearcher extends Closeable {
 		}
 
 		@Override
-		final public void commit() throws IOException {
+		public void commit() throws IOException {
 			indexWriter.flush();
 			indexWriter.commit();
 			searcherManager.maybeRefresh();
@@ -129,35 +97,22 @@ interface WriterAndSearcher extends Closeable {
 		}
 	}
 
-	final class WithTaxo extends Common {
+	class WithTaxo extends Common {
 
 		final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter;
 		final SearcherTaxonomyManager searcherTaxonomyManager;
 
 		WithTaxo(final IndexWriter indexWriter,
 				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter,
-				final SearcherFactory searcherFactory) throws IOException {
+				final SearcherTaxonomyManager searcherTaxonomyManager) throws IOException {
 			super(indexWriter);
 			this.taxonomyWriter = taxonomyWriter;
-			this.searcherTaxonomyManager =
-					new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter);
-		}
-
-		WithTaxo(final Directory dataDirectory, final Directory taxonomyDirectory,
-				final SearcherFactory searcherFactory) throws IOException {
-			super(null);
-			taxonomyWriter = null;
-			searcherTaxonomyManager = new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory);
+			this.searcherTaxonomyManager = searcherTaxonomyManager;
 		}
 
 		@Override
 		final public void refresh() throws IOException {
 			searcherTaxonomyManager.maybeRefresh();
-		}
-
-		@Override
-		public IndexAndTaxonomyRevision newRevision() throws IOException {
-			return new IndexAndTaxonomyRevision(indexWriter, taxonomyWriter);
 		}
 
 		@Override
@@ -176,7 +131,7 @@ interface WriterAndSearcher extends Closeable {
 		}
 
 		@Override
-		final public void commit() throws IOException {
+		public void commit() throws IOException {
 			taxonomyWriter.getIndexWriter().flush();
 			taxonomyWriter.commit();
 			indexWriter.flush();
