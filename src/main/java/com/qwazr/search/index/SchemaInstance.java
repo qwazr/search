@@ -327,7 +327,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 			backupRootDirectory = null;
 	}
 
-	IndexCheckStatus checkIndex(final String indexName) throws IOException {
+	IndexCheckStatus checkIndex(final String indexName) throws Exception {
 		final IndexInstanceManager indexInstanceManager = indexMap.get(indexName);
 		return indexInstanceManager == null ? null : new IndexCheckStatus(indexInstanceManager.check());
 	}

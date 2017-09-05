@@ -19,7 +19,6 @@ package com.qwazr.search.index;
 import com.qwazr.utils.IOUtils;
 import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.replicator.IndexAndTaxonomyRevision;
 import org.apache.lucene.replicator.IndexRevision;
 import org.apache.lucene.replicator.LocalReplicator;
@@ -44,8 +43,9 @@ interface ReplicationFiles {
 
 		final LocalReplicator localReplicator;
 
-		MasterWithTaxo(IndexWriter indexWriter, IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter,
-				SearcherFactory searcherFactory) throws IOException {
+		MasterWithTaxo(final IndexWriter indexWriter,
+				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter,
+				final SearcherFactory searcherFactory) throws IOException {
 			super(indexWriter, taxonomyWriter,
 					new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter));
 			localReplicator = new LocalReplicator();
@@ -78,17 +78,11 @@ interface ReplicationFiles {
 
 		private final IndexReplicator indexReplicator;
 
-		SlaveWithTaxo(final IndexServiceInterface indexService, RemoteIndex master, IndexFileSet fileSet,
-				Directory dataDirectory, Directory taxonomyDirectory, SearcherFactory searcherFactory)
+		SlaveWithTaxo(final IndexReplicator indexReplicator, final Directory dataDirectory,
+				final Directory taxonomyDirectory, final SearcherFactory searcherFactory)
 				throws IOException, URISyntaxException {
 			super(null, null, new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory));
-
-			indexReplicator =
-					new IndexReplicator(indexService, master, fileSet.uuidMasterFile, dataDirectory, taxonomyDirectory,
-							fileSet.replWorkPath, () -> false);
-			if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0 ||
-					SegmentInfos.getLastCommitGeneration(taxonomyDirectory) < 0)
-				indexReplicator.updateNow();
+			this.indexReplicator = indexReplicator;
 		}
 
 		@Override
@@ -101,13 +95,14 @@ interface ReplicationFiles {
 		public IndexReplicator getIndexReplicator() {
 			return indexReplicator;
 		}
+
 	}
 
 	final class MasterNoTaxo extends WriterAndSearcher.NoTaxo implements Master {
 
 		final LocalReplicator localReplicator;
 
-		MasterNoTaxo(IndexWriter indexWriter, SearcherFactory searcherFactory) throws IOException {
+		MasterNoTaxo(final IndexWriter indexWriter, final SearcherFactory searcherFactory) throws IOException {
 			super(indexWriter, new SearcherManager(indexWriter, searcherFactory));
 			localReplicator = new LocalReplicator();
 			localReplicator.publish(newRevision());
@@ -139,13 +134,10 @@ interface ReplicationFiles {
 
 		private final IndexReplicator indexReplicator;
 
-		SlaveNoTaxo(final IndexServiceInterface indexService, RemoteIndex master, IndexFileSet fileSet,
-				Directory dataDirectory, SearcherFactory searcherFactory) throws IOException, URISyntaxException {
+		SlaveNoTaxo(final IndexReplicator indexReplicator, final Directory dataDirectory,
+				final SearcherFactory searcherFactory) throws IOException, URISyntaxException {
 			super(null, new SearcherManager(dataDirectory, searcherFactory));
-			indexReplicator = new IndexReplicator(indexService, master, fileSet.uuidMasterFile, dataDirectory, null,
-					fileSet.replWorkPath, () -> false);
-			if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0)
-				indexReplicator.updateNow();
+			this.indexReplicator = indexReplicator;
 		}
 
 		@Override

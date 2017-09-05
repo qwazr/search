@@ -146,7 +146,7 @@ class IndexInstanceBuilder {
 	private final static int MERGE_SCHEDULER_SSD_THREADS =
 			Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() / 2));
 
-	private void openOrCreateDataIndex() throws IOException {
+	private void openOrCreateDataIndex(boolean closeAfter) throws IOException {
 
 		final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzers);
 		indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
@@ -195,6 +195,10 @@ class IndexInstanceBuilder {
 		indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
 
 		indexWriter = checkCommit(new IndexWriter(dataDirectory, indexWriterConfig));
+		if (closeAfter) {
+			IOUtils.closeQuietly(indexWriter);
+			indexWriter = null;
+		}
 	}
 
 	private IndexWriter checkCommit(final IndexWriter indexWriter) throws IOException {
@@ -203,18 +207,20 @@ class IndexInstanceBuilder {
 		return indexWriter;
 	}
 
-	private void openOrCreateTaxonomyIndex() throws IOException {
+	private void openOrCreateTaxonomyIndex(boolean closeAfter) throws IOException {
 		taxonomyWriter = new SnapshotDirectoryTaxonomyWriter(taxonomyDirectory);
 		checkCommit(taxonomyWriter.getIndexWriter());
+		if (closeAfter) {
+			IOUtils.closeQuietly(taxonomyWriter);
+			taxonomyWriter = null;
+		}
 	}
 
 	private long replicaCreateIfNotExistAndGetGen() throws IOException {
 		long gen = SegmentInfos.getLastCommitGeneration(dataDirectory);
 		if (gen >= 0)
 			return gen;
-		openOrCreateDataIndex();
-		IOUtils.closeQuietly(indexWriter);
-		indexWriter = null;
+		openOrCreateDataIndex(true);
 		return SegmentInfos.getLastCommitGeneration(dataDirectory);
 	}
 
@@ -222,17 +228,21 @@ class IndexInstanceBuilder {
 
 		final boolean withTaxo = IndexSettingsDefinition.useTaxonomyIndex(settings);
 
+		final IndexReplicator indexReplicator =
+				new IndexReplicator(indexService, settings.master, fileSet.uuidMasterFile, dataDirectory,
+						taxonomyDirectory, fileSet.replWorkPath, () -> false);
+		if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0 ||
+				(taxonomyDirectory != null && SegmentInfos.getLastCommitGeneration(taxonomyDirectory) < 0))
+			indexReplicator.updateNow();
+
 		switch (IndexSettingsDefinition.getReplicationType(settings)) {
 		case FILES:
 			if (withTaxo) {
 				writerAndSearcher =
-						new ReplicationFiles.SlaveWithTaxo(indexService, settings.master, fileSet, dataDirectory,
-								taxonomyDirectory, searcherFactory);
-			} else {
-				replicaCreateIfNotExistAndGetGen();
-				writerAndSearcher =
-						new ReplicationFiles.SlaveNoTaxo(indexService, settings.master, fileSet, dataDirectory,
+						new ReplicationFiles.SlaveWithTaxo(indexReplicator, dataDirectory, taxonomyDirectory,
 								searcherFactory);
+			} else {
+				writerAndSearcher = new ReplicationFiles.SlaveNoTaxo(indexReplicator, dataDirectory, searcherFactory);
 			}
 			break;
 		case NRT:
@@ -247,11 +257,11 @@ class IndexInstanceBuilder {
 
 	private void buildMaster() throws IOException {
 
-		openOrCreateDataIndex();
+		openOrCreateDataIndex(false);
 
 		final boolean withTaxo = IndexSettingsDefinition.useTaxonomyIndex(settings);
 		if (withTaxo)
-			openOrCreateTaxonomyIndex();
+			openOrCreateTaxonomyIndex(false);
 
 		// Manage the master replication
 		switch (IndexSettingsDefinition.getReplicationType(settings)) {
@@ -263,7 +273,8 @@ class IndexInstanceBuilder {
 		case NRT:
 			if (withTaxo)
 				throw new ServerException("the NRT replication does not support Taxonomy secondary index");
-			writerAndSearcher = ReplicationNrt.master(indexWriter, searcherFactory);
+			writerAndSearcher =
+					ReplicationNrt.master(indexWriter, indexWriter.getMaxCompletedSequenceNumber(), searcherFactory);
 			break;
 		}
 	}

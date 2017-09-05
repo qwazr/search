@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,9 +94,9 @@ public class AnnotatedIndexServiceTest {
 		final AnalyzerFactory analyzerFactory = resourceLoader -> {
 			Assert.assertNotNull(resourceLoader);
 			factoryCallCount.incrementAndGet();
-			return new AnnotatedIndex.TestAnalyzer(analyzerCallCount);
+			return new AnnotatedRecord.TestAnalyzer(analyzerCallCount);
 		};
-		indexManager.registerAnalyzerFactory(AnnotatedIndex.INJECTED_ANALYZER_NAME, analyzerFactory);
+		indexManager.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME, analyzerFactory);
 
 		// Get the service
 		service = indexManager.getService(IndexRecord.class);
@@ -115,7 +115,7 @@ public class AnnotatedIndexServiceTest {
 		Assert.assertEquals(2, fields.size());
 
 		// Check analyzer creation
-		service.testAnalyzer(AnnotatedIndex.INJECTED_ANALYZER_NAME, "Test");
+		service.testAnalyzer(AnnotatedRecord.INJECTED_ANALYZER_NAME, "Test");
 		Assert.assertEquals(1, factoryCallCount.get());
 		Assert.assertEquals(1, analyzerCallCount.get());
 	}
@@ -154,8 +154,8 @@ public class AnnotatedIndexServiceTest {
 		fieldBoosts.put("title", 10F);
 		fieldBoosts.put("content", 1F);
 
-		MultiFieldQuery multiFieldQuery = new MultiFieldQuery(fieldBoosts, QueryParserOperator.AND, "Title terms",
-				null);
+		MultiFieldQuery multiFieldQuery =
+				new MultiFieldQuery(fieldBoosts, QueryParserOperator.AND, "Title terms", null);
 
 		QueryBuilder builder = QueryDefinition.of(multiFieldQuery).queryDebug(true);
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
@@ -168,8 +168,8 @@ public class AnnotatedIndexServiceTest {
 	@Test
 	public void test501query() throws IOException, InterruptedException {
 		Long result = service.query(context -> {
-			ResultDefinition.WithObject<IndexRecord> res = context.searchObject(
-					QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
+			ResultDefinition.WithObject<IndexRecord> res =
+					context.searchObject(QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
 			return res.total_hits + context.getIndexReader().numDocs();
 		});
 		Assert.assertEquals(Long.valueOf(2), result);

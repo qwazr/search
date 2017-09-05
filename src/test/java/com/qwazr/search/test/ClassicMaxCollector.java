@@ -35,7 +35,7 @@ public class ClassicMaxCollector extends BaseCollector<Long> {
 		private final NumericDocValues qtyDocValues;
 
 		RandomCollector(final LeafReader reader) throws IOException {
-			qtyDocValues = reader.getNumericDocValues(AnnotatedIndex.DV_QUANTITY_FIELD);
+			qtyDocValues = reader.getNumericDocValues(AnnotatedRecord.DV_QUANTITY_FIELD);
 		}
 
 		@Override

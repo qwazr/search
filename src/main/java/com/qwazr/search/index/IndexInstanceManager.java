@@ -121,13 +121,15 @@ class IndexInstanceManager implements Closeable {
 		});
 	}
 
-	CheckIndex.Status check() throws IOException {
+	CheckIndex.Status check() throws Exception {
 		return rwl.writeEx(() -> {
 			closeIndex();
 			try (final Directory directory = IndexInstanceBuilder.getDirectory(settings, fileSet.dataDirectory)) {
 				try (final CheckIndex checkIndex = new CheckIndex(directory)) {
 					return checkIndex.checkIndex();
 				}
+			} finally {
+				ensureOpen();
 			}
 		});
 	}

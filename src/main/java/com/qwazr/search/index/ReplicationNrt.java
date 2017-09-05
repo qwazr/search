@@ -33,8 +33,8 @@ public class ReplicationNrt {
 
 	private static class Primary extends PrimaryNode {
 
-		Primary(IndexWriter writer, SearcherFactory searcherFactory) throws IOException {
-			super(writer, 1, writer.getConfig().getIndexCommit().getGeneration(), -1, searcherFactory, /* TODO: Remove */
+		Primary(IndexWriter writer, long primaryGen, SearcherFactory searcherFactory) throws IOException {
+			super(writer, 1, primaryGen, -1, searcherFactory, /* TODO: Remove */
 					System.out);
 		}
 
@@ -79,13 +79,15 @@ public class ReplicationNrt {
 		}
 
 		public void close() throws IOException {
+			if (!primary.isClosed())
+				IOUtils.closeQuietly(primary);
 			super.close();
-			IOUtils.closeQuietly(primary);
 		}
 	}
 
-	static WriterAndSearcher master(IndexWriter indexWriter, SearcherFactory searcherFactory) throws IOException {
-		final Primary primary = new Primary(indexWriter, searcherFactory);
+	static WriterAndSearcher master(IndexWriter indexWriter, long primaryGen, SearcherFactory searcherFactory)
+			throws IOException {
+		final Primary primary = new Primary(indexWriter, primaryGen, searcherFactory);
 		return new Master(indexWriter, primary);
 	}
 

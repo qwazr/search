@@ -43,11 +43,11 @@ import static com.qwazr.search.field.FieldDefinition.Template.SortedSetDocValues
 import static com.qwazr.search.field.FieldDefinition.Template.StoredField;
 import static com.qwazr.search.field.FieldDefinition.Template.StringField;
 
-@Index(name = AnnotatedIndex.INDEX_NAME_MASTER,
-		schema = AnnotatedIndex.SCHEMA_NAME,
+@Index(name = AnnotatedRecord.INDEX_NAME_MASTER,
+		schema = AnnotatedRecord.SCHEMA_NAME,
 		enableTaxonomyIndex = false,
 		mergeScheduler = IndexSettingsDefinition.MergeScheduler.SERIAL)
-public class AnnotatedIndex {
+public class AnnotatedRecord {
 
 	public final static String SCHEMA_NAME = "testSchema";
 	public final static String INDEX_NAME_MASTER = "testIndexMaster";
@@ -118,7 +118,7 @@ public class AnnotatedIndex {
 	@IndexField(template = StoredField)
 	final public SerialTest serialValue;
 
-	public AnnotatedIndex() {
+	public AnnotatedRecord() {
 		id = null;
 		title = null;
 		titleStd = null;
@@ -137,7 +137,7 @@ public class AnnotatedIndex {
 		serialValue = null;
 	}
 
-	public AnnotatedIndex(Integer id, String title, String content, Double price, Long quantity, boolean withFacets,
+	public AnnotatedRecord(Integer id, String title, String content, Double price, Long quantity, boolean withFacets,
 			boolean updateDVOnly, String... categories) {
 		this.id = id.toString();
 		this.title = title;
@@ -165,21 +165,23 @@ public class AnnotatedIndex {
 		this.serialValue = updateDVOnly ? null : new SerialTest(price, content);
 	}
 
-	public AnnotatedIndex simpleFacet(String field, String value) {
+	public AnnotatedRecord simpleFacet(String field, String value) {
 		simpleFacets.put("dynamic_simple_facet_" + field, value);
 		return this;
 	}
 
-	public AnnotatedIndex multiFacet(String field, String... values) {
+	public AnnotatedRecord multiFacet(String field, String... values) {
 		multiFacets.put("dynamic_multi_facet_" + field, Arrays.asList(values));
 		return this;
 	}
 
 	@Override
 	public boolean equals(Object object) {
-		if (!(object instanceof AnnotatedIndex))
+		if (!(object instanceof AnnotatedRecord))
 			return false;
-		AnnotatedIndex record = (AnnotatedIndex) object;
+		final AnnotatedRecord record = (AnnotatedRecord) object;
+		if (!Objects.equals(id, record.id))
+			return false;
 		if (!Objects.equals(title, record.title))
 			return false;
 		if (!Objects.equals(content, record.content))
@@ -189,11 +191,11 @@ public class AnnotatedIndex {
 		return true;
 	}
 
-	static List<AnnotatedIndex> randomList(final int count, final IntFunction<Integer> idSupplier) {
-		final List<AnnotatedIndex> records = new ArrayList<>();
+	public static List<AnnotatedRecord> randomList(final int count, final IntFunction<Integer> idSupplier) {
+		final List<AnnotatedRecord> records = new ArrayList<>();
 		for (int i = 0; i < count; i++) {
 			records.add(
-					new AnnotatedIndex(idSupplier.apply(i), RandomUtils.alphanumeric(10), RandomUtils.alphanumeric(10),
+					new AnnotatedRecord(idSupplier.apply(i), RandomUtils.alphanumeric(10), RandomUtils.alphanumeric(10),
 							RandomUtils.nextDouble(0, 100), RandomUtils.nextLong(0, 100), true, false,
 							RandomUtils.alphanumeric(5), RandomUtils.alphanumeric(5)));
 		}

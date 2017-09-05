@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestServer {
 
-	static IndexServiceInterface service;
-	static IndexServiceInterface remote;
+	public static IndexServiceInterface service;
+	public static IndexServiceInterface remote;
 
 	static final String BASE_URL = "http://localhost:9091";
 
@@ -46,8 +46,8 @@ public class TestServer {
 		SearchServer.main();
 		SearchServer.getInstance()
 				.getIndexManager()
-				.registerAnalyzerFactory(AnnotatedIndex.INJECTED_ANALYZER_NAME,
-						resourceLoader -> new AnnotatedIndex.TestAnalyzer(injectedAnalyzerCount));
+				.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME,
+						resourceLoader -> new AnnotatedRecord.TestAnalyzer(injectedAnalyzerCount));
 		IndexServiceBuilder indexServiceBuilder = SearchServer.getInstance().getServiceBuilder();
 		service = indexServiceBuilder.local();
 		remote = indexServiceBuilder.remote(RemoteService.of(BASE_URL).build());

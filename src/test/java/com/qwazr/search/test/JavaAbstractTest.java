@@ -100,12 +100,12 @@ public abstract class JavaAbstractTest {
 		this.indexSlaveDefinition = indexSlaveDefinition;
 	}
 
-	private AnnotatedIndexService<AnnotatedIndex> getMaster() throws URISyntaxException, IOException {
-		return getService(getIndexService(), AnnotatedIndex.class);
+	private AnnotatedIndexService<AnnotatedRecord> getMaster() throws URISyntaxException, IOException {
+		return getService(getIndexService(), AnnotatedRecord.class);
 	}
 
-	private AnnotatedIndexService<AnnotatedIndex> getSlave() throws URISyntaxException, IOException {
-		return getService(getIndexService(), AnnotatedIndex.class, AnnotatedIndex.INDEX_NAME_SLAVE,
+	private AnnotatedIndexService<AnnotatedRecord> getSlave() throws URISyntaxException, IOException {
+		return getService(getIndexService(), AnnotatedRecord.class, AnnotatedRecord.INDEX_NAME_SLAVE,
 				indexSlaveDefinition);
 	}
 
@@ -120,8 +120,8 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test010CheckMasterClient() throws URISyntaxException, IOException {
 		final AnnotatedIndexService master = getMaster();
-		Assert.assertEquals(AnnotatedIndex.SCHEMA_NAME, master.getSchemaName());
-		Assert.assertEquals(AnnotatedIndex.INDEX_NAME_MASTER, master.getIndexName());
+		Assert.assertEquals(AnnotatedRecord.SCHEMA_NAME, master.getSchemaName());
+		Assert.assertEquals(AnnotatedRecord.INDEX_NAME_MASTER, master.getIndexName());
 	}
 
 	@Test
@@ -223,18 +223,18 @@ public abstract class JavaAbstractTest {
 		checkTermDef(service.doAnalyzeQuery("content", "Please analyzer this text"), 3);
 	}
 
-	private final static AnnotatedIndex record1 =
-			new AnnotatedIndex(1, "First article title", "Content of the first article", 0d, 10L, true, false, "news",
+	private final static AnnotatedRecord record1 =
+			new AnnotatedRecord(1, "First article title", "Content of the first article", 0d, 10L, true, false, "news",
 					"economy").multiFacet("cat", "news", "economy");
 
-	private final static AnnotatedIndex record2 =
-			new AnnotatedIndex(2, "Second article title", "Content of the second article", 0d, 20L, true, false, "news",
+	private final static AnnotatedRecord record2 =
+			new AnnotatedRecord(2, "Second article title", "Content of the second article", 0d, 20L, true, false, "news",
 					"science").multiFacet("cat", "news", "science");
 
-	private AnnotatedIndex checkRecord(AnnotatedIndex refRecord)
+	private AnnotatedRecord checkRecord(AnnotatedRecord refRecord)
 			throws URISyntaxException, ReflectiveOperationException, IOException {
-		final AnnotatedIndexService<AnnotatedIndex> service = getMaster();
-		AnnotatedIndex record = service.getDocument(refRecord.id);
+		final AnnotatedIndexService<AnnotatedRecord> service = getMaster();
+		AnnotatedRecord record = service.getDocument(refRecord.id);
 		Assert.assertNotNull(record);
 		return record;
 	}
@@ -242,26 +242,26 @@ public abstract class JavaAbstractTest {
 	@Test
 	public void test100PostDocument()
 			throws URISyntaxException, IOException, InterruptedException, ReflectiveOperationException {
-		final AnnotatedIndexService<AnnotatedIndex> service = getMaster();
+		final AnnotatedIndexService<AnnotatedRecord> service = getMaster();
 		service.postDocument(record1);
-		AnnotatedIndex newRecord1 = checkRecord(record1);
+		AnnotatedRecord newRecord1 = checkRecord(record1);
 		Assert.assertEquals(record1, newRecord1);
 	}
 
 	@Test
 	public void test110PostDocuments()
 			throws URISyntaxException, IOException, InterruptedException, ReflectiveOperationException {
-		final AnnotatedIndexService<AnnotatedIndex> service = getMaster();
+		final AnnotatedIndexService<AnnotatedRecord> service = getMaster();
 		service.postDocuments(Arrays.asList(record1, record2));
-		AnnotatedIndex newRecord1 = checkRecord(record1);
+		AnnotatedRecord newRecord1 = checkRecord(record1);
 		Assert.assertEquals(record1, newRecord1);
-		AnnotatedIndex newRecord2 = checkRecord(record2);
+		AnnotatedRecord newRecord2 = checkRecord(record2);
 		Assert.assertEquals(record2, newRecord2);
 		Assert.assertEquals(new Long(2), service.getIndexStatus().num_docs);
 	}
 
-	private final static AnnotatedIndex docValue1 = new AnnotatedIndex(1, null, null, 1.11d, null, false, true);
-	private final static AnnotatedIndex docValue2 = new AnnotatedIndex(2, null, null, 2.22d, null, false, true);
+	private final static AnnotatedRecord docValue1 = new AnnotatedRecord(1, null, null, 1.11d, null, false, true);
+	private final static AnnotatedRecord docValue2 = new AnnotatedRecord(2, null, null, 2.22d, null, false, true);
 
 	@Test
 	public void test200UpdateDocValues() throws URISyntaxException, IOException, InterruptedException {
@@ -278,11 +278,11 @@ public abstract class JavaAbstractTest {
 		checkRecord(record2);
 	}
 
-	private ResultDefinition.WithObject<AnnotatedIndex> checkQueryResult(QueryBuilder builder, Long expectedHits)
+	private ResultDefinition.WithObject<AnnotatedRecord> checkQueryResult(QueryBuilder builder, Long expectedHits)
 			throws URISyntaxException, IOException {
 		final AnnotatedIndexService service = getMaster();
 		builder.returnedFields(RETURNED_FIELDS);
-		ResultDefinition.WithObject<AnnotatedIndex> result = service.searchQuery(builder.build());
+		ResultDefinition.WithObject<AnnotatedRecord> result = service.searchQuery(builder.build());
 		Assert.assertNotNull(result);
 		if (expectedHits != null)
 			Assert.assertEquals(expectedHits, result.total_hits);
@@ -311,45 +311,45 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test320PointExactQuery() throws URISyntaxException, IOException {
-		QueryBuilder builder = QueryDefinition.of(new LongExactQuery(AnnotatedIndex.QUANTITY_FIELD, 10));
-		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
+		QueryBuilder builder = QueryDefinition.of(new LongExactQuery(AnnotatedRecord.QUANTITY_FIELD, 10));
+		ResultDefinition.WithObject<AnnotatedRecord> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("1", result.documents.get(0).record.id);
 	}
 
 	@Test
 	public void test320PointSetQuery() throws URISyntaxException, IOException {
-		QueryBuilder builder = QueryDefinition.of(new LongSetQuery(AnnotatedIndex.QUANTITY_FIELD, 20, 25));
-		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
+		QueryBuilder builder = QueryDefinition.of(new LongSetQuery(AnnotatedRecord.QUANTITY_FIELD, 20, 25));
+		ResultDefinition.WithObject<AnnotatedRecord> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("2", result.documents.get(0).record.id);
 	}
 
 	@Test
 	public void test320PointRangeQuery() throws URISyntaxException, IOException {
-		QueryBuilder builder = QueryDefinition.of(new LongRangeQuery(AnnotatedIndex.QUANTITY_FIELD, 15L, 25L));
-		ResultDefinition.WithObject<AnnotatedIndex> result = checkQueryResult(builder, 1L);
+		QueryBuilder builder = QueryDefinition.of(new LongRangeQuery(AnnotatedRecord.QUANTITY_FIELD, 15L, 25L));
+		ResultDefinition.WithObject<AnnotatedRecord> result = checkQueryResult(builder, 1L);
 		Assert.assertEquals("2", result.documents.get(0).record.id);
 	}
 
 	@Test
 	public void test320PointMultiRangeQuery() throws URISyntaxException, IOException {
-		LongMultiRangeQuery.Builder qBuilder = new LongMultiRangeQuery.Builder(AnnotatedIndex.QUANTITY_FIELD);
+		LongMultiRangeQuery.Builder qBuilder = new LongMultiRangeQuery.Builder(AnnotatedRecord.QUANTITY_FIELD);
 		qBuilder.addRange(15L, 25L);
 		QueryBuilder builder = QueryDefinition.of(qBuilder.build());
 		checkQueryResult(builder, 1L);
 	}
 
-	private ResultDocumentObject<AnnotatedIndex> checkResultDocument(
-			ResultDefinition<ResultDocumentObject<AnnotatedIndex>> result, int pos) {
+	private ResultDocumentObject<AnnotatedRecord> checkResultDocument(
+			ResultDefinition<ResultDocumentObject<AnnotatedRecord>> result, int pos) {
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.documents);
 		Assert.assertTrue(result.documents.size() > pos);
-		ResultDocumentObject<AnnotatedIndex> resultDocument = result.documents.get(pos);
+		ResultDocumentObject<AnnotatedRecord> resultDocument = result.documents.get(pos);
 		Assert.assertNotNull(resultDocument);
 		return resultDocument;
 	}
 
-	private void checkEqualsReturnedFields(AnnotatedIndex record, AnnotatedIndex recordRef,
-			AnnotatedIndex docValueRef) {
+	private void checkEqualsReturnedFields(AnnotatedRecord record, AnnotatedRecord recordRef,
+			AnnotatedRecord docValueRef) {
 		Assert.assertEquals(recordRef.title, record.title);
 		Assert.assertEquals(recordRef.content, record.content);
 		Assert.assertEquals(docValueRef.price, record.price);
@@ -362,10 +362,10 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService service = getMaster();
 		QueryBuilder builder = QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, record2.id.toString()));
 		builder.returnedField(returnedFields);
-		ResultDefinition.WithObject<AnnotatedIndex> result = service.searchQuery(builder.build());
+		ResultDefinition.WithObject<AnnotatedRecord> result = service.searchQuery(builder.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(new Long(1), result.total_hits);
-		AnnotatedIndex returnedRecord = checkResultDocument(result, 0).record;
+		AnnotatedRecord returnedRecord = checkResultDocument(result, 0).record;
 		checkEqualsReturnedFields(returnedRecord, record2, docValue2);
 	}
 
@@ -381,19 +381,19 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test400getDocumentById() throws ReflectiveOperationException, URISyntaxException, IOException {
-		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
-		AnnotatedIndex record = master.getDocument(record1.id);
+		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
+		AnnotatedRecord record = master.getDocument(record1.id);
 		checkEqualsReturnedFields(record, record1, docValue1);
 	}
 
 	@Test
 	public void test420getDocuments() throws ReflectiveOperationException, URISyntaxException, IOException {
-		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
-		List<AnnotatedIndex> records = master.getDocuments(0, 2);
+		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
+		List<AnnotatedRecord> records = master.getDocuments(0, 2);
 		Assert.assertNotNull(records);
 		Assert.assertEquals(2L, records.size());
-		AnnotatedIndex doc1 = records.get(0);
-		AnnotatedIndex doc2 = records.get(1);
+		AnnotatedRecord doc1 = records.get(0);
+		AnnotatedRecord doc2 = records.get(1);
 		if (record1.id.equals(doc1.id))
 			checkEqualsReturnedFields(doc1, record1, docValue1);
 		else
@@ -405,16 +405,16 @@ public abstract class JavaAbstractTest {
 	}
 
 	private void testSort(QueryBuilder queryBuilder, int resultCount,
-			BiFunction<AnnotatedIndex, AnnotatedIndex, Boolean> checker) throws URISyntaxException, IOException {
-		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
-		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(queryBuilder.build());
+			BiFunction<AnnotatedRecord, AnnotatedRecord, Boolean> checker) throws URISyntaxException, IOException {
+		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
+		ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(queryBuilder.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(resultCount), result.total_hits);
 		Assert.assertNotNull(result.documents);
 		Assert.assertEquals(resultCount, result.documents.size());
-		AnnotatedIndex current = null;
-		for (ResultDocumentObject<AnnotatedIndex> resultDoc : result.documents) {
-			final AnnotatedIndex next = resultDoc.getRecord();
+		AnnotatedRecord current = null;
+		for (ResultDocumentObject<AnnotatedRecord> resultDoc : result.documents) {
+			final AnnotatedRecord next = resultDoc.getRecord();
 			if (current != null)
 				Assert.assertTrue(checker.apply(current, next));
 			current = next;
@@ -504,13 +504,13 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test600getFieldStats() throws IOException, URISyntaxException {
-		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
 		master.getFields().keySet().forEach(fieldName -> checkFieldStats(fieldName, master.getFieldStats(fieldName)));
 	}
 
 	@Test
 	public void test610TermsEnum() throws URISyntaxException, IOException {
-		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
 		int firstSize = checkTermList(master.doExtractTerms("content", null, null, 10000)).size();
 		int secondSize = checkTermList(master.doExtractTerms("content", null, 2, 10000)).size();
 		Assert.assertEquals(firstSize, secondSize + 2);
@@ -519,7 +519,7 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test612IndexStatus() throws URISyntaxException, IOException {
-		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
 		final IndexStatus indexStatus = master.getIndexStatus();
 		Assert.assertNotNull(indexStatus.segment_infos);
 		Assert.assertFalse(indexStatus.segment_infos.isEmpty());
@@ -531,16 +531,16 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test650checkIndex() throws IOException, URISyntaxException {
-		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
 		IndexCheckStatus status = master.checkIndex();
 		Assert.assertNotNull(status);
 	}
 
 	private void checkMultiField(final MultiFieldQuery query, final String check, final int size)
 			throws URISyntaxException, IOException {
-		final AnnotatedIndexService<AnnotatedIndex> master = getMaster();
+		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
 		final QueryBuilder builder = QueryDefinition.of(query).queryDebug(true);
-		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		final ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
 		Assert.assertEquals(check, result.getQuery());
 		Assert.assertEquals(size, result.documents.size());
 	}
@@ -679,9 +679,9 @@ public abstract class JavaAbstractTest {
 	public void test900join() throws URISyntaxException, IOException {
 		final AnnotatedIndexService master = getMaster();
 		final QueryBuilder builder = QueryDefinition.of(
-				new JoinQuery(AnnotatedIndex.INDEX_NAME_SLAVE, "docValuesCategory", "storedCategory", true,
+				new JoinQuery(AnnotatedRecord.INDEX_NAME_SLAVE, "docValuesCategory", "storedCategory", true,
 						ScoreMode.Max, new MatchAllDocsQuery()));
-		final ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		final ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(new Long(2), result.total_hits);
@@ -711,9 +711,9 @@ public abstract class JavaAbstractTest {
 		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
 		builder.collector("minPrice", MinNumericCollector.MinDouble.class, "price");
 		builder.collector("maxPrice", MaxNumericCollector.MaxDouble.class, "price");
-		builder.collector("minQuantity", MinNumericCollector.MinLong.class, AnnotatedIndex.DV_QUANTITY_FIELD);
-		builder.collector("maxQuantity", MaxNumericCollector.MaxLong.class, AnnotatedIndex.DV_QUANTITY_FIELD);
-		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		builder.collector("minQuantity", MinNumericCollector.MinLong.class, AnnotatedRecord.DV_QUANTITY_FIELD);
+		builder.collector("maxQuantity", MaxNumericCollector.MaxLong.class, AnnotatedRecord.DV_QUANTITY_FIELD);
+		ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
 		checkCollector(result, "minPrice", 1.11d);
 		checkCollector(result, "maxPrice", 2.22d);
 		checkCollector(result, "minQuantity", 10L, 10);
@@ -725,11 +725,11 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService master = getMaster();
 		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
 		builder.collector("maxQuantity", ClassicMaxCollector.class);
-		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
 		checkCollector(result, "maxQuantity", 20L, 20);
 	}
 
-	private void checkFacets(ResultDefinition.WithObject<AnnotatedIndex> result, String facetName, String facetDim) {
+	private void checkFacets(ResultDefinition.WithObject<AnnotatedRecord> result, String facetName, String facetDim) {
 		Assert.assertNotNull(result.facets);
 		Map<String, Number> facets = result.facets.get(facetName);
 		Assert.assertNotNull(facets);
@@ -743,7 +743,7 @@ public abstract class JavaAbstractTest {
 				new DrillDownQuery(new MatchAllDocsQuery(), true).add("dynamic_multi_facet_cat", "news"));
 		builder.collector("maxQuantity", ClassicMaxCollector.class);
 		builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10));
-		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
 		checkCollector(result, "maxQuantity", 20L, 20);
 		checkFacets(result, "dynamic_multi_facet_cat", "news");
 	}
@@ -754,7 +754,7 @@ public abstract class JavaAbstractTest {
 		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
 		builder.collector("maxQuantity", ClassicMaxCollector.class);
 		builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10));
-		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
 		checkCollector(result, "maxQuantity", 20L, 20);
 		checkFacets(result, "dynamic_multi_facet_cat", "news");
 	}
@@ -781,7 +781,7 @@ public abstract class JavaAbstractTest {
 	protected abstract File getIndexDirectory();
 
 	private File getSchemaDir() {
-		return new File(getIndexDirectory(), AnnotatedIndex.SCHEMA_NAME);
+		return new File(getIndexDirectory(), AnnotatedRecord.SCHEMA_NAME);
 	}
 
 	private File getIndexDir(String name) {
@@ -800,13 +800,13 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test980DeleteIndex() throws URISyntaxException, IOException {
-		File indexSlave = getIndexDir(AnnotatedIndex.INDEX_NAME_SLAVE);
+		File indexSlave = getIndexDir(AnnotatedRecord.INDEX_NAME_SLAVE);
 		Assert.assertTrue(indexSlave.exists());
 		getSlave().deleteIndex();
 		checkErrorStatusCode(() -> getSlave().getIndexStatus(), 404);
 		Assert.assertFalse(indexSlave.exists());
 
-		File indexMaster = getIndexDir(AnnotatedIndex.INDEX_NAME_MASTER);
+		File indexMaster = getIndexDir(AnnotatedRecord.INDEX_NAME_MASTER);
 		Assert.assertTrue(indexMaster.exists());
 		getMaster().deleteIndex();
 		checkErrorStatusCode(() -> getMaster().getIndexStatus(), 404);

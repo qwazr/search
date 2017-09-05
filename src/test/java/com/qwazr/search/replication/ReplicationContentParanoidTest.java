@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test;
+package com.qwazr.search.replication;
 
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.field.FieldDefinition;
@@ -21,6 +21,8 @@ import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.test.AnnotatedRecord;
+import com.qwazr.search.test.TestServer;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.LoggerUtils;
@@ -31,61 +33,55 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ReplicationContentParanoidTest {
+public class ReplicationContentParanoidTest extends ReplicationTestBase<AnnotatedRecord> {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(ReplicationContentParanoidTest.class);
 
 	private final static String SCHEMA = "repli-content";
+	private final static String MASTER = "replication-master";
 
-	private static AnnotatedIndexService<AnnotatedIndex> master;
-	private static AnnotatedIndexService<AnnotatedIndex> slave1;
-	private static AnnotatedIndexService<AnnotatedIndex> slave2;
+	public ReplicationContentParanoidTest() {
+		super(TestServer.service, AnnotatedRecord.class);
+	}
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-
 		LOGGER.setLevel(Level.INFO);
-
 		TestServer.startServer();
+	}
 
-		// Get the master service
-		master = new AnnotatedIndexService<>(TestServer.service, AnnotatedIndex.class, SCHEMA, "replication-master",
-				IndexSettingsDefinition.of()
-						.mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
-						.mergedSegmentWarmer(true)
-						.indexReaderWarmer(false)
-						.useCompoundFile(false)
-						//.replication(IndexSettingsDefinition.Replication.NRT)
-						.build());
-		master.createUpdateSchema();
-		master.createUpdateIndex();
-		master.createUpdateFields();
+	@Override
+	public AnnotatedIndexService<AnnotatedRecord> getMaster() throws URISyntaxException {
+		return new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, MASTER, IndexSettingsDefinition.of()
+				.mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
+				.mergedSegmentWarmer(true)
+				.indexReaderWarmer(false)
+				.useCompoundFile(false)
+				//.replication(IndexSettingsDefinition.Replication.NRT)
+				.build());
+	}
 
-		slave1 = new AnnotatedIndexService<>(TestServer.service, AnnotatedIndex.class, SCHEMA, "replication-slave1",
-				IndexSettingsDefinition.of()
-						.master(master.getSchemaName(), master.getIndexName())
-						.indexReaderWarmer(false)
-						//.replication(IndexSettingsDefinition.Replication.NRT)
-						.build());
-		slave1.createUpdateIndex();
+	@Override
+	public List<AnnotatedIndexService<AnnotatedRecord>> getSlaves() throws URISyntaxException {
+		return Arrays.asList(
 
-		slave2 = new AnnotatedIndexService<>(TestServer.service, AnnotatedIndex.class, SCHEMA, "replication-slave2",
-				IndexSettingsDefinition.of()
-						.master(master.getSchemaName(), master.getIndexName())
-						.indexReaderWarmer(true)
-						//.replication(IndexSettingsDefinition.Replication.NRT)
-						.build());
-		slave2.createUpdateIndex();
+				new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "replication-slave1",
+						IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(false)
+								//.replication(IndexSettingsDefinition.Replication.NRT)
+								.build()),
 
+				new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "replication-slave2",
+						IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(true)
+								//.replication(IndexSettingsDefinition.Replication.NRT)
+								.build()));
 	}
 
 	private Map<String, String> getCommitData(UUID version) {
@@ -102,23 +98,6 @@ public class ReplicationContentParanoidTest {
 		long t = System.currentTimeMillis();
 		runnable.run();
 		return System.currentTimeMillis() - t;
-	}
-
-	private static IndexStatus replicationAndCheck(final IndexStatus masterStatus,
-			final AnnotatedIndexService<AnnotatedIndex> slave) {
-		// Do the replication
-		slave.replicationCheck();
-		// Check we have the same status and commit data
-		final IndexStatus slaveStatus = slave.getIndexStatus();
-		Assert.assertTrue(CollectionsUtils.equals(masterStatus.commit_user_data, slaveStatus.commit_user_data));
-		Assert.assertEquals(masterStatus.num_docs, slaveStatus.num_docs);
-		Assert.assertEquals(masterStatus.num_deleted_docs, slaveStatus.num_deleted_docs);
-		Assert.assertEquals(masterStatus.number_of_segment, slaveStatus.number_of_segment);
-		Assert.assertEquals(1, slaveStatus.active_query_analyzers, 0);
-		Assert.assertEquals(1, slaveStatus.active_index_analyzers, 0);
-		Assert.assertEquals(1, masterStatus.active_query_analyzers, 0);
-		Assert.assertEquals(1, masterStatus.active_index_analyzers, 0);
-		return slaveStatus;
 	}
 
 	int indexMinTime(long... values) {
@@ -139,6 +118,10 @@ public class ReplicationContentParanoidTest {
 	public void contentTest() throws IOException, URISyntaxException, InterruptedException {
 
 		Assert.assertNotNull(master);
+
+		final AnnotatedIndexService<AnnotatedRecord> slave1 = slaves.get(0);
+		final AnnotatedIndexService<AnnotatedRecord> slave2 = slaves.get(1);
+
 		Assert.assertNotNull(slave1);
 		Assert.assertNotNull(slave2);
 
@@ -153,16 +136,17 @@ public class ReplicationContentParanoidTest {
 		for (int i = 0; i < ITERATION_COUNT; i++) {
 
 			// Post the documents
-			final List<AnnotatedIndex> records =
-					AnnotatedIndex.randomList(BATCH_SIZE, val -> RandomUtils.nextInt(0, ID_RANGE));
+			final List<AnnotatedRecord> records =
+					AnnotatedRecord.randomList(BATCH_SIZE, val -> RandomUtils.nextInt(0, ID_RANGE));
 			final Map<String, String> commitData = getCommitData(HashUtils.newTimeBasedUUID());
 			master.postDocuments(records, commitData);
 			final IndexStatus masterStatus = master.getIndexStatus();
 			Assert.assertTrue(CollectionsUtils.equals(commitData, masterStatus.commit_user_data));
 
 			// Do the replication
-			final IndexStatus slave1Status = replicationAndCheck(masterStatus, slave1);
-			final IndexStatus slave2Status = replicationAndCheck(masterStatus, slave2);
+			slave1.replicationCheck();
+			slave2.replicationCheck();
+			checkSlaveStatusEqualsMasterStatus();
 
 			// Compare content
 
@@ -184,30 +168,13 @@ public class ReplicationContentParanoidTest {
 				break;
 			}
 
-			final Iterator<AnnotatedIndex> masterIterator = master.searchIterator(queryIterator, AnnotatedIndex.class);
-			final Iterator<AnnotatedIndex> slave1Iterator = slave1.searchIterator(queryIterator, AnnotatedIndex.class);
-			final Iterator<AnnotatedIndex> slave2Iterator = slave2.searchIterator(queryIterator, AnnotatedIndex.class);
-
-			masterIterator.forEachRemaining(masterRecord -> {
-				final AnnotatedIndex slave1Record = slave1Iterator.next();
-				final AnnotatedIndex slave2Record = slave2Iterator.next();
-				Assert.assertNotNull(masterRecord.id);
-				Assert.assertNotNull(masterRecord.title);
-				Assert.assertEquals(masterRecord.id, slave1Record.id);
-				Assert.assertEquals(masterRecord.title, slave1Record.title);
-				Assert.assertEquals(masterRecord.id, slave2Record.id);
-				Assert.assertEquals(masterRecord.title, slave2Record.title);
+			compareMasterAndSlaveRecords((m, s) -> {
+				Assert.assertNotNull(m.id);
+				Assert.assertNotNull(m.title);
 			});
 
 			LOGGER.info(() -> "num_docs: " + masterStatus.num_docs + " - num_deleted_docs: " +
 					masterStatus.num_deleted_docs + " - number_of_segments: " + masterStatus.number_of_segment);
-
-			if (!Objects.equals(masterStatus.version, slave1Status.version))
-				LOGGER.warning(() -> "Master version: " + masterStatus.version + " - Slave 1 version: " +
-						slave1Status.version);
-			if (!Objects.equals(masterStatus.version, slave2Status.version))
-				LOGGER.warning(() -> "Master version: " + masterStatus.version + " - Slave 2 version: " +
-						slave2Status.version);
 
 			LOGGER.info("Master first Query wins: " + masterTotalQueryTimeWins);
 			LOGGER.info("Slave 1 first Query wins: " + slave1TotalQueryTimeWins);
