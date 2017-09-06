@@ -70,6 +70,8 @@ public class IndexStatus {
 	final public IndexSettingsDefinition settings;
 	final public Map<String, Set<FieldInfoStatus>> field_infos;
 	final public Integer segment_count;
+	final public Long segments_bytes_size;
+	final public String segments_size;
 	final public Collection<String> commit_filenames;
 	final public Long commit_generation;
 	final public MergePolicyStatus merge_policy;
@@ -92,6 +94,8 @@ public class IndexStatus {
 			@JsonProperty("fields") Set<String> fields, @JsonProperty("settings") IndexSettingsDefinition settings,
 			@JsonProperty("field_infos") Map<String, Set<FieldInfoStatus>> field_infos,
 			@JsonProperty("segment_count") Integer segment_count,
+			@JsonProperty("segments_bytes_size") Long segments_bytes_size,
+			@JsonProperty("segments_size") String segments_size,
 			@JsonProperty("commit_filenames") Collection<String> commit_filenames,
 			@JsonProperty("commit_generation") Long commit_generation,
 			@JsonProperty("merge_policy") MergePolicyStatus merge_policy,
@@ -117,6 +121,8 @@ public class IndexStatus {
 		this.settings = settings;
 		this.field_infos = field_infos;
 		this.segment_count = segment_count;
+		this.segments_bytes_size = segments_bytes_size;
+		this.segments_size = segments_size;
 		this.commit_filenames = commit_filenames;
 		this.commit_generation = commit_generation;
 		this.query_cache = query_cache;
@@ -171,9 +177,21 @@ public class IndexStatus {
 			segment_count = indexCommit.getSegmentCount();
 			commit_filenames = indexCommit.getFileNames();
 			commit_generation = indexCommit.getGeneration();
+			if (directory != null && commit_filenames != null) {
+				long size = 0;
+				for (String filename : commit_filenames)
+					size += directory.fileLength(filename);
+				segments_bytes_size = size;
+				segments_size = FileUtils.byteCountToDisplaySize(size);
+			} else {
+				segments_bytes_size = null;
+				segments_size = null;
+			}
 		} else {
 			commit_user_data = null;
 			segment_count = null;
+			segments_bytes_size = null;
+			segments_size = null;
 			commit_filenames = null;
 			commit_generation = null;
 		}

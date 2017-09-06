@@ -522,6 +522,8 @@ public abstract class JavaAbstractTest {
 		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
 		final IndexStatus indexStatus = master.getIndexStatus();
 		Assert.assertNotNull(indexStatus.directory_class);
+		Assert.assertNotNull(indexStatus.segments_bytes_size);
+		Assert.assertNotNull(indexStatus.segments_size);
 		Assert.assertNotNull(indexStatus.commit_filenames);
 		Assert.assertFalse(indexStatus.commit_filenames.isEmpty());
 		Assert.assertNotNull(indexStatus.commit_generation);
