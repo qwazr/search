@@ -43,7 +43,7 @@ public @interface Index {
 
 	IndexSettingsDefinition.Type type() default IndexSettingsDefinition.Type.FSDirectory;
 
-	IndexSettingsDefinition.MergeScheduler mergeScheduler() default IndexSettingsDefinition.MergeScheduler.CONCURRENT;
+	IndexSettingsDefinition.MergeScheduler mergeScheduler() default IndexSettingsDefinition.MergeScheduler.SERIAL;
 
 	double ramBufferSize() default IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
 
