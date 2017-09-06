@@ -174,7 +174,7 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 			});
 
 			LOGGER.info(() -> "num_docs: " + masterStatus.num_docs + " - num_deleted_docs: " +
-					masterStatus.num_deleted_docs + " - number_of_segments: " + masterStatus.number_of_segment);
+					masterStatus.num_deleted_docs + " - segment_count: " + masterStatus.segment_count);
 
 			LOGGER.info("Master first Query wins: " + masterTotalQueryTimeWins);
 			LOGGER.info("Slave 1 first Query wins: " + slave1TotalQueryTimeWins);

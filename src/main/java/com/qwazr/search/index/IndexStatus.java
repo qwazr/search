@@ -33,8 +33,6 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.LiveIndexWriterConfig;
 import org.apache.lucene.index.MergePolicy;
-import org.apache.lucene.index.SegmentCommitInfo;
-import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.LRUQueryCache;
@@ -43,7 +41,6 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NRTCachingDirectory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -52,8 +49,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -74,13 +69,13 @@ public class IndexStatus {
 	final public Set<String> fields;
 	final public IndexSettingsDefinition settings;
 	final public Map<String, Set<FieldInfoStatus>> field_infos;
-	final public Integer number_of_segment;
-	final public List<SegmentInfoStatus> segment_infos;
-	final public Long segments_bytes_size;
-	final public String segments_size;
+	final public Integer segment_count;
+	final public Collection<String> commit_filenames;
+	final public Long commit_generation;
 	final public MergePolicyStatus merge_policy;
 	final public QueryCacheStats query_cache;
 	final public Map<String, String> commit_user_data;
+	final public String directory_class;
 	final public String[] directory_cached_files;
 	final public String directory_cached_ram_used;
 	final public Integer active_index_analyzers;
@@ -96,13 +91,13 @@ public class IndexStatus {
 			@JsonProperty("version") Long version, @JsonProperty("analyzers") Set<String> analyzers,
 			@JsonProperty("fields") Set<String> fields, @JsonProperty("settings") IndexSettingsDefinition settings,
 			@JsonProperty("field_infos") Map<String, Set<FieldInfoStatus>> field_infos,
-			@JsonProperty("number_of_segment") Integer number_of_segment,
-			@JsonProperty("segment_infos") List<SegmentInfoStatus> segment_infos,
-			@JsonProperty("segments_bytes_size") Long segments_bytes_size,
-			@JsonProperty("segments_size") String segments_size,
+			@JsonProperty("segment_count") Integer segment_count,
+			@JsonProperty("commit_filenames") Collection<String> commit_filenames,
+			@JsonProperty("commit_generation") Long commit_generation,
 			@JsonProperty("merge_policy") MergePolicyStatus merge_policy,
 			@JsonProperty("query_cache") QueryCacheStats query_cache,
 			@JsonProperty("commit_user_data") Map<String, String> commit_user_data,
+			@JsonProperty("directory_class") String directory_class,
 			@JsonProperty("directory_cached_files") String[] directory_cached_files,
 			@JsonProperty("directory_cached_ram_used") String directory_cached_ram_used,
 			@JsonProperty("active_index_analyzers") Integer active_index_analyzers,
@@ -121,12 +116,12 @@ public class IndexStatus {
 		this.fields = fields;
 		this.settings = settings;
 		this.field_infos = field_infos;
-		this.number_of_segment = number_of_segment;
-		this.segment_infos = segment_infos;
-		this.segments_bytes_size = segments_bytes_size;
-		this.segments_size = segments_size;
+		this.segment_count = segment_count;
+		this.commit_filenames = commit_filenames;
+		this.commit_generation = commit_generation;
 		this.query_cache = query_cache;
 		this.commit_user_data = commit_user_data;
+		this.directory_class = directory_class;
 		this.directory_cached_files = directory_cached_files;
 		this.directory_cached_ram_used = directory_cached_ram_used;
 		this.active_index_analyzers = active_index_analyzers;
@@ -171,26 +166,16 @@ public class IndexStatus {
 			version = null;
 		}
 
-		final SegmentInfos segmentInfos;
 		if (indexCommit != null) {
 			commit_user_data = indexCommit.getUserData();
-			segmentInfos = SegmentInfos.readCommit(indexCommit.getDirectory(), indexCommit.getSegmentsFileName());
+			segment_count = indexCommit.getSegmentCount();
+			commit_filenames = indexCommit.getFileNames();
+			commit_generation = indexCommit.getGeneration();
 		} else {
 			commit_user_data = null;
-			segmentInfos = null;
-		}
-
-		if (segmentInfos != null) {
-			number_of_segment = segmentInfos.size();
-			final AtomicLong segmentsBytesSize = new AtomicLong();
-			segment_infos = getSegmentsInfoStatus(segmentInfos, segmentsBytesSize);
-			segments_bytes_size = segmentsBytesSize.get();
-			segments_size = FileUtils.byteCountToDisplaySize(segments_bytes_size);
-		} else {
-			number_of_segment = null;
-			segment_infos = null;
-			segments_bytes_size = null;
-			segments_size = null;
+			segment_count = null;
+			commit_filenames = null;
+			commit_generation = null;
 		}
 
 		this.index_uuid = indexUuid == null ? null : indexUuid.toString();
@@ -206,31 +191,22 @@ public class IndexStatus {
 				new QueryCacheStats((LRUQueryCache) queryCache) :
 				null;
 
-		if (directory != null && directory instanceof NRTCachingDirectory) {
-			final NRTCachingDirectory nrtCachingDirectory = (NRTCachingDirectory) directory;
-			directory_cached_files = nrtCachingDirectory.listCachedFiles();
-			directory_cached_ram_used = FileUtils.byteCountToDisplaySize(nrtCachingDirectory.ramBytesUsed());
+		if (directory != null) {
+			if (directory instanceof NRTCachingDirectory) {
+				final NRTCachingDirectory nrtCachingDirectory = (NRTCachingDirectory) directory;
+				directory_class = nrtCachingDirectory.getDelegate().getClass().getName();
+				directory_cached_files = nrtCachingDirectory.listCachedFiles();
+				directory_cached_ram_used = FileUtils.byteCountToDisplaySize(nrtCachingDirectory.ramBytesUsed());
+			} else {
+				directory_class = directory.getClass().getName();
+				directory_cached_files = null;
+				directory_cached_ram_used = null;
+			}
 		} else {
+			directory_class = null;
 			directory_cached_files = null;
 			directory_cached_ram_used = null;
 		}
-	}
-
-	private static ArrayList<SegmentInfoStatus> getSegmentsInfoStatus(final SegmentInfos segmentInfos,
-			final AtomicLong totalBytesSize) {
-		if (segmentInfos == null)
-			return null;
-		final ArrayList<SegmentInfoStatus> segmentInfoStatuses = new ArrayList<>(segmentInfos.size());
-		for (SegmentCommitInfo segmentInfo : segmentInfos) {
-			try {
-				final SegmentInfoStatus status = new SegmentInfoStatus(segmentInfo);
-				segmentInfoStatuses.add(status);
-				totalBytesSize.addAndGet(status.sizeInBytes);
-			} catch (IOException e) {
-				LOGGER.log(Level.WARNING, "Fail while extracting Segment information", e);
-			}
-		}
-		return segmentInfoStatuses;
 	}
 
 	private void fillFieldInfos(final Map<String, Set<FieldInfoStatus>> field_infos,
@@ -411,30 +387,6 @@ public class IndexStatus {
 			if (!Objects.equals(point_num_bytes, info.point_num_bytes))
 				return false;
 			return true;
-		}
-	}
-
-	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	public static class SegmentInfoStatus {
-
-		@JsonProperty("size_in_bytes")
-		final public Long sizeInBytes;
-
-		final public String size;
-
-		final public Collection<String> files;
-
-		@JsonCreator
-		SegmentInfoStatus(@JsonProperty("size_in_bytes") Long sizeInBytes, @JsonProperty("size") String size,
-				@JsonProperty("files") Collection<String> files) {
-			this.sizeInBytes = sizeInBytes;
-			this.size = size;
-			this.files = files;
-		}
-
-		SegmentInfoStatus(final SegmentCommitInfo segmentInfo) throws IOException {
-			this(segmentInfo.sizeInBytes(), FileUtils.byteCountToDisplaySize(segmentInfo.sizeInBytes()),
-					segmentInfo.files());
 		}
 	}
 

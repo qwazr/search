@@ -228,8 +228,8 @@ public abstract class JavaAbstractTest {
 					"economy").multiFacet("cat", "news", "economy");
 
 	private final static AnnotatedRecord record2 =
-			new AnnotatedRecord(2, "Second article title", "Content of the second article", 0d, 20L, true, false, "news",
-					"science").multiFacet("cat", "news", "science");
+			new AnnotatedRecord(2, "Second article title", "Content of the second article", 0d, 20L, true, false,
+					"news", "science").multiFacet("cat", "news", "science");
 
 	private AnnotatedRecord checkRecord(AnnotatedRecord refRecord)
 			throws URISyntaxException, ReflectiveOperationException, IOException {
@@ -521,10 +521,10 @@ public abstract class JavaAbstractTest {
 	public void test612IndexStatus() throws URISyntaxException, IOException {
 		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
 		final IndexStatus indexStatus = master.getIndexStatus();
-		Assert.assertNotNull(indexStatus.segment_infos);
-		Assert.assertFalse(indexStatus.segment_infos.isEmpty());
-		Assert.assertNotNull(indexStatus.segments_bytes_size);
-		Assert.assertNotNull(indexStatus.segments_size);
+		Assert.assertNotNull(indexStatus.directory_class);
+		Assert.assertNotNull(indexStatus.commit_filenames);
+		Assert.assertFalse(indexStatus.commit_filenames.isEmpty());
+		Assert.assertNotNull(indexStatus.commit_generation);
 		Assert.assertNotNull(indexStatus.query_cache);
 		Assert.assertNotNull(indexStatus.directory_cached_ram_used);
 	}
