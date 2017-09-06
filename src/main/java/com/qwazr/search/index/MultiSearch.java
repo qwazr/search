@@ -26,7 +26,6 @@ import org.apache.lucene.search.IndexSearcher;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.HashMap;
 
 class MultiSearch implements Closeable, AutoCloseable {
 
@@ -86,7 +85,7 @@ class MultiSearch implements Closeable, AutoCloseable {
 					IndexUtils.getNewFacetsState(indexSearcher.getIndexReader(), null);
 			try (final QueryContextImpl queryContext = new QueryContextImpl(context.indexProvider, null,
 					context.executorService, context.indexAnalyzers, context.queryAnalyzers, context.fieldMap, null,
-					state, indexSearcher, null, new HashMap<>())) {
+					state, indexSearcher, null)) {
 				return new QueryExecution<T>(queryContext, queryDef).execute(resultDocuments);
 			}
 		} finally {

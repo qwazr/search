@@ -48,7 +48,7 @@ public class DocValuesCacheTest extends AbstractIndexTest.WithIndexRecord.NoTaxo
 	@Test
 	public void checkUpdateDv() throws IOException, InterruptedException {
 		indexService.postDocument(new IndexRecord.NoTaxonomy("1"));
-		checkDocValue("1", 1, null);
+		checkDocValue("1", 1, 0d);
 		indexService.postDocument(new IndexRecord.NoTaxonomy("1").doubleDocValue(1.11d));
 		checkDocValue("1", 1, 1.11d);
 		checkDocValue("1", 1, 1.11d);

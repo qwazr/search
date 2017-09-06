@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.MultiReader;
 import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
@@ -22,11 +23,6 @@ import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericDocValuesField;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.MultiDocValues;
-import org.apache.lucene.index.NumericDocValues;
-
-import java.io.IOException;
 
 final class LongDocValuesType extends CustomFieldTypeAbstract.OneField {
 
@@ -46,10 +42,7 @@ final class LongDocValuesType extends CustomFieldTypeAbstract.OneField {
 	}
 
 	@Override
-	final public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
-		final NumericDocValues docValues = MultiDocValues.getNumericValues(reader, fieldName);
-		if (docValues == null)
-			return super.getConverter(fieldName, reader);
-		return new SingleDVConverter.LongDVConverter(docValues);
+	final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
+		return new SingleDVConverter.LongDVConverter(reader, fieldName);
 	}
 }

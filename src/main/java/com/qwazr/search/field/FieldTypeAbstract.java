@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.MultiReader;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
@@ -24,13 +25,11 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.WildcardMatcher;
 import jdk.nashorn.api.scripting.JSObject;
 import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -39,7 +38,7 @@ import java.util.Map;
 abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldTypeInterface {
 
 	final private WildcardMatcher wildcardMatcher;
-	final private T definition;
+	final protected T definition;
 	final protected BytesRefUtils.Converter bytesRefConverter;
 	final private FieldTypeInterface.Facet[] facetConfig;
 	final private FieldTypeInterface.FieldProvider[] fieldProviders;
@@ -81,6 +80,11 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 			return termProvider.term(fieldName, value);
 		else
 			throw new ServerException("Term not supported by the field: " + fieldName);
+	}
+
+	@Override
+	public ValueConverter getConverter(String fieldName, MultiReader reader) {
+		return null;
 	}
 
 	@Override
@@ -222,11 +226,6 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 				copyToFields.forEach(
 						(fieldType, copyFieldName) -> fieldType.dispatch(copyFieldName, value, fieldConsumer));
 		}
-	}
-
-	@Override
-	public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
-		return ValueConverter.newConverter(fieldName, definition, reader);
 	}
 
 	@Override

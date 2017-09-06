@@ -21,7 +21,6 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.search.analysis.CustomAnalyzer;
 import com.qwazr.search.analysis.UpdatableAnalyzers;
-import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
@@ -66,7 +65,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,8 +106,6 @@ final public class IndexInstance implements Closeable {
 	private final UpdatableAnalyzers queryAnalyzers;
 
 	private volatile FieldMap fieldMap;
-	private volatile Map<String, ValueConverter> docValuesConverters;
-	private volatile IndexSearcher lastIndexSearcher;
 
 	private volatile LinkedHashMap<String, AnalyzerDefinition> analyzerDefinitionMap;
 	private final LinkedHashMap<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap;
@@ -201,14 +197,6 @@ final public class IndexInstance implements Closeable {
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return getIndexStatus();
 		}
-	}
-
-	private synchronized Map<String, ValueConverter> refreshDocValuesConverter(IndexSearcher indexSearcher) {
-		if (indexSearcher == lastIndexSearcher)
-			return docValuesConverters;
-		docValuesConverters = indexSearcher == null ? null : new HashMap<>();
-		lastIndexSearcher = indexSearcher;
-		return docValuesConverters;
 	}
 
 	private void refreshFieldsAnalyzers() throws IOException {
@@ -634,8 +622,7 @@ final public class IndexInstance implements Closeable {
 			final FieldMapWrapper.Cache fieldMapWrappers) throws IOException {
 		final SortedSetDocValuesReaderState facetsState = getFacetsState(indexSearcher.getIndexReader());
 		return new QueryContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzers, queryAnalyzers,
-				fieldMap, fieldMapWrappers, facetsState, indexSearcher, taxonomyReader,
-				refreshDocValuesConverter(indexSearcher));
+				fieldMap, fieldMapWrappers, facetsState, indexSearcher, taxonomyReader);
 	}
 
 	final <T> T query(final FieldMapWrapper.Cache fieldMapWrappers,

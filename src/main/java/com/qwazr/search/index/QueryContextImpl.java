@@ -17,7 +17,6 @@ package com.qwazr.search.index;
 
 import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.UpdatableAnalyzers;
-import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.server.ServerException;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
@@ -29,7 +28,6 @@ import org.apache.lucene.search.IndexSearcher;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
@@ -40,15 +38,13 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext, C
 	final TaxonomyReader taxonomyReader;
 	final SortedSetDocValuesReaderState docValueReaderState;
 	final FieldMapWrapper.Cache fieldMapWrappers;
-	final Map<String, ValueConverter> docValuesConverters;
 	final FieldMap fieldMap;
 
 	QueryContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
 			final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
 			final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap,
 			final FieldMapWrapper.Cache fieldMapWrappers, final SortedSetDocValuesReaderState docValueReaderState,
-			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
-			final Map<String, ValueConverter> docValuesConverters) {
+			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader) {
 		super(indexProvider, resourceLoader, executorService, indexAnalyzers, queryAnalyzers, fieldMap);
 		this.docValueReaderState = docValueReaderState;
 		this.fieldMap = fieldMap;
@@ -56,7 +52,6 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext, C
 		this.indexSearcher = indexSearcher;
 		this.indexReader = indexSearcher.getIndexReader();
 		this.taxonomyReader = taxonomyReader;
-		this.docValuesConverters = docValuesConverters;
 	}
 
 	@Override
@@ -117,5 +112,5 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext, C
 		final ResultDocumentsEmpty resultDocumentEmpty = new ResultDocumentsEmpty(resultDocuments);
 		return (ResultDefinition.Empty) search(queryDefinition, resultDocumentEmpty);
 	}
-	
+
 }

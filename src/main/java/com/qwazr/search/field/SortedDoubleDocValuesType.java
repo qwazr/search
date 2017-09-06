@@ -16,18 +16,14 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.field.Converters.MultiDVConverter;
+import com.qwazr.search.field.Converters.MultiReader;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedNumericDocValuesField;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.MultiDocValues;
-import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.util.NumericUtils;
-
-import java.io.IOException;
 
 final class SortedDoubleDocValuesType extends CustomFieldTypeAbstract.OneField {
 
@@ -49,11 +45,8 @@ final class SortedDoubleDocValuesType extends CustomFieldTypeAbstract.OneField {
 	}
 
 	@Override
-	final public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
-		final SortedNumericDocValues docValues = MultiDocValues.getSortedNumericValues(reader, fieldName);
-		if (docValues == null)
-			return super.getConverter(fieldName, reader);
-		return new MultiDVConverter.DoubleSetDVConverter(docValues);
+	final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
+		return new MultiDVConverter.DoubleSetDVConverter(reader, fieldName);
 	}
 
 }

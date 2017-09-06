@@ -16,122 +16,114 @@
 package com.qwazr.search.field.Converters;
 
 import com.qwazr.binder.setter.FieldSetter;
-import org.apache.lucene.index.BinaryDocValues;
-import org.apache.lucene.index.NumericDocValues;
-import org.apache.lucene.index.SortedDocValues;
-import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
-public abstract class SingleDVConverter<T, V> extends ValueConverter<T, V> {
+import java.io.IOException;
 
-	private SingleDVConverter(final T source) {
-		super(source);
+public abstract class SingleDVConverter<T> extends ValueConverter<T> {
+
+	private SingleDVConverter(final MultiReader reader, final String field) {
+		super(reader, field);
 	}
 
-	final public static class DoubleDVConverter extends SingleDVConverter<NumericDocValues, Double> {
+	final public static class DoubleDVConverter extends SingleDVConverter<Double> {
 
-		public DoubleDVConverter(final NumericDocValues source) {
-			super(source);
+		public DoubleDVConverter(final MultiReader reader, final String field) {
+			super(reader, field);
 		}
 
 		@Override
-		final public Double convert(final int docId) {
-			return NumericUtils.sortableLongToDouble(source.get(docId));
+		final public Double convert(final int docId) throws IOException {
+			return NumericUtils.sortableLongToDouble(multiReader.getNumericDocValues(docId, field));
 		}
 
 		@Override
-		public void fill(Object record, FieldSetter fieldSetter, int docId) {
-			fieldSetter.fromDouble(NumericUtils.sortableLongToDouble(source.get(docId)), record);
-		}
-	}
-
-	final public static class FloatDVConverter extends SingleDVConverter<NumericDocValues, Float> {
-
-		public FloatDVConverter(final NumericDocValues source) {
-			super(source);
-		}
-
-		@Override
-		final public Float convert(final int docId) {
-			return NumericUtils.sortableIntToFloat((int) source.get(docId));
-		}
-
-		@Override
-		public void fill(Object record, FieldSetter fieldSetter, int docId) {
-			fieldSetter.fromFloat(NumericUtils.sortableIntToFloat((int) source.get(docId)), record);
+		public void fill(Object record, FieldSetter fieldSetter, int docId) throws IOException {
+			fieldSetter.fromDouble(convert(docId), record);
 		}
 	}
 
-	final public static class LongDVConverter extends SingleDVConverter<NumericDocValues, Long> {
+	final public static class FloatDVConverter extends SingleDVConverter<Float> {
 
-		public LongDVConverter(final NumericDocValues source) {
-			super(source);
+		public FloatDVConverter(final MultiReader reader, final String field) {
+			super(reader, field);
 		}
 
 		@Override
-		final public Long convert(int docId) {
-			return source.get(docId);
+		final public Float convert(final int docId) throws IOException {
+			return NumericUtils.sortableIntToFloat((int) multiReader.getNumericDocValues(docId, field));
 		}
 
 		@Override
-		public void fill(Object record, FieldSetter fieldSetter, int docId) {
-			fieldSetter.fromLong(source.get(docId), record);
+		public void fill(Object record, FieldSetter fieldSetter, int docId) throws IOException {
+			fieldSetter.fromFloat(convert(docId), record);
 		}
 	}
 
-	final public static class IntegerDVConverter extends SingleDVConverter<NumericDocValues, Integer> {
+	final public static class LongDVConverter extends SingleDVConverter<Long> {
 
-		public IntegerDVConverter(final NumericDocValues source) {
-			super(source);
+		public LongDVConverter(final MultiReader reader, final String field) {
+			super(reader, field);
 		}
 
 		@Override
-		final public Integer convert(final int docId) {
-			return (int) source.get(docId);
+		final public Long convert(int docId) throws IOException {
+			return multiReader.getNumericDocValues(docId, field);
 		}
 
 		@Override
-		public void fill(Object record, FieldSetter fieldSetter, int docId) {
-			fieldSetter.fromInteger((int) source.get(docId), record);
+		public void fill(Object record, FieldSetter fieldSetter, int docId) throws IOException {
+			fieldSetter.fromLong(convert(docId), record);
 		}
 	}
 
-	final public static class BinaryDVConverter extends SingleDVConverter<BinaryDocValues, String> {
+	final public static class IntegerDVConverter extends SingleDVConverter<Integer> {
 
-		public BinaryDVConverter(final BinaryDocValues source) {
-			super(source);
+		public IntegerDVConverter(final MultiReader reader, final String field) {
+			super(reader, field);
 		}
 
 		@Override
-		final public String convert(final int docId) {
-			final BytesRef bytesRef = source.get(docId);
-			if (bytesRef == null)
-				return null;
-			return bytesRef.utf8ToString();
+		final public Integer convert(final int docId) throws IOException {
+			return (int) multiReader.getNumericDocValues(docId, field);
 		}
 
 		@Override
-		public void fill(final Object record, final FieldSetter fieldSetter, final int docId) {
+		public void fill(Object record, FieldSetter fieldSetter, int docId) throws IOException {
+			fieldSetter.fromInteger(convert(docId), record);
+		}
+	}
+
+	final public static class BinaryDVConverter extends SingleDVConverter<String> {
+
+		public BinaryDVConverter(final MultiReader reader, final String field) {
+			super(reader, field);
+		}
+
+		@Override
+		final public String convert(final int docId) throws IOException {
+			return multiReader.getBinaryDocValues(docId, field).utf8ToString();
+		}
+
+		@Override
+		public void fill(final Object record, final FieldSetter fieldSetter, final int docId) throws IOException {
 			fieldSetter.fromString(convert(docId), record);
 		}
 	}
 
-	final public static class SortedDVConverter extends SingleDVConverter<SortedDocValues, String> {
+	final public static class SortedDVConverter extends SingleDVConverter<String> {
 
-		public SortedDVConverter(final SortedDocValues source) {
-			super(source);
+		public SortedDVConverter(final MultiReader reader, final String field) {
+			super(reader, field);
 		}
 
 		@Override
-		final public String convert(final int docId) {
-			BytesRef bytesRef = source.get(docId);
-			if (bytesRef == null)
-				return null;
-			return bytesRef.utf8ToString();
+		final public String convert(final int docId) throws IOException {
+			return multiReader.getSortedDocValues(docId, field).utf8ToString();
 		}
 
 		@Override
-		public void fill(final Object record, final FieldSetter fieldSetter, final int docId) {
+		public void fill(final Object record, final FieldSetter fieldSetter, final int docId) throws IOException {
 			fieldSetter.fromString(convert(docId), record);
 		}
 	}

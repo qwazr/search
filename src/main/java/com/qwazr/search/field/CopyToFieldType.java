@@ -15,6 +15,9 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.MultiReader;
+import com.qwazr.search.field.Converters.ValueConverter;
+
 final public class CopyToFieldType extends FieldTypeAbstract {
 
 	public CopyToFieldType() {
@@ -26,5 +29,5 @@ final public class CopyToFieldType extends FieldTypeAbstract {
 		return builder.fieldProvider((f, v, c) -> {
 		});
 	}
-
+	
 }

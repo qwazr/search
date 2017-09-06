@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.field.Converters.ValueConverter;
 import org.apache.lucene.search.ScoreDoc;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,7 @@ public class ResultDocumentMap extends ResultDocumentAbstract {
 		}
 
 		@Override
-		final void setDocValuesField(final String fieldName, final ValueConverter converter) {
+		final void setDocValuesField(final String fieldName, final ValueConverter converter) throws IOException {
 			fields.put(fieldName, converter.convert(scoreDoc.doc));
 		}
 

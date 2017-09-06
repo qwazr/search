@@ -15,18 +15,16 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.MultiReader;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
-
-import java.io.IOException;
 
 public interface FieldTypeInterface {
 
@@ -34,7 +32,7 @@ public interface FieldTypeInterface {
 
 	SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
 
-	ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException;
+	ValueConverter getConverter(final String fieldName, final MultiReader reader);
 
 	Object toTerm(final BytesRef bytesRef);
 

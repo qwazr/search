@@ -50,4 +50,5 @@ final class SortedSetDocValuesFacetType extends StorableFieldType {
 		if (stringValue != null)
 			consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
 	}
+
 }

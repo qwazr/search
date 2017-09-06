@@ -15,6 +15,10 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.MultiDVConverter;
+import com.qwazr.search.field.Converters.MultiReader;
+import com.qwazr.search.field.Converters.SingleDVConverter;
+import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
@@ -71,8 +75,8 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 			return (fieldName, sortEnum) -> {
 				if (FieldDefinition.SCORE_FIELD.equals(fieldName))
 					return new SortField(fieldName, SortField.Type.SCORE);
-				final SortField sortField = new SortField(fieldName, SortField.Type.STRING,
-						SortUtils.sortReverse(sortEnum));
+				final SortField sortField =
+						new SortField(fieldName, SortField.Type.STRING, SortUtils.sortReverse(sortEnum));
 				SortUtils.sortStringMissingValue(sortEnum, sortField);
 				return sortField;
 			};
@@ -82,8 +86,8 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 			return (fieldName, sortEnum) -> {
 				if (FieldDefinition.SCORE_FIELD.equals(fieldName))
 					return new SortField(fieldName, SortField.Type.SCORE);
-				final SortField sortField = new SortField(fieldName, SortField.Type.DOUBLE,
-						SortUtils.sortReverse(sortEnum));
+				final SortField sortField =
+						new SortField(fieldName, SortField.Type.DOUBLE, SortUtils.sortReverse(sortEnum));
 				SortUtils.sortDoubleMissingValue(sortEnum, sortField);
 				return sortField;
 			};
@@ -91,8 +95,8 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 			return (fieldName, sortEnum) -> {
 				if (FieldDefinition.SCORE_FIELD.equals(fieldName))
 					return new SortField(fieldName, SortField.Type.SCORE);
-				final SortField sortField = new SortField(fieldName, SortField.Type.FLOAT,
-						SortUtils.sortReverse(sortEnum));
+				final SortField sortField =
+						new SortField(fieldName, SortField.Type.FLOAT, SortUtils.sortReverse(sortEnum));
 				SortUtils.sortFloatMissingValue(sortEnum, sortField);
 				return sortField;
 			};
@@ -100,8 +104,8 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 			return (fieldName, sortEnum) -> {
 				if (FieldDefinition.SCORE_FIELD.equals(fieldName))
 					return new SortField(fieldName, SortField.Type.SCORE);
-				final SortField sortField = new SortField(fieldName, SortField.Type.INT,
-						SortUtils.sortReverse(sortEnum));
+				final SortField sortField =
+						new SortField(fieldName, SortField.Type.INT, SortUtils.sortReverse(sortEnum));
 				SortUtils.sortIntMissingValue(sortEnum, sortField);
 				return sortField;
 			};
@@ -109,8 +113,8 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 			return (fieldName, sortEnum) -> {
 				if (FieldDefinition.SCORE_FIELD.equals(fieldName))
 					return new SortField(fieldName, SortField.Type.SCORE);
-				final SortField sortField = new SortField(fieldName, SortField.Type.LONG,
-						SortUtils.sortReverse(sortEnum));
+				final SortField sortField =
+						new SortField(fieldName, SortField.Type.LONG, SortUtils.sortReverse(sortEnum));
 				SortUtils.sortLongMissingValue(sortEnum, sortField);
 				return sortField;
 			};
@@ -128,7 +132,80 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 		fieldConsumer.accept(fieldName, new CustomField(fieldName, type, value));
 	}
 
-	static BytesRefUtils.Converter getConverter(final FieldDefinition definition) {
+	@Override
+	public ValueConverter getConverter(String fieldName, MultiReader reader) {
+		if (definition == null)
+			return null;
+		if (definition.template != null) {
+			switch (definition.template) {
+			case IntDocValuesField:
+				return new SingleDVConverter.IntegerDVConverter(reader, fieldName);
+			case LongDocValuesField:
+				return new SingleDVConverter.LongDVConverter(reader, fieldName);
+			case FloatDocValuesField:
+				return new SingleDVConverter.FloatDVConverter(reader, fieldName);
+			case DoubleDocValuesField:
+				return new SingleDVConverter.DoubleDVConverter(reader, fieldName);
+			case SortedIntDocValuesField:
+				return new MultiDVConverter.IntegerSetDVConverter(reader, fieldName);
+			case SortedLongDocValuesField:
+				return new MultiDVConverter.LongSetDVConverter(reader, fieldName);
+			case SortedFloatDocValuesField:
+				return new MultiDVConverter.FloatSetDVConverter(reader, fieldName);
+			case SortedDoubleDocValuesField:
+				return new MultiDVConverter.DoubleSetDVConverter(reader, fieldName);
+			case SortedDocValuesField:
+				return new SingleDVConverter.SortedDVConverter(reader, fieldName);
+			case SortedSetDocValuesField:
+				return new MultiDVConverter.SortedSetDVConverter(reader, fieldName);
+			case BinaryDocValuesField:
+				return new SingleDVConverter.BinaryDVConverter(reader, fieldName);
+			}
+		}
+		if (definition.docValuesType == null)
+			return null;
+		switch (definition.docValuesType) {
+		case NONE:
+			return null;
+		case NUMERIC:
+			if (definition.numericType == null)
+				return null;
+			switch (definition.numericType) {
+			case INT:
+				return new SingleDVConverter.IntegerDVConverter(reader, fieldName);
+			case LONG:
+				return new SingleDVConverter.LongDVConverter(reader, fieldName);
+			case FLOAT:
+				return new SingleDVConverter.FloatDVConverter(reader, fieldName);
+			case DOUBLE:
+				return new SingleDVConverter.DoubleDVConverter(reader, fieldName);
+			}
+			return null;
+		case SORTED_NUMERIC:
+			if (definition.numericType == null)
+				return null;
+			switch (definition.numericType) {
+			case INT:
+				return new MultiDVConverter.IntegerSetDVConverter(reader, fieldName);
+			case LONG:
+				return new MultiDVConverter.LongSetDVConverter(reader, fieldName);
+			case FLOAT:
+				return new MultiDVConverter.FloatSetDVConverter(reader, fieldName);
+			case DOUBLE:
+				return new MultiDVConverter.DoubleSetDVConverter(reader, fieldName);
+			}
+			return null;
+		case SORTED:
+			return new SingleDVConverter.SortedDVConverter(reader, fieldName);
+		case SORTED_SET:
+			return new MultiDVConverter.SortedSetDVConverter(reader, fieldName);
+		case BINARY:
+			return new SingleDVConverter.BinaryDVConverter(reader, fieldName);
+		}
+		return null;
+	}
+
+	private static BytesRefUtils.Converter getConverter(final FieldDefinition definition) {
 		if (definition == null || !(definition instanceof CustomFieldDefinition))
 			return null;
 		final CustomFieldDefinition customDef = (CustomFieldDefinition) definition;

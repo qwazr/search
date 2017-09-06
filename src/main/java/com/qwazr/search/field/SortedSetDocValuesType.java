@@ -15,6 +15,9 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.MultiDVConverter;
+import com.qwazr.search.field.Converters.MultiReader;
+import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
@@ -39,4 +42,8 @@ final class SortedSetDocValuesType extends CustomFieldTypeAbstract.OneField {
 		consumer.accept(fieldName, field);
 	}
 
+	@Override
+	public ValueConverter getConverter(String fieldName, MultiReader reader) {
+		return new MultiDVConverter.SortedSetDVConverter(reader, fieldName);
+	}
 }

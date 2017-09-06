@@ -29,8 +29,8 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 		if (builder.definition.stored != null && builder.definition.stored)
 			storeProvider(builder);
 		if (builder.definition.index != null && builder.definition.index) {
-			if (StringUtils.isEmpty(builder.definition.analyzer) && StringUtils.isEmpty(
-					builder.definition.queryAnalyzer))
+			if (StringUtils.isEmpty(builder.definition.analyzer) &&
+					StringUtils.isEmpty(builder.definition.queryAnalyzer))
 				indexProvider(builder);
 			else
 				fullTextProvider(builder);
@@ -151,4 +151,5 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 			final SmartFieldDefinition definition) {
 		return new SmartFieldType(wildcardMatcher, definition);
 	}
+
 }

@@ -15,17 +15,13 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.MultiReader;
 import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.BinaryDocValuesField;
-import org.apache.lucene.index.BinaryDocValues;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.util.BytesRef;
-
-import java.io.IOException;
 
 final class BinaryDocValuesType extends CustomFieldTypeAbstract.OneField {
 
@@ -39,11 +35,8 @@ final class BinaryDocValuesType extends CustomFieldTypeAbstract.OneField {
 	}
 
 	@Override
-	public final ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
-		BinaryDocValues binaryDocValue = MultiDocValues.getBinaryValues(reader, fieldName);
-		if (binaryDocValue == null)
-			return super.getConverter(fieldName, reader);
-		return new SingleDVConverter.BinaryDVConverter(binaryDocValue);
+	public final ValueConverter getConverter(final String fieldName, final MultiReader reader) {
+		return new SingleDVConverter.BinaryDVConverter(reader, fieldName);
 	}
 
 }

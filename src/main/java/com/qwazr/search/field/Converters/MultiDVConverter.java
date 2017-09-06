@@ -16,149 +16,151 @@
 package com.qwazr.search.field.Converters;
 
 import com.qwazr.binder.setter.FieldSetter;
-import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.util.NumericUtils;
 
-public abstract class MultiDVConverter<T extends SortedNumericDocValues, V, A> extends ValueConverter<T, A> {
+import java.io.IOException;
+import java.util.List;
 
-	private MultiDVConverter(final T source) {
-		super(source);
+public abstract class MultiDVConverter<T, A> extends ValueConverter<A> {
+
+	private MultiDVConverter(final MultiReader reader, final String field) {
+		super(reader, field);
 	}
 
-	protected abstract void fillFirst(FieldSetter fieldSetter, Object record);
+	final public static class DoubleSetDVConverter extends MultiDVConverter<Double, double[]> {
 
-	protected abstract void fillAll(int count, FieldSetter fieldSetter, Object record);
-
-	@Override
-	final public void fill(final Object record, final FieldSetter fieldSetter, final int docId) {
-		source.setDocument(docId);
-		final int count = source.count();
-		if (count == 0) {
-			fieldSetter.fromNull(record);
-			return;
+		public DoubleSetDVConverter(final MultiReader reader, final String field) {
+			super(reader, field);
 		}
-		if (count == 1) {
-			fillFirst(fieldSetter, record);
-			return;
-		}
-		fillAll(count, fieldSetter, record);
-	}
 
-	final public static class DoubleSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Double, double[]> {
-
-		public DoubleSetDVConverter(final SortedNumericDocValues source) {
-			super(source);
-		}
+		final static double[] EMPTY = new double[0];
 
 		@Override
-		final public double[] convert(final int docId) {
-			source.setDocument(docId);
-			final double[] set = new double[source.count()];
+		final public double[] convert(final int docId) throws IOException {
+			final long[] sources = multiReader.getSortedNumericDocValues(docId, field);
+			if (sources.length == 0)
+				return EMPTY;
+			final double[] set = new double[sources.length];
 			for (int i = 0; i < set.length; i++)
-				set[i] = NumericUtils.sortableLongToDouble(source.valueAt(i));
+				set[i] = NumericUtils.sortableLongToDouble(sources[i]);
 			return set;
 		}
 
 		@Override
-		protected void fillFirst(final FieldSetter fieldSetter, final Object record) {
-			fieldSetter.fromDouble(NumericUtils.sortableLongToDouble(source.valueAt(0)), record);
-		}
-
-		@Override
-		protected void fillAll(int count, FieldSetter fieldSetter, Object record) {
-			final double[] set = new double[source.count()];
-			for (int i = 0; i < set.length; i++)
-				set[i] = NumericUtils.sortableLongToDouble(source.valueAt(i));
-			fieldSetter.fromDouble(set, record);
+		final public void fill(final Object record, final FieldSetter fieldSetter, final int docId) throws IOException {
+			final double[] values = convert(docId);
+			if (values.length == 0) {
+				fieldSetter.fromNull(record);
+			} else if (values.length == 1) {
+				fieldSetter.fromDouble(values[0], record);
+			} else
+				fieldSetter.fromDouble(values, record);
 		}
 
 	}
 
-	final public static class FloatSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Float, float[]> {
+	final public static class FloatSetDVConverter extends MultiDVConverter<Float, float[]> {
 
-		public FloatSetDVConverter(final SortedNumericDocValues source) {
-			super(source);
+		public FloatSetDVConverter(final MultiReader reader, final String field) {
+			super(reader, field);
 		}
 
 		@Override
-		final public float[] convert(final int docId) {
-			source.setDocument(docId);
-			final float[] set = new float[source.count()];
+		final public float[] convert(final int docId) throws IOException {
+			final long[] sources = multiReader.getSortedNumericDocValues(docId, field);
+			final float[] set = new float[sources.length];
 			for (int i = 0; i < set.length; i++)
-				set[i] = NumericUtils.sortableIntToFloat((int) source.valueAt(i));
+				set[i] = NumericUtils.sortableIntToFloat((int) sources[i]);
 			return set;
 		}
 
 		@Override
-		protected void fillFirst(final FieldSetter fieldSetter, final Object record) {
-			fieldSetter.fromFloat(NumericUtils.sortableIntToFloat((int) source.valueAt(0)), record);
+		final public void fill(final Object record, final FieldSetter fieldSetter, final int docId) throws IOException {
+			final float[] values = convert(docId);
+			if (values.length == 0) {
+				fieldSetter.fromNull(record);
+			} else if (values.length == 1) {
+				fieldSetter.fromFloat(values[0], record);
+			} else
+				fieldSetter.fromFloat(values, record);
 		}
 
-		@Override
-		protected void fillAll(final int count, final FieldSetter fieldSetter, final Object record) {
-			final float[] set = new float[count];
-			for (int i = 0; i < set.length; i++)
-				set[i] = NumericUtils.sortableIntToFloat((int) source.valueAt(i));
-			fieldSetter.fromFloat(set, record);
-		}
 	}
 
-	final public static class LongSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Long, long[]> {
+	final public static class LongSetDVConverter extends MultiDVConverter<Long, long[]> {
 
-		public LongSetDVConverter(final SortedNumericDocValues source) {
-			super(source);
+		public LongSetDVConverter(final MultiReader reader, final String field) {
+			super(reader, field);
 		}
 
 		@Override
-		final public long[] convert(final int docId) {
-			source.setDocument(docId);
-			final long[] set = new long[source.count()];
-			for (int i = 0; i < set.length; i++)
-				set[i] = source.valueAt(i);
-			return set;
+		final public long[] convert(final int docId) throws IOException {
+			return multiReader.getSortedNumericDocValues(docId, field);
 		}
 
 		@Override
-		protected void fillFirst(final FieldSetter fieldSetter, final Object record) {
-			fieldSetter.fromLong(source.valueAt(0), record);
+		final public void fill(final Object record, final FieldSetter fieldSetter, final int docId) throws IOException {
+			final long[] values = convert(docId);
+			if (values.length == 0) {
+				fieldSetter.fromNull(record);
+			} else if (values.length == 1) {
+				fieldSetter.fromLong(values[0], record);
+			} else
+				fieldSetter.fromLong(values, record);
 		}
 
-		@Override
-		protected void fillAll(final int count, final FieldSetter fieldSetter, final Object record) {
-			final long[] set = new long[count];
-			for (int i = 0; i < set.length; i++)
-				set[i] = source.valueAt(i);
-			fieldSetter.fromLong(set, record);
-		}
 	}
 
-	final public static class IntegerSetDVConverter extends MultiDVConverter<SortedNumericDocValues, Integer, int[]> {
+	final public static class IntegerSetDVConverter extends MultiDVConverter<Integer, int[]> {
 
-		public IntegerSetDVConverter(final SortedNumericDocValues source) {
-			super(source);
+		public IntegerSetDVConverter(final MultiReader reader, final String field) {
+			super(reader, field);
 		}
 
 		@Override
-		final public int[] convert(final int docId) {
-			source.setDocument(docId);
-			final int[] set = new int[source.count()];
+		final public int[] convert(final int docId) throws IOException {
+			final long[] sources = multiReader.getSortedNumericDocValues(docId, field);
+			final int[] set = new int[sources.length];
 			for (int i = 0; i < set.length; i++)
-				set[i] = (int) source.valueAt(i);
+				set[i] = (int) sources[i];
 			return set;
 		}
 
 		@Override
-		protected void fillFirst(final FieldSetter fieldSetter, final Object record) {
-			fieldSetter.fromInteger((int) source.valueAt(0), record);
+		final public void fill(final Object record, final FieldSetter fieldSetter, final int docId) throws IOException {
+			final int[] values = convert(docId);
+			if (values.length == 0) {
+				fieldSetter.fromNull(record);
+			} else if (values.length == 1) {
+				fieldSetter.fromInteger(values[0], record);
+			} else
+				fieldSetter.fromInteger(values, record);
+		}
+
+	}
+
+	final public static class SortedSetDVConverter extends MultiDVConverter<String, List<String>> {
+
+		public SortedSetDVConverter(final MultiReader reader, final String field) {
+			super(reader, field);
 		}
 
 		@Override
-		protected void fillAll(final int count, final FieldSetter fieldSetter, final Object record) {
-			final int[] set = new int[count];
-			for (int i = 0; i < set.length; i++)
-				set[i] = (int) source.valueAt(i);
-			fieldSetter.fromInteger(set, record);
+		final public List<String> convert(final int docId) throws IOException {
+			return multiReader.getSortedSetDocValues(docId, field);
 		}
+
+		@Override
+		final public void fill(final Object record, final FieldSetter fieldSetter, final int docId) throws IOException {
+			final List<String> values = convert(docId);
+			if (values.size() == 0) {
+				fieldSetter.fromNull(record);
+			} else if (values.size() == 1) {
+				fieldSetter.fromString(values.get(0), record);
+			} else
+				fieldSetter.fromString(values, record);
+		}
+
 	}
 
 }

@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.utils.FunctionUtils;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.StoredFieldVisitor;
 import org.apache.lucene.search.IndexSearcher;
@@ -52,7 +53,7 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 
 	abstract T build();
 
-	abstract void setDocValuesField(final String fieldName, final ValueConverter converter);
+	abstract void setDocValuesField(final String fieldName, final ValueConverter converter) throws IOException;
 
 	abstract void setStoredFieldString(final String fieldName, final List<String> values);
 
@@ -68,7 +69,7 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 
 	final void extractDocValuesReturnedFields(@NotNull final Map<String, ValueConverter> returnedFields)
 			throws IOException {
-		returnedFields.forEach(this::setDocValuesField);
+		FunctionUtils.forEachEx(returnedFields, this::setDocValuesField);
 	}
 
 	final void extractStoredReturnedFields(@NotNull final IndexSearcher searcher,
@@ -112,8 +113,8 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 		public void stringField(FieldInfo fieldInfo, byte[] value) throws IOException {
 			if (stringFields == null)
 				stringFields = new HashMap<>();
-			stringFields.computeIfAbsent(getReturnedField(fieldInfo.name), name -> new ArrayList<>()).add(
-					new String(value, StandardCharsets.UTF_8));
+			stringFields.computeIfAbsent(getReturnedField(fieldInfo.name), name -> new ArrayList<>())
+					.add(new String(value, StandardCharsets.UTF_8));
 		}
 
 		@Override

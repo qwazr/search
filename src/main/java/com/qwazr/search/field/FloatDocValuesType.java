@@ -15,17 +15,13 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.field.Converters.MultiReader;
 import com.qwazr.search.field.Converters.SingleDVConverter;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.FloatDocValuesField;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.MultiDocValues;
-import org.apache.lucene.index.NumericDocValues;
-
-import java.io.IOException;
 
 final class FloatDocValuesType extends CustomFieldTypeAbstract.OneField {
 
@@ -45,11 +41,8 @@ final class FloatDocValuesType extends CustomFieldTypeAbstract.OneField {
 	}
 
 	@Override
-	final public ValueConverter getConverter(final String fieldName, final IndexReader reader) throws IOException {
-		NumericDocValues docValues = MultiDocValues.getNumericValues(reader, fieldName);
-		if (docValues == null)
-			return super.getConverter(fieldName, reader);
-		return new SingleDVConverter.FloatDVConverter(docValues);
+	final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
+		return new SingleDVConverter.FloatDVConverter(reader, fieldName);
 	}
 
 }

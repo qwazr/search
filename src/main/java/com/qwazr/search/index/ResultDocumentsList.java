@@ -15,9 +15,9 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.Converters.MultiReader;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.field.FieldTypeInterface;
-import com.qwazr.server.ServerException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
@@ -54,6 +54,7 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 		if (this.returnedFields != null && !this.returnedFields.isEmpty()) {
 			this.storedFields = new HashMap<>();
 			this.returnedFieldsConverter = new LinkedHashMap<>();
+			final MultiReader multiReader = new MultiReader(indexReader);
 			for (String fieldName : this.returnedFields) {
 				final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
 				if (fieldType == null)
@@ -61,13 +62,7 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 				final String storedFieldName = fieldType.getStoredFieldName(fieldName);
 				if (storedFieldName != null)
 					storedFields.put(storedFieldName, fieldName);
-				final ValueConverter converter = context.docValuesConverters.computeIfAbsent(fieldName, f -> {
-					try {
-						return fieldType.getConverter(fieldName, indexReader);
-					} catch (IOException e) {
-						throw ServerException.of(e);
-					}
-				});
+				final ValueConverter converter = fieldType.getConverter(fieldName, multiReader);
 				if (converter != null)
 					returnedFieldsConverter.put(fieldName, converter);
 			}

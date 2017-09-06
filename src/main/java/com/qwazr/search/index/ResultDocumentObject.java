@@ -66,7 +66,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		}
 
 		@Override
-		void setDocValuesField(final String fieldName, final ValueConverter converter) {
+		void setDocValuesField(final String fieldName, final ValueConverter converter) throws IOException {
 			final FieldSetter fieldSetter = fieldMap.get(fieldName);
 			if (fieldSetter == null)
 				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());

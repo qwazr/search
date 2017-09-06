@@ -39,6 +39,8 @@ public class BytesRefUtils {
 		return bytesRef == null || bytesRef.bytes == BytesRef.EMPTY_BYTES || bytesRef.bytes == null;
 	}
 
+	public final static BytesRef EMPTY = new BytesRef();
+
 	public interface Converter<T> {
 
 		BytesRef from(T value);
