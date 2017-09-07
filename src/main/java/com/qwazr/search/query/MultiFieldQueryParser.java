@@ -18,7 +18,6 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.search.query.lucene.MultiFieldQueryParserFix;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 
@@ -38,8 +37,9 @@ public class MultiFieldQueryParser extends AbstractClassicQueryParser {
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
 		final FieldMap fieldMap = queryContext.getFieldMap();
-		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser = new MultiFieldQueryParserFix(
-				resolveFields(fieldMap), resolveAnalyzer(queryContext), resolvedBoosts(fieldMap));
+		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser =
+				new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(resolveFields(fieldMap),
+						resolveAnalyzer(queryContext), resolvedBoosts(fieldMap));
 		setParserParameters(parser);
 		return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
 	}

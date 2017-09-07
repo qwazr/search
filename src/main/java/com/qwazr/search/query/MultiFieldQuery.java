@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.TermConsumer;
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.search.query.lucene.QueryBuilderFix;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
@@ -149,9 +148,9 @@ public class MultiFieldQuery extends AbstractQuery {
 						BooleanClause.Occur.SHOULD);
 	}
 
-	protected Query getFieldQuery(final List<Query> queries) {
+	protected Query getFieldQuery(final Collection<Query> queries) {
 		if (queries.size() == 1)
-			return queries.get(0);
+			return queries.iterator().next();
 		if (tieBreakerMultiplier != null) {
 			return new org.apache.lucene.search.DisjunctionMaxQuery(queries, tieBreakerMultiplier);
 		} else {
@@ -243,10 +242,10 @@ public class MultiFieldQuery extends AbstractQuery {
 		}
 	}
 
-	final class Builder extends QueryBuilderFix {
+	final class Builder extends org.apache.lucene.util.QueryBuilder {
 
 		final Map<String, AtomicInteger> termsFreq;
-		final Map<Offset, List<Query>> perTermQueries;
+		final Map<Offset, LinkedHashSet<Query>> perTermQueries;
 		final Map<String, Set<Offset>> termsOffset;
 
 		private Builder(Analyzer analyzer, Map<String, AtomicInteger> termsFreq,
@@ -264,7 +263,7 @@ public class MultiFieldQuery extends AbstractQuery {
 				final String text = term.text();
 				final Collection<Offset> offset = termsOffset.get(text);
 				if (offset != null)
-					offset.forEach(o -> perTermQueries.computeIfAbsent(o, (k) -> new ArrayList<>()).add(query));
+					offset.forEach(o -> perTermQueries.computeIfAbsent(o, (k) -> new LinkedHashSet<>()).add(query));
 			}
 			return super.newSynonymQuery(terms);
 		}
@@ -276,7 +275,7 @@ public class MultiFieldQuery extends AbstractQuery {
 			final Query termQuery = getTermQuery(freq == null ? 0 : freq.get(), term);
 			final Collection<Offset> offset = termsOffset.get(text);
 			if (offset != null)
-				offset.forEach(o -> perTermQueries.computeIfAbsent(o, (k) -> new ArrayList<>()).add(termQuery));
+				offset.forEach(o -> perTermQueries.computeIfAbsent(o, (k) -> new LinkedHashSet<>()).add(termQuery));
 			return termQuery;
 		}
 

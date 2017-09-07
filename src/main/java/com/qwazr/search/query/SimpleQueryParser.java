@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.search.query.lucene.SimpleQueryParserFix;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.Query;
@@ -119,13 +118,15 @@ public class SimpleQueryParser extends AbstractQueryBuilder {
 
 		final FieldMap fieldMap = queryContext.getFieldMap();
 
-		final Map<String, Float> resolvedBoosts = fieldMap == null ? weights : fieldMap.resolveFieldNames(weights,
-				new HashMap<>(), fieldMap::resolveQueryFieldName);
+		final Map<String, Float> resolvedBoosts = fieldMap == null ?
+				weights :
+				fieldMap.resolveFieldNames(weights, new HashMap<>(), fieldMap::resolveQueryFieldName);
 
 		final int fl = flags == -2 ? computeTag() : flags;
 
-		final org.apache.lucene.queryparser.simple.SimpleQueryParser parser = new SimpleQueryParserFix(
-				analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, resolvedBoosts, fl);
+		final org.apache.lucene.queryparser.simple.SimpleQueryParser parser =
+				new org.apache.lucene.queryparser.simple.SimpleQueryParser(
+						analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, resolvedBoosts, fl);
 
 		setQueryBuilderParameters(parser);
 
