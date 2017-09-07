@@ -49,6 +49,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -179,8 +180,13 @@ public class IndexStatus {
 			commit_generation = indexCommit.getGeneration();
 			if (directory != null && commit_filenames != null) {
 				long size = 0;
-				for (String filename : commit_filenames)
-					size += directory.fileLength(filename);
+				for (String filename : commit_filenames) {
+					try {
+						size += directory.fileLength(filename);
+					} catch (IOException e) {
+						LOGGER.log(Level.FINE, e, e::getMessage);
+					}
+				}
 				segments_bytes_size = size;
 				segments_size = FileUtils.byteCountToDisplaySize(size);
 			} else {

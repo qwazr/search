@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.test.units;
 
+import com.qwazr.search.analysis.SmartAnalyzerSet;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
@@ -46,6 +47,11 @@ public abstract class IndexRecord<T extends IndexRecord> {
 			queryAnalyzerClass = SynonymsResourceAnalyzer.class,
 			analyzerClass = WhitespaceAnalyzer.class)
 	public String textSynonymsField2;
+
+	@IndexField(template = FieldDefinition.Template.TextField,
+			queryAnalyzerClass = ComplexQueryAnalyzer.class,
+			analyzerClass = SmartAnalyzerSet.English.class)
+	public String textComplexAnalyzer;
 
 	@IndexField(template = FieldDefinition.Template.StringField)
 	public String stringField;
@@ -126,6 +132,11 @@ public abstract class IndexRecord<T extends IndexRecord> {
 
 	public T textSynonymsField2(String textSynonymsField2) {
 		this.textSynonymsField2 = textSynonymsField2;
+		return (T) this;
+	}
+
+	public T textComplexAnalyzer(String textComplexAnalyzer) {
+		this.textComplexAnalyzer = textComplexAnalyzer;
 		return (T) this;
 	}
 

@@ -46,7 +46,8 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 		initIndexService();
 		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World")
 				.stringField("Hello World")
-				.textSynonymsField1("hello world"));
+				.textSynonymsField1("hello world")
+				.textComplexAnalyzer("completed queries"));
 		indexService.postDocument(
 				new IndexRecord.NoTaxonomy("2").textField("aaaaaa bbbbbb").stringField("aaaaaa bbbbbb"));
 	}
@@ -157,6 +158,15 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 						.boost("textField", 2.0F)
 						.boost("stringField", 3.0F);
 		checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 1L, "test");
+	}
+
+	@Test
+	@Ignore
+	public void testWithGraphSynonymsOperatorAndComplexAnalyzer() {
+		AbstractQuery query =
+				new MultiFieldQuery(QueryParserOperator.AND, "hello completed query").boost("textSynonymsField1", 1.0F)
+						.boost("textComplexAnalyzer", 2.0F);
+		checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 0L, "test");
 	}
 
 	@Test

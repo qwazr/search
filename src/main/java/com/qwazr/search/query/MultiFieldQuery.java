@@ -131,6 +131,7 @@ public class MultiFieldQuery extends AbstractQuery {
 		final Map<String, AtomicInteger> termsFreq = new HashMap<>();
 		final Map<String, Set<Offset>> termsOffsets = new HashMap<>();
 		final IndexReader indexReader = queryContext.getIndexReader();
+
 		// Build term queries
 		fieldsBoosts.forEach((field, boost) -> {
 			try (final TokenStream tokenStream = alzr.tokenStream(field, queryString)) {
