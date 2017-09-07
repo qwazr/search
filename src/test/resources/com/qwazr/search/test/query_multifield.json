@@ -4,9 +4,11 @@
     "query_string": "fifth search",
     "fields_boosts": {
       "name": 10,
-      "description": 1
+      "description": 1,
+      "fulltext": 0.5
     }
   },
+  "query_debug": true,
   "start": 0,
   "rows": 5,
   "returned_fields": [

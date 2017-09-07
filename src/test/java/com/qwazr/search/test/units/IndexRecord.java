@@ -36,16 +36,19 @@ public abstract class IndexRecord<T extends IndexRecord> {
 	final public String id;
 
 	@IndexField(template = FieldDefinition.Template.TextField, analyzerClass = StandardAnalyzer.class)
+	@Copy(to = { @Copy.To(order = 1, field = "textComplexAnalyzer") })
 	public String textField;
 
 	@IndexField(template = FieldDefinition.Template.TextField,
 			queryAnalyzerClass = SynonymsResourceAnalyzer.class,
 			analyzerClass = WhitespaceAnalyzer.class)
+	@Copy(to = { @Copy.To(order = 2, field = "textComplexAnalyzer") })
 	public String textSynonymsField1;
 
 	@IndexField(template = FieldDefinition.Template.TextField,
 			queryAnalyzerClass = SynonymsResourceAnalyzer.class,
 			analyzerClass = WhitespaceAnalyzer.class)
+	@Copy(to = { @Copy.To(order = 3, field = "textComplexAnalyzer") })
 	public String textSynonymsField2;
 
 	@IndexField(template = FieldDefinition.Template.TextField,
@@ -132,11 +135,6 @@ public abstract class IndexRecord<T extends IndexRecord> {
 
 	public T textSynonymsField2(String textSynonymsField2) {
 		this.textSynonymsField2 = textSynonymsField2;
-		return (T) this;
-	}
-
-	public T textComplexAnalyzer(String textComplexAnalyzer) {
-		this.textComplexAnalyzer = textComplexAnalyzer;
 		return (T) this;
 	}
 

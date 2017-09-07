@@ -17,6 +17,7 @@ package com.qwazr.search.test;
 
 import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.search.annotations.AnnotatedIndexService;
+import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.field.FieldDefinition;
@@ -112,7 +113,7 @@ public class AnnotatedIndexServiceTest {
 
 		Map<String, FieldDefinition> fields = service.createUpdateFields();
 		Assert.assertNotNull(fields);
-		Assert.assertEquals(2, fields.size());
+		Assert.assertEquals(3, fields.size());
 
 		// Check analyzer creation
 		service.testAnalyzer(AnnotatedRecord.INJECTED_ANALYZER_NAME, "Test");
@@ -153,6 +154,7 @@ public class AnnotatedIndexServiceTest {
 		Map<String, Float> fieldBoosts = new HashMap<>();
 		fieldBoosts.put("title", 10F);
 		fieldBoosts.put("content", 1F);
+		fieldBoosts.put("full", 0.5F);
 
 		MultiFieldQuery multiFieldQuery =
 				new MultiFieldQuery(fieldBoosts, QueryParserOperator.AND, "Title terms", null);
@@ -160,7 +162,7 @@ public class AnnotatedIndexServiceTest {
 		QueryBuilder builder = QueryDefinition.of(multiFieldQuery).queryDebug(true);
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
 		Assert.assertEquals(
-				"+(title:title title:titl content:title content:titl) +(title:terms title:term content:terms content:term)",
+				"(+Synonym(title:titl title:title) +Synonym(title:term title:terms))^10.0 (+Synonym(content:titl content:title) +Synonym(content:term content:terms)) (+Synonym(full:titl full:title) +Synonym(full:term full:terms))^0.5",
 				results.query);
 		Assert.assertEquals(Long.valueOf(1), results.total_hits);
 	}
@@ -178,7 +180,8 @@ public class AnnotatedIndexServiceTest {
 	@Test
 	public void test510explain() {
 		MultiFieldQuery mfq = new MultiFieldQuery(QueryParserOperator.AND, "Title terms", null).boost("title", 10F)
-				.boost("content", 1.0F);
+				.boost("content", 1.0F)
+				.boost("full", 0.5f);
 		QueryDefinition query = QueryDefinition.of(mfq).build();
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);
 		Assert.assertNotNull(results);
@@ -201,14 +204,20 @@ public class AnnotatedIndexServiceTest {
 	public static class IndexRecord {
 
 		@IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class, stored = true)
+		@Copy(to = @Copy.To(order = 1, field = "full"))
 		final public String title;
 
 		@IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class, stored = true)
+		@Copy(to = @Copy.To(order = 2, field = "full"))
 		final public String content;
+
+		@IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class)
+		final public String full;
 
 		public IndexRecord(String title, String content) {
 			this.title = title;
 			this.content = content;
+			this.full = null;
 		}
 
 		public IndexRecord() {

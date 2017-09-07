@@ -541,7 +541,7 @@ public abstract class JavaAbstractTest {
 	private void checkMultiField(final MultiFieldQuery query, final String check, final int size)
 			throws URISyntaxException, IOException {
 		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
-		final QueryBuilder builder = QueryDefinition.of(query).queryDebug(true);
+		final QueryBuilder builder = QueryDefinition.of(query).queryDebug(true).returnedField("*");
 		final ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
 		Assert.assertEquals(check, result.getQuery());
 		Assert.assertEquals(size, result.documents.size());
@@ -555,17 +555,17 @@ public abstract class JavaAbstractTest {
 		fields.put("content", 1.0F);
 		MultiFieldQuery query = new MultiFieldQuery(fields, QueryParserOperator.AND, "title sekond", null);
 		checkMultiField(query,
-				"+((title:titl)^10.0 (titleStd:title)^5.0 content:titl) +((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2)",
+				"(+title:titl +title:sekond~2)^10.0 (+titleStd:title +titleStd:sekond~2)^5.0 (+content:titl +content:sekond~2)",
 				1);
-		query = new MultiFieldQuery(fields, QueryParserOperator.OR, "title sekond", 2);
+		query = new MultiFieldQuery(fields, QueryParserOperator.OR, "title sekond", 100);
 		checkMultiField(query,
-				"(((title:titl)^10.0 (titleStd:title)^5.0 content:titl) ((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2))~2",
+				"((title:titl title:sekond~2)~2)^10.0 ((titleStd:title titleStd:sekond~2)~2)^5.0 ((content:titl content:sekond~2)~2)",
 				1);
-		query = new MultiFieldQuery(QueryParserOperator.OR, "title sekond", 1).boost("title", 10.0F)
+		query = new MultiFieldQuery(QueryParserOperator.OR, "title sekond", 50).boost("title", 10.0F)
 				.boost("titleStd", 5.0F)
 				.boost("content", 1.0F);
 		checkMultiField(query,
-				"(((title:titl)^10.0 (titleStd:title)^5.0 content:titl) ((title:sekond~2)^10.0 (titleStd:sekond~2)^5.0 content:sekond~2))~1",
+				"((title:titl title:sekond~2)~1)^10.0 ((titleStd:title titleStd:sekond~2)~1)^5.0 ((content:titl content:sekond~2)~1)",
 				2);
 	}
 
@@ -577,7 +577,7 @@ public abstract class JavaAbstractTest {
 						.boost("titleStd", 5.0F)
 						.boost("content", 1.0F);
 		checkMultiField(query,
-				"+((title:titl)^10.0 | (titleStd:title)^5.0 | content:titl)~0.1 +((title:second)^10.0 | (titleStd:second)^5.0 | content:second)~0.1",
+				"((+title:titl +title:second)^10.0 | (+titleStd:title +titleStd:second)^5.0 | (+content:titl +content:second))~0.1",
 				1);
 	}
 
