@@ -24,7 +24,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
-public class FilesReplicationWithTaxo extends ReplicationTestManager {
+public class ReplicationNoTaxo extends ReplicationTestManager {
 
 	private final static String SCHEMA = "FilesReplicationNoTaxo";
 	private final static String MASTER = "master";
@@ -33,19 +33,14 @@ public class FilesReplicationWithTaxo extends ReplicationTestManager {
 	public AnnotatedIndexService<AnnotatedRecord> getMaster() throws URISyntaxException {
 		return new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, MASTER, IndexSettingsDefinition.of()
 				.mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
-				.enableTaxonomyIndex(true)
-				.replication(IndexSettingsDefinition.Replication.FILES)
+				.enableTaxonomyIndex(false)
 				.build());
 	}
 
 	@Override
 	public List<AnnotatedIndexService<AnnotatedRecord>> getSlaves() throws URISyntaxException {
 		return Arrays.asList(new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "slave",
-				IndexSettingsDefinition.of()
-						.master(SCHEMA, MASTER)
-						.enableTaxonomyIndex(true)
-						.replication(IndexSettingsDefinition.Replication.FILES)
-						.build()));
+				IndexSettingsDefinition.of().master(SCHEMA, MASTER).enableTaxonomyIndex(false).build()));
 
 	}
 

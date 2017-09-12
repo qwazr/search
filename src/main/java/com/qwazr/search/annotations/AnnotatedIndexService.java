@@ -500,8 +500,9 @@ public class AnnotatedIndexService<T> {
 		Objects.requireNonNull(id, "The id cannot be empty");
 		if (annotatedService != null)
 			return annotatedService.getDocument(schemaName, indexName, id, wrapper);
-		else
+		else {
 			return wrapper.toRecord(indexService.getDocument(schemaName, indexName, id.toString()));
+		}
 	}
 
 	/**

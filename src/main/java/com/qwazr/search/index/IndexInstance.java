@@ -141,11 +141,11 @@ final public class IndexInstance implements Closeable {
 		this.commitLock = new ReentrantLock(true);
 		this.facetsReaderStateCache = null;
 		this.facetsReaderStateCacheLog = new ReentrantLock(true);
-		this.indexReplicator = writerAndSearcher instanceof ReplicationFiles.Slave ?
-				((ReplicationFiles.Slave) writerAndSearcher).getIndexReplicator() :
+		this.indexReplicator = writerAndSearcher instanceof IndexReplicator.Slave ?
+				((IndexReplicator.Slave) writerAndSearcher).getIndexReplicator() :
 				null;
-		this.localReplicator = writerAndSearcher instanceof ReplicationFiles.Master ?
-				((ReplicationFiles.Master) writerAndSearcher).getLocalReplicator() :
+		this.localReplicator = writerAndSearcher instanceof Replication.Master ?
+				((Replication.Master) writerAndSearcher).getLocalReplicator() :
 				null;
 	}
 
@@ -407,7 +407,7 @@ final public class IndexInstance implements Closeable {
 
 	final LocalReplicator getLocalReplicator(final String remoteMasterUuid) {
 		checkRemoteMasterUUID(remoteMasterUuid, indexUuid);
-		return localReplicator;
+		return Objects.requireNonNull(localReplicator, () -> "FILE replication not available: " + indexName);
 	}
 
 	void replicationCheck() throws IOException {

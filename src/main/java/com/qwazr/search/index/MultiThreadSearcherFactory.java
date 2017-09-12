@@ -15,16 +15,11 @@
  */
 package com.qwazr.search.index;
 
-import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SimpleMergedSegmentWarmer;
-import org.apache.lucene.index.StoredFieldVisitor;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.SearcherFactory;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.util.InfoStream;
 
@@ -55,18 +50,6 @@ class MultiThreadSearcherFactory extends SearcherFactory {
 
 		for (final LeafReaderContext context : indexReader.leaves())
 			WARMER.warm(context.reader());
-
-		final StoredFieldVisitor allFields = new StoredFieldVisitor() {
-			@Override
-			public StoredFieldVisitor.Status needsField(FieldInfo fieldInfo) throws IOException {
-				return StoredFieldVisitor.Status.YES;
-			}
-		};
-
-		final TopDocs topDocs = indexSearcher.search(new MatchAllDocsQuery(), 10);
-		if (topDocs != null && topDocs.scoreDocs != null)
-			for (final ScoreDoc scoreDoc : topDocs.scoreDocs)
-				indexSearcher.doc(scoreDoc.doc, allFields);
 
 		return indexSearcher;
 	}

@@ -234,23 +234,11 @@ class IndexInstanceBuilder {
 		if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0 ||
 				(taxonomyDirectory != null && SegmentInfos.getLastCommitGeneration(taxonomyDirectory) < 0))
 			indexReplicator.updateNow();
-
-		switch (IndexSettingsDefinition.getReplicationType(settings)) {
-		case FILES:
-			if (withTaxo) {
-				writerAndSearcher =
-						new ReplicationFiles.SlaveWithTaxo(indexReplicator, dataDirectory, taxonomyDirectory,
-								searcherFactory);
-			} else {
-				writerAndSearcher = new ReplicationFiles.SlaveNoTaxo(indexReplicator, dataDirectory, searcherFactory);
-			}
-			break;
-		case NRT:
-			if (withTaxo)
-				throw new ServerException("the NRT replication does not support Taxonomy secondary index");
-			final long currentGen = replicaCreateIfNotExistAndGetGen();
-			writerAndSearcher = ReplicationNrt.slave(dataDirectory, currentGen, searcherFactory);
-			break;
+		if (withTaxo) {
+			writerAndSearcher =
+					new Replication.SlaveWithTaxo(indexReplicator, dataDirectory, taxonomyDirectory, searcherFactory);
+		} else {
+			writerAndSearcher = new Replication.SlaveNoTaxo(indexReplicator, dataDirectory, searcherFactory);
 		}
 
 	}
@@ -263,20 +251,9 @@ class IndexInstanceBuilder {
 		if (withTaxo)
 			openOrCreateTaxonomyIndex(false);
 
-		// Manage the master replication
-		switch (IndexSettingsDefinition.getReplicationType(settings)) {
-		case FILES:
-			writerAndSearcher = withTaxo ?
-					new ReplicationFiles.MasterWithTaxo(indexWriter, taxonomyWriter, searcherFactory) :
-					new ReplicationFiles.MasterNoTaxo(indexWriter, searcherFactory);
-			break;
-		case NRT:
-			if (withTaxo)
-				throw new ServerException("the NRT replication does not support Taxonomy secondary index");
-			writerAndSearcher =
-					ReplicationNrt.master(indexWriter, indexWriter.getMaxCompletedSequenceNumber(), searcherFactory);
-			break;
-		}
+		writerAndSearcher = withTaxo ?
+				new Replication.MasterWithTaxo(indexWriter, taxonomyWriter, searcherFactory) :
+				new Replication.MasterNoTaxo(indexWriter, searcherFactory);
 	}
 
 	private void abort() {

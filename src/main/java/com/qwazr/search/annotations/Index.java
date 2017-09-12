@@ -38,9 +38,7 @@ public @interface Index {
 	Class<? extends Similarity> similarityClass() default BM25Similarity.class;
 
 	String replicationMaster() default StringUtils.EMPTY;
-
-	IndexSettingsDefinition.Replication replicationType() default IndexSettingsDefinition.Replication.FILES;
-
+	
 	IndexSettingsDefinition.Type type() default IndexSettingsDefinition.Type.FSDirectory;
 
 	IndexSettingsDefinition.MergeScheduler mergeScheduler() default IndexSettingsDefinition.MergeScheduler.SERIAL;

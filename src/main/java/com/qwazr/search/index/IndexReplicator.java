@@ -46,14 +46,17 @@ class IndexReplicator implements Replicator {
 	private final IndexServiceInterface indexService;
 	private final RemoteIndex master;
 	private final File masterUuidFile;
+	private final ReplicationClient replicationClient;
+
 	private volatile String masterUuidString;
 	private volatile UUID masterUuid;
-
-	private final ReplicationClient replicationClient;
 
 	IndexReplicator(final IndexServiceInterface localService, final RemoteIndex master, final File masterUuidFile,
 			final Directory indexDirectory, final Directory taxonomyDirectory, final Path replWorkPath,
 			final Callable<Boolean> callback) throws URISyntaxException, IOException {
+		replicationClient =
+				new ReplicationClient(this, getNewReplicationHandler(indexDirectory, taxonomyDirectory, callback),
+						new PerSessionDirectoryFactory(replWorkPath));
 		this.master = master;
 		this.masterUuidFile = masterUuidFile;
 		this.indexService = master == null ? null : master.host == null ? localService : new IndexSingleClient(master);
@@ -62,21 +65,9 @@ class IndexReplicator implements Replicator {
 			this.masterUuidString = masterUuid.toString();
 		} else
 			checkRemoteMasterUuid();
-
-		final ReplicationClient.SourceDirectoryFactory factory = new PerSessionDirectoryFactory(replWorkPath);
-		this.replicationClient =
-				new ReplicationClient(this, getNewReplicationHandler(indexDirectory, taxonomyDirectory, callback),
-						factory);
 	}
 
-	static ReplicationClient.ReplicationHandler getNewReplicationHandler(final Directory indexDirectory,
-			final Directory taxonomyDirectory, final Callable<Boolean> callback) throws IOException {
-		return taxonomyDirectory == null ?
-				new IndexReplicationHandler(indexDirectory, callback) :
-				new IndexAndTaxonomyReplicationHandler(indexDirectory, taxonomyDirectory, callback);
-	}
-
-	private IndexServiceInterface checkService() {
+	IndexServiceInterface checkService() {
 		if (indexService == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE, "The remote master has not been set");
 		return indexService;
@@ -128,23 +119,8 @@ class IndexReplicator implements Replicator {
 		return checkService().getResource(master.schema, master.index, resourceName);
 	}
 
-	@Override
-	final public void publish(final Revision revision) throws IOException {
-		throw new UnsupportedOperationException(
-				"this replicator implementation does not support remote publishing of revisions");
-	}
-
-	@Override
-	public SessionToken checkForUpdate(final String currVersion) throws IOException {
-		try (final InputStream inputStream = checkService().replicationUpdate(master.schema, master.index,
-				masterUuidString, currVersion)) {
-			if (inputStream == null)
-				return null;
-			if (inputStream.available() == 0)
-				return null;
-			final DataInput input = new DataInputStream(inputStream);
-			return new SessionToken(input);
-		}
+	interface Slave {
+		IndexReplicator getIndexReplicator();
 	}
 
 	@Override
@@ -164,7 +140,33 @@ class IndexReplicator implements Replicator {
 		replicationClient.close();
 	}
 
+	@Override
+	final public void publish(final Revision revision) throws IOException {
+		throw new UnsupportedOperationException(
+				"this replicator implementation does not support remote publishing of revisions");
+	}
+
+	@Override
+	public SessionToken checkForUpdate(final String currVersion) throws IOException {
+		try (final InputStream inputStream = checkService().replicationUpdate(master.schema, master.index,
+				masterUuidString, currVersion)) {
+			if (inputStream == null)
+				return null;
+			if (inputStream.available() == 0)
+				return null;
+			final DataInput input = new DataInputStream(inputStream);
+			return new SessionToken(input);
+		}
+	}
+
 	final void updateNow() throws IOException {
 		replicationClient.updateNow();
+	}
+
+	static ReplicationClient.ReplicationHandler getNewReplicationHandler(final Directory dataDirectory,
+			final Directory taxoDirectory, final Callable<Boolean> callback) throws IOException {
+		return taxoDirectory == null ?
+				new IndexReplicationHandler(dataDirectory, callback) :
+				new IndexAndTaxonomyReplicationHandler(dataDirectory, taxoDirectory, callback);
 	}
 }

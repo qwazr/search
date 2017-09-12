@@ -183,7 +183,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("fields")
 				.path(fieldName == null ? StringUtils.EMPTY : fieldName)
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(field), FieldDefinition.class);
+				.post(Entity.entity(field, MediaType.APPLICATION_JSON), FieldDefinition.class);
 	}
 
 	@Override
@@ -235,7 +235,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("analyzers")
 				.path(analyzerName)
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(analyzer), AnalyzerDefinition.class);
+				.post(Entity.entity(analyzer, MediaType.APPLICATION_JSON), AnalyzerDefinition.class);
 	}
 
 	@Override
@@ -245,7 +245,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("analyzers")
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(analyzers), mapStringAnalyzerType);
+				.post(Entity.entity(analyzers, MediaType.APPLICATION_JSON), mapStringAnalyzerType);
 	}
 
 	@Override
@@ -295,7 +295,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("merge")
 				.path(mergedIndex)
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(commitUserData), IndexStatus.class);
+				.post(Entity.entity(commitUserData, MediaType.APPLICATION_JSON), IndexStatus.class);
 	}
 
 	@Override
@@ -304,7 +304,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("check")
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(null), IndexCheckStatus.class);
+				.post(Entity.entity(null, MediaType.APPLICATION_JSON), IndexCheckStatus.class);
 	}
 
 	@Override
@@ -320,7 +320,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("backup")
 				.path(backupName)
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(null), mapStringMapStringBackupStatusType);
+				.post(Entity.entity(null, MediaType.APPLICATION_JSON), mapStringMapStringBackupStatusType);
 	}
 
 	@Override
@@ -438,7 +438,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("doc")
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(post), Integer.class);
+				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
 	}
 
 	@Override
@@ -448,7 +448,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("docs")
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(post), Integer.class);
+				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
 	}
 
 	@Override
@@ -459,7 +459,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("doc")
 				.path("values")
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(post), Integer.class);
+				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
 	}
 
 	@Override
@@ -470,7 +470,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("docs")
 				.path("values")
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(post), Integer.class);
+				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
 	}
 
 	@Override
@@ -510,7 +510,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		WebTarget target = indexTarget.path(schemaName).path(indexName).path("search");
 		if (delete != null)
 			target = target.queryParam("delete", delete);
-		return target.request(MediaType.APPLICATION_JSON).post(Entity.json(query), ResultDefinition.WithMap.class);
+		return target.request(MediaType.APPLICATION_JSON)
+				.post(Entity.entity(query, MediaType.APPLICATION_JSON), ResultDefinition.WithMap.class);
 	}
 
 	@Override
@@ -522,7 +523,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("explain")
 				.path(Integer.toString(docId))
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(query), ExplainDefinition.class);
+				.post(Entity.entity(query, MediaType.APPLICATION_JSON), ExplainDefinition.class);
 	}
 
 	@Override
@@ -533,7 +534,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("explain")
 				.path(Integer.toString(docId))
 				.request(MediaType.TEXT_PLAIN)
-				.post(Entity.json(query), String.class);
+				.post(Entity.entity(query, MediaType.APPLICATION_JSON), String.class);
 	}
 
 	@Override
@@ -546,7 +547,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(Integer.toString(docId));
 		if (descriptionWrapSize != null)
 			target = target.queryParam("wrap", descriptionWrapSize);
-		return target.request(MEDIATYPE_TEXT_GRAPHVIZ).post(Entity.json(query), String.class);
+		return target.request(MEDIATYPE_TEXT_GRAPHVIZ)
+				.post(Entity.entity(query, MediaType.APPLICATION_JSON), String.class);
 	}
 
 }

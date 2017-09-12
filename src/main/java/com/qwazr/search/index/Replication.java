@@ -29,14 +29,10 @@ import org.apache.lucene.store.Directory;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-interface ReplicationFiles {
+interface Replication {
 
 	interface Master {
 		LocalReplicator getLocalReplicator();
-	}
-
-	interface Slave {
-		IndexReplicator getIndexReplicator();
 	}
 
 	final class MasterWithTaxo extends WriterAndSearcher.WithTaxo implements Master {
@@ -74,7 +70,7 @@ interface ReplicationFiles {
 		}
 	}
 
-	final class SlaveWithTaxo extends WriterAndSearcher.WithTaxo implements Slave {
+	final class SlaveWithTaxo extends WriterAndSearcher.WithTaxo implements IndexReplicator.Slave {
 
 		private final IndexReplicator indexReplicator;
 
@@ -130,7 +126,7 @@ interface ReplicationFiles {
 		}
 	}
 
-	final class SlaveNoTaxo extends WriterAndSearcher.NoTaxo implements Slave {
+	final class SlaveNoTaxo extends WriterAndSearcher.NoTaxo implements IndexReplicator.Slave {
 
 		private final IndexReplicator indexReplicator;
 
