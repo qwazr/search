@@ -46,6 +46,10 @@ public class IndexSettingsDefinition {
 	public static final double DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB = 5;
 	public static final double DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB = 60;
 
+	// TODO: Name reservation
+	@JsonProperty("replication")
+	final public String replication = null;
+
 	@JsonProperty("similarity_class")
 	final public String similarityClass;
 
