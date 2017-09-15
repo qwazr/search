@@ -46,6 +46,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.HttpEntity;
 import org.apache.http.util.EntityUtils;
 
+import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -83,6 +84,8 @@ public class AnnotatedIndexService<T> {
 
 	private final LinkedHashMap<String, FieldDefinition> fieldDefinitions;
 
+	private final Class<T> indexDefinitionClass;
+
 	/**
 	 * Create a new index service. A class with Index and IndexField annotations.
 	 *
@@ -98,6 +101,7 @@ public class AnnotatedIndexService<T> {
 			throws URISyntaxException {
 		Objects.requireNonNull(indexService, "The indexService parameter is null");
 		Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
+		this.indexDefinitionClass = indexDefinitionClass;
 		this.indexService = indexService;
 		this.annotatedService =
 				indexService instanceof AnnotatedServiceInterface ? (AnnotatedServiceInterface) indexService : null;
@@ -113,35 +117,46 @@ public class AnnotatedIndexService<T> {
 		final Map<String, IndexField> indexFieldMap = new LinkedHashMap<>();
 		final Map<String, SmartField> smartFieldMap = new LinkedHashMap<>();
 		final Map<String, Copy> copyMap = new LinkedHashMap<>();
+
 		AnnotationsUtils.browseFieldsRecursive(indexDefinitionClass, field -> {
 			if (field.isAnnotationPresent(IndexField.class)) {
 				field.setAccessible(true);
 				final IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
 				final String fieldName = FieldMapWrappers.getFieldName(indexField.name(), field);
-				indexFieldMap.put(fieldName, indexField);
-				fieldMap.put(fieldName, field);
+				putCheckNotTwice(indexFieldMap, fieldName, indexField);
+				fieldMap.putIfAbsent(fieldName, field);
 			}
 			if (field.isAnnotationPresent(SmartField.class)) {
 				field.setAccessible(true);
 				final SmartField smartField = field.getDeclaredAnnotation(SmartField.class);
 				final String fieldName = FieldMapWrappers.getFieldName(smartField.name(), field);
-				smartFieldMap.put(fieldName, smartField);
-				fieldMap.put(fieldName, field);
+				putCheckNotTwice(smartFieldMap, fieldName, smartField);
+				fieldMap.putIfAbsent(fieldName, field);
 			}
 			if (field.isAnnotationPresent(Copy.class)) {
 				field.setAccessible(true);
 				final Copy copy = field.getDeclaredAnnotation(Copy.class);
 				final String fieldName = FieldMapWrappers.getFieldName(copy.name(), field);
-				copyMap.put(fieldName, copy);
-				fieldMap.put(fieldName, field);
+				putCheckNotTwice(copyMap, fieldName, copy);
+				fieldMap.putIfAbsent(fieldName, field);
 			}
 		});
+
 		smartFieldMap.forEach((name, propertyField) -> fieldDefinitions.put(name,
 				new SmartFieldDefinition(name, propertyField, copyMap)));
 		indexFieldMap.forEach((name, propertyField) -> fieldDefinitions.put(name,
 				new CustomFieldDefinition(name, propertyField, copyMap)));
+
 		this.fieldMapWrappers = new FieldMapWrappers(fieldMap.keySet());
 		this.schemaFieldMapWrapper = fieldMapWrappers.get(indexDefinitionClass);
+	}
+
+	private <F> void putCheckNotTwice(Map<String, F> map, String fieldName, F newField) {
+		final F duplicateField = map.put(fieldName, newField);
+		if (duplicateField != null)
+			throw new NotAcceptableException(
+					"This field name has been defined twice: " + fieldName + " - Fields: " + duplicateField + "/" +
+							newField);
 	}
 
 	public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass)
