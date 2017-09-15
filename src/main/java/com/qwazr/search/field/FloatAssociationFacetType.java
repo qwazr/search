@@ -26,8 +26,9 @@ import java.util.Objects;
 
 final class FloatAssociationFacetType extends CustomFieldTypeAbstract.NoField {
 
-	FloatAssociationFacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+	FloatAssociationFacetType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
 				BytesRefUtils.Converter.FLOAT_FACET));
 	}
 
@@ -39,7 +40,7 @@ final class FloatAssociationFacetType extends CustomFieldTypeAbstract.NoField {
 					"Expected at least 2 values - Field: " + fieldName);
 		final float assoc = TypeUtils.getFloatNumber(fieldName, values[0]);
 		final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
-		consumer.accept(fieldName, new FloatAssociationFacetField(assoc, fieldName, path));
+		consumer.accept(genericFieldName, fieldName, new FloatAssociationFacetField(assoc, fieldName, path));
 	}
 
 }

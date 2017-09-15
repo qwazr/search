@@ -26,10 +26,15 @@ import java.io.IOException;
 public class LongRangeQuery extends AbstractRangeQuery<Long> {
 
 	@JsonCreator
-	public LongRangeQuery(@JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
+	public LongRangeQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
 			@JsonProperty("upper_value") final Long upperValue) {
-		super(field, lowerValue == null ? Long.MIN_VALUE : lowerValue,
+		super(genericField, field, lowerValue == null ? Long.MIN_VALUE : lowerValue,
 				upperValue == null ? Long.MAX_VALUE : upperValue);
+	}
+
+	public LongRangeQuery(final String field, final Long lowerValue, final Long upperValue) {
+		this(null, field, lowerValue, upperValue);
 	}
 
 	@Override

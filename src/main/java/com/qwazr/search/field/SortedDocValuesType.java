@@ -26,14 +26,16 @@ import org.apache.lucene.util.BytesRef;
 
 final class SortedDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	SortedDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.STRING)
-				.sortFieldProvider(SortUtils::stringSortField));
+	SortedDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.STRING).sortFieldProvider(SortUtils::stringSortField));
 	}
 
 	@Override
 	protected void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
-		consumer.accept(fieldName, new SortedDocValuesField(fieldName, new BytesRef(value.toString())));
+		consumer.accept(genericFieldName, fieldName,
+				new SortedDocValuesField(fieldName, new BytesRef(value.toString())));
 	}
 
 	@Override

@@ -26,10 +26,15 @@ import java.io.IOException;
 public class FloatRangeQuery extends AbstractRangeQuery<Float> {
 
 	@JsonCreator
-	public FloatRangeQuery(@JsonProperty("field") final String field,
-			@JsonProperty("lower_value") final Float lowerValue, @JsonProperty("upper_value") final Float upperValue) {
-		super(field, lowerValue == null ? Float.MIN_VALUE : lowerValue,
+	public FloatRangeQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Float lowerValue,
+			@JsonProperty("upper_value") final Float upperValue) {
+		super(genericField, field, lowerValue == null ? Float.MIN_VALUE : lowerValue,
 				upperValue == null ? Float.MAX_VALUE : upperValue);
+	}
+
+	public FloatRangeQuery(final String field, final Float lowerValue, final Float upperValue) {
+		this(null, field, lowerValue, upperValue);
 	}
 
 	@Override

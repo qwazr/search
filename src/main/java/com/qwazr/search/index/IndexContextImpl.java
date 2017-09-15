@@ -22,7 +22,7 @@ import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.FacetsConfig;
 
 import java.io.Closeable;
-import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 class IndexContextImpl implements IndexContext, Closeable {
@@ -61,13 +61,13 @@ class IndexContextImpl implements IndexContext, Closeable {
 	}
 
 	@Override
-	final public FacetsConfig getFacetsConfig(final String dimension) {
-		return fieldMap.getFacetsConfig(dimension);
+	final public FacetsConfig getFacetsConfig(final String genericFieldName, final String concreteFieldName) {
+		return fieldMap.getFacetsConfig(genericFieldName, concreteFieldName);
 	}
 
 	@Override
-	final public FacetsConfig getFacetsConfig(Collection<String> fieldSet) {
-		return fieldMap.getFacetsConfig(fieldSet);
+	final public FacetsConfig getFacetsConfig(final Map<String, String> dimensions) {
+		return fieldMap.getFacetsConfig(dimensions);
 	}
 
 	@Override

@@ -30,18 +30,24 @@ public class RegexpQuery extends AbstractFieldQuery {
 	final public Integer flags;
 	final public Integer max_determinized_states;
 
-	public RegexpQuery(final String field, final String text, final Integer flags) {
-		this(field, text, flags, null);
-	}
-
 	@JsonCreator
-	public RegexpQuery(@JsonProperty("field") final String field, @JsonProperty("text")  final String text,
+	public RegexpQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("text") final String text,
 			@JsonProperty("flags") final Integer flags,
 			@JsonProperty("max_determinized_states") final Integer maxDeterminizedStates) {
-		super(field);
+		super(genericField, field);
 		this.text = text;
 		this.flags = flags;
 		this.max_determinized_states = maxDeterminizedStates;
+	}
+
+	public RegexpQuery(final String field, final String text, final Integer flags,
+			final Integer maxDeterminizedStates) {
+		this(null, field, text, flags, maxDeterminizedStates);
+	}
+
+	public RegexpQuery(final String field, final String text, final Integer flags) {
+		this(field, text, flags, null);
 	}
 
 	@Override

@@ -28,9 +28,14 @@ public class FloatExactQuery extends AbstractFieldQuery {
 	public float value;
 
 	@JsonCreator
-	public FloatExactQuery(@JsonProperty("field") final String field, @JsonProperty("value") final float value) {
-		super(field);
+	public FloatExactQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("value") final float value) {
+		super(genericField, field);
 		this.value = value;
+	}
+
+	public FloatExactQuery(final String field, final float value) {
+		this(null, field, value);
 	}
 
 	@Override

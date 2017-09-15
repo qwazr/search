@@ -29,23 +29,64 @@ import java.util.Objects;
 public class FacetPathQuery extends AbstractQuery {
 
 	final public String dimension;
+	@JsonProperty("generic_field")
+	final public String genericField;
 	final public String[] path;
 
 	@JsonCreator
-	public FacetPathQuery(@JsonProperty("dimension") final String dimension,
-			@JsonProperty("path") final String... path) {
+	FacetPathQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("dimension") final String dimension, @JsonProperty("path") final String... path) {
+		this.genericField = genericField;
 		this.dimension = dimension;
 		this.path = path;
+	}
+
+	FacetPathQuery(Builder builder) {
+		this(builder.genericField, builder.dimension, builder.path);
+	}
+
+	public static Builder of(String dimension) {
+		return new Builder().dimension(dimension);
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		Objects.requireNonNull(dimension, "The dimension is missing");
+
 		final FieldMap fieldMap = queryContext.getFieldMap();
-		final String resolvedDimension = fieldMap == null ? dimension : fieldMap.resolveQueryFieldName(dimension);
-		final String indexFieldName = queryContext.getFacetsConfig(dimension).getDimConfig(
-				resolvedDimension).indexFieldName;
+
+		final String resolvedDimension =
+				fieldMap == null ? dimension : fieldMap.resolveQueryFieldName(genericField, dimension);
+		final String indexFieldName =
+				queryContext.getFacetsConfig(genericField, dimension).getDimConfig(resolvedDimension).indexFieldName;
 		final Term term = new Term(indexFieldName, FacetsConfig.pathToString(resolvedDimension, path));
 		return new org.apache.lucene.search.TermQuery(term);
+	}
+
+	public static class Builder {
+
+		String dimension;
+		String genericField;
+		String[] path;
+
+		public Builder dimension(String dimension) {
+			this.dimension = dimension;
+			return this;
+		}
+
+		public Builder genericField(String genericField) {
+			this.genericField = genericField;
+			return this;
+		}
+
+		public Builder path(String... path) {
+			this.path = path;
+			return this;
+		}
+
+		public FacetPathQuery build() {
+			return new FacetPathQuery(this);
+		}
+
 	}
 }

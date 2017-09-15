@@ -27,9 +27,10 @@ import org.apache.lucene.util.NumericUtils;
 
 final class SortedFloatDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	SortedFloatDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.FLOAT)
-				.sortFieldProvider(SortUtils::floatSortField));
+	SortedFloatDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.FLOAT).sortFieldProvider(SortUtils::floatSortField));
 	}
 
 	@Override
@@ -41,7 +42,7 @@ final class SortedFloatDocValuesType extends CustomFieldTypeAbstract.OneField {
 		else
 			field = new SortedNumericDocValuesField(fieldName,
 					NumericUtils.floatToSortableInt(Float.parseFloat(value.toString())));
-		consumer.accept(fieldName, field);
+		consumer.accept(genericFieldName, fieldName, field);
 	}
 
 	@Override

@@ -26,11 +26,15 @@ import java.io.IOException;
 public class DoubleRangeQuery extends AbstractRangeQuery<Double> {
 
 	@JsonCreator
-	public DoubleRangeQuery(@JsonProperty("field") final String field,
-			@JsonProperty("lower_value") final Double lowerValue,
+	public DoubleRangeQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
 			@JsonProperty("upper_value") final Double upperValue) {
-		super(field, lowerValue == null ? Double.MIN_VALUE : lowerValue,
+		super(genericField, field, lowerValue == null ? Double.MIN_VALUE : lowerValue,
 				upperValue == null ? Double.MAX_VALUE : upperValue);
+	}
+
+	public DoubleRangeQuery(final String field, final Double lowerValue, final Double upperValue) {
+		this(null, field, lowerValue, upperValue);
 	}
 
 	@Override

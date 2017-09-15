@@ -23,17 +23,19 @@ import java.util.Objects;
 
 public abstract class AbstractFieldSpanQuery extends AbstractSpanQuery {
 
+	final public String genericField;
 	final public String field;
 
-	protected AbstractFieldSpanQuery(final String field) {
+	protected AbstractFieldSpanQuery(final String genericField, final String field) {
 		this.field = Objects.requireNonNull(field, "The field is null");
+		this.genericField = genericField;
 	}
 
 	final protected String resolveField(final FieldMap fieldMap) {
-		return AbstractFieldQuery.resolveField(fieldMap, field);
+		return AbstractFieldQuery.resolveField(fieldMap, genericField, field);
 	}
 
 	final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {
-		return AbstractFieldQuery.getResolvedTerm(fieldMap, field, value);
+		return AbstractFieldQuery.getResolvedTerm(fieldMap, genericField, field, value);
 	}
 }

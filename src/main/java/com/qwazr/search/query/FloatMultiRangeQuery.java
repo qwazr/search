@@ -31,12 +31,16 @@ public class FloatMultiRangeQuery extends AbstractMultiRangeQuery {
 	final public float[] upper_values;
 
 	@JsonCreator
-	public FloatMultiRangeQuery(@JsonProperty("field") final String field,
-			@JsonProperty("lower_values") final float[] lowerValues,
+	public FloatMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("lower_values") final float[] lowerValues,
 			@JsonProperty("upper_values") final float[] upperValues) {
-		super(field);
+		super(genericField, field);
 		this.lower_values = lowerValues;
 		this.upper_values = upperValues;
+	}
+
+	public FloatMultiRangeQuery(final String field, final float[] lowerValues, final float[] upperValues) {
+		this(null, field, lowerValues, upperValues);
 	}
 
 	@Override
@@ -46,14 +50,14 @@ public class FloatMultiRangeQuery extends AbstractMultiRangeQuery {
 
 	public static class Builder extends AbstractBuilder<Float> {
 
-		public Builder(String field) {
-			super(field);
+		public Builder(String genericField, String field) {
+			super(genericField, field);
 		}
 
 		@Override
 		protected FloatMultiRangeQuery build(final String field, final Collection<Float> lowerValues,
 				final Collection<Float> upperValues) {
-			return new FloatMultiRangeQuery(field, ArrayUtils.toPrimitiveFloat(lowerValues),
+			return new FloatMultiRangeQuery(genericField, field, ArrayUtils.toPrimitiveFloat(lowerValues),
 					ArrayUtils.toPrimitiveFloat(upperValues));
 		}
 	}

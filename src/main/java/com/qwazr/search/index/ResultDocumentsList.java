@@ -55,8 +55,8 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
 			this.storedFields = new HashMap<>();
 			this.returnedFieldsConverter = new LinkedHashMap<>();
 			final MultiReader multiReader = new MultiReader(indexReader);
-			for (String fieldName : this.returnedFields) {
-				final FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
+			for (final String fieldName : this.returnedFields) {
+				final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
 				if (fieldType == null)
 					continue;
 				final String storedFieldName = fieldType.getStoredFieldName(fieldName);

@@ -31,12 +31,16 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery {
 	final public double[] upper_values;
 
 	@JsonCreator
-	public DoubleMultiRangeQuery(@JsonProperty("field") final String field,
-			@JsonProperty("lower_values") final double[] lowerValues,
+	public DoubleMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("lower_values") final double[] lowerValues,
 			@JsonProperty("upper_values") final double[] upperValues) {
-		super(field);
+		super(genericField, field);
 		this.lower_values = lowerValues;
 		this.upper_values = upperValues;
+	}
+
+	public DoubleMultiRangeQuery(final String field, final double[] lowerValues, final double[] upperValues) {
+		this(null, field, lowerValues, upperValues);
 	}
 
 	@Override
@@ -46,8 +50,8 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery {
 
 	public static class Builder extends AbstractBuilder<Double> {
 
-		public Builder(String field) {
-			super(field);
+		public Builder(String genericField, String field) {
+			super(genericField, field);
 		}
 
 		@Override

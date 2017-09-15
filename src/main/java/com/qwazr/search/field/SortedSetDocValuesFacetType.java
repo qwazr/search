@@ -23,8 +23,9 @@ import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 
 final class SortedSetDocValuesFacetType extends StorableFieldType {
 
-	SortedSetDocValuesFacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+	SortedSetDocValuesFacetType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
 				BytesRefUtils.Converter.STRING));
 	}
 
@@ -40,15 +41,15 @@ final class SortedSetDocValuesFacetType extends StorableFieldType {
 		final String stringValue = getStringValue(value);
 		if (stringValue == null)
 			return;
-		consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
-		consumer.accept(fieldName, new StoredField(fieldName, stringValue));
+		consumer.accept(genericFieldName, fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
+		consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, stringValue));
 	}
 
 	@Override
 	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
 		final String stringValue = getStringValue(value);
 		if (stringValue != null)
-			consumer.accept(fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
+			consumer.accept(genericFieldName, fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
 	}
 
 }

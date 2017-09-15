@@ -28,9 +28,14 @@ public class DoubleExactQuery extends AbstractFieldQuery {
 	public double value;
 
 	@JsonCreator
-	public DoubleExactQuery(@JsonProperty("field") final String field, @JsonProperty("value") final double value) {
-		super(field);
+	public DoubleExactQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("value") final double value) {
+		super(genericField, field);
 		this.value = value;
+	}
+
+	public DoubleExactQuery(final String field, final double value) {
+		this(null, field, value);
 	}
 
 	@Override

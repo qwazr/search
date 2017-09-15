@@ -32,12 +32,17 @@ public class MultiPhraseQuery extends AbstractFieldQuery {
 	final public Integer slop;
 
 	@JsonCreator
-	public MultiPhraseQuery(@JsonProperty("field") String field, @JsonProperty("terms") List<String[]> terms,
+	public MultiPhraseQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") String field, @JsonProperty("terms") List<String[]> terms,
 			@JsonProperty("positions") List<Integer> positions, @JsonProperty("slop") Integer slop) {
-		super(field);
+		super(genericField, field);
 		this.terms = terms;
 		this.positions = positions;
 		this.slop = slop;
+	}
+
+	public MultiPhraseQuery(String field, List<String[]> terms, List<Integer> positions, Integer slop) {
+		this(null, field, terms, positions, slop);
 	}
 
 	public MultiPhraseQuery(final String field, final Integer slop) {

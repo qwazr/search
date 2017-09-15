@@ -26,9 +26,10 @@ import org.apache.lucene.document.NumericDocValuesField;
 
 final class LongDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	LongDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.LONG)
-				.sortFieldProvider(SortUtils::longSortField));
+	LongDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.LONG).sortFieldProvider(SortUtils::longSortField));
 	}
 
 	@Override
@@ -38,7 +39,7 @@ final class LongDocValuesType extends CustomFieldTypeAbstract.OneField {
 			field = new NumericDocValuesField(fieldName, ((Number) value).longValue());
 		else
 			field = new NumericDocValuesField(fieldName, Long.parseLong(value.toString()));
-		consumer.accept(fieldName, field);
+		consumer.accept(genericFieldName, fieldName, field);
 	}
 
 	@Override

@@ -23,18 +23,19 @@ import org.apache.lucene.document.TextField;
 
 final class TextFieldType extends StorableFieldType {
 
-	TextFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.STRING)
-				.termProvider(FieldUtils::newStringTerm));
+	TextFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.STRING).termProvider(FieldUtils::newStringTerm));
 	}
 
 	@Override
 	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
-		consumer.accept(fieldName, new TextField(fieldName, value.toString(), Field.Store.YES));
+		consumer.accept(genericFieldName, fieldName, new TextField(fieldName, value.toString(), Field.Store.YES));
 	}
 
 	@Override
 	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
-		consumer.accept(fieldName, new TextField(fieldName, value.toString(), Field.Store.NO));
+		consumer.accept(genericFieldName, fieldName, new TextField(fieldName, value.toString(), Field.Store.NO));
 	}
 }

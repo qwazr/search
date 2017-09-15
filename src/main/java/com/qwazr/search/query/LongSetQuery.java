@@ -28,9 +28,14 @@ public class LongSetQuery extends AbstractFieldQuery {
 	final public long[] values;
 
 	@JsonCreator
-	public LongSetQuery(@JsonProperty("field") final String field, @JsonProperty("values") final long... values) {
-		super(field);
+	public LongSetQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("values") final long... values) {
+		super(genericField, field);
 		this.values = values;
+	}
+
+	public LongSetQuery(final String field, final long... values) {
+		this(null, field, values);
 	}
 
 	@Override

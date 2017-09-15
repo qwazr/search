@@ -20,7 +20,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.facet.FacetsConfig;
 
 import java.io.Closeable;
-import java.util.Collection;
+import java.util.Map;
 
 public interface IndexContext extends Closeable {
 
@@ -40,11 +40,11 @@ public interface IndexContext extends Closeable {
 
 	FacetsConfig DEFAULT_FACETS_CONFIG = new FacetsConfig();
 
-	default FacetsConfig getFacetsConfig(String dimension) {
+	default FacetsConfig getFacetsConfig(String genericFieldName, String concreteFieldName) {
 		return DEFAULT_FACETS_CONFIG;
 	}
 
-	default FacetsConfig getFacetsConfig(Collection<String> fieldSet) {
+	default FacetsConfig getFacetsConfig(Map<String, String> fieldNames) {
 		return DEFAULT_FACETS_CONFIG;
 	}
 

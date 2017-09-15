@@ -26,8 +26,9 @@ import java.util.Objects;
 
 class IntAssociationFacetType extends CustomFieldTypeAbstract.NoField {
 
-	IntAssociationFacetType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+	IntAssociationFacetType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
 				BytesRefUtils.Converter.INT_FACET));
 	}
 
@@ -39,7 +40,7 @@ class IntAssociationFacetType extends CustomFieldTypeAbstract.NoField {
 					"Expected at least 2 values - Field: " + fieldName);
 		final int assoc = TypeUtils.getIntNumber(fieldName, values[0]);
 		final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
-		consumer.accept(fieldName, new IntAssociationFacetField(assoc, fieldName, path));
+		consumer.accept(genericFieldName, fieldName, new IntAssociationFacetField(assoc, fieldName, path));
 	}
 
 }

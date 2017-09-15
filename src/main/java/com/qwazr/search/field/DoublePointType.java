@@ -23,21 +23,22 @@ import org.apache.lucene.document.StoredField;
 
 final class DoublePointType extends StorableFieldType {
 
-	DoublePointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+	DoublePointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
 				BytesRefUtils.Converter.DOUBLE_POINT));
 	}
 
 	@Override
 	void newFieldNoStore(final String fieldName, final Object value, final FieldConsumer consumer) {
-		consumer.accept(fieldName, new DoublePoint(fieldName, FieldUtils.getDoubleValue(value)));
+		consumer.accept(genericFieldName, fieldName, new DoublePoint(fieldName, FieldUtils.getDoubleValue(value)));
 	}
 
 	@Override
 	void newFieldWithStore(final String fieldName, final Object value, final FieldConsumer consumer) {
 		final double doubleValue = FieldUtils.getDoubleValue(value);
-		consumer.accept(fieldName, new DoublePoint(fieldName, doubleValue));
-		consumer.accept(fieldName, new StoredField(fieldName, doubleValue));
+		consumer.accept(genericFieldName, fieldName, new DoublePoint(fieldName, doubleValue));
+		consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, doubleValue));
 	}
 
 }

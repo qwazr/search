@@ -37,6 +37,7 @@ import java.util.Map;
 
 abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldTypeInterface {
 
+	final protected String genericFieldName;
 	final private WildcardMatcher wildcardMatcher;
 	final protected T definition;
 	final protected BytesRefUtils.Converter bytesRefConverter;
@@ -49,6 +50,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 	final private Map<FieldTypeInterface, String> copyToFields;
 
 	protected FieldTypeAbstract(final Builder<T> builder) {
+		this.genericFieldName = builder.genericFieldName;
 		this.wildcardMatcher = builder.wildcardMatcher;
 		this.definition = builder.definition;
 		setup(builder);
@@ -233,13 +235,15 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 		return bytesRef == null ? null : bytesRefConverter == null ? null : bytesRefConverter.to(bytesRef);
 	}
 
-	static <T extends FieldDefinition> Builder<T> of(WildcardMatcher wildcardMatcher, T definition) {
-		return new Builder<>(wildcardMatcher, definition);
+	static <T extends FieldDefinition> Builder<T> of(String genericFieldName, WildcardMatcher wildcardMatcher,
+			T definition) {
+		return new Builder<>(genericFieldName, wildcardMatcher, definition);
 	}
 
 	static class Builder<T extends FieldDefinition> {
 
 		final T definition;
+		private final String genericFieldName;
 		private final WildcardMatcher wildcardMatcher;
 		private BytesRefUtils.Converter bytesRefConverter;
 		private LinkedHashSet<Facet> facetConfig;
@@ -249,7 +253,8 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 		private FieldNameProvider queryFieldNameProvider;
 		private SortFieldProvider sortFieldProvider;
 
-		Builder(WildcardMatcher wildcardMatcher, T definition) {
+		Builder(String genericFieldName, WildcardMatcher wildcardMatcher, T definition) {
+			this.genericFieldName = genericFieldName;
 			this.wildcardMatcher = wildcardMatcher;
 			this.definition = definition;
 		}

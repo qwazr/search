@@ -25,13 +25,15 @@ import org.apache.lucene.util.BytesRef;
 
 final class BinaryDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	BinaryDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition));
+	BinaryDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition));
 	}
 
 	@Override
 	final protected void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
-		consumer.accept(fieldName, new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
+		consumer.accept(genericFieldName, fieldName,
+				new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
 	}
 
 	@Override

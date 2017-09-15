@@ -37,7 +37,8 @@ public class DeleteByQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxon
 		indexService.postDocument(getNewRecord("1").textField("Hello World").stringField("Hello World"));
 		indexService.postDocument(getNewRecord("2").textField("Hello World 2").stringField("Hello World 2"));
 		Assert.assertEquals(Long.valueOf(2), indexService.getIndexStatus().num_docs);
-		QueryDefinition queryDef = QueryDefinition.of(new TermsQuery(FieldDefinition.ID_FIELD, "1", "2")).build();
+		QueryDefinition queryDef =
+				QueryDefinition.of(TermsQuery.of(null, FieldDefinition.ID_FIELD).add("1", "2").build()).build();
 		indexService.deleteByQuery(queryDef);
 		Assert.assertEquals(Long.valueOf(0), indexService.getIndexStatus().num_docs);
 	}

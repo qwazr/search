@@ -130,7 +130,7 @@ public class MoreLikeThisQuery extends AbstractQuery {
 			throw new ParseException("Either doc_num or like_text/fieldname are missing");
 
 		final org.apache.lucene.search.BooleanQuery bq = (org.apache.lucene.search.BooleanQuery) mlt.like(
-				AbstractFieldQuery.resolveField(fieldMap, fieldname), new StringReader(like_text));
+				AbstractFieldQuery.resolveField(fieldMap, fieldname, fieldname), new StringReader(like_text));
 		final org.apache.lucene.search.BooleanQuery.Builder newBq = new org.apache.lucene.search.BooleanQuery.Builder();
 		newBq.setDisableCoord(bq.isCoordDisabled());
 		for (BooleanClause clause : bq)

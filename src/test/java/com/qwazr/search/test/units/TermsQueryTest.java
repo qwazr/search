@@ -28,7 +28,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 
 public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
@@ -50,20 +49,15 @@ public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy
 
 	@Test
 	public void testArray() {
-		QueryDefinition queryDef = QueryDefinition.of(new TermsQuery(FieldDefinition.ID_FIELD, "1", "2")).build();
-		checkQuery(queryDef, 2L);
-	}
-
-	@Test
-	public void testCollection() {
 		QueryDefinition queryDef =
-				QueryDefinition.of(new TermsQuery(FieldDefinition.ID_FIELD, Arrays.asList("1", "2"))).build();
+				QueryDefinition.of(TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build()).build();
 		checkQuery(queryDef, 2L);
 	}
 
 	@Test
 	public void luceneQuery() throws IOException, ReflectiveOperationException {
-		Query luceneQuery = new TermsQuery(FieldDefinition.ID_FIELD, "1", "2").getQuery(QueryContext.DEFAULT);
+		Query luceneQuery =
+				TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build().getQuery(QueryContext.DEFAULT);
 		Assert.assertNotNull(luceneQuery);
 	}
 

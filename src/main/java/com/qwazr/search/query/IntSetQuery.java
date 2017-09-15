@@ -28,9 +28,14 @@ public class IntSetQuery extends AbstractFieldQuery {
 	final public int[] values;
 
 	@JsonCreator
-	public IntSetQuery(@JsonProperty("field") final String field, @JsonProperty("values") final int... values) {
-		super(field);
+	public IntSetQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("values") final int... values) {
+		super(genericField, field);
 		this.values = values;
+	}
+
+	public IntSetQuery(final String field, final int... values) {
+		this(null, field, values);
 	}
 
 	@Override

@@ -20,25 +20,26 @@ import com.qwazr.utils.WildcardMatcher;
 
 final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 
-	SmartFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (SmartFieldDefinition) definition));
+	SmartFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (SmartFieldDefinition) definition));
 	}
 
 	@Override
 	Builder<SmartFieldDefinition> setup(Builder<SmartFieldDefinition> builder) {
 		if (builder.definition.stored != null && builder.definition.stored)
-			storeProvider(builder);
+			storeProvider(genericFieldName, builder);
 		if (builder.definition.index != null && builder.definition.index) {
 			if (StringUtils.isEmpty(builder.definition.analyzer) &&
 					StringUtils.isEmpty(builder.definition.queryAnalyzer))
-				indexProvider(builder);
+				indexProvider(genericFieldName, builder);
 			else
-				fullTextProvider(builder);
+				fullTextProvider(genericFieldName, builder);
 		}
 		if (builder.definition.sort != null && builder.definition.sort)
-			sortProvider(builder);
+			sortProvider(genericFieldName, builder);
 		if (builder.definition.facet != null && builder.definition.facet)
-			facetProvider(builder);
+			facetProvider(genericFieldName, builder);
 		return builder;
 	}
 
@@ -46,110 +47,124 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 		return builder.definition.type == null ? SmartFieldDefinition.Type.TEXT : builder.definition.type;
 	}
 
-	static void storeProvider(final Builder<SmartFieldDefinition> builder) {
+	static void storeProvider(final String genericFieldName, final Builder<SmartFieldDefinition> builder) {
+		final SmartFieldProviders.StoreFieldProvider provider =
+				new SmartFieldProviders.StoreFieldProvider(genericFieldName);
 		switch (getType(builder)) {
 		case TEXT:
-			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::textField);
-			builder.storedFieldNameProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getTextName);
+			builder.fieldProvider(provider::textField);
+			builder.storedFieldNameProvider(provider::getTextName);
 			break;
 		case LONG:
-			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::longField);
-			builder.storedFieldNameProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getLongName);
+			builder.fieldProvider(provider::longField);
+			builder.storedFieldNameProvider(provider::getLongName);
 			break;
 		case INTEGER:
-			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::integerField);
-			builder.storedFieldNameProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getIntegerName);
+			builder.fieldProvider(provider::integerField);
+			builder.storedFieldNameProvider(provider::getIntegerName);
 			break;
 		case DOUBLE:
-			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::doubleField);
-			builder.storedFieldNameProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getDoubleName);
+			builder.fieldProvider(provider::doubleField);
+			builder.storedFieldNameProvider(provider::getDoubleName);
 			break;
 		case FLOAT:
-			builder.fieldProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::floatField);
-			builder.storedFieldNameProvider(SmartFieldProviders.StoreFieldProvider.INSTANCE::getFloatName);
+			builder.fieldProvider(provider::floatField);
+			builder.storedFieldNameProvider(provider::getFloatName);
 			break;
 		default:
 			break;
 		}
 	}
 
-	static void indexProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+	static void indexProvider(final String genericFieldName,
+			final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+		final SmartFieldProviders.StringFieldProvider provider =
+				new SmartFieldProviders.StringFieldProvider(genericFieldName);
 		switch (getType(builder)) {
 		case TEXT:
-			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::textField);
-			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::textTerm);
-			builder.queryFieldNameProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::getTextName);
+			builder.fieldProvider(provider::textField);
+			builder.termProvider(provider::textTerm);
+			builder.queryFieldNameProvider(provider::getTextName);
 			break;
 		case LONG:
-			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::longField);
-			builder.queryFieldNameProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::getLongName);
-			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::longTerm);
+			builder.fieldProvider(provider::longField);
+			builder.queryFieldNameProvider(provider::getLongName);
+			builder.termProvider(provider::longTerm);
 			break;
 		case INTEGER:
-			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::integerField);
-			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::integerTerm);
-			builder.queryFieldNameProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::getIntegerName);
+			builder.fieldProvider(provider::integerField);
+			builder.termProvider(provider::integerTerm);
+			builder.queryFieldNameProvider(provider::getIntegerName);
 			break;
 		case DOUBLE:
-			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::doubleField);
-			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::doubleTerm);
-			builder.queryFieldNameProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::getDoubleName);
+			builder.fieldProvider(provider::doubleField);
+			builder.termProvider(provider::doubleTerm);
+			builder.queryFieldNameProvider(provider::getDoubleName);
 			break;
 		case FLOAT:
-			builder.fieldProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::floatField);
-			builder.termProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::floatTerm);
-			builder.queryFieldNameProvider(SmartFieldProviders.StringFieldProvider.INSTANCE::getFloatName);
+			builder.fieldProvider(provider::floatField);
+			builder.termProvider(provider::floatTerm);
+			builder.queryFieldNameProvider(provider::getFloatName);
 			break;
 		default:
 			break;
 		}
 	}
 
-	static void sortProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+	static void sortProvider(final String genericFieldName,
+			final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+		final SmartFieldProviders.SortedDocValuesFieldProvider provider =
+				new SmartFieldProviders.SortedDocValuesFieldProvider(genericFieldName);
 		switch (getType(builder)) {
 		case TEXT:
-			builder.fieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::textField);
-			builder.sortFieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::sortTextField);
+			builder.fieldProvider(provider::textField);
+			builder.sortFieldProvider(provider::sortTextField);
 			break;
 		case LONG:
-			builder.fieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::longField);
-			builder.sortFieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::sortLongField);
+			builder.fieldProvider(provider::longField);
+			builder.sortFieldProvider(provider::sortLongField);
 			break;
 		case INTEGER:
-			builder.fieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::integerField);
-			builder.sortFieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::sortIntegerField);
+			builder.fieldProvider(provider::integerField);
+			builder.sortFieldProvider(provider::sortIntegerField);
 			break;
 		case DOUBLE:
-			builder.fieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::doubleField);
-			builder.sortFieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::sortDoubleField);
+			builder.fieldProvider(provider::doubleField);
+			builder.sortFieldProvider(provider::sortDoubleField);
 			break;
 		case FLOAT:
-			builder.fieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::floatField);
-			builder.sortFieldProvider(SmartFieldProviders.SortedDocValuesFieldProvider.INSTANCE::sortFloatField);
+			builder.fieldProvider(provider::floatField);
+			builder.sortFieldProvider(provider::sortFloatField);
 			break;
 		default:
 			break;
 		}
 	}
 
-	static void facetProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+	static void facetProvider(final String genericFieldName,
+			final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+		final SmartFieldProviders.FacetFieldProvider provider =
+				new SmartFieldProviders.FacetFieldProvider(genericFieldName);
 		builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> {
-			final String resolvedFieldName = SmartFieldProviders.FacetFieldProvider.INSTANCE.getTextName(fieldName);
+			final String resolvedFieldName = provider.getTextName(fieldName);
 			facetsConfig.setMultiValued(resolvedFieldName, true);
 			facetsConfig.setIndexFieldName(resolvedFieldName, fieldMap.sortedSetFacetField);
 		}));
-		builder.fieldProvider(SmartFieldProviders.FacetFieldProvider.INSTANCE::textField);
-		builder.queryFieldNameProvider(SmartFieldProviders.FacetFieldProvider.INSTANCE::getTextName);
+		builder.fieldProvider(provider::textField);
+		builder.queryFieldNameProvider(provider::getTextName);
 	}
 
-	static void fullTextProvider(final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
-		builder.fieldProvider(SmartFieldProviders.TextFieldProvider.INSTANCE::textField);
-		builder.queryFieldNameProvider(SmartFieldProviders.TextFieldProvider.INSTANCE::getTextName);
+	static void fullTextProvider(final String genericFieldName,
+			final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
+		final SmartFieldProviders.TextFieldProvider provider =
+				new SmartFieldProviders.TextFieldProvider(genericFieldName);
+		builder.fieldProvider(provider::textField);
+		builder.queryFieldNameProvider(provider::getTextName);
 	}
 
-	public static FieldTypeInterface build(final WildcardMatcher wildcardMatcher,
+	public static FieldTypeInterface build(final String genericFieldName, final WildcardMatcher wildcardMatcher,
 			final SmartFieldDefinition definition) {
-		return new SmartFieldType(wildcardMatcher, definition);
+		return new SmartFieldType(genericFieldName, wildcardMatcher, definition);
 	}
 
 }

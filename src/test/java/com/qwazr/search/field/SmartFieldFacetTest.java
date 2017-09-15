@@ -70,23 +70,23 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
 
 	@Test
 	public void drillDownQueryTest() throws IOException, ReflectiveOperationException {
-		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).add("tags", "tag1"),
+		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).filter("tags", "tag1"),
 				"+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
-		checkResult(new DrillDownQuery(null, false).add("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
-		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).add("tags", "tag1and2"),
+		checkResult(new DrillDownQuery(null, false).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
+		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).filter("tags", "tag1and2"),
 				"+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
 
-		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).add("tags", "tag1"),
+		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).filter("tags", "tag1"),
 				"+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
-		checkResult(new DrillDownQuery(null, true).add("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
-		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).add("tags", "tag1and2"),
+		checkResult(new DrillDownQuery(null, true).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
+		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).filter("tags", "tag1and2"),
 				"+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
 	}
 
 	@Test
 	public void facetPathQueryTest() throws IOException, ReflectiveOperationException {
-		checkResult(new FacetPathQuery("tags", "tag1"), "$facets$sdv:ft€tags\u001Ftag1", 1);
-		checkResult(new FacetPathQuery("tags", "tag1and2"), "$facets$sdv:ft€tags\u001Ftag1and2", 1, 2);
+		checkResult(FacetPathQuery.of("tags").path("tag1").build(), "$facets$sdv:ft€tags\u001Ftag1", 1);
+		checkResult(FacetPathQuery.of("tags").path("tag1and2").build(), "$facets$sdv:ft€tags\u001Ftag1and2", 1, 2);
 	}
 
 	@Test

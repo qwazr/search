@@ -28,9 +28,14 @@ public class IntExactQuery extends AbstractFieldQuery {
 	final public int value;
 
 	@JsonCreator
-	public IntExactQuery(@JsonProperty("field") final String field, @JsonProperty("value") final int value) {
-		super(field);
+	public IntExactQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("value") final int value) {
+		super(genericField, field);
 		this.value = value;
+	}
+
+	public IntExactQuery(final String field, final int value) {
+		this(null, field, value);
 	}
 
 	@Override

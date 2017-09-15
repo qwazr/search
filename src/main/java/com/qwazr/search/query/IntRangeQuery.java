@@ -26,11 +26,15 @@ import java.io.IOException;
 public class IntRangeQuery extends AbstractRangeQuery<Integer> {
 
 	@JsonCreator
-	public IntRangeQuery(@JsonProperty("field") final String field,
-			@JsonProperty("lower_value") final Integer lowerValue,
+	public IntRangeQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
 			@JsonProperty("upper_value") final Integer upperValue) {
-		super(field, lowerValue == null ? Integer.MIN_VALUE : lowerValue,
+		super(genericField, field, lowerValue == null ? Integer.MIN_VALUE : lowerValue,
 				upperValue == null ? Integer.MAX_VALUE : upperValue);
+	}
+
+	public IntRangeQuery(final String field, final Integer lowerValue, final Integer upperValue) {
+		this(null, field, lowerValue, upperValue);
 	}
 
 	@Override

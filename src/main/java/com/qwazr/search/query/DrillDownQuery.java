@@ -25,53 +25,73 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class DrillDownQuery extends AbstractQuery {
 
 	final public AbstractQuery baseQuery;
 	final public List<LinkedHashMap<String, String[]>> dimPath;
+	final public Map<String, String> genericFieldNames;
 	final public Boolean useDrillSideways;
 
 	@JsonCreator
 	public DrillDownQuery(@JsonProperty("baseQuery") final AbstractQuery baseQuery,
 			@JsonProperty("useDrillSideways") final boolean useDrillSideways,
-			@JsonProperty("dimPath") final List<LinkedHashMap<String, String[]>> dimPath) {
+			@JsonProperty("dimPath") final List<LinkedHashMap<String, String[]>> dimPath,
+			@JsonProperty("genericFieldNames") final Map<String, String> genericFieldNames) {
 		this.baseQuery = baseQuery;
 		this.useDrillSideways = useDrillSideways;
 		this.dimPath = dimPath == null ? new ArrayList<>() : dimPath;
+		this.genericFieldNames = genericFieldNames == null ? new LinkedHashMap<>() : genericFieldNames;
 	}
 
 	public DrillDownQuery(final AbstractQuery baseQuery, final boolean useDrillSideways) {
-		this(baseQuery, useDrillSideways, null);
+		this(baseQuery, useDrillSideways, null, null);
 	}
 
-	public DrillDownQuery add(final String dim, final String... path) {
+	public DrillDownQuery dynamicFilter(final String genericFieldName, final String dim, final String... path) {
 		final LinkedHashMap<String, String[]> map = new LinkedHashMap<>();
 		map.put(dim, path);
 		dimPath.add(map);
+		if (genericFieldName != null)
+			genericFieldNames.put(dim, genericFieldName);
 		return this;
+	}
+
+	public DrillDownQuery filter(final String dim, final String... path) {
+		return dynamicFilter(null, dim, path);
 	}
 
 	@Override
 	final public org.apache.lucene.facet.DrillDownQuery getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+
 		final org.apache.lucene.facet.DrillDownQuery drillDownQuery;
-		final Set<String> fieldSet = new HashSet<>();
-		dimPath.forEach(map -> fieldSet.addAll(map.keySet()));
-		final FacetsConfig facetsConfig = queryContext.getFacetsConfig(fieldSet);
+		final FieldMap fieldMap = queryContext.getFieldMap();
+
+		final Map<String, String> dimensions = new HashMap<>();
+		final Map<String, String> resolvedDimensions = new HashMap<>();
+		dimPath.forEach(map -> map.keySet().forEach(concreteField -> {
+			final String genericField = genericFieldNames.getOrDefault(concreteField, concreteField);
+			dimensions.put(concreteField, genericField);
+			if (fieldMap != null)
+				resolvedDimensions.put(concreteField, fieldMap.resolveQueryFieldName(genericField, concreteField));
+		}));
+
+		final FacetsConfig facetsConfig = queryContext.getFacetsConfig(resolvedDimensions);
 		Objects.requireNonNull(facetsConfig, "FacetsConfig is null");
 		if (baseQuery == null)
 			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig);
 		else
 			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig, baseQuery.getQuery(queryContext));
-		final FieldMap fieldMap = queryContext.getFieldMap();
+
 		dimPath.forEach(dimPath -> dimPath.forEach(
-				(dim, path) -> drillDownQuery.add(fieldMap == null ? dim : fieldMap.resolveQueryFieldName(dim), path)));
+				(dim, path) -> drillDownQuery.add(resolvedDimensions.getOrDefault(dim, dim), path)));
+
 		return drillDownQuery;
 	}
 

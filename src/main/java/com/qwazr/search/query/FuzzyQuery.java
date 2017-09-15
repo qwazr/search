@@ -32,17 +32,23 @@ public class FuzzyQuery extends AbstractMultiTermQuery {
 	final public Integer prefix_length;
 
 	@JsonCreator
-	public FuzzyQuery(@JsonProperty("field") final String field, @JsonProperty("text") final String text,
+	public FuzzyQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("text") final String text,
 			@JsonProperty("max_edits") final Integer maxEdits,
 			@JsonProperty("max_expansions") final Integer maxExpansions,
 			@JsonProperty("transpositions") final Boolean transpositions,
 			@JsonProperty("prefix_length") final Integer prefixLength) {
-		super(field);
+		super(genericField, field);
 		this.text = text;
 		this.max_edits = maxEdits;
 		this.max_expansions = maxExpansions;
 		this.transpositions = transpositions;
 		this.prefix_length = prefixLength;
+	}
+
+	public FuzzyQuery(final String field, final String text, final Integer maxEdits, final Integer maxExpansions,
+			final Boolean transpositions, final Integer prefixLength) {
+		this(null, field, text, maxEdits, maxExpansions, transpositions, prefixLength);
 	}
 
 	@Override

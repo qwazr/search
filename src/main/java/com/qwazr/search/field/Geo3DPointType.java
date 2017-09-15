@@ -23,8 +23,9 @@ import java.util.Map;
 
 final class Geo3DPointType extends CustomFieldTypeAbstract.NoField {
 
-	Geo3DPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition));
+	Geo3DPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition));
 	}
 
 	@Override
@@ -32,7 +33,8 @@ final class Geo3DPointType extends CustomFieldTypeAbstract.NoField {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even double values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
+			consumer.accept(genericFieldName, fieldName,
+					new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
 	}
 
 	@Override
@@ -40,7 +42,8 @@ final class Geo3DPointType extends CustomFieldTypeAbstract.NoField {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even float values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
+			consumer.accept(genericFieldName, fieldName,
+					new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
 	}
 
 	@Override
@@ -48,7 +51,7 @@ final class Geo3DPointType extends CustomFieldTypeAbstract.NoField {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even number values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new Geo3DPoint(fieldName, ((Number) values[i++]).doubleValue(),
+			consumer.accept(genericFieldName, fieldName, new Geo3DPoint(fieldName, ((Number) values[i++]).doubleValue(),
 					((Number) values[i++]).doubleValue(), ((Number) values[i++]).doubleValue()));
 	}
 
@@ -58,7 +61,8 @@ final class Geo3DPointType extends CustomFieldTypeAbstract.NoField {
 		if (lat != null) {
 			final Number lon = (Number) values.get("lon");
 			TypeUtils.notNull(lon, fieldName, "The longitude (lon) parameter is missing");
-			consumer.accept(fieldName, new Geo3DPoint(fieldName, lat.doubleValue(), lon.doubleValue()));
+			consumer.accept(genericFieldName, fieldName,
+					new Geo3DPoint(fieldName, lat.doubleValue(), lon.doubleValue()));
 			return;
 		}
 		final Number x = (Number) values.get("x");
@@ -67,7 +71,8 @@ final class Geo3DPointType extends CustomFieldTypeAbstract.NoField {
 		TypeUtils.notNull(y, fieldName, "The y parameter is missing");
 		final Number z = (Number) values.get("z");
 		TypeUtils.notNull(z, fieldName, "The z parameter is missing");
-		consumer.accept(fieldName, new Geo3DPoint(fieldName, x.doubleValue(), y.doubleValue(), z.doubleValue()));
+		consumer.accept(genericFieldName, fieldName,
+				new Geo3DPoint(fieldName, x.doubleValue(), y.doubleValue(), z.doubleValue()));
 	}
 
 }

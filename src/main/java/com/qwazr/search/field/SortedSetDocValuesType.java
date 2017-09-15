@@ -27,8 +27,9 @@ import org.apache.lucene.util.BytesRef;
 
 final class SortedSetDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	SortedSetDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+	SortedSetDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
 				BytesRefUtils.Converter.STRING));
 	}
 
@@ -39,7 +40,7 @@ final class SortedSetDocValuesType extends CustomFieldTypeAbstract.OneField {
 			field = new SortedSetDocValuesField(fieldName, (BytesRef) value);
 		else
 			field = new SortedSetDocValuesField(fieldName, new BytesRef(value.toString()));
-		consumer.accept(fieldName, field);
+		consumer.accept(genericFieldName, fieldName, field);
 	}
 
 	@Override

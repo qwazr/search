@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,9 +25,9 @@ public abstract class AbstractGeoBoxQuery extends AbstractFieldQuery {
 
 	final public double max_longitude;
 
-	public AbstractGeoBoxQuery(final String field, final double minLatitude, final double maxLatitude,
-			final double minLongitude, final double maxLongitude) {
-		super(field);
+	public AbstractGeoBoxQuery(final String genericField, final String field, final double minLatitude,
+			final double maxLatitude, final double minLongitude, final double maxLongitude) {
+		super(genericField, field);
 		this.min_latitude = minLatitude;
 		this.max_latitude = maxLatitude;
 		this.min_longitude = minLongitude;

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,18 +21,17 @@ import java.util.List;
 
 public abstract class AbstractMultiRangeQuery extends AbstractFieldQuery {
 
-	protected AbstractMultiRangeQuery(final String field) {
-		super(field);
+	protected AbstractMultiRangeQuery(final String genericField, final String field) {
+		super(genericField, field);
 	}
 
-	public abstract static class AbstractBuilder<T> {
+	public abstract static class AbstractBuilder<T> extends AbstractFieldBuilder {
 
-		private final String field;
 		private final List<T> lowerValues;
 		private final List<T> upperValues;
 
-		protected AbstractBuilder(String field) {
-			this.field = field;
+		protected AbstractBuilder(String genericField, String field) {
+			super(genericField, field);
 			lowerValues = new ArrayList<>();
 			upperValues = new ArrayList<>();
 		}

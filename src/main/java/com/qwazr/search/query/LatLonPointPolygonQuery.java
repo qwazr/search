@@ -55,12 +55,16 @@ public class LatLonPointPolygonQuery extends AbstractFieldQuery {
 	private Polygon[] lucenePolygons;
 
 	@JsonCreator
-	public LatLonPointPolygonQuery(@JsonProperty("field") final String field,
-			@JsonProperty("polygons") final GeoPolygon... poligons) {
-		super(field);
-		Objects.requireNonNull(poligons, "The poligons parameter is null");
-		this.polygons = poligons;
-		this.lucenePolygons = toPolygons(poligons);
+	public LatLonPointPolygonQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("polygons") final GeoPolygon... polygons) {
+		super(genericField, field);
+		Objects.requireNonNull(polygons, "The poligons parameter is null");
+		this.polygons = polygons;
+		this.lucenePolygons = toPolygons(polygons);
+	}
+
+	public LatLonPointPolygonQuery(final String field, final GeoPolygon... polygons) {
+		this(null, field, polygons);
 	}
 
 	@Override

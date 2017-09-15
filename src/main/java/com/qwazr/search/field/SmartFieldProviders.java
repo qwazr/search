@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
@@ -58,9 +57,11 @@ class SmartFieldProviders {
 	private abstract static class FieldProviderByType {
 
 		private final FieldPrefix fieldPrefix;
+		protected final String genericFieldName;
 
-		FieldProviderByType(final FieldPrefix fieldPrefix) {
+		FieldProviderByType(final FieldPrefix fieldPrefix, final String genericFieldName) {
 			this.fieldPrefix = fieldPrefix;
+			this.genericFieldName = genericFieldName;
 		}
 
 		final String getTextName(String fieldName) {
@@ -87,43 +88,44 @@ class SmartFieldProviders {
 
 	static final class StoreFieldProvider extends FieldProviderByType {
 
-		final static StoreFieldProvider INSTANCE = new StoreFieldProvider();
-
-		private StoreFieldProvider() {
-			super(FieldPrefix.storedField);
+		StoreFieldProvider(final String genericFieldName) {
+			super(FieldPrefix.storedField, genericFieldName);
 		}
 
 		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StoredField(getTextName(fieldName), value.toString()));
+			consumer.accept(genericFieldName, fieldName, new StoredField(getTextName(fieldName), value.toString()));
 		}
 
 		void longField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StoredField(getLongName(fieldName), FieldUtils.getLongValue(value)));
+			consumer.accept(genericFieldName, fieldName,
+					new StoredField(getLongName(fieldName), FieldUtils.getLongValue(value)));
 		}
 
 		void integerField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StoredField(getIntegerName(fieldName), FieldUtils.getIntValue(value)));
+			consumer.accept(genericFieldName, fieldName,
+					new StoredField(getIntegerName(fieldName), FieldUtils.getIntValue(value)));
 		}
 
 		void doubleField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StoredField(getDoubleName(fieldName), FieldUtils.getDoubleValue(value)));
+			consumer.accept(genericFieldName, fieldName,
+					new StoredField(getDoubleName(fieldName), FieldUtils.getDoubleValue(value)));
 		}
 
 		void floatField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StoredField(getFloatName(fieldName), FieldUtils.getFloatValue(value)));
+			consumer.accept(genericFieldName, fieldName,
+					new StoredField(getFloatName(fieldName), FieldUtils.getFloatValue(value)));
 		}
 	}
 
 	static final class StringFieldProvider extends FieldProviderByType {
 
-		final static StringFieldProvider INSTANCE = new StringFieldProvider();
-
-		private StringFieldProvider() {
-			super(FieldPrefix.stringField);
+		StringFieldProvider(final String genericFieldName) {
+			super(FieldPrefix.stringField, genericFieldName);
 		}
 
 		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StringField(getTextName(fieldName), value.toString(), Field.Store.NO));
+			consumer.accept(genericFieldName, fieldName,
+					new StringField(getTextName(fieldName), value.toString(), Field.Store.NO));
 		}
 
 		Term textTerm(final String fieldName, final Object value) {
@@ -135,7 +137,8 @@ class SmartFieldProviders {
 		}
 
 		void longField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StringField(getLongName(fieldName), getLongValue(value), Field.Store.NO));
+			consumer.accept(genericFieldName, fieldName,
+					new StringField(getLongName(fieldName), getLongValue(value), Field.Store.NO));
 		}
 
 		Term longTerm(final String fieldName, final Object value) {
@@ -147,7 +150,8 @@ class SmartFieldProviders {
 		}
 
 		void integerField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StringField(getIntegerName(fieldName), getIntValue(value), Field.Store.NO));
+			consumer.accept(genericFieldName, fieldName,
+					new StringField(getIntegerName(fieldName), getIntValue(value), Field.Store.NO));
 		}
 
 		Term integerTerm(final String fieldName, final Object value) {
@@ -159,7 +163,7 @@ class SmartFieldProviders {
 		}
 
 		void doubleField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName,
+			consumer.accept(genericFieldName, fieldName,
 					new StringField(getDoubleName(fieldName), getDoubleValue(value), Field.Store.NO));
 		}
 
@@ -172,7 +176,8 @@ class SmartFieldProviders {
 		}
 
 		void floatField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new StringField(getFloatName(fieldName), getFloatValue(value), Field.Store.NO));
+			consumer.accept(genericFieldName, fieldName,
+					new StringField(getFloatName(fieldName), getFloatValue(value), Field.Store.NO));
 		}
 
 		Term floatTerm(final String fieldName, final Object value) {
@@ -182,14 +187,12 @@ class SmartFieldProviders {
 
 	static final class SortedDocValuesFieldProvider extends FieldProviderByType {
 
-		final static SortedDocValuesFieldProvider INSTANCE = new SortedDocValuesFieldProvider();
-
-		private SortedDocValuesFieldProvider() {
-			super(FieldPrefix.docValues);
+		SortedDocValuesFieldProvider(final String genericFieldName) {
+			super(FieldPrefix.docValues, genericFieldName);
 		}
 
 		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName,
+			consumer.accept(genericFieldName, fieldName,
 					new SortedDocValuesField(getTextName(fieldName), new BytesRef(value.toString())));
 		}
 
@@ -198,7 +201,7 @@ class SmartFieldProviders {
 		}
 
 		void longField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName,
+			consumer.accept(genericFieldName, fieldName,
 					new SortedNumericDocValuesField(getLongName(fieldName), FieldUtils.getLongValue(value)));
 		}
 
@@ -207,7 +210,7 @@ class SmartFieldProviders {
 		}
 
 		void integerField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName,
+			consumer.accept(genericFieldName, fieldName,
 					new SortedNumericDocValuesField(getIntegerName(fieldName), FieldUtils.getIntValue(value)));
 		}
 
@@ -216,7 +219,7 @@ class SmartFieldProviders {
 		}
 
 		void doubleField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new SortedNumericDocValuesField(getDoubleName(fieldName),
+			consumer.accept(genericFieldName, fieldName, new SortedNumericDocValuesField(getDoubleName(fieldName),
 					NumericUtils.doubleToSortableLong(FieldUtils.getDoubleValue(value))));
 		}
 
@@ -225,7 +228,7 @@ class SmartFieldProviders {
 		}
 
 		void floatField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new SortedNumericDocValuesField(getFloatName(fieldName),
+			consumer.accept(genericFieldName, fieldName, new SortedNumericDocValuesField(getFloatName(fieldName),
 					NumericUtils.floatToSortableInt(FieldUtils.getFloatValue(value))));
 		}
 
@@ -236,27 +239,25 @@ class SmartFieldProviders {
 
 	static final class FacetFieldProvider extends FieldProviderByType {
 
-		final static FacetFieldProvider INSTANCE = new FacetFieldProvider();
-
-		private FacetFieldProvider() {
-			super(FieldPrefix.facetField);
+		FacetFieldProvider(final String genericFieldName) {
+			super(FieldPrefix.facetField, genericFieldName);
 		}
 
 		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new SortedSetDocValuesFacetField(getTextName(fieldName), value.toString()));
+			consumer.accept(genericFieldName, fieldName,
+					new SortedSetDocValuesFacetField(getTextName(fieldName), value.toString()));
 		}
 	}
 
 	static final class TextFieldProvider extends FieldProviderByType {
 
-		final static TextFieldProvider INSTANCE = new TextFieldProvider();
-
-		private TextFieldProvider() {
-			super(FieldPrefix.textField);
+		TextFieldProvider(final String genericFieldName) {
+			super(FieldPrefix.textField, genericFieldName);
 		}
 
 		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
-			consumer.accept(fieldName, new TextField(getTextName(fieldName), value.toString(), Field.Store.NO));
+			consumer.accept(genericFieldName, fieldName,
+					new TextField(getTextName(fieldName), value.toString(), Field.Store.NO));
 		}
 	}
 

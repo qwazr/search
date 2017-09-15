@@ -17,7 +17,6 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 
@@ -32,11 +31,16 @@ public class PhraseQuery extends AbstractFieldQuery {
 	final public Integer slop;
 
 	@JsonCreator
-	public PhraseQuery(@JsonProperty("field") final String field, @JsonProperty("slop") final Integer slop,
+	public PhraseQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("slop") final Integer slop,
 			@JsonProperty("terms") final List<String> terms) {
-		super(field);
+		super(genericField, field);
 		this.slop = slop;
 		this.terms = terms;
+	}
+
+	public PhraseQuery(final String field, final Integer slop, final List<String> terms) {
+		this(null, field, slop, terms);
 	}
 
 	public PhraseQuery(final String field, final Integer slop, final String... terms) {

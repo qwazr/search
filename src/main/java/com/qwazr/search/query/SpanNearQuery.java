@@ -32,13 +32,18 @@ public class SpanNearQuery extends AbstractFieldSpanQuery {
 	final public Integer slop;
 
 	@JsonCreator
-	public SpanNearQuery(@JsonProperty("clauses") final List<AbstractSpanQuery> clauses,
-			@JsonProperty("field") final String field, @JsonProperty("in_order") final Boolean in_order,
-			@JsonProperty("slop") final Integer slop) {
-		super(field);
+	public SpanNearQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("clauses") final List<AbstractSpanQuery> clauses, @JsonProperty("field") final String field,
+			@JsonProperty("in_order") final Boolean in_order, @JsonProperty("slop") final Integer slop) {
+		super(genericField, field);
 		this.clauses = clauses;
 		this.in_order = in_order;
 		this.slop = slop;
+	}
+
+	public SpanNearQuery(final List<AbstractSpanQuery> clauses, @JsonProperty("field") final String field,
+			final Boolean in_order, final Integer slop) {
+		this(null, clauses, field, in_order, slop);
 	}
 
 	@Override

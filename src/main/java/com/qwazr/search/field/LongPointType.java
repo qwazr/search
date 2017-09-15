@@ -23,21 +23,22 @@ import org.apache.lucene.document.StoredField;
 
 final class LongPointType extends StorableFieldType {
 
-	LongPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+	LongPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
 				BytesRefUtils.Converter.LONG_POINT));
 	}
 
 	@Override
 	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
 		final long longValue = FieldUtils.getLongValue(value);
-		consumer.accept(fieldName, new LongPoint(fieldName, longValue));
-		consumer.accept(fieldName, new StoredField(fieldName, longValue));
+		consumer.accept(genericFieldName, fieldName, new LongPoint(fieldName, longValue));
+		consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, longValue));
 	}
 
 	@Override
 	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
-		consumer.accept(fieldName, new LongPoint(fieldName, FieldUtils.getLongValue(value)));
+		consumer.accept(genericFieldName, fieldName, new LongPoint(fieldName, FieldUtils.getLongValue(value)));
 	}
 
 }

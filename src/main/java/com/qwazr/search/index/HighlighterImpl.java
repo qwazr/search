@@ -49,7 +49,7 @@ class HighlighterImpl extends UnifiedHighlighter {
 			setMaxNoHighlightPassages(definition.maxNoHighlightPassages);
 		this.definition = definition;
 		final String field = definition.field == null ? highlightName : definition.field;
-		this.indexFields = new String[] { queryContext.fieldMap.resolveQueryFieldName(field) };
+		this.indexFields = new String[] { queryContext.fieldMap.resolveQueryFieldName(field, field) };
 		this.storedFields = new String[] { queryContext.fieldMap.resolveStoredFieldName(field) };
 		if (definition.breakIterator != null && definition.breakIterator.language != null)
 			locale = Locale.forLanguageTag(definition.breakIterator.language);

@@ -73,11 +73,12 @@ public interface FieldTypeInterface {
 		SortField sortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
 	}
 
-	static FieldTypeInterface build(WildcardMatcher wildcardMatcher, FieldDefinition definition) {
+	static FieldTypeInterface build(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
 		if (definition instanceof CustomFieldDefinition)
-			return CustomFieldType.build(wildcardMatcher, (CustomFieldDefinition) definition);
+			return CustomFieldType.build(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition);
 		if (definition instanceof SmartFieldDefinition)
-			return SmartFieldType.build(wildcardMatcher, (SmartFieldDefinition) definition);
+			return SmartFieldType.build(genericFieldName, wildcardMatcher, (SmartFieldDefinition) definition);
 		return null;
 	}
 

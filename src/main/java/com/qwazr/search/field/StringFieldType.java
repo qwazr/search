@@ -23,20 +23,22 @@ import org.apache.lucene.document.StringField;
 
 final class StringFieldType extends StorableFieldType {
 
-	StringFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.STRING)
+	StringFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.STRING)
 				.termProvider(FieldUtils::newStringTerm)
 				.sortFieldProvider(SortUtils::stringSortField));
 	}
 
 	@Override
 	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
-		consumer.accept(fieldName, new StringField(fieldName, value.toString(), Field.Store.YES));
+		consumer.accept(genericFieldName, fieldName, new StringField(fieldName, value.toString(), Field.Store.YES));
 	}
 
 	@Override
 	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
-		consumer.accept(fieldName, new StringField(fieldName, value.toString(), Field.Store.NO));
+		consumer.accept(genericFieldName, fieldName, new StringField(fieldName, value.toString(), Field.Store.NO));
 	}
 
 }

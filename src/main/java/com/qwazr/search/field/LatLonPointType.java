@@ -23,8 +23,9 @@ import java.util.Map;
 
 final class LatLonPointType extends CustomFieldTypeAbstract.NoField {
 
-	LatLonPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition));
+	LatLonPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition));
 	}
 
 	@Override
@@ -32,7 +33,7 @@ final class LatLonPointType extends CustomFieldTypeAbstract.NoField {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even double values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new LatLonPoint(fieldName, values[i++], values[i++]));
+			consumer.accept(genericFieldName, fieldName, new LatLonPoint(fieldName, values[i++], values[i++]));
 	}
 
 	@Override
@@ -40,7 +41,7 @@ final class LatLonPointType extends CustomFieldTypeAbstract.NoField {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even float values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new LatLonPoint(fieldName, values[i++], values[i++]));
+			consumer.accept(genericFieldName, fieldName, new LatLonPoint(fieldName, values[i++], values[i++]));
 	}
 
 	@Override
@@ -48,8 +49,9 @@ final class LatLonPointType extends CustomFieldTypeAbstract.NoField {
 		if ((values.length & 1) != 0)
 			throw new RuntimeException("Expect even number values, but got: " + values.length);
 		for (int i = 0; i < values.length; )
-			consumer.accept(fieldName, new LatLonPoint(fieldName, ((Number) values[i++]).doubleValue(),
-					((Number) values[i++]).doubleValue()));
+			consumer.accept(genericFieldName, fieldName,
+					new LatLonPoint(fieldName, ((Number) values[i++]).doubleValue(),
+							((Number) values[i++]).doubleValue()));
 	}
 
 	@Override
@@ -58,7 +60,8 @@ final class LatLonPointType extends CustomFieldTypeAbstract.NoField {
 		TypeUtils.notNull(latitude, fieldName, "The latitude parameter (lat) is missing");
 		final Number longitude = (Number) values.get("lon");
 		TypeUtils.notNull(longitude, fieldName, "The longitude parameter (lon) is missing");
-		consumer.accept(fieldName, new LatLonPoint(fieldName, latitude.doubleValue(), longitude.doubleValue()));
+		consumer.accept(genericFieldName, fieldName,
+				new LatLonPoint(fieldName, latitude.doubleValue(), longitude.doubleValue()));
 	}
 
 }

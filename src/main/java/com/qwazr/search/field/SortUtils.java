@@ -119,29 +119,29 @@ public class SortUtils {
 	}
 
 	static SortField doubleSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.DOUBLE,
-				SortUtils.sortReverse(sortEnum));
+		final SortField sortField =
+				new SortedNumericSortField(fieldName, SortField.Type.DOUBLE, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortDoubleMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 
 	static SortField floatSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.FLOAT,
-				SortUtils.sortReverse(sortEnum));
+		final SortField sortField =
+				new SortedNumericSortField(fieldName, SortField.Type.FLOAT, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortFloatMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 
 	static SortField integerSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.INT,
-				SortUtils.sortReverse(sortEnum));
+		final SortField sortField =
+				new SortedNumericSortField(fieldName, SortField.Type.INT, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortIntMissingValue(sortEnum, sortField);
 		return sortField;
 	}
 
 	static SortField longSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-		final SortField sortField = new SortedNumericSortField(fieldName, SortField.Type.LONG,
-				SortUtils.sortReverse(sortEnum));
+		final SortField sortField =
+				new SortedNumericSortField(fieldName, SortField.Type.LONG, SortUtils.sortReverse(sortEnum));
 		SortUtils.sortLongMissingValue(sortEnum, sortField);
 		return sortField;
 	}
@@ -162,7 +162,7 @@ public class SortUtils {
 			return new SortField(null, SortField.Type.DOC, sortReverse(sortEnum));
 
 		// Let's check if the field exists and supports sorting
-		FieldTypeInterface fieldType = fieldMap.getFieldType(fieldName);
+		FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
 		if (fieldType == null)
 			throw new IllegalArgumentException("Unknown sort field: " + fieldName);
 		final SortField sortField = fieldType.getSortField(fieldName, sortEnum);

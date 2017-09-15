@@ -29,21 +29,25 @@ public class BlendedTermQuery extends AbstractQuery {
 
 	public class Term {
 
+		@JsonProperty("generic_field")
+		public final String genericField;
 		public final String field;
 		public final Object value;
 		public final Float boost;
 
 		@JsonCreator
-		public Term(@JsonProperty("field") final String field, @JsonProperty("value") final Object value,
-				@JsonProperty("boost") final Float boost) {
+		public Term(@JsonProperty("generic_field") final String genericField, @JsonProperty("field") final String field,
+				@JsonProperty("value") final Object value, @JsonProperty("boost") final Float boost) {
+			this.genericField = genericField;
 			this.field = field;
 			this.value = value;
 			this.boost = boost;
 		}
 
 		private void add(FieldMap fieldMap, org.apache.lucene.search.BlendedTermQuery.Builder builder) {
-			final org.apache.lucene.index.Term term = BytesRefUtils.toTerm(
-					fieldMap == null ? field : fieldMap.resolveQueryFieldName(field), value);
+			final org.apache.lucene.index.Term term =
+					BytesRefUtils.toTerm(fieldMap == null ? field : fieldMap.resolveQueryFieldName(genericField, field),
+							value);
 			if (boost == null)
 				builder.add(term);
 			else
@@ -58,13 +62,21 @@ public class BlendedTermQuery extends AbstractQuery {
 		this.terms = terms;
 	}
 
-	public BlendedTermQuery term(final String field, final String value, final Float boost) {
-		terms.add(new Term(field, value, boost));
+	public BlendedTermQuery term(final String genericField, final String field, final String value, final Float boost) {
+		terms.add(new Term(genericField, field, value, boost));
 		return this;
 	}
 
+	public BlendedTermQuery term(final String field, final String value, final Float boost) {
+		return term(null, field, value, boost);
+	}
+
+	public BlendedTermQuery term(final String genericField, final String field, final String value) {
+		return term(genericField, field, value, null);
+	}
+
 	public BlendedTermQuery term(final String field, final String value) {
-		return term(field, value, null);
+		return term(null, field, value, null);
 	}
 
 	@Override

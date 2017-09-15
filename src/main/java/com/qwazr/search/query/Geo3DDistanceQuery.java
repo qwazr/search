@@ -32,13 +32,19 @@ public class Geo3DDistanceQuery extends AbstractFieldQuery {
 	public final double radius_meters;
 
 	@JsonCreator
-	public Geo3DDistanceQuery(@JsonProperty("field") final String field,
-			@JsonProperty("latitude") final double latitude, @JsonProperty("longitude") final double longitude,
+	public Geo3DDistanceQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("latitude") final double latitude,
+			@JsonProperty("longitude") final double longitude,
 			@JsonProperty("radius_meters") final double radiusMeters) {
-		super(field);
+		super(genericField, field);
 		this.latitude = latitude;
 		this.longitude = longitude;
 		this.radius_meters = radiusMeters;
+	}
+
+	public Geo3DDistanceQuery(final String field, final double latitude, final double longitude,
+			final double radiusMeters) {
+		this(null, field, latitude, longitude, radiusMeters);
 	}
 
 	@Override

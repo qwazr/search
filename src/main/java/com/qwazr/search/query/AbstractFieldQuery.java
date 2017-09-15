@@ -16,6 +16,7 @@
 
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldMap;
 import org.apache.lucene.index.Term;
@@ -24,38 +25,47 @@ import java.util.Objects;
 
 public abstract class AbstractFieldQuery extends AbstractQuery {
 
+	@JsonProperty("generic_field")
+	final public String genericField;
+
 	final public String field;
 
-	protected AbstractFieldQuery(final String field) {
+	protected AbstractFieldQuery(final String genericField, final String field) {
+		this.genericField = genericField;
 		this.field = Objects.requireNonNull(field, "The field is null");
 	}
 
 	protected AbstractFieldQuery(final AbstractFieldBuilder builder) {
-		this(builder.field);
+		this(builder.genericField, builder.field);
 	}
 
-	static String resolveField(final FieldMap fieldMap, final String field) {
-		return fieldMap == null ? field : fieldMap.resolveQueryFieldName(field);
+	static String resolveField(final FieldMap fieldMap, final String genericFieldName, final String field) {
+		return fieldMap == null ? field : fieldMap.resolveQueryFieldName(genericFieldName, field);
 	}
 
 	final protected String resolveField(final FieldMap fieldMap) {
-		return resolveField(fieldMap, field);
+		return resolveField(fieldMap, genericField, field);
 	}
 
-	static Term getResolvedTerm(final FieldMap fieldMap, final String field, final Object value) {
-		return fieldMap == null ? new Term(field, BytesRefUtils.fromAny(value)) : Objects.requireNonNull(
-				fieldMap.getFieldType(field), "Unknown field: " + field).term(field, value);
+	static Term getResolvedTerm(final FieldMap fieldMap, final String genericFieldName, final String concreteFieldName,
+			final Object value) {
+		return fieldMap == null ?
+				new Term(concreteFieldName, BytesRefUtils.fromAny(value)) :
+				Objects.requireNonNull(fieldMap.getFieldType(genericFieldName, concreteFieldName),
+						"Unknown field: " + concreteFieldName).term(concreteFieldName, value);
 	}
 
 	final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {
-		return getResolvedTerm(fieldMap, field, value);
+		return getResolvedTerm(fieldMap, genericField, field, value);
 	}
 
 	public static abstract class AbstractFieldBuilder {
 
+		final public String genericField;
 		final public String field;
 
-		protected AbstractFieldBuilder(final String field) {
+		protected AbstractFieldBuilder(final String genericField, final String field) {
+			this.genericField = genericField;
 			this.field = field;
 		}
 	}

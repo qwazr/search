@@ -26,9 +26,10 @@ import org.apache.lucene.document.SortedNumericDocValuesField;
 
 final class SortedIntDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	SortedIntDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.INT)
-				.sortFieldProvider(SortUtils::integerSortField));
+	SortedIntDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.INT).sortFieldProvider(SortUtils::integerSortField));
 	}
 
 	@Override
@@ -38,7 +39,7 @@ final class SortedIntDocValuesType extends CustomFieldTypeAbstract.OneField {
 			field = new SortedNumericDocValuesField(fieldName, ((Number) value).intValue());
 		else
 			field = new SortedNumericDocValuesField(fieldName, Integer.parseInt(value.toString()));
-		consumer.accept(fieldName, field);
+		consumer.accept(genericFieldName, fieldName, field);
 	}
 
 	@Override

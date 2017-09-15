@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,8 +23,8 @@ import java.util.List;
 
 public abstract class AbstractMultiTermQuery extends AbstractFieldQuery {
 
-	protected AbstractMultiTermQuery(final String field) {
-		super(field);
+	protected AbstractMultiTermQuery(final String genericField, final String field) {
+		super(genericField, field);
 	}
 
 	protected AbstractMultiTermQuery(final MultiTermBuilder builder) {
@@ -33,57 +33,68 @@ public abstract class AbstractMultiTermQuery extends AbstractFieldQuery {
 
 	abstract static public class MultiTermBuilder<T extends AbstractMultiTermQuery> extends AbstractFieldBuilder {
 
-		final List<BytesRef> terms = new ArrayList<>();
+		final List<BytesRef> bytesRefs = new ArrayList<>();
+		final List<Object> objects = new ArrayList<>();
 
-		protected MultiTermBuilder(final String field) {
-			super(field);
+		protected MultiTermBuilder(final String genericField, final String field) {
+			super(genericField, field);
 		}
 
 		final public MultiTermBuilder<T> add(final BytesRef... bytes) {
 			if (bytes != null)
 				for (BytesRef b : bytes)
 					if (b != null)
-						terms.add(b);
+						bytesRefs.add(b);
 			return this;
 		}
 
 		final public MultiTermBuilder<T> add(final String... term) {
 			if (term != null)
 				for (String t : term)
-					if (t != null)
-						terms.add(BytesRefUtils.Converter.STRING.from(t));
+					if (t != null) {
+						bytesRefs.add(BytesRefUtils.Converter.STRING.from(t));
+						objects.add(t);
+					}
 			return this;
 		}
 
 		final public MultiTermBuilder<T> add(final Integer... value) {
 			if (value != null)
 				for (Integer v : value)
-					if (v != null)
-						terms.add(BytesRefUtils.Converter.INT.from(v));
+					if (v != null) {
+						bytesRefs.add(BytesRefUtils.Converter.INT.from(v));
+						objects.add(v);
+					}
 			return this;
 		}
 
 		final public MultiTermBuilder<T> add(final Float... value) {
 			if (value != null)
 				for (Float v : value)
-					if (v != null)
-						terms.add(BytesRefUtils.Converter.FLOAT.from(v));
+					if (v != null) {
+						bytesRefs.add(BytesRefUtils.Converter.FLOAT.from(v));
+						objects.add(v);
+					}
 			return this;
 		}
 
 		final public MultiTermBuilder<T> add(final Long... value) {
 			if (value != null)
 				for (Long v : value)
-					if (v != null)
-						terms.add(BytesRefUtils.Converter.LONG.from(v));
+					if (v != null) {
+						bytesRefs.add(BytesRefUtils.Converter.LONG.from(v));
+						objects.add(v);
+					}
 			return this;
 		}
 
 		final public MultiTermBuilder<T> add(final Double... value) {
 			if (value != null)
 				for (Double v : value)
-					if (v != null)
-						terms.add(BytesRefUtils.Converter.DOUBLE.from(v));
+					if (v != null) {
+						bytesRefs.add(BytesRefUtils.Converter.DOUBLE.from(v));
+						objects.add(v);
+					}
 			return this;
 		}
 

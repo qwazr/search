@@ -28,9 +28,14 @@ public class FloatSetQuery extends AbstractFieldQuery {
 	public float[] values;
 
 	@JsonCreator
-	public FloatSetQuery(@JsonProperty("field") final String field, @JsonProperty("values") final float... values) {
-		super(field);
+	public FloatSetQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("values") final float... values) {
+		super(genericField, field);
 		this.values = values;
+	}
+
+	public FloatSetQuery(final String field, final float... values) {
+		this(null, field, values);
 	}
 
 	@Override

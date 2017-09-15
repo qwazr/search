@@ -120,7 +120,7 @@ public class SimpleQueryParser extends AbstractQueryBuilder {
 
 		final Map<String, Float> resolvedBoosts = fieldMap == null ?
 				weights :
-				fieldMap.resolveFieldNames(weights, new HashMap<>(), fieldMap::resolveQueryFieldName);
+				FieldMap.resolveFieldNames(weights, new HashMap<>(), fieldMap::resolveQueryFieldName);
 
 		final int fl = flags == -2 ? computeTag() : flags;
 

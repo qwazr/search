@@ -45,7 +45,8 @@ public class QueryParser extends AbstractClassicQueryParser {
 		final FieldMap fieldMap = queryContext.getFieldMap();
 		final org.apache.lucene.queryparser.classic.QueryParser parser =
 				new org.apache.lucene.queryparser.classic.QueryParser(
-						AbstractFieldQuery.resolveField(fieldMap, defaulField), resolveAnalyzer(queryContext));
+						AbstractFieldQuery.resolveField(fieldMap, defaulField, defaulField),
+						resolveAnalyzer(queryContext));
 		setParserParameters(parser);
 		return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
 	}

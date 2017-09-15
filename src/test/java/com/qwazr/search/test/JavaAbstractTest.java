@@ -297,7 +297,7 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test301MultiTermQuery() throws URISyntaxException, IOException {
-		QueryBuilder builder = QueryDefinition.of(new TermsQuery(FieldDefinition.ID_FIELD, "1", "2"));
+		QueryBuilder builder = QueryDefinition.of(TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build());
 		checkQueryResult(builder, 2L);
 	}
 
@@ -332,7 +332,7 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test320PointMultiRangeQuery() throws URISyntaxException, IOException {
-		LongMultiRangeQuery.Builder qBuilder = new LongMultiRangeQuery.Builder(AnnotatedRecord.QUANTITY_FIELD);
+		LongMultiRangeQuery.Builder qBuilder = new LongMultiRangeQuery.Builder(null, AnnotatedRecord.QUANTITY_FIELD);
 		qBuilder.addRange(15L, 25L);
 		QueryBuilder builder = QueryDefinition.of(qBuilder.build());
 		checkQueryResult(builder, 1L);
@@ -742,7 +742,8 @@ public abstract class JavaAbstractTest {
 	public void test930ClassicCollectorWithDrillSideways() throws URISyntaxException, IOException {
 		final AnnotatedIndexService master = getMaster();
 		final QueryBuilder builder = QueryDefinition.of(
-				new DrillDownQuery(new MatchAllDocsQuery(), true).add("dynamic_multi_facet_cat", "news"));
+				new DrillDownQuery(new MatchAllDocsQuery(), true).dynamicFilter("dynamic_multi_facet_*",
+						"dynamic_multi_facet_cat", "news"));
 		builder.collector("maxQuantity", ClassicMaxCollector.class);
 		builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10));
 		ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());

@@ -25,9 +25,10 @@ import org.apache.lucene.document.FloatDocValuesField;
 
 final class FloatDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	FloatDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.FLOAT)
-				.sortFieldProvider(SortUtils::floatSortField));
+	FloatDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.FLOAT).sortFieldProvider(SortUtils::floatSortField));
 	}
 
 	@Override
@@ -37,7 +38,7 @@ final class FloatDocValuesType extends CustomFieldTypeAbstract.OneField {
 			field = new FloatDocValuesField(fieldName, ((Number) value).floatValue());
 		else
 			field = new FloatDocValuesField(fieldName, Float.parseFloat(value.toString()));
-		consumer.accept(fieldName, field);
+		consumer.accept(genericFieldName, fieldName, field);
 	}
 
 	@Override

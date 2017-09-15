@@ -41,7 +41,6 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -63,8 +62,9 @@ abstract class FacetsBuilder {
 		this.facetsDef = facetsDef;
 		this.queryContext = queryContext;
 		this.sortedSetFacetField = queryContext.fieldMap.getSortedSetFacetField();
-		this.resolvedDimensions = queryContext.fieldMap.resolveFieldNames(facetsDef.keySet(),
-				queryContext.fieldMap::resolveQueryFieldName);
+		this.resolvedDimensions = new HashMap<>();
+		getFields(facetsDef).forEach((concrete, generic) -> resolvedDimensions.put(concrete,
+				queryContext.fieldMap.resolveQueryFieldName(generic, concrete)));
 		this.searchQuery = searchQuery;
 		this.timeTracker = timeTracker;
 	}
@@ -124,13 +124,14 @@ abstract class FacetsBuilder {
 		FunctionUtils.forEachEx4(queries, consumer);
 	}
 
-	static Set<String> getFields(LinkedHashMap<String, FacetDefinition> facets) {
+	static Map<String, String> getFields(LinkedHashMap<String, FacetDefinition> facets) {
 		if (facets == null || facets.isEmpty())
 			return null;
-		final LinkedHashSet<String> fields = new LinkedHashSet<>();
+		final Map<String, String> fields = new HashMap<>();
 		facets.forEach((field, facetDefinition) -> {
-			if (facetDefinition.queries == null)
-				fields.add(field);
+			if (facetDefinition.queries == null) {
+				fields.put(field, facetDefinition.genericFieldName == null ? field : facetDefinition.genericFieldName);
+			}
 		});
 		return fields;
 	}

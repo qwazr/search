@@ -27,9 +27,14 @@ public class SpanTermQuery extends AbstractFieldSpanQuery {
 	final public Object value;
 
 	@JsonCreator
-	public SpanTermQuery(@JsonProperty("field") final String field, @JsonProperty("value") final Object value) {
-		super(field);
+	public SpanTermQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("value") final Object value) {
+		super(genericField, field);
 		this.value = value;
+	}
+
+	public SpanTermQuery(final String field, final Object value) {
+		this(null, field, value);
 	}
 
 	@Override

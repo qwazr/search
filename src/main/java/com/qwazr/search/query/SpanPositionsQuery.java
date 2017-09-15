@@ -37,11 +37,16 @@ public class SpanPositionsQuery extends AbstractFieldQuery {
 	final public String query_string;
 
 	@JsonCreator
-	public SpanPositionsQuery(@JsonProperty("field") final String field,
-			@JsonProperty("distance") final Integer distance, @JsonProperty("query_string") final String queryString) {
-		super(field);
+	public SpanPositionsQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("distance") final Integer distance,
+			@JsonProperty("query_string") final String queryString) {
+		super(genericField, field);
 		this.distance = distance;
 		this.query_string = queryString;
+	}
+
+	public SpanPositionsQuery(final String field, final Integer distance, final String queryString) {
+		this(null, field, distance, queryString);
 	}
 
 	@Override
@@ -51,8 +56,8 @@ public class SpanPositionsQuery extends AbstractFieldQuery {
 		final String resolvedField = resolveField(queryContext.getFieldMap());
 		try (final TokenStream tokenStream = queryContext.getQueryAnalyzer().tokenStream(resolvedField, query_string)) {
 			final CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
-			final PositionIncrementAttribute pocincrAttribute = tokenStream.getAttribute(
-					PositionIncrementAttribute.class);
+			final PositionIncrementAttribute pocincrAttribute =
+					tokenStream.getAttribute(PositionIncrementAttribute.class);
 			tokenStream.reset();
 			int pos = 0;
 			while (tokenStream.incrementToken()) {

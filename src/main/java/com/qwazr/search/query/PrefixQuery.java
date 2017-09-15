@@ -28,9 +28,14 @@ public class PrefixQuery extends AbstractFieldQuery {
 	final public String text;
 
 	@JsonCreator
-	public PrefixQuery(@JsonProperty("field") final String field, @JsonProperty("text") final String text) {
-		super(field);
+	public PrefixQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("text") final String text) {
+		super(genericField, field);
 		this.text = text;
+	}
+
+	public PrefixQuery(final String field, final String text) {
+		this(null, field, text);
 	}
 
 	@Override

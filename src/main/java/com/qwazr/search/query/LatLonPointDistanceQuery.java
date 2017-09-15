@@ -32,11 +32,11 @@ public class LatLonPointDistanceQuery extends AbstractFieldQuery {
 	final public double radius_meters;
 
 	@JsonCreator
-	public LatLonPointDistanceQuery(@JsonProperty("field") final String field,
-			@JsonProperty("center_latitude") final double centerLatitude,
+	public LatLonPointDistanceQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("center_latitude") final double centerLatitude,
 			@JsonProperty("center_longitude") final double centerLongitude,
 			@JsonProperty("radius_meters") final double radiusMeters) {
-		super(field);
+		super(genericField, field);
 		this.center_latitude = centerLatitude;
 		this.center_longitude = centerLongitude;
 		this.radius_meters = radiusMeters;

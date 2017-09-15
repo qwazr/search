@@ -26,14 +26,21 @@ import java.io.IOException;
 public class Geo3DBoxQuery extends AbstractGeoBoxQuery {
 
 	@JsonCreator
-	public Geo3DBoxQuery(@JsonProperty("field") final String field, @JsonProperty("min_latitude") final double minLat,
+	public Geo3DBoxQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("min_latitude") final double minLat,
 			@JsonProperty("max_latitude") final double maxLat, @JsonProperty("min_longitude") final double minLon,
 			@JsonProperty("max_longitude") final double maxLon) {
-		super(field, minLat, maxLat, minLon, maxLon);
+		super(genericField, field, minLat, maxLat, minLon, maxLon);
+	}
+
+	public Geo3DBoxQuery(final String field, final double minLat, final double maxLat, final double minLon,
+			final double maxLon) {
+		this(null, field, minLat, maxLat, minLon, maxLon);
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return Geo3DPoint.newBoxQuery(resolveField(queryContext.getFieldMap()), min_latitude, max_latitude, min_longitude, max_longitude);
+		return Geo3DPoint.newBoxQuery(resolveField(queryContext.getFieldMap()), min_latitude, max_latitude,
+				min_longitude, max_longitude);
 	}
 }

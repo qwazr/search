@@ -26,9 +26,10 @@ import org.apache.lucene.document.NumericDocValuesField;
 
 final class IntDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	IntDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.INT)
-				.sortFieldProvider(SortUtils::integerSortField));
+	IntDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.INT).sortFieldProvider(SortUtils::integerSortField));
 	}
 
 	@Override
@@ -38,7 +39,7 @@ final class IntDocValuesType extends CustomFieldTypeAbstract.OneField {
 			field = new NumericDocValuesField(fieldName, ((Number) value).intValue());
 		else
 			field = new NumericDocValuesField(fieldName, Integer.parseInt(value.toString()));
-		consumer.accept(fieldName, field);
+		consumer.accept(genericFieldName, fieldName, field);
 	}
 
 	@Override

@@ -33,8 +33,10 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 
 	private final Consumer<FieldType>[] typeSetters;
 
-	CustomFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(getConverter(definition))
+	CustomFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				getConverter(definition))
 				.termProvider(FieldUtils::newStringTerm)
 				.sortFieldProvider(buildSortFieldProvider((CustomFieldDefinition) definition)));
 		final CustomFieldDefinition customFieldDefinition = (CustomFieldDefinition) definition;
@@ -129,7 +131,7 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 		if (typeSetters != null)
 			for (Consumer<FieldType> ts : typeSetters)
 				ts.accept(type);
-		fieldConsumer.accept(fieldName, new CustomField(fieldName, type, value));
+		fieldConsumer.accept(genericFieldName, fieldName, new CustomField(fieldName, type, value));
 	}
 
 	@Override
@@ -226,68 +228,69 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 
 	}
 
-	public static FieldTypeInterface build(WildcardMatcher wildcardMatcher, CustomFieldDefinition definition) {
+	public static FieldTypeInterface build(final String genericFieldName, WildcardMatcher wildcardMatcher,
+			CustomFieldDefinition definition) {
 		final FieldDefinition.Template template =
 				definition.template == null ? FieldDefinition.Template.NONE : definition.template;
 		switch (template) {
 		case NONE:
-			return new CustomFieldType(wildcardMatcher, definition);
+			return new CustomFieldType(genericFieldName, wildcardMatcher, definition);
 		case DoublePoint:
-			return new DoublePointType(wildcardMatcher, definition);
+			return new DoublePointType(genericFieldName, wildcardMatcher, definition);
 		case FloatPoint:
-			return new FloatPointType(wildcardMatcher, definition);
+			return new FloatPointType(genericFieldName, wildcardMatcher, definition);
 		case IntPoint:
-			return new IntPointType(wildcardMatcher, definition);
+			return new IntPointType(genericFieldName, wildcardMatcher, definition);
 		case LongPoint:
-			return new LongPointType(wildcardMatcher, definition);
+			return new LongPointType(genericFieldName, wildcardMatcher, definition);
 		case DoubleField:
-			return new DoublePointType(wildcardMatcher, definition);
+			return new DoublePointType(genericFieldName, wildcardMatcher, definition);
 		case FloatField:
-			return new FloatPointType(wildcardMatcher, definition);
+			return new FloatPointType(genericFieldName, wildcardMatcher, definition);
 		case IntField:
-			return new IntPointType(wildcardMatcher, definition);
+			return new IntPointType(genericFieldName, wildcardMatcher, definition);
 		case LongField:
-			return new LongPointType(wildcardMatcher, definition);
+			return new LongPointType(genericFieldName, wildcardMatcher, definition);
 		case LongDocValuesField:
-			return new LongDocValuesType(wildcardMatcher, definition);
+			return new LongDocValuesType(genericFieldName, wildcardMatcher, definition);
 		case IntDocValuesField:
-			return new IntDocValuesType(wildcardMatcher, definition);
+			return new IntDocValuesType(genericFieldName, wildcardMatcher, definition);
 		case FloatDocValuesField:
-			return new FloatDocValuesType(wildcardMatcher, definition);
+			return new FloatDocValuesType(genericFieldName, wildcardMatcher, definition);
 		case DoubleDocValuesField:
-			return new DoubleDocValuesType(wildcardMatcher, definition);
+			return new DoubleDocValuesType(genericFieldName, wildcardMatcher, definition);
 		case LatLonPoint:
-			return new LatLonPointType(wildcardMatcher, definition);
+			return new LatLonPointType(genericFieldName, wildcardMatcher, definition);
 		case Geo3DPoint:
-			return new Geo3DPointType(wildcardMatcher, definition);
+			return new Geo3DPointType(genericFieldName, wildcardMatcher, definition);
 		case SortedDocValuesField:
-			return new SortedDocValuesType(wildcardMatcher, definition);
+			return new SortedDocValuesType(genericFieldName, wildcardMatcher, definition);
 		case SortedLongDocValuesField:
-			return new SortedLongDocValuesType(wildcardMatcher, definition);
+			return new SortedLongDocValuesType(genericFieldName, wildcardMatcher, definition);
 		case SortedIntDocValuesField:
-			return new SortedIntDocValuesType(wildcardMatcher, definition);
+			return new SortedIntDocValuesType(genericFieldName, wildcardMatcher, definition);
 		case SortedDoubleDocValuesField:
-			return new SortedDoubleDocValuesType(wildcardMatcher, definition);
+			return new SortedDoubleDocValuesType(genericFieldName, wildcardMatcher, definition);
 		case SortedFloatDocValuesField:
-			return new SortedFloatDocValuesType(wildcardMatcher, definition);
+			return new SortedFloatDocValuesType(genericFieldName, wildcardMatcher, definition);
 		case SortedSetDocValuesField:
-			return new SortedSetDocValuesType(wildcardMatcher, definition);
+			return new SortedSetDocValuesType(genericFieldName, wildcardMatcher, definition);
 		case BinaryDocValuesField:
-			return new BinaryDocValuesType(wildcardMatcher, definition);
+			return new BinaryDocValuesType(genericFieldName, wildcardMatcher, definition);
 		case StoredField:
-			return new StoredFieldType(wildcardMatcher, definition);
+			return new StoredFieldType(genericFieldName, wildcardMatcher, definition);
 		case StringField:
-			return new StringFieldType(wildcardMatcher, definition);
+			return new StringFieldType(genericFieldName, wildcardMatcher, definition);
 		case TextField:
-			return new TextFieldType(wildcardMatcher, definition);
+			return new TextFieldType(genericFieldName, wildcardMatcher, definition);
 		case FacetField:
-			return new FacetType(wildcardMatcher, definition);
+			return new FacetType(genericFieldName, wildcardMatcher, definition);
 		case IntAssociatedField:
-			return new IntAssociationFacetType(wildcardMatcher, definition);
+			return new IntAssociationFacetType(genericFieldName, wildcardMatcher, definition);
 		case FloatAssociatedField:
-			return new FloatAssociationFacetType(wildcardMatcher, definition);
+			return new FloatAssociationFacetType(genericFieldName, wildcardMatcher, definition);
 		case SortedSetDocValuesFacetField:
-			return new SortedSetDocValuesFacetType(wildcardMatcher, definition);
+			return new SortedSetDocValuesFacetType(genericFieldName, wildcardMatcher, definition);
 		}
 		return null;
 	}

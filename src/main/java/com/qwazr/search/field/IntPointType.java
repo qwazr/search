@@ -23,20 +23,21 @@ import org.apache.lucene.document.StoredField;
 
 final class IntPointType extends StorableFieldType {
 
-	IntPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+	IntPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
 				BytesRefUtils.Converter.INT_POINT));
 	}
 
 	@Override
 	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
 		final int intValue = FieldUtils.getIntValue(value);
-		consumer.accept(fieldName, new IntPoint(fieldName, intValue));
-		consumer.accept(fieldName, new StoredField(fieldName, intValue));
+		consumer.accept(genericFieldName, fieldName, new IntPoint(fieldName, intValue));
+		consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, intValue));
 	}
 
 	@Override
 	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
-		consumer.accept(fieldName, new IntPoint(fieldName, FieldUtils.getIntValue(value)));
+		consumer.accept(genericFieldName, fieldName, new IntPoint(fieldName, FieldUtils.getIntValue(value)));
 	}
 }

@@ -27,9 +27,14 @@ public class TermQuery extends AbstractFieldQuery {
 	final public Object term;
 
 	@JsonCreator
-	public TermQuery(@JsonProperty("field") String field, @JsonProperty("term") Object term) {
-		super(field);
+	public TermQuery(@JsonProperty("generic_field") final String genericField, @JsonProperty("field") String field,
+			@JsonProperty("term") Object term) {
+		super(genericField, field);
 		this.term = term;
+	}
+
+	public TermQuery(final String field, final Object term) {
+		this(null, field, term);
 	}
 
 	@Override

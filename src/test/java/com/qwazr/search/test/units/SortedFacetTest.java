@@ -189,9 +189,9 @@ public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
 				.facet("sortedSetDocValuesFacetField", FacetDefinition.of()
 						.query(facetName, BooleanQuery.of()
 								.addClause(BooleanQuery.Occur.should,
-										new FacetPathQuery("sortedSetDocValuesFacetField", facetTerm1))
+										FacetPathQuery.of("sortedSetDocValuesFacetField").path(facetTerm1).build())
 								.addClause(BooleanQuery.Occur.should,
-										new FacetPathQuery("sortedSetDocValuesFacetField", facetTerm2))
+										FacetPathQuery.of("sortedSetDocValuesFacetField").path(facetTerm2).build())
 								.build())
 						.build())
 				.build());

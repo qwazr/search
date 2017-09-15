@@ -43,7 +43,9 @@ public class DynamicMultiFieldFacetTest extends AbstractIndexTest.WithIndexRecor
 			record.dynamicFacets("dynamic_facets_" + RandomUtils.nextInt(0, 2), RandomUtils.alphanumeric(10));
 		indexService.postDocument(record);
 		QueryBuilder queryBuilder = QueryDefinition.of(new MatchAllDocsQuery());
-		record.dynamicFacets.keySet().forEach(f -> queryBuilder.facet(f, FacetDefinition.of(10).build()));
+		record.dynamicFacets.keySet()
+				.forEach(f -> queryBuilder.facet(f,
+						FacetDefinition.of(10).genericFieldName("dynamic_facets_*").build()));
 
 		final ResultDefinition.WithObject<? extends IndexRecord> result =
 				indexService.searchQuery(queryBuilder.build());

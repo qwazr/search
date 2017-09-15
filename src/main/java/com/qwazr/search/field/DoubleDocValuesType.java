@@ -26,9 +26,10 @@ import org.apache.lucene.document.Field;
 
 final class DoubleDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	DoubleDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.DOUBLE)
-				.sortFieldProvider(SortUtils::doubleSortField));
+	DoubleDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.DOUBLE).sortFieldProvider(SortUtils::doubleSortField));
 	}
 
 	@Override
@@ -38,7 +39,7 @@ final class DoubleDocValuesType extends CustomFieldTypeAbstract.OneField {
 			field = new DoubleDocValuesField(fieldName, ((Number) value).doubleValue());
 		else
 			field = new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString()));
-		consumer.accept(fieldName, field);
+		consumer.accept(genericFieldName, fieldName, field);
 	}
 
 	@Override

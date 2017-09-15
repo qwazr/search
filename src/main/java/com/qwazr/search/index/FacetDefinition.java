@@ -34,6 +34,9 @@ public class FacetDefinition {
 
 	final public Integer top;
 
+	@JsonProperty("generic_field_name")
+	final public String genericFieldName;
+
 	final public LinkedHashMap<String, AbstractQuery> queries;
 
 	@JsonProperty("specific_values")
@@ -75,23 +78,26 @@ public class FacetDefinition {
 	}
 
 	public FacetDefinition(Integer top, String prefix, Sort sort) {
-		this(top, prefix, sort, null, null);
+		this(top, prefix, sort, null, null, null);
 	}
 
 	@JsonCreator
 	public FacetDefinition(@JsonProperty("top") Integer top, @JsonProperty("prefix") String prefix,
 			@JsonProperty("sort") Sort sort, @JsonProperty("queries") LinkedHashMap<String, AbstractQuery> queries,
-			@JsonProperty("specific_values") LinkedHashSet<String[]> specificValues) {
+			@JsonProperty("specific_values") LinkedHashSet<String[]> specificValues,
+			@JsonProperty("genericFieldName") String genericFieldName) {
 		this.top = top;
 		this.prefix = prefix;
 		this.sort = sort;
 		this.queries = queries;
 		this.specificValues = specificValues;
+		this.genericFieldName = genericFieldName;
 	}
 
 	private FacetDefinition(final Builder builder) {
 		this(builder.top, builder.prefix, builder.sort, MapUtils.isEmpty(builder.queries) ? null : builder.queries,
-				CollectionUtils.isEmpty(builder.specificValues) ? null : builder.specificValues);
+				CollectionUtils.isEmpty(builder.specificValues) ? null : builder.specificValues,
+				builder.genericFieldName);
 	}
 
 	@Override
@@ -121,6 +127,7 @@ public class FacetDefinition {
 		public Sort sort;
 		public LinkedHashMap<String, AbstractQuery> queries;
 		public LinkedHashSet<String[]> specificValues;
+		public String genericFieldName;
 
 		public Builder top(Integer top) {
 			this.top = top;
@@ -148,6 +155,11 @@ public class FacetDefinition {
 			if (specificValues == null)
 				specificValues = new LinkedHashSet<>();
 			specificValues.add(path);
+			return this;
+		}
+
+		public Builder genericFieldName(String genericFieldName) {
+			this.genericFieldName = genericFieldName;
 			return this;
 		}
 

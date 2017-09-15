@@ -31,16 +31,16 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery {
 	final public long[] upper_values;
 
 	@JsonCreator
-	public LongMultiRangeQuery(@JsonProperty("field") final String field,
-			@JsonProperty("lower_values") final long[] lowerValues,
+	public LongMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("lower_values") final long[] lowerValues,
 			@JsonProperty("upper_values") final long[] upperValues) {
-		super(field);
+		super(genericField, field);
 		this.lower_values = lowerValues;
 		this.upper_values = upperValues;
 	}
 
 	public LongMultiRangeQuery(final String field, final long lowerValue, final long upperValue) {
-		this(field, new long[] { lowerValue }, new long[] { upperValue });
+		this(null, field, new long[] { lowerValue }, new long[] { upperValue });
 	}
 
 	@Override
@@ -54,14 +54,14 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery {
 
 	public static class Builder extends AbstractBuilder<Long> {
 
-		public Builder(String field) {
-			super(field);
+		public Builder(String genericField, String field) {
+			super(genericField, field);
 		}
 
 		@Override
 		protected LongMultiRangeQuery build(final String field, final Collection<Long> lowerValues,
 				final Collection<Long> upperValues) {
-			return new LongMultiRangeQuery(field, ArrayUtils.toPrimitiveLong(lowerValues),
+			return new LongMultiRangeQuery(genericField, field, ArrayUtils.toPrimitiveLong(lowerValues),
 					ArrayUtils.toPrimitiveLong(upperValues));
 		}
 

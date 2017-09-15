@@ -23,21 +23,22 @@ import org.apache.lucene.document.StoredField;
 
 final class FloatPointType extends StorableFieldType {
 
-	FloatPointType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+	FloatPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
 				BytesRefUtils.Converter.FLOAT_POINT));
 	}
 
 	@Override
 	void newFieldNoStore(final String fieldName, final Object value, final FieldConsumer consumer) {
-		consumer.accept(fieldName, new FloatPoint(fieldName, FieldUtils.getFloatValue(value)));
+		consumer.accept(genericFieldName, fieldName, new FloatPoint(fieldName, FieldUtils.getFloatValue(value)));
 	}
 
 	@Override
 	void newFieldWithStore(final String fieldName, final Object value, final FieldConsumer consumer) {
 		final float floatValue = FieldUtils.getFloatValue(value);
-		consumer.accept(fieldName, new FloatPoint(fieldName, floatValue));
-		consumer.accept(fieldName, new StoredField(fieldName, floatValue));
+		consumer.accept(genericFieldName, fieldName, new FloatPoint(fieldName, floatValue));
+		consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, floatValue));
 	}
 
 }

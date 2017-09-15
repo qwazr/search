@@ -25,17 +25,20 @@ import org.apache.lucene.document.SortedNumericDocValuesField;
 
 final class SortedLongDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	SortedLongDocValuesType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.LONG)
-				.sortFieldProvider(SortUtils::longSortField));
+	SortedLongDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.LONG).sortFieldProvider(SortUtils::longSortField));
 	}
 
 	@Override
 	final void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
 		if (value instanceof Number)
-			consumer.accept(fieldName, new SortedNumericDocValuesField(fieldName, ((Number) value).longValue()));
+			consumer.accept(genericFieldName, fieldName,
+					new SortedNumericDocValuesField(fieldName, ((Number) value).longValue()));
 		else
-			consumer.accept(fieldName, new SortedNumericDocValuesField(fieldName, Long.parseLong(value.toString())));
+			consumer.accept(genericFieldName, fieldName,
+					new SortedNumericDocValuesField(fieldName, Long.parseLong(value.toString())));
 	}
 
 	@Override

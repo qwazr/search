@@ -30,15 +30,21 @@ public class TermRangeQuery extends AbstractFieldQuery {
 	final public Boolean include_upper;
 
 	@JsonCreator
-	public TermRangeQuery(@JsonProperty("field") final String field,
-			@JsonProperty("lower_term") final String lower_term, @JsonProperty("upper_term") final String upper_term,
+	public TermRangeQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("lower_term") final String lower_term,
+			@JsonProperty("upper_term") final String upper_term,
 			@JsonProperty("include_lower") final Boolean include_lower,
 			@JsonProperty("include_upper") final Boolean include_upper) {
-		super(field);
+		super(genericField, field);
 		this.lower_term = lower_term;
 		this.upper_term = upper_term;
 		this.include_lower = include_lower;
 		this.include_upper = include_upper;
+	}
+
+	public TermRangeQuery(final String field, final String lower_term, final String upper_term,
+			final Boolean include_lower, final Boolean include_upper) {
+		this(null, field, lower_term, upper_term, include_lower, include_upper);
 	}
 
 	@Override

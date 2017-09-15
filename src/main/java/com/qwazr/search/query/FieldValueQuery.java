@@ -27,8 +27,13 @@ import java.io.IOException;
 public class FieldValueQuery extends AbstractFieldQuery {
 
 	@JsonCreator
-	public FieldValueQuery(@JsonProperty("field") final String field) {
-		super(field);
+	public FieldValueQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field) {
+		super(genericField, field);
+	}
+
+	public FieldValueQuery(final String field) {
+		this(null, field);
 	}
 
 	@Override

@@ -68,7 +68,7 @@ interface RecordsPoster {
 		}
 
 		private Document getFacetedDoc() throws IOException {
-			final FacetsConfig facetsConfig = fieldMap.getFacetsConfig(documentBuilder.fieldNameSet);
+			final FacetsConfig facetsConfig = fieldMap.getFacetsConfig(documentBuilder.dimensions);
 			return facetsConfig.build(taxonomyWriter, documentBuilder.document);
 		}
 

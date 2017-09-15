@@ -31,12 +31,16 @@ public class IntMultiRangeQuery extends AbstractMultiRangeQuery {
 	final public int[] upper_values;
 
 	@JsonCreator
-	public IntMultiRangeQuery(@JsonProperty("field") final String field,
-			@JsonProperty("lower_values") final int[] lowerValues,
+	public IntMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("lower_values") final int[] lowerValues,
 			@JsonProperty("upper_values") final int[] upperValues) {
-		super(field);
+		super(genericField, field);
 		this.lower_values = lowerValues;
 		this.upper_values = upperValues;
+	}
+
+	public IntMultiRangeQuery(final String field, final int[] lowerValues, final int[] upperValues) {
+		this(null, field, lowerValues, upperValues);
 	}
 
 	@Override
@@ -46,8 +50,8 @@ public class IntMultiRangeQuery extends AbstractMultiRangeQuery {
 
 	public static class Builder extends AbstractBuilder<Integer> {
 
-		public Builder(String field) {
-			super(field);
+		public Builder(String genericField, String field) {
+			super(genericField, field);
 		}
 
 		@Override

@@ -27,9 +27,14 @@ public class WildcardQuery extends AbstractMultiTermQuery {
 	final public String term;
 
 	@JsonCreator
-	public WildcardQuery(@JsonProperty("field") final String field, @JsonProperty("term") final String term) {
-		super(field);
+	public WildcardQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("term") final String term) {
+		super(genericField, field);
 		this.term = term;
+	}
+
+	public WildcardQuery(final String field, final String term) {
+		this(null, field, term);
 	}
 
 	@Override

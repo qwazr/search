@@ -28,9 +28,14 @@ public class LongExactQuery extends AbstractFieldQuery {
 	final public long value;
 
 	@JsonCreator
-	public LongExactQuery(@JsonProperty("field") final String field, @JsonProperty("value") final long value) {
-		super(field);
+	public LongExactQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("value") final long value) {
+		super(genericField, field);
 		this.value = value;
+	}
+
+	public LongExactQuery(final String field, final long value) {
+		this(null, field, value);
 	}
 
 	@Override

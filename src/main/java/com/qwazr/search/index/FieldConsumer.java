@@ -20,30 +20,32 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 public interface FieldConsumer {
 
 	void reset();
 
-	void accept(final String fieldName, final Field field);
+	void accept(final String genericFieldName, final String concreteFieldName, final Field field);
 
 	final class ForDocument implements FieldConsumer {
 
-		final HashSet<String> fieldNameSet = new HashSet<>();
+		final Map<String, String> dimensions = new HashMap<>();
 		final Document document = new Document();
 
 		@Override
 		final public void reset() {
-			fieldNameSet.clear();
+			dimensions.clear();
 			document.clear();
 		}
 
 		@Override
-		final public void accept(final String fieldName, final Field field) {
+		final public void accept(final String genericFieldName, final String concreteFieldName, final Field field) {
 			document.add(field);
-			fieldNameSet.add(fieldName);
+			dimensions.put(concreteFieldName == null ? genericFieldName : concreteFieldName,
+					genericFieldName == null ? concreteFieldName : genericFieldName);
 		}
 	}
 
@@ -57,7 +59,7 @@ public interface FieldConsumer {
 		}
 
 		@Override
-		final public void accept(final String fieldName, final Field field) {
+		final public void accept(final String genericFieldName, final String concreteFieldName, final Field field) {
 			// We will not update the internal ID of the document
 			if (FieldDefinition.ID_FIELD.equals(field.name()))
 				return;

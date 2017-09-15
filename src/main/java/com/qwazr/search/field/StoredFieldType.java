@@ -26,9 +26,10 @@ import java.io.Serializable;
 
 final class StoredFieldType extends CustomFieldTypeAbstract.OneField {
 
-	StoredFieldType(final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
-		super(of(wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(BytesRefUtils.Converter.STRING)
-				.storedFieldNameProvider(f -> f));
+	StoredFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+			final FieldDefinition definition) {
+		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+				BytesRefUtils.Converter.STRING).storedFieldNameProvider(f -> f));
 	}
 
 	@Override
@@ -48,7 +49,7 @@ final class StoredFieldType extends CustomFieldTypeAbstract.OneField {
 			field = new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Serializable) value));
 		else
 			field = new StoredField(fieldName, value.toString());
-		consumer.accept(fieldName, field);
+		consumer.accept(genericFieldName, fieldName, field);
 	}
 
 }

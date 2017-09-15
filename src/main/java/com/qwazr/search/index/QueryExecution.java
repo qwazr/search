@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 final class QueryExecution<T extends ResultDocumentAbstract> {
@@ -46,7 +45,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 	final QueryContextImpl queryContext;
 	final QueryDefinition queryDef;
 	final TimeTracker timeTracker;
-	final Set<String> facetKeys;
+	final Map<String, String> dimensions;
 	final FacetsConfig facetsConfig;
 	final int start;
 	final int rows;
@@ -73,8 +72,8 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 
 		this.sort = queryDef.sorts == null ? null : SortUtils.buildSort(queryContext.fieldMap, queryDef.sorts);
 
-		this.facetKeys = queryDef.facets == null ? null : FacetsBuilder.getFields(queryDef.facets);
-		this.facetsConfig = facetKeys == null ? null : queryContext.fieldMap.getFacetsConfig(facetKeys);
+		this.dimensions = queryDef.facets == null ? null : FacetsBuilder.getFields(queryDef.facets);
+		this.facetsConfig = dimensions == null ? null : queryContext.fieldMap.getFacetsConfig(dimensions);
 
 		this.start = queryDef.getStartValue();
 		this.rows = queryDef.getRowsValue();

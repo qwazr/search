@@ -28,9 +28,14 @@ public class DoubleSetQuery extends AbstractFieldQuery {
 	public double[] values;
 
 	@JsonCreator
-	public DoubleSetQuery(@JsonProperty("field") final String field, @JsonProperty("values") final double... values) {
-		super(field);
+	public DoubleSetQuery(@JsonProperty("generic_field") String genericField, @JsonProperty("field") final String field,
+			@JsonProperty("values") final double... values) {
+		super(genericField, field);
 		this.values = values;
+	}
+
+	public DoubleSetQuery(final String field, final double... values) {
+		this(null, field, values);
 	}
 
 	@Override
