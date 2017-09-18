@@ -176,12 +176,12 @@ class IndexInstanceBuilder {
 				case NO:
 					mergeScheduler = NoMergeScheduler.INSTANCE;
 					break;
-				default:
 				case CONCURRENT:
 					mergeScheduler = new ConcurrentMergeScheduler();
 					((ConcurrentMergeScheduler) mergeScheduler).setMaxMergesAndThreads(MERGE_SCHEDULER_SSD_THREADS,
 							MERGE_SCHEDULER_SSD_THREADS);
 					break;
+				default:
 				case SERIAL:
 					mergeScheduler = new SerialMergeScheduler();
 					break;

@@ -65,7 +65,6 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 				.mergedSegmentWarmer(true)
 				.indexReaderWarmer(false)
 				.useCompoundFile(false)
-				//.replication(IndexSettingsDefinition.Replication.NRT)
 				.build());
 	}
 
@@ -74,14 +73,10 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 		return Arrays.asList(
 
 				new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "replication-slave1",
-						IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(false)
-								//.replication(IndexSettingsDefinition.Replication.NRT)
-								.build()),
+						IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(false).build()),
 
 				new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "replication-slave2",
-						IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(true)
-								//.replication(IndexSettingsDefinition.Replication.NRT)
-								.build()));
+						IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(true).build()));
 	}
 
 	private Map<String, String> getCommitData(UUID version) {
