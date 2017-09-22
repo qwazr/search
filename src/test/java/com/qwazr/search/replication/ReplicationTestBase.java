@@ -93,14 +93,11 @@ public abstract class ReplicationTestBase<T> {
 		for (AnnotatedIndexService<T> slave : slaves)
 			slavesIterators.add(slave.searchIterator(queryIterator, recordClass));
 
-		masterIterator.forEachRemaining(masterRecord -> {
-			slavesIterators.forEach(slaveIterator -> {
-				final T slaveRecord = slaveIterator.next();
-				Assert.assertEquals(masterRecord, slaveRecord);
-				if (recordsChecker != null)
-					recordsChecker.accept(masterRecord, slaveRecord);
-			});
-
-		});
+		masterIterator.forEachRemaining(masterRecord -> slavesIterators.forEach(slaveIterator -> {
+			final T slaveRecord = slaveIterator.next();
+			Assert.assertEquals(masterRecord, slaveRecord);
+			if (recordsChecker != null)
+				recordsChecker.accept(masterRecord, slaveRecord);
+		}));
 	}
 }

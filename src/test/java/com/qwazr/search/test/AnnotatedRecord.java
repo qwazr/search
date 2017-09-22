@@ -191,6 +191,11 @@ public class AnnotatedRecord {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "id: " + id + " - title: " + title + " - price: " + price + " - content: " + content);
+	}
+
 	public static List<AnnotatedRecord> randomList(final int count, final IntFunction<Integer> idSupplier) {
 		final List<AnnotatedRecord> records = new ArrayList<>();
 		for (int i = 0; i < count; i++) {
