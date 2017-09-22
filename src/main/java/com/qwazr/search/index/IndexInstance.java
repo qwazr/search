@@ -99,10 +99,12 @@ final public class IndexInstance implements Closeable {
 
 	private final ReentrantLock replicationLock;
 	private final ReentrantLock commitLock;
+	private final ReentrantLock backupLock;
 
 	private final UpdatableAnalyzers indexAnalyzers;
 	private final UpdatableAnalyzers queryAnalyzers;
 
+	private final ReentrantLock fieldMapLock;
 	private volatile FieldMap fieldMap;
 
 	private volatile LinkedHashMap<String, AnalyzerDefinition> analyzerDefinitionMap;
@@ -123,6 +125,7 @@ final public class IndexInstance implements Closeable {
 		this.localAnalyzerFactoryMap = builder.localAnalyzerFactoryMap;
 		this.analyzerDefinitionMap = CustomAnalyzer.createDefinitionMap(localAnalyzerFactoryMap);
 		this.globalAnalyzerFactoryMap = builder.globalAnalyzerFactoryMap;
+		this.fieldMapLock = new ReentrantLock(true);
 		this.fieldMap = builder.fieldMap;
 		this.writerAndSearcher = builder.writerAndSearcher;
 		this.indexAnalyzers = builder.indexAnalyzers;
@@ -134,6 +137,7 @@ final public class IndexInstance implements Closeable {
 		this.fileResourceLoader = builder.fileResourceLoader;
 		this.replicationLock = new ReentrantLock(true);
 		this.commitLock = new ReentrantLock(true);
+		this.backupLock = new ReentrantLock(true);
 		this.indexReplicator = writerAndSearcher instanceof IndexReplicator.Slave ?
 				((IndexReplicator.Slave) writerAndSearcher).getIndexReplicator() :
 				null;
@@ -201,16 +205,19 @@ final public class IndexInstance implements Closeable {
 		multiSearchInstances.forEach(MultiSearchInstance::refresh);
 	}
 
-	synchronized void setFields(final LinkedHashMap<String, FieldDefinition> fields)
-			throws ServerException, IOException {
-		fileSet.writeFieldMap(fields);
-		fieldMap = new FieldMap(fields, settings.sortedSetFacetField);
-		refreshFieldsAnalyzers();
+	void setFields(final LinkedHashMap<String, FieldDefinition> fields) throws ServerException, IOException {
+		fieldMapLock.lock();
+		try {
+			fileSet.writeFieldMap(fields);
+			fieldMap = new FieldMap(fields, settings.sortedSetFacetField);
+			refreshFieldsAnalyzers();
+		} finally {
+			fieldMapLock.unlock();
+		}
 	}
 
 	void setField(final String field_name, final FieldDefinition field) throws IOException, ServerException {
-		final LinkedHashMap<String, FieldDefinition> fields =
-				(LinkedHashMap<String, FieldDefinition>) fieldMap.getFieldDefinitionMap().clone();
+		final LinkedHashMap<String, FieldDefinition> fields = new LinkedHashMap<>(fieldMap.getFieldDefinitionMap());
 		fields.put(field_name, field);
 		setFields(fields);
 	}
@@ -330,50 +337,59 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final synchronized BackupStatus backup(final Path backupIndexDirectory) throws IOException {
-		checkIsMaster();
-		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
+	final BackupStatus backup(final Path backupIndexDirectory) throws IOException {
+		backupLock.lock();
+		try {
+			checkIsMaster();
+			try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 
-			// Create (or check) the backup directory
-			if (Files.notExists(backupIndexDirectory))
-				Files.createDirectory(backupIndexDirectory);
-			if (!Files.isDirectory(backupIndexDirectory))
-				throw new IOException(
-						"Cannot create the backup directory: " + backupIndexDirectory + " - Index: " + indexName);
+				// Create (or check) the backup directory
+				if (Files.notExists(backupIndexDirectory))
+					Files.createDirectory(backupIndexDirectory);
+				if (!Files.isDirectory(backupIndexDirectory))
+					throw new IOException(
+							"Cannot create the backup directory: " + backupIndexDirectory + " - Index: " + indexName);
 
-			// Copy the UUID
-			IOUtils.writeStringAsFile(indexUuid.toString(),
-					backupIndexDirectory.resolve(IndexFileSet.UUID_FILE).toFile());
+				// Copy the UUID
+				IOUtils.writeStringAsFile(indexUuid.toString(),
+						backupIndexDirectory.resolve(IndexFileSet.UUID_FILE).toFile());
 
-			// Copy the option UUID Master File
-			if (fileSet.uuidMasterFile != null && fileSet.uuidMasterFile.exists() && fileSet.uuidMasterFile.isFile())
-				Files.copy(fileSet.uuidMasterFile.toPath(), backupIndexDirectory.resolve(IndexFileSet.UUID_MASTER_FILE),
-						StandardCopyOption.REPLACE_EXISTING);
+				// Copy the option UUID Master File
+				if (fileSet.uuidMasterFile != null && fileSet.uuidMasterFile.exists() &&
+						fileSet.uuidMasterFile.isFile())
+					Files.copy(fileSet.uuidMasterFile.toPath(),
+							backupIndexDirectory.resolve(IndexFileSet.UUID_MASTER_FILE),
+							StandardCopyOption.REPLACE_EXISTING);
 
-			// Copy the settings, field definitions analyzer definitions
-			IndexSettingsDefinition.save(settings, backupIndexDirectory.resolve(IndexFileSet.SETTINGS_FILE).toFile());
-			FieldDefinition.saveMap(fieldMap.getFieldDefinitionMap(),
-					backupIndexDirectory.resolve(IndexFileSet.FIELDS_FILE).toFile());
-			AnalyzerDefinition.saveMap(analyzerDefinitionMap,
-					backupIndexDirectory.resolve(IndexFileSet.ANALYZERS_FILE).toFile());
+				// Copy the settings, field definitions analyzer definitions
+				IndexSettingsDefinition.save(settings,
+						backupIndexDirectory.resolve(IndexFileSet.SETTINGS_FILE).toFile());
+				FieldDefinition.saveMap(fieldMap.getFieldDefinitionMap(),
+						backupIndexDirectory.resolve(IndexFileSet.FIELDS_FILE).toFile());
+				AnalyzerDefinition.saveMap(analyzerDefinitionMap,
+						backupIndexDirectory.resolve(IndexFileSet.ANALYZERS_FILE).toFile());
 
-			// Copy the data using replication
-			try (final Directory dataDir = FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_DATA));
-					final Directory taxoDir = taxonomyDirectory == null ?
-							null :
-							FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_TAXONOMY))) {
+				// Copy the data using replication
+				try (final Directory dataDir = FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_DATA));
+						final Directory taxoDir = taxonomyDirectory == null ?
+								null :
+								FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_TAXONOMY))) {
 
-				final PerSessionDirectoryFactory sourceDirFactory =
-						new PerSessionDirectoryFactory(backupIndexDirectory.resolve(IndexFileSet.REPL_WORK));
-				try (final ReplicationClient replicationClient = new ReplicationClient(localReplicator,
-						IndexReplicator.getNewReplicationHandler(dataDir, taxoDir, () -> false), sourceDirFactory)) {
-					replicationClient.updateNow();
-				} catch (IOException e) {
-					FileUtils.deleteDirectoryQuietly(backupIndexDirectory);
-					throw e;
+					final PerSessionDirectoryFactory sourceDirFactory =
+							new PerSessionDirectoryFactory(backupIndexDirectory.resolve(IndexFileSet.REPL_WORK));
+					try (final ReplicationClient replicationClient = new ReplicationClient(localReplicator,
+							IndexReplicator.getNewReplicationHandler(dataDir, taxoDir, () -> false),
+							sourceDirFactory)) {
+						replicationClient.updateNow();
+					} catch (IOException e) {
+						FileUtils.deleteDirectoryQuietly(backupIndexDirectory);
+						throw e;
+					}
+					return BackupStatus.newBackupStatus(backupIndexDirectory, false);
 				}
-				return BackupStatus.newBackupStatus(backupIndexDirectory, false);
 			}
+		} finally {
+			backupLock.unlock();
 		}
 	}
 
