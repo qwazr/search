@@ -41,8 +41,8 @@ interface Replication {
 
 		MasterWithTaxo(final IndexWriter indexWriter,
 				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter,
-				final SearcherFactory searcherFactory) throws IOException {
-			super(indexWriter, taxonomyWriter,
+				final String stateFacetField, final SearcherFactory searcherFactory) throws IOException {
+			super(indexWriter, taxonomyWriter, stateFacetField,
 					new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter));
 			localReplicator = new LocalReplicator();
 			localReplicator.publish(newRevision());
@@ -75,9 +75,10 @@ interface Replication {
 		private final IndexReplicator indexReplicator;
 
 		SlaveWithTaxo(final IndexReplicator indexReplicator, final Directory dataDirectory,
-				final Directory taxonomyDirectory, final SearcherFactory searcherFactory)
+				final Directory taxonomyDirectory, final String stateFacetField, final SearcherFactory searcherFactory)
 				throws IOException, URISyntaxException {
-			super(null, null, new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory));
+			super(null, null, stateFacetField,
+					new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory));
 			this.indexReplicator = indexReplicator;
 		}
 
@@ -98,8 +99,9 @@ interface Replication {
 
 		final LocalReplicator localReplicator;
 
-		MasterNoTaxo(final IndexWriter indexWriter, final SearcherFactory searcherFactory) throws IOException {
-			super(indexWriter, new SearcherManager(indexWriter, searcherFactory));
+		MasterNoTaxo(final IndexWriter indexWriter, final String stateFacetField, final SearcherFactory searcherFactory)
+				throws IOException {
+			super(indexWriter, stateFacetField, new SearcherManager(indexWriter, searcherFactory));
 			localReplicator = new LocalReplicator();
 			localReplicator.publish(newRevision());
 		}
@@ -130,9 +132,9 @@ interface Replication {
 
 		private final IndexReplicator indexReplicator;
 
-		SlaveNoTaxo(final IndexReplicator indexReplicator, final Directory dataDirectory,
+		SlaveNoTaxo(final IndexReplicator indexReplicator, final Directory dataDirectory, final String stateFacetField,
 				final SearcherFactory searcherFactory) throws IOException, URISyntaxException {
-			super(null, new SearcherManager(dataDirectory, searcherFactory));
+			super(null, stateFacetField, new SearcherManager(dataDirectory, searcherFactory));
 			this.indexReplicator = indexReplicator;
 		}
 

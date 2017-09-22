@@ -16,8 +16,10 @@
 package com.qwazr.search.index;
 
 import com.qwazr.utils.IOUtils;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.replicator.IndexAndTaxonomyRevision;
 import org.apache.lucene.search.IndexSearcher;
@@ -41,37 +43,54 @@ interface WriterAndSearcher extends Closeable {
 	abstract class Common implements WriterAndSearcher {
 
 		final IndexWriter indexWriter;
+		final String stateFacetField;
+		volatile SortedSetDocValuesReaderState sortedSetDocValuesReaderState;
 
-		protected Common(final IndexWriter indexWriter) {
+		protected Common(final IndexWriter indexWriter, final String stateFacetField) {
 			this.indexWriter = indexWriter;
+			this.stateFacetField = stateFacetField;
+		}
+
+		synchronized void setFacetsState(final IndexReader indexReader) throws IOException {
+			sortedSetDocValuesReaderState = IndexUtils.getNewFacetsState(indexReader, stateFacetField);
 		}
 
 		@Override
 		final public IndexWriter getIndexWriter() {
 			return indexWriter;
 		}
+
 	}
 
 	class NoTaxo extends Common {
 
 		final ReferenceManager<IndexSearcher> searcherManager;
 
-		NoTaxo(final IndexWriter indexWriter, final ReferenceManager<IndexSearcher> searcherManager)
-				throws IOException {
-			super(indexWriter);
+		NoTaxo(final IndexWriter indexWriter, final String stateFacetField,
+				final ReferenceManager<IndexSearcher> searcherManager) throws IOException {
+			super(indexWriter, stateFacetField);
 			this.searcherManager = searcherManager;
+			refresh();
 		}
 
 		@Override
 		final public void refresh() throws IOException {
 			searcherManager.maybeRefresh();
+			final IndexSearcher searcher = searcherManager.acquire();
+			try {
+				setFacetsState(searcher.getIndexReader());
+			} finally {
+				searcherManager.release(searcher);
+			}
 		}
 
 		@Override
 		final public <T> T search(final SearchAction<T> action) throws IOException {
 			final IndexSearcher searcher = searcherManager.acquire();
 			try {
-				return action.apply(searcher, null);
+				assert sortedSetDocValuesReaderState == null ||
+						searcher.getIndexReader() == sortedSetDocValuesReaderState.getReader();
+				return action.apply(searcher, null, sortedSetDocValuesReaderState);
 			} finally {
 				searcherManager.release(searcher);
 			}
@@ -86,7 +105,7 @@ interface WriterAndSearcher extends Closeable {
 		public void commit() throws IOException {
 			indexWriter.flush();
 			indexWriter.commit();
-			searcherManager.maybeRefresh();
+			refresh();
 		}
 
 		@Override
@@ -95,6 +114,7 @@ interface WriterAndSearcher extends Closeable {
 			if (indexWriter != null && indexWriter.isOpen())
 				IOUtils.closeQuietly(indexWriter);
 		}
+
 	}
 
 	class WithTaxo extends Common {
@@ -104,22 +124,30 @@ interface WriterAndSearcher extends Closeable {
 
 		WithTaxo(final IndexWriter indexWriter,
 				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter,
-				final SearcherTaxonomyManager searcherTaxonomyManager) throws IOException {
-			super(indexWriter);
+				final String stateFacetField, final SearcherTaxonomyManager searcherTaxonomyManager)
+				throws IOException {
+			super(indexWriter, stateFacetField);
 			this.taxonomyWriter = taxonomyWriter;
 			this.searcherTaxonomyManager = searcherTaxonomyManager;
+			refresh();
 		}
 
 		@Override
 		final public void refresh() throws IOException {
 			searcherTaxonomyManager.maybeRefresh();
+			final SearcherTaxonomyManager.SearcherAndTaxonomy searcher = searcherTaxonomyManager.acquire();
+			try {
+				setFacetsState(searcher.searcher.getIndexReader());
+			} finally {
+				searcherTaxonomyManager.release(searcher);
+			}
 		}
 
 		@Override
 		final public <T> T search(final SearchAction<T> action) throws IOException {
 			final SearcherTaxonomyManager.SearcherAndTaxonomy reference = searcherTaxonomyManager.acquire();
 			try {
-				return action.apply(reference.searcher, reference.taxonomyReader);
+				return action.apply(reference.searcher, reference.taxonomyReader, sortedSetDocValuesReaderState);
 			} finally {
 				searcherTaxonomyManager.release(reference);
 			}
@@ -136,7 +164,7 @@ interface WriterAndSearcher extends Closeable {
 			taxonomyWriter.commit();
 			indexWriter.flush();
 			indexWriter.commit();
-			searcherTaxonomyManager.maybeRefresh();
+			refresh();
 		}
 
 		@Override
@@ -154,7 +182,8 @@ interface WriterAndSearcher extends Closeable {
 
 	interface SearchAction<T> {
 
-		T apply(final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader) throws IOException;
+		T apply(final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
+				final SortedSetDocValuesReaderState facetsState) throws IOException;
 	}
 
 	interface WriteAction<T> {

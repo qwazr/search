@@ -235,10 +235,12 @@ class IndexInstanceBuilder {
 				(taxonomyDirectory != null && SegmentInfos.getLastCommitGeneration(taxonomyDirectory) < 0))
 			indexReplicator.updateNow();
 		if (withTaxo) {
-			writerAndSearcher =
-					new Replication.SlaveWithTaxo(indexReplicator, dataDirectory, taxonomyDirectory, searcherFactory);
+			writerAndSearcher = new Replication.SlaveWithTaxo(indexReplicator, dataDirectory, taxonomyDirectory,
+					settings.sortedSetFacetField, searcherFactory);
 		} else {
-			writerAndSearcher = new Replication.SlaveNoTaxo(indexReplicator, dataDirectory, searcherFactory);
+			writerAndSearcher =
+					new Replication.SlaveNoTaxo(indexReplicator, dataDirectory, settings.sortedSetFacetField,
+							searcherFactory);
 		}
 
 	}
@@ -252,8 +254,9 @@ class IndexInstanceBuilder {
 			openOrCreateTaxonomyIndex(false);
 
 		writerAndSearcher = withTaxo ?
-				new Replication.MasterWithTaxo(indexWriter, taxonomyWriter, searcherFactory) :
-				new Replication.MasterNoTaxo(indexWriter, searcherFactory);
+				new Replication.MasterWithTaxo(indexWriter, taxonomyWriter, settings.sortedSetFacetField,
+						searcherFactory) :
+				new Replication.MasterNoTaxo(indexWriter, settings.sortedSetFacetField, searcherFactory);
 	}
 
 	private void abort() {
