@@ -193,7 +193,7 @@ public class AnnotatedRecord {
 
 	@Override
 	public String toString() {
-		return "id: " + id + " - title: " + title + " - price: " + price + " - content: " + content);
+		return "id: " + id + " - title: " + title + " - price: " + price + " - content: " + content;
 	}
 
 	public static List<AnnotatedRecord> randomList(final int count, final IntFunction<Integer> idSupplier) {
