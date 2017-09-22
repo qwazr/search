@@ -225,7 +225,7 @@ public class MultiFieldQuery extends AbstractQuery {
 			super(analyzer);
 			this.termsFreq = termsFreq;
 			this.field = field;
-			setEnableGraphQueries(!fieldsDisabledGraph.contains(field));
+			setEnableGraphQueries(fieldsDisabledGraph == null || !fieldsDisabledGraph.contains(field));
 		}
 
 		@Override
