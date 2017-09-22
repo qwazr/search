@@ -66,8 +66,10 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.function.BiFunction;
 
@@ -549,21 +551,25 @@ public abstract class JavaAbstractTest {
 
 	@Test
 	public void test700MultiFieldWithFuzzy() throws IOException, ReflectiveOperationException, URISyntaxException {
-		Map<String, Float> fields = new LinkedHashMap<>();
-		fields.put("title", 10.0F);
-		fields.put("titleStd", 5.0F);
-		fields.put("content", 1.0F);
-		MultiFieldQuery query = new MultiFieldQuery(fields, QueryParserOperator.AND, "title sekond", null);
+		Map<String, Float> fieldsBoosts = new LinkedHashMap<>();
+		fieldsBoosts.put("title", 10.0F);
+		fieldsBoosts.put("titleStd", 5.0F);
+		fieldsBoosts.put("content", 1.0F);
+		Set<String> fieldsDisableGraph = new LinkedHashSet<>();
+		fieldsDisableGraph.add("title");
+		fieldsDisableGraph.add("titleStd");
+		MultiFieldQuery query =
+				new MultiFieldQuery(fieldsBoosts, fieldsDisableGraph, QueryParserOperator.AND, "title sekond", null);
 		checkMultiField(query,
 				"(+title:titl +title:sekond~2)^10.0 (+titleStd:title +titleStd:sekond~2)^5.0 (+content:titl +content:sekond~2)",
 				1);
-		query = new MultiFieldQuery(fields, QueryParserOperator.OR, "title sekond", 100);
+		query = new MultiFieldQuery(fieldsBoosts, fieldsDisableGraph, QueryParserOperator.OR, "title sekond", 100);
 		checkMultiField(query,
 				"((title:titl title:sekond~2)~2)^10.0 ((titleStd:title titleStd:sekond~2)~2)^5.0 ((content:titl content:sekond~2)~2)",
 				1);
-		query = new MultiFieldQuery(QueryParserOperator.OR, "title sekond", 50).boost("title", 10.0F)
-				.boost("titleStd", 5.0F)
-				.boost("content", 1.0F);
+		query = new MultiFieldQuery(QueryParserOperator.OR, "title sekond", 50).field("title", 10.0F, false)
+				.field("titleStd", 5.0F, false)
+				.field("content", 1.0F, true);
 		checkMultiField(query,
 				"((title:titl title:sekond~2)~1)^10.0 ((titleStd:title titleStd:sekond~2)~1)^5.0 ((content:titl content:sekond~2)~1)",
 				2);
@@ -573,9 +579,9 @@ public abstract class JavaAbstractTest {
 	public void test710MultiFieldWithDisjunction()
 			throws IOException, ReflectiveOperationException, URISyntaxException {
 		MultiFieldQuery query =
-				new MultiFieldQuery(QueryParserOperator.AND, "title second", null, 0.1F).boost("title", 10.0F)
-						.boost("titleStd", 5.0F)
-						.boost("content", 1.0F);
+				new MultiFieldQuery(QueryParserOperator.AND, "title second", null, 0.1F).field("title", 10.0F, false)
+						.field("titleStd", 5.0F, false)
+						.field("content", 1.0F, true);
 		checkMultiField(query,
 				"((+title:titl +title:second)^10.0 | (+titleStd:title +titleStd:second)^5.0 | (+content:titl +content:second))~0.1",
 				1);

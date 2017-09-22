@@ -51,7 +51,9 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -156,8 +158,12 @@ public class AnnotatedIndexServiceTest {
 		fieldBoosts.put("content", 1F);
 		fieldBoosts.put("full", 0.5F);
 
+		Set<String> fieldsDisableGraph = new HashSet<>();
+		fieldsDisableGraph.add("title");
+		fieldsDisableGraph.add("content");
+
 		MultiFieldQuery multiFieldQuery =
-				new MultiFieldQuery(fieldBoosts, QueryParserOperator.AND, "Title terms", null);
+				new MultiFieldQuery(fieldBoosts, fieldsDisableGraph, QueryParserOperator.AND, "Title terms", null);
 
 		QueryBuilder builder = QueryDefinition.of(multiFieldQuery).queryDebug(true);
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
@@ -179,9 +185,10 @@ public class AnnotatedIndexServiceTest {
 
 	@Test
 	public void test510explain() {
-		MultiFieldQuery mfq = new MultiFieldQuery(QueryParserOperator.AND, "Title terms", null).boost("title", 10F)
-				.boost("content", 1.0F)
-				.boost("full", 0.5f);
+		MultiFieldQuery mfq =
+				new MultiFieldQuery(QueryParserOperator.AND, "Title terms", null).field("title", 10F, false)
+						.field("content", 1.0F, false)
+						.field("full", 0.5f, true);
 		QueryDefinition query = QueryDefinition.of(mfq).build();
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);
 		Assert.assertNotNull(results);
