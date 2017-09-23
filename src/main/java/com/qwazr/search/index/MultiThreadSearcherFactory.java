@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SimpleMergedSegmentWarmer;
@@ -28,23 +29,28 @@ import java.util.concurrent.ExecutorService;
 
 class MultiThreadSearcherFactory extends SearcherFactory {
 
-	static MultiThreadSearcherFactory of(ExecutorService executorService, boolean useWarmer, Similarity similarity) {
+	static MultiThreadSearcherFactory of(final ExecutorService executorService, final boolean useWarmer,
+			final Similarity similarity, final String stateFacetField) {
 		return similarity == null ?
-				new MultiThreadSearcherFactory(executorService, useWarmer) :
-				new WithSimilarity(executorService, useWarmer, similarity);
+				new MultiThreadSearcherFactory(executorService, useWarmer, stateFacetField) :
+				new WithSimilarity(executorService, useWarmer, similarity, stateFacetField);
 	}
 
 	private static final SimpleMergedSegmentWarmer WARMER = new SimpleMergedSegmentWarmer(InfoStream.getDefault());
 
 	protected final ExecutorService executorService;
 	private final boolean useWarmer;
+	private final String stateFacetField;
 
-	private MultiThreadSearcherFactory(final ExecutorService executorService, boolean useWarmer) {
+	private MultiThreadSearcherFactory(final ExecutorService executorService, boolean useWarmer,
+			final String stateFacetField) {
 		this.executorService = executorService;
 		this.useWarmer = useWarmer;
+		this.stateFacetField = stateFacetField;
 	}
 
-	protected IndexSearcher warm(final IndexReader indexReader, final IndexSearcher indexSearcher) throws IOException {
+	protected StateIndexSearcher warm(final IndexReader indexReader, final StateIndexSearcher indexSearcher)
+			throws IOException {
 		if (!useWarmer)
 			return indexSearcher;
 
@@ -54,8 +60,9 @@ class MultiThreadSearcherFactory extends SearcherFactory {
 		return indexSearcher;
 	}
 
-	public IndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader) throws IOException {
-		return warm(reader, new IndexSearcher(reader, executorService));
+	public StateIndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader)
+			throws IOException {
+		return warm(reader, new StateIndexSearcher(reader));
 	}
 
 	static class WithSimilarity extends MultiThreadSearcherFactory {
@@ -63,16 +70,27 @@ class MultiThreadSearcherFactory extends SearcherFactory {
 		private final Similarity similarity;
 
 		private WithSimilarity(final ExecutorService executorService, final boolean useWarmer,
-				final Similarity similarity) {
-			super(executorService, useWarmer);
+				final Similarity similarity, final String stateFacetField) {
+			super(executorService, useWarmer, stateFacetField);
 			this.similarity = similarity;
 		}
 
-		public IndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader)
+		public StateIndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader)
 				throws IOException {
-			final IndexSearcher searcher = new IndexSearcher(reader, executorService);
+			final StateIndexSearcher searcher = new StateIndexSearcher(reader);
 			searcher.setSimilarity(similarity);
 			return warm(reader, searcher);
 		}
+	}
+
+	class StateIndexSearcher extends IndexSearcher {
+
+		final SortedSetDocValuesReaderState state;
+
+		StateIndexSearcher(IndexReader reader) throws IOException {
+			super(reader, executorService);
+			state = IndexUtils.getNewFacetsState(reader, stateFacetField);
+		}
+
 	}
 }

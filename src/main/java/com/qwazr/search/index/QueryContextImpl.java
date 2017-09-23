@@ -43,10 +43,10 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext, C
 	QueryContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
 			final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
 			final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap,
-			final FieldMapWrapper.Cache fieldMapWrappers, final SortedSetDocValuesReaderState docValueReaderState,
-			final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader) {
+			final FieldMapWrapper.Cache fieldMapWrappers, final IndexSearcher indexSearcher,
+			final TaxonomyReader taxonomyReader) {
 		super(indexProvider, resourceLoader, executorService, indexAnalyzers, queryAnalyzers, fieldMap);
-		this.docValueReaderState = docValueReaderState;
+		this.docValueReaderState = ((MultiThreadSearcherFactory.StateIndexSearcher) indexSearcher).state;
 		this.fieldMap = fieldMap;
 		this.fieldMapWrappers = fieldMapWrappers;
 		this.indexSearcher = indexSearcher;

@@ -32,7 +32,6 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
@@ -170,7 +169,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private IndexStatus getIndexStatus() throws IOException {
-		return writerAndSearcher.search((indexSearcher, taxonomyReader, facetsState) -> new IndexStatus(indexUuid,
+		return writerAndSearcher.search((indexSearcher, taxonomyReader) -> new IndexStatus(indexUuid,
 				indexReplicator != null ? indexReplicator.getMasterUuid() : null, dataDirectory, indexSearcher,
 				writerAndSearcher.getIndexWriter(), settings, localAnalyzerFactoryMap.keySet(),
 				fieldMap.getFieldDefinitionMap().keySet(), indexAnalyzers.getActiveAnalyzers(),
@@ -183,7 +182,7 @@ final public class IndexInstance implements Closeable {
 
 	FieldStats getFieldStats(String fieldName) throws IOException {
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
-			return writerAndSearcher.search((indexSearcher, taxonomyReader, facetsState) -> {
+			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				final Terms terms = MultiFields.getFields(indexSearcher.getIndexReader()).terms(fieldName);
 				return terms == null ? new FieldStats() : new FieldStats(terms, fieldMap.getFieldType(null, fieldName));
 			});
@@ -310,9 +309,8 @@ final public class IndexInstance implements Closeable {
 
 	public Query createJoinQuery(final JoinQuery joinQuery) throws IOException {
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
-			return writerAndSearcher.search((indexSearcher, taxonomyReader, facetsState) -> {
-				try (final QueryContext queryContext = buildQueryContext(indexSearcher, taxonomyReader, facetsState,
-						null)) {
+			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
+				try (final QueryContext queryContext = buildQueryContext(indexSearcher, taxonomyReader, null)) {
 					final Query fromQuery = joinQuery.from_query == null ?
 							new MatchAllDocsQuery() :
 							joinQuery.from_query.getQuery(queryContext);
@@ -570,9 +568,8 @@ final public class IndexInstance implements Closeable {
 		Objects.requireNonNull(queryDefinition, "The queryDefinition is missing - Index: " + indexName);
 		Objects.requireNonNull(queryDefinition.query, "The query is missing - Index: " + indexName);
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-			return writerAndSearcher.search((indexSearcher, taxonomyReader, facetsState) -> {
-				try (final QueryContext queryContext = buildQueryContext(indexSearcher, taxonomyReader, facetsState,
-						null)) {
+			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
+				try (final QueryContext queryContext = buildQueryContext(indexSearcher, taxonomyReader, null)) {
 					final Query query = queryDefinition.query.getQuery(queryContext);
 					final IndexWriter indexWriter = writerAndSearcher.getIndexWriter();
 					int docs = indexWriter.numDocs();
@@ -593,7 +590,7 @@ final public class IndexInstance implements Closeable {
 			final Integer rows) throws InterruptedException, IOException {
 		Objects.requireNonNull(fieldName, "The field name is missing - Index: " + indexName);
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
-			return writerAndSearcher.search((indexSearcher, taxonomyReader, facetsState) -> {
+			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
 				if (fieldType == null)
 					throw new ServerException(Response.Status.NOT_FOUND,
@@ -608,17 +605,16 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private QueryContextImpl buildQueryContext(final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
-			final SortedSetDocValuesReaderState facetsState, final FieldMapWrapper.Cache fieldMapWrappers)
-			throws IOException {
+			final FieldMapWrapper.Cache fieldMapWrappers) throws IOException {
 		return new QueryContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzers, queryAnalyzers,
-				fieldMap, fieldMapWrappers, facetsState, indexSearcher, taxonomyReader);
+				fieldMap, fieldMapWrappers, indexSearcher, taxonomyReader);
 	}
 
 	final <T> T query(final FieldMapWrapper.Cache fieldMapWrappers,
 			final IndexServiceInterface.QueryActions<T> queryActions) throws IOException {
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
-			return writerAndSearcher.search((indexSearcher, taxonomyReader, facetsState) -> {
-				try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader, facetsState,
+			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
+				try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader,
 						fieldMapWrappers)) {
 					return queryActions.apply(context);
 				}
@@ -629,9 +625,8 @@ final public class IndexInstance implements Closeable {
 	final Explanation explain(final QueryDefinition queryDefinition, final int docId)
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
-			return writerAndSearcher.search((indexSearcher, taxonomyReader, facetsState) -> {
-				try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader, facetsState,
-						null)) {
+			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
+				try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader, null)) {
 					return new QueryExecution<>(context, queryDefinition).explain(docId);
 				} catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
 					throw ServerException.of(e);

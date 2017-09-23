@@ -107,7 +107,8 @@ class IndexInstanceBuilder {
 			similarity = IndexUtils.findSimilarity(settings.similarityClass);
 
 		searcherFactory = MultiThreadSearcherFactory.of(executorService,
-				settings.indexReaderWarmer == null ? true : settings.indexReaderWarmer, similarity);
+				settings.indexReaderWarmer == null ? true : settings.indexReaderWarmer, similarity,
+				settings.sortedSetFacetField);
 
 		localAnalyzerFactoryMap = fileSet.loadAnalyzerDefinitionMap();
 		final LinkedHashMap<String, FieldDefinition> fieldMapDefinition = fileSet.loadFieldMap();
@@ -235,12 +236,10 @@ class IndexInstanceBuilder {
 				(taxonomyDirectory != null && SegmentInfos.getLastCommitGeneration(taxonomyDirectory) < 0))
 			indexReplicator.updateNow();
 		if (withTaxo) {
-			writerAndSearcher = new Replication.SlaveWithTaxo(indexReplicator, dataDirectory, taxonomyDirectory,
-					settings.sortedSetFacetField, searcherFactory);
-		} else {
 			writerAndSearcher =
-					new Replication.SlaveNoTaxo(indexReplicator, dataDirectory, settings.sortedSetFacetField,
-							searcherFactory);
+					new Replication.SlaveWithTaxo(indexReplicator, dataDirectory, taxonomyDirectory, searcherFactory);
+		} else {
+			writerAndSearcher = new Replication.SlaveNoTaxo(indexReplicator, dataDirectory, searcherFactory);
 		}
 
 	}
@@ -254,9 +253,8 @@ class IndexInstanceBuilder {
 			openOrCreateTaxonomyIndex(false);
 
 		writerAndSearcher = withTaxo ?
-				new Replication.MasterWithTaxo(indexWriter, taxonomyWriter, settings.sortedSetFacetField,
-						searcherFactory) :
-				new Replication.MasterNoTaxo(indexWriter, settings.sortedSetFacetField, searcherFactory);
+				new Replication.MasterWithTaxo(indexWriter, taxonomyWriter, searcherFactory) :
+				new Replication.MasterNoTaxo(indexWriter, searcherFactory);
 	}
 
 	private void abort() {

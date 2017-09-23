@@ -18,7 +18,6 @@ package com.qwazr.search.index;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.concurrent.ReferenceCounter;
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -81,11 +80,9 @@ class MultiSearch implements Closeable, AutoCloseable {
 			return null;
 		incRef();
 		try {
-			final SortedSetDocValuesReaderState state =
-					IndexUtils.getNewFacetsState(indexSearcher.getIndexReader(), null);
 			try (final QueryContextImpl queryContext = new QueryContextImpl(context.indexProvider, null,
 					context.executorService, context.indexAnalyzers, context.queryAnalyzers, context.fieldMap, null,
-					state, indexSearcher, null)) {
+					indexSearcher, null)) {
 				return new QueryExecution<T>(queryContext, queryDef).execute(resultDocuments);
 			}
 		} finally {
