@@ -56,6 +56,9 @@ public class AnnotatedRecord {
 	@IndexField(name = FieldDefinition.ID_FIELD, template = StringField, stored = true)
 	final public String id;
 
+	@IndexField(template = SortedDocValuesField)
+	final public String sortId;
+
 	@IndexField(analyzer = "en.EnglishAnalyzer",
 			tokenized = true,
 			stored = true,
@@ -120,6 +123,7 @@ public class AnnotatedRecord {
 
 	public AnnotatedRecord() {
 		id = null;
+		sortId = null;
 		title = null;
 		titleStd = null;
 		titleSort = null;
@@ -139,7 +143,7 @@ public class AnnotatedRecord {
 
 	public AnnotatedRecord(Integer id, String title, String content, Double price, Long quantity, boolean withFacets,
 			boolean updateDVOnly, String... categories) {
-		this.id = id.toString();
+		this.id = sortId = id.toString();
 		this.title = title;
 		this.titleStd = title;
 		this.titleSort = title;
@@ -156,8 +160,7 @@ public class AnnotatedRecord {
 		} else {
 			this.storedCategory = new LinkedHashSet<>();
 			this.docValuesCategory = this.storedCategory;
-			for (String category : categories)
-				this.storedCategory.add(category);
+			this.storedCategory.addAll(Arrays.asList(categories));
 		}
 		this.simpleFacets = withFacets ? new LinkedHashMap<>() : null;
 		this.multiFacets = withFacets ? new LinkedHashMap<>() : null;
