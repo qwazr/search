@@ -143,7 +143,8 @@ public class AnnotatedRecord {
 
 	public AnnotatedRecord(Integer id, String title, String content, Double price, Long quantity, boolean withFacets,
 			boolean updateDVOnly, String... categories) {
-		this.id = sortId = id.toString();
+		this.id = id.toString();
+		this.sortId = updateDVOnly ? null : this.id;
 		this.title = title;
 		this.titleStd = title;
 		this.titleSort = title;
