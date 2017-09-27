@@ -68,14 +68,14 @@ public class FilterCollector extends BaseCollector<FilterCollector.Query>
 	}
 
 	@Override
-	public FilterCollector.Query getReducedResult(
+	final public FilterCollector.Query getReducedResult(
 			final Collection<BaseCollector<FilterCollector.Query>> baseCollectors) {
 		final FilteredQuery filteredQuery = new FilteredQuery(new HashMap<>());
 		baseCollectors.forEach(collector -> filteredQuery.merge(collector.getResult().filteredQuery));
 		return new FilterCollector.Query(filteredQuery);
 	}
 
-	final public static class Query extends AbstractQuery {
+	public static class Query extends AbstractQuery {
 
 		private final FilteredQuery filteredQuery;
 
