@@ -254,7 +254,7 @@ public abstract class IndexRecord<T extends IndexRecord> {
 
 	}
 
-	@Index(name = "IndexRecord", schema = "TestQueries", enableTaxonomyIndex = false)
+	@Index(name = "IndexRecord", schema = "TestQueries", enableTaxonomyIndex = false, useCompoundFile = false)
 	public static class NoTaxonomy extends IndexRecord<NoTaxonomy> {
 
 		public NoTaxonomy() {

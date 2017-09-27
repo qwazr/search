@@ -74,10 +74,12 @@ public final class FilteredQuery extends org.apache.lucene.search.Query {
 						collector.setScorer(scorer);
 						int doc;
 						final DocIdSetIterator it = docIdSet.iterator();
-						while ((doc = it.nextDoc()) != DocIdSetIterator.NO_MORE_DOCS) {
-							if (acceptDocs == null || acceptDocs.get(doc)) {
-								scorer.doc = doc;
-								collector.collect(doc);
+						if (it != null) {
+							while ((doc = it.nextDoc()) != DocIdSetIterator.NO_MORE_DOCS) {
+								if (acceptDocs == null || acceptDocs.get(doc)) {
+									scorer.doc = doc;
+									collector.collect(doc);
+								}
 							}
 						}
 						return max == maxDoc ? DocIdSetIterator.NO_MORE_DOCS : max;

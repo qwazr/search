@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.units;
+package com.qwazr.search.collector;
 
-import com.qwazr.search.collector.FilterCollector;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.IntExactQuery;
+import com.qwazr.search.test.units.AbstractIndexTest;
+import com.qwazr.search.test.units.IndexRecord;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;

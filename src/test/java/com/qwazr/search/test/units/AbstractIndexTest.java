@@ -144,7 +144,7 @@ public abstract class AbstractIndexTest {
 
 			public static AnnotatedIndexService<IndexRecord.NoTaxonomy> indexService;
 
-			static void initIndexService() throws IOException, URISyntaxException {
+			protected static void initIndexService() throws IOException, URISyntaxException {
 				indexService = AbstractIndexTest.initIndexService(IndexRecord.NoTaxonomy.class);
 			}
 
