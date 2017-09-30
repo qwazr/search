@@ -39,16 +39,11 @@ import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.index.TermDefinition;
 import com.qwazr.search.index.TermEnumDefinition;
 import com.qwazr.utils.AnnotationsUtils;
-import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.http.HttpEntity;
-import org.apache.http.util.EntityUtils;
 
 import javax.ws.rs.NotAcceptableException;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -198,34 +193,6 @@ public class AnnotatedIndexService<T> {
 	public SchemaSettingsDefinition createUpdateSchema(final SchemaSettingsDefinition settings) {
 		checkParameters();
 		return indexService.createUpdateSchema(schemaName, settings);
-	}
-
-	/**
-	 * Check if the HTTP response returned a valid code. If not a WebApplicationException is thrown
-	 *
-	 * @param response   The HTTP   response
-	 * @param validCodes The valid HTTP codes
-	 */
-	private void checkHttpResponse(final Response response, final int... validCodes) {
-		if (response == null)
-			throw new WebApplicationException("No response");
-		if (ArrayUtils.contains(validCodes, response.getStatus()))
-			return;
-		String message = null;
-		Object entity = response.getEntity();
-		if (entity != null) {
-			try {
-				if (entity instanceof HttpEntity)
-					message = EntityUtils.toString((HttpEntity) entity);
-				else if (entity instanceof InputStream)
-					message = IOUtils.toString((InputStream) entity, StandardCharsets.UTF_8);
-			} catch (IOException e) {
-				message = null;
-			}
-		}
-		if (message == null && response.getStatusInfo() != null)
-			message = response.getStatusInfo().getReasonPhrase();
-		throw new WebApplicationException(message, response);
 	}
 
 	/**

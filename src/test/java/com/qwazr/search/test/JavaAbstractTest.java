@@ -51,8 +51,6 @@ import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.query.TermsQuery;
 import com.qwazr.search.query.WildcardQuery;
 import com.qwazr.server.RemoteService;
-import com.qwazr.utils.http.HttpResponseEntityException;
-import org.apache.http.conn.HttpHostConnectException;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.search.join.ScoreMode;
 import org.junit.Assert;
@@ -624,10 +622,6 @@ public abstract class JavaAbstractTest {
 			if (!e.getMessage().contains("dummy"))
 				message = e.getResponse().readEntity(String.class);
 			Assert.assertTrue(message.contains("dummy"));
-		} catch (HttpHostConnectException e) {
-			//OK
-		} catch (HttpResponseEntityException e) {
-			Assert.assertEquals(500, e.getStatusCode());
 		}
 
 		// Now we set the real slave index

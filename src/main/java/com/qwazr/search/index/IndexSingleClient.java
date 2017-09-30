@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.jaxrs.smile.SmileMediaTypes;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.RemoteService;
@@ -22,14 +23,12 @@ import com.qwazr.server.ServerException;
 import com.qwazr.server.client.JsonClient;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.entity.ContentType;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,9 +43,6 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		super(remote);
 		indexTarget = client.target(remote.serviceAddress).path(IndexServiceInterface.PATH);
 	}
-
-	public static final ContentType CONTENTTYPE_TEXT_GRAPHVIZ =
-			ContentType.create(MEDIATYPE_TEXT_GRAPHVIZ, (Charset) null);
 
 	@Override
 	public SchemaSettingsDefinition createUpdateSchema(final String schemaName) {
@@ -63,7 +59,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
 	@Override
 	public Set<String> getSchemas() {
-		return indexTarget.request(MediaType.APPLICATION_JSON).get(setStringType);
+		return indexTarget.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE).get(setStringType);
 	}
 
 	@Override
@@ -73,7 +69,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
 	@Override
 	public Set<String> getIndexes(final String schemaName) {
-		return indexTarget.path(schemaName).request(MediaType.APPLICATION_JSON).get(setStringType);
+		return indexTarget.path(schemaName).request(SmileMediaTypes.APPLICATION_JACKSON_SMILE).get(setStringType);
 	}
 
 	@Override
@@ -86,8 +82,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 			final IndexSettingsDefinition settings) {
 		return indexTarget.path(schemaName)
 				.path(indexName)
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(settings), IndexStatus.class);
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.post(Entity.entity(settings, SmileMediaTypes.APPLICATION_JACKSON_SMILE), IndexStatus.class);
 	}
 
 	@Override
@@ -95,7 +91,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("fields")
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.get(mapStringFieldType);
 	}
 
@@ -105,8 +101,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("fields")
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(fields), mapStringFieldType);
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.post(Entity.entity(fields, SmileMediaTypes.APPLICATION_JACKSON_SMILE), mapStringFieldType);
 	}
 
 	@Override
@@ -118,7 +114,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(fieldName)
 				.path("analyzer/query")
 				.queryParam("text", text == null ? StringUtils.EMPTY : text)
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.get(listTermDefinitionType);
 	}
 
@@ -131,7 +127,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(fieldName)
 				.path("analyzer/index")
 				.queryParam("text", text == null ? StringUtils.EMPTY : text)
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.get(listTermDefinitionType);
 	}
 
@@ -142,7 +138,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("fields")
 				.path(fieldName)
 				.path("stats")
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.get(FieldStats.class);
 	}
 
@@ -162,7 +158,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 			target = target.queryParam("start", start);
 		if (rows != null)
 			target = target.queryParam("rows", rows);
-		return target.request(MediaType.APPLICATION_JSON).get(listTermEnumDefinitionType);
+		return target.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE).get(listTermEnumDefinitionType);
 	}
 
 	@Override
@@ -171,7 +167,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("fields")
 				.path(fieldName == null ? StringUtils.EMPTY : fieldName)
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.get(FieldDefinition.class);
 	}
 
@@ -182,7 +178,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("fields")
 				.path(fieldName == null ? StringUtils.EMPTY : fieldName)
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.post(Entity.entity(field, MediaType.APPLICATION_JSON), FieldDefinition.class);
 	}
 
@@ -211,7 +207,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("analyzers")
 				.path(analyzerName)
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.get(AnalyzerDefinition.class);
 	}
 
@@ -234,8 +230,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("analyzers")
 				.path(analyzerName)
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(analyzer, MediaType.APPLICATION_JSON), AnalyzerDefinition.class);
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.post(Entity.entity(analyzer, SmileMediaTypes.APPLICATION_JACKSON_SMILE), AnalyzerDefinition.class);
 	}
 
 	@Override
@@ -244,8 +240,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("analyzers")
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(analyzers, MediaType.APPLICATION_JSON), mapStringAnalyzerType);
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.post(Entity.entity(analyzers, SmileMediaTypes.APPLICATION_JACKSON_SMILE), mapStringAnalyzerType);
 	}
 
 	@Override
@@ -265,7 +261,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("analyzers")
 				.path(analyzerName)
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.post(Entity.text(text == null ? StringUtils.EMPTY : text), listTermDefinitionType);
 	}
 
@@ -294,8 +290,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("merge")
 				.path(mergedIndex)
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(commitUserData, MediaType.APPLICATION_JSON), IndexStatus.class);
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.post(Entity.entity(commitUserData, SmileMediaTypes.APPLICATION_JACKSON_SMILE), IndexStatus.class);
 	}
 
 	@Override
@@ -303,8 +299,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("check")
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(null, MediaType.APPLICATION_JSON), IndexCheckStatus.class);
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.post(Entity.entity(null, SmileMediaTypes.APPLICATION_JACKSON_SMILE), IndexCheckStatus.class);
 	}
 
 	@Override
@@ -319,8 +315,9 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("backup")
 				.path(backupName)
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(null, MediaType.APPLICATION_JSON), mapStringMapStringBackupStatusType);
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.post(Entity.entity(null, SmileMediaTypes.APPLICATION_JACKSON_SMILE),
+						mapStringMapStringBackupStatusType);
 	}
 
 	@Override
@@ -331,7 +328,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("backup")
 				.path(backupName)
 				.queryParam("extractVersion", extractVersion == null ? false : extractVersion)
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.get(mapStringMapStringMapStringBackupStatusType);
 	}
 
@@ -341,7 +338,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("backup")
 				.path(backupName)
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.delete(Integer.class);
 	}
 
@@ -398,7 +395,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("resources")
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.get(mapStringResourceInfoType);
 	}
 
@@ -437,8 +434,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("doc")
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.post(Entity.entity(post, SmileMediaTypes.APPLICATION_JACKSON_SMILE), Integer.class);
 	}
 
 	@Override
@@ -447,8 +444,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("docs")
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.post(Entity.entity(post, SmileMediaTypes.APPLICATION_JACKSON_SMILE), Integer.class);
 	}
 
 	@Override
@@ -458,8 +455,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("doc")
 				.path("values")
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.post(Entity.entity(post, SmileMediaTypes.APPLICATION_JACKSON_SMILE), Integer.class);
 	}
 
 	@Override
@@ -469,8 +466,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("docs")
 				.path("values")
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.post(Entity.entity(post, SmileMediaTypes.APPLICATION_JACKSON_SMILE), Integer.class);
 	}
 
 	@Override
@@ -489,7 +486,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("doc")
 				.path(docId)
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.get(mapStringObjectType);
 	}
 
@@ -501,7 +498,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 			target = target.queryParam("start", start);
 		if (rows != null)
 			target = target.queryParam("rows", rows);
-		return target.request(MediaType.APPLICATION_JSON).get(listMapStringObjectType);
+		return target.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE).get(listMapStringObjectType);
 	}
 
 	@Override
