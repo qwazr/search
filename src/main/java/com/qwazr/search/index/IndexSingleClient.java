@@ -428,6 +428,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.delete(boolean.class);
 	}
 
+	// TODO Replace JSON post by SMILE post
+	
 	@Override
 	public Integer postMappedDocument(final String schemaName, final String indexName,
 			final PostDefinition.Document post) {
@@ -435,7 +437,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("doc")
 				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
-				.post(Entity.entity(post, SmileMediaTypes.APPLICATION_JACKSON_SMILE), Integer.class);
+				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
 	}
 
 	@Override
@@ -445,7 +447,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path(indexName)
 				.path("docs")
 				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
-				.post(Entity.entity(post, SmileMediaTypes.APPLICATION_JACKSON_SMILE), Integer.class);
+				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
 	}
 
 	@Override
@@ -456,7 +458,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("doc")
 				.path("values")
 				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
-				.post(Entity.entity(post, SmileMediaTypes.APPLICATION_JACKSON_SMILE), Integer.class);
+				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
 	}
 
 	@Override
@@ -467,7 +469,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 				.path("docs")
 				.path("values")
 				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
-				.post(Entity.entity(post, SmileMediaTypes.APPLICATION_JACKSON_SMILE), Integer.class);
+				.post(Entity.entity(post, MediaType.APPLICATION_JSON), Integer.class);
 	}
 
 	@Override
