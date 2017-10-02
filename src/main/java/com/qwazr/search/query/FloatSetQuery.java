@@ -16,21 +16,23 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Arrays;
 
-public class FloatSetQuery extends AbstractFieldQuery {
+public class FloatSetQuery extends AbstractFieldQuery<FloatSetQuery> {
 
 	public float[] values;
 
 	@JsonCreator
 	public FloatSetQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("values") final float... values) {
-		super(genericField, field);
+		super(FloatSetQuery.class, genericField, field);
 		this.values = values;
 	}
 
@@ -39,7 +41,14 @@ public class FloatSetQuery extends AbstractFieldQuery {
 	}
 
 	@Override
+	@JsonIgnore
+	protected boolean isEqual(FloatSetQuery q) {
+		return super.isEqual(q) && Arrays.equals(values, q.values);
+	}
+
+	@Override
 	public Query getQuery(final QueryContext queryContext) throws IOException {
 		return FloatPoint.newSetQuery(resolveField(queryContext.getFieldMap()), values);
 	}
+	
 }

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.Equalizer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
@@ -97,7 +98,11 @@ import java.io.IOException;
 		@JsonSubTypes.Type(value = TermsQuery.class),
 		@JsonSubTypes.Type(value = WildcardQuery.class) })
 
-public abstract class AbstractQuery {
+public abstract class AbstractQuery<T extends AbstractQuery> extends Equalizer<T> {
+
+	protected AbstractQuery(Class<T> queryClass) {
+		super(queryClass);
+	}
 
 	@JsonIgnore
 	public abstract Query getQuery(final QueryContext queryContext)

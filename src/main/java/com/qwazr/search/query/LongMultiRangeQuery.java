@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
@@ -23,9 +24,10 @@ import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 
-public class LongMultiRangeQuery extends AbstractMultiRangeQuery {
+public class LongMultiRangeQuery extends AbstractMultiRangeQuery<LongMultiRangeQuery> {
 
 	final public long[] lower_values;
 	final public long[] upper_values;
@@ -34,13 +36,20 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery {
 	public LongMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("lower_values") final long[] lowerValues,
 			@JsonProperty("upper_values") final long[] upperValues) {
-		super(genericField, field);
+		super(LongMultiRangeQuery.class, genericField, field);
 		this.lower_values = lowerValues;
 		this.upper_values = upperValues;
 	}
 
 	public LongMultiRangeQuery(final String field, final long lowerValue, final long upperValue) {
 		this(null, field, new long[] { lowerValue }, new long[] { upperValue });
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(LongMultiRangeQuery q) {
+		return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
+				Arrays.equals(upper_values, q.upper_values);
 	}
 
 	@Override

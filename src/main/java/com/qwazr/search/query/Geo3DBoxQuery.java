@@ -23,14 +23,14 @@ import org.apache.lucene.spatial3d.Geo3DPoint;
 
 import java.io.IOException;
 
-public class Geo3DBoxQuery extends AbstractGeoBoxQuery {
+public class Geo3DBoxQuery extends AbstractGeoBoxQuery<Geo3DBoxQuery> {
 
 	@JsonCreator
 	public Geo3DBoxQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("min_latitude") final double minLat,
 			@JsonProperty("max_latitude") final double maxLat, @JsonProperty("min_longitude") final double minLon,
 			@JsonProperty("max_longitude") final double maxLon) {
-		super(genericField, field, minLat, maxLat, minLon, maxLon);
+		super(Geo3DBoxQuery.class, genericField, field, minLat, maxLat, minLon, maxLon);
 	}
 
 	public Geo3DBoxQuery(final String field, final double minLat, final double maxLat, final double minLon,

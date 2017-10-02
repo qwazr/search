@@ -21,14 +21,17 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.query.AbstractQuery;
+import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
 public class QueryDefinition extends BaseQueryDefinition {
@@ -76,6 +79,16 @@ public class QueryDefinition extends BaseQueryDefinition {
 			this.classname = classname;
 			this.arguments = arguments == null || arguments.length == 0 ? null : arguments;
 		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == null || !(o instanceof CollectorDefinition))
+				return false;
+			if (o == this)
+				return true;
+			final CollectorDefinition c = (CollectorDefinition) o;
+			return Objects.equals(classname, c.classname) && Arrays.equals(arguments, c.arguments);
+		}
 	}
 
 	@JsonCreator
@@ -107,6 +120,19 @@ public class QueryDefinition extends BaseQueryDefinition {
 		query = builder.query;
 		luceneQuery = builder.luceneQuery;
 		commitUserData = builder.commitUserData;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == null || !(o instanceof QueryDefinition))
+			return false;
+		if (o == this)
+			return true;
+		final QueryDefinition q = (QueryDefinition) o;
+		return Objects.equals(query, q.query) && CollectionsUtils.equals(sorts, q.sorts) &&
+				CollectionsUtils.equals(collectors, q.collectors) && CollectionsUtils.equals(facets, q.facets) &&
+				CollectionsUtils.equals(highlighters, q.highlighters) &&
+				CollectionsUtils.equals(commitUserData, q.commitUserData);
 	}
 
 	public static QueryBuilder of(final QueryDefinition queryDefinition) {

@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.NumericDocValuesField;
@@ -23,20 +24,27 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class FloatDocValuesExactQuery extends AbstractFieldQuery {
+public class FloatDocValuesExactQuery extends AbstractFieldQuery<FloatDocValuesExactQuery> {
 
 	public float value;
 
 	@JsonCreator
 	public FloatDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("value") final float value) {
-		super(genericField, field);
+		super(FloatDocValuesExactQuery.class, genericField, field);
 		this.value = value;
 	}
 
 	public FloatDocValuesExactQuery(final String field, final float value) {
 		this(null, field, value);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(FloatDocValuesExactQuery q) {
+		return super.isEqual(q) && Objects.equals(value, q.value);
 	}
 
 	@Override

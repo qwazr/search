@@ -23,13 +23,13 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-public class FloatRangeQuery extends AbstractRangeQuery<Float> {
+public class FloatRangeQuery extends AbstractRangeQuery<Float, FloatRangeQuery> {
 
 	@JsonCreator
 	public FloatRangeQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Float lowerValue,
 			@JsonProperty("upper_value") final Float upperValue) {
-		super(genericField, field, lowerValue == null ? Float.MIN_VALUE : lowerValue,
+		super(FloatRangeQuery.class, genericField, field, lowerValue == null ? Float.MIN_VALUE : lowerValue,
 				upperValue == null ? Float.MAX_VALUE : upperValue);
 	}
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2016 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.function;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -24,18 +26,15 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Objects;
 
-public class SumFloatFunction extends AbstractValueSourceArray {
+public class SumFloatFunction extends AbstractValueSourceArray<SumFloatFunction> {
 
-	public SumFloatFunction() {
-		super();
-	}
-
-	public SumFloatFunction(AbstractValueSource... sources) {
-		super(sources);
+	@JsonCreator
+	public SumFloatFunction(@JsonProperty("sources") AbstractValueSource... sources) {
+		super(SumFloatFunction.class, sources);
 	}
 
 	public SumFloatFunction(Collection<AbstractValueSource> sources) {
-		super(sources);
+		super(SumFloatFunction.class, sources);
 	}
 
 	@Override

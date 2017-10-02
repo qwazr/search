@@ -16,22 +16,30 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Arrays;
 
-public class DoubleSetQuery extends AbstractFieldQuery {
+public class DoubleSetQuery extends AbstractFieldQuery<DoubleSetQuery> {
 
 	public double[] values;
 
 	@JsonCreator
 	public DoubleSetQuery(@JsonProperty("generic_field") String genericField, @JsonProperty("field") final String field,
 			@JsonProperty("values") final double... values) {
-		super(genericField, field);
+		super(DoubleSetQuery.class, genericField, field);
 		this.values = values;
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(DoubleSetQuery q) {
+		return super.isEqual(q) && Arrays.equals(values, q.values);
 	}
 
 	public DoubleSetQuery(final String field, final double... values) {

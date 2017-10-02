@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.CollectionsUtils;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
@@ -30,7 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class BooleanQuery extends AbstractQuery {
+public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 
 	final public List<BooleanClause> clauses;
 	final public Boolean disable_coord;
@@ -63,10 +64,20 @@ public class BooleanQuery extends AbstractQuery {
 		}
 
 		@JsonIgnore
-		final private org.apache.lucene.search.BooleanClause getNewClause(final QueryContext queryContext)
+		private org.apache.lucene.search.BooleanClause getNewClause(final QueryContext queryContext)
 				throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 			Objects.requireNonNull(occur, "Occur must not be null");
 			return new org.apache.lucene.search.BooleanClause(query.getQuery(queryContext), occur.occur);
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == null || !(o instanceof BooleanClause))
+				return false;
+			if (o == this)
+				return true;
+			final BooleanClause bc = (BooleanClause) o;
+			return Objects.equals(occur, bc.occur) && Objects.equals(query, bc.query);
 		}
 	}
 
@@ -74,30 +85,35 @@ public class BooleanQuery extends AbstractQuery {
 	public BooleanQuery(@JsonProperty("disable_coord") final Boolean disable_coord,
 			@JsonProperty("minimum_number_should_match") final Integer minimum_number_should_match,
 			@JsonProperty("clauses") final List<BooleanClause> clauses) {
+		super(BooleanQuery.class);
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = minimum_number_should_match;
 		this.clauses = clauses;
 	}
 
 	public BooleanQuery(final List<BooleanClause> clauses) {
+		super(BooleanQuery.class);
 		this.disable_coord = null;
 		this.minimum_number_should_match = null;
 		this.clauses = clauses;
 	}
 
 	public BooleanQuery(final BooleanClause... clauses) {
+		super(BooleanQuery.class);
 		this.disable_coord = null;
 		this.minimum_number_should_match = null;
 		this.clauses = Arrays.asList(clauses);
 	}
 
 	public BooleanQuery(final Boolean disable_coord, final List<BooleanClause> clauses) {
+		super(BooleanQuery.class);
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = null;
 		this.clauses = clauses;
 	}
 
 	public BooleanQuery(final Boolean disable_coord, final BooleanClause... clauses) {
+		super(BooleanQuery.class);
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = null;
 		this.clauses = Arrays.asList(clauses);
@@ -105,12 +121,14 @@ public class BooleanQuery extends AbstractQuery {
 
 	public BooleanQuery(final Boolean disable_coord, final Integer minimum_number_should_match,
 			final BooleanClause... clauses) {
+		super(BooleanQuery.class);
 		this.disable_coord = disable_coord;
 		this.minimum_number_should_match = minimum_number_should_match;
 		this.clauses = Arrays.asList(clauses);
 	}
 
 	private BooleanQuery(final Builder builder) {
+		super(BooleanQuery.class);
 		this.disable_coord = builder.disableCoord;
 		this.minimum_number_should_match = builder.minimumNumberShouldMatch;
 		this.clauses = builder.clauses == null ? Collections.emptyList() : new ArrayList<>(builder.clauses);
@@ -129,6 +147,12 @@ public class BooleanQuery extends AbstractQuery {
 			for (BooleanClause clause : clauses)
 				builder.add(clause.getNewClause(queryContext));
 		return builder.build();
+	}
+
+	@Override
+	protected boolean isEqual(BooleanQuery query) {
+		return CollectionsUtils.equals(clauses, query.clauses) && Objects.equals(disable_coord, query.disable_coord) &&
+				Objects.equals(minimum_number_should_match, query.minimum_number_should_match);
 	}
 
 	public static Builder of() {

@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.query;
 
-public abstract class AbstractGeoBoxQuery extends AbstractFieldQuery {
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+public abstract class AbstractGeoBoxQuery<T extends AbstractGeoBoxQuery> extends AbstractFieldQuery<T> {
 
 	final public double min_latitude;
 
@@ -25,13 +27,20 @@ public abstract class AbstractGeoBoxQuery extends AbstractFieldQuery {
 
 	final public double max_longitude;
 
-	public AbstractGeoBoxQuery(final String genericField, final String field, final double minLatitude,
-			final double maxLatitude, final double minLongitude, final double maxLongitude) {
-		super(genericField, field);
+	public AbstractGeoBoxQuery(Class<T> queryClass, final String genericField, final String field,
+			final double minLatitude, final double maxLatitude, final double minLongitude, final double maxLongitude) {
+		super(queryClass, genericField, field);
 		this.min_latitude = minLatitude;
 		this.max_latitude = maxLatitude;
 		this.min_longitude = minLongitude;
 		this.max_longitude = maxLongitude;
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(T q) {
+		return super.isEqual(q) && min_latitude == q.min_latitude && max_latitude == q.max_latitude &&
+				min_longitude == q.min_longitude && max_longitude == q.max_longitude;
 	}
 
 }

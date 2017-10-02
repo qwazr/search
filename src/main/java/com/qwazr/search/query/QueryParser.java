@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
@@ -25,19 +26,26 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.Objects;
 
-public class QueryParser extends AbstractClassicQueryParser {
+public class QueryParser extends AbstractClassicQueryParser<QueryParser> {
 
 	@JsonProperty("default_field")
 	public final String defaulField;
 
 	@JsonCreator
 	private QueryParser(@JsonProperty("default_field") String defaulField) {
+		super(QueryParser.class);
 		this.defaulField = defaulField;
 	}
 
 	private QueryParser(Builder builder) {
-		super(builder);
+		super(QueryParser.class, builder);
 		this.defaulField = builder.defaulField;
+	}
+
+	@JsonIgnore
+	@Override
+	protected boolean isEqual(QueryParser q) {
+		return super.isEqual(q) && Objects.equals(defaulField, q.defaulField);
 	}
 
 	@Override

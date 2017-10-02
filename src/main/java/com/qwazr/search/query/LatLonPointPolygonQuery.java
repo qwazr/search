@@ -24,9 +24,10 @@ import org.apache.lucene.geo.Polygon;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Objects;
 
-public class LatLonPointPolygonQuery extends AbstractFieldQuery {
+public class LatLonPointPolygonQuery extends AbstractFieldQuery<LatLonPointPolygonQuery> {
 
 	public final class GeoPolygon {
 
@@ -47,6 +48,16 @@ public class LatLonPointPolygonQuery extends AbstractFieldQuery {
 			return new Polygon(polyLats, polyLons, toPolygons(holes));
 		}
 
+		@Override
+		public boolean equals(Object o) {
+			if (o == null || !(o instanceof GeoPolygon))
+				return false;
+			if (o == this)
+				return true;
+			final GeoPolygon p = (GeoPolygon) o;
+			return Arrays.equals(polyLats, p.polyLats) && Arrays.equals(polyLons, p.polyLons) &&
+					Arrays.equals(holes, p.holes);
+		}
 	}
 
 	final public GeoPolygon[] polygons;
@@ -57,7 +68,7 @@ public class LatLonPointPolygonQuery extends AbstractFieldQuery {
 	@JsonCreator
 	public LatLonPointPolygonQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("polygons") final GeoPolygon... polygons) {
-		super(genericField, field);
+		super(LatLonPointPolygonQuery.class, genericField, field);
 		Objects.requireNonNull(polygons, "The poligons parameter is null");
 		this.polygons = polygons;
 		this.lucenePolygons = toPolygons(polygons);
@@ -65,6 +76,12 @@ public class LatLonPointPolygonQuery extends AbstractFieldQuery {
 
 	public LatLonPointPolygonQuery(final String field, final GeoPolygon... polygons) {
 		this(null, field, polygons);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(LatLonPointPolygonQuery q) {
+		return super.isEqual(q) && Arrays.equals(polygons, q.polygons);
 	}
 
 	@Override

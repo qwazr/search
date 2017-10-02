@@ -109,7 +109,7 @@ public class FacetDefinition {
 		final FacetDefinition f = (FacetDefinition) o;
 		return Objects.equals(top, f.top) && CollectionsUtils.equals(queries, f.queries) &&
 				CollectionsUtils.equals(specificValues, f.specificValues) && Objects.equals(prefix, f.prefix) &&
-				Objects.equals(sort, f.sort);
+				Objects.equals(sort, f.sort) && Objects.equals(genericFieldName, f.genericFieldName);
 	}
 
 	public static Builder of() {

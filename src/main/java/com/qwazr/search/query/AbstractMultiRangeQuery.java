@@ -19,10 +19,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public abstract class AbstractMultiRangeQuery extends AbstractFieldQuery {
+abstract class AbstractMultiRangeQuery<T extends AbstractMultiRangeQuery> extends AbstractFieldQuery<T> {
 
-	protected AbstractMultiRangeQuery(final String genericField, final String field) {
-		super(genericField, field);
+	protected AbstractMultiRangeQuery(Class<T> queryClass, final String genericField, final String field) {
+		super(queryClass, genericField, field);
 	}
 
 	public abstract static class AbstractBuilder<T> extends AbstractFieldBuilder {

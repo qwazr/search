@@ -16,26 +16,34 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Arrays;
 
-public class IntSetQuery extends AbstractFieldQuery {
+public class IntSetQuery extends AbstractFieldQuery<IntSetQuery> {
 
 	final public int[] values;
 
 	@JsonCreator
 	public IntSetQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("values") final int... values) {
-		super(genericField, field);
+		super(IntSetQuery.class, genericField, field);
 		this.values = values;
 	}
 
 	public IntSetQuery(final String field, final int... values) {
 		this(null, field, values);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(IntSetQuery q) {
+		return super.isEqual(q) && Arrays.equals(values, q.values);
 	}
 
 	@Override

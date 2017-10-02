@@ -16,14 +16,16 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MultiTermQuery;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class FuzzyQuery extends AbstractMultiTermQuery {
+public class FuzzyQuery extends AbstractMultiTermQuery<FuzzyQuery> {
 
 	final public String text;
 	final public Integer max_edits;
@@ -38,7 +40,7 @@ public class FuzzyQuery extends AbstractMultiTermQuery {
 			@JsonProperty("max_expansions") final Integer maxExpansions,
 			@JsonProperty("transpositions") final Boolean transpositions,
 			@JsonProperty("prefix_length") final Integer prefixLength) {
-		super(genericField, field);
+		super(FuzzyQuery.class, genericField, field);
 		this.text = text;
 		this.max_edits = maxEdits;
 		this.max_expansions = maxExpansions;
@@ -49,6 +51,14 @@ public class FuzzyQuery extends AbstractMultiTermQuery {
 	public FuzzyQuery(final String field, final String text, final Integer maxEdits, final Integer maxExpansions,
 			final Boolean transpositions, final Integer prefixLength) {
 		this(null, field, text, maxEdits, maxExpansions, transpositions, prefixLength);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(FuzzyQuery q) {
+		return super.isEqual(q) && Objects.equals(text, q.text) && Objects.equals(max_edits, q.max_edits) &&
+				Objects.equals(max_expansions, q.max_expansions) && Objects.equals(transpositions, q.transpositions) &&
+				Objects.equals(prefix_length, q.prefix_length);
 	}
 
 	@Override

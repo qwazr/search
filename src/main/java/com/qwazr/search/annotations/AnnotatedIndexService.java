@@ -751,7 +751,7 @@ public class AnnotatedIndexService<T> {
 		if (result == null)
 			return null;
 		if (!(result instanceof ResultDefinition.WithMap))
-			return new ResultDefinition.WithObject(result.total_hits);
+			return new ResultDefinition.WithObject<>(result.total_hits);
 		final ResultDefinition.WithMap resultWithMap = (ResultDefinition.WithMap) result;
 		final List<ResultDocumentObject<C>> documents = new ArrayList<>();
 		try {

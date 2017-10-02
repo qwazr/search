@@ -21,14 +21,14 @@ import org.apache.lucene.util.BytesRef;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractMultiTermQuery extends AbstractFieldQuery {
+public abstract class AbstractMultiTermQuery<T extends AbstractMultiTermQuery> extends AbstractFieldQuery<T> {
 
-	protected AbstractMultiTermQuery(final String genericField, final String field) {
-		super(genericField, field);
+	protected AbstractMultiTermQuery(final Class<T> queryClass, final String genericField, final String field) {
+		super(queryClass, genericField, field);
 	}
 
-	protected AbstractMultiTermQuery(final MultiTermBuilder builder) {
-		super(builder);
+	protected AbstractMultiTermQuery(final Class<T> queryClass, final MultiTermBuilder builder) {
+		super(queryClass, builder);
 	}
 
 	abstract static public class MultiTermBuilder<T extends AbstractMultiTermQuery> extends AbstractFieldBuilder {

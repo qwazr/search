@@ -21,7 +21,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.util.QueryBuilder;
 
-public abstract class AbstractQueryBuilder extends AbstractQuery {
+import java.util.Objects;
+
+public abstract class AbstractQueryBuilder<T extends AbstractQueryBuilder> extends AbstractQuery<T> {
 
 	@JsonProperty("enable_position_increments")
 	final public Boolean enablePositionIncrements;
@@ -38,7 +40,8 @@ public abstract class AbstractQueryBuilder extends AbstractQuery {
 	@JsonIgnore
 	final protected Analyzer analyzer;
 
-	protected AbstractQueryBuilder() {
+	protected AbstractQueryBuilder(Class<T> queryClass) {
+		super(queryClass);
 		analyzer = null;
 		enablePositionIncrements = null;
 		autoGenerateMultiTermSynonymsPhraseQuery = null;
@@ -46,7 +49,8 @@ public abstract class AbstractQueryBuilder extends AbstractQuery {
 		queryString = null;
 	}
 
-	protected AbstractQueryBuilder(AbstractBuilder builder) {
+	protected AbstractQueryBuilder(Class<T> queryClass, AbstractBuilder builder) {
+		super(queryClass);
 		this.analyzer = builder.analyzer;
 		this.enablePositionIncrements = builder.enablePositionIncrements;
 		this.autoGenerateMultiTermSynonymsPhraseQuery = builder.autoGenerateMultiTermSynonymsPhraseQuery;
@@ -63,6 +67,15 @@ public abstract class AbstractQueryBuilder extends AbstractQuery {
 			queryBuilder.setAutoGenerateMultiTermSynonymsPhraseQuery(autoGenerateMultiTermSynonymsPhraseQuery);
 		if (enableGraphQueries != null)
 			queryBuilder.setEnableGraphQueries(enableGraphQueries);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(T q) {
+		return Objects.equals(enablePositionIncrements, q.enablePositionIncrements) &&
+				Objects.equals(autoGenerateMultiTermSynonymsPhraseQuery, q.autoGenerateMultiTermSynonymsPhraseQuery) &&
+				Objects.equals(enableGraphQueries, q.enableGraphQueries) &&
+				Objects.equals(queryString, q.queryString) && Objects.equals(analyzer, q.analyzer);
 	}
 
 	public static abstract class AbstractBuilder<T extends AbstractQueryBuilder> {

@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,25 @@
  */
 package com.qwazr.search.function;
 
+import java.util.Arrays;
 import java.util.Collection;
 
-abstract class AbstractValueSourceArray extends AbstractValueSource {
+abstract class AbstractValueSourceArray<T extends AbstractValueSourceArray> extends AbstractValueSource<T> {
 
 	public final AbstractValueSource[] sources;
 
-	protected AbstractValueSourceArray(AbstractValueSource... sources) {
+	protected AbstractValueSourceArray(Class<T> ownClass, AbstractValueSource... sources) {
+		super(ownClass);
 		this.sources = sources;
 	}
 
-	protected AbstractValueSourceArray(Collection<AbstractValueSource> sources) {
-		this.sources = sources == null ? null : sources.toArray(new AbstractValueSource[sources.size()]);
+	protected AbstractValueSourceArray(Class<T> ownClass, Collection<AbstractValueSource> sources) {
+		this(ownClass, sources == null ? null : sources.toArray(new AbstractValueSource[sources.size()]));
+	}
+
+	@Override
+	protected boolean isEqual(T q) {
+		return Arrays.equals(sources, q.sources);
 	}
 
 }

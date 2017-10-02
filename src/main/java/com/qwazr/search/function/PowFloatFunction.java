@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.function;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -23,17 +25,14 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import java.io.IOException;
 import java.util.Objects;
 
-public class PowFloatFunction extends AbstractValueSource {
+public class PowFloatFunction extends AbstractValueSource<PowFloatFunction> {
 
 	public final AbstractValueSource a;
 	public final AbstractValueSource b;
 
-	public PowFloatFunction() {
-		a = null;
-		b = null;
-	}
-
-	public PowFloatFunction(AbstractValueSource a, AbstractValueSource b) {
+	@JsonCreator
+	public PowFloatFunction(@JsonProperty("a") AbstractValueSource a, @JsonProperty("b") AbstractValueSource b) {
+		super(PowFloatFunction.class);
 		this.a = a;
 		this.b = b;
 	}
@@ -45,5 +44,10 @@ public class PowFloatFunction extends AbstractValueSource {
 		Objects.requireNonNull(b, "b value source is missing");
 		return new org.apache.lucene.queries.function.valuesource.PowFloatFunction(a.getValueSource(queryContext),
 				b.getValueSource(queryContext));
+	}
+
+	@Override
+	protected boolean isEqual(PowFloatFunction q) {
+		return Objects.equals(a, q.a) && Objects.equals(b, q.b);
 	}
 }

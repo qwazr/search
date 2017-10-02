@@ -24,13 +24,13 @@ import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
 
-public class DoubleDocValuesRangeQuery extends AbstractRangeQuery<Double> {
+public class DoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, DoubleDocValuesRangeQuery> {
 
 	@JsonCreator
 	public DoubleDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
 			@JsonProperty("upper_value") final Double upperValue) {
-		super(genericField, field, lowerValue == null ? Double.MIN_VALUE : lowerValue,
+		super(DoubleDocValuesRangeQuery.class, genericField, field, lowerValue == null ? Double.MIN_VALUE : lowerValue,
 				upperValue == null ? Double.MAX_VALUE : upperValue);
 	}
 

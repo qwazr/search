@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,19 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-public class MatchNoDocsQuery extends AbstractQuery {
+public class MatchNoDocsQuery extends AbstractQuery<MatchNoDocsQuery> {
 
 	public MatchNoDocsQuery() {
+		super(MatchNoDocsQuery.class);
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		return new org.apache.lucene.search.MatchNoDocsQuery();
+	}
+
+	@Override
+	protected boolean isEqual(MatchNoDocsQuery query) {
+		return query != null;
 	}
 }

@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.Equalizer;
 import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -28,16 +29,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "source")
-@JsonSubTypes({@JsonSubTypes.Type(value = ConstValueSource.class), @JsonSubTypes.Type(value = DefFunction.class),
-		@JsonSubTypes.Type(value = DivFloatFunction.class), @JsonSubTypes.Type(value = DoubleConstValueSource.class),
-		@JsonSubTypes.Type(value = DoubleFieldSource.class), @JsonSubTypes.Type(value = FloatFieldSource.class),
-		@JsonSubTypes.Type(value = IfFunction.class), @JsonSubTypes.Type(value = IntFieldSource.class),
-		@JsonSubTypes.Type(value = LongFieldSource.class), @JsonSubTypes.Type(value = MaxFloatFunction.class),
-		@JsonSubTypes.Type(value = MinFloatFunction.class), @JsonSubTypes.Type(value = NumDocsValueSource.class),
-		@JsonSubTypes.Type(value = PowFloatFunction.class), @JsonSubTypes.Type(value = ProductFloatFunction.class),
-		@JsonSubTypes.Type(value = QueryValueSource.class), @JsonSubTypes.Type(value = SortedSetFieldSource.class),
-		@JsonSubTypes.Type(value = SumFloatFunction.class)})
-public abstract class AbstractValueSource {
+@JsonSubTypes({ @JsonSubTypes.Type(value = ConstValueSource.class),
+		@JsonSubTypes.Type(value = DefFunction.class),
+		@JsonSubTypes.Type(value = DivFloatFunction.class),
+		@JsonSubTypes.Type(value = DoubleConstValueSource.class),
+		@JsonSubTypes.Type(value = DoubleFieldSource.class),
+		@JsonSubTypes.Type(value = FloatFieldSource.class),
+		@JsonSubTypes.Type(value = IfFunction.class),
+		@JsonSubTypes.Type(value = IntFieldSource.class),
+		@JsonSubTypes.Type(value = LongFieldSource.class),
+		@JsonSubTypes.Type(value = MaxFloatFunction.class),
+		@JsonSubTypes.Type(value = MinFloatFunction.class),
+		@JsonSubTypes.Type(value = NumDocsValueSource.class),
+		@JsonSubTypes.Type(value = PowFloatFunction.class),
+		@JsonSubTypes.Type(value = ProductFloatFunction.class),
+		@JsonSubTypes.Type(value = QueryValueSource.class),
+		@JsonSubTypes.Type(value = SortedSetFieldSource.class),
+		@JsonSubTypes.Type(value = SumFloatFunction.class) })
+public abstract class AbstractValueSource<T extends AbstractValueSource> extends Equalizer<T> {
+
+	protected AbstractValueSource(Class<T> ownClass) {
+		super(ownClass);
+	}
 
 	@JsonIgnore
 	public abstract ValueSource getValueSource(QueryContext queryContext)
@@ -65,4 +78,5 @@ public abstract class AbstractValueSource {
 			valueSources.add(source.getValueSource(queryContext));
 		return valueSources;
 	}
+
 }

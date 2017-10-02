@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
@@ -23,8 +24,9 @@ import org.apache.lucene.util.automaton.Operations;
 import org.apache.lucene.util.automaton.RegExp;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class RegexpQuery extends AbstractFieldQuery {
+public class RegexpQuery extends AbstractFieldQuery<RegexpQuery> {
 
 	final public String text;
 	final public Integer flags;
@@ -35,7 +37,7 @@ public class RegexpQuery extends AbstractFieldQuery {
 			@JsonProperty("field") final String field, @JsonProperty("text") final String text,
 			@JsonProperty("flags") final Integer flags,
 			@JsonProperty("max_determinized_states") final Integer maxDeterminizedStates) {
-		super(genericField, field);
+		super(RegexpQuery.class, genericField, field);
 		this.text = text;
 		this.flags = flags;
 		this.max_determinized_states = maxDeterminizedStates;
@@ -55,5 +57,12 @@ public class RegexpQuery extends AbstractFieldQuery {
 		return new org.apache.lucene.search.RegexpQuery(getResolvedTerm(queryContext.getFieldMap(), text),
 				flags == null ? RegExp.ALL : flags,
 				max_determinized_states == null ? Operations.DEFAULT_MAX_DETERMINIZED_STATES : max_determinized_states);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(RegexpQuery q) {
+		return super.isEqual(q) && Objects.equals(text, q.text) && Objects.equals(flags, q.flags) &&
+				Objects.equals(max_determinized_states, q.max_determinized_states);
 	}
 }

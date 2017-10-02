@@ -24,14 +24,15 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.Objects;
 
-public class MultiFieldQueryParser extends AbstractClassicQueryParser {
+public class MultiFieldQueryParser extends AbstractClassicQueryParser<MultiFieldQueryParser> {
 
 	@JsonCreator
 	private MultiFieldQueryParser() {
+		super(MultiFieldQueryParser.class);
 	}
 
 	public MultiFieldQueryParser(Builder builder) {
-		super(builder);
+		super(MultiFieldQueryParser.class, builder);
 	}
 
 	@Override

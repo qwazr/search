@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,13 +25,15 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class DrillDownQuery extends AbstractQuery {
+public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
 
 	final public AbstractQuery baseQuery;
 	final public List<LinkedHashMap<String, String[]>> dimPath;
@@ -43,6 +45,7 @@ public class DrillDownQuery extends AbstractQuery {
 			@JsonProperty("useDrillSideways") final boolean useDrillSideways,
 			@JsonProperty("dimPath") final List<LinkedHashMap<String, String[]>> dimPath,
 			@JsonProperty("genericFieldNames") final Map<String, String> genericFieldNames) {
+		super(DrillDownQuery.class);
 		this.baseQuery = baseQuery;
 		this.useDrillSideways = useDrillSideways;
 		this.dimPath = dimPath == null ? new ArrayList<>() : dimPath;
@@ -93,6 +96,28 @@ public class DrillDownQuery extends AbstractQuery {
 				(dim, path) -> drillDownQuery.add(resolvedDimensions.getOrDefault(dim, dim), path)));
 
 		return drillDownQuery;
+	}
+
+	@Override
+	protected boolean isEqual(DrillDownQuery q) {
+		if (!Objects.equals(baseQuery, q.baseQuery) || !Objects.equals(genericFieldNames, q.genericFieldNames) ||
+				!Objects.equals(useDrillSideways, q.useDrillSideways))
+			return false;
+		if (dimPath == q.dimPath)
+			return true;
+		if (dimPath == null || q.dimPath == null)
+			return false;
+		if (dimPath.size() != q.dimPath.size())
+			return false;
+		final Iterator<LinkedHashMap<String, String[]>> mapIterator = q.dimPath.iterator();
+		for (LinkedHashMap<String, String[]> map1 : dimPath) {
+			final LinkedHashMap<String, String[]> map2 = mapIterator.next();
+			for (Map.Entry<String, String[]> entry1 : map1.entrySet()) {
+				if (!Arrays.equals(entry1.getValue(), map2.get(entry1.getKey())))
+					return false;
+			}
+		}
+		return true;
 	}
 
 }

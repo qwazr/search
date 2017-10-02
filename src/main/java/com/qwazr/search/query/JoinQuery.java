@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,8 +24,9 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.join.ScoreMode;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class JoinQuery extends AbstractQuery {
+public class JoinQuery extends AbstractQuery<JoinQuery> {
 
 	final public String from_index;
 	final public String from_field;
@@ -40,6 +41,7 @@ public class JoinQuery extends AbstractQuery {
 			@JsonProperty("multiple_values_per_document") final Boolean multipleValuesPerDocument,
 			@JsonProperty("score_mode") final ScoreMode scoreMode,
 			@JsonProperty("from_query") final AbstractQuery fromQuery) {
+		super(JoinQuery.class);
 		this.from_index = fromIndex;
 		this.from_field = fromField;
 		this.to_field = toField;
@@ -52,6 +54,14 @@ public class JoinQuery extends AbstractQuery {
 	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 		return queryContext.getIndex(from_index).createJoinQuery(this);
+	}
+
+	@Override
+	protected boolean isEqual(JoinQuery q) {
+		return Objects.equals(from_query, q.from_query) && Objects.equals(from_field, q.from_field) &&
+				Objects.equals(to_field, q.to_field) &&
+				Objects.equals(multiple_values_per_document, q.multiple_values_per_document) &&
+				Objects.equals(score_mode, q.score_mode) && Objects.equals(from_query, q.from_query);
 	}
 
 }

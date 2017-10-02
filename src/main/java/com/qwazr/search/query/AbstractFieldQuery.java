@@ -16,6 +16,7 @@
 
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldMap;
@@ -23,20 +24,21 @@ import org.apache.lucene.index.Term;
 
 import java.util.Objects;
 
-public abstract class AbstractFieldQuery extends AbstractQuery {
+public abstract class AbstractFieldQuery<T extends AbstractFieldQuery> extends AbstractQuery<T> {
 
 	@JsonProperty("generic_field")
 	final public String genericField;
 
 	final public String field;
 
-	protected AbstractFieldQuery(final String genericField, final String field) {
+	protected AbstractFieldQuery(final Class<T> queryClass, final String genericField, final String field) {
+		super(queryClass);
 		this.genericField = genericField;
 		this.field = Objects.requireNonNull(field, "The field is null");
 	}
 
-	protected AbstractFieldQuery(final AbstractFieldBuilder builder) {
-		this(builder.genericField, builder.field);
+	protected AbstractFieldQuery(final Class<T> queryClass, final AbstractFieldBuilder builder) {
+		this(queryClass, builder.genericField, builder.field);
 	}
 
 	static String resolveField(final FieldMap fieldMap, final String genericFieldName, final String field) {
@@ -57,6 +59,12 @@ public abstract class AbstractFieldQuery extends AbstractQuery {
 
 	final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {
 		return getResolvedTerm(fieldMap, genericField, field, value);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(T q) {
+		return Objects.equals(genericField, q.genericField) && Objects.equals(field, q.field);
 	}
 
 	public static abstract class AbstractFieldBuilder {

@@ -23,7 +23,7 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-public class LatLonPointBBoxQuery extends AbstractGeoBoxQuery {
+public class LatLonPointBBoxQuery extends AbstractGeoBoxQuery<LatLonPointBBoxQuery> {
 
 	@JsonCreator
 	public LatLonPointBBoxQuery(@JsonProperty("generic_field") final String genericField,
@@ -31,7 +31,7 @@ public class LatLonPointBBoxQuery extends AbstractGeoBoxQuery {
 			@JsonProperty("max_latitude") final double maxLatitude,
 			@JsonProperty("min_longitude") final double minLongitude,
 			@JsonProperty("max_longitude") final double maxLongitude) {
-		super(genericField, field, minLatitude, maxLatitude, minLongitude, maxLongitude);
+		super(LatLonPointBBoxQuery.class, genericField, field, minLatitude, maxLatitude, minLongitude, maxLongitude);
 	}
 
 	public LatLonPointBBoxQuery(final String field, final double minLatitude, final double maxLatitude,

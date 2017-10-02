@@ -16,8 +16,10 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.CollectionsUtils;
 import org.apache.lucene.index.Term;
 
 import java.io.IOException;
@@ -25,7 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class PhraseQuery extends AbstractFieldQuery {
+public class PhraseQuery extends AbstractFieldQuery<PhraseQuery> {
 
 	final public List<String> terms;
 	final public Integer slop;
@@ -34,7 +36,7 @@ public class PhraseQuery extends AbstractFieldQuery {
 	public PhraseQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("slop") final Integer slop,
 			@JsonProperty("terms") final List<String> terms) {
-		super(genericField, field);
+		super(PhraseQuery.class, genericField, field);
 		this.slop = slop;
 		this.terms = terms;
 	}
@@ -45,6 +47,12 @@ public class PhraseQuery extends AbstractFieldQuery {
 
 	public PhraseQuery(final String field, final Integer slop, final String... terms) {
 		this(field, slop, Arrays.asList(terms));
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(PhraseQuery q) {
+		return super.equals(q) && CollectionsUtils.equals(terms, q.terms) && Objects.equals(slop, q.slop);
 	}
 
 	@Override

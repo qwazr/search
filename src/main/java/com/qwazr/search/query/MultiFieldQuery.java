@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.TermConsumer;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -42,7 +43,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class MultiFieldQuery extends AbstractQuery {
+public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 
 	@JsonProperty("fields_boosts")
 	final public Map<String, Float> fieldsBoosts;
@@ -94,6 +95,7 @@ public class MultiFieldQuery extends AbstractQuery {
 	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final Set<String> fieldsDisabledGraph,
 			final QueryParserOperator defaultOperator, final String queryString, final Integer minNumberShouldMatch,
 			final Float tieBreakerMultiplier, final Analyzer analyser) {
+		super(MultiFieldQuery.class);
 		this.fieldsBoosts = fieldsBoosts;
 		this.fieldsDisabledGraph = fieldsDisabledGraph;
 		this.defaultOperator = defaultOperator;
@@ -132,6 +134,15 @@ public class MultiFieldQuery extends AbstractQuery {
 	@JsonIgnore
 	public MultiFieldQuery field(final String field, final Float boost) {
 		return field(field, boost, true);
+	}
+
+	@Override
+	protected boolean isEqual(MultiFieldQuery q) {
+		return CollectionsUtils.equals(fieldsBoosts, q.fieldsBoosts) &&
+				CollectionsUtils.equals(fieldsDisabledGraph, q.fieldsDisabledGraph) &&
+				Objects.equals(defaultOperator, q.defaultOperator) && Objects.equals(queryString, q.queryString) &&
+				Objects.equals(minNumberShouldMatch, q.minNumberShouldMatch) &&
+				Objects.equals(tieBreakerMultiplier, q.tieBreakerMultiplier) && Objects.equals(analyzer, q.analyzer);
 	}
 
 	@Override

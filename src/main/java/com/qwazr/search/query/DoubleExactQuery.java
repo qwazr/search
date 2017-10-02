@@ -16,26 +16,34 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class DoubleExactQuery extends AbstractFieldQuery {
+public class DoubleExactQuery extends AbstractFieldQuery<DoubleExactQuery> {
 
 	public double value;
 
 	@JsonCreator
 	public DoubleExactQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("value") final double value) {
-		super(genericField, field);
+		super(DoubleExactQuery.class, genericField, field);
 		this.value = value;
 	}
 
 	public DoubleExactQuery(final String field, final double value) {
 		this(null, field, value);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(DoubleExactQuery q) {
+		return super.isEqual(q) && Objects.equals(value, q.value);
 	}
 
 	@Override

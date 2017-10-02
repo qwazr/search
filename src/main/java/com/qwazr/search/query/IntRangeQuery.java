@@ -23,13 +23,13 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-public class IntRangeQuery extends AbstractRangeQuery<Integer> {
+public class IntRangeQuery extends AbstractRangeQuery<Integer, IntRangeQuery> {
 
 	@JsonCreator
 	public IntRangeQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
 			@JsonProperty("upper_value") final Integer upperValue) {
-		super(genericField, field, lowerValue == null ? Integer.MIN_VALUE : lowerValue,
+		super(IntRangeQuery.class, genericField, field, lowerValue == null ? Integer.MIN_VALUE : lowerValue,
 				upperValue == null ? Integer.MAX_VALUE : upperValue);
 	}
 

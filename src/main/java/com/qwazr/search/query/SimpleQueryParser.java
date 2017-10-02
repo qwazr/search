@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.CollectionsUtils;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.Query;
@@ -30,7 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class SimpleQueryParser extends AbstractQueryBuilder {
+public class SimpleQueryParser extends AbstractQueryBuilder<SimpleQueryParser> {
 
 	final public LinkedHashMap<String, Float> weights;
 
@@ -53,6 +54,7 @@ public class SimpleQueryParser extends AbstractQueryBuilder {
 
 	@JsonCreator
 	private SimpleQueryParser() {
+		super(SimpleQueryParser.class);
 		weights = null;
 		defaultOperator = null;
 		and_operator = null;
@@ -70,7 +72,7 @@ public class SimpleQueryParser extends AbstractQueryBuilder {
 	}
 
 	private SimpleQueryParser(Builder builder) {
-		super(builder);
+		super(SimpleQueryParser.class, builder);
 		this.weights = builder.weights;
 		this.defaultOperator = builder.defaultOperator;
 		this.flags = builder.flags;
@@ -89,6 +91,8 @@ public class SimpleQueryParser extends AbstractQueryBuilder {
 	}
 
 	private int computeTag() {
+		if (flags != -2)
+			return flags;
 		int flags = 0;
 		if (and_operator == null || and_operator)
 			flags = flags | org.apache.lucene.queryparser.simple.SimpleQueryParser.AND_OPERATOR;
@@ -135,6 +139,13 @@ public class SimpleQueryParser extends AbstractQueryBuilder {
 					defaultOperator == QueryParserOperator.AND ? BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD);
 
 		return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(SimpleQueryParser q) {
+		return super.isEqual(q) && CollectionsUtils.equals(weights, q.weights) &&
+				Objects.equals(defaultOperator, q.defaultOperator) && computeTag() == q.computeTag();
 	}
 
 	public static Builder of() {

@@ -24,13 +24,13 @@ import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
 
-public class FloatDocValuesRangeQuery extends AbstractRangeQuery<Float> {
+public class FloatDocValuesRangeQuery extends AbstractRangeQuery<Float, FloatDocValuesRangeQuery> {
 
 	@JsonCreator
 	public FloatDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Float lowerValue,
 			@JsonProperty("upper_value") final Float upperValue) {
-		super(genericField, field, lowerValue == null ? Float.MIN_VALUE : lowerValue,
+		super(FloatDocValuesRangeQuery.class, genericField, field, lowerValue == null ? Float.MIN_VALUE : lowerValue,
 				upperValue == null ? Float.MAX_VALUE : upperValue);
 	}
 

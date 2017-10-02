@@ -23,13 +23,15 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class ConstantScoreQuery extends AbstractQuery {
+public class ConstantScoreQuery extends AbstractQuery<ConstantScoreQuery> {
 
 	public final AbstractQuery query;
 
 	@JsonCreator
 	public ConstantScoreQuery(@JsonProperty("query") final AbstractQuery query) {
+		super(ConstantScoreQuery.class);
 		this.query = query;
 	}
 
@@ -39,5 +41,10 @@ public class ConstantScoreQuery extends AbstractQuery {
 		if (query == null)
 			throw new IOException("No embedded query");
 		return new org.apache.lucene.search.ConstantScoreQuery(query.getQuery(queryContext));
+	}
+
+	@Override
+	protected boolean isEqual(ConstantScoreQuery q) {
+		return Objects.equals(query, q.query);
 	}
 }

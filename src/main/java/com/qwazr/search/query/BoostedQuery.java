@@ -26,7 +26,7 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.Objects;
 
-public class BoostedQuery extends AbstractQuery {
+public class BoostedQuery extends AbstractQuery<BoostedQuery> {
 
 	final public AbstractQuery sub_query;
 	final public AbstractValueSource value_source;
@@ -34,6 +34,7 @@ public class BoostedQuery extends AbstractQuery {
 	@JsonCreator
 	public BoostedQuery(@JsonProperty("sub_query") final AbstractQuery subQuery,
 			@JsonProperty("value_source") final AbstractValueSource valueSource) {
+		super(BoostedQuery.class);
 		this.sub_query = subQuery;
 		this.value_source = valueSource;
 	}
@@ -45,5 +46,10 @@ public class BoostedQuery extends AbstractQuery {
 		Objects.requireNonNull(value_source, "The value_source property is missing");
 		return new org.apache.lucene.queries.function.BoostedQuery(sub_query.getQuery(queryContext),
 				value_source.getValueSource(queryContext));
+	}
+
+	@Override
+	protected boolean isEqual(BoostedQuery q) {
+		return Objects.equals(sub_query, q.sub_query) && Objects.equals(value_source, q.value_source);
 	}
 }

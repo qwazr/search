@@ -30,7 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 
-public class SynonymQuery extends AbstractMultiTermQuery {
+public class SynonymQuery extends AbstractMultiTermQuery<SynonymQuery> {
 
 	final public Collection<Object> terms;
 
@@ -40,7 +40,7 @@ public class SynonymQuery extends AbstractMultiTermQuery {
 	@JsonCreator
 	public SynonymQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("terms") final Collection<Object> terms) {
-		super(genericField, field);
+		super(SynonymQuery.class, genericField, field);
 		this.terms = Objects.requireNonNull(terms, "The term list is null");
 		this.termArray = null;
 	}
@@ -50,7 +50,7 @@ public class SynonymQuery extends AbstractMultiTermQuery {
 	}
 
 	public SynonymQuery(final String field, final Object... terms) {
-		super(null, field);
+		super(SynonymQuery.class, null, field);
 		Objects.requireNonNull(terms, "The term list is null");
 		this.terms = new ArrayList<>(terms.length);
 		Collections.addAll(this.terms, terms);
@@ -58,13 +58,19 @@ public class SynonymQuery extends AbstractMultiTermQuery {
 	}
 
 	private SynonymQuery(final Builder builder) {
-		super(builder);
+		super(SynonymQuery.class, builder);
 		this.terms = builder.objects;
 		termArray = new Term[builder.bytesRefs.size()];
 		int i = 0;
 		for (BytesRef br : builder.bytesRefs) {
 			termArray[i++] = new Term(builder.field, br);
 		}
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(SynonymQuery q) {
+		return super.isEqual(q) && Objects.equals(terms, q.terms);
 	}
 
 	@Override

@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
@@ -23,9 +24,10 @@ import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 
-public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery {
+public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<DoubleMultiRangeQuery> {
 
 	final public double[] lower_values;
 	final public double[] upper_values;
@@ -34,13 +36,20 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery {
 	public DoubleMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("lower_values") final double[] lowerValues,
 			@JsonProperty("upper_values") final double[] upperValues) {
-		super(genericField, field);
+		super(DoubleMultiRangeQuery.class, genericField, field);
 		this.lower_values = lowerValues;
 		this.upper_values = upperValues;
 	}
 
 	public DoubleMultiRangeQuery(final String field, final double[] lowerValues, final double[] upperValues) {
 		this(null, field, lowerValues, upperValues);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(DoubleMultiRangeQuery q) {
+		return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
+				Arrays.equals(upper_values, q.upper_values);
 	}
 
 	@Override

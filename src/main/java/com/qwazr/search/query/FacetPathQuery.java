@@ -24,9 +24,10 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Objects;
 
-public class FacetPathQuery extends AbstractQuery {
+public class FacetPathQuery extends AbstractQuery<FacetPathQuery> {
 
 	final public String dimension;
 	@JsonProperty("generic_field")
@@ -36,6 +37,7 @@ public class FacetPathQuery extends AbstractQuery {
 	@JsonCreator
 	FacetPathQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("dimension") final String dimension, @JsonProperty("path") final String... path) {
+		super(FacetPathQuery.class);
 		this.genericField = genericField;
 		this.dimension = dimension;
 		this.path = path;
@@ -61,6 +63,12 @@ public class FacetPathQuery extends AbstractQuery {
 				queryContext.getFacetsConfig(genericField, dimension).getDimConfig(resolvedDimension).indexFieldName;
 		final Term term = new Term(indexFieldName, FacetsConfig.pathToString(resolvedDimension, path));
 		return new org.apache.lucene.search.TermQuery(term);
+	}
+
+	@Override
+	protected boolean isEqual(FacetPathQuery q) {
+		return Objects.equals(dimension, q.dimension) && Objects.equals(genericField, q.genericField) &&
+				Arrays.equals(path, q.path);
 	}
 
 	public static class Builder {

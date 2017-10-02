@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.collector;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.query.lucene.FilteredQuery;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class FilterCollector extends BaseCollector<FilterCollector.Query>
 		implements ConcurrentCollector<FilterCollector.Query> {
@@ -75,11 +77,12 @@ public class FilterCollector extends BaseCollector<FilterCollector.Query>
 		return new FilterCollector.Query(filteredQuery);
 	}
 
-	public static class Query extends AbstractQuery {
+	public static class Query extends AbstractQuery<Query> {
 
 		private final FilteredQuery filteredQuery;
 
 		Query(FilteredQuery filteredQuery) {
+			super(Query.class);
 			this.filteredQuery = filteredQuery;
 		}
 
@@ -87,6 +90,12 @@ public class FilterCollector extends BaseCollector<FilterCollector.Query>
 		final public org.apache.lucene.search.Query getQuery(final QueryContext queryContext)
 				throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 			return filteredQuery;
+		}
+
+		@JsonIgnore
+		@Override
+		protected boolean isEqual(Query q) {
+			return Objects.equals(filteredQuery, q.filteredQuery);
 		}
 	}
 }

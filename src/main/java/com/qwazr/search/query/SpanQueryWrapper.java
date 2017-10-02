@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,21 +26,24 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class SpanQueryWrapper extends AbstractSpanQuery {
+public class SpanQueryWrapper extends AbstractSpanQuery<SpanQueryWrapper> {
 
-	final public AbstractQuery wrapped_query;
+	@JsonProperty("wrapped_query")
+	final public AbstractQuery wrappedQuery;
 
 	@JsonCreator
 	public SpanQueryWrapper(@JsonProperty("wrapped_query") final AbstractQuery wrappedQuery) {
-		this.wrapped_query = wrappedQuery;
+		super(SpanQueryWrapper.class);
+		this.wrappedQuery = wrappedQuery;
 	}
 
 	@Override
 	@JsonIgnore
 	final public SpanQuery getQuery(final QueryContext queryContext)
 			throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
-		final Query subQuery = wrapped_query.getQuery(queryContext);
+		final Query subQuery = wrappedQuery.getQuery(queryContext);
 		if (subQuery instanceof SpanQuery)
 			return (SpanQuery) subQuery;
 		else if (subQuery instanceof MultiTermQuery)
@@ -49,5 +52,10 @@ public class SpanQueryWrapper extends AbstractSpanQuery {
 			return new org.apache.lucene.search.spans.SpanTermQuery(
 					((org.apache.lucene.search.TermQuery) subQuery).getTerm());
 		throw new ParseException("Cannot convert " + subQuery.getClass().getName() + " as SpanQuery");
+	}
+
+	@Override
+	protected boolean isEqual(SpanQueryWrapper q) {
+		return Objects.equals(wrappedQuery, q.wrappedQuery);
 	}
 }

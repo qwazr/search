@@ -26,12 +26,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-public class SpanOrQuery extends AbstractSpanQuery {
+public class SpanOrQuery extends AbstractSpanQuery<SpanOrQuery> {
 
 	final public List<AbstractSpanQuery> clauses;
 
 	@JsonCreator
 	public SpanOrQuery(@JsonProperty("clauses") final List<AbstractSpanQuery> clauses) {
+		super(SpanOrQuery.class);
 		this.clauses = clauses;
 	}
 
@@ -45,4 +46,10 @@ public class SpanOrQuery extends AbstractSpanQuery {
 			spanQueries[i++] = query.getQuery(queryContext);
 		return new org.apache.lucene.search.spans.SpanOrQuery(spanQueries);
 	}
+
+	@Override
+	protected boolean isEqual(SpanOrQuery q) {
+		return Objects.deepEquals(clauses, q.clauses);
+	}
+
 }

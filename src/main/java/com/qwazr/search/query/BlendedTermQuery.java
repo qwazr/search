@@ -20,12 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.CollectionsUtils;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Objects;
 
-public class BlendedTermQuery extends AbstractQuery {
+public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
 
 	public class Term {
 
@@ -53,12 +55,24 @@ public class BlendedTermQuery extends AbstractQuery {
 			else
 				builder.add(term, boost);
 		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == null || !(o instanceof Term))
+				return false;
+			if (o == this)
+				return true;
+			final Term t = (Term) o;
+			return Objects.equals(genericField, t.genericField) && Objects.equals(field, t.field) &&
+					Objects.equals(value, t.value) && Objects.equals(boost, t.boost);
+		}
 	}
 
 	final public Collection<Term> terms;
 
 	@JsonCreator
 	public BlendedTermQuery(@JsonProperty("terms") final Collection<Term> terms) {
+		super(BlendedTermQuery.class);
 		this.terms = terms;
 	}
 
@@ -86,6 +100,11 @@ public class BlendedTermQuery extends AbstractQuery {
 		if (terms != null)
 			terms.forEach(term -> term.add(queryContext.getFieldMap(), builder));
 		return builder.build();
+	}
+
+	@Override
+	protected boolean isEqual(BlendedTermQuery query) {
+		return CollectionsUtils.equals(terms, query.terms);
 	}
 
 }

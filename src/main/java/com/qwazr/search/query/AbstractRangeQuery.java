@@ -15,16 +15,27 @@
  */
 package com.qwazr.search.query;
 
-public abstract class AbstractRangeQuery<T> extends AbstractFieldQuery {
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-	final public T lower_value;
-	final public T upper_value;
+import java.util.Objects;
 
-	protected AbstractRangeQuery(final String genericField, final String field, final T lowerValue,
-			final T upperValue) {
-		super(genericField, field);
+public abstract class AbstractRangeQuery<V, T extends AbstractRangeQuery> extends AbstractFieldQuery<T> {
+
+	final public V lower_value;
+	final public V upper_value;
+
+	protected AbstractRangeQuery(final Class<T> queryClass, final String genericField, final String field,
+			final V lowerValue, final V upperValue) {
+		super(queryClass, genericField, field);
 		this.lower_value = lowerValue;
 		this.upper_value = upperValue;
+	}
+
+	@JsonIgnore
+	@Override
+	protected boolean isEqual(T q) {
+		return super.isEqual(q) && Objects.equals(lower_value, q.lower_value) &&
+				Objects.equals(upper_value, q.upper_value);
 	}
 
 }

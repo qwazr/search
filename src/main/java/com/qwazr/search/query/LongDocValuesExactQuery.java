@@ -16,26 +16,34 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class LongDocValuesExactQuery extends AbstractFieldQuery {
+public class LongDocValuesExactQuery extends AbstractFieldQuery<LongDocValuesExactQuery> {
 
 	public long value;
 
 	@JsonCreator
 	public LongDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("value") final long value) {
-		super(genericField, field);
+		super(LongDocValuesExactQuery.class, genericField, field);
 		this.value = value;
 	}
 
 	public LongDocValuesExactQuery(final String field, final long value) {
 		this(null, field, value);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(LongDocValuesExactQuery q) {
+		return super.isEqual(q) && Objects.equals(value, q.value);
 	}
 
 	@Override

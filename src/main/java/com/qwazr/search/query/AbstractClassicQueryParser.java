@@ -16,20 +16,24 @@
 
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
+import com.qwazr.utils.CollectionsUtils;
 import org.apache.lucene.analysis.Analyzer;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-public abstract class AbstractClassicQueryParser extends AbstractQueryBuilder {
+public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryParser> extends AbstractQueryBuilder<T> {
 
 	final public String[] fields;
 	final public LinkedHashMap<String, Float> boosts;
@@ -46,7 +50,8 @@ public abstract class AbstractClassicQueryParser extends AbstractQueryBuilder {
 	@JsonProperty("split_on_whitespace")
 	final public Boolean splitOnWhitespace;
 
-	protected AbstractClassicQueryParser() {
+	protected AbstractClassicQueryParser(Class<T> queryClass) {
+		super(queryClass);
 		fields = null;
 		boosts = null;
 		allow_leading_wildcard = null;
@@ -61,8 +66,8 @@ public abstract class AbstractClassicQueryParser extends AbstractQueryBuilder {
 		splitOnWhitespace = null;
 	}
 
-	protected AbstractClassicQueryParser(AbstractParserBuilder builder) {
-		super(builder);
+	protected AbstractClassicQueryParser(Class<T> queryClass, AbstractParserBuilder builder) {
+		super(queryClass, builder);
 		this.fields = builder.fields == null ? null : ArrayUtils.toArray(builder.fields);
 		this.boosts = builder.boosts;
 		this.allow_leading_wildcard = builder.allow_leading_wildcard;
@@ -75,6 +80,21 @@ public abstract class AbstractClassicQueryParser extends AbstractQueryBuilder {
 		this.max_determinized_states = builder.max_determinized_states;
 		this.lowercase_expanded_terms = builder.lowercase_expanded_terms;
 		this.splitOnWhitespace = builder.splitOnWhitespace;
+	}
+
+	@JsonIgnore
+	@Override
+	protected boolean isEqual(T q) {
+		return super.isEqual(q) && Arrays.equals(fields, q.fields) && CollectionsUtils.equals(boosts, q.boosts) &&
+				Objects.equals(allow_leading_wildcard, q.allow_leading_wildcard) &&
+				Objects.equals(default_operator, q.default_operator) && Objects.equals(phrase_slop, q.phrase_slop) &&
+				Objects.equals(auto_generate_phrase_query, q.auto_generate_phrase_query) &&
+				Objects.equals(analyzer_range_terms, q.analyzer_range_terms) &&
+				Objects.equals(fuzzy_min_sim, q.fuzzy_min_sim) &&
+				Objects.equals(fuzzy_prefix_length, q.fuzzy_prefix_length) &&
+				Objects.equals(max_determinized_states, q.max_determinized_states) &&
+				Objects.equals(lowercase_expanded_terms, q.lowercase_expanded_terms) &&
+				Objects.equals(splitOnWhitespace, q.splitOnWhitespace);
 	}
 
 	protected void setParserParameters(org.apache.lucene.queryparser.classic.QueryParser parser) {
