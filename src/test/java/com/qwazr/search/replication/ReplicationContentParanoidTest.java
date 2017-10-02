@@ -147,7 +147,6 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 
 			final QueryDefinition queryIterator = QueryDefinition.of(new MatchAllDocsQuery())
 					.returnedField(FieldDefinition.ID_FIELD, "title")
-					.sort("sortId", QueryDefinition.SortEnum.ascending)
 					.build();
 
 			switch (indexMinTime(timeTracker(() -> master.searchQuery(queryIterator)),

@@ -87,7 +87,10 @@ public abstract class ReplicationTestBase<T> {
 	 */
 	public void compareMasterAndSlaveRecords(BiConsumer<T, T> recordsChecker) {
 
-		final QueryDefinition queryIterator = QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*").build();
+		final QueryDefinition queryIterator = QueryDefinition.of(new MatchAllDocsQuery())
+				.returnedField("*")
+				.sort("sortId", QueryDefinition.SortEnum.ascending)
+				.build();
 		final Iterator<T> masterIterator = master.searchIterator(queryIterator, recordClass);
 		List<Iterator<T>> slavesIterators = new ArrayList<>();
 		for (AnnotatedIndexService<T> slave : slaves)
