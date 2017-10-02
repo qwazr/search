@@ -16,19 +16,27 @@
 
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qwazr.search.index.FieldMap;
 import org.apache.lucene.index.Term;
 
 import java.util.Objects;
 
-public abstract class AbstractFieldSpanQuery extends AbstractSpanQuery {
+public abstract class AbstractFieldSpanQuery<T extends AbstractFieldSpanQuery> extends AbstractSpanQuery<T> {
 
 	final public String genericField;
 	final public String field;
 
-	protected AbstractFieldSpanQuery(final String genericField, final String field) {
+	protected AbstractFieldSpanQuery(final Class<T> queryClass, final String genericField, final String field) {
+		super(queryClass);
 		this.field = Objects.requireNonNull(field, "The field is null");
 		this.genericField = genericField;
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(T q) {
+		return Objects.equals(genericField, q.genericField) && Objects.equals(field, q.field);
 	}
 
 	final protected String resolveField(final FieldMap fieldMap) {

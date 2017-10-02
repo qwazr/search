@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,26 @@
  */
 package com.qwazr.search.function;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class DefFunction extends AbstractValueSource {
+public class DefFunction extends AbstractValueSourceArray<DefFunction> {
 
-	public final List<AbstractValueSource> sources;
-
-	public DefFunction() {
-		sources = null;
-	}
-
-	public DefFunction(AbstractValueSource... sources) {
-		this.sources = sources == null ? null : Arrays.asList(sources);
+	@JsonCreator
+	public DefFunction(@JsonProperty("sources") AbstractValueSource... sources) {
+		super(DefFunction.class, sources);
 	}
 
 	public DefFunction(List<AbstractValueSource> sources) {
-		this.sources = sources;
+		super(DefFunction.class, sources);
 	}
 
 	@Override

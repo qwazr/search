@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.function;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -32,6 +34,7 @@ abstract class AbstractValueSourceArray<T extends AbstractValueSourceArray> exte
 	}
 
 	@Override
+	@JsonIgnore
 	protected boolean isEqual(T q) {
 		return Arrays.equals(sources, q.sources);
 	}

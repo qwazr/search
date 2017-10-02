@@ -16,13 +16,15 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.MultiTermQuery;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class TermRangeQuery extends AbstractFieldQuery {
+public class TermRangeQuery extends AbstractFieldQuery<TermRangeQuery> {
 
 	final public String lower_term;
 	final public String upper_term;
@@ -35,7 +37,7 @@ public class TermRangeQuery extends AbstractFieldQuery {
 			@JsonProperty("upper_term") final String upper_term,
 			@JsonProperty("include_lower") final Boolean include_lower,
 			@JsonProperty("include_upper") final Boolean include_upper) {
-		super(genericField, field);
+		super(TermRangeQuery.class, genericField, field);
 		this.lower_term = lower_term;
 		this.upper_term = upper_term;
 		this.include_lower = include_lower;
@@ -45,6 +47,14 @@ public class TermRangeQuery extends AbstractFieldQuery {
 	public TermRangeQuery(final String field, final String lower_term, final String upper_term,
 			final Boolean include_lower, final Boolean include_upper) {
 		this(null, field, lower_term, upper_term, include_lower, include_upper);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(final TermRangeQuery q) {
+		return super.isEqual(q) && Objects.equals(lower_term, q.lower_term) &&
+				Objects.equals(upper_term, q.upper_term) && Objects.equals(include_lower, q.include_lower) &&
+				Objects.equals(include_upper, q.include_upper);
 	}
 
 	@Override

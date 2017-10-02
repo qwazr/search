@@ -16,26 +16,34 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class PrefixQuery extends AbstractFieldQuery {
+public class PrefixQuery extends AbstractFieldQuery<PrefixQuery> {
 
 	final public String text;
 
 	@JsonCreator
 	public PrefixQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("text") final String text) {
-		super(genericField, field);
+		super(PrefixQuery.class, genericField, field);
 		this.text = text;
 	}
 
 	public PrefixQuery(final String field, final String text) {
 		this(null, field, text);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(final PrefixQuery q) {
+		return super.isEqual(q) && Objects.equals(text, q.text);
 	}
 
 	@Override

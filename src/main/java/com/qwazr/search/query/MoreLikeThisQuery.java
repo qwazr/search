@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -26,10 +27,12 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
-public class MoreLikeThisQuery extends AbstractQuery {
+public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
 
 	final public String like_text;
 	final public String fieldname;
@@ -52,6 +55,7 @@ public class MoreLikeThisQuery extends AbstractQuery {
 
 	@JsonCreator
 	private MoreLikeThisQuery() {
+		super(MoreLikeThisQuery.class);
 		like_text = null;
 		fieldname = null;
 		percent_terms_to_match = 0;
@@ -71,6 +75,7 @@ public class MoreLikeThisQuery extends AbstractQuery {
 	}
 
 	private MoreLikeThisQuery(final Builder builder) {
+		super(MoreLikeThisQuery.class);
 		this.like_text = builder.likeText;
 		this.fieldname = builder.fieldname;
 		this.percent_terms_to_match = builder.percentTermsToMatch;
@@ -87,6 +92,19 @@ public class MoreLikeThisQuery extends AbstractQuery {
 		this.min_term_freq = builder.minTermFreq;
 		this.min_word_len = builder.minWordLen;
 		this.stop_words = builder.stopWords;
+	}
+
+	@Override
+	protected boolean isEqual(MoreLikeThisQuery q) {
+		return Objects.equals(like_text, q.like_text) && Objects.equals(fieldname, q.fieldname) &&
+				Objects.equals(percent_terms_to_match, q.percent_terms_to_match) &&
+				Objects.equals(doc_num, q.doc_num) && Objects.equals(is_boost, q.is_boost) &&
+				Objects.equals(boost_factor, q.boost_factor) && Arrays.equals(fieldnames, q.fieldnames) &&
+				Objects.equals(max_doc_freq, q.max_doc_freq) && Objects.equals(max_doc_freq_pct, q.max_doc_freq_pct) &&
+				Objects.equals(max_num_tokens_parsed, q.max_num_tokens_parsed) &&
+				Objects.equals(max_query_terms, q.max_query_terms) && Objects.equals(max_word_len, q.max_word_len) &&
+				Objects.equals(min_doc_freq, q.min_doc_freq) && Objects.equals(min_term_freq, q.min_term_freq) &&
+				Objects.equals(min_word_len, q.min_word_len) && CollectionsUtils.equals(stop_words, q.stop_words);
 	}
 
 	@Override

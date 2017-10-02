@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LatLonPoint;
@@ -23,7 +24,7 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-public class LatLonPointDistanceQuery extends AbstractFieldQuery {
+public class LatLonPointDistanceQuery extends AbstractFieldQuery<LatLonPointDistanceQuery> {
 
 	final public double center_latitude;
 
@@ -36,10 +37,17 @@ public class LatLonPointDistanceQuery extends AbstractFieldQuery {
 			@JsonProperty("field") final String field, @JsonProperty("center_latitude") final double centerLatitude,
 			@JsonProperty("center_longitude") final double centerLongitude,
 			@JsonProperty("radius_meters") final double radiusMeters) {
-		super(genericField, field);
+		super(LatLonPointDistanceQuery.class, genericField, field);
 		this.center_latitude = centerLatitude;
 		this.center_longitude = centerLongitude;
 		this.radius_meters = radiusMeters;
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(LatLonPointDistanceQuery q) {
+		return super.isEqual(q) && center_latitude == q.center_latitude && center_longitude == q.center_longitude &&
+				radius_meters == q.radius_meters;
 	}
 
 	@Override

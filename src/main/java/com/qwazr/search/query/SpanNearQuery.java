@@ -16,16 +16,19 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.CollectionsUtils;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
-public class SpanNearQuery extends AbstractFieldSpanQuery {
+public class SpanNearQuery extends AbstractFieldSpanQuery<SpanNearQuery> {
 
 	final public List<AbstractSpanQuery> clauses;
 	final public Boolean in_order;
@@ -35,7 +38,7 @@ public class SpanNearQuery extends AbstractFieldSpanQuery {
 	public SpanNearQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("clauses") final List<AbstractSpanQuery> clauses, @JsonProperty("field") final String field,
 			@JsonProperty("in_order") final Boolean in_order, @JsonProperty("slop") final Integer slop) {
-		super(genericField, field);
+		super(SpanNearQuery.class, genericField, field);
 		this.clauses = clauses;
 		this.in_order = in_order;
 		this.slop = slop;
@@ -44,6 +47,13 @@ public class SpanNearQuery extends AbstractFieldSpanQuery {
 	public SpanNearQuery(final List<AbstractSpanQuery> clauses, @JsonProperty("field") final String field,
 			final Boolean in_order, final Integer slop) {
 		this(null, clauses, field, in_order, slop);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(SpanNearQuery q) {
+		return super.isEqual(q) && CollectionsUtils.equals(clauses, q.clauses) &&
+				Objects.equals(in_order, q.in_order) && Objects.equals(slop, q.slop);
 	}
 
 	@Override

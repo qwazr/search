@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,12 +25,13 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import java.io.IOException;
 import java.util.Objects;
 
-public class FunctionQuery extends AbstractQuery {
+public class FunctionQuery extends AbstractQuery<FunctionQuery> {
 
 	final public AbstractValueSource source;
 
 	@JsonCreator
 	public FunctionQuery(@JsonProperty("source") final AbstractValueSource source) {
+		super(FunctionQuery.class);
 		this.source = source;
 	}
 
@@ -52,5 +53,10 @@ public class FunctionQuery extends AbstractQuery {
 		for (FunctionQuery scoringQuery : scoringQueries)
 			functionQueries[i++] = scoringQuery.getQuery(queryContext);
 		return functionQueries;
+	}
+
+	@Override
+	protected boolean isEqual(FunctionQuery q) {
+		return Objects.equals(source, q.source);
 	}
 }

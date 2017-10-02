@@ -24,12 +24,12 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-public class FieldValueQuery extends AbstractFieldQuery {
+public class FieldValueQuery extends AbstractFieldQuery<FieldValueQuery> {
 
 	@JsonCreator
 	public FieldValueQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field) {
-		super(genericField, field);
+		super(FieldValueQuery.class, genericField, field);
 	}
 
 	public FieldValueQuery(final String field) {

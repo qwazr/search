@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.Objects;
 
-public class NGramPhraseQuery extends AbstractQuery {
+public class NGramPhraseQuery extends AbstractQuery<NGramPhraseQuery> {
 
 	@JsonProperty("phrase_query")
 	final public PhraseQuery phraseQuery;
@@ -34,6 +34,7 @@ public class NGramPhraseQuery extends AbstractQuery {
 	@JsonCreator
 	public NGramPhraseQuery(@JsonProperty("phrase_query") final PhraseQuery phraseQuery,
 			@JsonProperty("ngram_size") final Integer ngramSize) {
+		super(NGramPhraseQuery.class);
 		this.phraseQuery = phraseQuery;
 		this.nGramSize = ngramSize;
 	}
@@ -43,5 +44,10 @@ public class NGramPhraseQuery extends AbstractQuery {
 		Objects.requireNonNull(phraseQuery, "The phrase_query should not be null");
 		Objects.requireNonNull(phraseQuery, "The ngram_size should not be null");
 		return new org.apache.lucene.search.NGramPhraseQuery(nGramSize, phraseQuery.getQuery(queryContext));
+	}
+
+	@Override
+	protected boolean isEqual(NGramPhraseQuery q) {
+		return Objects.equals(phraseQuery, q.phraseQuery) && Objects.equals(nGramSize, q.nGramSize);
 	}
 }

@@ -23,8 +23,9 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class SpanFirstQuery extends AbstractSpanQuery {
+public class SpanFirstQuery extends AbstractSpanQuery<SpanFirstQuery> {
 
 	final public AbstractSpanQuery spanQuery;
 	final public Integer end;
@@ -32,6 +33,7 @@ public class SpanFirstQuery extends AbstractSpanQuery {
 	@JsonCreator
 	public SpanFirstQuery(@JsonProperty("spanQuery") final AbstractSpanQuery spanQuery,
 			@JsonProperty("end") final Integer end) {
+		super(SpanFirstQuery.class);
 		this.spanQuery = spanQuery;
 		this.end = end;
 	}
@@ -41,5 +43,10 @@ public class SpanFirstQuery extends AbstractSpanQuery {
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
 		return new org.apache.lucene.search.spans.SpanFirstQuery(spanQuery.getQuery(queryContext),
 				end == null ? 0 : end);
+	}
+
+	@Override
+	protected boolean isEqual(SpanFirstQuery q) {
+		return Objects.equals(spanQuery, q.spanQuery) && Objects.equals(end, q.end);
 	}
 }

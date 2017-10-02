@@ -23,8 +23,9 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class SpanContainingQuery extends AbstractSpanQuery {
+public class SpanContainingQuery extends AbstractSpanQuery<SpanContainingQuery> {
 
 	final public AbstractSpanQuery big;
 	final public AbstractSpanQuery little;
@@ -32,6 +33,7 @@ public class SpanContainingQuery extends AbstractSpanQuery {
 	@JsonCreator
 	public SpanContainingQuery(@JsonProperty("big") final AbstractSpanQuery big,
 			@JsonProperty("little") final AbstractSpanQuery little) {
+		super(SpanContainingQuery.class);
 		this.big = big;
 		this.little = little;
 	}
@@ -41,5 +43,10 @@ public class SpanContainingQuery extends AbstractSpanQuery {
 			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 		return new org.apache.lucene.search.spans.SpanContainingQuery(big.getQuery(queryContext),
 				little.getQuery(queryContext));
+	}
+
+	@Override
+	protected boolean isEqual(SpanContainingQuery q) {
+		return Objects.equals(big, q.big) && Objects.equals(little, q.little);
 	}
 }

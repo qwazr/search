@@ -25,7 +25,7 @@ import org.apache.lucene.search.spans.SpanQuery;
 import java.io.IOException;
 import java.util.Objects;
 
-public class SpanNotQuery extends AbstractSpanQuery {
+public class SpanNotQuery extends AbstractSpanQuery<SpanNotQuery> {
 
 	final public AbstractSpanQuery include;
 	final public AbstractSpanQuery exclude;
@@ -37,6 +37,7 @@ public class SpanNotQuery extends AbstractSpanQuery {
 	public SpanNotQuery(@JsonProperty("include") final AbstractSpanQuery include,
 			@JsonProperty("exclude") final AbstractSpanQuery exclude, @JsonProperty("pre") final Integer pre,
 			@JsonProperty("post") final Integer post, @JsonProperty("dist") final Integer dist) {
+		super(SpanNotQuery.class);
 		this.include = include;
 		this.exclude = exclude;
 		this.pre = pre;
@@ -57,5 +58,11 @@ public class SpanNotQuery extends AbstractSpanQuery {
 			return new org.apache.lucene.search.spans.SpanNotQuery(includeQuery, excludeQuery, pre == null ? 0 : pre,
 					post == null ? 0 : post);
 		return new org.apache.lucene.search.spans.SpanNotQuery(includeQuery, excludeQuery);
+	}
+
+	@Override
+	protected boolean isEqual(SpanNotQuery q) {
+		return Objects.equals(include, q.include) && Objects.equals(exclude, q.exclude) &&
+				Objects.equals(dist, q.dist) && Objects.equals(pre, q.pre) && Objects.equals(post, q.post);
 	}
 }

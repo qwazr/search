@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,24 @@
  */
 package com.qwazr.search.function;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queries.function.ValueSource;
 
-public class MaxDocValueSource extends AbstractValueSource {
+public class MaxDocValueSource extends AbstractValueSource<MaxDocValueSource> {
 
+	@JsonCreator
 	public MaxDocValueSource() {
+		super(MaxDocValueSource.class);
 	}
 
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext) {
 		return new org.apache.lucene.queries.function.valuesource.MaxDocValueSource();
+	}
+
+	@Override
+	protected boolean isEqual(MaxDocValueSource query) {
+		return query != null;
 	}
 }

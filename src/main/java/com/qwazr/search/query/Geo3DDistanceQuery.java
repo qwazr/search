@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
@@ -23,7 +24,7 @@ import org.apache.lucene.spatial3d.Geo3DPoint;
 
 import java.io.IOException;
 
-public class Geo3DDistanceQuery extends AbstractFieldQuery {
+public class Geo3DDistanceQuery extends AbstractFieldQuery<Geo3DDistanceQuery> {
 
 	public final double latitude;
 
@@ -36,7 +37,7 @@ public class Geo3DDistanceQuery extends AbstractFieldQuery {
 			@JsonProperty("field") final String field, @JsonProperty("latitude") final double latitude,
 			@JsonProperty("longitude") final double longitude,
 			@JsonProperty("radius_meters") final double radiusMeters) {
-		super(genericField, field);
+		super(Geo3DDistanceQuery.class, genericField, field);
 		this.latitude = latitude;
 		this.longitude = longitude;
 		this.radius_meters = radiusMeters;
@@ -45,6 +46,13 @@ public class Geo3DDistanceQuery extends AbstractFieldQuery {
 	public Geo3DDistanceQuery(final String field, final double latitude, final double longitude,
 			final double radiusMeters) {
 		this(null, field, latitude, longitude, radiusMeters);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(Geo3DDistanceQuery q) {
+		return super.isEqual(q) && latitude == q.latitude && longitude == q.longitude &&
+				radius_meters == q.radius_meters;
 	}
 
 	@Override

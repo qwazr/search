@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.function;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.query.AbstractQuery;
 import org.apache.lucene.queries.function.ValueSource;
@@ -24,19 +26,16 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import java.io.IOException;
 import java.util.Objects;
 
-public class QueryValueSource extends AbstractValueSource {
+public class QueryValueSource extends AbstractValueSource<QueryValueSource> {
 
 	final public AbstractQuery query;
 	final public Float defVal;
 
-	public QueryValueSource() {
-		query = null;
-		defVal = null;
-	}
-
-	public QueryValueSource(AbstractQuery query, Float defVal) {
-		this.query = null;
-		this.defVal = null;
+	@JsonCreator
+	public QueryValueSource(@JsonProperty("query") AbstractQuery query, @JsonProperty("defVal") Float defVal) {
+		super(QueryValueSource.class);
+		this.query = query;
+		this.defVal = defVal;
 	}
 
 	@Override
@@ -46,5 +45,10 @@ public class QueryValueSource extends AbstractValueSource {
 		Objects.requireNonNull(defVal, "The default value is missing (defVal");
 		return new org.apache.lucene.queries.function.valuesource.QueryValueSource(query.getQuery(queryContext),
 				defVal);
+	}
+
+	@Override
+	protected boolean isEqual(QueryValueSource q) {
+		return Objects.equals(query, q.query) && Objects.equals(defVal, q.defVal);
 	}
 }

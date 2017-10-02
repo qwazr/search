@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,11 +69,11 @@ public abstract class AbstractValueSource<T extends AbstractValueSource> extends
 	}
 
 	@JsonIgnore
-	public static List<ValueSource> getValueSourceList(QueryContext queryContext, List<AbstractValueSource> sources)
+	public static List<ValueSource> getValueSourceList(QueryContext queryContext, AbstractValueSource[] sources)
 			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
 		if (sources == null)
 			return null;
-		List<ValueSource> valueSources = new ArrayList<>(sources.size());
+		final List<ValueSource> valueSources = new ArrayList<>(sources.length);
 		for (AbstractValueSource source : sources)
 			valueSources.add(source.getValueSource(queryContext));
 		return valueSources;

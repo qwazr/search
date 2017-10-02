@@ -16,25 +16,33 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class SpanTermQuery extends AbstractFieldSpanQuery {
+public class SpanTermQuery extends AbstractFieldSpanQuery<SpanTermQuery> {
 
 	final public Object value;
 
 	@JsonCreator
 	public SpanTermQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("value") final Object value) {
-		super(genericField, field);
+		super(SpanTermQuery.class, genericField, field);
 		this.value = value;
 	}
 
 	public SpanTermQuery(final String field, final Object value) {
 		this(null, field, value);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(SpanTermQuery q) {
+		return super.isEqual(q) && Objects.equals(value, q.value);
 	}
 
 	@Override

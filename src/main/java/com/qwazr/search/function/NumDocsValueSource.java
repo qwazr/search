@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,22 @@
 package com.qwazr.search.function;
 
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.Equalizer;
 import org.apache.lucene.queries.function.ValueSource;
 
 public class NumDocsValueSource extends AbstractValueSource {
 
 	public NumDocsValueSource() {
+		super(NumDocsValueSource.class);
 	}
 
 	@Override
 	public ValueSource getValueSource(QueryContext queryContext) {
 		return new org.apache.lucene.queries.function.valuesource.NumDocsValueSource();
+	}
+
+	@Override
+	protected boolean isEqual(Equalizer query) {
+		return query != null;
 	}
 }

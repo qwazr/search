@@ -16,25 +16,33 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class TermQuery extends AbstractFieldQuery {
+public class TermQuery extends AbstractFieldQuery<TermQuery> {
 
 	final public Object term;
 
 	@JsonCreator
 	public TermQuery(@JsonProperty("generic_field") final String genericField, @JsonProperty("field") String field,
 			@JsonProperty("term") Object term) {
-		super(genericField, field);
+		super(TermQuery.class, genericField, field);
 		this.term = term;
 	}
 
 	public TermQuery(final String field, final Object term) {
 		this(null, field, term);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(final TermQuery q) {
+		return super.isEqual(q) && Objects.equals(term, q.term);
 	}
 
 	@Override

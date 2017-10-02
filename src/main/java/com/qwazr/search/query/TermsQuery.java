@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.CollectionsUtils;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermInSetQuery;
 import org.apache.lucene.util.BytesRef;
@@ -29,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
-public class TermsQuery extends AbstractMultiTermQuery {
+public class TermsQuery extends AbstractMultiTermQuery<TermsQuery> {
 
 	final public Collection<Object> terms;
 
@@ -39,15 +40,21 @@ public class TermsQuery extends AbstractMultiTermQuery {
 	@JsonCreator
 	TermsQuery(@JsonProperty("generic_field") final String genericField, @JsonProperty("field") final String field,
 			@JsonProperty("terms") final Collection<Object> terms) {
-		super(genericField, field);
+		super(TermsQuery.class, genericField, field);
 		this.terms = Objects.requireNonNull(terms, "The term list is null");
 		this.bytesRefCollection = null;
 	}
 
 	private TermsQuery(final Builder builder) {
-		super(builder);
+		super(TermsQuery.class, builder);
 		this.terms = builder.objects;
 		this.bytesRefCollection = builder.bytesRefs;
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(TermsQuery q) {
+		return super.isEqual(q) && CollectionsUtils.equals(terms, q.terms);
 	}
 
 	@Override

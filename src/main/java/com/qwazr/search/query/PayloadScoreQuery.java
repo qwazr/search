@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,15 +31,14 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.Objects;
 
-public class PayloadScoreQuery extends AbstractQuery {
+public class PayloadScoreQuery extends AbstractQuery<PayloadScoreQuery> {
 
 	public final AbstractSpanQuery wrapped_query;
 	public final Boolean include_span_score;
+	public final String payload_function;
 
 	@JsonIgnore
 	private PayloadFunction payloadFunction;
-
-	public final String payload_function;
 
 	public enum FunctionType {
 		MIN, MAX, AVERAGE;
@@ -47,6 +46,7 @@ public class PayloadScoreQuery extends AbstractQuery {
 
 	public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final PayloadFunction payloadFunction,
 			final Boolean includeSpanScore) {
+		super(PayloadScoreQuery.class);
 		this.wrapped_query = wrappedQuery;
 		this.payloadFunction = payloadFunction;
 		this.payload_function = null;
@@ -57,6 +57,7 @@ public class PayloadScoreQuery extends AbstractQuery {
 	public PayloadScoreQuery(@JsonProperty("wrapped_query") final AbstractSpanQuery wrappedQuery,
 			@JsonProperty("payload_function") final String payloadFunction,
 			@JsonProperty("include_span_score") final Boolean includeSpanScore) {
+		super(PayloadScoreQuery.class);
 		this.wrapped_query = wrappedQuery;
 		this.payload_function = payloadFunction;
 		this.payloadFunction = null;
@@ -65,6 +66,7 @@ public class PayloadScoreQuery extends AbstractQuery {
 
 	public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final FunctionType type,
 			final Boolean includeSpanScore) {
+		super(PayloadScoreQuery.class);
 		this.wrapped_query = wrappedQuery;
 		if (type != null) {
 			switch (type) {
@@ -87,6 +89,14 @@ public class PayloadScoreQuery extends AbstractQuery {
 			payload_function = null;
 		}
 		this.include_span_score = includeSpanScore == null ? true : includeSpanScore;
+	}
+
+	@Override
+	protected boolean isEqual(final PayloadScoreQuery q) {
+		return Objects.equals(wrapped_query, q.wrapped_query) &&
+				Objects.equals(include_span_score, q.include_span_score) &&
+				Objects.equals(payload_function, q.payload_function) &&
+				Objects.equals(payloadFunction, q.payloadFunction);
 	}
 
 	final static String[] payloadFunctionClassPrefixes = { "", "org.apache.lucene.queries.payloads." };

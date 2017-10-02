@@ -16,26 +16,34 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.util.Arrays;
 
-public class LongSetQuery extends AbstractFieldQuery {
+public class LongSetQuery extends AbstractFieldQuery<LongSetQuery> {
 
 	final public long[] values;
 
 	@JsonCreator
 	public LongSetQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("values") final long... values) {
-		super(genericField, field);
+		super(LongSetQuery.class, genericField, field);
 		this.values = values;
 	}
 
 	public LongSetQuery(final String field, final long... values) {
 		this(null, field, values);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(LongSetQuery q) {
+		return super.isEqual(q) && Arrays.equals(values, q.values);
 	}
 
 	@Override

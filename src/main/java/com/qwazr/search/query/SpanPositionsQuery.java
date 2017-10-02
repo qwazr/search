@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.analysis.TokenStream;
@@ -30,8 +31,9 @@ import org.apache.lucene.search.spans.SpanPositionRangeQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class SpanPositionsQuery extends AbstractFieldQuery {
+public class SpanPositionsQuery extends AbstractFieldQuery<SpanPositionsQuery> {
 
 	final public Integer distance;
 	final public String query_string;
@@ -40,7 +42,7 @@ public class SpanPositionsQuery extends AbstractFieldQuery {
 	public SpanPositionsQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("distance") final Integer distance,
 			@JsonProperty("query_string") final String queryString) {
-		super(genericField, field);
+		super(SpanPositionsQuery.class, genericField, field);
 		this.distance = distance;
 		this.query_string = queryString;
 	}
@@ -50,6 +52,13 @@ public class SpanPositionsQuery extends AbstractFieldQuery {
 	}
 
 	@Override
+	@JsonIgnore
+	protected boolean isEqual(final SpanPositionsQuery q) {
+		return super.isEqual(q) && Objects.equals(distance, q.distance) && Objects.equals(query_string, q.query_string);
+	}
+
+	@Override
+	@JsonIgnore
 	final public Query getQuery(final QueryContext queryContext) throws IOException {
 
 		final BooleanQuery.Builder builder = new BooleanQuery.Builder();

@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.CollectionsUtils;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
@@ -28,7 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class DisjunctionMaxQuery extends AbstractQuery {
+public class DisjunctionMaxQuery extends AbstractQuery<DisjunctionMaxQuery> {
 
 	final public List<AbstractQuery> queries;
 
@@ -38,6 +39,7 @@ public class DisjunctionMaxQuery extends AbstractQuery {
 	@JsonCreator
 	public DisjunctionMaxQuery(@JsonProperty("queries") final List<AbstractQuery> queries,
 			@JsonProperty("tie_breaker_multiplier") final Float tieBreakerMultiplier) {
+		super(DisjunctionMaxQuery.class);
 		this.queries = queries;
 		this.tieBreakerMultiplier = tieBreakerMultiplier;
 	}
@@ -55,5 +57,10 @@ public class DisjunctionMaxQuery extends AbstractQuery {
 			queryList.add(query.getQuery(queryContext));
 		return new org.apache.lucene.search.DisjunctionMaxQuery(queryList,
 				tieBreakerMultiplier == null ? 0 : tieBreakerMultiplier);
+	}
+
+	@Override
+	protected boolean isEqual(DisjunctionMaxQuery q) {
+		return CollectionsUtils.equals(queries, q.queries);
 	}
 }

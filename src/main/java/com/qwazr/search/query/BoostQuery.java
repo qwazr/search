@@ -25,13 +25,14 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.Objects;
 
-public class BoostQuery extends AbstractQuery {
+public class BoostQuery extends AbstractQuery<BoostQuery> {
 
 	final public AbstractQuery query;
 	final public Float boost;
 
 	@JsonCreator
 	public BoostQuery(@JsonProperty("query") final AbstractQuery query, @JsonProperty("boost") final Float boost) {
+		super(BoostQuery.class);
 		this.query = query;
 		this.boost = boost;
 	}
@@ -42,5 +43,10 @@ public class BoostQuery extends AbstractQuery {
 		Objects.requireNonNull(query, "The query property is missing");
 		Objects.requireNonNull(boost, "The boost property is missing");
 		return new org.apache.lucene.search.BoostQuery(query.getQuery(queryContext), boost);
+	}
+
+	@Override
+	protected boolean isEqual(BoostQuery q) {
+		return Objects.equals(query, q.query) && Objects.equals(boost, q.boost);
 	}
 }

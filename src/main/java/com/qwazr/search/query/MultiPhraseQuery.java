@@ -16,16 +16,19 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.CollectionsUtils;
 import org.apache.lucene.index.Term;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class MultiPhraseQuery extends AbstractFieldQuery {
+public class MultiPhraseQuery extends AbstractFieldQuery<MultiPhraseQuery> {
 
 	final public List<String[]> terms;
 	final public List<Integer> positions;
@@ -35,7 +38,7 @@ public class MultiPhraseQuery extends AbstractFieldQuery {
 	public MultiPhraseQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") String field, @JsonProperty("terms") List<String[]> terms,
 			@JsonProperty("positions") List<Integer> positions, @JsonProperty("slop") Integer slop) {
-		super(genericField, field);
+		super(MultiPhraseQuery.class, genericField, field);
 		this.terms = terms;
 		this.positions = positions;
 		this.slop = slop;
@@ -58,6 +61,24 @@ public class MultiPhraseQuery extends AbstractFieldQuery {
 		this.terms.add(terms);
 		this.positions.add(position);
 		return this;
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(final MultiPhraseQuery q) {
+		if (!super.isEqual(q) || !CollectionsUtils.equals(positions, q.positions) && !Objects.equals(slop, q.slop))
+			return false;
+		if (terms == q.terms)
+			return true;
+		if (terms == null || q.terms == null)
+			return false;
+		if (terms.size() != q.terms.size())
+			return false;
+		int i = 0;
+		for (String[] t : terms)
+			if (!Arrays.equals(t, q.terms.get(i++)))
+				return false;
+		return true;
 	}
 
 	@Override

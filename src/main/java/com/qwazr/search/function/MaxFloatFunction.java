@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.function;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -24,18 +26,15 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Objects;
 
-public class MaxFloatFunction extends AbstractValueSourceArray {
+public class MaxFloatFunction extends AbstractValueSourceArray<MaxFloatFunction> {
 
-	public MaxFloatFunction() {
-		super();
-	}
-
-	public MaxFloatFunction(AbstractValueSource... sources) {
-		super(sources);
+	@JsonCreator
+	public MaxFloatFunction(@JsonProperty("sources") AbstractValueSource... sources) {
+		super(MaxFloatFunction.class, sources);
 	}
 
 	public MaxFloatFunction(Collection<AbstractValueSource> sources) {
-		super(sources);
+		super(MaxFloatFunction.class, sources);
 	}
 
 	@Override

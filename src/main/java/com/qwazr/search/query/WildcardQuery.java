@@ -16,25 +16,33 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.MultiTermQuery;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class WildcardQuery extends AbstractMultiTermQuery {
+public class WildcardQuery extends AbstractMultiTermQuery<WildcardQuery> {
 
 	final public String term;
 
 	@JsonCreator
 	public WildcardQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("term") final String term) {
-		super(genericField, field);
+		super(WildcardQuery.class, genericField, field);
 		this.term = term;
 	}
 
 	public WildcardQuery(final String field, final String term) {
 		this(null, field, term);
+	}
+
+	@Override
+	@JsonIgnore
+	protected boolean isEqual(WildcardQuery q) {
+		return super.isEqual(q) && Objects.equals(term, q.term);
 	}
 
 	@Override

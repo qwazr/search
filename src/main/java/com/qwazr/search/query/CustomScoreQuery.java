@@ -28,9 +28,10 @@ import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import java.util.Objects;
 
-public class CustomScoreQuery extends AbstractQuery {
+public class CustomScoreQuery extends AbstractQuery<CustomScoreQuery> {
 
 	public final AbstractQuery subQuery;
 	public final FunctionQuery scoringQuery;
@@ -42,13 +43,14 @@ public class CustomScoreQuery extends AbstractQuery {
 
 	@JsonCreator
 	private CustomScoreQuery(@JsonProperty("subQuery") final AbstractQuery subQuery,
-			@JsonProperty("customScoreProvider") final String customScoreProviderClass,
+			@JsonProperty("customScoreProvider") final String customScoreProviderClassName,
 			@JsonProperty("scoringQuery") final FunctionQuery scoringQuery,
 			@JsonProperty("scoringQueries") final FunctionQuery... scoringQueries) {
+		super(CustomScoreQuery.class);
 		this.subQuery = subQuery;
 		this.scoringQuery = scoringQuery;
 		this.scoringQueries = scoringQueries;
-		this.customScoreProviderClassName = customScoreProviderClass;
+		this.customScoreProviderClassName = customScoreProviderClassName;
 		this.customScoreProviderClass = null;
 	}
 
@@ -59,6 +61,7 @@ public class CustomScoreQuery extends AbstractQuery {
 	public CustomScoreQuery(final AbstractQuery subQuery,
 			final Class<? extends CustomScoreProvider> customScoreProviderClass,
 			final String customScoreProviderClassName, final FunctionQuery... scoringQueries) {
+		super(CustomScoreQuery.class);
 		this.subQuery = subQuery;
 		if (scoringQueries == null || scoringQueries.length == 0) {
 			this.scoringQuery = null;
@@ -119,8 +122,8 @@ public class CustomScoreQuery extends AbstractQuery {
 
 	private Class<? extends CustomScoreProvider> getProviderClass()
 			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
-		Class<? extends CustomScoreProvider> customScoreProviderClass = ClassLoaderUtils.findClass(
-				customScoreProviderClassName);
+		Class<? extends CustomScoreProvider> customScoreProviderClass =
+				ClassLoaderUtils.findClass(customScoreProviderClassName);
 		Objects.requireNonNull(customScoreProviderClass, "Cannot find the class for " + customScoreProviderClassName);
 		return customScoreProviderClass;
 	}
@@ -140,6 +143,14 @@ public class CustomScoreQuery extends AbstractQuery {
 					scoringQuery.getQuery(queryContext));
 		else
 			return new CustomScoreQueryWithProvider(customScoreProviderConstructor, query);
+	}
+
+	@Override
+	protected boolean isEqual(CustomScoreQuery q) {
+		return Objects.equals(subQuery, q.subQuery) && Objects.equals(scoringQuery, q.scoringQuery) &&
+				Arrays.equals(scoringQueries, q.scoringQueries) &&
+				Objects.equals(customScoreProviderClassName, q.customScoreProviderClassName) &&
+				Objects.equals(customScoreProviderClass, q.customScoreProviderClass);
 	}
 
 	private static class CustomScoreQueryWithProvider extends org.apache.lucene.queries.CustomScoreQuery {

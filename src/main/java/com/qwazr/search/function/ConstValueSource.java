@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,20 @@
  */
 package com.qwazr.search.function;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queries.function.ValueSource;
 
 import java.util.Objects;
 
-public class ConstValueSource extends AbstractValueSource {
+public class ConstValueSource extends AbstractValueSource<ConstValueSource> {
 
 	public final Float constant;
 
-	public ConstValueSource() {
-		constant = null;
-	}
-
-	public ConstValueSource(Float constant) {
+	@JsonCreator
+	public ConstValueSource(@JsonProperty("constant") Float constant) {
+		super(ConstValueSource.class);
 		this.constant = constant;
 	}
 
@@ -36,5 +36,10 @@ public class ConstValueSource extends AbstractValueSource {
 	public ValueSource getValueSource(QueryContext queryContext) {
 		Objects.requireNonNull(constant, "constant value is missing");
 		return new org.apache.lucene.queries.function.valuesource.ConstValueSource(constant);
+	}
+
+	@Override
+	protected boolean isEqual(ConstValueSource q) {
+		return Objects.equals(constant, q.constant);
 	}
 }

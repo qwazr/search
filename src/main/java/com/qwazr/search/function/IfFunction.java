@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.function;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -23,19 +25,17 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import java.io.IOException;
 import java.util.Objects;
 
-public class IfFunction extends AbstractValueSource {
+public class IfFunction extends AbstractValueSource<IfFunction> {
 
 	public final AbstractValueSource ifSource;
 	public final AbstractValueSource trueSource;
 	public final AbstractValueSource falseSource;
 
-	public IfFunction() {
-		ifSource = null;
-		trueSource = null;
-		falseSource = null;
-	}
-
-	public IfFunction(AbstractValueSource ifSource, AbstractValueSource trueSource, AbstractValueSource falseSource) {
+	@JsonCreator
+	public IfFunction(@JsonProperty("ifSource") AbstractValueSource ifSource,
+			@JsonProperty("trueSource") AbstractValueSource trueSource,
+			@JsonProperty("falseSource") AbstractValueSource falseSource) {
+		super(IfFunction.class);
 		this.ifSource = ifSource;
 		this.trueSource = trueSource;
 		this.falseSource = falseSource;
@@ -49,5 +49,11 @@ public class IfFunction extends AbstractValueSource {
 		Objects.requireNonNull(falseSource, "falseSource value source is missing");
 		return new org.apache.lucene.queries.function.valuesource.IfFunction(ifSource.getValueSource(queryContext),
 				trueSource.getValueSource(queryContext), falseSource.getValueSource(queryContext));
+	}
+
+	@Override
+	protected boolean isEqual(IfFunction q) {
+		return Objects.equals(ifSource, q.ifSource) && Objects.equals(trueSource, q.trueSource) &&
+				Objects.equals(falseSource, q.falseSource);
 	}
 }
