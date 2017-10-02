@@ -16,6 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.SerializationUtils;
 import com.qwazr.utils.StringUtils;
 
@@ -89,7 +90,21 @@ interface TypeUtils {
 	static <T> T notNull(final T value, final String fieldName, final String msg) {
 		if (value != null)
 			return value;
-		throw new RuntimeException("Error on field: " + fieldName + " - " + msg == null ? StringUtils.EMPTY : msg);
+		throw new RuntimeException("Error on field: " + fieldName + " - " + (msg == null ? StringUtils.EMPTY : msg));
+	}
+
+	static byte[] toPrimitiveByteArray(final Object value) {
+		if (value == null)
+			return null;
+		final Class<?> valueClass = value.getClass();
+		if (!valueClass.isArray())
+			return null;
+		final Class<?> componentType = valueClass.getComponentType();
+		if (componentType != byte.class)
+			return null;
+		if (componentType.isPrimitive())
+			return (byte[]) value;
+		return ArrayUtils.toPrimitive((Byte[]) value);
 	}
 
 }

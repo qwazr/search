@@ -35,6 +35,7 @@ final class StoredFieldType extends CustomFieldTypeAbstract.OneField {
 	@Override
 	final void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
 		final Field field;
+		final byte[] bytes;
 		if (value instanceof String)
 			field = new StoredField(fieldName, (String) value);
 		else if (value instanceof Integer)
@@ -43,11 +44,13 @@ final class StoredFieldType extends CustomFieldTypeAbstract.OneField {
 			field = new StoredField(fieldName, (long) value);
 		else if (value instanceof Float)
 			field = new StoredField(fieldName, (float) value);
+		else if ((bytes = TypeUtils.toPrimitiveByteArray(value)) != null)
+			field = new StoredField(fieldName, bytes);
 		else if (value instanceof Externalizable)
 			field = new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Externalizable) value));
 		else if (value instanceof Serializable)
 			field = new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Serializable) value));
-		else
+		else // Last change, convert to string
 			field = new StoredField(fieldName, value.toString());
 		consumer.accept(genericFieldName, fieldName, field);
 	}
