@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.units;
+package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.index.QueryDefinition;
-import com.qwazr.search.query.AbstractQuery;
-import com.qwazr.search.query.MultiFieldQueryParser;
-import com.qwazr.search.query.QueryParserOperator;
+import com.qwazr.search.test.units.AbstractIndexTest;
+import com.qwazr.search.test.units.IndexRecord;
+import com.qwazr.search.test.units.RealTimeSynonymsResourcesTest;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -33,7 +33,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
+public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException, java.text.ParseException {
@@ -49,8 +49,7 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
 
 	@Test
 	public void testWithDefaultAnalyzer() {
-		QueryDefinition queryDef = QueryDefinition.of(MultiFieldQueryParser.of()
-				.addField("textField", "stringField")
+		QueryDefinition queryDef = QueryDefinition.of(SimpleQueryParser.of()
 				.setDefaultOperator(QueryParserOperator.AND)
 				.addBoost("textField", 1F)
 				.addBoost("stringField", 1F)
@@ -61,22 +60,20 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
 
 	@Test
 	public void testWithCustomAnalyzer() {
-		QueryDefinition queryDef = QueryDefinition.of(MultiFieldQueryParser.of()
-				.addField("textField", "stringField")
+		QueryDefinition queryDef = QueryDefinition.of(SimpleQueryParser.of()
 				.setDefaultOperator(QueryParserOperator.AND)
 				.addBoost("textField", 1F)
 				.addBoost("stringField", 1F)
-				.setQueryString("Hello World")
 				.setAnalyzer(new StandardAnalyzer())
+				.setQueryString("Hello World")
 				.build()).
 				build();
 		checkQuery(queryDef);
 	}
 
 	@Test
-	public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
-		Query luceneQuery = MultiFieldQueryParser.of()
-				.addField("textField", "stringField")
+	public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException {
+		Query luceneQuery = SimpleQueryParser.of()
 				.setDefaultOperator(QueryParserOperator.AND)
 				.
 						addBoost("textField", 1F)
@@ -88,12 +85,12 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
 	}
 
 	@Test
+	@Ignore
 	public void testWithSynonymsOr()
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = MultiFieldQueryParser.of()
+		AbstractQuery query = SimpleQueryParser.of()
 				.addField("textSynonymsField1", "textField", "stringField")
 				.setDefaultOperator(QueryParserOperator.OR)
-				.setSplitOnWhitespace(false)
 				.setQueryString("bonjour le monde")
 				.build();
 		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
@@ -103,10 +100,9 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
 	@Ignore
 	public void testWithSynonymsAnd()
 			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = MultiFieldQueryParser.of()
+		AbstractQuery query = SimpleQueryParser.of()
 				.addField("textSynonymsField1", "textSynonymsField2")
 				.setDefaultOperator(QueryParserOperator.AND)
-				.setSplitOnWhitespace(false)
 				.setQueryString("bonjour le monde")
 				.build();
 		checkQuery(QueryDefinition.of(query).queryDebug(true).build());

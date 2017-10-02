@@ -13,18 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.units;
+package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.DoubleDocValuesExactQuery;
-import com.qwazr.search.query.DoubleDocValuesRangeQuery;
-import com.qwazr.search.query.FloatDocValuesExactQuery;
-import com.qwazr.search.query.FloatDocValuesRangeQuery;
-import com.qwazr.search.query.IntDocValuesExactQuery;
-import com.qwazr.search.query.IntDocValuesRangeQuery;
-import com.qwazr.search.query.LongDocValuesExactQuery;
-import com.qwazr.search.query.LongDocValuesRangeQuery;
+import com.qwazr.search.test.units.AbstractIndexTest;
+import com.qwazr.search.test.units.IndexRecord;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;

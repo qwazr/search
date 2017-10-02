@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.units;
+package com.qwazr.search.query;
 
 import com.qwazr.search.function.ConstValueSource;
 import com.qwazr.search.function.DivFloatFunction;
@@ -31,9 +31,8 @@ import com.qwazr.search.function.ProductFloatFunction;
 import com.qwazr.search.function.SumFloatFunction;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.CustomScoreQuery;
-import com.qwazr.search.query.FunctionQuery;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.test.units.AbstractIndexTest;
+import com.qwazr.search.test.units.IndexRecord;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;

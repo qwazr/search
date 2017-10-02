@@ -13,34 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.units;
+package com.qwazr.search.query;
 
-import com.qwazr.search.index.QueryDefinition;
-import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.BlendedTermQuery;
+import com.qwazr.search.index.QueryContext;
+import com.qwazr.search.test.units.AbstractIndexTest;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.search.Query;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 
-public class BlendedTermQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
+public class DrillDownQueryTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
-		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World"));
-		indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?"));
 	}
 
 	@Test
-	public void test() {
-		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(
-				new BlendedTermQuery(new ArrayList<>()).term("textField", "hello", 2.0F).term("textField", "world"))
-				.build());
-		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
+	public void luceneQuery() throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
+		Query luceneQuery =
+				new DrillDownQuery(new MatchAllDocsQuery(), true).filter("dim", "value").getQuery(QueryContext.DEFAULT);
+		Assert.assertNotNull(luceneQuery);
 	}
+
 }

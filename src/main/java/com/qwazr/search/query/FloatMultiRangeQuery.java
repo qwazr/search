@@ -45,6 +45,10 @@ public class FloatMultiRangeQuery extends AbstractMultiRangeQuery<FloatMultiRang
 		this(null, field, lowerValues, upperValues);
 	}
 
+	public FloatMultiRangeQuery(final String field, final float lowerValue, final float upperValue) {
+		this(field, new float[] { lowerValue }, new float[] { upperValue });
+	}
+
 	@Override
 	@JsonIgnore
 	protected boolean isEqual(FloatMultiRangeQuery q) {

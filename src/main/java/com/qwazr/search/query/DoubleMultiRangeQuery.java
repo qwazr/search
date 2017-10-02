@@ -45,6 +45,10 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<DoubleMultiRa
 		this(null, field, lowerValues, upperValues);
 	}
 
+	public DoubleMultiRangeQuery(final String field, final double lowerValue, final double upperValue) {
+		this(field, new double[] { lowerValue }, new double[] { upperValue });
+	}
+
 	@Override
 	@JsonIgnore
 	protected boolean isEqual(DoubleMultiRangeQuery q) {

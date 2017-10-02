@@ -35,10 +35,10 @@ import java.text.ParseException;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RealTimeSynonymsResourcesTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	final static String[] EN_FR_SYNONYMS = new String[] { "hello world", "bonjour le monde" };
-	final static String[] EN_FR_DE_SYNONYMS = new String[] { "hello world", "bonjour le monde", "hallo welt" };
+	public final static String[] EN_FR_SYNONYMS = new String[] { "hello world", "bonjour le monde" };
+	public final static String[] EN_FR_DE_SYNONYMS = new String[] { "hello world", "bonjour le monde", "hallo welt" };
 
-	final static Analyzer WHITESPACE_ANALYZER = new WhitespaceAnalyzer();
+	public final static Analyzer WHITESPACE_ANALYZER = new WhitespaceAnalyzer();
 
 	@BeforeClass
 	public static void setup() throws IOException, ParseException, InterruptedException, URISyntaxException {
@@ -48,7 +48,8 @@ public class RealTimeSynonymsResourcesTest extends AbstractIndexTest.WithIndexRe
 		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textSynonymsField1("hello world"));
 	}
 
-	static SynonymMap getSynonymMap(Analyzer analyzer, String[]... synonymsList) throws IOException, ParseException {
+	public static SynonymMap getSynonymMap(Analyzer analyzer, String[]... synonymsList)
+			throws IOException, ParseException {
 		final SynonymMapBuilder builder = new SynonymMapBuilder(analyzer, true, true);
 		for (String[] synonyms : synonymsList)
 			builder.add(true, synonyms);

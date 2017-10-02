@@ -45,6 +45,10 @@ public class IntMultiRangeQuery extends AbstractMultiRangeQuery<IntMultiRangeQue
 		this(null, field, lowerValues, upperValues);
 	}
 
+	public IntMultiRangeQuery(final String field, final int lowerValue, final int upperValue) {
+		this(field, new int[] { lowerValue }, new int[] { upperValue });
+	}
+
 	@Override
 	@JsonIgnore
 	protected boolean isEqual(IntMultiRangeQuery q) {

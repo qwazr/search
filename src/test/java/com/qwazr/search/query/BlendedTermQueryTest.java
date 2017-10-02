@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.units;
+package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.BoostQuery;
-import com.qwazr.search.query.ConstantScoreQuery;
-import com.qwazr.search.query.TermQuery;
+import com.qwazr.search.test.units.AbstractIndexTest;
+import com.qwazr.search.test.units.IndexRecord;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 
-public class ConstantScoreAndBoostQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
+public class BlendedTermQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
@@ -38,11 +38,10 @@ public class ConstantScoreAndBoostQueryTest extends AbstractIndexTest.WithIndexR
 
 	@Test
 	public void test() {
-		final float scoreValue = Float.MAX_VALUE - 1;
-		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(QueryDefinition.of(
-				new BoostQuery(new ConstantScoreQuery(new TermQuery("textField", "hello")), scoreValue)).build());
+		ResultDefinition result = indexService.searchQuery(QueryDefinition.of(
+				new BlendedTermQuery(new ArrayList<>()).term("textField", "hello", 2.0F).term("textField", "world"))
+				.build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(1), result.total_hits);
-		Assert.assertEquals(scoreValue, result.getDocuments().get(0).getScore(), 0);
 	}
 }

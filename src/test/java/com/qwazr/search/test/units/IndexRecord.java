@@ -71,6 +71,15 @@ public abstract class IndexRecord<T extends IndexRecord> {
 	@IndexField(template = FieldDefinition.Template.IntPoint)
 	public Integer intPoint;
 
+	@IndexField(template = FieldDefinition.Template.LongPoint)
+	public Long longPoint;
+
+	@IndexField(template = FieldDefinition.Template.FloatPoint)
+	public Float floatPoint;
+
+	@IndexField(template = FieldDefinition.Template.DoublePoint)
+	public Double doublePoint;
+
 	@IndexField(template = FieldDefinition.Template.FloatDocValuesField)
 	public Float floatDocValue;
 
@@ -192,11 +201,6 @@ public abstract class IndexRecord<T extends IndexRecord> {
 		return (T) this;
 	}
 
-	public T intPoint(Integer intPoint) {
-		this.intPoint = intPoint;
-		return (T) this;
-	}
-
 	public T floatDocValue(Float floatDocValue) {
 		this.floatDocValue = floatDocValue;
 		return (T) this;
@@ -204,6 +208,26 @@ public abstract class IndexRecord<T extends IndexRecord> {
 
 	public T doubleDocValue(Double doubleDocValue) {
 		this.doubleDocValue = doubleDocValue;
+		return (T) this;
+	}
+
+	public T intPoint(Integer intPoint) {
+		this.intPoint = intPoint;
+		return (T) this;
+	}
+
+	public T longPoint(Long longPoint) {
+		this.longPoint = longPoint;
+		return (T) this;
+	}
+
+	public T floatPoint(Float floatPoint) {
+		this.floatPoint = floatPoint;
+		return (T) this;
+	}
+
+	public T doublePoint(Double doublePoint) {
+		this.doublePoint = doublePoint;
 		return (T) this;
 	}
 

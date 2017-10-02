@@ -110,11 +110,12 @@ public abstract class AbstractIndexTest {
 			}
 		}
 
-		ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef, Long hitsExpected, String queryDebug) {
+		public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef, Long hitsExpected,
+				String queryDebug) {
 			return checkQuery(service, queryDef, hitsExpected, queryDebug);
 		}
 
-		ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef) {
+		public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef) {
 			return checkQuery(queryDef, 1L, null);
 		}
 
@@ -122,7 +123,7 @@ public abstract class AbstractIndexTest {
 
 			public static AnnotatedIndexService<IndexRecord.WithTaxonomy> indexService;
 
-			static void initIndexService() throws IOException, URISyntaxException {
+			public static void initIndexService() throws IOException, URISyntaxException {
 				indexService = AbstractIndexTest.initIndexService(IndexRecord.WithTaxonomy.class);
 			}
 

@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.units;
+package com.qwazr.search.query;
 
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.FieldValueQuery;
+import com.qwazr.search.test.units.AbstractIndexTest;
+import com.qwazr.search.test.units.IndexRecord;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,22 +26,32 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class FieldValueQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
+public class MoreLikeThisQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
-		indexService.postDocument(new IndexRecord.NoTaxonomy("1").intDocValue(1));
-		indexService.postDocument(new IndexRecord.NoTaxonomy("2").intDocValue(2));
-		indexService.postDocument(new IndexRecord.NoTaxonomy("3"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("1").mlt("Hello World"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("2").mlt("Hello world again"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("3").mlt("absolutely nothing to match"));
 	}
 
 	@Test
-	public void hasValue() {
-		ResultDefinition result =
-				indexService.searchQuery(QueryDefinition.of(new FieldValueQuery("intDocValue")).build());
+	public void mltTest() {
+		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result;
+		result = indexService.searchQuery(
+				QueryDefinition.of(MoreLikeThisQuery.of("hello again", "mlt").minDocFreq(1).minTermFreq(1).build())
+						.build());
+		Assert.assertNotNull(result);
+		Assert.assertEquals(Long.valueOf(2), result.total_hits);
+
+		result = indexService.searchQuery(QueryDefinition.of(MoreLikeThisQuery.of(result.getDocuments().get(0).getDoc())
+				.minDocFreq(1)
+				.minTermFreq(1)
+				.fieldnames("mlt")
+				.isBoost(true)
+				.build()).build());
 		Assert.assertNotNull(result);
 		Assert.assertEquals(Long.valueOf(2), result.total_hits);
 	}
-
 }
