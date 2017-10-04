@@ -65,8 +65,26 @@ public abstract class IndexRecord<T extends IndexRecord> {
 	@IndexField(template = FieldDefinition.Template.IntDocValuesField)
 	public Integer intDocValue;
 
+	@IndexField(template = FieldDefinition.Template.SortedIntDocValuesField)
+	public Integer sortedIntDocValue;
+
 	@IndexField(template = FieldDefinition.Template.LongDocValuesField)
 	public Long longDocValue;
+
+	@IndexField(template = FieldDefinition.Template.SortedLongDocValuesField)
+	public Long sortedLongDocValue;
+
+	@IndexField(template = FieldDefinition.Template.FloatDocValuesField)
+	public Float floatDocValue;
+
+	@IndexField(template = FieldDefinition.Template.SortedFloatDocValuesField)
+	public Float sortedFloatDocValue;
+
+	@IndexField(template = FieldDefinition.Template.DoubleDocValuesField)
+	public Double doubleDocValue;
+
+	@IndexField(template = FieldDefinition.Template.SortedDoubleDocValuesField)
+	public Double sortedDoubleDocValue;
 
 	@IndexField(template = FieldDefinition.Template.IntPoint)
 	public Integer intPoint;
@@ -79,12 +97,6 @@ public abstract class IndexRecord<T extends IndexRecord> {
 
 	@IndexField(template = FieldDefinition.Template.DoublePoint)
 	public Double doublePoint;
-
-	@IndexField(template = FieldDefinition.Template.FloatDocValuesField)
-	public Float floatDocValue;
-
-	@IndexField(template = FieldDefinition.Template.DoubleDocValuesField)
-	public Double doubleDocValue;
 
 	@IndexField(template = FieldDefinition.Template.IntAssociatedField)
 	public Object[] intAssociatedFacet;
@@ -196,8 +208,18 @@ public abstract class IndexRecord<T extends IndexRecord> {
 		return (T) this;
 	}
 
+	public T sortedIntDocValue(Integer sortedIntDocValue) {
+		this.sortedIntDocValue = sortedIntDocValue;
+		return (T) this;
+	}
+
 	public T longDocValue(long longDocValue) {
 		this.longDocValue = longDocValue;
+		return (T) this;
+	}
+
+	public T sortedLongDocValue(long sortedLongDocValue) {
+		this.sortedLongDocValue = sortedLongDocValue;
 		return (T) this;
 	}
 
@@ -206,8 +228,18 @@ public abstract class IndexRecord<T extends IndexRecord> {
 		return (T) this;
 	}
 
+	public T sortedFloatDocValue(Float sortedFloatDocValue) {
+		this.sortedFloatDocValue = sortedFloatDocValue;
+		return (T) this;
+	}
+
 	public T doubleDocValue(Double doubleDocValue) {
 		this.doubleDocValue = doubleDocValue;
+		return (T) this;
+	}
+
+	public T sortedDoubleDocValue(Double sortedDoubleDocValue) {
+		this.sortedDoubleDocValue = sortedDoubleDocValue;
 		return (T) this;
 	}
 

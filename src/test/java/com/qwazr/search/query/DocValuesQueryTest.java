@@ -25,80 +25,145 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.function.Consumer;
 
+/**
+ * This class check the set of queries for DocValues and SortedDocValues
+ */
 public class DocValuesQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException, URISyntaxException {
 		initIndexService();
 		indexService.postDocument(new IndexRecord.NoTaxonomy("i1").intDocValue(1));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("si1").sortedIntDocValue(1));
 		indexService.postDocument(new IndexRecord.NoTaxonomy("l2").longDocValue(2));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("sl2").sortedLongDocValue(2));
 		indexService.postDocument(new IndexRecord.NoTaxonomy("f3").floatDocValue(3f));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("sf3").sortedFloatDocValue(3f));
 		indexService.postDocument(new IndexRecord.NoTaxonomy("d4").doubleDocValue(4d));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("sd4").sortedDoubleDocValue(4d));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("sdv").sortedDocValue("b"));
+	}
+
+	private void test(AbstractQuery query, String expectedId, Consumer<IndexRecord> recordCheck) {
+		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result =
+				indexService.searchQuery(QueryDefinition.of(query).returnedField("*").build());
+		Assert.assertEquals(Long.valueOf(1), result.total_hits);
+		final IndexRecord record = result.getDocuments().get(0).record;
+		Assert.assertEquals(expectedId, record.id);
+		recordCheck.accept(record);
 	}
 
 	@Test
 	public void intExact() {
-		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-				QueryDefinition.of(new IntDocValuesExactQuery("intDocValue", 1)).returnedField("*").build());
-		Assert.assertEquals("i1", result.getDocuments().get(0).record.id);
-		Assert.assertEquals(1, result.getDocuments().get(0).record.intDocValue, 0);
+		test(new IntDocValuesExactQuery("intDocValue", 1), "i1",
+				record -> Assert.assertEquals(1, record.intDocValue, 0));
+	}
+
+	@Test
+	public void sortedIntExact() {
+		test(new SortedIntDocValuesExactQuery("sortedIntDocValue", 1), "si1",
+				record -> Assert.assertEquals(1, record.sortedIntDocValue, 0));
 	}
 
 	@Test
 	public void intRange() {
-		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-				QueryDefinition.of(new IntDocValuesRangeQuery("intDocValue", 0, 2)).returnedField("*").build());
-		Assert.assertEquals("i1", result.getDocuments().get(0).record.id);
-		Assert.assertEquals(1, result.getDocuments().get(0).record.intDocValue, 0);
+		test(new IntDocValuesRangeQuery("intDocValue", 0, 2), "i1",
+				record -> Assert.assertEquals(1, record.intDocValue, 0));
+	}
+
+	@Test
+	public void sortedIntRange() {
+		test(new SortedIntDocValuesRangeQuery("sortedIntDocValue", 0, 2), "si1",
+				record -> Assert.assertEquals(1, record.sortedIntDocValue, 0));
 	}
 
 	@Test
 	public void longExact() {
-		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-				QueryDefinition.of(new LongDocValuesExactQuery("longDocValue", 2)).returnedField("*").build());
-		Assert.assertEquals("l2", result.getDocuments().get(0).record.id);
-		Assert.assertEquals(2, result.getDocuments().get(0).record.longDocValue, 0);
+		test(new LongDocValuesExactQuery("longDocValue", 2L), "l2",
+				record -> Assert.assertEquals(2, record.longDocValue, 0));
+	}
+
+	@Test
+	public void sortedLongExact() {
+		test(new SortedLongDocValuesExactQuery("sortedLongDocValue", 2L), "sl2",
+				record -> Assert.assertEquals(2, record.sortedLongDocValue, 0));
 	}
 
 	@Test
 	public void longRange() {
-		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-				QueryDefinition.of(new LongDocValuesRangeQuery("longDocValue", 1L, 3L)).returnedField("*").build());
-		Assert.assertEquals("l2", result.getDocuments().get(0).record.id);
-		Assert.assertEquals(2, result.getDocuments().get(0).record.longDocValue, 0);
+		test(new LongDocValuesRangeQuery("longDocValue", 1L, 3L), "l2",
+				record -> Assert.assertEquals(2, record.longDocValue, 0));
+	}
+
+	@Test
+	public void sortedLongRange() {
+		test(new SortedLongDocValuesRangeQuery("sortedLongDocValue", 1L, 3L), "sl2",
+				record -> Assert.assertEquals(2L, record.sortedLongDocValue, 0));
 	}
 
 	@Test
 	public void floatExact() {
-		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-				QueryDefinition.of(new FloatDocValuesExactQuery("floatDocValue", 3)).returnedField("*").build());
-		Assert.assertEquals("f3", result.getDocuments().get(0).record.id);
-		Assert.assertEquals(3, result.getDocuments().get(0).record.floatDocValue, 0);
+		test(new FloatDocValuesExactQuery("floatDocValue", 3F), "f3",
+				record -> Assert.assertEquals(3F, record.floatDocValue, 0));
+	}
+
+	@Test
+	public void sortedFloatExact() {
+		test(new SortedFloatDocValuesExactQuery("sortedFloatDocValue", 3F), "sf3",
+				record -> Assert.assertEquals(3F, record.sortedFloatDocValue, 0));
 	}
 
 	@Test
 	public void floatRange() {
-		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-				QueryDefinition.of(new FloatDocValuesRangeQuery("floatDocValue", 2F, 4F)).returnedField("*").build());
-		Assert.assertEquals("f3", result.getDocuments().get(0).record.id);
-		Assert.assertEquals(3, result.getDocuments().get(0).record.floatDocValue, 0);
+		test(new FloatDocValuesRangeQuery("floatDocValue", 2F, 4F), "f3",
+				record -> Assert.assertEquals(3F, record.floatDocValue, 0));
+	}
+
+	@Test
+	public void sortedFloatRange() {
+		test(new SortedFloatDocValuesRangeQuery("sortedFloatDocValue", 2F, 4F), "sf3",
+				record -> Assert.assertEquals(3F, record.sortedFloatDocValue, 0));
 	}
 
 	@Test
 	public void doubleExact() {
-		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-				QueryDefinition.of(new DoubleDocValuesExactQuery("doubleDocValue", 4)).returnedField("*").build());
-		Assert.assertEquals("d4", result.getDocuments().get(0).record.id);
-		Assert.assertEquals(4, result.getDocuments().get(0).record.doubleDocValue, 0);
+		test(new DoubleDocValuesExactQuery("doubleDocValue", 4D), "d4",
+				record -> Assert.assertEquals(4D, record.doubleDocValue, 0));
+	}
+
+	@Test
+	public void sortedDoubleExact() {
+		test(new SortedDoubleDocValuesExactQuery("sortedDoubleDocValue", 4D), "sd4",
+				record -> Assert.assertEquals(4D, record.sortedDoubleDocValue, 0));
 	}
 
 	@Test
 	public void doubleRange() {
-		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-				QueryDefinition.of(new DoubleDocValuesRangeQuery("doubleDocValue", 3D, 5D)).returnedField("*").build());
-		Assert.assertEquals("d4", result.getDocuments().get(0).record.id);
-		Assert.assertEquals(4, result.getDocuments().get(0).record.doubleDocValue, 0);
+		test(new DoubleDocValuesRangeQuery("doubleDocValue", 3D, 5D), "d4",
+				record -> Assert.assertEquals(4D, record.doubleDocValue, 0));
 	}
 
+	@Test
+	public void sortedDoubleRange() {
+		test(new SortedDoubleDocValuesRangeQuery("sortedDoubleDocValue", 3D, 5D), "sd4",
+				record -> Assert.assertEquals(4D, record.sortedDoubleDocValue, 0));
+	}
+
+	@Test
+	public void sortedExact() {
+		test(new SortedDocValuesExactQuery("sortedDocValue", "b"), "sdv",
+				record -> Assert.assertEquals("b", record.sortedDocValue));
+	}
+
+	@Test
+	public void sortedRange() {
+		test(new SortedDocValuesRangeQuery("sortedDocValue", "b", "c", null, null), "sdv",
+				record -> Assert.assertEquals("b", record.sortedDocValue));
+		test(new SortedDocValuesRangeQuery("sortedDocValue", "b", "b", true, true), "sdv",
+				record -> Assert.assertEquals("b", record.sortedDocValue));
+		test(new SortedDocValuesRangeQuery("sortedDocValue", "a", "b", false, true), "sdv",
+				record -> Assert.assertEquals("b", record.sortedDocValue));
+	}
 }

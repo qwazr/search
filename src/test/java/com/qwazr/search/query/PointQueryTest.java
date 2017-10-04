@@ -97,7 +97,7 @@ public class PointQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy
 	@Test
 	public void floatExact() {
 		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-				QueryDefinition.of(new FloatExactQuery("floatPoint", 3)).returnedField("*").build());
+				QueryDefinition.of(new FloatExactQuery("floatPoint", 3F)).returnedField("*").build());
 		Assert.assertEquals("f3", result.getDocuments().get(0).record.id);
 	}
 
@@ -125,7 +125,7 @@ public class PointQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy
 	@Test
 	public void doubleExact() {
 		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-				QueryDefinition.of(new DoubleExactQuery("doublePoint", 4)).returnedField("*").build());
+				QueryDefinition.of(new DoubleExactQuery("doublePoint", 4D)).returnedField("*").build());
 		Assert.assertEquals("d4", result.getDocuments().get(0).record.id);
 	}
 

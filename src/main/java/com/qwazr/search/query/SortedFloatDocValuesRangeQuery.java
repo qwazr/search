@@ -18,27 +18,29 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.document.NumericDocValuesField;
+import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
 
-public class FloatDocValuesExactQuery extends AbstractExactQuery<Float, FloatDocValuesExactQuery> {
+public class SortedFloatDocValuesRangeQuery extends AbstractRangeQuery<Float, SortedFloatDocValuesRangeQuery> {
 
 	@JsonCreator
-	public FloatDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final Float value) {
-		super(FloatDocValuesExactQuery.class, genericField, field, value == null ? 0 : value);
+	public SortedFloatDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Float lowerValue,
+			@JsonProperty("upper_value") final Float upperValue) {
+		super(SortedFloatDocValuesRangeQuery.class, genericField, field,
+				lowerValue == null ? Float.MIN_VALUE : lowerValue, upperValue == null ? Float.MAX_VALUE : upperValue);
 	}
 
-	public FloatDocValuesExactQuery(final String field, final Float value) {
-		this(null, field, value);
+	public SortedFloatDocValuesRangeQuery(final String field, final Float lowerValue, final Float upperValue) {
+		this(null, field, lowerValue, upperValue);
 	}
 
 	@Override
 	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return NumericDocValuesField.newExactQuery(resolveField(queryContext.getFieldMap()),
-				NumericUtils.floatToSortableInt(value));
+		return SortedNumericDocValuesField.newRangeQuery(resolveField(queryContext.getFieldMap()),
+				NumericUtils.floatToSortableInt(lower_value), NumericUtils.floatToSortableInt(upper_value));
 	}
 }

@@ -18,27 +18,29 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.document.NumericDocValuesField;
+import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
 
-public class FloatDocValuesExactQuery extends AbstractExactQuery<Float, FloatDocValuesExactQuery> {
+public class SortedDoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, SortedDoubleDocValuesRangeQuery> {
 
 	@JsonCreator
-	public FloatDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final Float value) {
-		super(FloatDocValuesExactQuery.class, genericField, field, value == null ? 0 : value);
+	public SortedDoubleDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
+			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
+			@JsonProperty("upper_value") final Double upperValue) {
+		super(SortedDoubleDocValuesRangeQuery.class, genericField, field,
+				lowerValue == null ? Double.MIN_VALUE : lowerValue, upperValue == null ? Double.MAX_VALUE : upperValue);
 	}
 
-	public FloatDocValuesExactQuery(final String field, final Float value) {
-		this(null, field, value);
+	public SortedDoubleDocValuesRangeQuery(final String field, final Double lowerValue, final Double upperValue) {
+		this(null, field, lowerValue, upperValue);
 	}
 
 	@Override
 	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return NumericDocValuesField.newExactQuery(resolveField(queryContext.getFieldMap()),
-				NumericUtils.floatToSortableInt(value));
+		return SortedNumericDocValuesField.newRangeQuery(resolveField(queryContext.getFieldMap()),
+				NumericUtils.doubleToSortableLong(lower_value), NumericUtils.doubleToSortableLong(upper_value));
 	}
 }

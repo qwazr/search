@@ -16,34 +16,23 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
-import java.util.Objects;
 
-public class FloatExactQuery extends AbstractFieldQuery<FloatExactQuery> {
-
-	public float value;
+public class FloatExactQuery extends AbstractExactQuery<Float, FloatExactQuery> {
 
 	@JsonCreator
 	public FloatExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final float value) {
-		super(FloatExactQuery.class, genericField, field);
-		this.value = value;
+			@JsonProperty("field") final String field, @JsonProperty("value") final Float value) {
+		super(FloatExactQuery.class, genericField, field, value == null ? 0 : value);
 	}
 
-	public FloatExactQuery(final String field, final float value) {
+	public FloatExactQuery(final String field, final Float value) {
 		this(null, field, value);
-	}
-
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(FloatExactQuery q) {
-		return super.isEqual(q) && Objects.equals(value, q.value);
 	}
 
 	@Override

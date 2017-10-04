@@ -16,7 +16,6 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.NumericDocValuesField;
@@ -24,27 +23,17 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
-import java.util.Objects;
 
-public class DoubleDocValuesExactQuery extends AbstractFieldQuery<DoubleDocValuesExactQuery> {
-
-	public double value;
+public class DoubleDocValuesExactQuery extends AbstractExactQuery<Double, DoubleDocValuesExactQuery> {
 
 	@JsonCreator
 	public DoubleDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final double value) {
-		super(DoubleDocValuesExactQuery.class, genericField, field);
-		this.value = value;
+			@JsonProperty("field") final String field, @JsonProperty("value") final Double value) {
+		super(DoubleDocValuesExactQuery.class, genericField, field, value == null ? 0 : value);
 	}
 
-	public DoubleDocValuesExactQuery(final String field, final double value) {
+	public DoubleDocValuesExactQuery(final String field, final Double value) {
 		this(null, field, value);
-	}
-
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(DoubleDocValuesExactQuery q) {
-		return super.isEqual(q) && Objects.equals(value, q.value);
 	}
 
 	@Override

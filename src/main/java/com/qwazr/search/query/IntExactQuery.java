@@ -16,34 +16,24 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
-import java.util.Objects;
 
-public class IntExactQuery extends AbstractFieldQuery<IntExactQuery> {
-
-	final public int value;
+public class IntExactQuery extends AbstractExactQuery<Integer, IntExactQuery> {
 
 	@JsonCreator
 	public IntExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final int value) {
-		super(IntExactQuery.class, genericField, field);
+			@JsonProperty("field") final String field, @JsonProperty("value") final Integer value) {
+		super(IntExactQuery.class, genericField, field, value == null ? 0 : value);
 		this.value = value;
 	}
 
 	public IntExactQuery(final String field, final int value) {
 		this(null, field, value);
-	}
-
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(IntExactQuery q) {
-		return super.isEqual(q) && Objects.equals(value, q.value);
 	}
 
 	@Override
