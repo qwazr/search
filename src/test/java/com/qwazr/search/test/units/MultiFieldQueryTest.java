@@ -85,6 +85,14 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 	}
 
 	@Test
+	public void testWithFieldOperators() {
+		QueryDefinition queryDef = QueryDefinition.of(
+				new MultiFieldQuery(QueryParserOperator.OR, "Hello world", null).field("textField", 3F, false,
+						QueryParserOperator.AND).field("stringField", 1F)).queryDebug(true).build();
+		checkQuery(queryDef, 1L, "(+textField:hello +textField:world)^3.0 stringField:Hello world~2");
+	}
+
+	@Test
 	public void testWithDisjunction() {
 		QueryDefinition queryDef = QueryDefinition.of(
 				new MultiFieldQuery(QueryParserOperator.AND, "Hello world", null, 0.1f).field("textField", 3F)
