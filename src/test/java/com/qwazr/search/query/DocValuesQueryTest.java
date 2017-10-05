@@ -25,6 +25,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.function.Consumer;
 
 /**
@@ -44,6 +46,7 @@ public class DocValuesQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxo
 		indexService.postDocument(new IndexRecord.NoTaxonomy("d4").doubleDocValue(4d));
 		indexService.postDocument(new IndexRecord.NoTaxonomy("sd4").sortedDoubleDocValue(4d));
 		indexService.postDocument(new IndexRecord.NoTaxonomy("sdv").sortedDocValue("b"));
+		indexService.postDocument(new IndexRecord.NoTaxonomy("ssdv").sortedSetDocValue("c").sortedSetDocValue("d"));
 	}
 
 	private void test(AbstractQuery query, String expectedId, Consumer<IndexRecord> recordCheck) {
@@ -165,5 +168,25 @@ public class DocValuesQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxo
 				record -> Assert.assertEquals("b", record.sortedDocValue));
 		test(new SortedDocValuesRangeQuery("sortedDocValue", "a", "b", false, true), "sdv",
 				record -> Assert.assertEquals("b", record.sortedDocValue));
+	}
+
+	@Test
+	public void sortedSetExact() {
+		final LinkedHashSet<String> set = new LinkedHashSet<>(Arrays.asList("c", "d"));
+		test(new SortedSetDocValuesExactQuery("sortedSetDocValue", "c"), "ssdv",
+				record -> Assert.assertEquals(set, record.sortedSetDocValue));
+		test(new SortedSetDocValuesExactQuery("sortedSetDocValue", "d"), "ssdv",
+				record -> Assert.assertEquals(set, record.sortedSetDocValue));
+	}
+
+	@Test
+	public void sortedSetRange() {
+		final LinkedHashSet<String> set = new LinkedHashSet<>(Arrays.asList("c", "d"));
+		test(new SortedSetDocValuesRangeQuery("sortedSetDocValue", "d", "e", null, null), "ssdv",
+				record -> Assert.assertEquals(set, record.sortedSetDocValue));
+		test(new SortedSetDocValuesRangeQuery("sortedSetDocValue", "c", "c", true, true), "ssdv",
+				record -> Assert.assertEquals(set, record.sortedSetDocValue));
+		test(new SortedSetDocValuesRangeQuery("sortedSetDocValue", "c", "d", false, true), "ssdv",
+				record -> Assert.assertEquals(set, record.sortedSetDocValue));
 	}
 }

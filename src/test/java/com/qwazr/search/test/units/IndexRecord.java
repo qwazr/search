@@ -25,10 +25,11 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.LinkedHashMap;
+import java.util.Set;
 
 public abstract class IndexRecord<T extends IndexRecord> {
 
@@ -61,6 +62,9 @@ public abstract class IndexRecord<T extends IndexRecord> {
 
 	@IndexField(template = FieldDefinition.Template.SortedDocValuesField)
 	public String sortedDocValue;
+
+	@IndexField(template = FieldDefinition.Template.SortedSetDocValuesField)
+	public Set<String> sortedSetDocValue;
 
 	@IndexField(template = FieldDefinition.Template.IntDocValuesField)
 	public Integer intDocValue;
@@ -176,6 +180,13 @@ public abstract class IndexRecord<T extends IndexRecord> {
 
 	public T sortedDocValue(String sortedDocValue) {
 		this.sortedDocValue = sortedDocValue;
+		return (T) this;
+	}
+
+	public T sortedSetDocValue(String value) {
+		if (sortedSetDocValue == null)
+			sortedSetDocValue = new LinkedHashSet<>();
+		this.sortedSetDocValue.add(value);
 		return (T) this;
 	}
 

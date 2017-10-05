@@ -93,6 +93,8 @@ import java.io.IOException;
 		@JsonSubTypes.Type(value = SortedIntDocValuesRangeQuery.class),
 		@JsonSubTypes.Type(value = SortedLongDocValuesExactQuery.class),
 		@JsonSubTypes.Type(value = SortedLongDocValuesRangeQuery.class),
+		@JsonSubTypes.Type(value = SortedSetDocValuesExactQuery.class),
+		@JsonSubTypes.Type(value = SortedSetDocValuesRangeQuery.class),
 		@JsonSubTypes.Type(value = SpanContainingQuery.class),
 		@JsonSubTypes.Type(value = SpanFirstQuery.class),
 		@JsonSubTypes.Type(value = SpanNearQuery.class),
