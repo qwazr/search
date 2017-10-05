@@ -34,6 +34,8 @@ import org.apache.lucene.analysis.el.GreekStemFilter;
 import org.apache.lucene.analysis.en.EnglishPossessiveFilter;
 import org.apache.lucene.analysis.en.PorterStemFilter;
 import org.apache.lucene.analysis.es.SpanishLightStemFilter;
+import org.apache.lucene.analysis.fr.FrenchAnalyzer;
+import org.apache.lucene.analysis.fr.FrenchLightStemFilter;
 import org.apache.lucene.analysis.ga.IrishLowerCaseFilter;
 import org.apache.lucene.analysis.hi.HindiNormalizationFilter;
 import org.apache.lucene.analysis.hi.HindiStemFilter;
@@ -75,6 +77,7 @@ public enum SmartAnalyzerSet {
 	CZECH(Czech.class),
 	DANISH(Danish.class),
 	DUTCH(Dutch.class),
+	FRENCH(French.class),
 	GERMAN(German.class),
 	GREEK(Greek.class),
 	ENGLISH(English.class),
@@ -203,6 +206,18 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
+	static public final class French extends Common {
+
+		@Override
+		protected TokenStream normalize(String fieldName, TokenStream source) {
+			TokenStream result = new StandardFilter(source);
+			result = new ElisionFilter(result, FrenchAnalyzer.DEFAULT_ARTICLES);
+			result = new LowerCaseFilter(result);
+			result = new FrenchLightStemFilter(result);
+			return result;
+		}
+	}
+
 	static public final class German extends Common {
 
 		@Override
@@ -262,11 +277,11 @@ public enum SmartAnalyzerSet {
 
 	static public final class Irish extends Common {
 
-		private static final CharArraySet DEFAULT_ARTICLES = CharArraySet.unmodifiableSet(
-				new CharArraySet(Arrays.asList("d", "m", "b"), true));
+		private static final CharArraySet DEFAULT_ARTICLES =
+				CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("d", "m", "b"), true));
 
-		private static final CharArraySet HYPHENATIONS = CharArraySet.unmodifiableSet(
-				new CharArraySet(Arrays.asList("h", "n", "t"), true));
+		private static final CharArraySet HYPHENATIONS =
+				CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("h", "n", "t"), true));
 
 		@Override
 		protected TokenStream normalize(String fieldName, TokenStream source) {
