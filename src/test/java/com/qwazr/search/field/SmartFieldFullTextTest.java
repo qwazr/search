@@ -16,6 +16,7 @@
 
 package com.qwazr.search.field;
 
+import com.qwazr.search.analysis.SmartAnalyzerSet;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.Index;
@@ -52,14 +53,14 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
 				new String[] { "tag1", "tag1and2" }));
 		indexService.postDocument(new Record(2, "Second article", new String[] { "Third sentence", "Fourth sentence" },
 				new String[] { "tag2", "tag1and2" }));
+		indexService.postDocument(new Record(3, "file.ext", null, null));
 	}
 
 	ResultDefinition.WithObject<Record> checkResult(AbstractQuery query, String queryExplain, long... expectedIds)
 			throws IOException, ReflectiveOperationException {
-		final ResultDefinition.WithObject<Record> result = indexService.searchQuery(QueryDefinition.of(query)
-				.returnedField("*")
-				.queryDebug(true)
-				.build(), Record.class);
+		final ResultDefinition.WithObject<Record> result =
+				indexService.searchQuery(QueryDefinition.of(query).returnedField("*").queryDebug(true).build(),
+						Record.class);
 		if (queryExplain != null)
 			Assert.assertEquals(queryExplain, result.query);
 		else
@@ -73,16 +74,18 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
 
 	void fullSearch(String queryString, String queryExplain, long... expectedIds)
 			throws IOException, ReflectiveOperationException {
-		checkResult(QueryParser.of("full")
-				.setDefaultOperator(QueryParserOperator.AND)
-				.setQueryString(queryString)
-				.build(), queryExplain, expectedIds);
+		checkResult(
+				QueryParser.of("full").setDefaultOperator(QueryParserOperator.AND).setQueryString(queryString).build(),
+				queryExplain, expectedIds);
 	}
 
 	ResultDefinition.WithObject<Record> multiSearch(String queryString, String queryExplain, long... expectedIds)
 			throws IOException, ReflectiveOperationException {
-		return checkResult(MultiFieldQueryParser.of().setDefaultOperator(QueryParserOperator.AND).addField("title",
-				"content", "tags").setQueryString(queryString).build(), queryExplain, expectedIds);
+		return checkResult(MultiFieldQueryParser.of()
+				.setDefaultOperator(QueryParserOperator.AND)
+				.addField("title", "content", "tags")
+				.setQueryString(queryString)
+				.build(), queryExplain, expectedIds);
 	}
 
 	@Test
@@ -127,10 +130,20 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
 	}
 
 	@Test
+	public void checkWordDelimiter() throws IOException, ReflectiveOperationException {
+		fullSearch("file.ext", "+tt€full:file +tt€full:ext", 3);
+		fullSearch("file", "tt€full:file", 3);
+		fullSearch("ext", "tt€full:ext", 3);
+	}
+
+	@Test
 	public void searchHighlights() throws IOException, ReflectiveOperationException {
-		final ResultDefinition.WithObject<Record> result = indexService.searchQuery(QueryDefinition.of(QueryParser.of(
-				"title").setQueryString("article").build()).returnedField("*").highlighter("title",
-				HighlighterDefinition.of("title").build()).queryDebug(true).build(), Record.class);
+		final ResultDefinition.WithObject<Record> result = indexService.searchQuery(
+				QueryDefinition.of(QueryParser.of("title").setQueryString("article").build())
+						.returnedField("*")
+						.highlighter("title", HighlighterDefinition.of("title").build())
+						.queryDebug(true)
+						.build(), Record.class);
 		Assert.assertNotNull(result);
 	}
 
@@ -154,14 +167,20 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
 		@Copy(to = { @Copy.To(order = 2, field = "full") })
 		final public String[] content;
 
-		@SmartField(type = SmartFieldDefinition.Type.TEXT, index = true, analyzerClass = StandardAnalyzer.class)
+		@SmartField(type = SmartFieldDefinition.Type.TEXT,
+				index = true,
+				analyzerClass = SmartAnalyzerSet.AsciiIndex.class,
+				queryAnalyzerClass = SmartAnalyzerSet.AsciiIndex.class)
 		@Copy(to = { @Copy.To(order = 3, field = "full") })
 		final public String[] tags;
 
 		@SmartField(type = SmartFieldDefinition.Type.TEXT, index = true)
 		final public String nonFullTextTitle;
 
-		@SmartField(type = SmartFieldDefinition.Type.TEXT, index = true, analyzerClass = StandardAnalyzer.class)
+		@SmartField(type = SmartFieldDefinition.Type.TEXT,
+				index = true,
+				analyzerClass = SmartAnalyzerSet.AsciiIndex.class,
+				queryAnalyzerClass = SmartAnalyzerSet.AsciiQuery.class)
 		final public List<String> full;
 
 		Record(long id, String title, String[] content, String[] tags) {

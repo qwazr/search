@@ -54,7 +54,7 @@ public abstract class IndexRecord<T extends IndexRecord> {
 
 	@IndexField(template = FieldDefinition.Template.TextField,
 			queryAnalyzerClass = ComplexQueryAnalyzer.class,
-			analyzerClass = SmartAnalyzerSet.English.class)
+			analyzerClass = SmartAnalyzerSet.EnglishIndex.class)
 	public String textComplexAnalyzer;
 
 	@IndexField(template = FieldDefinition.Template.StringField)
