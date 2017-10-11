@@ -198,10 +198,10 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 			final BooleanClause.Occur occur;
 			if (fieldsAndFilter != null && fieldsAndFilter.contains(field)) {
 				queries = andFieldQueries;
-				occur = minNumberShouldMatch != null ? BooleanClause.Occur.SHOULD : defaultOccur;
+				occur = minNumberShouldMatch != null ? BooleanClause.Occur.SHOULD : BooleanClause.Occur.MUST;
 			} else {
 				queries = fieldQueries;
-				occur = minNumberShouldMatch != null ? BooleanClause.Occur.SHOULD : BooleanClause.Occur.MUST;
+				occur = minNumberShouldMatch != null ? BooleanClause.Occur.SHOULD : defaultOccur;
 			}
 			queries.add(new FieldQueryBuilder(alzr, field, termsFreq).parse(queryString, occur, boost));
 		});
