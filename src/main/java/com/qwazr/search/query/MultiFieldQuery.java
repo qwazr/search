@@ -50,8 +50,8 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 	@JsonProperty("fields_disabled_graph")
 	final public Set<String> fieldsDisabledGraph;
 
-	@JsonProperty("fields_operator")
-	final public Map<String, QueryParserOperator> fieldsOperator;
+	@JsonProperty("fields_and_filter")
+	final public Set<String> fieldsAndFilter;
 
 	@JsonProperty("default_operator")
 	final public QueryParserOperator defaultOperator;
@@ -97,18 +97,17 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final Set<String> fieldsDisabledGraph,
 			final QueryParserOperator defaultOperator, final String queryString, final Integer minNumberShouldMatch,
 			final Float tieBreakerMultiplier, final Analyzer analyzer) {
-		this(fieldsBoosts, fieldsDisabledGraph, new LinkedHashMap<>(), defaultOperator, queryString,
+		this(fieldsBoosts, fieldsDisabledGraph, new LinkedHashSet<>(), defaultOperator, queryString,
 				minNumberShouldMatch, tieBreakerMultiplier, analyzer);
 	}
 
 	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final Set<String> fieldsDisabledGraph,
-			final Map<String, QueryParserOperator> fieldsOperator, final QueryParserOperator defaultOperator,
-			final String queryString, final Integer minNumberShouldMatch, final Float tieBreakerMultiplier,
-			final Analyzer analyzer) {
+			final Set<String> fieldsAndFilter, final QueryParserOperator defaultOperator, final String queryString,
+			final Integer minNumberShouldMatch, final Float tieBreakerMultiplier, final Analyzer analyzer) {
 		super(MultiFieldQuery.class);
 		this.fieldsBoosts = fieldsBoosts;
 		this.fieldsDisabledGraph = fieldsDisabledGraph;
-		this.fieldsOperator = fieldsOperator;
+		this.fieldsAndFilter = fieldsAndFilter;
 		this.defaultOperator = defaultOperator;
 		this.queryString = queryString;
 		this.minNumberShouldMatch = minNumberShouldMatch;
@@ -119,18 +118,18 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 	@JsonCreator
 	public MultiFieldQuery(@JsonProperty("fields_boosts") final Map<String, Float> fieldsBoosts,
 			@JsonProperty("fields_disabled_graph") final Set<String> fieldsDisabledGraph,
-			@JsonProperty("fields_operator") final Map<String, QueryParserOperator> fieldsOperator,
+			@JsonProperty("fields_and_filter") final Set<String> fieldsAndFilter,
 			@JsonProperty("default_operator") final QueryParserOperator defaultOperator,
 			@JsonProperty("query_string") final String queryString,
 			@JsonProperty("min_number_should_match") final Integer minNumberShouldMatch,
 			@JsonProperty("tie_breaker_multiplier") final Float tieBreakerMultiplier) {
-		this(fieldsBoosts, fieldsDisabledGraph, fieldsOperator, defaultOperator, queryString, minNumberShouldMatch,
+		this(fieldsBoosts, fieldsDisabledGraph, fieldsAndFilter, defaultOperator, queryString, minNumberShouldMatch,
 				tieBreakerMultiplier, null);
 	}
 
 	@JsonIgnore
 	public MultiFieldQuery field(final String field, final Float boost, final boolean enableGraph,
-			final QueryParserOperator operator) {
+			final boolean andFilter) {
 		Objects.requireNonNull(field, "The field is missing");
 		Objects.requireNonNull(fieldsBoosts);
 		if (boost != null)
@@ -141,28 +140,28 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 			fieldsDisabledGraph.remove(field);
 		else
 			fieldsDisabledGraph.add(field);
-		if (operator != null)
-			fieldsOperator.put(field, operator);
+		if (andFilter)
+			fieldsAndFilter.add(field);
 		else
-			fieldsOperator.remove(field);
+			fieldsAndFilter.remove(field);
 		return this;
 	}
 
 	@JsonIgnore
 	public MultiFieldQuery field(final String field, final Float boost, final boolean enableGraph) {
-		return field(field, boost, enableGraph, null);
+		return field(field, boost, enableGraph, false);
 	}
 
 	@JsonIgnore
 	public MultiFieldQuery field(final String field, final Float boost) {
-		return field(field, boost, true, null);
+		return field(field, boost, true, false);
 	}
 
 	@Override
 	protected boolean isEqual(MultiFieldQuery q) {
 		return CollectionsUtils.equals(fieldsBoosts, q.fieldsBoosts) &&
 				CollectionsUtils.equals(fieldsDisabledGraph, q.fieldsDisabledGraph) &&
-				CollectionsUtils.equals(fieldsOperator, q.fieldsOperator) &&
+				CollectionsUtils.equals(fieldsAndFilter, q.fieldsAndFilter) &&
 				Objects.equals(defaultOperator, q.defaultOperator) && Objects.equals(queryString, q.queryString) &&
 				Objects.equals(minNumberShouldMatch, q.minNumberShouldMatch) &&
 				Objects.equals(tieBreakerMultiplier, q.tieBreakerMultiplier) && Objects.equals(analyzer, q.analyzer);
@@ -190,24 +189,32 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 
 		// Build the per field queries
 		final List<Query> fieldQueries = new ArrayList<>();
-		fieldsBoosts.forEach((field, boost) -> fieldQueries.add(
-				new FieldQueryBuilder(alzr, field, termsFreq).parse(queryString, getOccur(field), boost)));
-
-		// Build the final query
-		return getRootQuery(fieldQueries);
-	}
-
-	protected BooleanClause.Occur getOccur(String field) {
-		// If minShouldMatch is active, we are using SHOULD
-		if (minNumberShouldMatch != null)
-			return BooleanClause.Occur.SHOULD;
-		// Let's check per field parameter
-		final QueryParserOperator operator =
-				fieldsOperator == null ? defaultOperator : fieldsOperator.getOrDefault(field, defaultOperator);
-		return operator == null || operator == QueryParserOperator.AND ?
+		final List<Query> andFieldQueries = fieldsAndFilter != null ? new ArrayList<>() : null;
+		final BooleanClause.Occur defaultOccur = defaultOperator == null || defaultOperator == QueryParserOperator.AND ?
 				BooleanClause.Occur.MUST :
 				BooleanClause.Occur.SHOULD;
+		fieldsBoosts.forEach((field, boost) -> {
+			final List<Query> queries;
+			final BooleanClause.Occur occur;
+			if (fieldsAndFilter != null && fieldsAndFilter.contains(field)) {
+				queries = andFieldQueries;
+				occur = minNumberShouldMatch != null ? BooleanClause.Occur.SHOULD : defaultOccur;
+			} else {
+				queries = fieldQueries;
+				occur = minNumberShouldMatch != null ? BooleanClause.Occur.SHOULD : BooleanClause.Occur.MUST;
+			}
+			queries.add(new FieldQueryBuilder(alzr, field, termsFreq).parse(queryString, occur, boost));
+		});
 
+		// Build the final query
+		final Query fieldsQuery = getRootQuery(fieldQueries);
+		if (andFieldQueries == null || andFieldQueries.isEmpty())
+			return fieldsQuery;
+		final Query andFieldsQuery = getRootQuery(andFieldQueries);
+		final BooleanQuery.Builder builder = new org.apache.lucene.search.BooleanQuery.Builder();
+		builder.add(fieldsQuery, BooleanClause.Occur.MUST);
+		builder.add(andFieldsQuery, BooleanClause.Occur.MUST);
+		return builder.build();
 	}
 
 	protected Query getRootQuery(final Collection<Query> queries) {
