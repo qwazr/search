@@ -200,7 +200,7 @@ public class MultiFieldQuery extends AbstractQuery {
 			return fieldsQuery;
 		final Query andFieldsQuery = getRootQuery(andFieldQueries);
 		final BooleanQuery.Builder builder = new org.apache.lucene.search.BooleanQuery.Builder();
-		builder.add(fieldsQuery, BooleanClause.Occur.MUST);
+		builder.add(fieldsQuery, BooleanClause.Occur.SHOULD);
 		builder.add(andFieldsQuery, BooleanClause.Occur.MUST);
 		return builder.build();
 	}
