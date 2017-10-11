@@ -186,10 +186,10 @@ public class AnnotatedIndexServiceTest {
 	@Test
 	public void test510explain() {
 		MultiFieldQuery mfq =
-				new MultiFieldQuery(QueryParserOperator.AND, "Title terms", null).field("title", 10F, false, null)
-						.field("content", 1.0F, false, QueryParserOperator.AND)
-						.field("full", 0.5f, true, QueryParserOperator.AND);
-		QueryDefinition query = QueryDefinition.of(mfq).build();
+				new MultiFieldQuery(QueryParserOperator.OR, "Title terms", null).field("title", 10F, false, false)
+						.field("content", 1.0F, false, false)
+						.field("full", 0.5f, false, true);
+		QueryDefinition query = QueryDefinition.of(mfq).queryDebug(true).build();
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);
 		Assert.assertNotNull(results);
 		int docId = results.getDocuments().get(0).getDoc();

@@ -87,9 +87,11 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 	@Test
 	public void testWithFieldOperators() {
 		QueryDefinition queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.OR, "Hello world", null).field("textField", 3F, false,
-						QueryParserOperator.AND).field("stringField", 1F)).queryDebug(true).build();
-		checkQuery(queryDef, 1L, "(+textField:hello +textField:world)^3.0 stringField:Hello world~2");
+				new MultiFieldQuery(QueryParserOperator.OR, "Hello world", null).field("textField", 3F, false, true)
+						.field("stringField", 1F)
+						.field("textSynonymsField1", 2.F, true)).queryDebug(true).build();
+		checkQuery(queryDef, 1L,
+				"+(stringField:Hello world~2 (((+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2) (+textSynonymsField1:hallo~2 +textSynonymsField1:welt~2) (+textSynonymsField1:Hello~2 +textSynonymsField1:world)))^2.0) +(+textField:hello +textField:world)^3.0");
 	}
 
 	@Test
@@ -98,6 +100,15 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 				new MultiFieldQuery(QueryParserOperator.AND, "Hello world", null, 0.1f).field("textField", 3F)
 						.field("stringField", 1F)).queryDebug(true).build();
 		checkQuery(queryDef, 1L, "((+textField:hello +textField:world)^3.0 | stringField:Hello world~2)~0.1");
+	}
+
+	@Test
+	public void testWithDisjunctionAndFieldOperators() {
+		QueryDefinition queryDef = QueryDefinition.of(
+				new MultiFieldQuery(QueryParserOperator.OR, "Hello world", null, 0.1f).field("textField", 3F, false,
+						true).field("stringField", 1F).field("textSynonymsField1", 2.F, true)).queryDebug(true).build();
+		checkQuery(queryDef, 1L,
+				"+(stringField:Hello world~2 | (((+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2) (+textSynonymsField1:hallo~2 +textSynonymsField1:welt~2) (+textSynonymsField1:Hello~2 +textSynonymsField1:world)))^2.0)~0.1 +(+textField:hello +textField:world)^3.0");
 	}
 
 	@Test
