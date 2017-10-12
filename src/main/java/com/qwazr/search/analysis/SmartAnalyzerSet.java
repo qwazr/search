@@ -109,10 +109,10 @@ public enum SmartAnalyzerSet {
 		this.queryAnalyzer = queryAnalyzer;
 	}
 
-	private final static int MAX_TOKEN_LENGTH = 255;
-	private final static int POSITION_INCREMENT_GAP = 100;
+	public final static int MAX_TOKEN_LENGTH = 255;
+	public final static int POSITION_INCREMENT_GAP = 100;
 
-	static abstract class Common extends Analyzer {
+	public static abstract class Common extends Analyzer {
 
 		final private Normalize normalize;
 		final private AfterTokenize afterTokenize;
@@ -121,7 +121,7 @@ public enum SmartAnalyzerSet {
 			return POSITION_INCREMENT_GAP;
 		}
 
-		Common(Normalize normalize, AfterTokenize afterTokenize) {
+		protected Common(Normalize normalize, AfterTokenize afterTokenize) {
 			this.normalize = normalize;
 			this.afterTokenize = afterTokenize;
 		}
@@ -143,16 +143,16 @@ public enum SmartAnalyzerSet {
 	}
 
 	@FunctionalInterface
-	interface Normalize {
+	public interface Normalize {
 		TokenStream apply(TokenStream in);
 	}
 
 	@FunctionalInterface
-	interface AfterTokenize {
+	public interface AfterTokenize {
 		TokenStream apply(Tokenizer src);
 	}
 
-	static TokenStream indexWordDelimiter(Tokenizer src) {
+	static public TokenStream indexWordDelimiter(Tokenizer src) {
 		return new WordDelimiterGraphFilter(src,
 				WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
 						WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE |
@@ -161,30 +161,30 @@ public enum SmartAnalyzerSet {
 				CharArraySet.EMPTY_SET);
 	}
 
-	static abstract class Index extends Common {
+	public static abstract class Index extends Common {
 
-		Index(Normalize normalize) {
+		protected Index(Normalize normalize) {
 			super(normalize, SmartAnalyzerSet::indexWordDelimiter);
 		}
 
 	}
 
-	static TokenStream queryWordDelimiter(Tokenizer src) {
+	public static TokenStream queryWordDelimiter(Tokenizer src) {
 		return new WordDelimiterGraphFilter(src,
 				WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
 						WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE,
 				CharArraySet.EMPTY_SET);
 	}
 
-	static abstract class Query extends Common {
+	public static abstract class Query extends Common {
 
-		Query(Normalize normalize) {
+		protected Query(Normalize normalize) {
 			super(normalize, SmartAnalyzerSet::queryWordDelimiter);
 		}
 
 	}
 
-	static TokenStream lower(TokenStream in) {
+	static public TokenStream lower(TokenStream in) {
 		return new LowerCaseFilter(in);
 	}
 
@@ -200,7 +200,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream ascii(TokenStream in) {
+	static public TokenStream ascii(TokenStream in) {
 		return new ASCIIFoldingFilter(new LowerCaseFilter(in));
 	}
 
@@ -216,7 +216,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream arabic(TokenStream result) {
+	static public TokenStream arabic(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new DecimalDigitFilter(result);
 		result = new ArabicNormalizationFilter(result);
@@ -235,7 +235,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream bulgarian(TokenStream result) {
+	static public TokenStream bulgarian(TokenStream result) {
 		result = new StandardFilter(result);
 		result = new LowerCaseFilter(result);
 		result = new BulgarianStemFilter(result);
@@ -254,7 +254,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream cjk(TokenStream result) {
+	static public TokenStream cjk(TokenStream result) {
 		result = new CJKWidthFilter(result);
 		result = new LowerCaseFilter(result);
 		result = new CJKBigramFilter(result);
@@ -273,7 +273,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream czech(TokenStream result) {
+	static public TokenStream czech(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new CzechStemFilter(result);
 		return result;
@@ -291,7 +291,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream danish(TokenStream result) {
+	static public TokenStream danish(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new SnowballFilter(result, new DanishStemmer());
 		return result;
@@ -309,7 +309,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream dutch(TokenStream result) {
+	static public TokenStream dutch(TokenStream result) {
 		result = new StandardFilter(result);
 		result = new LowerCaseFilter(result);
 		result = new SnowballFilter(result, new org.tartarus.snowball.ext.DutchStemmer());
@@ -328,7 +328,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream english(TokenStream result) {
+	static public TokenStream english(TokenStream result) {
 		result = new EnglishPossessiveFilter(result);
 		result = new LowerCaseFilter(result);
 		result = new PorterStemFilter(result);
@@ -347,7 +347,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream french(TokenStream result) {
+	static public TokenStream french(TokenStream result) {
 		result = new ElisionFilter(result, FrenchAnalyzer.DEFAULT_ARTICLES);
 		result = new LowerCaseFilter(result);
 		result = new FrenchLightStemFilter(result);
@@ -366,7 +366,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream finnish(TokenStream result) {
+	static public TokenStream finnish(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new SnowballFilter(result, new FinnishStemmer());
 		return result;
@@ -384,7 +384,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream german(TokenStream result) {
+	static public TokenStream german(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new GermanNormalizationFilter(result);
 		result = new GermanLightStemFilter(result);
@@ -403,7 +403,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream greek(TokenStream result) {
+	static public TokenStream greek(TokenStream result) {
 		result = new GreekLowerCaseFilter(result);
 		result = new GreekStemFilter(result);
 		return result;
@@ -421,7 +421,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream hindi(TokenStream result) {
+	static public TokenStream hindi(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new DecimalDigitFilter(result);
 		result = new IndicNormalizationFilter(result);
@@ -442,7 +442,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream hungarian(TokenStream result) {
+	static public TokenStream hungarian(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new SnowballFilter(result, new HungarianStemmer());
 		return result;
@@ -460,13 +460,13 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	private static final CharArraySet IRISH_DEFAULT_ARTICLES =
+	static public final CharArraySet IRISH_DEFAULT_ARTICLES =
 			CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("d", "m", "b"), true));
 
-	private static final CharArraySet IRISH_HYPHENATIONS =
+	static public final CharArraySet IRISH_HYPHENATIONS =
 			CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("h", "n", "t"), true));
 
-	static TokenStream irish(TokenStream result) {
+	static public TokenStream irish(TokenStream result) {
 		result = new StopFilter(result, IRISH_HYPHENATIONS);
 		result = new ElisionFilter(result, IRISH_DEFAULT_ARTICLES);
 		result = new IrishLowerCaseFilter(result);
@@ -486,11 +486,11 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	private static final CharArraySet ITALIAN_DEFAULT_ARTICLES = CharArraySet.unmodifiableSet(new CharArraySet(
+	static public final CharArraySet ITALIAN_DEFAULT_ARTICLES = CharArraySet.unmodifiableSet(new CharArraySet(
 			Arrays.asList("c", "l", "all", "dall", "dell", "nell", "sull", "coll", "pell", "gl", "agl", "dagl", "degl",
 					"negl", "sugl", "un", "m", "t", "s", "v", "d"), true));
 
-	static TokenStream italian(TokenStream result) {
+	static public TokenStream italian(TokenStream result) {
 		result = new ElisionFilter(result, ITALIAN_DEFAULT_ARTICLES);
 		result = new LowerCaseFilter(result);
 		result = new ItalianLightStemFilter(result);
@@ -509,7 +509,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream lithuanian(TokenStream result) {
+	static public TokenStream lithuanian(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new SnowballFilter(result, new LithuanianStemmer());
 		return result;
@@ -527,7 +527,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream latvian(TokenStream result) {
+	static public TokenStream latvian(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new LatvianStemFilter(result);
 		return result;
@@ -545,7 +545,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream norwegian(TokenStream result) {
+	static public TokenStream norwegian(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new SnowballFilter(result, new NorwegianStemmer());
 		return result;
@@ -563,7 +563,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream polish(TokenStream result) {
+	static public TokenStream polish(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new StempelFilter(result, new StempelStemmer(PolishAnalyzer.getDefaultTable()));
 		return result;
@@ -581,7 +581,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream portuguese(TokenStream result) {
+	static public TokenStream portuguese(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new PortugueseLightStemFilter(result);
 		return result;
@@ -599,7 +599,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream romanian(TokenStream result) {
+	static public TokenStream romanian(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new SnowballFilter(result, new RomanianStemmer());
 		return result;
@@ -617,7 +617,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream russian(TokenStream result) {
+	static public TokenStream russian(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new SnowballFilter(result, new org.tartarus.snowball.ext.RussianStemmer());
 		return result;
@@ -635,7 +635,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream spanish(TokenStream result) {
+	static public TokenStream spanish(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new SpanishLightStemFilter(result);
 		return result;
@@ -653,7 +653,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream swedish(TokenStream result) {
+	static public TokenStream swedish(TokenStream result) {
 		result = new LowerCaseFilter(result);
 		result = new SnowballFilter(result, new SwedishStemmer());
 		return result;
@@ -671,7 +671,7 @@ public enum SmartAnalyzerSet {
 		}
 	}
 
-	static TokenStream turkish(TokenStream result) {
+	static public TokenStream turkish(TokenStream result) {
 		result = new ApostropheFilter(result);
 		result = new TurkishLowerCaseFilter(result);
 		result = new SnowballFilter(result, new TurkishStemmer());
