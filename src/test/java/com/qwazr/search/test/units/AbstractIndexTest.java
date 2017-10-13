@@ -41,11 +41,11 @@ public abstract class AbstractIndexTest {
 
 	static final Logger LOGGER = LoggerUtils.getLogger(AbstractIndexTest.class);
 
-	protected static void initIndexManager() {
+	protected static IndexManager initIndexManager() {
 		try {
 			executor = Executors.newCachedThreadPool();
 			rootDirectory = Files.createTempDirectory("qwazr_index_test");
-			indexManager = new IndexManager(rootDirectory, executor);
+			return indexManager = new IndexManager(rootDirectory, executor);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
