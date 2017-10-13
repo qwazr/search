@@ -104,7 +104,7 @@ class IndexInstanceBuilder {
 	private void buildCommon() throws IOException, ReflectiveOperationException, URISyntaxException {
 
 		if (settings.similarityClass != null && !settings.similarityClass.isEmpty())
-			similarity = IndexUtils.findSimilarity(settings.similarityClass);
+			similarity = IndexUtils.findSimilarity(instanceFactory, settings.similarityClass);
 
 		searcherFactory = MultiThreadSearcherFactory.of(executorService,
 				settings.indexReaderWarmer == null ? true : settings.indexReaderWarmer, similarity,

@@ -21,7 +21,6 @@ import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.StopFilter;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.ar.ArabicNormalizationFilter;
 import org.apache.lucene.analysis.bg.BulgarianStemFilter;
 import org.apache.lucene.analysis.cjk.CJKBigramFilter;
@@ -112,18 +111,10 @@ public enum SmartAnalyzerSet {
 	public final static int MAX_TOKEN_LENGTH = 255;
 	public final static int POSITION_INCREMENT_GAP = 100;
 
-	public static abstract class Common extends Analyzer {
-
-		final private Normalize normalize;
-		final private AfterTokenize afterTokenize;
+	public static abstract class Base extends Analyzer {
 
 		final public int getPositionIncrementGap(String fieldName) {
 			return POSITION_INCREMENT_GAP;
-		}
-
-		protected Common(Normalize normalize, AfterTokenize afterTokenize) {
-			this.normalize = normalize;
-			this.afterTokenize = afterTokenize;
 		}
 
 		@Override
@@ -131,8 +122,8 @@ public enum SmartAnalyzerSet {
 
 			final UAX29URLEmailTokenizer src = new UAX29URLEmailTokenizer();
 			src.setMaxTokenLength(MAX_TOKEN_LENGTH);
-			final TokenStream tok = normalize.apply(afterTokenize.apply(src));
-			return new TokenStreamComponents(src, tok) {
+
+			return new TokenStreamComponents(src, filter(fieldName, src)) {
 				@Override
 				protected void setReader(final Reader reader) {
 					src.setMaxTokenLength(MAX_TOKEN_LENGTH);
@@ -140,19 +131,14 @@ public enum SmartAnalyzerSet {
 				}
 			};
 		}
+
+		protected TokenStream filter(String fieldName, TokenStream in) {
+			return normalize(fieldName, in);
+		}
+
 	}
 
-	@FunctionalInterface
-	public interface Normalize {
-		TokenStream apply(TokenStream in);
-	}
-
-	@FunctionalInterface
-	public interface AfterTokenize {
-		TokenStream apply(Tokenizer src);
-	}
-
-	static public TokenStream indexWordDelimiter(Tokenizer src) {
+	static public TokenStream indexWordDelimiter(TokenStream src) {
 		return new WordDelimiterGraphFilter(src,
 				WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
 						WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE |
@@ -161,27 +147,31 @@ public enum SmartAnalyzerSet {
 				CharArraySet.EMPTY_SET);
 	}
 
-	public static abstract class Index extends Common {
-
-		protected Index(Normalize normalize) {
-			super(normalize, SmartAnalyzerSet::indexWordDelimiter);
+	public static abstract class Index extends Base {
+		protected TokenStream filter(String fieldName, TokenStream in) {
+			return normalize(fieldName, indexWordDelimiter(in));
 		}
-
 	}
 
-	public static TokenStream queryWordDelimiter(Tokenizer src) {
+	public static abstract class PayloadBoost extends Index {
+		protected TokenStream filter(String fieldName, TokenStream in) {
+			final FirstTokenPayloadFilter firstTokenPayloadFilter = new FirstTokenPayloadFilter(in);
+			return firstTokenPayloadFilter.newSetterFilter(
+					normalize(fieldName, indexWordDelimiter(firstTokenPayloadFilter)));
+		}
+	}
+
+	public static TokenStream queryWordDelimiter(TokenStream src) {
 		return new WordDelimiterGraphFilter(src,
 				WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
 						WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE,
 				CharArraySet.EMPTY_SET);
 	}
 
-	public static abstract class Query extends Common {
-
-		protected Query(Normalize normalize) {
-			super(normalize, SmartAnalyzerSet::queryWordDelimiter);
+	public static abstract class Query extends Base {
+		protected TokenStream filter(String fieldName, TokenStream in) {
+			return normalize(fieldName, queryWordDelimiter(in));
 		}
-
 	}
 
 	static public TokenStream lower(TokenStream in) {
@@ -189,14 +179,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class LowercaseIndex extends Index {
-		public LowercaseIndex() {
-			super(SmartAnalyzerSet::lower);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return lower(in);
 		}
 	}
 
 	static public final class LowercaseQuery extends Query {
-		public LowercaseQuery() {
-			super(SmartAnalyzerSet::lower);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return lower(in);
 		}
 	}
 
@@ -205,14 +195,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class AsciiIndex extends Index {
-		public AsciiIndex() {
-			super(SmartAnalyzerSet::ascii);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return ascii(in);
 		}
 	}
 
 	static public final class AsciiQuery extends Query {
-		public AsciiQuery() {
-			super(SmartAnalyzerSet::ascii);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return ascii(in);
 		}
 	}
 
@@ -224,14 +214,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class ArabicIndex extends Index {
-		public ArabicIndex() {
-			super(SmartAnalyzerSet::arabic);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return arabic(in);
 		}
 	}
 
 	static public final class ArabicQuery extends Query {
-		public ArabicQuery() {
-			super(SmartAnalyzerSet::arabic);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return arabic(in);
 		}
 	}
 
@@ -243,14 +233,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class BulgarianIndex extends Index {
-		public BulgarianIndex() {
-			super(SmartAnalyzerSet::bulgarian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return bulgarian(in);
 		}
 	}
 
 	static public final class BulgarianQuery extends Query {
-		public BulgarianQuery() {
-			super(SmartAnalyzerSet::bulgarian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return bulgarian(in);
 		}
 	}
 
@@ -262,14 +252,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class CJKIndex extends Index {
-		public CJKIndex() {
-			super(SmartAnalyzerSet::cjk);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return cjk(in);
 		}
 	}
 
 	static public final class CJKQuery extends Query {
-		public CJKQuery() {
-			super(SmartAnalyzerSet::cjk);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return cjk(in);
 		}
 	}
 
@@ -280,14 +270,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class CzechIndex extends Index {
-		public CzechIndex() {
-			super(SmartAnalyzerSet::czech);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return czech(in);
 		}
 	}
 
 	static public final class CzechQuery extends Query {
-		public CzechQuery() {
-			super(SmartAnalyzerSet::czech);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return czech(in);
 		}
 	}
 
@@ -298,14 +288,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class DanishIndex extends Index {
-		public DanishIndex() {
-			super(SmartAnalyzerSet::danish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return danish(in);
 		}
 	}
 
 	static public final class DanishQuery extends Query {
-		public DanishQuery() {
-			super(SmartAnalyzerSet::danish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return danish(in);
 		}
 	}
 
@@ -317,14 +307,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class DutchIndex extends Index {
-		public DutchIndex() {
-			super(SmartAnalyzerSet::dutch);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return dutch(in);
 		}
 	}
 
 	static public final class DutchQuery extends Query {
-		public DutchQuery() {
-			super(SmartAnalyzerSet::dutch);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return dutch(in);
 		}
 	}
 
@@ -336,14 +326,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class EnglishIndex extends Index {
-		public EnglishIndex() {
-			super(SmartAnalyzerSet::english);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return english(in);
 		}
 	}
 
 	static public final class EnglishQuery extends Query {
-		public EnglishQuery() {
-			super(SmartAnalyzerSet::english);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return english(in);
 		}
 	}
 
@@ -355,14 +345,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class FrenchIndex extends Index {
-		public FrenchIndex() {
-			super(SmartAnalyzerSet::french);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return french(in);
 		}
 	}
 
 	static public final class FrenchQuery extends Query {
-		public FrenchQuery() {
-			super(SmartAnalyzerSet::french);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return french(in);
 		}
 	}
 
@@ -373,14 +363,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class FinnishIndex extends Index {
-		public FinnishIndex() {
-			super(SmartAnalyzerSet::finnish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return finnish(in);
 		}
 	}
 
 	static public final class FinnishQuery extends Query {
-		public FinnishQuery() {
-			super(SmartAnalyzerSet::finnish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return finnish(in);
 		}
 	}
 
@@ -392,14 +382,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class GermanIndex extends Index {
-		public GermanIndex() {
-			super(SmartAnalyzerSet::german);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return german(in);
 		}
 	}
 
 	static public final class GermanQuery extends Query {
-		public GermanQuery() {
-			super(SmartAnalyzerSet::german);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return german(in);
 		}
 	}
 
@@ -410,14 +400,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class GreekIndex extends Index {
-		public GreekIndex() {
-			super(SmartAnalyzerSet::greek);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return greek(in);
 		}
 	}
 
 	static public final class GreekQuery extends Query {
-		public GreekQuery() {
-			super(SmartAnalyzerSet::greek);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return greek(in);
 		}
 	}
 
@@ -431,14 +421,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class HindiIndex extends Index {
-		public HindiIndex() {
-			super(SmartAnalyzerSet::hindi);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return hindi(in);
 		}
 	}
 
 	static public final class HindiQuery extends Query {
-		public HindiQuery() {
-			super(SmartAnalyzerSet::hindi);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return hindi(in);
 		}
 	}
 
@@ -449,14 +439,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class HungarianIndex extends Index {
-		public HungarianIndex() {
-			super(SmartAnalyzerSet::hungarian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return hungarian(in);
 		}
 	}
 
 	static public final class HungarianQuery extends Query {
-		public HungarianQuery() {
-			super(SmartAnalyzerSet::hungarian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return hungarian(in);
 		}
 	}
 
@@ -475,14 +465,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class IrishIndex extends Index {
-		public IrishIndex() {
-			super(SmartAnalyzerSet::irish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return irish(in);
 		}
 	}
 
 	static public final class IrishQuery extends Query {
-		public IrishQuery() {
-			super(SmartAnalyzerSet::irish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return irish(in);
 		}
 	}
 
@@ -498,14 +488,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class ItalianIndex extends Index {
-		public ItalianIndex() {
-			super(SmartAnalyzerSet::italian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return italian(in);
 		}
 	}
 
 	static public final class ItalianQuery extends Query {
-		public ItalianQuery() {
-			super(SmartAnalyzerSet::italian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return italian(in);
 		}
 	}
 
@@ -516,14 +506,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class LithuanianIndex extends Index {
-		public LithuanianIndex() {
-			super(SmartAnalyzerSet::lithuanian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return lithuanian(in);
 		}
 	}
 
 	static public final class LithuanianQuery extends Query {
-		public LithuanianQuery() {
-			super(SmartAnalyzerSet::lithuanian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return lithuanian(in);
 		}
 	}
 
@@ -534,14 +524,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class LatvianIndex extends Index {
-		public LatvianIndex() {
-			super(SmartAnalyzerSet::latvian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return latvian(in);
 		}
 	}
 
 	static public final class LatvianQuery extends Query {
-		public LatvianQuery() {
-			super(SmartAnalyzerSet::latvian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return latvian(in);
 		}
 	}
 
@@ -552,14 +542,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class NorwegianIndex extends Index {
-		public NorwegianIndex() {
-			super(SmartAnalyzerSet::norwegian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return norwegian(in);
 		}
 	}
 
 	static public final class NorwegianQuery extends Query {
-		public NorwegianQuery() {
-			super(SmartAnalyzerSet::norwegian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return norwegian(in);
 		}
 	}
 
@@ -570,14 +560,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class PolishIndex extends Index {
-		public PolishIndex() {
-			super(SmartAnalyzerSet::polish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return polish(in);
 		}
 	}
 
 	static public final class PolishQuery extends Query {
-		public PolishQuery() {
-			super(SmartAnalyzerSet::polish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return polish(in);
 		}
 	}
 
@@ -588,14 +578,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class PortugueseIndex extends Index {
-		public PortugueseIndex() {
-			super(SmartAnalyzerSet::portuguese);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return portuguese(in);
 		}
 	}
 
 	static public final class PortugueseQuery extends Query {
-		public PortugueseQuery() {
-			super(SmartAnalyzerSet::portuguese);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return portuguese(in);
 		}
 	}
 
@@ -606,14 +596,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class RomanianIndex extends Index {
-		public RomanianIndex() {
-			super(SmartAnalyzerSet::romanian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return romanian(in);
 		}
 	}
 
 	static public final class RomanianQuery extends Query {
-		public RomanianQuery() {
-			super(SmartAnalyzerSet::romanian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return romanian(in);
 		}
 	}
 
@@ -624,14 +614,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class RussianIndex extends Index {
-		public RussianIndex() {
-			super(SmartAnalyzerSet::russian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return russian(in);
 		}
 	}
 
 	static public final class RussianQuery extends Query {
-		public RussianQuery() {
-			super(SmartAnalyzerSet::russian);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return russian(in);
 		}
 	}
 
@@ -642,14 +632,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class SpanishIndex extends Index {
-		public SpanishIndex() {
-			super(SmartAnalyzerSet::spanish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return spanish(in);
 		}
 	}
 
 	static public final class SpanishQuery extends Query {
-		public SpanishQuery() {
-			super(SmartAnalyzerSet::spanish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return spanish(in);
 		}
 	}
 
@@ -660,14 +650,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class SwedishIndex extends Index {
-		public SwedishIndex() {
-			super(SmartAnalyzerSet::swedish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return swedish(in);
 		}
 	}
 
 	static public final class SwedishQuery extends Query {
-		public SwedishQuery() {
-			super(SmartAnalyzerSet::swedish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return swedish(in);
 		}
 	}
 
@@ -679,14 +669,14 @@ public enum SmartAnalyzerSet {
 	}
 
 	static public final class TurkishIndex extends Index {
-		public TurkishIndex() {
-			super(SmartAnalyzerSet::turkish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return turkish(in);
 		}
 	}
 
 	static public final class TurkishQuery extends Query {
-		public TurkishQuery() {
-			super(SmartAnalyzerSet::turkish);
+		protected TokenStream normalize(String fieldName, TokenStream in) {
+			return turkish(in);
 		}
 	}
 }
