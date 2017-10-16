@@ -64,7 +64,7 @@ public class FirstTokenPayloadFilter extends FilteringTokenFilter {
 	 * @param input the stream to analyze
 	 * @return a new PayloadSetter
 	 */
-	final PayloadSetter newSetterFilter(TokenStream input) {
+	final public PayloadSetter newSetterFilter(TokenStream input) {
 		return new PayloadSetter(input);
 	}
 
