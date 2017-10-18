@@ -223,4 +223,20 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 				"+((+textSynonymsField1:hello +textSynonymsField1:world) (+textSynonymsField1:bonjour +textSynonymsField1:le +textSynonymsField1:monde)) +textSynonymsField1:hello");
 	}
 
+	@Test
+	public void testWithQueryWithoutToken() throws QueryNodeException, ReflectiveOperationException,
+			org.apache.lucene.queryparser.classic.ParseException, IOException {
+		AbstractQuery query = new MultiFieldQuery(QueryParserOperator.AND, " & ", 50).field("textField", 1.0F)
+				.field("stringField", 2.0F);
+		checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 0L, "(stringField: & ~2)^2.0");
+	}
+
+	@Test
+	public void testWithQueryWithBlankQueryString() throws QueryNodeException, ReflectiveOperationException,
+			org.apache.lucene.queryparser.classic.ParseException, IOException {
+		AbstractQuery query = new MultiFieldQuery(QueryParserOperator.AND, " ", 50).field("textField", 1.0F)
+				.field("textComplexAnalyzer", 2.0F);
+		checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 0L, "");
+	}
+
 }
