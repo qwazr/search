@@ -203,7 +203,9 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 				queries = fieldQueries;
 				occur = minNumberShouldMatch != null ? BooleanClause.Occur.SHOULD : defaultOccur;
 			}
-			queries.add(new FieldQueryBuilder(alzr, field, termsFreq).parse(queryString, occur, boost));
+			final Query query = new FieldQueryBuilder(alzr, field, termsFreq).parse(queryString, occur, boost);
+			if (query != null)
+				queries.add(query);
 		});
 
 		// Build the final query
@@ -224,7 +226,10 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 			return new org.apache.lucene.search.DisjunctionMaxQuery(queries, tieBreakerMultiplier);
 		} else {
 			final BooleanQuery.Builder builder = new org.apache.lucene.search.BooleanQuery.Builder();
-			queries.forEach(query -> builder.add(query, BooleanClause.Occur.SHOULD));
+			queries.forEach(query -> {
+				if (query != null)
+					builder.add(query, BooleanClause.Occur.SHOULD);
+			});
 			return builder.build();
 		}
 	}
@@ -290,7 +295,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 
 		final Query parse(final String queryString, final BooleanClause.Occur defaultOperator, final Float boost) {
 			final Query fieldQuery = createBooleanQuery(field, queryString, defaultOperator);
-			return boost != null && boost != 1.0F ?
+			return boost != null && boost != 1.0F && fieldQuery != null ?
 					new org.apache.lucene.search.BoostQuery(fieldQuery, boost) :
 					fieldQuery;
 		}
