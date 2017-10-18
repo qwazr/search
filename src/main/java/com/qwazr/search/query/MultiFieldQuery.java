@@ -310,7 +310,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 		@Override
 		public BooleanQuery build() {
 			if (minNumberShouldMatch != null) {
-				final int minShouldMatch = Math.max(1, (clauseCount * minNumberShouldMatch) / 100);
+				final int minShouldMatch = Math.round(Math.max(1, (float) (clauseCount * minNumberShouldMatch) / 100));
 				setMinimumNumberShouldMatch(minShouldMatch);
 			}
 			return super.build();
