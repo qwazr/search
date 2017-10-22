@@ -19,6 +19,8 @@ import org.apache.commons.lang3.RandomUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.function.Consumer;
+
 public class BooleanQueryTest {
 
 	private void check(Integer mmsm, Boolean coord, int size, BooleanQuery.Builder builder) {
@@ -48,12 +50,36 @@ public class BooleanQueryTest {
 		check(mmsm, coord, 0, builder);
 	}
 
-	@Test
-	public void someClauses() {
+	void checkClauses(Consumer<BooleanQuery.Builder> consumer) {
 		BooleanQuery.Builder builder = new BooleanQuery.Builder();
 		final int count = RandomUtils.nextInt(1, 5);
 		for (int i = 0; i < count; i++)
-			builder.addClause(BooleanQuery.Occur.must, new MatchAllDocsQuery());
+			consumer.accept(builder);
 		check(null, null, count, builder);
+	}
+
+	@Test
+	public void someClauses() {
+		checkClauses(builder -> builder.addClause(BooleanQuery.Occur.must, new MatchAllDocsQuery()));
+	}
+
+	@Test
+	public void mustClauses() {
+		checkClauses(builder -> builder.must(new MatchAllDocsQuery()));
+	}
+
+	@Test
+	public void shouldClauses() {
+		checkClauses(builder -> builder.should(new MatchAllDocsQuery()));
+	}
+
+	@Test
+	public void mustNotClauses() {
+		checkClauses(builder -> builder.mustNot(new MatchAllDocsQuery()));
+	}
+
+	@Test
+	public void filterClauses() {
+		checkClauses(builder -> builder.filter(new MatchAllDocsQuery()));
 	}
 }

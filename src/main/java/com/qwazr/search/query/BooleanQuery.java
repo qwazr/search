@@ -169,9 +169,6 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 		private Boolean disableCoord;
 		private Integer minimumNumberShouldMatch;
 
-		public Builder() {
-		}
-
 		public final Builder setDisableCoord(final Boolean disableCoord) {
 			this.disableCoord = disableCoord;
 			return this;
@@ -187,6 +184,22 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 				clauses = new ArrayList<>();
 			clauses.add(new BooleanClause(occur, query));
 			return this;
+		}
+
+		public final Builder filter(final AbstractQuery query) {
+			return addClause(Occur.filter, query);
+		}
+
+		public final Builder must(final AbstractQuery query) {
+			return addClause(Occur.must, query);
+		}
+
+		public final Builder mustNot(final AbstractQuery query) {
+			return addClause(Occur.must_not, query);
+		}
+
+		public final Builder should(final AbstractQuery query) {
+			return addClause(Occur.should, query);
 		}
 
 		public final int getSize() {
