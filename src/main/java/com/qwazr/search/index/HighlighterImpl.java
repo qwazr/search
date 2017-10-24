@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.utils.StringUtils;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
@@ -28,7 +29,7 @@ import java.text.BreakIterator;
 import java.util.List;
 import java.util.Locale;
 
-class HighlighterImpl extends UnifiedHighlighter {
+final class HighlighterImpl extends UnifiedHighlighter {
 
 	private final HighlighterDefinition definition;
 
@@ -87,10 +88,15 @@ class HighlighterImpl extends UnifiedHighlighter {
 		}
 	}
 
-	String[] highlights(final Query query, final TopDocs topDocs) throws IOException {
-		return highlightFields(indexFields, query, topDocs,
+	final String[] highlights(final Query query, final TopDocs topDocs) throws IOException {
+		final String[] highlights = highlightFields(indexFields, query, topDocs,
 				definition.maxPassages == null ? new int[] { 1 } : new int[] { definition.maxPassages }).get(
 				indexFields[0]);
-
+		int i = 0;
+		for (final String highlight : highlights) {
+			final String[] parts = StringUtils.split(highlight, MULTIVAL_SEP_CHAR);
+			highlights[i++] = StringUtils.join(parts, definition.multivaluedSeparator);
+		}
+		return highlights;
 	}
 }
