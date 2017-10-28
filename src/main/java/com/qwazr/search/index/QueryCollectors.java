@@ -19,8 +19,6 @@ package com.qwazr.search.index;
 import com.qwazr.search.query.DrillDownQuery;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.FacetsCollector;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.TopDocs;
 
 import java.io.IOException;
@@ -36,8 +34,7 @@ abstract class QueryCollectors {
 		this.queryExecution = queryExecution;
 	}
 
-	abstract FacetsBuilder execute()
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException;
+	abstract FacetsBuilder execute() throws Exception;
 
 	abstract Integer getTotalHits();
 

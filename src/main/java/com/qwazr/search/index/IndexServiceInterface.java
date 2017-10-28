@@ -21,7 +21,7 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.PATCH;
 import com.qwazr.server.ServiceInterface;
-import com.qwazr.utils.FunctionUtils;
+import com.qwazr.utils.concurrent.FunctionEx;
 import org.apache.commons.lang3.NotImplementedException;
 
 import javax.annotation.security.RolesAllowed;
@@ -413,7 +413,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 			};
 
 	@FunctionalInterface
-	interface QueryActions<T> extends FunctionUtils.FunctionEx<QueryContext, T, IOException> {
+	interface QueryActions<T> extends FunctionEx<QueryContext, T, IOException> {
 	}
 
 	default <T> T query(final String schemaName, final String indexName, final FieldMapWrapper.Cache fieldMapWrappers,
@@ -422,7 +422,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	}
 
 	@FunctionalInterface
-	interface WriteActions<T> extends FunctionUtils.FunctionEx<WriteContext, T, IOException> {
+	interface WriteActions<T> extends FunctionEx<WriteContext, T, IOException> {
 	}
 
 	default <T> T write(final String schemaName, final String indexName, final WriteActions<T> actions)

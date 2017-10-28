@@ -19,8 +19,6 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.concurrent.ReferenceCounter;
 import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.IndexSearcher;
 
 import java.io.Closeable;
@@ -74,8 +72,7 @@ class MultiSearch implements Closeable, AutoCloseable {
 	}
 
 	<T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDef,
-			final ResultDocuments<T> resultDocuments)
-			throws IOException, QueryNodeException, ParseException, ReflectiveOperationException {
+			final ResultDocuments<T> resultDocuments) throws Exception {
 		if (indexSearcher == null)
 			return null;
 		incRef();

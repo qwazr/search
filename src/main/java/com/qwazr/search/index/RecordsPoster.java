@@ -17,7 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.FunctionUtils;
+import com.qwazr.utils.concurrent.ConsumerEx;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
@@ -111,7 +111,7 @@ interface RecordsPoster {
 
 	}
 
-	interface MapDocument extends RecordsPoster, FunctionUtils.ConsumerEx<Map<String, ?>, IOException> {
+	interface MapDocument extends RecordsPoster, ConsumerEx<Map<String, ?>, IOException> {
 	}
 
 	final class UpdateMapDocument extends Documents implements MapDocument {
@@ -152,7 +152,7 @@ interface RecordsPoster {
 				new AddMapDocument(fieldMap, indexWriter, taxonomyWriter);
 	}
 
-	interface ObjectDocument extends RecordsPoster, FunctionUtils.ConsumerEx<Object, IOException> {
+	interface ObjectDocument extends RecordsPoster, ConsumerEx<Object, IOException> {
 
 	}
 

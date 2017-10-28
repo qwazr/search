@@ -36,9 +36,9 @@ import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.QueryParser;
 import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.ObjectMappers;
+import com.qwazr.utils.concurrent.RunnableEx;
 import org.apache.commons.io.output.NullOutputStream;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -172,7 +172,7 @@ public abstract class JsonAbstractTest {
 		Assert.assertTrue(schemas.contains(SCHEMA_NAME));
 	}
 
-	public static void checkErrorStatusCode(FunctionUtils.RunnableEx runnable, int expectedStatusCode) {
+	public static void checkErrorStatusCode(RunnableEx runnable, int expectedStatusCode) {
 		try {
 			runnable.run();
 			Assert.fail("WebApplicationException was not thrown");

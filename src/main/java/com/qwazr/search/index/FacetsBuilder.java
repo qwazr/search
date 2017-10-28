@@ -17,9 +17,10 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.AbstractQuery;
-import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
+import com.qwazr.utils.concurrent.BiConsumerEx;
+import com.qwazr.utils.concurrent.ConcurrentUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.lucene.facet.DrillSideways;
@@ -69,7 +70,7 @@ abstract class FacetsBuilder {
 		this.timeTracker = timeTracker;
 	}
 
-	final FacetsBuilder build() throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
+	final FacetsBuilder build() throws Exception {
 		for (Map.Entry<String, FacetDefinition> entry : facetsDef.entrySet()) {
 			final String dimension = entry.getKey();
 			final String resolvedDimension = resolvedDimensions.get(dimension);
@@ -113,15 +114,14 @@ abstract class FacetsBuilder {
 	}
 
 	private void buildFacetQueries(final LinkedHashMap<String, AbstractQuery> queries, final FacetBuilder facetBuilder)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		final FunctionUtils.BiConsumerEx4<String, AbstractQuery, IOException, ParseException, QueryNodeException, ReflectiveOperationException>
-				consumer = (name, facetQuery) -> {
+			throws Exception {
+		final BiConsumerEx<String, AbstractQuery, Exception> consumer = (name, facetQuery) -> {
 			final BooleanQuery.Builder builder = new BooleanQuery.Builder();
 			builder.add(searchQuery, BooleanClause.Occur.FILTER);
 			builder.add(facetQuery.getQuery(queryContext), BooleanClause.Occur.FILTER);
 			facetBuilder.put(new LabelAndValue(name, queryContext.indexSearcher.count(builder.build())));
 		};
-		FunctionUtils.forEachEx4(queries, consumer);
+		ConcurrentUtils.forEachEx(queries, consumer);
 	}
 
 	static Map<String, String> getFields(LinkedHashMap<String, FacetDefinition> facets) {

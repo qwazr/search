@@ -21,8 +21,8 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.LoggerUtils;
+import com.qwazr.utils.concurrent.FunctionEx;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -213,7 +213,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final String text, final boolean index) throws IOException {
 		checkRight(schemaName);
 		final IndexInstance indexInstance = indexManager.get(schemaName).get(indexName, false);
-		final FunctionUtils.FunctionEx<Analyzer, List<TermDefinition>, IOException> analyzerFunction = analyzer -> {
+		final FunctionEx<Analyzer, List<TermDefinition>, IOException> analyzerFunction = analyzer -> {
 			if (analyzer == null)
 				throw new ServerException(
 						"No analyzer found for " + fieldName + " - Schema/index: " + schemaName + '/' + indexName);

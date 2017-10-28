@@ -26,9 +26,9 @@ import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FileUtils;
-import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.concurrent.FunctionEx;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.analysis.Analyzer;
@@ -290,20 +290,19 @@ final public class IndexInstance implements Closeable {
 	}
 
 	private <T> T useAnalyzer(final UpdatableAnalyzers updatableAnalyzers, final String field,
-			final FunctionUtils.FunctionEx<Analyzer, T, IOException> analyzerConsumer)
-			throws ServerException, IOException {
+			final FunctionEx<Analyzer, T, IOException> analyzerConsumer) throws ServerException, IOException {
 		try (final UpdatableAnalyzers.Analyzers analyzers = updatableAnalyzers.getAnalyzers()) {
 			return analyzerConsumer.apply(analyzers.getWrappedAnalyzer(field));
 		}
 	}
 
-	<T> T useQueryAnalyzer(final String field,
-			final FunctionUtils.FunctionEx<Analyzer, T, IOException> analyzerFunction) throws IOException {
+	<T> T useQueryAnalyzer(final String field, final FunctionEx<Analyzer, T, IOException> analyzerFunction)
+			throws IOException {
 		return useAnalyzer(queryAnalyzers, field, analyzerFunction);
 	}
 
-	<T> T useIndexAnalyzer(final String field,
-			final FunctionUtils.FunctionEx<Analyzer, T, IOException> analyzerFunction) throws IOException {
+	<T> T useIndexAnalyzer(final String field, final FunctionEx<Analyzer, T, IOException> analyzerFunction)
+			throws IOException {
 		return useAnalyzer(indexAnalyzers, field, analyzerFunction);
 	}
 

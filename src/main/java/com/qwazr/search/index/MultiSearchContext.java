@@ -23,8 +23,6 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -77,8 +75,7 @@ final class MultiSearchContext implements Closeable, AutoCloseable {
 	}
 
 	final <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDef,
-			final ResultDocuments<T> resultDocuments)
-			throws ServerException, IOException, QueryNodeException, ParseException, ReflectiveOperationException {
+			final ResultDocuments<T> resultDocuments) throws Exception {
 		return new MultiSearch(this).search(queryDef, resultDocuments);
 	}
 

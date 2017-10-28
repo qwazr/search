@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +12,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -87,8 +85,7 @@ class MultiSearchInstance implements Closeable {
 	}
 
 	<T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDef,
-			final ResultDocuments<T> resultDocuments)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+			final ResultDocuments<T> resultDocuments) throws Exception {
 		return getContext().search(queryDef, resultDocuments);
 	}
 

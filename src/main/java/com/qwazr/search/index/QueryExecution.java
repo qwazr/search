@@ -19,8 +19,8 @@ import com.qwazr.search.collector.ConcurrentCollector;
 import com.qwazr.search.field.SortUtils;
 import com.qwazr.search.query.DrillDownQuery;
 import com.qwazr.utils.ClassLoaderUtils;
-import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.TimeTracker;
+import com.qwazr.utils.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -98,7 +98,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 			return true; // By default we use concurrent
 		final AtomicInteger concurrentCollectors = new AtomicInteger(0);
 		final AtomicInteger classicCollectors = new AtomicInteger(0);
-		FunctionUtils.forEachEx(collectors, (name, collector) -> {
+		ConcurrentUtils.forEachEx(collectors, (name, collector) -> {
 			final Class<? extends Collector> collectorClass = ClassLoaderUtils.findClass(collector.classname);
 			Constructor<?>[] constructors = collectorClass.getConstructors();
 			if (constructors.length == 0)
@@ -129,8 +129,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 		return concurrentCollectors.get() > 0 || classicCollectors.get() == 0;
 	}
 
-	final ResultDefinition<T> execute(final ResultDocuments<T> resultDocuments)
-			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+	final ResultDefinition<T> execute(final ResultDocuments<T> resultDocuments) throws Exception {
 
 		final ResultDocumentsInterface resultDocumentsInterface = resultDocuments.getResultDocuments();
 

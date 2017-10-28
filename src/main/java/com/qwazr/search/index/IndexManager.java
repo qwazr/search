@@ -20,10 +20,10 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.concurrent.BiConsumerEx;
 import com.qwazr.utils.reflection.ConstructorParameters;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
@@ -180,7 +180,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 	}
 
 	private void schemaIterator(final String schemaName,
-			final FunctionUtils.BiConsumerEx<String, SchemaInstance, IOException> consumer) throws IOException {
+			final BiConsumerEx<String, SchemaInstance, IOException> consumer) throws IOException {
 		synchronized (schemaMap) {
 			if ("*".equals(schemaName)) {
 				for (Map.Entry<String, SchemaInstance> entry : schemaMap.entrySet())

@@ -22,8 +22,6 @@ import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.IndexSearcher;
 
 import java.io.Closeable;
@@ -73,7 +71,7 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext, C
 			final ResultDocuments<T> resultDocuments) throws IOException {
 		try {
 			return new QueryExecution<T>(this, queryDefinition).execute(resultDocuments);
-		} catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
+		} catch (Exception e) {
 			throw ServerException.of(e);
 		}
 	}

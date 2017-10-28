@@ -19,8 +19,6 @@ import com.qwazr.search.collector.BaseCollector;
 import com.qwazr.search.collector.ConcurrentCollector;
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetsCollector;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.CollectorManager;
 import org.apache.lucene.search.TopDocs;
@@ -45,8 +43,7 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 	}
 
 	@Override
-	final public FacetsBuilder execute()
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+	final public FacetsBuilder execute() throws Exception {
 
 		final FacetsBuilder facetsBuilder;
 
@@ -63,9 +60,11 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 
 			queryExecution.queryContext.indexSearcher.search(queryExecution.query, this);
 			facetsCollector = getFacetsCollector();
-			facetsBuilder = facetsCollector == null ? null : new FacetsBuilder.WithCollectors(
-					queryExecution.queryContext, queryExecution.facetsConfig, queryExecution.queryDef.facets,
-					queryExecution.query, queryExecution.timeTracker, facetsCollector).build();
+			facetsBuilder = facetsCollector == null ?
+					null :
+					new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
+							queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+							facetsCollector).build();
 		}
 
 		return facetsBuilder;
@@ -157,8 +156,8 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 				if (queryCollectors.userCollectors != null)
 					externalCollectors.add(queryCollectors.userCollectors.get(i));
 			if (!externalCollectors.isEmpty()) {
-				results.put(name, ((ConcurrentCollector) externalCollectors.get(0)).getReducedResult(
-						externalCollectors));
+				results.put(name,
+						((ConcurrentCollector) externalCollectors.get(0)).getReducedResult(externalCollectors));
 			}
 			i++;
 		}

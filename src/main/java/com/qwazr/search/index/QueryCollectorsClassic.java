@@ -112,17 +112,16 @@ class QueryCollectorsClassic extends QueryCollectors {
 	}
 
 	@Override
-	public final FacetsBuilder execute()
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+	public final FacetsBuilder execute() throws Exception {
 
 		final FacetsBuilder facetsBuilder;
 
 		if (queryExecution.useDrillSideways) {
 
-			final DrillSideways.DrillSidewaysResult drillSidewaysResult = new DrillSideways(
-					queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
-					queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState).search(
-					(org.apache.lucene.facet.DrillDownQuery) queryExecution.query, finalCollector);
+			final DrillSideways.DrillSidewaysResult drillSidewaysResult =
+					new DrillSideways(queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
+							queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState)
+							.search((org.apache.lucene.facet.DrillDownQuery) queryExecution.query, finalCollector);
 			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.facetsConfig,
 					queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
 					drillSidewaysResult).build();
@@ -130,9 +129,11 @@ class QueryCollectorsClassic extends QueryCollectors {
 		} else {
 
 			queryExecution.queryContext.indexSearcher.search(queryExecution.query, finalCollector);
-			facetsBuilder = facetsCollector == null ? null : new FacetsBuilder.WithCollectors(
-					queryExecution.queryContext, queryExecution.facetsConfig, queryExecution.queryDef.facets,
-					queryExecution.query, queryExecution.timeTracker, facetsCollector).build();
+			facetsBuilder = facetsCollector == null ?
+					null :
+					new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
+							queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+							facetsCollector).build();
 
 		}
 

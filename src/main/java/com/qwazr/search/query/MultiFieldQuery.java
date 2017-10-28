@@ -21,8 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.TermConsumer;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
-import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.concurrent.ConcurrentUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.index.IndexReader;
@@ -180,7 +180,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 		// We look for terms frequency globally
 		final Map<String, Integer> termsFreq = new HashMap<>();
 		final IndexReader indexReader = queryContext.getIndexReader();
-		FunctionUtils.forEachEx(fieldsBoosts, (field, boost) -> {
+		ConcurrentUtils.forEachEx(fieldsBoosts, (field, boost) -> {
 			try (final TokenStream tokenStream = alzr.tokenStream(field, queryString)) {
 				new TermsWithFreq(tokenStream, indexReader, field, termsFreq).forEachToken();
 				tokenStream.end();

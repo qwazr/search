@@ -16,7 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.Converters.ValueConverter;
-import com.qwazr.utils.FunctionUtils;
+import com.qwazr.utils.concurrent.ConcurrentUtils;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.StoredFieldVisitor;
 import org.apache.lucene.search.IndexSearcher;
@@ -69,7 +69,7 @@ abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 
 	final void extractDocValuesReturnedFields(@NotNull final Map<String, ValueConverter> returnedFields)
 			throws IOException {
-		FunctionUtils.forEachEx(returnedFields, this::setDocValuesField);
+		ConcurrentUtils.forEachEx(returnedFields, this::setDocValuesField);
 	}
 
 	final void extractStoredReturnedFields(@NotNull final IndexSearcher searcher,
