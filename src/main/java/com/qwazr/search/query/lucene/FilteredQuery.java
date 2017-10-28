@@ -54,8 +54,9 @@ public final class FilteredQuery extends org.apache.lucene.search.Query {
 			@Override
 			final public Scorer scorer(final LeafReaderContext context) throws IOException {
 				final RoaringDocIdSet docIdSet = docIdSetMap.get(context.docBase);
+				final DocIdSetIterator docIdSetIterator = docIdSet == null ? null : docIdSet.iterator();
 				return new ConstantScoreScorer(this, score(),
-						docIdSet == null ? DocIdSetIterator.empty() : docIdSet.iterator());
+						docIdSetIterator == null ? DocIdSetIterator.empty() : docIdSetIterator);
 			}
 
 			@Override
