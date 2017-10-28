@@ -234,7 +234,7 @@ class IndexInstanceBuilder {
 						taxonomyDirectory, fileSet.replWorkPath, () -> false);
 		if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0 ||
 				(taxonomyDirectory != null && SegmentInfos.getLastCommitGeneration(taxonomyDirectory) < 0))
-			indexReplicator.updateNow();
+			indexReplicator.updateNow(null);
 		if (withTaxo) {
 			writerAndSearcher =
 					new Replication.SlaveWithTaxo(indexReplicator, dataDirectory, taxonomyDirectory, searcherFactory);

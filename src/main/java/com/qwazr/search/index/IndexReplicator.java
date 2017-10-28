@@ -50,6 +50,7 @@ class IndexReplicator implements Replicator {
 
 	private volatile String masterUuidString;
 	private volatile UUID masterUuid;
+	private volatile ReplicationStatus.Builder currentStatus;
 
 	IndexReplicator(final IndexServiceInterface localService, final RemoteIndex master, final File masterUuidFile,
 			final Directory indexDirectory, final Directory taxonomyDirectory, final Path replWorkPath,
@@ -131,12 +132,14 @@ class IndexReplicator implements Replicator {
 	@Override
 	final public InputStream obtainFile(final String sessionID, final String source, final String fileName)
 			throws IOException {
+		if (currentStatus != null)
+			currentStatus.countSize(source, fileName);
 		return checkService().replicationObtain(master.schema, master.index, masterUuidString, sessionID, source,
 				fileName);
 	}
 
 	@Override
-	final public void close() throws IOException {
+	final public void close() {
 		replicationClient.close();
 	}
 
@@ -155,11 +158,15 @@ class IndexReplicator implements Replicator {
 			if (inputStream.available() == 0)
 				return null;
 			final DataInput input = new DataInputStream(inputStream);
-			return new SessionToken(input);
+			final SessionToken sessionToken = new SessionToken(input);
+			if (currentStatus != null)
+				currentStatus.sessionToken(sessionToken);
+			return sessionToken;
 		}
 	}
 
-	final void updateNow() throws IOException {
+	final void updateNow(ReplicationStatus.Builder currentStatus) throws IOException {
+		this.currentStatus = currentStatus;
 		replicationClient.updateNow();
 	}
 
@@ -169,4 +176,5 @@ class IndexReplicator implements Replicator {
 				new IndexReplicationHandler(dataDirectory, callback) :
 				new IndexAndTaxonomyReplicationHandler(dataDirectory, taxoDirectory, callback);
 	}
+
 }

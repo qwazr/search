@@ -31,6 +31,7 @@ import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.PostDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.QueryDocumentsIterator;
+import com.qwazr.search.index.ReplicationStatus;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentMap;
 import com.qwazr.search.index.ResultDocumentObject;
@@ -742,8 +743,8 @@ public class AnnotatedIndexService<T> {
 		fieldMapWrappers.newFieldMapWrapper(objectClass);
 	}
 
-	public void replicationCheck() {
-		indexService.replicationCheck(schemaName, indexName);
+	public ReplicationStatus replicationCheck() {
+		return indexService.replicationCheck(schemaName, indexName);
 	}
 
 	private <C> ResultDefinition.WithObject<C> toRecords(final ResultDefinition<?> result,

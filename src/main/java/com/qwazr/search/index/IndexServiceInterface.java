@@ -320,7 +320,8 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/{schema_name}/{index_name}/replication")
 	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
-	boolean replicationCheck(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
+	ReplicationStatus replicationCheck(@PathParam("schema_name") String schema_name,
+			@PathParam("index_name") String index_name);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/resources")
