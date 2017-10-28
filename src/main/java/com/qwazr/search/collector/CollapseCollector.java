@@ -81,15 +81,15 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
 		});
 
 		// Now we can build the bitsets
-		final Map<LeafReaderContext, RoaringDocIdSet> docIdMaps = new HashMap<>();
+		final Map<Integer, RoaringDocIdSet> docIdMaps = new HashMap<>();
 		sortedInts.forEach((ctx, sortedInt) -> {
 			final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(ctx.reader().maxDoc());
 			sortedInt.forEach((IntConsumer) builder::add);
-			docIdMaps.put(ctx, builder.build());
+			docIdMaps.put(ctx.docBase, builder.build());
 		});
 
 		// Add empty bitset for unassigned leaf
-		leafCollectors.forEach(leaf -> docIdMaps.putIfAbsent(leaf.context,
+		leafCollectors.forEach(leaf -> docIdMaps.putIfAbsent(leaf.context.docBase,
 				new RoaringDocIdSet.Builder(leaf.context.reader().maxDoc()).build()));
 
 		return new Query(new FilteredQuery(docIdMaps), collapsedMap);

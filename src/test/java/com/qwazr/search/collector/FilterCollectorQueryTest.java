@@ -41,6 +41,7 @@ public class FilterCollectorQueryTest extends AbstractIndexTest.WithIndexRecord.
 			for (int j = 0; j < 100; j++)
 				indexRecords.add(new IndexRecord.NoTaxonomy(Integer.toString(k)).intPoint((k++) % 2 == 0 ? 1 : 0));
 			indexService.postDocuments(indexRecords);
+			indexService.postDocuments(indexRecords);
 		}
 	}
 

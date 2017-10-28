@@ -42,16 +42,19 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
 		int k = 0;
 		for (int i = 0; i < RandomUtils.nextInt(8, 12); i++) {
 			indexRecords.clear();
-			for (int j = 0; j < RandomUtils.nextInt(5000, 15000); j++) {
-				String value = "sdv" + i;// (char) (65 + RandomUtils.nextInt(0, 10));
-				indexRecords.add(new IndexRecord.NoTaxonomy(Integer.toString(k++)).sortedDocValue(value)
-						.textField("text" + i)
-						.stringField(RandomUtils.alphanumeric(25))
-						.intPoint(RandomUtils.nextInt(0, 100000))
-						.storedField(RandomUtils.alphanumeric(50)));
-			}
+			for (int j = 0; j < RandomUtils.nextInt(5000, 15000); j++)
+				indexRecords.add(getRandomRecord(i, k++));
 			indexService.postDocuments(indexRecords);
 		}
+	}
+
+	static IndexRecord.NoTaxonomy getRandomRecord(int i, int k) {
+		String value = "sdv" + i;// (char) (65 + RandomUtils.nextInt(0, 10));
+		return new IndexRecord.NoTaxonomy(Integer.toString(k)).sortedDocValue(value)
+				.textField("text" + i)
+				.stringField(RandomUtils.alphanumeric(25))
+				.intPoint(RandomUtils.nextInt(0, 100000))
+				.storedField(RandomUtils.alphanumeric(50));
 	}
 
 	@Test

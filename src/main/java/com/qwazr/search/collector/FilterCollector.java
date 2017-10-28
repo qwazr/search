@@ -35,7 +35,7 @@ import java.util.Objects;
 public class FilterCollector extends BaseCollector<FilterCollector.Query>
 		implements ConcurrentCollector<FilterCollector.Query> {
 
-	private final Map<LeafReaderContext, RoaringDocIdSet.Builder> docIdSetMapBuilders;
+	private final Map<Integer, RoaringDocIdSet.Builder> docIdSetMapBuilders;
 
 	public FilterCollector(final String collectorName) {
 		super(collectorName);
@@ -44,8 +44,8 @@ public class FilterCollector extends BaseCollector<FilterCollector.Query>
 
 	@Override
 	public FilterCollector.Query getResult() {
-		final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap = new HashMap<>();
-		docIdSetMapBuilders.forEach((context, builder) -> docIdSetMap.put(context, builder.build()));
+		final Map<Integer, RoaringDocIdSet> docIdSetMap = new HashMap<>();
+		docIdSetMapBuilders.forEach((docBase, builder) -> docIdSetMap.put(docBase, builder.build()));
 		return new FilterCollector.Query(new FilteredQuery(docIdSetMap));
 	}
 
@@ -53,7 +53,7 @@ public class FilterCollector extends BaseCollector<FilterCollector.Query>
 	final public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
 
 		final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(context.reader().maxDoc());
-		docIdSetMapBuilders.put(context, builder);
+		docIdSetMapBuilders.put(context.docBase, builder);
 
 		return new LeafCollector() {
 
