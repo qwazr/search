@@ -389,7 +389,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("replication")
-				.request(MediaType.APPLICATION_JSON)
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
 				.get(ReplicationStatus.class);
 	}
 
