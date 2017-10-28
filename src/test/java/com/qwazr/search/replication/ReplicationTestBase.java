@@ -20,8 +20,10 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.ReplicationStatus;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.utils.CollectionsUtils;
+import com.qwazr.utils.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
 
@@ -77,6 +79,21 @@ public abstract class ReplicationTestBase<T> {
 			Assert.assertEquals(1, masterStatus.active_query_analyzers, 0);
 			Assert.assertEquals(1, masterStatus.active_index_analyzers, 0);
 		}
+	}
+
+	/**
+	 * Check the content of the replication status
+	 *
+	 * @param replicationStatus
+	 */
+	public void checkReplicationStatus(ReplicationStatus replicationStatus) {
+		Assert.assertNotNull(replicationStatus);
+		Assert.assertNotNull(replicationStatus.start);
+		Assert.assertNotNull(replicationStatus.end);
+		Assert.assertEquals(replicationStatus.time,
+				replicationStatus.end.getTime() - replicationStatus.start.getTime());
+		Assert.assertNotNull(replicationStatus.size);
+		Assert.assertEquals(FileUtils.byteCountToDisplaySize(replicationStatus.bytes), replicationStatus.size);
 	}
 
 	/**

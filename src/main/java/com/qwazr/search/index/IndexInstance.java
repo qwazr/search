@@ -418,7 +418,7 @@ final public class IndexInstance implements Closeable {
 		return Objects.requireNonNull(localReplicator, () -> "FILE replication not available: " + indexName);
 	}
 
-	void replicationCheck() throws IOException {
+	ReplicationStatus replicationCheck() throws IOException {
 		if (indexReplicator == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"No replication master has been setup - Index: " + indexName);
@@ -428,6 +428,8 @@ final public class IndexInstance implements Closeable {
 			// We only want one replication at a time
 			replicationLock.lock();
 			try {
+
+				final ReplicationStatus.Builder currentStatus = ReplicationStatus.of();
 
 				// Check that the master is the right one
 				indexReplicator.checkRemoteMasterUuid();
@@ -451,9 +453,10 @@ final public class IndexInstance implements Closeable {
 				setAnalyzers(indexReplicator.getMasterAnalyzers());
 				setFields(indexReplicator.getMasterFields());
 
-				indexReplicator.updateNow();
+				indexReplicator.updateNow(currentStatus);
 				writerAndSearcher.refresh();
 
+				return currentStatus.build();
 			} finally {
 				replicationLock.unlock();
 			}

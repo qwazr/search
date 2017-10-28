@@ -27,6 +27,7 @@ import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.PostDefinition;
 import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.ReplicationStatus;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentMap;
 import com.qwazr.search.index.SchemaSettingsDefinition;
@@ -1047,11 +1048,19 @@ public abstract class JsonAbstractTest {
 
 		// First replication
 		// First replication has something to do
-		Assert.assertTrue(client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME));
+		ReplicationStatus status = client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		Assert.assertNotNull(status);
+		Assert.assertNotNull(status.size);
+		Assert.assertNotNull(status.start);
+		Assert.assertNotNull(status.end);
 		checkReplication(client);
 
 		// Second one should do nothing
-		Assert.assertTrue(client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME));
+		status = client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		Assert.assertNotNull(status);
+		Assert.assertNotNull(status.size);
+		Assert.assertNotNull(status.start);
+		Assert.assertNotNull(status.end);
 		checkReplication(client);
 	}
 

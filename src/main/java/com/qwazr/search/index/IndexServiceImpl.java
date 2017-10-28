@@ -612,11 +612,14 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public boolean replicationCheck(final String schemaName, final String indexName) {
+	final public ReplicationStatus replicationCheck(final String schemaName, final String indexName) {
 		try {
 			checkRight(null);
-			indexManager.get(schemaName).get(indexName, false).replicationCheck();
-			return true;
+			LOGGER.info(() -> "Start replication " + schemaName + '/' + indexName);
+			final ReplicationStatus status = indexManager.get(schemaName).get(indexName, false).replicationCheck();
+			LOGGER.info(() -> "End replication " + schemaName + '/' + indexName + " - time: " + status.time +
+					"ms - size: " + status.size);
+			return status;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}

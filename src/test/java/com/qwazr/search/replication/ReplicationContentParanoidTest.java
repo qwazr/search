@@ -139,8 +139,8 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 			Assert.assertTrue(CollectionsUtils.equals(commitData, masterStatus.commit_user_data));
 
 			// Do the replication
-			slave1.replicationCheck();
-			slave2.replicationCheck();
+			checkReplicationStatus(slave1.replicationCheck());
+			checkReplicationStatus(slave2.replicationCheck());
 			checkSlaveStatusEqualsMasterStatus();
 
 			// Compare content

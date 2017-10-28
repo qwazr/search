@@ -59,14 +59,14 @@ public abstract class ReplicationTestManager extends ReplicationTestBase<Annotat
 	@Test
 	public void test() throws IOException, InterruptedException {
 		master.postDocuments(AnnotatedRecord.randomList(1000, count -> count));
-		slaves.get(0).replicationCheck();
+		checkReplicationStatus(slaves.get(0).replicationCheck());
 		compareMasterAndSlaveRecords(null);
 
 		master.checkIndex();
 		slaves.get(0).checkIndex();
 
 		master.postDocuments(AnnotatedRecord.randomList(1000, count -> count + 1000));
-		slaves.get(0).replicationCheck();
+		checkReplicationStatus(slaves.get(0).replicationCheck());
 		compareMasterAndSlaveRecords(null);
 
 	}

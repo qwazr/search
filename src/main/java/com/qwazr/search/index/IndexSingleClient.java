@@ -384,12 +384,12 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 	}
 
 	@Override
-	public boolean replicationCheck(final String schemaName, final String indexName) {
+	public ReplicationStatus replicationCheck(final String schemaName, final String indexName) {
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("replication")
 				.request(MediaType.TEXT_PLAIN)
-				.get(boolean.class);
+				.get(ReplicationStatus.class);
 	}
 
 	@Override
