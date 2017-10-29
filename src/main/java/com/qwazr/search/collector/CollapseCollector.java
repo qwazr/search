@@ -75,10 +75,12 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
 
 		// The DocID must be sorted and grouped by segment
 		final Map<LeafReaderContext, IntSortedSet> sortedInts = new HashMap<>();
-		groupQueue.groupLeaders.values().forEach(groupLeader -> {
+		long collapsedCount = 0;
+		for (final GroupLeader groupLeader : groupQueue.groupLeaders.values()) {
 			sortedInts.computeIfAbsent(groupLeader.context, ctx -> new IntAVLTreeSet()).add(groupLeader.doc);
 			collapsedMap.addTo(groupLeader.context.docBase + groupLeader.doc, groupLeader.collapsedCount);
-		});
+			collapsedCount += groupLeader.collapsedCount;
+		}
 
 		// Now we can build the bitsets
 		final Map<LeafReaderContext, RoaringDocIdSet> docIdMaps = new HashMap<>();
@@ -92,7 +94,7 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
 		leafCollectors.forEach(leaf -> docIdMaps.putIfAbsent(leaf.context,
 				new RoaringDocIdSet.Builder(leaf.context.reader().maxDoc()).build()));
 
-		return new Query(new FilteredQuery(docIdMaps), collapsedMap);
+		return new Query(new FilteredQuery(docIdMaps), collapsedMap, collapsedCount);
 	}
 
 	final class CollapseLeafCollector implements LeafCollector {
@@ -220,10 +222,17 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
 	public static class Query extends FilterCollector.Query {
 
 		final Int2IntLinkedOpenHashMap collapsedMap;
+		final long collapsedCount;
 
-		Query(final FilteredQuery filteredQuery, final Int2IntLinkedOpenHashMap collapsedMap) {
+		Query(final FilteredQuery filteredQuery, final Int2IntLinkedOpenHashMap collapsedMap,
+				final long collapsedCount) {
 			super(filteredQuery);
 			this.collapsedMap = collapsedMap;
+			this.collapsedCount = collapsedCount;
+		}
+
+		public long getCollapsed() {
+			return collapsedCount;
 		}
 
 		public int getCollapsed(int docId) {

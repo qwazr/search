@@ -67,13 +67,17 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
 				.addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text5"))
 				.addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text6"))
 				.build()).collector("collapse", CollapseCollector.class, "sortedDocValue", 5).build();
-		CollapseCollector.Query collapseQuery = indexService.searchQuery(queryDef).getCollector("collapse");
+		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> firstPassResults = indexService.searchQuery(queryDef);
+		Assert.assertNotNull(firstPassResults);
+		CollapseCollector.Query collapseQuery = firstPassResults.getCollector("collapse");
 		Assert.assertNotNull(collapseQuery);
 		queryDef = QueryDefinition.of(collapseQuery).queryDebug(true).build();
-		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> results = indexService.searchQuery(queryDef);
-		Assert.assertNotNull(results);
-		Assert.assertEquals(Long.valueOf(5), results.total_hits);
-		for (ResultDocumentAbstract result : results.getDocuments())
+		Assert.assertTrue(
+				collapseQuery.getCollapsed() > 0 && collapseQuery.getCollapsed() < firstPassResults.getTotalHits());
+		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> secondPassResults = indexService.searchQuery(queryDef);
+		Assert.assertNotNull(secondPassResults);
+		Assert.assertEquals(Long.valueOf(5), secondPassResults.total_hits);
+		for (ResultDocumentAbstract result : secondPassResults.getDocuments())
 			Assert.assertNotEquals(-1, collapseQuery.getCollapsed(result.getDoc()));
 	}
 
