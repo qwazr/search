@@ -33,9 +33,9 @@ import java.util.Objects;
 
 public final class FilteredQuery extends org.apache.lucene.search.Query {
 
-	private final Map<Integer, RoaringDocIdSet> docIdSetMap;
+	private final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap;
 
-	public FilteredQuery(final Map<Integer, RoaringDocIdSet> docIdSetMap) {
+	public FilteredQuery(final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap) {
 		this.docIdSetMap = docIdSetMap;
 	}
 
@@ -53,7 +53,7 @@ public final class FilteredQuery extends org.apache.lucene.search.Query {
 
 			@Override
 			final public Scorer scorer(final LeafReaderContext context) throws IOException {
-				final RoaringDocIdSet docIdSet = docIdSetMap.get(context.docBase);
+				final RoaringDocIdSet docIdSet = docIdSetMap.get(context);
 				final DocIdSetIterator docIdSetIterator = docIdSet == null ? null : docIdSet.iterator();
 				return new ConstantScoreScorer(this, score(),
 						docIdSetIterator == null ? DocIdSetIterator.empty() : docIdSetIterator);
@@ -64,7 +64,7 @@ public final class FilteredQuery extends org.apache.lucene.search.Query {
 
 				final float score = score();
 				final int maxDoc = context.reader().maxDoc();
-				final RoaringDocIdSet docIdSet = docIdSetMap.get(context.docBase);
+				final RoaringDocIdSet docIdSet = docIdSetMap.get(context);
 				final int cost = docIdSet.cardinality();
 
 				return new BulkScorer() {
