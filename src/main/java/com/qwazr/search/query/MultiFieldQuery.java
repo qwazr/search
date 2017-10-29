@@ -16,7 +16,6 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.TermConsumer;
 import com.qwazr.search.index.QueryContext;
@@ -34,6 +33,7 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -65,45 +65,21 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 	@JsonProperty("tie_breaker_multiplier")
 	final public Float tieBreakerMultiplier;
 
+	@JsonProperty("enable_fuzzy_query")
+	final public Boolean enableFuzzyQuery;
+
 	final private Analyzer analyzer;
 
-	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString) {
-		this(new LinkedHashMap<>(), new LinkedHashSet<>(), defaultOperator, queryString, null, null, null);
+	MultiFieldQuery(Builder builder) {
+		this(builder.fieldsBoosts, builder.fieldsDisabledGraph, builder.fieldsAndFilter, builder.defaultOperator,
+				builder.queryString, builder.minNumberShouldMatch, builder.tieBreakerMultiplier,
+				builder.enableFuzzyQuery, builder.analyzer);
 	}
 
-	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString,
-			final Integer minNumberShouldMatch) {
-		this(new LinkedHashMap<>(), new LinkedHashSet<>(), defaultOperator, queryString, minNumberShouldMatch, null,
-				null);
-	}
-
-	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString,
-			final Integer minNumberShouldMatch, final Float tieBreakerMultiplier) {
-		this(new LinkedHashMap<>(), new LinkedHashSet<>(), defaultOperator, queryString, minNumberShouldMatch,
-				tieBreakerMultiplier, null);
-	}
-
-	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final Set<String> fieldsGraphs,
-			final QueryParserOperator defaultOperator, final String queryString, final Integer minNumberShouldMatch) {
-		this(fieldsBoosts, fieldsGraphs, defaultOperator, queryString, minNumberShouldMatch, null, null);
-	}
-
-	public MultiFieldQuery(final QueryParserOperator defaultOperator, final String queryString,
-			final Integer minNumberShouldMatch, final Float tieBreakerMultiplier, final Analyzer analyzer) {
-		this(new LinkedHashMap<>(), new LinkedHashSet<>(), defaultOperator, queryString, minNumberShouldMatch,
-				tieBreakerMultiplier, analyzer);
-	}
-
-	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final Set<String> fieldsDisabledGraph,
-			final QueryParserOperator defaultOperator, final String queryString, final Integer minNumberShouldMatch,
-			final Float tieBreakerMultiplier, final Analyzer analyzer) {
-		this(fieldsBoosts, fieldsDisabledGraph, new LinkedHashSet<>(), defaultOperator, queryString,
-				minNumberShouldMatch, tieBreakerMultiplier, analyzer);
-	}
-
-	public MultiFieldQuery(final Map<String, Float> fieldsBoosts, final Set<String> fieldsDisabledGraph,
+	MultiFieldQuery(final Map<String, Float> fieldsBoosts, final Set<String> fieldsDisabledGraph,
 			final Set<String> fieldsAndFilter, final QueryParserOperator defaultOperator, final String queryString,
-			final Integer minNumberShouldMatch, final Float tieBreakerMultiplier, final Analyzer analyzer) {
+			final Integer minNumberShouldMatch, final Float tieBreakerMultiplier, final Boolean enableFuzzyQuery,
+			final Analyzer analyzer) {
 		super(MultiFieldQuery.class);
 		this.fieldsBoosts = fieldsBoosts;
 		this.fieldsDisabledGraph = fieldsDisabledGraph;
@@ -112,6 +88,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 		this.queryString = queryString;
 		this.minNumberShouldMatch = minNumberShouldMatch;
 		this.tieBreakerMultiplier = tieBreakerMultiplier;
+		this.enableFuzzyQuery = enableFuzzyQuery;
 		this.analyzer = analyzer;
 	}
 
@@ -122,39 +99,10 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 			@JsonProperty("default_operator") final QueryParserOperator defaultOperator,
 			@JsonProperty("query_string") final String queryString,
 			@JsonProperty("min_number_should_match") final Integer minNumberShouldMatch,
-			@JsonProperty("tie_breaker_multiplier") final Float tieBreakerMultiplier) {
+			@JsonProperty("tie_breaker_multiplier") final Float tieBreakerMultiplier,
+			@JsonProperty("enable_fuzzy_query") final Boolean enableFuzzyQuery) {
 		this(fieldsBoosts, fieldsDisabledGraph, fieldsAndFilter, defaultOperator, queryString, minNumberShouldMatch,
-				tieBreakerMultiplier, null);
-	}
-
-	@JsonIgnore
-	public MultiFieldQuery field(final String field, final Float boost, final boolean enableGraph,
-			final boolean andFilter) {
-		Objects.requireNonNull(field, "The field is missing");
-		Objects.requireNonNull(fieldsBoosts);
-		if (boost != null)
-			fieldsBoosts.put(field, boost);
-		else
-			fieldsBoosts.put(field, 1.0F);
-		if (enableGraph)
-			fieldsDisabledGraph.remove(field);
-		else
-			fieldsDisabledGraph.add(field);
-		if (andFilter)
-			fieldsAndFilter.add(field);
-		else
-			fieldsAndFilter.remove(field);
-		return this;
-	}
-
-	@JsonIgnore
-	public MultiFieldQuery field(final String field, final Float boost, final boolean enableGraph) {
-		return field(field, boost, enableGraph, false);
-	}
-
-	@JsonIgnore
-	public MultiFieldQuery field(final String field, final Float boost) {
-		return field(field, boost, true, false);
+				tieBreakerMultiplier, enableFuzzyQuery, null);
 	}
 
 	@Override
@@ -164,7 +112,8 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 				CollectionsUtils.equals(fieldsAndFilter, q.fieldsAndFilter) &&
 				Objects.equals(defaultOperator, q.defaultOperator) && Objects.equals(queryString, q.queryString) &&
 				Objects.equals(minNumberShouldMatch, q.minNumberShouldMatch) &&
-				Objects.equals(tieBreakerMultiplier, q.tieBreakerMultiplier) && Objects.equals(analyzer, q.analyzer);
+				Objects.equals(tieBreakerMultiplier, q.tieBreakerMultiplier) &&
+				Objects.equals(enableFuzzyQuery, q.enableFuzzyQuery) && Objects.equals(analyzer, q.analyzer);
 	}
 
 	@Override
@@ -236,7 +185,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 
 	protected Query getTermQuery(final int freq, final Term term) {
 		Query query;
-		if (freq > 0)
+		if (enableFuzzyQuery == null || !enableFuzzyQuery || freq > 0)
 			query = new org.apache.lucene.search.TermQuery(term);
 		else
 			query = new org.apache.lucene.search.FuzzyQuery(term);
@@ -319,6 +268,78 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 				setMinimumNumberShouldMatch(minShouldMatch);
 			}
 			return super.build();
+		}
+	}
+
+	public static Builder of() {
+		return new Builder();
+	}
+
+	public static class Builder {
+
+		Map<String, Float> fieldsBoosts;
+		Set<String> fieldsDisabledGraph;
+		Set<String> fieldsAndFilter;
+		QueryParserOperator defaultOperator;
+		String queryString;
+		Integer minNumberShouldMatch;
+		Float tieBreakerMultiplier;
+		Boolean enableFuzzyQuery;
+		Analyzer analyzer;
+
+		public Builder fieldBoost(String field, Float boost) {
+			if (fieldsBoosts == null)
+				fieldsBoosts = new LinkedHashMap<>();
+			fieldsBoosts.put(field, boost);
+			return this;
+		}
+
+		public Builder fieldDisableGraph(String... fields) {
+			if (fieldsDisabledGraph == null)
+				fieldsDisabledGraph = new LinkedHashSet<>();
+			Collections.addAll(fieldsDisabledGraph, fields);
+			return this;
+		}
+
+		public Builder fieldAndFilter(String... fields) {
+			if (fieldsAndFilter == null)
+				fieldsAndFilter = new LinkedHashSet<>();
+			Collections.addAll(fieldsAndFilter, fields);
+			return this;
+		}
+
+		public Builder defaultOperator(QueryParserOperator defaultOperator) {
+			this.defaultOperator = defaultOperator;
+			return this;
+		}
+
+		public Builder queryString(String queryString) {
+			this.queryString = queryString;
+			return this;
+		}
+
+		public Builder minNumberShouldMatch(Integer minNumberShouldMatch) {
+			this.minNumberShouldMatch = minNumberShouldMatch;
+			return this;
+		}
+
+		public Builder tieBreakerMultiplier(Float tieBreakerMultiplier) {
+			this.tieBreakerMultiplier = tieBreakerMultiplier;
+			return this;
+		}
+
+		public Builder enableFuzzyQuery(Boolean enableFuzzyQuery) {
+			this.enableFuzzyQuery = enableFuzzyQuery;
+			return this;
+		}
+
+		public Builder analyzer(Analyzer analyzer) {
+			this.analyzer = analyzer;
+			return this;
+		}
+
+		public MultiFieldQuery build() {
+			return new MultiFieldQuery(this);
 		}
 	}
 

@@ -53,70 +53,120 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 	public void testWithDefaultAnalyzer() {
 		QueryDefinition queryDef;
 
-		queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.OR, "Hello", 0).field("textField", 1F).field("stringField", 1F))
-				.queryDebug(true)
-				.build();
+		queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.OR)
+				.queryString("Hello")
+				.minNumberShouldMatch(0)
+				.fieldBoost("textField", 1F)
+				.fieldBoost("stringField", 1F)
+				.enableFuzzyQuery(true)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L, "textField:hello stringField:Hello~2");
 
-		queryDef = QueryDefinition.of(new MultiFieldQuery(QueryParserOperator.AND, "Hello", 0).field("textField", 1F)
-				.field("stringField", 1F)).queryDebug(true).build();
+		queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString("Hello")
+				.minNumberShouldMatch(0)
+				.fieldBoost("textField", 1F)
+				.fieldBoost("stringField", 1F)
+				.enableFuzzyQuery(true)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L, "textField:hello stringField:Hello~2");
 
-		queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.OR, "Hello world", 0).field("textField", 2F)
-						.field("stringField", 1F)).queryDebug(true).build();
+		queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.OR)
+				.queryString("Hello world")
+				.minNumberShouldMatch(0)
+				.fieldBoost("textField", 2F)
+				.fieldBoost("stringField", 1F)
+				.enableFuzzyQuery(true)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L, "((textField:hello textField:world)~1)^2.0 stringField:Hello world~2");
 
-		queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.AND, "Hello world", 0).field("textField", 2F)
-						.field("stringField", 1F)).queryDebug(true).build();
+		queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString("Hello world")
+				.minNumberShouldMatch(0)
+				.fieldBoost("textField", 2F)
+				.fieldBoost("stringField", 1F)
+				.enableFuzzyQuery(true)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L, "((textField:hello textField:world)~1)^2.0 stringField:Hello world~2");
 	}
 
 	@Test
 	public void testWithMinShouldMatch() {
-		QueryDefinition queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.OR, "Hello world aaaaaa", 70).field("textField", 3F)
-						.field("stringField", 1F)).queryDebug(true).build();
+		QueryDefinition queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.OR)
+				.queryString("Hello world aaaaaa")
+				.minNumberShouldMatch(70)
+				.fieldBoost("textField", 3F)
+				.fieldBoost("stringField", 1F)
+				.enableFuzzyQuery(true)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L,
 				"((textField:hello textField:world textField:aaaaaa)~2)^3.0 stringField:Hello world aaaaaa~2");
 	}
 
 	@Test
 	public void testWithFieldOperators() {
-		QueryDefinition queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.OR, "Hello world", null).field("textField", 3F, false, true)
-						.field("stringField", 1F)
-						.field("textSynonymsField1", 2.F, true)).queryDebug(true).build();
+		QueryDefinition queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.OR)
+				.queryString("Hello world")
+				.fieldBoost("textField", 3F)
+				.fieldAndFilter("textField")
+				.fieldDisableGraph("textField")
+				.fieldBoost("stringField", 1F)
+				.fieldBoost("textSynonymsField1", 2.F)
+				.enableFuzzyQuery(true)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L,
 				"(stringField:Hello world~2 (((+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2) (+textSynonymsField1:hallo~2 +textSynonymsField1:welt~2) (+textSynonymsField1:Hello~2 +textSynonymsField1:world)))^2.0) +(+textField:hello +textField:world)^3.0");
 	}
 
 	@Test
 	public void testWith2FieldOperators() {
-		QueryDefinition queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.OR, "Hello world", null).field("textField", 3F, false, true)
-						.field("textComplexAnalyzer", 2F, false, true)
-						.field("stringField", 1F)
-						.field("textSynonymsField1", 2.F, true)).queryDebug(true).build();
+		QueryDefinition queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.OR)
+				.queryString("Hello world")
+				.fieldBoost("textField", 3F)
+				.fieldAndFilter("textField")
+				.fieldBoost("textComplexAnalyzer", 2F)
+				.fieldAndFilter("textComplexAnalyzer")
+				.fieldDisableGraph("textComplexAnalyzer")
+				.fieldBoost("stringField", 1F)
+				.fieldBoost("textSynonymsField1", 2.F)
+				.enableFuzzyQuery(true)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L,
 				"(stringField:Hello world~2 (((+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2) (+textSynonymsField1:hallo~2 +textSynonymsField1:welt~2) (+textSynonymsField1:Hello~2 +textSynonymsField1:world)))^2.0) +((+textField:hello +textField:world)^3.0 (+Synonym(textComplexAnalyzer:hello textComplexAnalyzer:helloworld) +textComplexAnalyzer:world)^2.0)");
 	}
 
 	@Test
 	public void testWithDisjunction() {
-		QueryDefinition queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.AND, "Hello world", null, 0.1f).field("textField", 3F)
-						.field("stringField", 1F)).queryDebug(true).build();
+		QueryDefinition queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString("Hello world")
+				.tieBreakerMultiplier(0.1f)
+				.fieldBoost("textField", 3F)
+				.fieldBoost("stringField", 1F)
+				.enableFuzzyQuery(true)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L, "((+textField:hello +textField:world)^3.0 | stringField:Hello world~2)~0.1");
 	}
 
 	@Test
 	public void testWithDisjunctionAndFieldOperators() {
-		QueryDefinition queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.OR, "Hello world", null, 0.1f).field("textField", 3F, false,
-						true).field("stringField", 1F).field("textSynonymsField1", 2.F, true)).queryDebug(true).build();
+		QueryDefinition queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.OR)
+				.queryString("Hello world")
+				.tieBreakerMultiplier(0.1f)
+				.fieldBoost("textField", 3F)
+				.fieldAndFilter("textField")
+				.fieldBoost("stringField", 1F)
+				.fieldBoost("textSynonymsField1", 2.F)
+				.enableFuzzyQuery(true)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L,
 				"(stringField:Hello world~2 | (((+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2) (+textSynonymsField1:hallo~2 +textSynonymsField1:welt~2) (+textSynonymsField1:Hello~2 +textSynonymsField1:world)))^2.0)~0.1 +(+textField:hello +textField:world)^3.0");
 	}
@@ -126,26 +176,48 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 		QueryDefinition queryDef;
 		Analyzer analyzer = new StandardAnalyzer();
 
-		queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.OR, "Hello", 0, null, analyzer).field("textField", 1F)
-						.field("stringField", 1F)).queryDebug(true).build();
+		queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.OR)
+				.queryString("Hello")
+				.minNumberShouldMatch(0)
+				.analyzer(analyzer)
+				.fieldBoost("textField", 1F)
+				.fieldBoost("stringField", 1F)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L, "textField:hello stringField:hello");
 
-		queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.AND, "Hello", 0, null, analyzer).field("textField", 1F)
-						.field("stringField", 1F)).queryDebug(true).build();
+		queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString("Hello")
+				.minNumberShouldMatch(0)
+				.analyzer(analyzer)
+				.fieldBoost("textField", 1F)
+				.fieldBoost("stringField", 1F)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L, "textField:hello stringField:hello");
 
-		queryDef = QueryDefinition.of(
-				new MultiFieldQuery(QueryParserOperator.AND, "Hello zzzzz", 0, null, analyzer).field("textField", 1F)
-						.field("stringField", 1F)).queryDebug(true).build();
+		queryDef = QueryDefinition.of(MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString("Hello zzzzz")
+				.minNumberShouldMatch(0)
+				.analyzer(analyzer)
+				.fieldBoost("textField", 1F)
+				.fieldBoost("stringField", 1F)
+				.enableFuzzyQuery(true)
+				.build()).queryDebug(true).build();
 		checkQuery(queryDef, 1L, "((textField:hello textField:zzzzz~2)~1) ((stringField:hello stringField:zzzzz~2)~1)");
 	}
 
 	@Test
 	public void luceneQuery() throws IOException, ReflectiveOperationException {
-		Query luceneQuery = new MultiFieldQuery(QueryParserOperator.AND, "Hello World", 0).field("textField", 2F)
-				.field("stringField", 1F)
+		Query luceneQuery = MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString("Hello World")
+				.minNumberShouldMatch(0)
+				.fieldBoost("textField", 2F)
+				.fieldBoost("stringField", 1F)
+				.enableFuzzyQuery(true)
+				.build()
 				.getQuery(QueryContext.DEFAULT);
 		Assert.assertNotNull(luceneQuery);
 		Assert.assertEquals(
@@ -157,10 +229,13 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 	public void testWithGraphSynonymsOperatorOrKeywordsIsOneMultiWordSynonym()
 			throws QueryNodeException, ReflectiveOperationException,
 			org.apache.lucene.queryparser.classic.ParseException, IOException {
-		AbstractQuery query =
-				new MultiFieldQuery(QueryParserOperator.OR, "bonjour le monde").field("textSynonymsField1", 1.0F)
-						.field("textField", 2.0F)
-						.field("stringField", 3.0F);
+		AbstractQuery query = MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.OR)
+				.queryString("bonjour le monde")
+				.fieldBoost("textSynonymsField1", 1.0F)
+				.fieldBoost("textField", 2.0F)
+				.fieldBoost("stringField", 3.0F)
+				.build();
 		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
 	}
 
@@ -168,10 +243,13 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 	public void testWithGraphSynonymsOperatorOrKeywordsIsContainsMultiWordSynonym()
 			throws QueryNodeException, ReflectiveOperationException,
 			org.apache.lucene.queryparser.classic.ParseException, IOException {
-		AbstractQuery query =
-				new MultiFieldQuery(QueryParserOperator.OR, "hello bonjour le monde").field("textSynonymsField1", 1.0F)
-						.field("textField", 2.0F)
-						.field("stringField", 3.0F);
+		AbstractQuery query = MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.OR)
+				.queryString("hello bonjour le monde")
+				.fieldBoost("textSynonymsField1", 1.0F)
+				.fieldBoost("textField", 2.0F)
+				.fieldBoost("stringField", 3.0F)
+				.build();
 		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
 	}
 
@@ -179,19 +257,28 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 	public void testWithGraphSynonymsOperatorAndKeywordsIsOneMultiWordSynonym()
 			throws QueryNodeException, ReflectiveOperationException,
 			org.apache.lucene.queryparser.classic.ParseException, IOException {
-		AbstractQuery query =
-				new MultiFieldQuery(QueryParserOperator.AND, "bonjour le monde").field("textSynonymsField1", 1.0F)
-						.field("textField", 2.0F)
-						.field("stringField", 3.0F);
+		AbstractQuery query = MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString("bonjour le monde")
+				.fieldBoost("textSynonymsField1", 1.0F)
+				.fieldBoost("textField", 2.0F)
+				.fieldBoost("stringField", 3.0F)
+				.enableFuzzyQuery(true)
+				.build();
 		checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 1L,
 				"(+((+textSynonymsField1:hello +textSynonymsField1:world) (+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2))) (+textField:bonjour~2 +textField:le~2 +textField:monde~2)^2.0 (stringField:bonjour le monde~2)^3.0");
 	}
 
 	@Test
 	public void testWithGraphSynonymsOperatorAndComplexAnalyzer() {
-		AbstractQuery query =
-				new MultiFieldQuery(QueryParserOperator.AND, "Hello Worlds", 50).field("textSynonymsField1", 1.0F)
-						.field("textComplexAnalyzer", 2.0F);
+		AbstractQuery query = MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString("Hello Worlds")
+				.minNumberShouldMatch(50)
+				.fieldBoost("textSynonymsField1", 1.0F)
+				.fieldBoost("textComplexAnalyzer", 2.0F)
+				.enableFuzzyQuery(true)
+				.build();
 		checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 1L,
 				"((textSynonymsField1:Hello~2 textSynonymsField1:Worlds~2)~1) ((((+textComplexAnalyzer:hello +textComplexAnalyzer:world)~1) textComplexAnalyzer:helloworld~2))^2.0");
 	}
@@ -225,16 +312,27 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 	@Test
 	public void testWithQueryWithoutToken() throws QueryNodeException, ReflectiveOperationException,
 			org.apache.lucene.queryparser.classic.ParseException, IOException {
-		AbstractQuery query = new MultiFieldQuery(QueryParserOperator.AND, " & ", 50).field("textField", 1.0F)
-				.field("stringField", 2.0F);
+		AbstractQuery query = MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString(" & ")
+				.minNumberShouldMatch(50)
+				.fieldBoost("textField", 1.0F)
+				.fieldBoost("stringField", 2.0F)
+				.enableFuzzyQuery(true)
+				.build();
 		checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 0L, "(stringField: & ~2)^2.0");
 	}
 
 	@Test
 	public void testWithQueryWithBlankQueryString() throws QueryNodeException, ReflectiveOperationException,
 			org.apache.lucene.queryparser.classic.ParseException, IOException {
-		AbstractQuery query = new MultiFieldQuery(QueryParserOperator.AND, " ", 50).field("textField", 1.0F)
-				.field("textComplexAnalyzer", 2.0F);
+		AbstractQuery query = MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString(" ")
+				.minNumberShouldMatch(50)
+				.fieldBoost("textField", 1.0F)
+				.fieldBoost("textComplexAnalyzer", 2.0F)
+				.build();
 		checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 0L, "");
 	}
 

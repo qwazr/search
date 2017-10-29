@@ -50,10 +50,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -153,17 +150,14 @@ public class AnnotatedIndexServiceTest {
 	@Test
 	public void test500query() throws IOException, ReflectiveOperationException {
 
-		Map<String, Float> fieldBoosts = new HashMap<>();
-		fieldBoosts.put("title", 10F);
-		fieldBoosts.put("content", 1F);
-		fieldBoosts.put("full", 0.5F);
-
-		Set<String> fieldsDisableGraph = new HashSet<>();
-		fieldsDisableGraph.add("title");
-		fieldsDisableGraph.add("content");
-
-		MultiFieldQuery multiFieldQuery =
-				new MultiFieldQuery(fieldBoosts, fieldsDisableGraph, QueryParserOperator.AND, "Title terms", null);
+		MultiFieldQuery multiFieldQuery = MultiFieldQuery.of()
+				.fieldBoost("title", 10F)
+				.fieldBoost("content", 1F)
+				.fieldBoost("full", 0.5F)
+				.fieldDisableGraph("title", "content")
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString("Title terms")
+				.build();
 
 		QueryBuilder builder = QueryDefinition.of(multiFieldQuery).queryDebug(true);
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
@@ -185,10 +179,14 @@ public class AnnotatedIndexServiceTest {
 
 	@Test
 	public void test510explain() {
-		MultiFieldQuery mfq =
-				new MultiFieldQuery(QueryParserOperator.AND, "Title terms", null).field("title", 10F, false)
-						.field("content", 1.0F, false)
-						.field("full", 0.5f, true);
+		MultiFieldQuery mfq = MultiFieldQuery.of()
+				.defaultOperator(QueryParserOperator.AND)
+				.queryString("Title terms")
+				.fieldBoost("title", 10F)
+				.fieldBoost("content", 1.0F)
+				.fieldBoost("full", 0.5f)
+				.fieldAndFilter("full")
+				.build();
 		QueryDefinition query = QueryDefinition.of(mfq).build();
 		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);
 		Assert.assertNotNull(results);
