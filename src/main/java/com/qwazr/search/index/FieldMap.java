@@ -23,6 +23,7 @@ import com.qwazr.utils.WildcardMatcher;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.FacetsConfig;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -91,20 +92,28 @@ public class FieldMap {
 		nameDefMap.forEach(consumer);
 	}
 
+	@NotNull
 	final public FieldTypeInterface getFieldType(final String genericFieldName, final String concreteFieldName) {
 		if (genericFieldName == null && concreteFieldName == null)
-			return null;
+			throw new IllegalArgumentException("The field name is missing");
 		// Annotated can find wildcarded fields directly using genericFieldName
-		final FieldTypeInterface fieldType =
-				nameDefMap.get(genericFieldName != null ? genericFieldName : concreteFieldName);
-		if (fieldType != null)
-			return fieldType;
-		//Second change, using the wildcard collection
+		if (genericFieldName != null) {
+			final FieldTypeInterface fieldType = nameDefMap.get(genericFieldName);
+			if (fieldType != null)
+				return fieldType;
+		}
+		if (concreteFieldName != null) {
+			final FieldTypeInterface fieldType = nameDefMap.get(concreteFieldName);
+			if (fieldType != null)
+				return fieldType;
+		}
+		//Second chance, using the wildcard collection
 		final String searchField = concreteFieldName != null ? concreteFieldName : genericFieldName;
 		for (Pair<WildcardMatcher, FieldTypeInterface> entry : wildcardMap)
 			if (entry.getLeft().match(searchField))
 				return entry.getRight();
-		return null;
+		throw new IllegalArgumentException(
+				"The field has not been found: " + genericFieldName + " / " + concreteFieldName);
 	}
 
 	final LinkedHashMap<String, FieldDefinition> getFieldDefinitionMap() {
@@ -143,18 +152,15 @@ public class FieldMap {
 	}
 
 	final public String resolveStoredFieldName(final String fieldName) {
-		final FieldTypeInterface fieldType = getFieldType(fieldName, fieldName);
-		return fieldType == null ? null : fieldType.getStoredFieldName(fieldName);
+		return getFieldType(fieldName, fieldName).getStoredFieldName(fieldName);
 	}
 
 	final public String resolveQueryFieldName(final String fieldName) {
-		final FieldTypeInterface fieldType = getFieldType(fieldName, fieldName);
-		return fieldType == null ? null : fieldType.getQueryFieldName(fieldName);
+		return getFieldType(fieldName, fieldName).getQueryFieldName(fieldName);
 	}
 
 	final public String resolveQueryFieldName(final String genericFieldName, final String fieldName) {
-		final FieldTypeInterface fieldType = getFieldType(genericFieldName, fieldName);
-		return fieldType == null ? null : fieldType.getQueryFieldName(fieldName);
+		return getFieldType(genericFieldName, fieldName).getQueryFieldName(fieldName);
 	}
 
 	static public String[] resolveFieldNames(final String[] fields, final Function<String, String> resolver) {

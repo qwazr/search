@@ -154,6 +154,7 @@ public class UpdatableAnalyzersTest {
 				new AnnotatedIndexService<>(service, IndexRecord.class, SCHEMA, "slave",
 						IndexSettingsDefinition.of().master("schema/master").build());
 		slave.createUpdateIndex();
+		slave.createUpdateFields();
 
 		checkActiveAnalyzers(1, master, slave);
 
