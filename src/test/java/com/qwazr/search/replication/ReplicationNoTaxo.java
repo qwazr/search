@@ -26,8 +26,8 @@ import java.util.List;
 
 public class ReplicationNoTaxo extends ReplicationTestManager {
 
-	private final static String SCHEMA = "FilesReplicationNoTaxo";
-	private final static String MASTER = "master";
+	final static String SCHEMA = "FilesReplicationNoTaxo";
+	final static String MASTER = "master";
 
 	@Override
 	public AnnotatedIndexService<AnnotatedRecord> getMaster() throws URISyntaxException {

@@ -106,7 +106,7 @@ public abstract class ReplicationTestBase<T> {
 
 		final QueryDefinition queryIterator = QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*").build();
 		final Iterator<T> masterIterator = master.searchIterator(queryIterator, recordClass);
-		List<Iterator<T>> slavesIterators = new ArrayList<>();
+		final List<Iterator<T>> slavesIterators = new ArrayList<>();
 		for (AnnotatedIndexService<T> slave : slaves)
 			slavesIterators.add(slave.searchIterator(queryIterator, recordClass));
 
