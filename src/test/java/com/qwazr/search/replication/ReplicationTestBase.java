@@ -109,7 +109,7 @@ public abstract class ReplicationTestBase<T> {
 				.sort("sortId", QueryDefinition.SortEnum.ascending)
 				.build();
 		final Iterator<T> masterIterator = master.searchIterator(queryIterator, recordClass);
-		List<Iterator<T>> slavesIterators = new ArrayList<>();
+		final List<Iterator<T>> slavesIterators = new ArrayList<>();
 		for (AnnotatedIndexService<T> slave : slaves)
 			slavesIterators.add(slave.searchIterator(queryIterator, recordClass));
 

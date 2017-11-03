@@ -20,7 +20,6 @@ import com.qwazr.search.index.IndexManager;
 import com.qwazr.search.test.AnnotatedRecord;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -56,7 +55,6 @@ public abstract class ReplicationTestManager extends ReplicationTestBase<Annotat
 		executorService.awaitTermination(1, TimeUnit.MINUTES);
 	}
 
-	@Test
 	public void test() throws IOException, InterruptedException {
 		master.postDocuments(AnnotatedRecord.randomList(1000, count -> count));
 		checkReplicationStatus(slaves.get(0).replicationCheck());
