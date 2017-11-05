@@ -31,6 +31,7 @@ import java.io.IOException;
 @JsonSubTypes({ @JsonSubTypes.Type(value = BlendedTermQuery.class),
 		@JsonSubTypes.Type(value = BooleanQuery.class),
 		@JsonSubTypes.Type(value = BoostedQuery.class),
+		@JsonSubTypes.Type(value = BoostingQuery.class),
 		@JsonSubTypes.Type(value = BoostQuery.class),
 		@JsonSubTypes.Type(value = ConstantScoreQuery.class),
 		@JsonSubTypes.Type(value = CustomScoreQuery.class),
