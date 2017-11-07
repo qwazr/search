@@ -53,11 +53,11 @@ interface WriterAndSearcher extends Closeable {
 
 	}
 
-	class NoTaxo extends Common {
+	class WithIndex extends Common {
 
 		final ReferenceManager<IndexSearcher> searcherManager;
 
-		NoTaxo(final IndexWriter indexWriter, final ReferenceManager<IndexSearcher> searcherManager)
+		WithIndex(final IndexWriter indexWriter, final ReferenceManager<IndexSearcher> searcherManager)
 				throws IOException {
 			super(indexWriter);
 			this.searcherManager = searcherManager;
@@ -100,12 +100,12 @@ interface WriterAndSearcher extends Closeable {
 
 	}
 
-	class WithTaxo extends Common {
+	class WithIndexAndTaxo extends Common {
 
 		final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter;
 		final SearcherTaxonomyManager searcherTaxonomyManager;
 
-		WithTaxo(final IndexWriter indexWriter,
+		WithIndexAndTaxo(final IndexWriter indexWriter,
 				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter,
 				final SearcherTaxonomyManager searcherTaxonomyManager) throws IOException {
 			super(indexWriter);
@@ -156,13 +156,13 @@ interface WriterAndSearcher extends Closeable {
 		}
 	}
 
+	@FunctionalInterface
 	interface SearchAction<T> {
-
 		T apply(final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader) throws IOException;
 	}
 
+	@FunctionalInterface
 	interface WriteAction<T> {
-
 		T apply(final IndexWriter indexWriter,
 				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException;
 	}

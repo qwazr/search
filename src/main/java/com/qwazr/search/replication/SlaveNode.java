@@ -19,11 +19,53 @@ package com.qwazr.search.replication;
 import org.apache.lucene.store.Directory;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
-public class SlaveNode extends NodeBase {
+public interface SlaveNode {
 
-	public SlaveNode(Directory directory) throws IOException {
-		super(directory);
+	ReplicationProcess newReplicationProcess(final ReplicationSession masterFiles,
+			final ReplicationProcess.FileProvider fileProvider) throws IOException;
+
+	class WithIndex implements SlaveNode {
+
+		protected final Directory indexDirectory;
+		protected final Path indexDirectoryPath;
+		protected final Path workDirectory;
+
+		public WithIndex(final Directory indexDirectory, final Path indexDirectoryPath, final Path workDirectory)
+				throws IOException {
+			this.indexDirectory = indexDirectory;
+			this.indexDirectoryPath = indexDirectoryPath;
+			this.workDirectory = workDirectory;
+		}
+
+		@Override
+		public ReplicationProcess newReplicationProcess(final ReplicationSession masterFiles,
+				final ReplicationProcess.FileProvider fileProvider) throws IOException {
+			return new ReplicationProcess.WithIndex(indexDirectoryPath, workDirectory,
+					new IndexView.FromDirectory(indexDirectory), masterFiles, fileProvider);
+		}
 	}
 
+	class WithIndexAndTaxo extends WithIndex {
+
+		private final Directory taxoDirectory;
+		private final Path taxoDirectoryPath;
+
+		public WithIndexAndTaxo(final Directory indexDirectory, final Path indexDirectoryPath,
+				final Directory taxoDirectory, final Path taxoDirectoryPath, final Path workDirectory)
+				throws IOException {
+			super(indexDirectory, indexDirectoryPath, workDirectory);
+			this.taxoDirectory = taxoDirectory;
+			this.taxoDirectoryPath = taxoDirectoryPath;
+		}
+
+		@Override
+		public ReplicationProcess newReplicationProcess(final ReplicationSession masterFiles,
+				final ReplicationProcess.FileProvider fileProvider) throws IOException {
+			return new ReplicationProcess.WithIndexAndTaxo(indexDirectoryPath, taxoDirectoryPath, workDirectory,
+					new IndexView.FromDirectory(indexDirectory), new IndexView.FromDirectory(taxoDirectory),
+					masterFiles, fileProvider);
+		}
+	}
 }

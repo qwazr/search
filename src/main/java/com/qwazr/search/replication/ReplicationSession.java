@@ -16,23 +16,22 @@
 
 package com.qwazr.search.replication;
 
-import org.apache.lucene.store.Directory;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
 
-abstract class NodeBase {
+public class ReplicationSession {
 
-	private final Directory directory;
+	public final String id;
 
-	private volatile FileMap fileMap;
+	public final Map<String, Collection<String>> files;
 
-	NodeBase(Directory directory) throws IOException {
-		this.directory = directory;
-		reloadFiles();
+	@JsonCreator
+	ReplicationSession(@JsonProperty("id") final String id,
+			@JsonProperty("files") final Map<String, Collection<String>> files) {
+		this.id = id;
+		this.files = files;
 	}
-
-	synchronized void reloadFiles() throws IOException {
-		fileMap = new FileMap(directory);
-	}
-
 }

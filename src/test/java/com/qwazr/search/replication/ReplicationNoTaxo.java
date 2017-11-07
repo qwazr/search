@@ -19,7 +19,9 @@ package com.qwazr.search.replication;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.test.AnnotatedRecord;
+import org.junit.Test;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +44,11 @@ public class ReplicationNoTaxo extends ReplicationTestManager {
 		return Arrays.asList(new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "slave",
 				IndexSettingsDefinition.of().master(SCHEMA, MASTER).enableTaxonomyIndex(false).build()));
 
+	}
+
+	@Test
+	public void test() throws IOException, InterruptedException {
+		super.test();
 	}
 
 }

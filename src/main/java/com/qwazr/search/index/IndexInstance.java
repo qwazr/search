@@ -24,8 +24,8 @@ import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
+import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.FunctionEx;
@@ -39,9 +39,7 @@ import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.replicator.PerSessionDirectoryFactory;
-import org.apache.lucene.replicator.ReplicationClient;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -110,8 +108,8 @@ final public class IndexInstance implements Closeable {
 	private final LinkedHashMap<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap;
 	private final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap;
 
-	private final IndexReplicator indexReplicator;
-	private final LocalReplicator localReplicator;
+	private final ReplicationMaster replicationMaster;
+	private final ReplicationSlave replicationSlave;
 
 	IndexInstance(final IndexInstanceBuilder builder) {
 		this.readWriteSemaphores = builder.readWriteSemaphores;
@@ -137,12 +135,9 @@ final public class IndexInstance implements Closeable {
 		this.replicationLock = new ReentrantLock(true);
 		this.commitLock = new ReentrantLock(true);
 		this.backupLock = new ReentrantLock(true);
-		this.indexReplicator = writerAndSearcher instanceof IndexReplicator.Slave ?
-				((IndexReplicator.Slave) writerAndSearcher).getIndexReplicator() :
-				null;
-		this.localReplicator = writerAndSearcher instanceof Replication.Master ?
-				((Replication.Master) writerAndSearcher).getLocalReplicator() :
-				null;
+		this.replicationMaster = builder.replicationMaster;
+		this.replicationSlave = builder.replicationSlave;
+
 	}
 
 	public IndexSettingsDefinition getSettings() {
@@ -151,7 +146,7 @@ final public class IndexInstance implements Closeable {
 
 	@Override
 	public void close() {
-		IOUtils.closeQuietly(writerAndSearcher, indexAnalyzers, queryAnalyzers);
+		IOUtils.closeQuietly(writerAndSearcher, replicationMaster, indexAnalyzers, queryAnalyzers);
 
 		if (taxonomyDirectory != null)
 			IOUtils.closeQuietly(taxonomyDirectory);
@@ -170,10 +165,9 @@ final public class IndexInstance implements Closeable {
 
 	private IndexStatus getIndexStatus() throws IOException {
 		return writerAndSearcher.search((indexSearcher, taxonomyReader) -> new IndexStatus(indexUuid,
-				indexReplicator != null ? indexReplicator.getMasterUuid() : null, dataDirectory, indexSearcher,
-				writerAndSearcher.getIndexWriter(), settings, localAnalyzerFactoryMap.keySet(),
-				fieldMap.getFieldDefinitionMap().keySet(), indexAnalyzers.getActiveAnalyzers(),
-				queryAnalyzers.getActiveAnalyzers()));
+				/*TODO */ null, dataDirectory, indexSearcher, writerAndSearcher.getIndexWriter(), settings,
+				localAnalyzerFactoryMap.keySet(), fieldMap.getFieldDefinitionMap().keySet(),
+				indexAnalyzers.getActiveAnalyzers(), queryAnalyzers.getActiveAnalyzers()));
 	}
 
 	LinkedHashMap<String, FieldDefinition> getFields() {
@@ -374,7 +368,8 @@ final public class IndexInstance implements Closeable {
 
 					final PerSessionDirectoryFactory sourceDirFactory =
 							new PerSessionDirectoryFactory(backupIndexDirectory.resolve(IndexFileSet.REPL_WORK));
-					try (final ReplicationClient replicationClient = new ReplicationClient(localReplicator,
+					/* TODO
+					try (final ReplicationClient replicationClient = new ReplicationClient(null,
 							IndexReplicator.getNewReplicationHandler(dataDir, taxoDir, () -> false),
 							sourceDirFactory)) {
 						replicationClient.updateNow();
@@ -382,6 +377,7 @@ final public class IndexInstance implements Closeable {
 						FileUtils.deleteDirectoryQuietly(backupIndexDirectory);
 						throw e;
 					}
+					*/
 					return BackupStatus.newBackupStatus(backupIndexDirectory, false);
 				}
 			}
@@ -403,22 +399,15 @@ final public class IndexInstance implements Closeable {
 					"Writing in a read only index (slave) is not allowed: " + indexName);
 	}
 
-	final UUID checkRemoteMasterUUID(final String remoteMasterUuid, final UUID localUuid) {
-		final UUID uuid = UUID.fromString(remoteMasterUuid);
-		if (!Objects.equals(uuid, localUuid))
+	public ReplicationSession replicationUpdate(String masterUuid, String currentVersion) throws IOException {
+		if (replicationMaster == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"The UUID of the local index and the remote index does not match: " + localUuid + " <> " +
-							remoteMasterUuid + " - Index: " + indexName);
-		return uuid;
-	}
-
-	final LocalReplicator getLocalReplicator(final String remoteMasterUuid) {
-		checkRemoteMasterUUID(remoteMasterUuid, indexUuid);
-		return Objects.requireNonNull(localReplicator, () -> "FILE replication not available: " + indexName);
+					"This node is not a master - Index: " + indexName);
+		return replicationMaster.newReplicationSession();
 	}
 
 	ReplicationStatus replicationCheck() throws IOException {
-		if (indexReplicator == null)
+		if (replicationSlave == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"No replication master has been setup - Index: " + indexName);
 
@@ -430,16 +419,13 @@ final public class IndexInstance implements Closeable {
 
 				final ReplicationStatus.Builder currentStatus = ReplicationStatus.of();
 
-				// Check that the master is the right one
-				indexReplicator.checkRemoteMasterUuid();
-
 				//Sync resources
 				final Map<String, ResourceInfo> localResources = getResources();
-				indexReplicator.getMasterResources().forEach((remoteName, remoteInfo) -> {
+				replicationSlave.getMasterResources().forEach((remoteName, remoteInfo) -> {
 					final ResourceInfo localInfo = localResources.remove(remoteName);
 					if (localInfo != null && localInfo.equals(remoteInfo))
 						return;
-					try (final InputStream input = indexReplicator.getResource(remoteName)) {
+					try (final InputStream input = replicationSlave.getResource(remoteName)) {
 						postResource(remoteName, remoteInfo.lastModified, input);
 					} catch (IOException e) {
 						throw ServerException.of(
@@ -449,11 +435,10 @@ final public class IndexInstance implements Closeable {
 				localResources.forEach((resourceName, resourceInfo) -> deleteResource(resourceName));
 
 				//Sync analyzer and fields
-				setAnalyzers(indexReplicator.getMasterAnalyzers());
-				setFields(indexReplicator.getMasterFields());
+				setAnalyzers(replicationSlave.getMasterAnalyzers());
+				setFields(replicationSlave.getMasterFields());
 
-				indexReplicator.updateNow(currentStatus);
-				writerAndSearcher.refresh();
+				replicationSlave.update(currentStatus, writerAndSearcher);
 
 				return currentStatus.build();
 			} finally {

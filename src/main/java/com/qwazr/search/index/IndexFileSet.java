@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
-public class IndexFileSet {
+class IndexFileSet {
 
 	final static String INDEX_DATA = "data";
 	final static String INDEX_TAXONOMY = "taxonomy";
@@ -44,8 +44,8 @@ public class IndexFileSet {
 	final File uuidMasterFile;
 	final private File settingsFile;
 	final File mainDirectory;
-	final File dataDirectory;
-	final File taxonomyDirectory;
+	final Path dataDirectory;
+	final Path taxonomyDirectory;
 	final private File analyzerMapFile;
 	final File resourcesDirectory;
 	final private File fieldMapFile;
@@ -55,8 +55,8 @@ public class IndexFileSet {
 		this.uuidFile = mainDirectory.resolve(UUID_FILE).toFile();
 		this.uuidMasterFile = mainDirectory.resolve(UUID_MASTER_FILE).toFile();
 		this.mainDirectory = mainDirectory.toFile();
-		this.dataDirectory = mainDirectory.resolve(INDEX_DATA).toFile();
-		this.taxonomyDirectory = mainDirectory.resolve(INDEX_TAXONOMY).toFile();
+		this.dataDirectory = mainDirectory.resolve(INDEX_DATA);
+		this.taxonomyDirectory = mainDirectory.resolve(INDEX_TAXONOMY);
 		this.analyzerMapFile = mainDirectory.resolve(ANALYZERS_FILE).toFile();
 		this.resourcesDirectory = mainDirectory.resolve(RESOURCES_DIR).toFile();
 		this.fieldMapFile = mainDirectory.resolve(FIELDS_FILE).toFile();

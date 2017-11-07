@@ -19,6 +19,7 @@ import com.fasterxml.jackson.jaxrs.smile.SmileMediaTypes;
 import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.PATCH;
 import com.qwazr.server.ServiceInterface;
 import com.qwazr.utils.concurrent.FunctionEx;
@@ -313,7 +314,8 @@ public interface IndexServiceInterface extends ServiceInterface {
 
 	@GET
 	@Path("/{schema_name}/{index_name}/replication/{master_uuid}")
-	InputStream replicationUpdate(@PathParam("schema_name") String schema_name,
+	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE })
+	ReplicationSession replicationUpdate(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name, @PathParam("master_uuid") String masterUuid,
 			@QueryParam("current_version") String current_version);
 

@@ -19,6 +19,7 @@ import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.TermQuery;
+import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.LoggerUtils;
@@ -28,16 +29,12 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.replicator.LocalReplicator;
-import org.apache.lucene.replicator.SessionToken;
 import org.apache.lucene.search.MatchAllDocsQuery;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -561,8 +558,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final String sessionID, final String source, final String fileName) {
 		try {
 			checkRight(null);
-			final LocalReplicator localReplicator =
-					indexManager.get(schemaName).get(indexName, false).getLocalReplicator(masterUuid);
+			final LocalReplicator localReplicator = null;
+			//TODO remove indexManager.get(schemaName).get(indexName, false).getLocalReplicator(masterUuid);
 			final InputStream input = localReplicator.obtainFile(sessionID, source, fileName);
 			if (input == null)
 				throw new ServerException(Response.Status.NOT_FOUND,
@@ -578,7 +575,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final String sessionID) {
 		try {
 			checkRight(null);
-			indexManager.get(schemaName).get(indexName, false).getLocalReplicator(masterUuid).release(sessionID);
+			// TODO Remove indexManager.get(schemaName).get(indexName, false).getLocalReplicator(masterUuid).release(sessionID);
 			return true;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -586,26 +583,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public InputStream replicationUpdate(final String schemaName, final String indexName, final String masterUuid,
-			final String currentVersion) {
+	final public ReplicationSession replicationUpdate(final String schemaName, final String indexName,
+			final String masterUuid, final String currentVersion) {
 		try {
 			checkRight(null);
-
-			final SessionToken token = indexManager.get(schemaName)
-					.get(indexName, false)
-					.getLocalReplicator(masterUuid)
-					.checkForUpdate(currentVersion);
-			if (token == null) // Returns a 204 (no content)
-				return null;
-
-			try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-				try (final DataOutputStream dataOutput = new DataOutputStream(outputStream)) {
-					token.serialize(dataOutput);
-					dataOutput.flush();
-				}
-				outputStream.flush();
-				return new AutoCloseInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
-			}
+			return indexManager.get(schemaName).get(indexName, false).replicationUpdate(masterUuid, currentVersion);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}

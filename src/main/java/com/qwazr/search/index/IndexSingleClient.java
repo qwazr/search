@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.jaxrs.smile.SmileMediaTypes;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServerException;
 import com.qwazr.server.client.JsonClient;
@@ -373,15 +374,15 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 	}
 
 	@Override
-	public InputStream replicationUpdate(final String schemaName, final String indexName, final String masterUuid,
-			final String currentVersion) {
-		return new AutoCloseInputStream(indexTarget.path(schemaName)
+	public ReplicationSession replicationUpdate(final String schemaName, final String indexName,
+			final String masterUuid, final String currentVersion) {
+		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("replication")
 				.path(masterUuid)
 				.queryParam("current_version", currentVersion)
-				.request(MediaType.APPLICATION_OCTET_STREAM)
-				.get(InputStream.class));
+				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
+				.get(ReplicationSession.class);
 	}
 
 	@Override

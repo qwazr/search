@@ -24,6 +24,7 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
+import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -35,6 +36,7 @@ import org.apache.lucene.index.SimpleMergedSegmentWarmer;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.search.SearcherFactory;
+import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -42,9 +44,9 @@ import org.apache.lucene.store.NRTCachingDirectory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.InfoStream;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -80,6 +82,8 @@ class IndexInstanceBuilder {
 	UpdatableAnalyzers indexAnalyzers;
 	UpdatableAnalyzers queryAnalyzers;
 
+	ReplicationMaster replicationMaster;
+	ReplicationSlave replicationSlave;
 	WriterAndSearcher writerAndSearcher = null;
 
 	private Similarity similarity;
@@ -128,10 +132,10 @@ class IndexInstanceBuilder {
 				null;
 	}
 
-	static Directory getDirectory(IndexSettingsDefinition settings, File dataDirectory) throws IOException {
+	static Directory getDirectory(IndexSettingsDefinition settings, Path dataDirectory) throws IOException {
 		final Directory directory = settings == null || settings.directoryType == null ||
 				settings.directoryType == IndexSettingsDefinition.Type.FSDirectory ?
-				FSDirectory.open(dataDirectory.toPath()) :
+				FSDirectory.open(dataDirectory) :
 				new RAMDirectory();
 		final double maxMergeSizeMB = settings == null || settings.nrtCachingDirectoryMaxMergeSizeMB == null ?
 				IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB :
@@ -227,19 +231,20 @@ class IndexInstanceBuilder {
 
 	private void buildSlave() throws IOException, URISyntaxException {
 
-		final boolean withTaxo = IndexSettingsDefinition.useTaxonomyIndex(settings);
+		openOrCreateDataIndex(true);
 
-		final IndexReplicator indexReplicator =
-				new IndexReplicator(indexService, settings.master, fileSet.uuidMasterFile, dataDirectory,
-						taxonomyDirectory, fileSet.replWorkPath, () -> false);
-		if (SegmentInfos.getLastCommitGeneration(dataDirectory) < 0 ||
-				(taxonomyDirectory != null && SegmentInfos.getLastCommitGeneration(taxonomyDirectory) < 0))
-			indexReplicator.updateNow(null);
-		if (withTaxo) {
-			writerAndSearcher =
-					new Replication.SlaveWithTaxo(indexReplicator, dataDirectory, taxonomyDirectory, searcherFactory);
+		if (IndexSettingsDefinition.useTaxonomyIndex(settings)) {
+			openOrCreateTaxonomyIndex(true);
+			replicationSlave = new ReplicationSlave.WithIndexAndTaxo(indexService, settings.master, dataDirectory,
+					fileSet.dataDirectory, taxonomyDirectory, fileSet.taxonomyDirectory, fileSet.replWorkPath);
+			writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(null, null,
+					new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory));
 		} else {
-			writerAndSearcher = new Replication.SlaveNoTaxo(indexReplicator, dataDirectory, searcherFactory);
+			replicationSlave =
+					new ReplicationSlave.WithIndex(indexService, settings.master, dataDirectory, fileSet.dataDirectory,
+							fileSet.replWorkPath);
+			writerAndSearcher =
+					new WriterAndSearcher.WithIndex(null, new SearcherManager(dataDirectory, searcherFactory));
 		}
 
 	}
@@ -248,17 +253,20 @@ class IndexInstanceBuilder {
 
 		openOrCreateDataIndex(false);
 
-		final boolean withTaxo = IndexSettingsDefinition.useTaxonomyIndex(settings);
-		if (withTaxo)
+		if (IndexSettingsDefinition.useTaxonomyIndex(settings)) {
 			openOrCreateTaxonomyIndex(false);
-
-		writerAndSearcher = withTaxo ?
-				new Replication.MasterWithTaxo(indexWriter, taxonomyWriter, searcherFactory) :
-				new Replication.MasterNoTaxo(indexWriter, searcherFactory);
+			replicationMaster = new ReplicationMaster.WithIndexAndTaxo(indexWriter, taxonomyWriter);
+			writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(indexWriter, taxonomyWriter,
+					new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter));
+		} else {
+			replicationMaster = new ReplicationMaster.WithIndex(indexWriter);
+			writerAndSearcher =
+					new WriterAndSearcher.WithIndex(indexWriter, new SearcherManager(indexWriter, searcherFactory));
+		}
 	}
 
 	private void abort() {
-		IOUtils.closeQuietly(writerAndSearcher, indexAnalyzers, queryAnalyzers);
+		IOUtils.closeQuietly(writerAndSearcher, replicationMaster, indexAnalyzers, queryAnalyzers);
 
 		if (taxonomyWriter != null) {
 			IOUtils.closeQuietly(taxonomyWriter);
