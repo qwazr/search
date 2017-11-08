@@ -20,6 +20,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.ReplicationStatus;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.test.AnnotatedRecord;
 import com.qwazr.search.test.TestServer;
@@ -139,8 +140,10 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 			Assert.assertTrue(CollectionsUtils.equals(commitData, masterStatus.commit_user_data));
 
 			// Do the replication
-			checkReplicationStatus(slave1.replicationCheck(), null, null);
-			checkReplicationStatus(slave2.replicationCheck(), null, null);
+			final ReplicationStatus.Strategy expectedStrategy =
+					i == 0 ? ReplicationStatus.Strategy.full : ReplicationStatus.Strategy.incremental;
+			checkReplicationStatus(slave1.replicationCheck(), expectedStrategy, null);
+			checkReplicationStatus(slave2.replicationCheck(), expectedStrategy, null);
 			checkSlaveStatusEqualsMasterStatus();
 
 			// Compare content

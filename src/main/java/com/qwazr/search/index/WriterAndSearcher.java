@@ -30,6 +30,8 @@ interface WriterAndSearcher extends Closeable {
 
 	void refresh() throws IOException;
 
+	void reload() throws IOException;
+
 	<T> T search(final SearchAction<T> action) throws IOException;
 
 	<T> T write(final WriteAction<T> action) throws IOException;
@@ -53,20 +55,34 @@ interface WriterAndSearcher extends Closeable {
 
 	}
 
+	@FunctionalInterface
+	interface SearcherManagerFactory {
+		ReferenceManager<IndexSearcher> supply() throws IOException;
+	}
+
 	class WithIndex extends Common {
 
-		final ReferenceManager<IndexSearcher> searcherManager;
+		private final SearcherManagerFactory searcherManagerFactory;
+		private volatile ReferenceManager<IndexSearcher> searcherManager;
 
-		WithIndex(final IndexWriter indexWriter, final ReferenceManager<IndexSearcher> searcherManager)
+		WithIndex(final IndexWriter indexWriter, final SearcherManagerFactory searcherManagerFactory)
 				throws IOException {
 			super(indexWriter);
-			this.searcherManager = searcherManager;
+			this.searcherManagerFactory = searcherManagerFactory;
+			this.searcherManager = searcherManagerFactory.supply();
 			refresh();
 		}
 
 		@Override
 		final public void refresh() throws IOException {
 			searcherManager.maybeRefresh();
+		}
+
+		@Override
+		final synchronized public void reload() throws IOException {
+			final ReferenceManager<IndexSearcher> oldSearcherManager = searcherManager;
+			searcherManager = searcherManagerFactory.supply();
+			oldSearcherManager.close();
 		}
 
 		@Override
@@ -92,31 +108,48 @@ interface WriterAndSearcher extends Closeable {
 		}
 
 		@Override
-		public void close() throws IOException {
-			IOUtils.closeQuietly(searcherManager);
+		public synchronized void close() throws IOException {
+			if (searcherManager != null) {
+				IOUtils.closeQuietly(searcherManager);
+				searcherManager = null;
+			}
 			if (indexWriter != null && indexWriter.isOpen())
 				IOUtils.closeQuietly(indexWriter);
 		}
 
 	}
 
+	@FunctionalInterface
+	interface SearcherTaxonomyManagerFactory {
+		SearcherTaxonomyManager supply() throws IOException;
+	}
+
 	class WithIndexAndTaxo extends Common {
 
-		final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter;
-		final SearcherTaxonomyManager searcherTaxonomyManager;
+		private final SearcherTaxonomyManagerFactory searcherTaxonomyManagerFactory;
+		private final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter;
+		private volatile SearcherTaxonomyManager searcherTaxonomyManager;
 
 		WithIndexAndTaxo(final IndexWriter indexWriter,
 				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter,
-				final SearcherTaxonomyManager searcherTaxonomyManager) throws IOException {
+				final SearcherTaxonomyManagerFactory searcherTaxonomyManagerFactory) throws IOException {
 			super(indexWriter);
 			this.taxonomyWriter = taxonomyWriter;
-			this.searcherTaxonomyManager = searcherTaxonomyManager;
+			this.searcherTaxonomyManagerFactory = searcherTaxonomyManagerFactory;
+			this.searcherTaxonomyManager = searcherTaxonomyManagerFactory.supply();
 			refresh();
 		}
 
 		@Override
 		final public void refresh() throws IOException {
 			searcherTaxonomyManager.maybeRefresh();
+		}
+
+		@Override
+		final synchronized public void reload() throws IOException {
+			final SearcherTaxonomyManager oldSearcherManager = searcherTaxonomyManager;
+			searcherTaxonomyManager = searcherTaxonomyManagerFactory.supply();
+			oldSearcherManager.close();
 		}
 
 		@Override
@@ -144,9 +177,11 @@ interface WriterAndSearcher extends Closeable {
 		}
 
 		@Override
-		public void close() throws IOException {
-
-			IOUtils.closeQuietly(searcherTaxonomyManager);
+		public synchronized void close() throws IOException {
+			if (searcherTaxonomyManager != null) {
+				IOUtils.closeQuietly(searcherTaxonomyManager);
+				searcherTaxonomyManager = null;
+			}
 
 			if (taxonomyWriter != null)
 				IOUtils.closeQuietly(taxonomyWriter);

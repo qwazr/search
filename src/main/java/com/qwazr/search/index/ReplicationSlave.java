@@ -131,7 +131,10 @@ interface ReplicationSlave {
 					})) {
 				replicationProcess.obtainNewFiles();
 				replicationProcess.moveInPlaceNewFiles();
-				writerAndSearcher.refresh();
+				if (strategy == ReplicationStatus.Strategy.incremental)
+					writerAndSearcher.refresh();
+				else
+					writerAndSearcher.reload();
 				replicationProcess.deleteOldFiles();
 
 				setNewMasterUuid(remoteMasterUuid);
