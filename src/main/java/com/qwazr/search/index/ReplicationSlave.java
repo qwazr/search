@@ -116,15 +116,14 @@ interface ReplicationSlave {
 
 			final ReplicationStatus.Builder currentStatus = ReplicationStatus.of(strategy).session(replicationSession);
 
-			try (final ReplicationProcess replicationProcess = slaveNode.newReplicationProcess(replicationSession,
-					(source, file) -> {
+			try (final ReplicationProcess replicationProcess = slaveNode.newReplicationProcess(strategy,
+					replicationSession, (source, file) -> {
 						if (currentStatus != null)
 							currentStatus.countSize(source, file);
 						return indexService.replicationObtain(master.schema, master.index,
 								replicationSession.sessionUuid, source.name(), file);
 					})) {
 				replicationProcess.obtainNewFiles();
-				//TODO refresh sync in case of file conflicts
 				replicationProcess.moveInPlaceNewFiles();
 				writerAndSearcher.refresh();
 				replicationProcess.deleteOldFiles();

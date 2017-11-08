@@ -24,27 +24,35 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-class ReplicationProcessIncrementalIndex extends ReplicationProcess.Common {
+class ReplicationProcessFullIndex extends ReplicationProcess.Common {
 
 	private final Path indexDirectoryPath;
+	private final Path indexTrashPath;
 
-	ReplicationProcessIncrementalIndex(final Path workDirectory, final Path indexDirectoryPath,
-			final Directory indexDirectory, final Source source, final ReplicationSession masterFiles,
-			final SourceFileProvider sourceFileProvider) throws IOException {
+	ReplicationProcessFullIndex(final Path workDirectory, final Path indexDirectoryPath, final Directory indexDirectory,
+			final Source source, final ReplicationSession masterFiles, final SourceFileProvider sourceFileProvider)
+			throws IOException {
 		super(workDirectory, source, sourceFileProvider);
 		this.indexDirectoryPath = indexDirectoryPath;
-		new IndexView.FromDirectory(indexDirectoryPath, indexDirectory).incremental(
+		this.indexTrashPath = workDirectory.resolve("trash");
+		if (!Files.exists(indexTrashPath))
+			Files.createDirectory(indexTrashPath);
+		new IndexView.FromDirectory(indexDirectoryPath, indexDirectory).full(
 				masterFiles.getSourceFiles(source).keySet(), indexFilesToObtain, indexFilesToDelete);
 	}
 
-	ReplicationProcessIncrementalIndex(final Path workDirectory, final Path indexDirectoryPath,
-			final Directory indexDirectory, final ReplicationSession masterFiles,
-			final SourceFileProvider sourceFileProvider) throws IOException {
+	ReplicationProcessFullIndex(final Path workDirectory, final Path indexDirectoryPath, final Directory indexDirectory,
+			final ReplicationSession masterFiles, final SourceFileProvider sourceFileProvider) throws IOException {
 		this(workDirectory, indexDirectoryPath, indexDirectory, Source.index, masterFiles, sourceFileProvider);
 	}
 
 	@Override
 	public void moveInPlaceNewFiles() throws IOException {
+		for (String fileToMove : indexFilesToDelete) {
+			final Path source = indexDirectoryPath.resolve(fileToMove);
+			final Path target = indexTrashPath.resolve(fileToMove);
+			Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
+		}
 		for (String fileToMove : indexFilesToObtain) {
 			final Path source = indexWorkDirectory.resolve(fileToMove);
 			final Path target = indexDirectoryPath.resolve(fileToMove);
@@ -54,8 +62,7 @@ class ReplicationProcessIncrementalIndex extends ReplicationProcess.Common {
 
 	@Override
 	public void deleteOldFiles() throws IOException {
-		for (String fileToDelete : indexFilesToDelete)
-			Files.deleteIfExists(indexDirectoryPath.resolve(fileToDelete));
+		// Nothing to do, we already moved the file to the trash directory
 	}
 
 	@Override

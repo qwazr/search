@@ -16,29 +16,32 @@
 
 package com.qwazr.search.replication;
 
+import com.qwazr.search.index.ReplicationStatus;
 import com.qwazr.search.test.AnnotatedRecord;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
 
 public class ReplicationChangeMasterTest extends ReplicationNoTaxo {
 
-	private void putDocumentAndCheckReplication(int loopNumber) throws IOException, InterruptedException {
+	private void putDocumentAndCheckReplication(int loopNumber, ReplicationStatus.Strategy expectedStrategy)
+			throws IOException, InterruptedException {
 		for (int i = 0; i < loopNumber; i++)
 			master.postDocuments(AnnotatedRecord.randomList(1000, count -> count));
-		checkReplicationStatus(slaves.get(0).replicationCheck(), null, null);
+		checkReplicationStatus(slaves.get(0).replicationCheck(), expectedStrategy, null);
 		Assert.assertEquals(master.getIndexStatus().num_docs, slaves.get(0).getIndexStatus().num_docs);
 		compareMasterAndSlaveRecords(null);
 	}
 
 	@Test
-	@Ignore
 	@Override
 	public void test() throws IOException, InterruptedException {
 		// Make a first replication
-		putDocumentAndCheckReplication(5);
+		putDocumentAndCheckReplication(5, ReplicationStatus.Strategy.full);
+
+		// Make a second replication
+		putDocumentAndCheckReplication(5, ReplicationStatus.Strategy.incremental);
 
 		// Get the number of documents
 		long numberOfDoc = master.getIndexStatus().num_docs;
@@ -52,7 +55,7 @@ public class ReplicationChangeMasterTest extends ReplicationNoTaxo {
 		System.out.println(slaves.get(0).getIndexStatus().version);
 
 		// Do another replication
-		putDocumentAndCheckReplication(5);
+		putDocumentAndCheckReplication(5, ReplicationStatus.Strategy.full);
 		System.out.println(slaves.get(0).getIndexStatus().version);
 	}
 }

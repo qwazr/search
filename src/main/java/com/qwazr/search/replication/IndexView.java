@@ -54,7 +54,7 @@ class IndexView {
 	 * @param fileToGet      the files to get
 	 * @param fileToDelete   the files to delete
 	 */
-	void analyse(final Collection<String> referenceFiles, final Collection<String> fileToGet,
+	void incremental(final Collection<String> referenceFiles, final Collection<String> fileToGet,
 			final Collection<String> fileToDelete) {
 		for (final String referenceFile : referenceFiles)
 			if (!files.containsKey(referenceFile))
@@ -62,6 +62,19 @@ class IndexView {
 		for (final String file : files.keySet())
 			if (!referenceFiles.contains(file))
 				fileToDelete.add(file);
+	}
+
+	/**
+	 * Return the file to get and the file to delete for a full replication
+	 *
+	 * @param referenceFiles the files of the reference (master)
+	 * @param fileToGet      the files to get
+	 * @param fileToDelete   the files to delete
+	 */
+	void full(final Collection<String> referenceFiles, final Collection<String> fileToGet,
+			final Collection<String> fileToDelete) {
+		fileToGet.addAll(referenceFiles);
+		fileToDelete.addAll(files.keySet());
 	}
 
 	final Map<String, Long> getFiles() {

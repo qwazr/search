@@ -16,6 +16,8 @@
 
 package com.qwazr.search.replication;
 
+import com.qwazr.search.index.ReplicationStatus;
+import com.qwazr.server.ServerException;
 import org.apache.lucene.store.Directory;
 
 import java.io.IOException;
@@ -24,8 +26,9 @@ import java.nio.file.Path;
 
 public interface SlaveNode {
 
-	ReplicationProcess newReplicationProcess(final ReplicationSession masterFiles,
-			final ReplicationProcess.SourceFileProvider sourceFileProvider) throws IOException;
+	ReplicationProcess newReplicationProcess(final ReplicationStatus.Strategy strategy,
+			final ReplicationSession masterFiles, final ReplicationProcess.SourceFileProvider sourceFileProvider)
+			throws IOException;
 
 	class WithIndex implements SlaveNode {
 
@@ -43,10 +46,18 @@ public interface SlaveNode {
 		}
 
 		@Override
-		public ReplicationProcess newReplicationProcess(final ReplicationSession masterFiles,
-				final ReplicationProcess.SourceFileProvider fileProvider) throws IOException {
-			return new ReplicationProcessIncrementalIndex(workDirectory, indexDirectoryPath, indexDirectory,
-					masterFiles, fileProvider);
+		public ReplicationProcess newReplicationProcess(final ReplicationStatus.Strategy strategy,
+				final ReplicationSession masterFiles, final ReplicationProcess.SourceFileProvider fileProvider)
+				throws IOException {
+			switch (strategy) {
+			case incremental:
+				return new ReplicationProcessIncrementalIndex(workDirectory, indexDirectoryPath, indexDirectory,
+						masterFiles, fileProvider);
+			case full:
+				return new ReplicationProcessFullIndex(workDirectory, indexDirectoryPath, indexDirectory, masterFiles,
+						fileProvider);
+			}
+			throw new ServerException("Unsupported replication strategy: " + strategy);
 		}
 	}
 
@@ -64,10 +75,18 @@ public interface SlaveNode {
 		}
 
 		@Override
-		public ReplicationProcess newReplicationProcess(final ReplicationSession masterFiles,
-				final ReplicationProcess.SourceFileProvider fileProvider) throws IOException {
-			return new ReplicationProcessIncrementalIndexAndTaxo(workDirectory, indexDirectoryPath, indexDirectory,
-					taxoDirectoryPath, taxoDirectory, masterFiles, fileProvider);
+		public ReplicationProcess newReplicationProcess(final ReplicationStatus.Strategy strategy,
+				final ReplicationSession masterFiles, final ReplicationProcess.SourceFileProvider fileProvider)
+				throws IOException {
+			switch (strategy) {
+			case incremental:
+				return new ReplicationProcessIncrementalIndexAndTaxo(workDirectory, indexDirectoryPath, indexDirectory,
+						taxoDirectoryPath, taxoDirectory, masterFiles, fileProvider);
+			case full:
+				return new ReplicationProcessFullIndexAndTaxo(workDirectory, indexDirectoryPath, indexDirectory,
+						taxoDirectoryPath, taxoDirectory, masterFiles, fileProvider);
+			}
+			throw new ServerException("Unsupported replication strategy: " + strategy);
 		}
 	}
 }

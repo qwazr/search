@@ -16,9 +16,16 @@
 
 package com.qwazr.search.replication;
 
+import com.qwazr.utils.IOUtils;
+
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashSet;
 
 public interface ReplicationProcess extends Closeable {
 
@@ -37,4 +44,33 @@ public interface ReplicationProcess extends Closeable {
 
 	void deleteOldFiles() throws IOException;
 
+	abstract class Common implements ReplicationProcess {
+
+		protected final Source source;
+		protected final SourceFileProvider sourceFileProvider;
+		protected final Path indexWorkDirectory;
+		protected final Collection<String> indexFilesToObtain;
+		protected final Collection<String> indexFilesToDelete;
+
+		protected Common(final Path workDirectory, final Source source, final SourceFileProvider sourceFileProvider)
+				throws IOException {
+			this.source = source;
+			this.sourceFileProvider = sourceFileProvider;
+			this.indexWorkDirectory = workDirectory.resolve(source.name());
+			this.indexFilesToObtain = new HashSet<>();
+			this.indexFilesToDelete = new HashSet<>();
+		}
+
+		@Override
+		public void obtainNewFiles() throws IOException {
+			if (!Files.exists(indexWorkDirectory))
+				Files.createDirectory(indexWorkDirectory);
+			for (final String fileToObtain : indexFilesToObtain) {
+				final File file = indexWorkDirectory.resolve(fileToObtain).toFile();
+				try (final InputStream input = sourceFileProvider.obtain(source, fileToObtain)) {
+					IOUtils.copy(input, file);
+				}
+			}
+		}
+	}
 }
