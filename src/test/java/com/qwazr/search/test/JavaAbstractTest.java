@@ -32,7 +32,6 @@ import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
-import com.qwazr.search.index.RemoteIndex;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.search.index.SchemaSettingsDefinition;
@@ -50,7 +49,6 @@ import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.query.TermsQuery;
 import com.qwazr.search.query.WildcardQuery;
-import com.qwazr.server.RemoteService;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.search.join.ScoreMode;
 import org.junit.Assert;
@@ -58,7 +56,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import javax.ws.rs.WebApplicationException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -610,23 +607,6 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(nonSlaveStatus.settings);
 		Assert.assertNull(nonSlaveStatus.settings.master);
 
-		// Then we set a wrong master node
-		try {
-			final IndexStatus wrongMasterStatus =
-					getIndexService().createUpdateIndex(slave.getSchemaName(), slave.getIndexName(),
-							IndexSettingsDefinition.of()
-									.master(new RemoteIndex(RemoteService.of("http://localhost:9092"), "dummy",
-											"dummy"))
-									.build());
-			Assert.fail("The exception has not been thrown");
-		} catch (WebApplicationException e) {
-			Assert.assertEquals(500, e.getResponse().getStatus());
-			String message = e.getMessage();
-			if (!e.getMessage().contains("dummy"))
-				message = e.getResponse().readEntity(String.class);
-			Assert.assertTrue(message.contains("dummy"));
-		}
-
 		// Now we set the real slave index
 		final IndexStatus indexStatus = slave.createUpdateIndex();
 		Assert.assertNotNull(indexStatus);
@@ -635,7 +615,6 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(indexStatus.settings.master);
 		Assert.assertNotNull(indexStatus.settings.master.schema);
 		Assert.assertNotNull(indexStatus.settings.master.index);
-		Assert.assertNotNull(indexStatus.master_uuid);
 
 		// Second call to check setting comparison
 		Assert.assertNotNull(slave.createUpdateIndex());

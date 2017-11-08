@@ -51,11 +51,8 @@ public class ReplicationChangeMasterTest extends ReplicationNoTaxo {
 		master.deleteIndex();
 		master.createUpdateIndex();
 		master.createUpdateFields();
-		System.out.println(master.getIndexStatus().version);
-		System.out.println(slaves.get(0).getIndexStatus().version);
 
 		// Do another replication
 		putDocumentAndCheckReplication(5, ReplicationStatus.Strategy.full);
-		System.out.println(slaves.get(0).getIndexStatus().version);
 	}
 }

@@ -45,6 +45,8 @@ interface ReplicationSlave {
 
 	ReplicationStatus update(final WriterAndSearcher writerAndSearcher) throws IOException;
 
+	UUID getMasterUuid();
+
 	abstract class Base implements ReplicationSlave {
 
 		private final File masterUuidFile;
@@ -75,6 +77,10 @@ interface ReplicationSlave {
 				return;
 			IOUtils.writeStringAsFile(newMasterUuid.toString(), masterUuidFile);
 			masterUuid = newMasterUuid;
+		}
+
+		public UUID getMasterUuid() {
+			return masterUuid;
 		}
 
 		private IndexServiceInterface checkService() {

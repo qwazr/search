@@ -167,9 +167,10 @@ final public class IndexInstance implements Closeable {
 
 	private IndexStatus getIndexStatus() throws IOException {
 		return writerAndSearcher.search((indexSearcher, taxonomyReader) -> new IndexStatus(indexUuid,
-				/*TODO */ null, dataDirectory, indexSearcher, writerAndSearcher.getIndexWriter(), settings,
-				localAnalyzerFactoryMap.keySet(), fieldMap.getFieldDefinitionMap().keySet(),
-				indexAnalyzers.getActiveAnalyzers(), queryAnalyzers.getActiveAnalyzers()));
+				replicationSlave == null ? null : replicationSlave.getMasterUuid(), dataDirectory, indexSearcher,
+				writerAndSearcher.getIndexWriter(), settings, localAnalyzerFactoryMap.keySet(),
+				fieldMap.getFieldDefinitionMap().keySet(), indexAnalyzers.getActiveAnalyzers(),
+				queryAnalyzers.getActiveAnalyzers()));
 	}
 
 	LinkedHashMap<String, FieldDefinition> getFields() {
