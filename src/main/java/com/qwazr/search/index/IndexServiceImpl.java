@@ -19,6 +19,7 @@ import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.TermQuery;
+import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
@@ -28,7 +29,6 @@ import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.replicator.LocalReplicator;
 import org.apache.lucene.search.MatchAllDocsQuery;
 
 import javax.servlet.http.HttpServletRequest;
@@ -558,9 +558,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 			final String sessionID, final String source, final String fileName) {
 		try {
 			checkRight(null);
-			final LocalReplicator localReplicator = null;
-			//TODO remove indexManager.get(schemaName).get(indexName, false).getLocalReplicator(masterUuid);
-			final InputStream input = localReplicator.obtainFile(sessionID, source, fileName);
+			final InputStream input = indexManager.get(schemaName)
+					.get(indexName, false)
+					.replicationObtain(sessionID, ReplicationProcess.Source.valueOf(source), fileName);
 			if (input == null)
 				throw new ServerException(Response.Status.NOT_FOUND,
 						"File not found: " + fileName + " - Schema/index: " + schemaName + '/' + indexName);

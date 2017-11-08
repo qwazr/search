@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.search.replication.SlaveNode;
 import com.qwazr.server.ServerException;
@@ -88,13 +89,20 @@ interface ReplicationSlave {
 				final WriterAndSearcher writerAndSearcher) throws IOException {
 			final ReplicationSession replicationSession =
 					indexService.replicationUpdate(master.schema, master.index, null, null);
-			try {
-				slaveNode.newReplicationProcess(replicationSession, (source, file) -> {
-					if (currentStatus != null)
-						currentStatus.countSize(source, file);
-					return indexService.replicationObtain(master.schema, master.index, null, replicationSession.id,
-							source, file);
-				});
+			if (currentStatus != null)
+				currentStatus.session(replicationSession);
+			try (final ReplicationProcess replicationProcess = slaveNode.newReplicationProcess(replicationSession,
+					(source, file) -> {
+						if (currentStatus != null)
+							currentStatus.countSize(source, file);
+						return indexService.replicationObtain(master.schema, master.index, null, replicationSession.id,
+								source.name(), file);
+					})) {
+				replicationProcess.obtainNewFiles();
+				//TODO refresh sync in case of file conflicts
+				replicationProcess.moveInPlaceNewFiles();
+				writerAndSearcher.refresh();
+				replicationProcess.deleteOldFiles();
 			} finally {
 				indexService.replicationRelease(master.schema, master.index, null, replicationSession.id);
 			}

@@ -255,11 +255,12 @@ class IndexInstanceBuilder {
 
 		if (IndexSettingsDefinition.useTaxonomyIndex(settings)) {
 			openOrCreateTaxonomyIndex(false);
-			replicationMaster = new ReplicationMaster.WithIndexAndTaxo(indexWriter, taxonomyWriter);
+			replicationMaster = new ReplicationMaster.WithIndexAndTaxo(fileSet.dataDirectory, indexWriter,
+					fileSet.taxonomyDirectory, taxonomyWriter);
 			writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(indexWriter, taxonomyWriter,
 					new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter));
 		} else {
-			replicationMaster = new ReplicationMaster.WithIndex(indexWriter);
+			replicationMaster = new ReplicationMaster.WithIndex(fileSet.dataDirectory, indexWriter);
 			writerAndSearcher =
 					new WriterAndSearcher.WithIndex(indexWriter, new SearcherManager(indexWriter, searcherFactory));
 		}

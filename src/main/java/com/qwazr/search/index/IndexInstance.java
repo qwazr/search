@@ -24,6 +24,7 @@ import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.JoinQuery;
+import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
@@ -52,6 +53,7 @@ import org.apache.lucene.store.FSDirectory;
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -393,17 +395,24 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final void checkIsMaster() {
+	final ReplicationMaster checkIsMaster() {
 		if (writerAndSearcher.getIndexWriter() == null)
 			throw new UnsupportedOperationException(
 					"Writing in a read only index (slave) is not allowed: " + indexName);
-	}
-
-	public ReplicationSession replicationUpdate(String masterUuid, String currentVersion) throws IOException {
 		if (replicationMaster == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"This node is not a master - Index: " + indexName);
-		return replicationMaster.newReplicationSession();
+		return replicationMaster;
+	}
+
+	ReplicationSession replicationUpdate(String masterUuid, String currentVersion) throws IOException {
+		//TODO check uuid and decide replication strategy
+		return checkIsMaster().newReplicationSession();
+	}
+
+	InputStream replicationObtain(String sessionID, ReplicationProcess.Source source, String fileName)
+			throws FileNotFoundException {
+		return checkIsMaster().getFile(sessionID, source, fileName);
 	}
 
 	ReplicationStatus replicationCheck() throws IOException {

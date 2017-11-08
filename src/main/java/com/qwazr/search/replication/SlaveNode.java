@@ -19,6 +19,7 @@ package com.qwazr.search.replication;
 import org.apache.lucene.store.Directory;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public interface SlaveNode {
@@ -37,13 +38,15 @@ public interface SlaveNode {
 			this.indexDirectory = indexDirectory;
 			this.indexDirectoryPath = indexDirectoryPath;
 			this.workDirectory = workDirectory;
+			if (!Files.exists(workDirectory))
+				Files.createDirectory(workDirectory);
 		}
 
 		@Override
 		public ReplicationProcess newReplicationProcess(final ReplicationSession masterFiles,
 				final ReplicationProcess.FileProvider fileProvider) throws IOException {
 			return new ReplicationProcess.WithIndex(indexDirectoryPath, workDirectory,
-					new IndexView.FromDirectory(indexDirectory), masterFiles, fileProvider);
+					new IndexView.FromDirectory(indexDirectoryPath, indexDirectory), masterFiles, fileProvider);
 		}
 	}
 
@@ -64,8 +67,8 @@ public interface SlaveNode {
 		public ReplicationProcess newReplicationProcess(final ReplicationSession masterFiles,
 				final ReplicationProcess.FileProvider fileProvider) throws IOException {
 			return new ReplicationProcess.WithIndexAndTaxo(indexDirectoryPath, taxoDirectoryPath, workDirectory,
-					new IndexView.FromDirectory(indexDirectory), new IndexView.FromDirectory(taxoDirectory),
-					masterFiles, fileProvider);
+					new IndexView.FromDirectory(indexDirectoryPath, indexDirectory),
+					new IndexView.FromDirectory(taxoDirectoryPath, taxoDirectory), masterFiles, fileProvider);
 		}
 	}
 }

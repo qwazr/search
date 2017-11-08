@@ -21,22 +21,30 @@ import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.store.Directory;
 
+import java.io.BufferedInputStream;
 import java.io.Closeable;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 class IndexView {
 
-	private final Collection<String> files;
+	private final Path indexDirectoryPath;
+	private final Map<String, Long> files;
 
-	IndexView(final Iterable<String> fileNames) throws IOException {
-		final Set<String> f = new HashSet<>();
+	IndexView(final Path indexDirectoryPath, final Iterable<String> fileNames) throws IOException {
+		this.indexDirectoryPath = indexDirectoryPath;
+		final Map<String, Long> f = new LinkedHashMap<>();
 		for (String fileName : fileNames)
-			f.add(fileName);
-		files = Collections.unmodifiableSet(f);
+			f.put(fileName, Files.size(indexDirectoryPath.resolve(fileName)));
+		files = Collections.unmodifiableMap(f);
 	}
 
 	/**
@@ -49,15 +57,19 @@ class IndexView {
 	void analyse(final Collection<String> referenceFiles, final Collection<String> fileToGet,
 			final Collection<String> fileToDelete) {
 		for (final String referenceFile : referenceFiles)
-			if (!files.contains(referenceFile))
+			if (!files.containsKey(referenceFile))
 				fileToGet.add(referenceFile);
-		for (final String file : files)
+		for (final String file : files.keySet())
 			if (!referenceFiles.contains(file))
 				fileToDelete.add(file);
 	}
 
-	Collection<String> getFiles() {
+	final Map<String, Long> getFiles() {
 		return files;
+	}
+
+	final InputStream getFile(String fileName) throws FileNotFoundException {
+		return new BufferedInputStream(new FileInputStream(indexDirectoryPath.resolve(fileName).toFile()));
 	}
 
 	static class FromCommit extends IndexView implements Closeable {
@@ -65,15 +77,15 @@ class IndexView {
 		private final SnapshotDeletionPolicy indexSnapshots;
 		private final IndexCommit indexCommit;
 
-		private FromCommit(final SnapshotDeletionPolicy indexSnapshots, final IndexCommit indexCommit)
-				throws IOException {
-			super(indexCommit.getFileNames());
+		private FromCommit(final Path directoryPath, final SnapshotDeletionPolicy indexSnapshots,
+				final IndexCommit indexCommit) throws IOException {
+			super(directoryPath, indexCommit.getFileNames());
 			this.indexSnapshots = indexSnapshots;
 			this.indexCommit = indexCommit;
 		}
 
-		FromCommit(final SnapshotDeletionPolicy indexSnapshots) throws IOException {
-			this(indexSnapshots, indexSnapshots.snapshot());
+		FromCommit(final Path directoryPath, final SnapshotDeletionPolicy indexSnapshots) throws IOException {
+			this(directoryPath, indexSnapshots, indexSnapshots.snapshot());
 		}
 
 		@Override
@@ -84,8 +96,8 @@ class IndexView {
 
 	static class FromDirectory extends IndexView {
 
-		FromDirectory(final Directory directory) throws IOException {
-			super(SegmentInfos.readLatestCommit(directory).files(true));
+		FromDirectory(final Path directoryPath, final Directory directory) throws IOException {
+			super(directoryPath, SegmentInfos.readLatestCommit(directory).files(true));
 		}
 
 	}

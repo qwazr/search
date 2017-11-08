@@ -45,7 +45,7 @@ class ReplicationProcessImpl implements ReplicationProcess {
 		this.indexFilesToObtain = new HashSet<>();
 		this.indexFilesToDelete = new HashSet<>();
 		this.fileProvider = fileProvider;
-		indexView.analyse(masterFiles.files.get(source.name()), indexFilesToObtain, indexFilesToDelete);
+		indexView.analyse(masterFiles.getSourceFiles(source).keySet(), indexFilesToObtain, indexFilesToDelete);
 	}
 
 	@Override
@@ -54,7 +54,7 @@ class ReplicationProcessImpl implements ReplicationProcess {
 			Files.createDirectory(indexSourceDirectory);
 		for (String fileToObtain : indexFilesToObtain) {
 			final File file = indexSourceDirectory.resolve(fileToObtain).toFile();
-			try (final InputStream input = fileProvider.obtain(source.name(), fileToObtain)) {
+			try (final InputStream input = fileProvider.obtain(source, fileToObtain)) {
 				IOUtils.copy(input, file);
 			}
 		}

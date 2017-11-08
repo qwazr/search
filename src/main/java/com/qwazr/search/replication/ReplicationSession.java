@@ -17,21 +17,33 @@
 package com.qwazr.search.replication;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Collection;
 import java.util.Map;
 
 public class ReplicationSession {
 
 	public final String id;
 
-	public final Map<String, Collection<String>> files;
+	public final Map<String, Map<String, Long>> files;
 
 	@JsonCreator
 	ReplicationSession(@JsonProperty("id") final String id,
-			@JsonProperty("files") final Map<String, Collection<String>> files) {
+			@JsonProperty("files") final Map<String, Map<String, Long>> files) {
 		this.id = id;
 		this.files = files;
 	}
+
+	@JsonIgnore
+	public Map<String, Long> getSourceFiles(final ReplicationProcess.Source source) {
+		return source == null ? null : files.get(source.name());
+	}
+
+	@JsonIgnore
+	public Long getFileLength(final ReplicationProcess.Source source, final String fileName) {
+		final Map<String, Long> sourceFiles = files.get(source.name());
+		return sourceFiles == null ? null : sourceFiles.get(fileName);
+	}
+
 }

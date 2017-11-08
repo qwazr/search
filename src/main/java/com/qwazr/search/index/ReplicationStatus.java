@@ -18,8 +18,9 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.replication.ReplicationProcess;
+import com.qwazr.search.replication.ReplicationSession;
 import org.apache.commons.io.FileUtils;
-import org.apache.lucene.replicator.SessionToken;
 
 import java.util.Date;
 
@@ -49,23 +50,21 @@ public class ReplicationStatus {
 	static class Builder {
 
 		final Date start;
-		SessionToken sessionToken;
 		long bytes;
+		ReplicationSession session;
 
 		Builder() {
 			this.start = new Date();
 		}
 
-		void sessionToken(SessionToken sessionToken) {
-			this.sessionToken = sessionToken;
+		void session(final ReplicationSession session) {
+			this.session = session;
 		}
 
-		void countSize(String resourceName, String fileName) {
-			sessionToken.sourceFiles.get(resourceName)
-					.stream()
-					.filter(r -> r.fileName.equals(fileName))
-					.findAny()
-					.ifPresent(r -> bytes += r.size);
+		void countSize(ReplicationProcess.Source source, String fileName) {
+			final Long size = session.getFileLength(source, fileName);
+			if (size != null)
+				bytes += size;
 		}
 
 		ReplicationStatus build() {

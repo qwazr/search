@@ -29,7 +29,7 @@ public interface ReplicationProcess extends Closeable {
 
 	@FunctionalInterface
 	interface FileProvider {
-		InputStream obtain(String source, String fileName) throws IOException;
+		InputStream obtain(Source source, String fileName) throws IOException;
 	}
 
 	void obtainNewFiles() throws IOException;

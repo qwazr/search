@@ -22,8 +22,10 @@ import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.replicator.IndexAndTaxonomyRevision;
 
 import java.io.Closeable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Collection;
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,15 +33,18 @@ public interface MasterNode extends Closeable {
 
 	ReplicationSession newSession() throws IOException;
 
+	InputStream getFile(String sessionId, ReplicationProcess.Source source, String fileName)
+			throws FileNotFoundException;
+
 	void releaseSession(String sessionId) throws IOException;
 
 	abstract class Base implements MasterNode {
 
-		protected abstract void fillSession(final String sessionId, final Map<String, Collection<String>> sessionMap)
+		protected abstract void fillSession(final String sessionId, final Map<String, Map<String, Long>> sessionMap)
 				throws IOException;
 
 		final public ReplicationSession newSession() throws IOException {
-			final Map<String, Collection<String>> sessionMap = new HashMap<>();
+			final Map<String, Map<String, Long>> sessionMap = new HashMap<>();
 			final String sessionID = HashUtils.newTimeBasedUUID().toString();
 			fillSession(sessionID, sessionMap);
 			return new ReplicationSession(sessionID, sessionMap);
@@ -49,21 +54,32 @@ public interface MasterNode extends Closeable {
 
 	class WithIndex extends Base {
 
+		private final Path indexDirectoryPath;
 		private final SnapshotDeletionPolicy indexSnapshot;
 		private final HashMap<String, IndexView.FromCommit> indexSessions;
 
-		public WithIndex(IndexWriter indexWriter) throws IOException {
+		public WithIndex(final Path indexDirectoryPath, final IndexWriter indexWriter) throws IOException {
+			this.indexDirectoryPath = indexDirectoryPath;
 			this.indexSnapshot = (SnapshotDeletionPolicy) indexWriter.getConfig().getIndexDeletionPolicy();
 			this.indexSessions = new HashMap<>();
 		}
 
 		@Override
-		protected void fillSession(String sessionId, Map<String, Collection<String>> sessionMap) throws IOException {
+		protected void fillSession(String sessionId, Map<String, Map<String, Long>> sessionMap) throws IOException {
 			synchronized (indexSessions) {
-				final IndexView.FromCommit indexView = new IndexView.FromCommit(indexSnapshot);
+				final IndexView.FromCommit indexView = new IndexView.FromCommit(indexDirectoryPath, indexSnapshot);
 				indexSessions.put(sessionId, indexView);
 				sessionMap.put(ReplicationProcess.Source.index.name(), indexView.getFiles());
 			}
+		}
+
+		@Override
+		public InputStream getFile(String sessionId, ReplicationProcess.Source source, String fileName)
+				throws FileNotFoundException {
+			if (source != null && source != ReplicationProcess.Source.index)
+				return null;
+			final IndexView.FromCommit indexView = indexSessions.get(sessionId);
+			return indexView == null ? null : indexView.getFile(fileName);
 		}
 
 		@Override
@@ -87,24 +103,35 @@ public interface MasterNode extends Closeable {
 
 	class WithIndexAndTaxo extends WithIndex {
 
+		private final Path taxoDirectoryPath;
 		private final SnapshotDeletionPolicy taxoSnapshots;
 		private final HashMap<String, IndexView.FromCommit> taxoSessions;
 
-		public WithIndexAndTaxo(final IndexWriter indexWriter,
-				IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException {
-			super(indexWriter);
+		public WithIndexAndTaxo(final Path indexDirectoryPath, final IndexWriter indexWriter,
+				final Path taxoDirectoryPath, IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter)
+				throws IOException {
+			super(indexDirectoryPath, indexWriter);
+			this.taxoDirectoryPath = taxoDirectoryPath;
 			this.taxoSnapshots = taxonomyWriter.getDeletionPolicy();
 			this.taxoSessions = new HashMap<>();
 		}
 
 		@Override
-		protected void fillSession(String sessionId, Map<String, Collection<String>> sessionMap) throws IOException {
+		protected void fillSession(String sessionId, Map<String, Map<String, Long>> sessionMap) throws IOException {
 			super.fillSession(sessionId, sessionMap);
 			synchronized (taxoSessions) {
-				final IndexView.FromCommit indexView = new IndexView.FromCommit(taxoSnapshots);
+				final IndexView.FromCommit indexView = new IndexView.FromCommit(taxoDirectoryPath, taxoSnapshots);
 				taxoSessions.put(sessionId, indexView);
 				sessionMap.put(ReplicationProcess.Source.taxo.name(), indexView.getFiles());
 			}
+		}
+
+		public InputStream getFile(String sessionId, ReplicationProcess.Source source, String fileName)
+				throws FileNotFoundException {
+			if (source != null && source != ReplicationProcess.Source.taxo)
+				return super.getFile(sessionId, source, fileName);
+			final IndexView.FromCommit indexView = taxoSessions.get(sessionId);
+			return indexView == null ? null : indexView.getFile(fileName);
 		}
 
 		@Override
