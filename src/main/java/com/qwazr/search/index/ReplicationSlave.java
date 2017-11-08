@@ -22,14 +22,16 @@ import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.search.replication.SlaveNode;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.IOUtils;
 import org.apache.lucene.store.Directory;
 
 import javax.ws.rs.core.Response;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.UUID;
 
 interface ReplicationSlave {
 
@@ -39,24 +41,40 @@ interface ReplicationSlave {
 
 	LinkedHashMap<String, IndexInstance.ResourceInfo> getMasterResources();
 
-	IndexStatus getMasterStatus();
-
 	InputStream getResource(final String resourceName) throws IOException;
 
-	void update(final ReplicationStatus.Builder currentStatus, final WriterAndSearcher writerAndSearcher)
-			throws IOException;
+	ReplicationStatus update(final WriterAndSearcher writerAndSearcher) throws IOException;
 
 	abstract class Base implements ReplicationSlave {
 
+		private final File masterUuidFile;
+		private volatile UUID masterUuid;
 		private final SlaveNode slaveNode;
 		private final IndexServiceInterface indexService;
 		private final RemoteIndex master;
 
-		private Base(final IndexServiceInterface localService, final RemoteIndex master, final SlaveNode slaveNode) {
+		private Base(final File masterUuidFile, final IndexServiceInterface localService, final RemoteIndex master,
+				final SlaveNode slaveNode) throws IOException {
+			this.masterUuidFile = masterUuidFile;
 			this.slaveNode = slaveNode;
 			this.master = master;
 			this.indexService =
 					master == null ? null : master.host == null ? localService : new IndexSingleClient(master);
+			readMasterUuid();
+		}
+
+		void readMasterUuid() throws IOException {
+			if (masterUuidFile.exists() && masterUuidFile.length() > 0)
+				masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
+			else
+				masterUuid = null;
+		}
+
+		void setNewMasterUuid(final UUID newMasterUuid) throws IOException {
+			if (newMasterUuid.equals(masterUuid))
+				return;
+			IOUtils.writeStringAsFile(newMasterUuid.toString(), masterUuidFile);
+			masterUuid = newMasterUuid;
 		}
 
 		private IndexServiceInterface checkService() {
@@ -85,26 +103,36 @@ interface ReplicationSlave {
 			return checkService().getResource(master.schema, master.index, resourceName);
 		}
 
-		public final void update(final ReplicationStatus.Builder currentStatus,
-				final WriterAndSearcher writerAndSearcher) throws IOException {
+		public final ReplicationStatus update(final WriterAndSearcher writerAndSearcher) throws IOException {
+
 			final ReplicationSession replicationSession =
-					indexService.replicationUpdate(master.schema, master.index, null, null);
-			if (currentStatus != null)
-				currentStatus.session(replicationSession);
+					indexService.replicationUpdate(master.schema, master.index, null);
+
+			final UUID remoteMasterUuid = UUID.fromString(replicationSession.masterUuid);
+
+			final ReplicationStatus.Strategy strategy = remoteMasterUuid.equals(masterUuid) ?
+					ReplicationStatus.Strategy.incremental :
+					ReplicationStatus.Strategy.full;
+
+			final ReplicationStatus.Builder currentStatus = ReplicationStatus.of(strategy).session(replicationSession);
+
 			try (final ReplicationProcess replicationProcess = slaveNode.newReplicationProcess(replicationSession,
 					(source, file) -> {
 						if (currentStatus != null)
 							currentStatus.countSize(source, file);
-						return indexService.replicationObtain(master.schema, master.index, null, replicationSession.id,
-								source.name(), file);
+						return indexService.replicationObtain(master.schema, master.index,
+								replicationSession.sessionUuid, source.name(), file);
 					})) {
 				replicationProcess.obtainNewFiles();
 				//TODO refresh sync in case of file conflicts
 				replicationProcess.moveInPlaceNewFiles();
 				writerAndSearcher.refresh();
 				replicationProcess.deleteOldFiles();
+
+				setNewMasterUuid(remoteMasterUuid);
+				return currentStatus.build();
 			} finally {
-				indexService.replicationRelease(master.schema, master.index, null, replicationSession.id);
+				indexService.replicationRelease(master.schema, master.index, replicationSession.sessionUuid);
 			}
 		}
 
@@ -112,20 +140,21 @@ interface ReplicationSlave {
 
 	final class WithIndexAndTaxo extends Base {
 
-		WithIndexAndTaxo(final IndexServiceInterface localService, final RemoteIndex master,
-				final Directory dataDirectory, final Path dataDirectoryPath, final Directory taxonomyDirectory,
-				final Path taxoDirectoryPath, final Path replWorkDirectory) throws IOException, URISyntaxException {
-			super(localService, master,
-					new SlaveNode.WithIndexAndTaxo(dataDirectory, dataDirectoryPath, taxonomyDirectory,
-							taxoDirectoryPath, replWorkDirectory));
+		WithIndexAndTaxo(final IndexFileSet fileSet, final IndexServiceInterface localService, final RemoteIndex master,
+				final Directory dataDirectory, final Directory taxonomyDirectory)
+				throws IOException, URISyntaxException {
+			super(fileSet.uuidMasterFile, localService, master,
+					new SlaveNode.WithIndexAndTaxo(dataDirectory, fileSet.dataDirectory, taxonomyDirectory,
+							fileSet.taxonomyDirectory, fileSet.replWorkPath));
 		}
 	}
 
 	final class WithIndex extends Base {
 
-		WithIndex(final IndexServiceInterface localService, final RemoteIndex master, final Directory dataDirectory,
-				final Path dataDirectoryPath, final Path replWorkDirectory) throws IOException, URISyntaxException {
-			super(localService, master, new SlaveNode.WithIndex(dataDirectory, dataDirectoryPath, replWorkDirectory));
+		WithIndex(final IndexFileSet fileSet, final IndexServiceInterface localService, final RemoteIndex master,
+				final Directory dataDirectory) throws IOException, URISyntaxException {
+			super(fileSet.uuidMasterFile, localService, master,
+					new SlaveNode.WithIndex(dataDirectory, fileSet.dataDirectory, fileSet.replWorkPath));
 		}
 	}
 }

@@ -299,25 +299,24 @@ public interface IndexServiceInterface extends ServiceInterface {
 			@PathParam("backup_name") String backup_name);
 
 	@GET
-	@Path("/{schema_name}/{index_name}/replication/{master_uuid}/{session_id}/{source}/{filename}")
+	@Path("/{schema_name}/{index_name}/replication/{session_id}/{source}/{filename}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	InputStream replicationObtain(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, @PathParam("master_uuid") String masterUuid,
-			@PathParam("session_id") String sessionID, @PathParam("source") String source,
-			@PathParam("filename") String fileName);
+			@PathParam("index_name") String index_name, @PathParam("session_id") String sessionID,
+			@PathParam("source") String source, @PathParam("filename") String fileName);
 
 	@DELETE
-	@Path("/{schema_name}/{index_name}/replication/{master_uuid}/{session_id}")
+	@Path("/{schema_name}/{index_name}/replication/{session_id}")
 	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
 	boolean replicationRelease(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-			@PathParam("master_uuid") String masterUuid, @PathParam("session_id") String sessionID);
+			@PathParam("session_id") String sessionID);
 
-	@GET
-	@Path("/{schema_name}/{index_name}/replication/{master_uuid}")
+	@POST
+	@Path("/{schema_name}/{index_name}/replication")
+	@Consumes({ ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE })
 	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE })
 	ReplicationSession replicationUpdate(@PathParam("schema_name") String schema_name,
-			@PathParam("index_name") String index_name, @PathParam("master_uuid") String masterUuid,
-			@QueryParam("current_version") String current_version);
+			@PathParam("index_name") String index_name, String current_version);
 
 	@GET
 	@Path("/{schema_name}/{index_name}/replication")

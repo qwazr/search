@@ -19,16 +19,15 @@ package com.qwazr.search.replication;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 
 public interface ReplicationProcess extends Closeable {
 
 	enum Source {
-		index, taxo;
+		index, taxo
 	}
 
 	@FunctionalInterface
-	interface FileProvider {
+	interface SourceFileProvider {
 		InputStream obtain(Source source, String fileName) throws IOException;
 	}
 
@@ -38,75 +37,4 @@ public interface ReplicationProcess extends Closeable {
 
 	void deleteOldFiles() throws IOException;
 
-	class WithIndex implements ReplicationProcess {
-
-		private final ReplicationProcess indexReplicationProcess;
-
-		WithIndex(final Path indexDirectory, final Path workDirectory, final IndexView indexView,
-				final ReplicationSession masterFiles, final FileProvider fileProvider) {
-			indexReplicationProcess =
-					new ReplicationProcessImpl(indexDirectory, workDirectory, Source.index, indexView, masterFiles,
-							fileProvider);
-		}
-
-		@Override
-		public void obtainNewFiles() throws IOException {
-			indexReplicationProcess.obtainNewFiles();
-		}
-
-		@Override
-		public void moveInPlaceNewFiles() throws IOException {
-			indexReplicationProcess.moveInPlaceNewFiles();
-		}
-
-		@Override
-		public void deleteOldFiles() throws IOException {
-			indexReplicationProcess.deleteOldFiles();
-		}
-
-		@Override
-		public void close() throws IOException {
-			indexReplicationProcess.close();
-		}
-
-	}
-
-	class WithIndexAndTaxo extends WithIndex {
-
-		private final ReplicationProcess taxoReplicationProcess;
-
-		WithIndexAndTaxo(final Path indexDirectory, final Path taxoDirectory, final Path workDirectory,
-				final IndexView indexView, final IndexView taxoView, final ReplicationSession masterFiles,
-				final FileProvider fileProvider) {
-			super(indexDirectory, workDirectory, indexView, masterFiles, fileProvider);
-			taxoReplicationProcess =
-					new ReplicationProcessImpl(taxoDirectory, workDirectory, Source.taxo, taxoView, masterFiles,
-							fileProvider);
-		}
-
-		@Override
-		public void obtainNewFiles() throws IOException {
-			super.obtainNewFiles();
-			taxoReplicationProcess.obtainNewFiles();
-		}
-
-		@Override
-		public void moveInPlaceNewFiles() throws IOException {
-			super.moveInPlaceNewFiles();
-			taxoReplicationProcess.moveInPlaceNewFiles();
-		}
-
-		@Override
-		public void deleteOldFiles() throws IOException {
-			super.deleteOldFiles();
-			taxoReplicationProcess.deleteOldFiles();
-		}
-
-		@Override
-		public void close() throws IOException {
-			super.close();
-			taxoReplicationProcess.close();
-		}
-
-	}
 }

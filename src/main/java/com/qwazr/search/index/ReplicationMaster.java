@@ -52,7 +52,7 @@ interface ReplicationMaster extends Closeable {
 		@Override
 		final public ReplicationSession newReplicationSession() throws IOException {
 			final ReplicationSession newSession = masterNode.newSession();
-			sessions.put(newSession.id, newSession);
+			sessions.put(newSession.sessionUuid, newSession);
 			return newSession;
 		}
 
@@ -71,7 +71,7 @@ interface ReplicationMaster extends Closeable {
 		@Override
 		final public void close() throws IOException {
 			for (final ReplicationSession session : sessions.values())
-				releaseSession(session.id);
+				releaseSession(session.sessionUuid);
 			masterNode.close();
 		}
 
@@ -79,16 +79,19 @@ interface ReplicationMaster extends Closeable {
 
 	final class WithIndexAndTaxo extends Base {
 
-		WithIndexAndTaxo(final Path indexDirectoryPath, final IndexWriter indexWriter, final Path taxoDirectoryPath,
+		WithIndexAndTaxo(final String masterUuid, final Path indexDirectoryPath, final IndexWriter indexWriter,
+				final Path taxoDirectoryPath,
 				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException {
-			super(new MasterNode.WithIndexAndTaxo(indexDirectoryPath, indexWriter, taxoDirectoryPath, taxonomyWriter));
+			super(new MasterNode.WithIndexAndTaxo(masterUuid, indexDirectoryPath, indexWriter, taxoDirectoryPath,
+					taxonomyWriter));
 		}
 	}
 
 	final class WithIndex extends Base {
 
-		WithIndex(final Path indexDirectoryPath, final IndexWriter indexWriter) throws IOException {
-			super(new MasterNode.WithIndex(indexDirectoryPath, indexWriter));
+		WithIndex(final String masterUuid, final Path indexDirectoryPath, final IndexWriter indexWriter)
+				throws IOException {
+			super(new MasterNode.WithIndex(masterUuid, indexDirectoryPath, indexWriter));
 		}
 	}
 

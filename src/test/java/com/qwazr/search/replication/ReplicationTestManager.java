@@ -17,6 +17,7 @@
 package com.qwazr.search.replication;
 
 import com.qwazr.search.index.IndexManager;
+import com.qwazr.search.index.ReplicationStatus;
 import com.qwazr.search.test.AnnotatedRecord;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -57,14 +58,14 @@ public abstract class ReplicationTestManager extends ReplicationTestBase<Annotat
 
 	public void test() throws IOException, InterruptedException {
 		master.postDocuments(AnnotatedRecord.randomList(1000, count -> count));
-		checkReplicationStatus(slaves.get(0).replicationCheck());
+		checkReplicationStatus(slaves.get(0).replicationCheck(), ReplicationStatus.Strategy.incremental, 100);
 		compareMasterAndSlaveRecords(null);
 
 		master.checkIndex();
 		slaves.get(0).checkIndex();
 
 		master.postDocuments(AnnotatedRecord.randomList(1000, count -> count + 1000));
-		checkReplicationStatus(slaves.get(0).replicationCheck());
+		checkReplicationStatus(slaves.get(0).replicationCheck(), ReplicationStatus.Strategy.incremental, null);
 		compareMasterAndSlaveRecords(null);
 
 	}

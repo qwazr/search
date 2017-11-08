@@ -28,7 +28,7 @@ public class ReplicationChangeMasterTest extends ReplicationNoTaxo {
 	private void putDocumentAndCheckReplication(int loopNumber) throws IOException, InterruptedException {
 		for (int i = 0; i < loopNumber; i++)
 			master.postDocuments(AnnotatedRecord.randomList(1000, count -> count));
-		checkReplicationStatus(slaves.get(0).replicationCheck());
+		checkReplicationStatus(slaves.get(0).replicationCheck(), null, null);
 		Assert.assertEquals(master.getIndexStatus().num_docs, slaves.get(0).getIndexStatus().num_docs);
 		compareMasterAndSlaveRecords(null);
 	}

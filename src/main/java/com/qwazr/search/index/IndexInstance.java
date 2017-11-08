@@ -405,9 +405,13 @@ final public class IndexInstance implements Closeable {
 		return replicationMaster;
 	}
 
-	ReplicationSession replicationUpdate(String masterUuid, String currentVersion) throws IOException {
-		//TODO check uuid and decide replication strategy
+	ReplicationSession replicationUpdate(String currentVersion) throws IOException {
+		//TODO check current version to avoid non useful replication
 		return checkIsMaster().newReplicationSession();
+	}
+
+	void replicationRelease(String sessionID) throws IOException {
+		checkIsMaster().releaseSession(sessionID);
 	}
 
 	InputStream replicationObtain(String sessionID, ReplicationProcess.Source source, String fileName)
@@ -425,8 +429,6 @@ final public class IndexInstance implements Closeable {
 			// We only want one replication at a time
 			replicationLock.lock();
 			try {
-
-				final ReplicationStatus.Builder currentStatus = ReplicationStatus.of();
 
 				//Sync resources
 				final Map<String, ResourceInfo> localResources = getResources();
@@ -447,9 +449,7 @@ final public class IndexInstance implements Closeable {
 				setAnalyzers(replicationSlave.getMasterAnalyzers());
 				setFields(replicationSlave.getMasterFields());
 
-				replicationSlave.update(currentStatus, writerAndSearcher);
-
-				return currentStatus.build();
+				return replicationSlave.update(writerAndSearcher);
 			} finally {
 				replicationLock.unlock();
 			}

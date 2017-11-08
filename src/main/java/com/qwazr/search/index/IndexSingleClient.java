@@ -348,12 +348,11 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 	}
 
 	@Override
-	public InputStream replicationObtain(final String schemaName, final String indexName, final String masterUuid,
-			final String sessionID, final String source, final String fileName) {
+	public InputStream replicationObtain(final String schemaName, final String indexName, final String sessionID,
+			final String source, final String fileName) {
 		return new AutoCloseInputStream(indexTarget.path(schemaName)
 				.path(indexName)
 				.path("replication")
-				.path(masterUuid)
 				.path(sessionID)
 				.path(source)
 				.path(fileName)
@@ -362,12 +361,10 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 	}
 
 	@Override
-	public boolean replicationRelease(final String schemaName, final String indexName, final String masterUuid,
-			final String sessionID) {
+	public boolean replicationRelease(final String schemaName, final String indexName, final String sessionID) {
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("replication")
-				.path(masterUuid)
 				.path(sessionID)
 				.request(MediaType.TEXT_PLAIN)
 				.delete(boolean.class);
@@ -375,14 +372,14 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
 	@Override
 	public ReplicationSession replicationUpdate(final String schemaName, final String indexName,
-			final String masterUuid, final String currentVersion) {
+			final String currentVersion) {
 		return indexTarget.path(schemaName)
 				.path(indexName)
 				.path("replication")
-				.path(masterUuid)
 				.queryParam("current_version", currentVersion)
 				.request(SmileMediaTypes.APPLICATION_JACKSON_SMILE)
-				.get(ReplicationSession.class);
+				.post(Entity.entity(currentVersion, SmileMediaTypes.APPLICATION_JACKSON_SMILE),
+						ReplicationSession.class);
 	}
 
 	@Override

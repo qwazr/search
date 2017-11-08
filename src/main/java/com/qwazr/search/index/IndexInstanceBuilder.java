@@ -235,14 +235,13 @@ class IndexInstanceBuilder {
 
 		if (IndexSettingsDefinition.useTaxonomyIndex(settings)) {
 			openOrCreateTaxonomyIndex(true);
-			replicationSlave = new ReplicationSlave.WithIndexAndTaxo(indexService, settings.master, dataDirectory,
-					fileSet.dataDirectory, taxonomyDirectory, fileSet.taxonomyDirectory, fileSet.replWorkPath);
+			replicationSlave =
+					new ReplicationSlave.WithIndexAndTaxo(fileSet, indexService, settings.master, dataDirectory,
+							taxonomyDirectory);
 			writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(null, null,
 					new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory));
 		} else {
-			replicationSlave =
-					new ReplicationSlave.WithIndex(indexService, settings.master, dataDirectory, fileSet.dataDirectory,
-							fileSet.replWorkPath);
+			replicationSlave = new ReplicationSlave.WithIndex(fileSet, indexService, settings.master, dataDirectory);
 			writerAndSearcher =
 					new WriterAndSearcher.WithIndex(null, new SearcherManager(dataDirectory, searcherFactory));
 		}
@@ -255,12 +254,14 @@ class IndexInstanceBuilder {
 
 		if (IndexSettingsDefinition.useTaxonomyIndex(settings)) {
 			openOrCreateTaxonomyIndex(false);
-			replicationMaster = new ReplicationMaster.WithIndexAndTaxo(fileSet.dataDirectory, indexWriter,
-					fileSet.taxonomyDirectory, taxonomyWriter);
+			replicationMaster =
+					new ReplicationMaster.WithIndexAndTaxo(indexUuid.toString(), fileSet.dataDirectory, indexWriter,
+							fileSet.taxonomyDirectory, taxonomyWriter);
 			writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(indexWriter, taxonomyWriter,
 					new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter));
 		} else {
-			replicationMaster = new ReplicationMaster.WithIndex(fileSet.dataDirectory, indexWriter);
+			replicationMaster =
+					new ReplicationMaster.WithIndex(indexUuid.toString(), fileSet.dataDirectory, indexWriter);
 			writerAndSearcher =
 					new WriterAndSearcher.WithIndex(indexWriter, new SearcherManager(indexWriter, searcherFactory));
 		}

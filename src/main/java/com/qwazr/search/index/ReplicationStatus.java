@@ -27,38 +27,50 @@ import java.util.Date;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ReplicationStatus {
 
+	public enum Strategy {
+		full, incremental
+	}
+
 	public final Date start;
 	public final Date end;
 	public final long time;
 	public final long bytes;
 	public final String size;
+	public final int ratio;
+	public final Strategy strategy;
 
 	ReplicationStatus(@JsonProperty("start") final Date start, @JsonProperty("end") final Date end,
 			@JsonProperty("time") final long time, @JsonProperty("bytes") final long bytes,
-			@JsonProperty("size") final String size) {
+			@JsonProperty("size") final String size, @JsonProperty("ratio") final int ratio,
+			@JsonProperty("strategy") final Strategy strategy) {
 		this.start = start;
 		this.end = end;
 		this.time = time;
 		this.bytes = bytes;
 		this.size = size;
+		this.ratio = ratio;
+		this.strategy = strategy;
 	}
 
-	static ReplicationStatus.Builder of() {
-		return new Builder();
+	static ReplicationStatus.Builder of(final Strategy strategy) {
+		return new Builder(strategy);
 	}
 
 	static class Builder {
 
+		final Strategy strategy;
 		final Date start;
 		long bytes;
 		ReplicationSession session;
 
-		Builder() {
+		Builder(Strategy strategy) {
 			this.start = new Date();
+			this.strategy = strategy;
 		}
 
-		void session(final ReplicationSession session) {
+		Builder session(final ReplicationSession session) {
 			this.session = session;
+			return this;
 		}
 
 		void countSize(ReplicationProcess.Source source, String fileName) {
@@ -69,8 +81,9 @@ public class ReplicationStatus {
 
 		ReplicationStatus build() {
 			final Date end = new Date();
+			final int ratio = bytes == 0 || session.size == 0 ? 0 : (int) ((bytes * 100) / session.size);
 			return new ReplicationStatus(start, end, end.getTime() - start.getTime(), bytes,
-					FileUtils.byteCountToDisplaySize(bytes));
+					FileUtils.byteCountToDisplaySize(bytes), ratio, strategy);
 		}
 
 	}

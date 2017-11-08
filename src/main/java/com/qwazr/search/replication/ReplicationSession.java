@@ -24,15 +24,32 @@ import java.util.Map;
 
 public class ReplicationSession {
 
-	public final String id;
-
+	public final String masterUuid;
+	public final String sessionUuid;
 	public final Map<String, Map<String, Long>> files;
+	public final long size;
 
 	@JsonCreator
-	ReplicationSession(@JsonProperty("id") final String id,
-			@JsonProperty("files") final Map<String, Map<String, Long>> files) {
-		this.id = id;
+	ReplicationSession(@JsonProperty("master_uuid") final String masterUuid,
+			@JsonProperty("session_uuid") final String sessionUuid,
+			@JsonProperty("files") final Map<String, Map<String, Long>> files, @JsonProperty("size") final long size) {
+		this.masterUuid = masterUuid;
+		this.sessionUuid = sessionUuid;
 		this.files = files;
+		this.size = size;
+	}
+
+	ReplicationSession(final String masterUuid, final String sessionUuid, final Map<String, Map<String, Long>> files) {
+		this(masterUuid, sessionUuid, files, computeTotalSize(files));
+	}
+
+	static long computeTotalSize(final Map<String, Map<String, Long>> files) {
+		long totalSize = 0;
+		for (final Map<String, Long> sourceFiles : files.values())
+			for (final Long size : sourceFiles.values())
+				if (size != null)
+					totalSize += size;
+		return totalSize;
 	}
 
 	@JsonIgnore

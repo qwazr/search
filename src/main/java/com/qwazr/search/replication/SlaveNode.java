@@ -25,7 +25,7 @@ import java.nio.file.Path;
 public interface SlaveNode {
 
 	ReplicationProcess newReplicationProcess(final ReplicationSession masterFiles,
-			final ReplicationProcess.FileProvider fileProvider) throws IOException;
+			final ReplicationProcess.SourceFileProvider sourceFileProvider) throws IOException;
 
 	class WithIndex implements SlaveNode {
 
@@ -44,9 +44,9 @@ public interface SlaveNode {
 
 		@Override
 		public ReplicationProcess newReplicationProcess(final ReplicationSession masterFiles,
-				final ReplicationProcess.FileProvider fileProvider) throws IOException {
-			return new ReplicationProcess.WithIndex(indexDirectoryPath, workDirectory,
-					new IndexView.FromDirectory(indexDirectoryPath, indexDirectory), masterFiles, fileProvider);
+				final ReplicationProcess.SourceFileProvider fileProvider) throws IOException {
+			return new ReplicationProcessIncrementalIndex(workDirectory, indexDirectoryPath, indexDirectory,
+					masterFiles, fileProvider);
 		}
 	}
 
@@ -65,10 +65,9 @@ public interface SlaveNode {
 
 		@Override
 		public ReplicationProcess newReplicationProcess(final ReplicationSession masterFiles,
-				final ReplicationProcess.FileProvider fileProvider) throws IOException {
-			return new ReplicationProcess.WithIndexAndTaxo(indexDirectoryPath, taxoDirectoryPath, workDirectory,
-					new IndexView.FromDirectory(indexDirectoryPath, indexDirectory),
-					new IndexView.FromDirectory(taxoDirectoryPath, taxoDirectory), masterFiles, fileProvider);
+				final ReplicationProcess.SourceFileProvider fileProvider) throws IOException {
+			return new ReplicationProcessIncrementalIndexAndTaxo(workDirectory, indexDirectoryPath, indexDirectory,
+					taxoDirectoryPath, taxoDirectory, masterFiles, fileProvider);
 		}
 	}
 }

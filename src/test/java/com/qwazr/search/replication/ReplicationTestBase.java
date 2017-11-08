@@ -86,7 +86,8 @@ public abstract class ReplicationTestBase<T> {
 	 *
 	 * @param replicationStatus
 	 */
-	public void checkReplicationStatus(ReplicationStatus replicationStatus) {
+	public ReplicationStatus checkReplicationStatus(ReplicationStatus replicationStatus,
+			ReplicationStatus.Strategy expectedStrategy, Integer expectedRatio) {
 		Assert.assertNotNull(replicationStatus);
 		Assert.assertNotNull(replicationStatus.start);
 		Assert.assertNotNull(replicationStatus.end);
@@ -94,6 +95,11 @@ public abstract class ReplicationTestBase<T> {
 				replicationStatus.end.getTime() - replicationStatus.start.getTime());
 		Assert.assertNotNull(replicationStatus.size);
 		Assert.assertEquals(FileUtils.byteCountToDisplaySize(replicationStatus.bytes), replicationStatus.size);
+		if (expectedStrategy != null)
+			Assert.assertEquals(expectedStrategy, replicationStatus.strategy);
+		if (expectedRatio != null)
+			Assert.assertEquals(expectedRatio, replicationStatus.ratio, 0);
+		return replicationStatus;
 	}
 
 	/**

@@ -40,14 +40,20 @@ public interface MasterNode extends Closeable {
 
 	abstract class Base implements MasterNode {
 
-		protected abstract void fillSession(final String sessionId, final Map<String, Map<String, Long>> sessionMap)
+		private final String masterUuid;
+
+		protected Base(final String masterUuid) {
+			this.masterUuid = masterUuid;
+		}
+
+		protected abstract void fillSession(final String sessionUuid, final Map<String, Map<String, Long>> sessionMap)
 				throws IOException;
 
 		final public ReplicationSession newSession() throws IOException {
 			final Map<String, Map<String, Long>> sessionMap = new HashMap<>();
-			final String sessionID = HashUtils.newTimeBasedUUID().toString();
-			fillSession(sessionID, sessionMap);
-			return new ReplicationSession(sessionID, sessionMap);
+			final String sessionUuid = HashUtils.newTimeBasedUUID().toString();
+			fillSession(sessionUuid, sessionMap);
+			return new ReplicationSession(masterUuid, sessionUuid, sessionMap);
 		}
 
 	}
@@ -58,7 +64,9 @@ public interface MasterNode extends Closeable {
 		private final SnapshotDeletionPolicy indexSnapshot;
 		private final HashMap<String, IndexView.FromCommit> indexSessions;
 
-		public WithIndex(final Path indexDirectoryPath, final IndexWriter indexWriter) throws IOException {
+		public WithIndex(final String masterUuid, final Path indexDirectoryPath, final IndexWriter indexWriter)
+				throws IOException {
+			super(masterUuid);
 			this.indexDirectoryPath = indexDirectoryPath;
 			this.indexSnapshot = (SnapshotDeletionPolicy) indexWriter.getConfig().getIndexDeletionPolicy();
 			this.indexSessions = new HashMap<>();
@@ -107,10 +115,10 @@ public interface MasterNode extends Closeable {
 		private final SnapshotDeletionPolicy taxoSnapshots;
 		private final HashMap<String, IndexView.FromCommit> taxoSessions;
 
-		public WithIndexAndTaxo(final Path indexDirectoryPath, final IndexWriter indexWriter,
+		public WithIndexAndTaxo(final String masterUuid, final Path indexDirectoryPath, final IndexWriter indexWriter,
 				final Path taxoDirectoryPath, IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter)
 				throws IOException {
-			super(indexDirectoryPath, indexWriter);
+			super(masterUuid, indexDirectoryPath, indexWriter);
 			this.taxoDirectoryPath = taxoDirectoryPath;
 			this.taxoSnapshots = taxonomyWriter.getDeletionPolicy();
 			this.taxoSessions = new HashMap<>();

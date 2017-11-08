@@ -554,8 +554,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public InputStream replicationObtain(final String schemaName, final String indexName, final String masterUuid,
-			final String sessionID, final String source, final String fileName) {
+	final public InputStream replicationObtain(final String schemaName, final String indexName, final String sessionID,
+			final String source, final String fileName) {
 		try {
 			checkRight(null);
 			final InputStream input = indexManager.get(schemaName)
@@ -571,11 +571,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public boolean replicationRelease(final String schemaName, final String indexName, final String masterUuid,
-			final String sessionID) {
+	final public boolean replicationRelease(final String schemaName, final String indexName, final String sessionID) {
 		try {
 			checkRight(null);
-			// TODO Remove indexManager.get(schemaName).get(indexName, false).getLocalReplicator(masterUuid).release(sessionID);
+			indexManager.get(schemaName).get(indexName, false).replicationRelease(sessionID);
 			return true;
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
@@ -584,10 +583,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public ReplicationSession replicationUpdate(final String schemaName, final String indexName,
-			final String masterUuid, final String currentVersion) {
+			final String currentVersion) {
 		try {
 			checkRight(null);
-			return indexManager.get(schemaName).get(indexName, false).replicationUpdate(masterUuid, currentVersion);
+			return indexManager.get(schemaName).get(indexName, false).replicationUpdate(currentVersion);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
