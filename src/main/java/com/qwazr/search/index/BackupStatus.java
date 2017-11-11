@@ -118,7 +118,7 @@ public class BackupStatus {
 			return false;
 		if (!(o instanceof BackupStatus))
 			return false;
-		BackupStatus s = (BackupStatus) o;
+		final BackupStatus s = (BackupStatus) o;
 		if (!Objects.equals(index_version, s.index_version))
 			return false;
 		if (!Objects.equals(taxonomy_version, s.taxonomy_version))

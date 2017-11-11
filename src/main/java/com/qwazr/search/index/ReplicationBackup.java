@@ -16,104 +16,65 @@
 
 package com.qwazr.search.index;
 
-import com.qwazr.search.analysis.AnalyzerDefinition;
-import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
-import com.qwazr.utils.IOUtils;
+import com.qwazr.search.replication.SlaveNode;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.LinkedHashMap;
-import java.util.UUID;
 
 class ReplicationBackup extends ReplicationClient {
 
 	private final IndexInstance indexInstance;
 	private final Path backupIndexDirectory;
 
-	ReplicationBackup(final IndexInstance indexInstance, final Path backupIndexDirectory) {
-		super(null);
+	ReplicationBackup(final IndexInstance indexInstance, final Path backupIndexDirectory, final boolean withTaxonomy)
+			throws IOException {
+		super(getSlaveNode(backupIndexDirectory, withTaxonomy));
 		this.indexInstance = indexInstance;
 		this.backupIndexDirectory = backupIndexDirectory;
 	}
 
-	/**
-	 * Backup the index UUID and the optional Master UUID
-	 *
-	 * @param indexUuid the index UUID
-	 * @throws IOException
-	 */
-	private void backupIndexAndMasterUuid(final IndexFileSet indexFileSet, UUID indexUuid) throws IOException {
-
-		// Copy the UUID
-		IOUtils.writeStringAsFile(indexUuid.toString(), backupIndexDirectory.resolve(IndexFileSet.UUID_FILE).toFile());
-
-		// Copy the option UUID Master File
-		if (indexFileSet.uuidMasterFile != null && indexFileSet.uuidMasterFile.exists() &&
-				indexFileSet.uuidMasterFile.isFile())
-			Files.copy(indexFileSet.uuidMasterFile.toPath(),
-					backupIndexDirectory.resolve(IndexFileSet.UUID_MASTER_FILE), StandardCopyOption.REPLACE_EXISTING);
-	}
-
-	/**
-	 * Backup the settings, field definitions analyzer definitions
-	 *
-	 * @param settings              the index settings
-	 * @param fieldMap              the field map
-	 * @param analyzerDefinitionMap the analyzer definition
-	 */
-	private void backupSettings(final IndexSettingsDefinition settings, final FieldMap fieldMap,
-			final LinkedHashMap<String, AnalyzerDefinition> analyzerDefinitionMap) throws IOException {
-		IndexSettingsDefinition.save(settings, backupIndexDirectory.resolve(IndexFileSet.SETTINGS_FILE).toFile());
-		FieldDefinition.saveMap(fieldMap.getFieldDefinitionMap(),
-				backupIndexDirectory.resolve(IndexFileSet.FIELDS_FILE).toFile());
-		AnalyzerDefinition.saveMap(analyzerDefinitionMap,
-				backupIndexDirectory.resolve(IndexFileSet.ANALYZERS_FILE).toFile());
-	}
-
-	/**
-	 * Backup the index files
-	 */
-	private void backupIndexFiles(final ReplicationMaster replicationMaster, boolean withTaxo) throws IOException {
-
-		final ReplicationSession session = replicationMaster.newReplicationSession();
-		try {
-			//TODO implements
-		} finally {
-			replicationMaster.releaseSession(session.sessionUuid);
-		}
+	@Override
+	InputStream getItem(final String sessionUuid, final ReplicationProcess.Source source, final String itemName)
+			throws FileNotFoundException {
+		return indexInstance.replicationObtain(sessionUuid, source, itemName);
 	}
 
 	/**
 	 * Execute the entire backup process
 	 *
-	 * @param indexFileSet          the directory list of the index instance
-	 * @param indexUUID             the index UUID
-	 * @param settings              the index settings
-	 * @param fieldMap              the field map of the index
-	 * @param analyzerDefinitionMap the analyzers of the index
-	 * @param replicationMaster     the replicationMaster of the index
-	 * @return the result of the backup
+	 * @return the final status of the backup
 	 * @throws IOException
 	 */
-	BackupStatus doBackup(final IndexFileSet indexFileSet, final UUID indexUUID, final IndexSettingsDefinition settings,
-			final FieldMap fieldMap, final LinkedHashMap<String, AnalyzerDefinition> analyzerDefinitionMap,
-			final ReplicationMaster replicationMaster) throws IOException {
-
-		backupIndexAndMasterUuid(indexFileSet, indexUUID);
-		backupSettings(settings, fieldMap, analyzerDefinitionMap);
-		return BackupStatus.newBackupStatus(backupIndexDirectory, false);
+	BackupStatus backup() throws IOException {
+		final ReplicationSession session = indexInstance.replicationUpdate(null);
+		try {
+			replicate(session, null, (strategy, remoteMasterUuid) -> {
+			});
+			return BackupStatus.newBackupStatus(backupIndexDirectory, false);
+		} finally {
+			indexInstance.replicationRelease(session.sessionUuid);
+		}
 	}
 
-	@Override
-	InputStream getItem(String sessionUuid, ReplicationProcess.Source source, String itemName)
-			throws FileNotFoundException {
-		return indexInstance.replicationObtain(sessionUuid, source, itemName);
+	static SlaveNode getSlaveNode(final Path backupIndexDirectory, final boolean withTaxonomy) throws IOException {
+		final Path resourcesPath = backupIndexDirectory.resolve(IndexFileSet.RESOURCES_DIR);
+		final Path dataIndexPath = backupIndexDirectory.resolve(IndexFileSet.INDEX_DATA);
+		final Path replWorkDirectory = backupIndexDirectory.resolve(IndexFileSet.REPL_WORK);
+
+		if (!withTaxonomy)
+			return new SlaveNode.WithIndex(resourcesPath, null, dataIndexPath, replWorkDirectory, backupIndexDirectory,
+					IndexFileSet.FIELDS_FILE, IndexFileSet.ANALYZERS_FILE, IndexFileSet.SETTINGS_FILE,
+					IndexFileSet.UUID_FILE, IndexFileSet.UUID_MASTER_FILE);
+
+		final Path taxoIndexPath = backupIndexDirectory.resolve(IndexFileSet.INDEX_TAXONOMY);
+
+		return new SlaveNode.WithIndexAndTaxo(resourcesPath, null, dataIndexPath, null, taxoIndexPath,
+				replWorkDirectory, backupIndexDirectory, IndexFileSet.FIELDS_FILE, IndexFileSet.ANALYZERS_FILE,
+				IndexFileSet.SETTINGS_FILE, IndexFileSet.UUID_FILE, IndexFileSet.UUID_MASTER_FILE);
 	}
 
 }

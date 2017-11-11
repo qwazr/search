@@ -231,8 +231,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	void deleteField(final String field_name) throws IOException, ServerException {
-		final LinkedHashMap<String, FieldDefinition> fields =
-				(LinkedHashMap<String, FieldDefinition>) fieldMap.getFieldDefinitionMap().clone();
+		final LinkedHashMap<String, FieldDefinition> fields = new LinkedHashMap<>(fieldMap.getFieldDefinitionMap());
 		if (fields.remove(field_name) == null)
 			throw new ServerException(Response.Status.NOT_FOUND,
 					"Field not found: " + field_name + " - Index: " + indexName);
@@ -346,23 +345,18 @@ final public class IndexInstance implements Closeable {
 	final BackupStatus backup(final Path backupIndexDirectory) throws IOException {
 		backupLock.lock();
 		try {
-			checkIsMaster();
+			// Create (or check) the backup directory
+			if (Files.notExists(backupIndexDirectory))
+				Files.createDirectory(backupIndexDirectory);
+			if (!Files.isDirectory(backupIndexDirectory))
+				throw new IOException("The backup path is not a directory: " + backupIndexDirectory.toAbsolutePath());
 			try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
-
-				// Create (or check) the backup directory
-				if (Files.notExists(backupIndexDirectory))
-					Files.createDirectory(backupIndexDirectory);
-				if (!Files.isDirectory(backupIndexDirectory))
-					throw new IOException(
-							"Cannot create the backup directory: " + backupIndexDirectory + " - Index: " + indexName);
-
-				try {
-					return new ReplicationBackup(this, backupIndexDirectory).doBackup(fileSet, indexUuid, settings,
-							fieldMap, analyzerDefinitionMap, replicationMaster);
-				} catch (IOException e) {
+				return new ReplicationBackup(this, backupIndexDirectory, taxonomyDirectory != null).backup();
+			} catch (IOException e) {
+				// If any error occurred, we delete the backup directory
+				if (Files.exists(backupIndexDirectory))
 					FileUtils.deleteDirectoryQuietly(backupIndexDirectory);
-					throw e;
-				}
+				throw e;
 			}
 		} finally {
 			backupLock.unlock();

@@ -224,13 +224,12 @@ class IndexInstanceBuilder {
 
 		if (IndexSettingsDefinition.useTaxonomyIndex(settings)) {
 			openOrCreateTaxonomyIndex(true);
-			replicationSlave =
-					new ReplicationSlave.WithIndexAndTaxo(fileSet, indexService, settings.master, dataDirectory,
-							taxonomyDirectory);
+			replicationSlave = ReplicationSlave.withIndexAndTaxo(fileSet, indexService, settings.master, dataDirectory,
+					taxonomyDirectory);
 			writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(null, null,
 					() -> new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory));
 		} else {
-			replicationSlave = new ReplicationSlave.WithIndex(fileSet, indexService, settings.master, dataDirectory);
+			replicationSlave = ReplicationSlave.withIndex(fileSet, indexService, settings.master, dataDirectory);
 			writerAndSearcher =
 					new WriterAndSearcher.WithIndex(null, () -> new SearcherManager(dataDirectory, searcherFactory));
 		}

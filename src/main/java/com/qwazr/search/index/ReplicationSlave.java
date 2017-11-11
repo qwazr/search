@@ -27,18 +27,17 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.UUID;
 
-abstract class ReplicationSlave extends ReplicationClient {
+class ReplicationSlave extends ReplicationClient {
 
 	private final File masterUuidFile;
 	private volatile UUID clientMasterUuid;
 	private final IndexServiceInterface indexService;
 	private final RemoteIndex master;
 
-	private ReplicationSlave(final File masterUuidFile, final IndexServiceInterface localService,
-			final RemoteIndex master, final SlaveNode slaveNode) throws IOException {
+	ReplicationSlave(final File masterUuidFile, final IndexServiceInterface localService, final RemoteIndex master,
+			final SlaveNode slaveNode) throws IOException {
 		super(slaveNode);
 		this.masterUuidFile = masterUuidFile;
 		this.master = master;
@@ -81,25 +80,19 @@ abstract class ReplicationSlave extends ReplicationClient {
 		}
 	}
 
-	final static class WithIndexAndTaxo extends ReplicationSlave {
-
-		WithIndexAndTaxo(final IndexFileSet fileSet, final IndexServiceInterface localService, final RemoteIndex master,
-				final Directory dataDirectory, final Directory taxonomyDirectory)
-				throws IOException, URISyntaxException {
-			super(fileSet.uuidMasterFile, localService, master,
-					new SlaveNode.WithIndexAndTaxo(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
-							taxonomyDirectory, fileSet.taxonomyDirectory, fileSet.replWorkPath, fileSet.mainDirectory));
-		}
+	static ReplicationSlave withIndexAndTaxo(final IndexFileSet fileSet, final IndexServiceInterface localService,
+			final RemoteIndex master, final Directory dataDirectory, final Directory taxonomyDirectory)
+			throws IOException {
+		return new ReplicationSlave(fileSet.uuidMasterFile, localService, master,
+				new SlaveNode.WithIndexAndTaxo(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
+						taxonomyDirectory, fileSet.taxonomyDirectory, fileSet.replWorkPath, fileSet.mainDirectory));
 	}
 
-	final static class WithIndex extends ReplicationSlave {
-
-		WithIndex(final IndexFileSet fileSet, final IndexServiceInterface localService, final RemoteIndex master,
-				final Directory dataDirectory) throws IOException, URISyntaxException {
-			super(fileSet.uuidMasterFile, localService, master,
-					new SlaveNode.WithIndex(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
-							fileSet.replWorkPath, fileSet.mainDirectory));
-		}
-
+	static ReplicationSlave withIndex(final IndexFileSet fileSet, final IndexServiceInterface localService,
+			final RemoteIndex master, final Directory dataDirectory) throws IOException {
+		return new ReplicationSlave(fileSet.uuidMasterFile, localService, master,
+				new SlaveNode.WithIndex(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
+						fileSet.replWorkPath, fileSet.mainDirectory));
 	}
+
 }

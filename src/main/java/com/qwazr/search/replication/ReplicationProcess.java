@@ -104,7 +104,9 @@ public interface ReplicationProcess extends Closeable {
 
 		private ReplicationProcess index(final Source source, final Path indexDirectoryPath,
 				final Directory indexDirectory) throws IOException {
-			final SourceView sourceView = new SourceView.FromDirectory(indexDirectoryPath, indexDirectory);
+			final SourceView sourceView = indexDirectory == null ?
+					new SourceView.FromPathDirectory(indexDirectoryPath) :
+					new SourceView.FromDirectory(indexDirectoryPath, indexDirectory);
 			switch (strategy) {
 			case full:
 				return full(indexDirectoryPath, source, sourceView);

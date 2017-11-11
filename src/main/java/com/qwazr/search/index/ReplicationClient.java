@@ -79,4 +79,5 @@ abstract class ReplicationClient {
 	interface Switcher {
 		void switcher(final ReplicationStatus.Strategy strategy, final UUID remoteMasterUuid) throws IOException;
 	}
+
 }
