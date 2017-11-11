@@ -47,7 +47,7 @@ class IndexFileSet {
 	final Path dataDirectory;
 	final Path taxonomyDirectory;
 	final private File analyzerMapFile;
-	final File resourcesDirectory;
+	final Path resourcesDirectoryPath;
 	final private File fieldMapFile;
 	final Path replWorkPath;
 
@@ -58,7 +58,7 @@ class IndexFileSet {
 		this.dataDirectory = mainDirectory.resolve(INDEX_DATA);
 		this.taxonomyDirectory = mainDirectory.resolve(INDEX_TAXONOMY);
 		this.analyzerMapFile = mainDirectory.resolve(ANALYZERS_FILE).toFile();
-		this.resourcesDirectory = mainDirectory.resolve(RESOURCES_DIR).toFile();
+		this.resourcesDirectoryPath = mainDirectory.resolve(RESOURCES_DIR);
 		this.fieldMapFile = mainDirectory.resolve(FIELDS_FILE).toFile();
 		this.settingsFile = mainDirectory.resolve(SETTINGS_FILE).toFile();
 		this.replWorkPath = mainDirectory.resolve(REPL_WORK);

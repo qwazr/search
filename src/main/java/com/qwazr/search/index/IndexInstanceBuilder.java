@@ -52,8 +52,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
-import static org.apache.lucene.replicator.IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter;
-
 class IndexInstanceBuilder {
 
 	final IndexFileSet fileSet;
@@ -101,7 +99,7 @@ class IndexInstanceBuilder {
 		this.settings = settings;
 		this.globalAnalyzerFactoryMap = globalAnalyzerFactoryMap;
 		this.indexService = indexService;
-		this.fileResourceLoader = new FileResourceLoader(null, fileSet.resourcesDirectory);
+		this.fileResourceLoader = new FileResourceLoader(null, fileSet.resourcesDirectoryPath);
 		this.indexUuid = indexUuid;
 	}
 
@@ -220,15 +218,7 @@ class IndexInstanceBuilder {
 			taxonomyWriter = null;
 		}
 	}
-
-	private long replicaCreateIfNotExistAndGetGen() throws IOException {
-		long gen = SegmentInfos.getLastCommitGeneration(dataDirectory);
-		if (gen >= 0)
-			return gen;
-		openOrCreateDataIndex(true);
-		return SegmentInfos.getLastCommitGeneration(dataDirectory);
-	}
-
+	
 	private void buildSlave() throws IOException, URISyntaxException {
 
 		openOrCreateDataIndex(true);
@@ -237,7 +227,7 @@ class IndexInstanceBuilder {
 			openOrCreateTaxonomyIndex(true);
 			replicationSlave =
 					new ReplicationSlave.WithIndexAndTaxo(fileSet, indexService, settings.master, dataDirectory,
-							taxonomyDirectory);
+							taxonomyDirectory, writerAndSearcher);
 			writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(null, null,
 					() -> new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory));
 		} else {

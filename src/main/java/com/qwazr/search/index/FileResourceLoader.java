@@ -21,37 +21,38 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.lucene.analysis.util.ResourceLoader;
 
 import javax.ws.rs.core.Response;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 class FileResourceLoader implements ResourceLoader {
 
 	private final ResourceLoader delegate;
-	private final File directory;
+	private final Path directory;
 
-	FileResourceLoader(final ResourceLoader delegate, final File directory) {
+	FileResourceLoader(final ResourceLoader delegate, final Path directory) {
 		this.delegate = delegate;
 		this.directory = directory;
 	}
 
-	final File checkResourceName(final String resourceName) {
+	final Path checkResourceName(final String resourceName) {
 		Objects.requireNonNull(resourceName, "The resource name is missing");
 		final String expectedResourceName = FilenameUtils.getName(FilenameUtils.normalize(resourceName));
 		if (!resourceName.equals(expectedResourceName))
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"The resource name is not valid. Expected: " + expectedResourceName);
-		return new File(directory, expectedResourceName);
+		return directory.resolve(expectedResourceName);
 	}
 
 	@Override
 	public InputStream openResource(final String resourceName) throws IOException {
-		if (directory.exists()) {
-			final File resourceFile = checkResourceName(resourceName);
-			if (resourceFile.exists())
-				return new FileInputStream(resourceFile);
+		if (Files.exists(directory)) {
+			final Path resourceFilePath = checkResourceName(resourceName);
+			if (Files.exists(resourceFilePath))
+				return new FileInputStream(resourceFilePath.toFile());
 		}
 		if (delegate != null)
 			return delegate.openResource(resourceName);

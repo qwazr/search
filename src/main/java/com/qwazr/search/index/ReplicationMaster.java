@@ -20,7 +20,6 @@ import com.qwazr.search.replication.MasterNode;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.replicator.IndexAndTaxonomyRevision;
 
 import java.io.Closeable;
 import java.io.FileNotFoundException;
@@ -79,19 +78,19 @@ interface ReplicationMaster extends Closeable {
 
 	final class WithIndexAndTaxo extends Base {
 
-		WithIndexAndTaxo(final String masterUuid, final Path indexDirectoryPath, final IndexWriter indexWriter,
-				final Path taxoDirectoryPath,
-				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException {
-			super(new MasterNode.WithIndexAndTaxo(masterUuid, indexDirectoryPath, indexWriter, taxoDirectoryPath,
-					taxonomyWriter));
+		WithIndexAndTaxo(final String masterUuid, final Path resourcesPath, final Path indexDirectoryPath,
+				final IndexWriter indexWriter, final Path taxoDirectoryPath,
+				final SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException {
+			super(new MasterNode.WithIndexAndTaxo(masterUuid, resourcesPath, indexDirectoryPath, indexWriter,
+					taxoDirectoryPath, taxonomyWriter));
 		}
 	}
 
 	final class WithIndex extends Base {
 
-		WithIndex(final String masterUuid, final Path indexDirectoryPath, final IndexWriter indexWriter)
-				throws IOException {
-			super(new MasterNode.WithIndex(masterUuid, indexDirectoryPath, indexWriter));
+		WithIndex(final String masterUuid, final Path resourcesPath, final Path indexDirectoryPath,
+				final IndexWriter indexWriter) throws IOException {
+			super(new MasterNode.WithIndex(masterUuid, resourcesPath, indexDirectoryPath, indexWriter));
 		}
 	}
 

@@ -27,6 +27,7 @@ import com.qwazr.search.query.JoinQuery;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.FunctionEx;
@@ -40,7 +41,6 @@ import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.replicator.PerSessionDirectoryFactory;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -48,7 +48,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.join.JoinUtil;
 import org.apache.lucene.search.join.ScoreMode;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
@@ -59,7 +58,6 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -167,7 +165,7 @@ final public class IndexInstance implements Closeable {
 
 	private IndexStatus getIndexStatus() throws IOException {
 		return writerAndSearcher.search((indexSearcher, taxonomyReader) -> new IndexStatus(indexUuid,
-				replicationSlave == null ? null : replicationSlave.getMasterUuid(), dataDirectory, indexSearcher,
+				replicationSlave == null ? null : replicationSlave.getClientMasterUuid(), dataDirectory, indexSearcher,
 				writerAndSearcher.getIndexWriter(), settings, localAnalyzerFactoryMap.keySet(),
 				fieldMap.getFieldDefinitionMap().keySet(), indexAnalyzers.getActiveAnalyzers(),
 				queryAnalyzers.getActiveAnalyzers()));
@@ -344,44 +342,12 @@ final public class IndexInstance implements Closeable {
 					throw new IOException(
 							"Cannot create the backup directory: " + backupIndexDirectory + " - Index: " + indexName);
 
-				// Copy the UUID
-				IOUtils.writeStringAsFile(indexUuid.toString(),
-						backupIndexDirectory.resolve(IndexFileSet.UUID_FILE).toFile());
-
-				// Copy the option UUID Master File
-				if (fileSet.uuidMasterFile != null && fileSet.uuidMasterFile.exists() &&
-						fileSet.uuidMasterFile.isFile())
-					Files.copy(fileSet.uuidMasterFile.toPath(),
-							backupIndexDirectory.resolve(IndexFileSet.UUID_MASTER_FILE),
-							StandardCopyOption.REPLACE_EXISTING);
-
-				// Copy the settings, field definitions analyzer definitions
-				IndexSettingsDefinition.save(settings,
-						backupIndexDirectory.resolve(IndexFileSet.SETTINGS_FILE).toFile());
-				FieldDefinition.saveMap(fieldMap.getFieldDefinitionMap(),
-						backupIndexDirectory.resolve(IndexFileSet.FIELDS_FILE).toFile());
-				AnalyzerDefinition.saveMap(analyzerDefinitionMap,
-						backupIndexDirectory.resolve(IndexFileSet.ANALYZERS_FILE).toFile());
-
-				// Copy the data using replication
-				try (final Directory dataDir = FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_DATA));
-						final Directory taxoDir = taxonomyDirectory == null ?
-								null :
-								FSDirectory.open(backupIndexDirectory.resolve(IndexFileSet.INDEX_TAXONOMY))) {
-
-					final PerSessionDirectoryFactory sourceDirFactory =
-							new PerSessionDirectoryFactory(backupIndexDirectory.resolve(IndexFileSet.REPL_WORK));
-					/* TODO
-					try (final ReplicationClient replicationClient = new ReplicationClient(null,
-							IndexReplicator.getNewReplicationHandler(dataDir, taxoDir, () -> false),
-							sourceDirFactory)) {
-						replicationClient.updateNow();
-					} catch (IOException e) {
-						FileUtils.deleteDirectoryQuietly(backupIndexDirectory);
-						throw e;
-					}
-					*/
-					return BackupStatus.newBackupStatus(backupIndexDirectory, false);
+				try {
+					return new ReplicationBackup(this, backupIndexDirectory).doBackup(fileSet, indexUuid, settings,
+							fieldMap, analyzerDefinitionMap, replicationMaster);
+				} catch (IOException e) {
+					FileUtils.deleteDirectoryQuietly(backupIndexDirectory);
+					throw e;
 				}
 			}
 		} finally {
@@ -426,31 +392,10 @@ final public class IndexInstance implements Closeable {
 					"No replication master has been setup - Index: " + indexName);
 
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
-
 			// We only want one replication at a time
 			replicationLock.lock();
 			try {
-
-				//Sync resources
-				final Map<String, ResourceInfo> localResources = getResources();
-				replicationSlave.getMasterResources().forEach((remoteName, remoteInfo) -> {
-					final ResourceInfo localInfo = localResources.remove(remoteName);
-					if (localInfo != null && localInfo.equals(remoteInfo))
-						return;
-					try (final InputStream input = replicationSlave.getResource(remoteName)) {
-						postResource(remoteName, remoteInfo.lastModified, input);
-					} catch (IOException e) {
-						throw ServerException.of(
-								"Cannot replicate the resource " + remoteName + " - Index: " + indexName, e);
-					}
-				});
-				localResources.forEach((resourceName, resourceInfo) -> deleteResource(resourceName));
-
-				//Sync analyzer and fields
-				setAnalyzers(replicationSlave.getMasterAnalyzers());
-				setFields(replicationSlave.getMasterFields());
-
-				return replicationSlave.update(writerAndSearcher);
+				return replicationSlave.replicate();
 			} finally {
 				replicationLock.unlock();
 			}
@@ -681,8 +626,8 @@ final public class IndexInstance implements Closeable {
 
 	final void postResource(final String resourceName, final Long lastModified, final InputStream inputStream)
 			throws IOException {
-		if (!fileSet.resourcesDirectory.exists())
-			fileSet.resourcesDirectory.mkdir();
+		if (!Files.exists(fileSet.resourcesDirectoryPath))
+			Files.createDirectory(fileSet.resourcesDirectoryPath);
 		final File resourceFile = fileResourceLoader.checkResourceName(resourceName);
 		IOUtils.copy(inputStream, resourceFile);
 		if (lastModified != null)
@@ -690,27 +635,25 @@ final public class IndexInstance implements Closeable {
 		refreshFieldsAnalyzers();
 	}
 
-	final LinkedHashMap<String, ResourceInfo> getResources() {
+	final Map<String, ResourceInfo> getResources() throws IOException {
+		if (!Files.exists(fileSet.resourcesDirectoryPath))
+			return Collections.emptyMap();
 		final LinkedHashMap<String, ResourceInfo> map = new LinkedHashMap<>();
-		if (!fileSet.resourcesDirectory.exists())
-			return map;
-		final File[] files = fileSet.resourcesDirectory.listFiles();
-		if (files == null)
-			return map;
-		for (File file : files)
-			map.put(file.getName(), new ResourceInfo(file));
+		Files.list(fileSet.resourcesDirectoryPath)
+				.filter(p -> Files.isRegularFile(p))
+				.forEach(p -> map.put(p.getFileName().toString(), new ResourceInfo(p.toFile())));
 		return map;
 	}
 
 	final InputStream getResource(final String resourceName) throws IOException {
-		if (!fileSet.resourcesDirectory.exists())
+		if (!Files.exists(fileSet.resourcesDirectoryPath))
 			throw new ServerException(Response.Status.NOT_FOUND,
 					"Resource not found : " + resourceName + " - Index: " + indexName);
 		return fileResourceLoader.openResource(resourceName);
 	}
 
 	final void deleteResource(final String resourceName) {
-		if (!fileSet.resourcesDirectory.exists())
+		if (!Files.exists(fileSet.resourcesDirectoryPath))
 			throw new ServerException(Response.Status.NOT_FOUND,
 					"Resource not found : " + resourceName + " - Index: " + indexName);
 		final File resourceFile = fileResourceLoader.checkResourceName(resourceName);
@@ -721,7 +664,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	final FileResourceLoader newResourceLoader(final FileResourceLoader resourceLoader) {
-		return new FileResourceLoader(resourceLoader, fileSet.resourcesDirectory);
+		return new FileResourceLoader(resourceLoader, fileSet.resourcesDirectoryPath.toFile());
 	}
 
 }

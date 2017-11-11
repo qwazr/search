@@ -19,7 +19,6 @@ import com.qwazr.utils.IOUtils;
 import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.replicator.IndexAndTaxonomyRevision;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ReferenceManager;
 
@@ -127,11 +126,10 @@ interface WriterAndSearcher extends Closeable {
 	class WithIndexAndTaxo extends Common {
 
 		private final SearcherTaxonomyManagerFactory searcherTaxonomyManagerFactory;
-		private final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter;
+		private final SnapshotDirectoryTaxonomyWriter taxonomyWriter;
 		private volatile SearcherTaxonomyManager searcherTaxonomyManager;
 
-		WithIndexAndTaxo(final IndexWriter indexWriter,
-				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter,
+		WithIndexAndTaxo(final IndexWriter indexWriter, final SnapshotDirectoryTaxonomyWriter taxonomyWriter,
 				final SearcherTaxonomyManagerFactory searcherTaxonomyManagerFactory) throws IOException {
 			super(indexWriter);
 			this.taxonomyWriter = taxonomyWriter;
@@ -198,8 +196,7 @@ interface WriterAndSearcher extends Closeable {
 
 	@FunctionalInterface
 	interface WriteAction<T> {
-		T apply(final IndexWriter indexWriter,
-				final IndexAndTaxonomyRevision.SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException;
+		T apply(final IndexWriter indexWriter, final SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException;
 	}
 
 }

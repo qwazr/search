@@ -33,136 +33,117 @@ import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
-interface ReplicationSlave {
+abstract class ReplicationSlave extends ReplicationClient.Base {
 
-	LinkedHashMap<String, AnalyzerDefinition> getMasterAnalyzers();
+	private final File masterUuidFile;
+	private volatile UUID masterUuid;
+	private final IndexServiceInterface indexService;
+	private final RemoteIndex master;
+	private final WriterAndSearcher writerAndSearcher;
 
-	LinkedHashMap<String, FieldDefinition> getMasterFields();
-
-	LinkedHashMap<String, IndexInstance.ResourceInfo> getMasterResources();
-
-	InputStream getResource(final String resourceName) throws IOException;
-
-	ReplicationStatus update(final WriterAndSearcher writerAndSearcher) throws IOException;
-
-	UUID getMasterUuid();
-
-	abstract class Base implements ReplicationSlave {
-
-		private final File masterUuidFile;
-		private volatile UUID masterUuid;
-		private final SlaveNode slaveNode;
-		private final IndexServiceInterface indexService;
-		private final RemoteIndex master;
-
-		private Base(final File masterUuidFile, final IndexServiceInterface localService, final RemoteIndex master,
-				final SlaveNode slaveNode) throws IOException {
-			this.masterUuidFile = masterUuidFile;
-			this.slaveNode = slaveNode;
-			this.master = master;
-			this.indexService =
-					master == null ? null : master.host == null ? localService : new IndexSingleClient(master);
-			readMasterUuid();
-		}
-
-		void readMasterUuid() throws IOException {
-			if (masterUuidFile.exists() && masterUuidFile.length() > 0)
-				masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
-			else
-				masterUuid = null;
-		}
-
-		void setNewMasterUuid(final UUID newMasterUuid) throws IOException {
-			if (newMasterUuid.equals(masterUuid))
-				return;
-			IOUtils.writeStringAsFile(newMasterUuid.toString(), masterUuidFile);
-			masterUuid = newMasterUuid;
-		}
-
-		public UUID getMasterUuid() {
-			return masterUuid;
-		}
-
-		private IndexServiceInterface checkService() {
-			if (indexService == null)
-				throw new ServerException(Response.Status.NOT_ACCEPTABLE, "The remote master has not been set");
-			return indexService;
-		}
-
-		public final LinkedHashMap<String, AnalyzerDefinition> getMasterAnalyzers() {
-			return checkService().getAnalyzers(master.schema, master.index);
-		}
-
-		public final LinkedHashMap<String, FieldDefinition> getMasterFields() {
-			return checkService().getFields(master.schema, master.index);
-		}
-
-		public final LinkedHashMap<String, IndexInstance.ResourceInfo> getMasterResources() {
-			return checkService().getResources(master.schema, master.index);
-		}
-
-		public final IndexStatus getMasterStatus() {
-			return checkService().getIndex(master.schema, master.index);
-		}
-
-		public final InputStream getResource(final String resourceName) throws IOException {
-			return checkService().getResource(master.schema, master.index, resourceName);
-		}
-
-		public final ReplicationStatus update(final WriterAndSearcher writerAndSearcher) throws IOException {
-
-			final ReplicationSession replicationSession =
-					indexService.replicationUpdate(master.schema, master.index, null);
-
-			final UUID remoteMasterUuid = UUID.fromString(replicationSession.masterUuid);
-
-			final ReplicationStatus.Strategy strategy = remoteMasterUuid.equals(masterUuid) ?
-					ReplicationStatus.Strategy.incremental :
-					ReplicationStatus.Strategy.full;
-
-			final ReplicationStatus.Builder currentStatus = ReplicationStatus.of(strategy).session(replicationSession);
-
-			try (final ReplicationProcess replicationProcess = slaveNode.newReplicationProcess(strategy,
-					replicationSession, (source, file) -> {
-						if (currentStatus != null)
-							currentStatus.countSize(source, file);
-						return indexService.replicationObtain(master.schema, master.index,
-								replicationSession.sessionUuid, source.name(), file);
-					})) {
-				replicationProcess.obtainNewFiles();
-				replicationProcess.moveInPlaceNewFiles();
-				if (strategy == ReplicationStatus.Strategy.incremental)
-					writerAndSearcher.refresh();
-				else
-					writerAndSearcher.reload();
-				replicationProcess.deleteOldFiles();
-
-				setNewMasterUuid(remoteMasterUuid);
-				return currentStatus.build();
-			} finally {
-				indexService.replicationRelease(master.schema, master.index, replicationSession.sessionUuid);
-			}
-		}
-
+	private ReplicationSlave(final File masterUuidFile, final IndexServiceInterface localService,
+			final RemoteIndex master, final SlaveNode slaveNode, final WriterAndSearcher writerAndSearcher)
+			throws IOException {
+		super(slaveNode);
+		this.masterUuidFile = masterUuidFile;
+		this.writerAndSearcher = writerAndSearcher;
+		this.master = master;
+		this.indexService = master == null ? null : master.host == null ? localService : new IndexSingleClient(master);
+		getClientMasterUuid();
 	}
 
-	final class WithIndexAndTaxo extends Base {
+	@Override
+	public UUID getClientMasterUuid() throws IOException {
+		if (masterUuidFile.exists() && masterUuidFile.length() > 0)
+			masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
+		else
+			masterUuid = null;
+		return masterUuid;
+	}
+
+	@Override
+	public void setClientMasterUuid(final UUID newMasterUuid) throws IOException {
+		if (newMasterUuid.equals(masterUuid))
+			return;
+		IOUtils.writeStringAsFile(newMasterUuid.toString(), masterUuidFile);
+		masterUuid = newMasterUuid;
+	}
+
+	private IndexServiceInterface checkService() {
+		if (indexService == null)
+			throw new ServerException(Response.Status.NOT_ACCEPTABLE, "The remote master has not been set");
+		return indexService;
+	}
+
+	@Override
+	public final LinkedHashMap<String, AnalyzerDefinition> getMasterAnalyzers() {
+		return checkService().getAnalyzers(master.schema, master.index);
+	}
+
+	@Override
+	public final LinkedHashMap<String, FieldDefinition> getMasterFields() {
+		return checkService().getFields(master.schema, master.index);
+	}
+
+	@Override
+	public void setClientAnalyzers(LinkedHashMap<String, AnalyzerDefinition> analyzers) throws IOException {
+		indexInstance.setAnalyzers(analyzers);
+	}
+
+	@Override
+	public void setClientFields(LinkedHashMap<String, FieldDefinition> fields) throws IOException {
+		indexInstance.setFields(fields);
+	}
+
+	@Override
+	public InputStream getIndexFile(String sessionId, ReplicationProcess.Source source, String file) {
+		switch (source) {
+		case resources:
+			return checkService().getResource(master.schema, master.index, file);
+		case data:
+		case taxonomy:
+			return checkService().replicationObtain(master.schema, master.index, sessionId, source.name(), file);
+		}
+		return null;
+	}
+
+	@Override
+	public final void switchRefresh(ReplicationStatus.Strategy strategy) throws IOException {
+		if (strategy == ReplicationStatus.Strategy.incremental)
+			writerAndSearcher.refresh();
+		else
+			writerAndSearcher.reload();
+	}
+
+	ReplicationStatus replicate() throws IOException {
+		final ReplicationSession session = checkService().replicationUpdate(master.schema, master.index, null);
+		try {
+			return replicate(session);
+		} finally {
+			checkService().replicationRelease(master.schema, master.index, session.sessionUuid);
+		}
+	}
+
+	final static class WithIndexAndTaxo extends ReplicationSlave {
 
 		WithIndexAndTaxo(final IndexFileSet fileSet, final IndexServiceInterface localService, final RemoteIndex master,
-				final Directory dataDirectory, final Directory taxonomyDirectory)
-				throws IOException, URISyntaxException {
-			super(fileSet.uuidMasterFile, localService, master,
-					new SlaveNode.WithIndexAndTaxo(dataDirectory, fileSet.dataDirectory, taxonomyDirectory,
-							fileSet.taxonomyDirectory, fileSet.replWorkPath));
+				final Directory dataDirectory, final Directory taxonomyDirectory,
+				final WriterAndSearcher writerAndSearcher) throws IOException, URISyntaxException {
+			super(fileSet.uuidMasterFile, indexInstance, localService, master,
+					new SlaveNode.WithIndexAndTaxo(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
+							taxonomyDirectory, fileSet.taxonomyDirectory, fileSet.replWorkPath), writerAndSearcher);
 		}
 	}
 
-	final class WithIndex extends Base {
+	final static class WithIndex extends ReplicationSlave {
 
-		WithIndex(final IndexFileSet fileSet, final IndexServiceInterface localService, final RemoteIndex master,
-				final Directory dataDirectory) throws IOException, URISyntaxException {
-			super(fileSet.uuidMasterFile, localService, master,
-					new SlaveNode.WithIndex(dataDirectory, fileSet.dataDirectory, fileSet.replWorkPath));
+		WithIndex(final IndexFileSet fileSet, final IndexInstance indexInstance,
+				final IndexServiceInterface localService, final RemoteIndex master, final Directory dataDirectory,
+				final WriterAndSearcher writerAndSearcher) throws IOException, URISyntaxException {
+			super(fileSet.uuidMasterFile, indexInstance, localService, master,
+					new SlaveNode.WithIndex(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
+							fileSet.replWorkPath), writerAndSearcher);
 		}
+
 	}
 }

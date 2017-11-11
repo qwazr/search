@@ -17,7 +17,6 @@
 package com.qwazr.search.replication;
 
 import com.qwazr.search.index.ReplicationStatus;
-import com.qwazr.server.ServerException;
 import org.apache.lucene.store.Directory;
 
 import java.io.IOException;
@@ -32,12 +31,14 @@ public interface SlaveNode {
 
 	class WithIndex implements SlaveNode {
 
+		protected final Path resourcesPath;
 		protected final Directory indexDirectory;
 		protected final Path indexDirectoryPath;
 		protected final Path workDirectory;
 
-		public WithIndex(final Directory indexDirectory, final Path indexDirectoryPath, final Path workDirectory)
-				throws IOException {
+		public WithIndex(final Path resourcesPath, final Directory indexDirectory, final Path indexDirectoryPath,
+				final Path workDirectory) throws IOException {
+			this.resourcesPath = resourcesPath;
 			this.indexDirectory = indexDirectory;
 			this.indexDirectoryPath = indexDirectoryPath;
 			this.workDirectory = workDirectory;
@@ -47,17 +48,12 @@ public interface SlaveNode {
 
 		@Override
 		public ReplicationProcess newReplicationProcess(final ReplicationStatus.Strategy strategy,
-				final ReplicationSession masterFiles, final ReplicationProcess.SourceFileProvider fileProvider)
+				final ReplicationSession session, final ReplicationProcess.SourceFileProvider fileProvider)
 				throws IOException {
-			switch (strategy) {
-			case incremental:
-				return new ReplicationProcessIncrementalIndex(workDirectory, indexDirectoryPath, indexDirectory,
-						masterFiles, fileProvider);
-			case full:
-				return new ReplicationProcessFullIndex(workDirectory, indexDirectoryPath, indexDirectory, masterFiles,
-						fileProvider);
-			}
-			throw new ServerException("Unsupported replication strategy: " + strategy);
+			final ReplicationProcess.Builder builder =
+					new ReplicationProcess.Builder(workDirectory, fileProvider, strategy, session);
+			return builder.build(builder.resources(resourcesPath),
+					builder.dataIndex(indexDirectoryPath, indexDirectory));
 		}
 	}
 
@@ -66,27 +62,23 @@ public interface SlaveNode {
 		private final Directory taxoDirectory;
 		private final Path taxoDirectoryPath;
 
-		public WithIndexAndTaxo(final Directory indexDirectory, final Path indexDirectoryPath,
+		public WithIndexAndTaxo(final Path resourcesPath, final Directory indexDirectory, final Path indexDirectoryPath,
 				final Directory taxoDirectory, final Path taxoDirectoryPath, final Path workDirectory)
 				throws IOException {
-			super(indexDirectory, indexDirectoryPath, workDirectory);
+			super(resourcesPath, indexDirectory, indexDirectoryPath, workDirectory);
 			this.taxoDirectory = taxoDirectory;
 			this.taxoDirectoryPath = taxoDirectoryPath;
 		}
 
 		@Override
 		public ReplicationProcess newReplicationProcess(final ReplicationStatus.Strategy strategy,
-				final ReplicationSession masterFiles, final ReplicationProcess.SourceFileProvider fileProvider)
+				final ReplicationSession session, final ReplicationProcess.SourceFileProvider fileProvider)
 				throws IOException {
-			switch (strategy) {
-			case incremental:
-				return new ReplicationProcessIncrementalIndexAndTaxo(workDirectory, indexDirectoryPath, indexDirectory,
-						taxoDirectoryPath, taxoDirectory, masterFiles, fileProvider);
-			case full:
-				return new ReplicationProcessFullIndexAndTaxo(workDirectory, indexDirectoryPath, indexDirectory,
-						taxoDirectoryPath, taxoDirectory, masterFiles, fileProvider);
-			}
-			throw new ServerException("Unsupported replication strategy: " + strategy);
+			final ReplicationProcess.Builder builder =
+					new ReplicationProcess.Builder(workDirectory, fileProvider, strategy, session);
+			return builder.build(builder.resources(resourcesPath),
+					builder.dataIndex(indexDirectoryPath, indexDirectory),
+					builder.taxoIndex(taxoDirectoryPath, taxoDirectory));
 		}
 	}
 }

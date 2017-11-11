@@ -16,51 +16,86 @@
 
 package com.qwazr.search.replication;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY,
+		getterVisibility = JsonAutoDetect.Visibility.NONE,
+		setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class ReplicationSession {
 
 	public final String masterUuid;
 	public final String sessionUuid;
-	public final Map<String, Map<String, Long>> files;
+	public final Map<String, Map<String, Item>> items;
 	public final long size;
 
 	@JsonCreator
 	ReplicationSession(@JsonProperty("master_uuid") final String masterUuid,
 			@JsonProperty("session_uuid") final String sessionUuid,
-			@JsonProperty("files") final Map<String, Map<String, Long>> files, @JsonProperty("size") final long size) {
+			@JsonProperty("files") final Map<String, Map<String, Item>> items, @JsonProperty("size") final long size) {
 		this.masterUuid = masterUuid;
 		this.sessionUuid = sessionUuid;
-		this.files = files;
+		this.items = items;
 		this.size = size;
 	}
 
-	ReplicationSession(final String masterUuid, final String sessionUuid, final Map<String, Map<String, Long>> files) {
+	ReplicationSession(final String masterUuid, final String sessionUuid, final Map<String, Map<String, Item>> files) {
 		this(masterUuid, sessionUuid, files, computeTotalSize(files));
 	}
 
-	static long computeTotalSize(final Map<String, Map<String, Long>> files) {
+	static long computeTotalSize(final Map<String, Map<String, Item>> items) {
 		long totalSize = 0;
-		for (final Map<String, Long> sourceFiles : files.values())
-			for (final Long size : sourceFiles.values())
-				if (size != null)
-					totalSize += size;
+		for (final Map<String, Item> sourceItems : items.values())
+			for (final Item item : sourceItems.values())
+				if (item != null && item.size != null)
+					totalSize += item.size;
 		return totalSize;
 	}
 
 	@JsonIgnore
-	public Map<String, Long> getSourceFiles(final ReplicationProcess.Source source) {
-		return source == null ? null : files.get(source.name());
+	public Map<String, Item> getSourceFiles(final ReplicationProcess.Source source) {
+		return source == null ? null : items.get(source.name());
 	}
 
 	@JsonIgnore
-	public Long getFileLength(final ReplicationProcess.Source source, final String fileName) {
-		final Map<String, Long> sourceFiles = files.get(source.name());
-		return sourceFiles == null ? null : sourceFiles.get(fileName);
+	public Item getItem(final ReplicationProcess.Source source, final String name) {
+		final Map<String, Item> sourceItems = getSourceFiles(source);
+		return sourceItems == null ? null : sourceItems.get(name);
+	}
+
+	public static final class Item {
+
+		final Long size;
+		final Long version;
+
+		@JsonCreator
+		Item(@JsonProperty("size") final Long size, @JsonProperty("version") final Long version) {
+			this.size = size;
+			this.version = version;
+		}
+
+		Item(Path itemPath) throws IOException {
+			this(Files.size(itemPath), Objects.requireNonNull(Files.getLastModifiedTime(itemPath),
+					"Cannot extract last modified on: " + itemPath).toMillis());
+		}
+
+		@Override
+		public boolean equals(final Object object) {
+			if (object == this)
+				return true;
+			if (object == null || !(object instanceof Item))
+				return false;
+			final Item item = (Item) object;
+			return Objects.equals(size, item.size) && Objects.equals(version, item.version);
+		}
 	}
 
 }
