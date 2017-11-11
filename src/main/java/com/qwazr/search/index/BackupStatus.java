@@ -47,7 +47,7 @@ public class BackupStatus {
 	final public Long bytes_size;
 	final public Integer files_count;
 
-	final int hashCode;
+	private final int hashCode;
 
 	@JsonCreator
 	BackupStatus(@JsonProperty("index_version") Long index_version,
@@ -133,6 +133,12 @@ public class BackupStatus {
 		if (!Objects.equals(bytes_size, s.bytes_size))
 			return false;
 		return Objects.equals(files_count, s.files_count);
+	}
+
+	@Override
+	public String toString() {
+		return "Index version: " + index_version + " - Taxo version: " + taxonomy_version + " - Date: " + date +
+				" - Size: " + bytes_size + " - Count:" + files_count;
 	}
 
 }
