@@ -59,7 +59,7 @@ public class BackupStatus {
 		this.bytes_size = bytes_size;
 		this.files_count = files_count;
 
-		this.hashCode = Objects.hash(date, bytes_size, files_count, index_version, taxonomy_version);
+		this.hashCode = Objects.hash(date.getTime(), bytes_size, files_count, index_version, taxonomy_version);
 	}
 
 	static BackupStatus newBackupStatus(final Path backupDir, final boolean extractVersion) throws IOException {
