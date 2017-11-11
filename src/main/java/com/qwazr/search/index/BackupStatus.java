@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.LoggerUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexNotFoundException;
 import org.apache.lucene.store.Directory;
@@ -59,7 +60,11 @@ public class BackupStatus {
 		this.bytes_size = bytes_size;
 		this.files_count = files_count;
 
-		this.hashCode = Objects.hash(date.getTime(), bytes_size, files_count, index_version, taxonomy_version);
+		this.hashCode = new HashCodeBuilder().append(date == null ? 0 : date.getTime())
+				.append(bytes_size)
+				.append(index_version)
+				.append(taxonomy_version)
+				.build();
 	}
 
 	static BackupStatus newBackupStatus(final Path backupDir, final boolean extractVersion) throws IOException {
