@@ -120,6 +120,7 @@ public interface MasterNode extends Closeable {
 		@Override
 		protected void fillSession(final String sessionId,
 				final Map<String, Map<String, ReplicationSession.Item>> sessionMap) throws IOException {
+			super.fillSession(sessionId, sessionMap);
 			synchronized (resourcesSessions) {
 				final SourceView.FromPathDirectory indexView = new SourceView.FromPathDirectory(resourcesPath);
 				resourcesSessions.put(sessionId, indexView);
@@ -141,6 +142,7 @@ public interface MasterNode extends Closeable {
 
 		@Override
 		public void releaseSession(final String sessionId) throws IOException {
+			super.releaseSession(sessionId);
 			synchronized (resourcesSessions) {
 				resourcesSessions.remove(sessionId);
 			}
@@ -148,6 +150,7 @@ public interface MasterNode extends Closeable {
 
 		@Override
 		public void close() throws IOException {
+			super.close();
 		}
 	}
 
@@ -158,37 +161,39 @@ public interface MasterNode extends Closeable {
 		private final HashMap<String, SourceView.FromCommit> indexSessions;
 
 		public WithIndex(final String masterUuid, final Path resourcesPath, final Path indexDirectoryPath,
-				final IndexWriter indexWriter) throws IOException {
-			super(masterUuid, resourcesPath);
+				final IndexWriter indexWriter, final Path metadataDirectory, final String... metadataItems)
+				throws IOException {
+			super(masterUuid, resourcesPath, metadataDirectory, metadataItems);
 			this.indexDirectoryPath = indexDirectoryPath;
 			this.indexSnapshot = (SnapshotDeletionPolicy) indexWriter.getConfig().getIndexDeletionPolicy();
 			this.indexSessions = new HashMap<>();
 		}
 
 		@Override
-		protected void fillSession(String sessionId, Map<String, Map<String, Long>> sessionMap) throws IOException {
+		protected void fillSession(final String sessionId,
+				final Map<String, Map<String, ReplicationSession.Item>> sessionMap) throws IOException {
 			super.fillSession(sessionId, sessionMap);
 			synchronized (indexSessions) {
 				final SourceView.FromCommit indexView = new SourceView.FromCommit(indexDirectoryPath, indexSnapshot);
 				indexSessions.put(sessionId, indexView);
-				sessionMap.put(ReplicationProcess.Source.data.name(), indexView.getFiles());
+				sessionMap.put(ReplicationProcess.Source.data.name(), indexView.getItems());
 			}
 		}
 
 		@Override
-		public InputStream getFile(String sessionId, ReplicationProcess.Source source, String fileName)
+		public InputStream getItem(final String sessionId, ReplicationProcess.Source source, final String itemName)
 				throws FileNotFoundException {
 			if (source == null || source != ReplicationProcess.Source.data)
-				return super.getFile(sessionId, source, fileName);
+				return super.getItem(sessionId, source, itemName);
 			final SourceView.FromCommit sourceView;
 			synchronized (indexSessions) {
 				sourceView = indexSessions.get(sessionId);
 			}
-			return sourceView == null ? null : sourceView.getFile(fileName);
+			return sourceView == null ? null : sourceView.getItem(itemName);
 		}
 
 		@Override
-		public void releaseSession(String sessionId) throws IOException {
+		public void releaseSession(final String sessionId) throws IOException {
 			super.releaseSession(sessionId);
 			synchronized (indexSessions) {
 				final SourceView.FromCommit sourceView = indexSessions.remove(sessionId);
@@ -215,36 +220,39 @@ public interface MasterNode extends Closeable {
 
 		public WithIndexAndTaxo(final String masterUuid, final Path resourcesPath, final Path indexDirectoryPath,
 				final IndexWriter indexWriter, final Path taxoDirectoryPath,
-				SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException {
-			super(masterUuid, resourcesPath, indexDirectoryPath, indexWriter);
+				final SnapshotDirectoryTaxonomyWriter taxonomyWriter, final Path metadataDirectory,
+				final String... metadataItems) throws IOException {
+			super(masterUuid, resourcesPath, indexDirectoryPath, indexWriter, metadataDirectory, metadataItems);
 			this.taxoDirectoryPath = taxoDirectoryPath;
 			this.taxoSnapshots = taxonomyWriter.getDeletionPolicy();
 			this.taxoSessions = new HashMap<>();
 		}
 
 		@Override
-		protected void fillSession(String sessionId, Map<String, Map<String, Long>> sessionMap) throws IOException {
+		protected void fillSession(final String sessionId,
+				final Map<String, Map<String, ReplicationSession.Item>> sessionMap) throws IOException {
 			super.fillSession(sessionId, sessionMap);
 			synchronized (taxoSessions) {
 				final SourceView.FromCommit indexView = new SourceView.FromCommit(taxoDirectoryPath, taxoSnapshots);
 				taxoSessions.put(sessionId, indexView);
-				sessionMap.put(ReplicationProcess.Source.taxonomy.name(), indexView.getFiles());
+				sessionMap.put(ReplicationProcess.Source.taxonomy.name(), indexView.getItems());
 			}
 		}
 
-		public InputStream getFile(String sessionId, ReplicationProcess.Source source, String fileName)
-				throws FileNotFoundException {
+		@Override
+		public InputStream getItem(final String sessionId, final ReplicationProcess.Source source,
+				final String itemName) throws FileNotFoundException {
 			if (source == null || source != ReplicationProcess.Source.taxonomy)
-				return super.getFile(sessionId, source, fileName);
+				return super.getItem(sessionId, source, itemName);
 			final SourceView.FromCommit sourceView;
 			synchronized (taxoSessions) {
 				sourceView = taxoSessions.get(sessionId);
 			}
-			return sourceView == null ? null : sourceView.getFile(fileName);
+			return sourceView == null ? null : sourceView.getItem(itemName);
 		}
 
 		@Override
-		public void releaseSession(String sessionId) throws IOException {
+		public void releaseSession(final String sessionId) throws IOException {
 			super.releaseSession(sessionId);
 			synchronized (taxoSessions) {
 				final SourceView.FromCommit sourceView = taxoSessions.remove(sessionId);

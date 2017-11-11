@@ -58,6 +58,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -115,7 +116,7 @@ final public class IndexInstance implements Closeable {
 		this.readWriteSemaphores = builder.readWriteSemaphores;
 		this.indexProvider = builder.indexProvider;
 		this.fileSet = builder.fileSet;
-		this.indexName = builder.fileSet.mainDirectory.getName();
+		this.indexName = builder.fileSet.mainDirectory.getFileName().toString();
 		this.indexUuid = builder.indexUuid;
 		this.dataDirectory = builder.dataDirectory;
 		this.taxonomyDirectory = builder.taxonomyDirectory;
@@ -383,7 +384,7 @@ final public class IndexInstance implements Closeable {
 
 	InputStream replicationObtain(String sessionID, ReplicationProcess.Source source, String fileName)
 			throws FileNotFoundException {
-		return checkIsMaster().getFile(sessionID, source, fileName);
+		return checkIsMaster().getItem(sessionID, source, fileName);
 	}
 
 	ReplicationStatus replicationCheck() throws IOException {
@@ -395,7 +396,16 @@ final public class IndexInstance implements Closeable {
 			// We only want one replication at a time
 			replicationLock.lock();
 			try {
-				return replicationSlave.replicate();
+				return replicationSlave.replicate(((strategy, remoteMasterUuid) -> {
+					if (strategy == ReplicationStatus.Strategy.incremental)
+						writerAndSearcher.refresh();
+					else
+						writerAndSearcher.reload();
+					setFields(fileSet.loadFieldMap());
+					setAnalyzers(CustomAnalyzer.createDefinitionMap(fileSet.loadAnalyzerDefinitionMap()));
+					replicationSlave.setClientMasterUuid(remoteMasterUuid);
+					// Add fields and analyzers reload
+				}));
 			} finally {
 				replicationLock.unlock();
 			}
@@ -628,10 +638,10 @@ final public class IndexInstance implements Closeable {
 			throws IOException {
 		if (!Files.exists(fileSet.resourcesDirectoryPath))
 			Files.createDirectory(fileSet.resourcesDirectoryPath);
-		final File resourceFile = fileResourceLoader.checkResourceName(resourceName);
-		IOUtils.copy(inputStream, resourceFile);
+		final Path resourceFile = fileResourceLoader.checkResourceName(resourceName);
+		IOUtils.copy(inputStream, resourceFile.toFile());
 		if (lastModified != null)
-			resourceFile.setLastModified(lastModified);
+			Files.setLastModifiedTime(resourceFile, FileTime.fromMillis(lastModified));
 		refreshFieldsAnalyzers();
 	}
 
@@ -652,19 +662,19 @@ final public class IndexInstance implements Closeable {
 		return fileResourceLoader.openResource(resourceName);
 	}
 
-	final void deleteResource(final String resourceName) {
+	final void deleteResource(final String resourceName) throws IOException {
 		if (!Files.exists(fileSet.resourcesDirectoryPath))
 			throw new ServerException(Response.Status.NOT_FOUND,
 					"Resource not found : " + resourceName + " - Index: " + indexName);
-		final File resourceFile = fileResourceLoader.checkResourceName(resourceName);
-		if (!resourceFile.exists())
+		final Path resourceFile = fileResourceLoader.checkResourceName(resourceName);
+		if (!Files.exists(resourceFile))
 			throw new ServerException(Response.Status.NOT_FOUND,
 					"Resource not found : " + resourceName + " - Index: " + indexName);
-		resourceFile.delete();
+		Files.delete(resourceFile);
 	}
 
 	final FileResourceLoader newResourceLoader(final FileResourceLoader resourceLoader) {
-		return new FileResourceLoader(resourceLoader, fileSet.resourcesDirectoryPath.toFile());
+		return new FileResourceLoader(resourceLoader, fileSet.resourcesDirectoryPath);
 	}
 
 }

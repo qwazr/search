@@ -25,14 +25,13 @@ import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.concurrent.ConcurrentHashMap;
 
 interface ReplicationMaster extends Closeable {
 
 	ReplicationSession newReplicationSession() throws IOException;
 
-	InputStream getFile(String sessionId, ReplicationProcess.Source source, String fileName)
+	InputStream getItem(final String sessionId, final ReplicationProcess.Source source, final String itemName)
 			throws FileNotFoundException;
 
 	void releaseSession(String sessionId) throws IOException;
@@ -56,9 +55,9 @@ interface ReplicationMaster extends Closeable {
 		}
 
 		@Override
-		final public InputStream getFile(final String sessionId, final ReplicationProcess.Source source,
+		final public InputStream getItem(final String sessionId, final ReplicationProcess.Source source,
 				final String fileName) throws FileNotFoundException {
-			return masterNode.getFile(sessionId, source, fileName);
+			return masterNode.getItem(sessionId, source, fileName);
 		}
 
 		@Override
@@ -76,21 +75,22 @@ interface ReplicationMaster extends Closeable {
 
 	}
 
-	final class WithIndexAndTaxo extends Base {
+	final class WithIndex extends Base {
 
-		WithIndexAndTaxo(final String masterUuid, final Path resourcesPath, final Path indexDirectoryPath,
-				final IndexWriter indexWriter, final Path taxoDirectoryPath,
-				final SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException {
-			super(new MasterNode.WithIndexAndTaxo(masterUuid, resourcesPath, indexDirectoryPath, indexWriter,
-					taxoDirectoryPath, taxonomyWriter));
+		WithIndex(final String masterUuid, final IndexFileSet indexFileSet, final IndexWriter indexWriter)
+				throws IOException {
+			super(new MasterNode.WithIndex(masterUuid, indexFileSet.resourcesDirectoryPath, indexFileSet.dataDirectory,
+					indexWriter, indexFileSet.mainDirectory, IndexFileSet.ANALYZERS_FILE, IndexFileSet.FIELDS_FILE));
 		}
 	}
 
-	final class WithIndex extends Base {
+	final class WithIndexAndTaxo extends Base {
 
-		WithIndex(final String masterUuid, final Path resourcesPath, final Path indexDirectoryPath,
-				final IndexWriter indexWriter) throws IOException {
-			super(new MasterNode.WithIndex(masterUuid, resourcesPath, indexDirectoryPath, indexWriter));
+		WithIndexAndTaxo(final String masterUuid, final IndexFileSet indexFileSet, final IndexWriter indexWriter,
+				final SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException {
+			super(new MasterNode.WithIndexAndTaxo(masterUuid, indexFileSet.resourcesDirectoryPath,
+					indexFileSet.dataDirectory, indexWriter, indexFileSet.taxonomyDirectory, taxonomyWriter,
+					indexFileSet.mainDirectory, IndexFileSet.ANALYZERS_FILE, IndexFileSet.FIELDS_FILE));
 		}
 	}
 

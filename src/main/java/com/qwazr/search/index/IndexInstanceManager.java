@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
@@ -108,7 +109,7 @@ class IndexInstanceManager implements Closeable {
 								"This index already contains document - Index: " + fileSet.mainDirectory);
 					indexInstance.close();
 					indexInstance = null;
-					FileUtils.deleteDirectoryQuietly(fileSet.mainDirectory.toPath());
+					FileUtils.deleteDirectoryQuietly(fileSet.mainDirectory);
 					checkDirectoryAndUuid();
 				}
 			}
@@ -158,8 +159,8 @@ class IndexInstanceManager implements Closeable {
 	public void delete() {
 		rwl.writeEx(() -> {
 			closeIndex();
-			if (fileSet.mainDirectory.exists())
-				FileUtils.deleteDirectoryQuietly(fileSet.mainDirectory.toPath());
+			if (Files.exists(fileSet.mainDirectory))
+				FileUtils.deleteDirectoryQuietly(fileSet.mainDirectory);
 		});
 	}
 

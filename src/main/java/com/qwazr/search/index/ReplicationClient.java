@@ -16,95 +16,67 @@
 
 package com.qwazr.search.index;
 
-import com.qwazr.search.analysis.AnalyzerDefinition;
-import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.search.replication.SlaveNode;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedHashMap;
 import java.util.UUID;
 
-class ReplicationClient {
+/**
+ * Base replication class shared by the ReplicationBackup and ReplicationSlave
+ */
+abstract class ReplicationClient {
 
-	LinkedHashMap<String, AnalyzerDefinition> getMasterAnalyzers();
+	final private SlaveNode slaveNode;
+	volatile private ReplicationStatus lastStatus;
 
-	void setClientAnalyzers(final LinkedHashMap<String, AnalyzerDefinition> analyzers) throws IOException;
+	protected ReplicationClient(final SlaveNode slaveNode) {
+		this.slaveNode = slaveNode;
+	}
 
-	LinkedHashMap<String, FieldDefinition> getMasterFields();
+	ReplicationStatus getLastStatus() {
+		return lastStatus;
+	}
 
-	void setClientFields(final LinkedHashMap<String, FieldDefinition> fields) throws IOException;
+	abstract InputStream getItem(final String sessionUuid, final ReplicationProcess.Source source,
+			final String itemName) throws FileNotFoundException;
 
-	UUID getClientMasterUuid() throws IOException;
+	final ReplicationStatus replicate(final ReplicationSession session, final UUID clientMasterUuid,
+			final Switcher switcher) throws IOException {
 
-	void setClientMasterUuid(final UUID masterUuid) throws IOException;
+		final UUID remoteMasterUuid = UUID.fromString(session.masterUuid);
 
-	void switchRefresh(ReplicationStatus.Strategy strategy) throws IOException;
+		final ReplicationStatus.Strategy strategy = remoteMasterUuid.equals(clientMasterUuid) ?
+				ReplicationStatus.Strategy.incremental :
+				ReplicationStatus.Strategy.full;
 
-	InputStream getSourceItem(final String sessionId, final ReplicationProcess.Source source, final String name);
+		final ReplicationStatus.Builder currentStatus = ReplicationStatus.of(strategy).session(session);
 
-	ReplicationStatus getLastStatus();
+		try (final ReplicationProcess replicationProcess = slaveNode.newReplicationProcess(strategy, session,
+				(source, file) -> {
+					currentStatus.countSize(source, file);
+					lastStatus = currentStatus.build();
+					return getItem(session.sessionUuid, source, file);
+				})) {
+			replicationProcess.obtainNewFiles();
+			replicationProcess.moveInPlaceNewFiles();
 
-	ReplicationStatus replicate(ReplicationSession session) throws IOException;
+			// New files are in place, the client may switch to the new replicat
+			if (switcher != null)
+				switcher.switcher(strategy, remoteMasterUuid);
 
-	/**
-	 * Base replication class shared by the ReplicationBackup and ReplicationSlave
-	 */
-	abstract class Base implements ReplicationClient {
-
-		final private SlaveNode slaveNode;
-		volatile private ReplicationStatus lastStatus;
-
-		protected Base(final SlaveNode slaveNode) {
-			this.slaveNode = slaveNode;
+			// Finaly we can clean the old files
+			replicationProcess.deleteOldFiles();
 		}
 
-		@Override
-		public ReplicationStatus getLastStatus() {
-			return lastStatus;
-		}
+		return lastStatus = currentStatus.build();
+	}
 
-		@Override
-		public final ReplicationStatus replicate(ReplicationSession session) throws IOException {
-
-			final UUID remoteMasterUuid = UUID.fromString(session.masterUuid);
-
-			final ReplicationStatus.Strategy strategy = remoteMasterUuid.equals(getClientMasterUuid()) ?
-					ReplicationStatus.Strategy.incremental :
-					ReplicationStatus.Strategy.full;
-
-			// Sync analyzers
-			setClientAnalyzers(getMasterAnalyzers());
-
-			//Sync fields
-			setClientFields(getMasterFields());
-
-			// Sync index & resource files
-			final ReplicationStatus.Builder currentStatus = ReplicationStatus.of(strategy).session(session);
-
-			try (final ReplicationProcess replicationProcess = slaveNode.newReplicationProcess(strategy, session,
-					(source, file) -> {
-						currentStatus.countSize(source, file);
-						lastStatus = currentStatus.build();
-						return getIndexFile(session.sessionUuid, source, file);
-					})) {
-				replicationProcess.obtainNewFiles();
-				replicationProcess.moveInPlaceNewFiles();
-
-				// We're done, let's set the remoteMasterUUID
-				setClientMasterUuid(remoteMasterUuid);
-
-				// New files are in place, the client may switch to the new replicat
-				switchRefresh(strategy);
-
-				// And we can clean the old files
-				replicationProcess.deleteOldFiles();
-			}
-
-			lastStatus = currentStatus.build();
-			return getLastStatus();
-		}
+	@FunctionalInterface
+	interface Switcher {
+		void switcher(final ReplicationStatus.Strategy strategy, final UUID remoteMasterUuid) throws IOException;
 	}
 }

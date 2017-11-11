@@ -19,18 +19,22 @@ package com.qwazr.search.replication;
 import com.qwazr.search.index.ReplicationStatus;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.concurrent.ConcurrentUtils;
 import org.apache.lucene.store.Directory;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
 import java.rmi.ServerException;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Objects;
 
 public interface ReplicationProcess extends Closeable {
 
@@ -75,8 +79,20 @@ public interface ReplicationProcess extends Closeable {
 					session);
 		}
 
+		public ReplicationProcess metadata(final Path metadataDirectoryPath, final String... metadataItems)
+				throws IOException {
+			final SourceView sourceView = new SourceView.FromPathFiles(metadataDirectoryPath, metadataItems);
+			switch (strategy) {
+			case full:
+				return full(metadataDirectoryPath, Source.metadata, sourceView);
+			case incremental:
+				return incremental(metadataDirectoryPath, Source.resources, sourceView);
+			}
+			throw new ServerException("Unknown replication strategy: " + strategy);
+		}
+
 		public ReplicationProcess resources(final Path resourcesPath) throws IOException {
-			final SourceView sourceView = new SourceView.FromPath(resourcesPath);
+			final SourceView sourceView = new SourceView.FromPathDirectory(resourcesPath);
 			switch (strategy) {
 			case full:
 				return full(resourcesPath, Source.resources, sourceView);
@@ -124,7 +140,7 @@ public interface ReplicationProcess extends Closeable {
 		protected final SourceFileProvider sourceFileProvider;
 		protected final Path sourceWorkDirectory;
 		protected final Path targetDirectoryPath;
-		protected final Collection<String> filesToObtain;
+		protected final Map<String, ReplicationSession.Item> filesToObtain;
 		protected final Collection<String> filesToDelete;
 
 		protected Common(final Path workDirectory, final Path targetDirectoryPath, final Source source,
@@ -133,20 +149,25 @@ public interface ReplicationProcess extends Closeable {
 			this.sourceFileProvider = sourceFileProvider;
 			this.sourceWorkDirectory = workDirectory.resolve(source.name());
 			this.targetDirectoryPath = targetDirectoryPath;
-			this.filesToObtain = new HashSet<>();
-			this.filesToDelete = new HashSet<>();
+			this.filesToObtain = new LinkedHashMap<>();
+			this.filesToDelete = new LinkedHashSet<>();
 		}
 
 		@Override
 		final public void obtainNewFiles() throws IOException {
 			if (!Files.exists(sourceWorkDirectory))
 				Files.createDirectory(sourceWorkDirectory);
-			for (final String fileToObtain : filesToObtain) {
-				final File file = sourceWorkDirectory.resolve(fileToObtain).toFile();
-				try (final InputStream input = sourceFileProvider.obtain(source, fileToObtain)) {
-					IOUtils.copy(input, file);
+			ConcurrentUtils.forEachEx(filesToObtain, (name, item) -> {
+				final Path path = sourceWorkDirectory.resolve(name);
+				try (final InputStream input = sourceFileProvider.obtain(source, name)) {
+					IOUtils.copy(input, path.toFile());
+					Files.setLastModifiedTime(path, FileTime.fromMillis(item.version));
+					final long itemSize = Files.size(path);
+					if (!Objects.equals(itemSize, item.size))
+						throw new IOException(
+								"Wrong file size for " + path + ". Expected: " + item.size + " - Got: " + itemSize);
 				}
-			}
+			});
 		}
 
 		@Override
@@ -161,18 +182,19 @@ public interface ReplicationProcess extends Closeable {
 	 */
 	final class Differential extends Common {
 
-		Differential(Path workDirectory, Path targetDirectoryPath, Source source, SourceFileProvider sourceFileProvider,
-				final SourceView sourceView, final ReplicationSession session) throws IOException {
+		Differential(final Path workDirectory, final Path targetDirectoryPath, final Source source,
+				final SourceFileProvider sourceFileProvider, final SourceView sourceView,
+				final ReplicationSession session) throws IOException {
 			super(workDirectory, targetDirectoryPath, source, sourceFileProvider);
-			sourceView.differential(session.getSourceFiles(source).keySet(), filesToObtain, filesToDelete);
+			sourceView.differential(session.getSourceFiles(source), filesToObtain, filesToDelete);
 		}
 
 		@Override
 		public void moveInPlaceNewFiles() throws IOException {
-			for (String fileToMove : filesToObtain) {
+			for (final String fileToMove : filesToObtain.keySet()) {
 				final Path source = sourceWorkDirectory.resolve(fileToMove);
 				final Path target = targetDirectoryPath.resolve(fileToMove);
-				Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
+				Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 			}
 		}
 
@@ -191,14 +213,14 @@ public interface ReplicationProcess extends Closeable {
 
 		private final Path sourceTrashPath;
 
-		protected Full(Path workDirectory, Path targetDirectoryPath, Source source,
-				SourceFileProvider sourceFileProvider, final SourceView sourceView, final ReplicationSession session)
-				throws IOException {
+		protected Full(final Path workDirectory, final Path targetDirectoryPath, final Source source,
+				final SourceFileProvider sourceFileProvider, final SourceView sourceView,
+				final ReplicationSession session) throws IOException {
 			super(workDirectory, targetDirectoryPath, source, sourceFileProvider);
 			this.sourceTrashPath = workDirectory.resolve("trash-" + source.name());
 			if (!Files.exists(sourceTrashPath))
 				Files.createDirectory(sourceTrashPath);
-			sourceView.full(session.getSourceFiles(source).keySet(), filesToObtain, filesToDelete);
+			sourceView.full(session.getSourceFiles(source), filesToObtain, filesToDelete);
 		}
 
 		@Override
@@ -208,10 +230,10 @@ public interface ReplicationProcess extends Closeable {
 				final Path target = sourceTrashPath.resolve(fileToMove);
 				Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
 			}
-			for (String fileToMove : filesToObtain) {
+			for (String fileToMove : filesToObtain.keySet()) {
 				final Path source = sourceWorkDirectory.resolve(fileToMove);
 				final Path target = targetDirectoryPath.resolve(fileToMove);
-				Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
+				Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 			}
 		}
 

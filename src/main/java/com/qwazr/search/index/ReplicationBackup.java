@@ -22,6 +22,7 @@ import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.utils.IOUtils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -30,7 +31,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
-class ReplicationBackup extends ReplicationClient.Base {
+class ReplicationBackup extends ReplicationClient {
 
 	private final IndexInstance indexInstance;
 	private final Path backupIndexDirectory;
@@ -75,10 +76,6 @@ class ReplicationBackup extends ReplicationClient.Base {
 				backupIndexDirectory.resolve(IndexFileSet.ANALYZERS_FILE).toFile());
 	}
 
-	private void backupResources() {
-
-	}
-
 	/**
 	 * Backup the index files
 	 */
@@ -114,47 +111,9 @@ class ReplicationBackup extends ReplicationClient.Base {
 	}
 
 	@Override
-	public LinkedHashMap<String, AnalyzerDefinition> getMasterAnalyzers() {
-		return null;
+	InputStream getItem(String sessionUuid, ReplicationProcess.Source source, String itemName)
+			throws FileNotFoundException {
+		return indexInstance.replicationObtain(sessionUuid, source, itemName);
 	}
 
-	@Override
-	public void setClientAnalyzers(LinkedHashMap<String, AnalyzerDefinition> analyzers) {
-
-	}
-
-	@Override
-	public LinkedHashMap<String, FieldDefinition> getMasterFields() {
-		return null;
-	}
-
-	@Override
-	public void setClientFields(LinkedHashMap<String, FieldDefinition> fields) {
-
-	}
-
-	@Override
-	public UUID getClientMasterUuid() throws IOException {
-		return null;
-	}
-
-	@Override
-	public void setClientMasterUuid(UUID masterUuid) {
-
-	}
-
-	@Override
-	public void switchRefresh(ReplicationStatus.Strategy strategy) {
-
-	}
-
-	@Override
-	public InputStream getIndexFile(String sessionId, ReplicationProcess.Source source, String file) {
-		return null;
-	}
-
-	@Override
-	public ReplicationStatus getLastStatus() {
-		return null;
-	}
 }

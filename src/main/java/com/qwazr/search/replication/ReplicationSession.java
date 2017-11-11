@@ -71,10 +71,13 @@ public class ReplicationSession {
 		return sourceItems == null ? null : sourceItems.get(name);
 	}
 
+	@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY,
+			getterVisibility = JsonAutoDetect.Visibility.NONE,
+			setterVisibility = JsonAutoDetect.Visibility.NONE)
 	public static final class Item {
 
-		final Long size;
-		final Long version;
+		public final Long size;
+		public final Long version;
 
 		@JsonCreator
 		Item(@JsonProperty("size") final Long size, @JsonProperty("version") final Long version) {

@@ -16,8 +16,6 @@
 
 package com.qwazr.search.index;
 
-import com.qwazr.search.analysis.AnalyzerDefinition;
-import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.search.replication.SlaveNode;
@@ -30,43 +28,37 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.LinkedHashMap;
 import java.util.UUID;
 
-abstract class ReplicationSlave extends ReplicationClient.Base {
+abstract class ReplicationSlave extends ReplicationClient {
 
 	private final File masterUuidFile;
-	private volatile UUID masterUuid;
+	private volatile UUID clientMasterUuid;
 	private final IndexServiceInterface indexService;
 	private final RemoteIndex master;
-	private final WriterAndSearcher writerAndSearcher;
 
 	private ReplicationSlave(final File masterUuidFile, final IndexServiceInterface localService,
-			final RemoteIndex master, final SlaveNode slaveNode, final WriterAndSearcher writerAndSearcher)
-			throws IOException {
+			final RemoteIndex master, final SlaveNode slaveNode) throws IOException {
 		super(slaveNode);
 		this.masterUuidFile = masterUuidFile;
-		this.writerAndSearcher = writerAndSearcher;
 		this.master = master;
 		this.indexService = master == null ? null : master.host == null ? localService : new IndexSingleClient(master);
 		getClientMasterUuid();
 	}
 
-	@Override
-	public UUID getClientMasterUuid() throws IOException {
+	UUID getClientMasterUuid() throws IOException {
 		if (masterUuidFile.exists() && masterUuidFile.length() > 0)
-			masterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
+			clientMasterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
 		else
-			masterUuid = null;
-		return masterUuid;
+			clientMasterUuid = null;
+		return clientMasterUuid;
 	}
 
-	@Override
-	public void setClientMasterUuid(final UUID newMasterUuid) throws IOException {
-		if (newMasterUuid.equals(masterUuid))
+	void setClientMasterUuid(final UUID remoteMasterUuid) throws IOException {
+		if (remoteMasterUuid.equals(clientMasterUuid))
 			return;
-		IOUtils.writeStringAsFile(newMasterUuid.toString(), masterUuidFile);
-		masterUuid = newMasterUuid;
+		IOUtils.writeStringAsFile(remoteMasterUuid.toString(), masterUuidFile);
+		clientMasterUuid = remoteMasterUuid;
 	}
 
 	private IndexServiceInterface checkService() {
@@ -76,49 +68,14 @@ abstract class ReplicationSlave extends ReplicationClient.Base {
 	}
 
 	@Override
-	public final LinkedHashMap<String, AnalyzerDefinition> getMasterAnalyzers() {
-		return checkService().getAnalyzers(master.schema, master.index);
+	public InputStream getItem(final String sessionId, final ReplicationProcess.Source source, final String file) {
+		return checkService().replicationObtain(master.schema, master.index, sessionId, source.name(), file);
 	}
 
-	@Override
-	public final LinkedHashMap<String, FieldDefinition> getMasterFields() {
-		return checkService().getFields(master.schema, master.index);
-	}
-
-	@Override
-	public void setClientAnalyzers(LinkedHashMap<String, AnalyzerDefinition> analyzers) throws IOException {
-		indexInstance.setAnalyzers(analyzers);
-	}
-
-	@Override
-	public void setClientFields(LinkedHashMap<String, FieldDefinition> fields) throws IOException {
-		indexInstance.setFields(fields);
-	}
-
-	@Override
-	public InputStream getIndexFile(String sessionId, ReplicationProcess.Source source, String file) {
-		switch (source) {
-		case resources:
-			return checkService().getResource(master.schema, master.index, file);
-		case data:
-		case taxonomy:
-			return checkService().replicationObtain(master.schema, master.index, sessionId, source.name(), file);
-		}
-		return null;
-	}
-
-	@Override
-	public final void switchRefresh(ReplicationStatus.Strategy strategy) throws IOException {
-		if (strategy == ReplicationStatus.Strategy.incremental)
-			writerAndSearcher.refresh();
-		else
-			writerAndSearcher.reload();
-	}
-
-	ReplicationStatus replicate() throws IOException {
+	ReplicationStatus replicate(final Switcher switcher) throws IOException {
 		final ReplicationSession session = checkService().replicationUpdate(master.schema, master.index, null);
 		try {
-			return replicate(session);
+			return replicate(session, getClientMasterUuid(), switcher);
 		} finally {
 			checkService().replicationRelease(master.schema, master.index, session.sessionUuid);
 		}
@@ -127,22 +84,21 @@ abstract class ReplicationSlave extends ReplicationClient.Base {
 	final static class WithIndexAndTaxo extends ReplicationSlave {
 
 		WithIndexAndTaxo(final IndexFileSet fileSet, final IndexServiceInterface localService, final RemoteIndex master,
-				final Directory dataDirectory, final Directory taxonomyDirectory,
-				final WriterAndSearcher writerAndSearcher) throws IOException, URISyntaxException {
-			super(fileSet.uuidMasterFile, indexInstance, localService, master,
+				final Directory dataDirectory, final Directory taxonomyDirectory)
+				throws IOException, URISyntaxException {
+			super(fileSet.uuidMasterFile, localService, master,
 					new SlaveNode.WithIndexAndTaxo(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
-							taxonomyDirectory, fileSet.taxonomyDirectory, fileSet.replWorkPath), writerAndSearcher);
+							taxonomyDirectory, fileSet.taxonomyDirectory, fileSet.replWorkPath, fileSet.mainDirectory));
 		}
 	}
 
 	final static class WithIndex extends ReplicationSlave {
 
-		WithIndex(final IndexFileSet fileSet, final IndexInstance indexInstance,
-				final IndexServiceInterface localService, final RemoteIndex master, final Directory dataDirectory,
-				final WriterAndSearcher writerAndSearcher) throws IOException, URISyntaxException {
-			super(fileSet.uuidMasterFile, indexInstance, localService, master,
+		WithIndex(final IndexFileSet fileSet, final IndexServiceInterface localService, final RemoteIndex master,
+				final Directory dataDirectory) throws IOException, URISyntaxException {
+			super(fileSet.uuidMasterFile, localService, master,
 					new SlaveNode.WithIndex(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
-							fileSet.replWorkPath), writerAndSearcher);
+							fileSet.replWorkPath, fileSet.mainDirectory));
 		}
 
 	}

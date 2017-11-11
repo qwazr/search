@@ -327,7 +327,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/{schema_name}/{index_name}/resources")
 	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE })
-	LinkedHashMap<String, IndexInstance.ResourceInfo> getResources(@PathParam("schema_name") String schema_name,
+	Map<String, IndexInstance.ResourceInfo> getResources(@PathParam("schema_name") String schema_name,
 			@PathParam("index_name") String index_name);
 
 	@GET

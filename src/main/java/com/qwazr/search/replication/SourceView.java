@@ -46,7 +46,8 @@ class SourceView {
 		final Map<String, ReplicationSession.Item> f = new LinkedHashMap<>();
 		for (String itemName : itemNames) {
 			final Path itemPath = directoryPath.resolve(itemName);
-			f.put(itemName, new ReplicationSession.Item(itemPath));
+			if (Files.exists(itemPath))
+				f.put(itemName, new ReplicationSession.Item(itemPath));
 		}
 		items = Collections.unmodifiableMap(f);
 	}
@@ -70,11 +71,11 @@ class SourceView {
 	 * @param itemsToGet     the items to get
 	 * @param itemsToDelete  the items to delete
 	 */
-	void differential(final Map<String, ReplicationSession.Item> referenceItems, final Collection<String> itemsToGet,
-			final Collection<String> itemsToDelete) {
+	void differential(final Map<String, ReplicationSession.Item> referenceItems,
+			final Map<String, ReplicationSession.Item> itemsToGet, final Collection<String> itemsToDelete) {
 		referenceItems.forEach((name, item) -> {
 			if (!isUpToDate(name, item))
-				itemsToGet.add(name);
+				itemsToGet.put(name, item);
 		});
 		for (final String itemName : items.keySet())
 			if (!referenceItems.containsKey(itemName))
@@ -88,9 +89,9 @@ class SourceView {
 	 * @param itemsToGet     the items to get
 	 * @param itemsToDelete  the items to delete
 	 */
-	void full(final Map<String, ReplicationSession.Item> referenceItems, final Collection<String> itemsToGet,
-			final Collection<String> itemsToDelete) {
-		itemsToGet.addAll(referenceItems.keySet());
+	void full(final Map<String, ReplicationSession.Item> referenceItems,
+			final Map<String, ReplicationSession.Item> itemsToGet, final Collection<String> itemsToDelete) {
+		itemsToGet.putAll(referenceItems);
 		itemsToDelete.addAll(items.keySet());
 	}
 
@@ -107,9 +108,9 @@ class SourceView {
 		private final SnapshotDeletionPolicy indexSnapshots;
 		private final IndexCommit indexCommit;
 
-		private FromCommit(final Path directoryPath, final SnapshotDeletionPolicy indexSnapshots,
+		private FromCommit(final Path indexDirectoryPath, final SnapshotDeletionPolicy indexSnapshots,
 				final IndexCommit indexCommit) throws IOException {
-			super(directoryPath, indexCommit.getFileNames());
+			super(indexDirectoryPath, indexCommit.getFileNames());
 			this.indexSnapshots = indexSnapshots;
 			this.indexCommit = indexCommit;
 		}
@@ -126,8 +127,8 @@ class SourceView {
 
 	static class FromDirectory extends SourceView {
 
-		FromDirectory(final Path directoryPath, final Directory directory) throws IOException {
-			super(directoryPath, SegmentInfos.readLatestCommit(directory).files(true));
+		FromDirectory(final Path indexDirectoryPath, final Directory directory) throws IOException {
+			super(indexDirectoryPath, SegmentInfos.readLatestCommit(directory).files(true));
 		}
 
 	}
@@ -135,10 +136,12 @@ class SourceView {
 	static class FromPathDirectory extends SourceView {
 
 		FromPathDirectory(final Path directoryPath) throws IOException {
-			super(directoryPath, Files.list(directoryPath)
-					.filter(p -> Files.isRegularFile(p))
-					.map(p -> p.getFileName().toString())
-					.collect(Collectors.toList()));
+			super(directoryPath, Files.exists(directoryPath) ?
+					Files.list(directoryPath)
+							.filter(p -> Files.isRegularFile(p))
+							.map(p -> p.getFileName().toString())
+							.collect(Collectors.toList()) :
+					Collections.emptyList());
 		}
 	}
 

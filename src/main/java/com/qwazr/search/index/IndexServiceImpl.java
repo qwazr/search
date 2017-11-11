@@ -607,8 +607,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	public LinkedHashMap<String, IndexInstance.ResourceInfo> getResources(final String schemaName,
-			final String indexName) {
+	public Map<String, IndexInstance.ResourceInfo> getResources(final String schemaName, final String indexName) {
 		try {
 			checkRight(null);
 			return indexManager.get(schemaName).get(indexName, false).getResources();

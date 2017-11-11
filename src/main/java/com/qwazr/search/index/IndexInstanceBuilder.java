@@ -30,7 +30,6 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.MergeScheduler;
 import org.apache.lucene.index.NoMergeScheduler;
-import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.SimpleMergedSegmentWarmer;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
@@ -218,7 +217,7 @@ class IndexInstanceBuilder {
 			taxonomyWriter = null;
 		}
 	}
-	
+
 	private void buildSlave() throws IOException, URISyntaxException {
 
 		openOrCreateDataIndex(true);
@@ -227,7 +226,7 @@ class IndexInstanceBuilder {
 			openOrCreateTaxonomyIndex(true);
 			replicationSlave =
 					new ReplicationSlave.WithIndexAndTaxo(fileSet, indexService, settings.master, dataDirectory,
-							taxonomyDirectory, writerAndSearcher);
+							taxonomyDirectory);
 			writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(null, null,
 					() -> new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory));
 		} else {
@@ -245,13 +244,11 @@ class IndexInstanceBuilder {
 		if (IndexSettingsDefinition.useTaxonomyIndex(settings)) {
 			openOrCreateTaxonomyIndex(false);
 			replicationMaster =
-					new ReplicationMaster.WithIndexAndTaxo(indexUuid.toString(), fileSet.dataDirectory, indexWriter,
-							fileSet.taxonomyDirectory, taxonomyWriter);
+					new ReplicationMaster.WithIndexAndTaxo(indexUuid.toString(), fileSet, indexWriter, taxonomyWriter);
 			writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(indexWriter, taxonomyWriter,
 					() -> new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter));
 		} else {
-			replicationMaster =
-					new ReplicationMaster.WithIndex(indexUuid.toString(), fileSet.dataDirectory, indexWriter);
+			replicationMaster = new ReplicationMaster.WithIndex(indexUuid.toString(), fileSet, indexWriter);
 			writerAndSearcher = new WriterAndSearcher.WithIndex(indexWriter,
 					() -> new SearcherManager(indexWriter, searcherFactory));
 		}

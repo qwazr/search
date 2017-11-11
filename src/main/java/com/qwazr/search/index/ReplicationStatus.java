@@ -74,9 +74,9 @@ public class ReplicationStatus {
 		}
 
 		void countSize(ReplicationProcess.Source source, String fileName) {
-			final Long size = session.getFileLength(source, fileName);
-			if (size != null)
-				bytes += size;
+			final ReplicationSession.Item item = session.getItem(source, fileName);
+			if (item != null && item.size != null)
+				bytes += item.size;
 		}
 
 		ReplicationStatus build() {

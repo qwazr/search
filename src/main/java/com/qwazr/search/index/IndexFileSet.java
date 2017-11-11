@@ -24,6 +24,7 @@ import com.qwazr.utils.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.UUID;
@@ -43,7 +44,7 @@ class IndexFileSet {
 	final private File uuidFile;
 	final File uuidMasterFile;
 	final private File settingsFile;
-	final File mainDirectory;
+	final Path mainDirectory;
 	final Path dataDirectory;
 	final Path taxonomyDirectory;
 	final private File analyzerMapFile;
@@ -54,7 +55,7 @@ class IndexFileSet {
 	IndexFileSet(final Path mainDirectory) {
 		this.uuidFile = mainDirectory.resolve(UUID_FILE).toFile();
 		this.uuidMasterFile = mainDirectory.resolve(UUID_MASTER_FILE).toFile();
-		this.mainDirectory = mainDirectory.toFile();
+		this.mainDirectory = mainDirectory;
 		this.dataDirectory = mainDirectory.resolve(INDEX_DATA);
 		this.taxonomyDirectory = mainDirectory.resolve(INDEX_TAXONOMY);
 		this.analyzerMapFile = mainDirectory.resolve(ANALYZERS_FILE).toFile();
@@ -65,11 +66,11 @@ class IndexFileSet {
 	}
 
 	void checkIndexDirectory() throws IOException {
-		if (!mainDirectory.exists())
-			mainDirectory.mkdir();
-		if (!mainDirectory.isDirectory())
-			throw new IOException("This name is not valid. No directory exists for this location: " +
-					mainDirectory.getAbsolutePath());
+		if (!Files.exists(mainDirectory))
+			Files.createDirectory(mainDirectory);
+		if (!Files.isDirectory(mainDirectory))
+			throw new IOException(
+					"This name is not valid. No directory exists for this location: " + mainDirectory.toAbsolutePath());
 	}
 
 	/**

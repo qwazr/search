@@ -31,17 +31,22 @@ public interface SlaveNode {
 
 	class WithIndex implements SlaveNode {
 
-		protected final Path resourcesPath;
-		protected final Directory indexDirectory;
-		protected final Path indexDirectoryPath;
-		protected final Path workDirectory;
+		final Path resourcesPath;
+		final Directory indexDirectory;
+		final Path indexDirectoryPath;
+		final Path workDirectory;
+		final Path metadataDirectoryPath;
+		final String[] metadataItems;
 
 		public WithIndex(final Path resourcesPath, final Directory indexDirectory, final Path indexDirectoryPath,
-				final Path workDirectory) throws IOException {
+				final Path workDirectory, final Path metadataDirectoryPath, final String... metadataItems)
+				throws IOException {
 			this.resourcesPath = resourcesPath;
 			this.indexDirectory = indexDirectory;
 			this.indexDirectoryPath = indexDirectoryPath;
 			this.workDirectory = workDirectory;
+			this.metadataDirectoryPath = metadataDirectoryPath;
+			this.metadataItems = metadataItems;
 			if (!Files.exists(workDirectory))
 				Files.createDirectory(workDirectory);
 		}
@@ -53,7 +58,8 @@ public interface SlaveNode {
 			final ReplicationProcess.Builder builder =
 					new ReplicationProcess.Builder(workDirectory, fileProvider, strategy, session);
 			return builder.build(builder.resources(resourcesPath),
-					builder.dataIndex(indexDirectoryPath, indexDirectory));
+					builder.dataIndex(indexDirectoryPath, indexDirectory),
+					builder.metadata(metadataDirectoryPath, metadataItems));
 		}
 	}
 
@@ -63,9 +69,10 @@ public interface SlaveNode {
 		private final Path taxoDirectoryPath;
 
 		public WithIndexAndTaxo(final Path resourcesPath, final Directory indexDirectory, final Path indexDirectoryPath,
-				final Directory taxoDirectory, final Path taxoDirectoryPath, final Path workDirectory)
-				throws IOException {
-			super(resourcesPath, indexDirectory, indexDirectoryPath, workDirectory);
+				final Directory taxoDirectory, final Path taxoDirectoryPath, final Path workDirectory,
+				final Path metadataDirectoryPath, final String... metadataItems) throws IOException {
+			super(resourcesPath, indexDirectory, indexDirectoryPath, workDirectory, metadataDirectoryPath,
+					metadataItems);
 			this.taxoDirectory = taxoDirectory;
 			this.taxoDirectoryPath = taxoDirectoryPath;
 		}
@@ -78,7 +85,8 @@ public interface SlaveNode {
 					new ReplicationProcess.Builder(workDirectory, fileProvider, strategy, session);
 			return builder.build(builder.resources(resourcesPath),
 					builder.dataIndex(indexDirectoryPath, indexDirectory),
-					builder.taxoIndex(taxoDirectoryPath, taxoDirectory));
+					builder.taxoIndex(taxoDirectoryPath, taxoDirectory),
+					builder.metadata(metadataDirectoryPath, metadataItems));
 		}
 	}
 }
