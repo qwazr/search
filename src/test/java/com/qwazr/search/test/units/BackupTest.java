@@ -73,8 +73,10 @@ public class BackupTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 		Assert.assertEquals(1, service.deleteBackups("*", "*", "backup"), 0);
 
 		// Backup two indexes
-		checkBackup(indexNoTaxo.doBackup("backup"), "indexNoTaxo");
-		checkBackup(indexWithTaxo.doBackup("backup"), "indexWithTaxo");
+		final BackupStatus status1 = checkBackupSchema(indexNoTaxo.doBackup("backup"), "indexNoTaxo", null);
+		checkBackups(indexNoTaxo.getBackups("backup", false), "indexNoTaxo", status1);
+		final BackupStatus status2 = checkBackupSchema(indexWithTaxo.doBackup("backup"), "indexWithTaxo", null);
+		checkBackups(indexWithTaxo.getBackups("backup", false), "indexWithTaxo", status2);
 
 		// Delete backup. There is only two
 		Assert.assertEquals(2, service.deleteBackups("*", "*", "backup"), 0);
@@ -87,16 +89,34 @@ public class BackupTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 		Assert.assertEquals(0, service.deleteBackups("*", "*", "backup"), 0);
 	}
 
-	private void checkBackup(SortedMap<String, SortedMap<String, BackupStatus>> backup, final String indexName) {
-		Assert.assertNotNull(backup);
-		final SortedMap<String, BackupStatus> statusMap = backup.get(SCHEMA_NAME);
-		Assert.assertNotNull(statusMap);
-		final BackupStatus backupStatus = statusMap.get(indexName);
+	private BackupStatus checkBackup(SortedMap<String, BackupStatus> backupIndexMap, final String indexName,
+			final BackupStatus status) {
+		Assert.assertNotNull(backupIndexMap);
+		final BackupStatus backupStatus = backupIndexMap.get(indexName);
 		Assert.assertNotNull(backupStatus);
 		Assert.assertNotNull(backupStatus.date);
 		Assert.assertNotNull(backupStatus.bytes_size);
 		Assert.assertTrue(backupStatus.bytes_size > 0);
 		Assert.assertNotNull(backupStatus.files_count);
 		Assert.assertTrue(backupStatus.files_count > 0);
+		if (status != null)
+			Assert.assertEquals(backupStatus, status);
+		return backupStatus;
+	}
+
+	private BackupStatus checkBackupSchema(SortedMap<String, SortedMap<String, BackupStatus>> backup,
+			final String indexName, final BackupStatus status) {
+		Assert.assertNotNull(backup);
+		return checkBackup(backup.get(SCHEMA_NAME), indexName, status);
+	}
+
+	private BackupStatus checkBackups(SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups,
+			final String indexName, final BackupStatus status) {
+		Assert.assertNotNull(backups);
+		final SortedMap<String, SortedMap<String, BackupStatus>> schemaMap = backups.get(SCHEMA_NAME);
+		Assert.assertNotNull(schemaMap);
+		final SortedMap<String, BackupStatus> backupMap = schemaMap.get("backup");
+		Assert.assertNotNull(backupMap);
+		return checkBackup(backupMap, indexName, status);
 	}
 }

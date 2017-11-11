@@ -124,21 +124,15 @@ public class BackupStatus {
 		if (o == this)
 			return true;
 		final BackupStatus s = (BackupStatus) o;
-		if (!Objects.equals(index_version, s.index_version))
-			return false;
-		if (!Objects.equals(taxonomy_version, s.taxonomy_version))
-			return false;
-		if (!Objects.equals(date, s.date))
-			return false;
-		if (!Objects.equals(bytes_size, s.bytes_size))
-			return false;
-		return Objects.equals(files_count, s.files_count);
+		return Objects.equals(index_version, s.index_version) && Objects.equals(taxonomy_version, s.taxonomy_version) &&
+				Objects.equals(date, s.date) && Objects.equals(bytes_size, s.bytes_size) &&
+				Objects.equals(files_count, s.files_count);
 	}
 
 	@Override
 	public String toString() {
 		return "Index version: " + index_version + " - Taxo version: " + taxonomy_version + " - Date: " + date +
-				" - Size: " + bytes_size + " - Count:" + files_count;
+				" - Size: " + bytes_size + " - Count:" + files_count + " - Hash: " + hashCode;
 	}
 
 }
