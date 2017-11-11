@@ -47,6 +47,8 @@ public class BackupStatus {
 	final public Long bytes_size;
 	final public Integer files_count;
 
+	final int hashCode;
+
 	@JsonCreator
 	BackupStatus(@JsonProperty("index_version") Long index_version,
 			@JsonProperty("taxonomy_version") Long taxonomy_version, @JsonProperty("date") Date date,
@@ -56,6 +58,8 @@ public class BackupStatus {
 		this.date = date;
 		this.bytes_size = bytes_size;
 		this.files_count = files_count;
+
+		this.hashCode = Objects.hash(date, bytes_size, files_count, index_version, taxonomy_version);
 	}
 
 	static BackupStatus newBackupStatus(final Path backupDir, final boolean extractVersion) throws IOException {
@@ -108,8 +112,7 @@ public class BackupStatus {
 	}
 
 	public int hashCode() {
-		assert false;
-		return 42;
+		return hashCode;
 	}
 
 	@Override
@@ -118,6 +121,8 @@ public class BackupStatus {
 			return false;
 		if (!(o instanceof BackupStatus))
 			return false;
+		if (o == this)
+			return true;
 		final BackupStatus s = (BackupStatus) o;
 		if (!Objects.equals(index_version, s.index_version))
 			return false;
