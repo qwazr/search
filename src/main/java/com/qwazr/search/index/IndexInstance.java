@@ -191,6 +191,19 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
+	private void reloadAnalyzersAndFields() throws IOException {
+		fieldMapLock.lock();
+		try {
+			synchronized (localAnalyzerFactoryMap) {
+				setAnalyzers(CustomAnalyzer.createDefinitionMap(fileSet.loadAnalyzerDefinitionMap()));
+				setFields(fileSet.loadFieldMap());
+				refreshFieldsAnalyzers();
+			}
+		} finally {
+			fieldMapLock.unlock();
+		}
+	}
+
 	private void refreshFieldsAnalyzers() throws IOException {
 		final AnalyzerContext analyzerContext =
 				new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, true, globalAnalyzerFactoryMap,
@@ -401,8 +414,7 @@ final public class IndexInstance implements Closeable {
 						writerAndSearcher.refresh();
 					else
 						writerAndSearcher.reload();
-					setFields(fileSet.loadFieldMap());
-					setAnalyzers(CustomAnalyzer.createDefinitionMap(fileSet.loadAnalyzerDefinitionMap()));
+					reloadAnalyzersAndFields();
 					replicationSlave.setClientMasterUuid(remoteMasterUuid);
 					// Add fields and analyzers reload
 				}));

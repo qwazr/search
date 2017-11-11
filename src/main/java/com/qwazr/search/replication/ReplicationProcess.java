@@ -230,10 +230,14 @@ public interface ReplicationProcess extends Closeable {
 				final Path target = sourceTrashPath.resolve(fileToMove);
 				Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
 			}
-			for (String fileToMove : filesToObtain.keySet()) {
-				final Path source = sourceWorkDirectory.resolve(fileToMove);
-				final Path target = targetDirectoryPath.resolve(fileToMove);
-				Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+			if (!filesToObtain.isEmpty()) {
+				if (!Files.exists(targetDirectoryPath))
+					Files.createDirectory(targetDirectoryPath);
+				for (String fileToMove : filesToObtain.keySet()) {
+					final Path source = sourceWorkDirectory.resolve(fileToMove);
+					final Path target = targetDirectoryPath.resolve(fileToMove);
+					Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+				}
 			}
 		}
 
