@@ -30,7 +30,6 @@ import org.apache.lucene.store.NoLockFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -44,7 +43,7 @@ public class BackupStatus {
 
 	final public Long index_version;
 	final public Long taxonomy_version;
-	final public Date date;
+	final public Long date;
 	final public Long bytes_size;
 	final public Integer files_count;
 
@@ -52,7 +51,7 @@ public class BackupStatus {
 
 	@JsonCreator
 	BackupStatus(@JsonProperty("index_version") Long index_version,
-			@JsonProperty("taxonomy_version") Long taxonomy_version, @JsonProperty("date") Date date,
+			@JsonProperty("taxonomy_version") Long taxonomy_version, @JsonProperty("date") Long date,
 			@JsonProperty("bytes_size") Long bytes_size, @JsonProperty("files_count") Integer files_count) {
 		this.index_version = index_version;
 		this.taxonomy_version = taxonomy_version;
@@ -60,7 +59,7 @@ public class BackupStatus {
 		this.bytes_size = bytes_size;
 		this.files_count = files_count;
 
-		this.hashCode = new HashCodeBuilder().append(date == null ? 0 : date.getTime())
+		this.hashCode = new HashCodeBuilder().append(date)
 				.append(bytes_size)
 				.append(index_version)
 				.append(taxonomy_version)
@@ -95,8 +94,8 @@ public class BackupStatus {
 			indexVersion = null;
 			taxonomyVersion = null;
 		}
-		return new BackupStatus(indexVersion, taxonomyVersion,
-				new Date(Files.getLastModifiedTime(backupDir).toMillis()), size.get(), count.get());
+		return new BackupStatus(indexVersion, taxonomyVersion, Files.getLastModifiedTime(backupDir).toMillis(),
+				size.get(), count.get());
 	}
 
 	private static Long getIndexVersion(final Path indexPath) throws IOException {
