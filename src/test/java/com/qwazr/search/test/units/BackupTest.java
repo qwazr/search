@@ -95,6 +95,7 @@ public class BackupTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 		final BackupStatus backupStatus = backupIndexMap.get(indexName);
 		Assert.assertNotNull(backupStatus);
 		Assert.assertNotNull(backupStatus.date);
+		Assert.assertNotNull(backupStatus.human_date);
 		Assert.assertNotNull(backupStatus.bytes_size);
 		Assert.assertTrue(backupStatus.bytes_size > 0);
 		Assert.assertNotNull(backupStatus.files_count);

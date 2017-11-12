@@ -30,9 +30,11 @@ import org.apache.lucene.store.NoLockFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,6 +45,7 @@ public class BackupStatus {
 
 	final public Long index_version;
 	final public Long taxonomy_version;
+	final public String human_date;
 	final public Long date;
 	final public Long bytes_size;
 	final public Integer files_count;
@@ -52,9 +55,12 @@ public class BackupStatus {
 	@JsonCreator
 	BackupStatus(@JsonProperty("index_version") Long index_version,
 			@JsonProperty("taxonomy_version") Long taxonomy_version, @JsonProperty("date") Long date,
-			@JsonProperty("bytes_size") Long bytes_size, @JsonProperty("files_count") Integer files_count) {
+			@JsonProperty("human_date") String human_date, @JsonProperty("bytes_size") Long bytes_size,
+			@JsonProperty("files_count") Integer files_count) {
+
 		this.index_version = index_version;
 		this.taxonomy_version = taxonomy_version;
+		this.human_date = human_date;
 		this.date = date;
 		this.bytes_size = bytes_size;
 		this.files_count = files_count;
@@ -76,9 +82,22 @@ public class BackupStatus {
 		final AtomicLong size = new AtomicLong();
 		final AtomicInteger count = new AtomicInteger();
 
-		Files.walk(backupDir).forEach(path -> {
+		final AtomicReference<FileTime> lastModified = new AtomicReference<>();
+
+		Files.walk(backupDir).filter(p -> Files.isRegularFile(p)).forEach(path -> {
 			try {
+				if (Files.isHidden(path))
+					return;
 				size.addAndGet(Files.size(path));
+				// Get the most recent modified file
+				lastModified.updateAndGet(ft -> {
+					try {
+						final FileTime nft = Files.getLastModifiedTime(path);
+						return ft != null && ft.compareTo(nft) >= 0 ? ft : nft;
+					} catch (IOException e) {
+						throw ServerException.of(e);
+					}
+				});
 			} catch (IOException e) {
 				throw ServerException.of(e);
 			}
@@ -94,8 +113,10 @@ public class BackupStatus {
 			indexVersion = null;
 			taxonomyVersion = null;
 		}
-		return new BackupStatus(indexVersion, taxonomyVersion, Files.getLastModifiedTime(backupDir).toMillis(),
-				size.get(), count.get());
+
+		final FileTime lastFileTime = lastModified.get();
+		return new BackupStatus(indexVersion, taxonomyVersion, lastFileTime.toMillis(),
+				lastFileTime.toInstant().toString(), size.get(), count.get());
 	}
 
 	private static Long getIndexVersion(final Path indexPath) throws IOException {
