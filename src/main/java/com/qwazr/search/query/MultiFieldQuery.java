@@ -207,6 +207,10 @@ public class MultiFieldQuery extends AbstractQuery {
 		return builder.build();
 	}
 
+	protected int getMinShouldMatch(final int clauseCount) {
+		return Math.round(Math.max(1, (float) (clauseCount * minNumberShouldMatch) / 100));
+	}
+
 	protected Query getRootQuery(final Collection<Query> queries) {
 		if (queries.size() == 1)
 			return queries.iterator().next();
@@ -303,8 +307,7 @@ public class MultiFieldQuery extends AbstractQuery {
 		@Override
 		public BooleanQuery build() {
 			if (minNumberShouldMatch != null) {
-				final int minShouldMatch = Math.round(Math.max(1, (float) (clauseCount * minNumberShouldMatch) / 100));
-				setMinimumNumberShouldMatch(minShouldMatch);
+				setMinimumNumberShouldMatch(getMinShouldMatch(clauseCount));
 			}
 			return super.build();
 		}
