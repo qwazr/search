@@ -162,7 +162,7 @@ public interface ReplicationProcess extends Closeable {
 			ConcurrentUtils.forEachEx(filesToObtain, (name, item) -> {
 				final Path path = sourceWorkDirectory.resolve(name);
 				try (final InputStream input = sourceFileProvider.obtain(source, name)) {
-					IOUtils.copy(input, path.toFile());
+					IOUtils.copy(input, path);
 					Files.setLastModifiedTime(path, FileTime.fromMillis(item.version));
 					final long itemSize = Files.size(path);
 					if (!Objects.equals(itemSize, item.size))

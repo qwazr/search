@@ -53,7 +53,7 @@ class MultiSearch implements Closeable, AutoCloseable {
 	}
 
 	private synchronized void doClose() {
-		IOUtils.close(multiReader);
+		IOUtils.closeQuietly(multiReader);
 	}
 
 	@Override

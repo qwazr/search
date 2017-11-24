@@ -79,7 +79,7 @@ class MultiSearchInstance implements Closeable {
 	void refresh() {
 		synchronized (indexInstances) {
 			if (multiSearchContext != null)
-				IOUtils.close(multiSearchContext);
+				IOUtils.closeQuietly(multiSearchContext);
 			multiSearchContext = null;
 		}
 	}
@@ -91,6 +91,6 @@ class MultiSearchInstance implements Closeable {
 
 	@Override
 	public void close() throws IOException {
-		IOUtils.close(multiSearchContext);
+		IOUtils.closeQuietly(multiSearchContext);
 	}
 }

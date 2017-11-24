@@ -645,7 +645,7 @@ final public class IndexInstance implements Closeable {
 		if (!Files.exists(fileSet.resourcesDirectoryPath))
 			Files.createDirectory(fileSet.resourcesDirectoryPath);
 		final Path resourceFile = fileResourceLoader.checkResourceName(resourceName);
-		IOUtils.copy(inputStream, resourceFile.toFile());
+		IOUtils.copy(inputStream, resourceFile);
 		if (lastModified != null)
 			Files.setLastModifiedTime(resourceFile, FileTime.fromMillis(lastModified));
 		refreshFieldsAnalyzers();

@@ -188,46 +188,34 @@ public abstract class JsonAbstractTest {
 	}
 
 	public static LinkedHashMap<String, FieldDefinition> getFieldMap(String res) {
-		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
-		try {
+		try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
 			return FieldDefinition.newFieldMap(IOUtils.toString(is, StandardCharsets.UTF_8));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		} finally {
-			IOUtils.close(is);
 		}
 	}
 
 	private static FieldDefinition getField(String res) {
-		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
-		try {
+		try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
 			return FieldDefinition.newField(IOUtils.toString(is, StandardCharsets.UTF_8));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		} finally {
-			IOUtils.close(is);
 		}
 	}
 
 	private static LinkedHashMap<String, AnalyzerDefinition> getAnalyzerMap(String res) {
-		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
-		try {
+		try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
 			return AnalyzerDefinition.newAnalyzerMap(IOUtils.toString(is, StandardCharsets.UTF_8));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		} finally {
-			IOUtils.close(is);
 		}
 	}
 
 	private static AnalyzerDefinition getAnalyzer(String res) {
-		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
-		try {
+		try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
 			return AnalyzerDefinition.newAnalyzer(IOUtils.toString(is, StandardCharsets.UTF_8));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		} finally {
-			IOUtils.close(is);
 		}
 	}
 
@@ -418,13 +406,10 @@ public abstract class JsonAbstractTest {
 	}
 
 	public static QueryDefinition getQuery(String res) {
-		InputStream is = JsonAbstractTest.class.getResourceAsStream(res);
-		try {
+		try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
 			return QueryDefinition.newQuery(IOUtils.toString(is, StandardCharsets.UTF_8));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		} finally {
-			IOUtils.close(is);
 		}
 	}
 

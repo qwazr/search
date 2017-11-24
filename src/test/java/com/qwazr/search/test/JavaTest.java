@@ -74,7 +74,7 @@ public class JavaTest {
 
 		@AfterClass
 		public static void afterClass() {
-			IOUtils.close(indexManager);
+			IOUtils.closeQuietly(indexManager);
 		}
 	}
 

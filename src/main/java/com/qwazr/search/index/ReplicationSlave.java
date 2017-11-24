@@ -56,7 +56,7 @@ class ReplicationSlave extends ReplicationClient {
 	void setClientMasterUuid(final UUID remoteMasterUuid) throws IOException {
 		if (remoteMasterUuid.equals(clientMasterUuid))
 			return;
-		IOUtils.writeStringAsFile(remoteMasterUuid.toString(), masterUuidFile);
+		IOUtils.writeStringToFile(remoteMasterUuid.toString(), masterUuidFile);
 		clientMasterUuid = remoteMasterUuid;
 	}
 

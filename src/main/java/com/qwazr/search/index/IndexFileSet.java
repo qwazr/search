@@ -86,7 +86,7 @@ class IndexFileSet {
 			indexUuid = UUID.fromString(IOUtils.readFileAsString(uuidFile));
 		} else {
 			indexUuid = HashUtils.newTimeBasedUUID();
-			IOUtils.writeStringAsFile(indexUuid.toString(), uuidFile);
+			IOUtils.writeStringToFile(indexUuid.toString(), uuidFile);
 		}
 		return indexUuid;
 	}
