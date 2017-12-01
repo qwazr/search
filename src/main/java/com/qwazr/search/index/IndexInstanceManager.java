@@ -25,7 +25,6 @@ import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.store.Directory;
 
-import javax.ws.rs.core.Response;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -92,29 +91,13 @@ class IndexInstanceManager implements Closeable {
 		return rwl.writeEx(this::ensureOpen);
 	}
 
-	private boolean isNewMaster(final IndexSettingsDefinition newSettings) {
-		return !(newSettings == null || newSettings.master == null) &&
-				(settings == null || !Objects.equals(settings.master, newSettings.master));
-	}
-
 	IndexInstance createUpdate(final IndexSettingsDefinition newSettings) throws Exception {
 		return rwl.writeEx(() -> {
 			final boolean same = Objects.equals(newSettings, settings);
 			if (same && indexInstance != null)
 				return indexInstance;
-			if (indexInstance != null) {
-				if (isNewMaster(newSettings)) {
-					if (indexInstance.getStatus().num_docs > 0)
-						throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-								"This index already contains document - Index: " + fileSet.mainDirectory);
-					indexInstance.close();
-					indexInstance = null;
-					FileUtils.deleteDirectoryQuietly(fileSet.mainDirectory);
-					checkDirectoryAndUuid();
-				}
-			}
 			closeIndex();
-			if (settings != null && !same) {
+			if (!same) {
 				fileSet.writeSettings(newSettings);
 				settings = newSettings;
 			}
