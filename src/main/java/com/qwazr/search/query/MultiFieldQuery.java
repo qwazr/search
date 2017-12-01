@@ -196,6 +196,12 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 		return query;
 	}
 
+	protected Query getBoostQuery(final Query fieldQuery, final Float boost) {
+		return boost != null && boost != 1.0F && fieldQuery != null ?
+				new org.apache.lucene.search.BoostQuery(fieldQuery, boost) :
+				fieldQuery;
+	}
+
 	private class TermsWithFreq extends TermConsumer.WithChar {
 
 		private final IndexReader indexReader;
@@ -248,9 +254,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 
 		final Query parse(final String queryString, final BooleanClause.Occur defaultOperator, final Float boost) {
 			final Query fieldQuery = createBooleanQuery(field, queryString, defaultOperator);
-			return boost != null && boost != 1.0F && fieldQuery != null ?
-					new org.apache.lucene.search.BoostQuery(fieldQuery, boost) :
-					fieldQuery;
+			return getBoostQuery(fieldQuery, boost);
 		}
 
 	}
