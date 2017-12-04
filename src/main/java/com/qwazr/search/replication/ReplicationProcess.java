@@ -20,16 +20,17 @@ import com.qwazr.search.index.ReplicationStatus;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.concurrent.ConcurrentUtils;
-import com.qwazr.utils.concurrent.ThreadUtils;
 import org.apache.lucene.store.Directory;
 
 import java.io.Closeable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.AccessDeniedException;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.rmi.ServerException;
 import java.util.Collection;
@@ -37,7 +38,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 public interface ReplicationProcess extends Closeable {
 
@@ -205,22 +205,20 @@ public interface ReplicationProcess extends Closeable {
 
 		@Override
 		public void deleteOldFiles() throws IOException {
-			final long timeOut = System.currentTimeMillis() + 300000; //We wait 5 minutes until we can delete the file
 			for (String fileToDelete : filesToDelete) {
-				boolean deleted = false;
-				while (!deleted) {
-					try {
-						Files.deleteIfExists(targetDirectoryPath.resolve(fileToDelete));
-						deleted = true;
-					} catch (AccessDeniedException e) {
-						if (System.currentTimeMillis() > timeOut)
-							throw e;
-						ThreadUtils.sleep(100, TimeUnit.MILLISECONDS);
+				final Path pathToDelete = targetDirectoryPath.resolve(fileToDelete);
+				if (Files.exists(pathToDelete)) {
+					try (final FileChannel fileChannel = FileChannel.open(pathToDelete, StandardOpenOption.WRITE,
+							StandardOpenOption.DELETE_ON_CLOSE)) {
+						fileChannel.lock().close();
+					} catch (FileNotFoundException e) {
+						//That's ok
 					}
+					if (Files.exists(pathToDelete))
+						throw new IOException("Can't delete the file: " + pathToDelete);
 				}
 			}
 		}
-
 	}
 
 	/**
