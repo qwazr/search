@@ -24,6 +24,7 @@ import org.apache.lucene.search.ReferenceManager;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Objects;
 
 interface WriterAndSearcher extends Closeable {
 
@@ -86,11 +87,13 @@ interface WriterAndSearcher extends Closeable {
 
 		@Override
 		final public <T> T search(final SearchAction<T> action) throws IOException {
-			final IndexSearcher searcher = searcherManager.acquire();
+			final ReferenceManager<IndexSearcher> sm =
+					Objects.requireNonNull(searcherManager, "No SearchManager available");
+			final IndexSearcher searcher = sm.acquire();
 			try {
 				return action.apply(searcher, null);
 			} finally {
-				searcherManager.release(searcher);
+				sm.release(searcher);
 			}
 		}
 
@@ -107,7 +110,7 @@ interface WriterAndSearcher extends Closeable {
 		}
 
 		@Override
-		public synchronized void close() throws IOException {
+		public synchronized void close() {
 			if (searcherManager != null) {
 				IOUtils.closeQuietly(searcherManager);
 				searcherManager = null;
@@ -152,11 +155,13 @@ interface WriterAndSearcher extends Closeable {
 
 		@Override
 		final public <T> T search(final SearchAction<T> action) throws IOException {
-			final SearcherTaxonomyManager.SearcherAndTaxonomy reference = searcherTaxonomyManager.acquire();
+			final SearcherTaxonomyManager sm =
+					Objects.requireNonNull(searcherTaxonomyManager, "No SearcherTaxonomyManager available");
+			final SearcherTaxonomyManager.SearcherAndTaxonomy reference = sm.acquire();
 			try {
 				return action.apply(reference.searcher, reference.taxonomyReader);
 			} finally {
-				searcherTaxonomyManager.release(reference);
+				sm.release(reference);
 			}
 		}
 
@@ -175,7 +180,7 @@ interface WriterAndSearcher extends Closeable {
 		}
 
 		@Override
-		public synchronized void close() throws IOException {
+		public synchronized void close() {
 			if (searcherTaxonomyManager != null) {
 				IOUtils.closeQuietly(searcherTaxonomyManager);
 				searcherTaxonomyManager = null;
