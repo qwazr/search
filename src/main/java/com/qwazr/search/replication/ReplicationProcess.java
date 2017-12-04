@@ -20,11 +20,13 @@ import com.qwazr.search.index.ReplicationStatus;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.concurrent.ConcurrentUtils;
+import com.qwazr.utils.concurrent.ThreadUtils;
 import org.apache.lucene.store.Directory;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -35,6 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public interface ReplicationProcess extends Closeable {
 
@@ -74,7 +77,7 @@ public interface ReplicationProcess extends Closeable {
 		}
 
 		private ReplicationProcess incremental(final Path targetDirectoryPath, final Source source,
-				final SourceView sourceView) throws IOException {
+				final SourceView sourceView) {
 			return new Differential(workDirectory, targetDirectoryPath, source, sourceFileProvider, sourceView,
 					session);
 		}
@@ -146,7 +149,7 @@ public interface ReplicationProcess extends Closeable {
 		protected final Collection<String> filesToDelete;
 
 		protected Common(final Path workDirectory, final Path targetDirectoryPath, final Source source,
-				final SourceFileProvider sourceFileProvider) throws IOException {
+				final SourceFileProvider sourceFileProvider) {
 			this.source = source;
 			this.sourceFileProvider = sourceFileProvider;
 			this.sourceWorkDirectory = workDirectory.resolve(source.name());
@@ -186,7 +189,7 @@ public interface ReplicationProcess extends Closeable {
 
 		Differential(final Path workDirectory, final Path targetDirectoryPath, final Source source,
 				final SourceFileProvider sourceFileProvider, final SourceView sourceView,
-				final ReplicationSession session) throws IOException {
+				final ReplicationSession session) {
 			super(workDirectory, targetDirectoryPath, source, sourceFileProvider);
 			sourceView.differential(session.getSourceFiles(source), filesToObtain, filesToDelete);
 		}
@@ -202,8 +205,20 @@ public interface ReplicationProcess extends Closeable {
 
 		@Override
 		public void deleteOldFiles() throws IOException {
-			for (String fileToDelete : filesToDelete)
-				Files.deleteIfExists(targetDirectoryPath.resolve(fileToDelete));
+			final long timeOut = System.currentTimeMillis() + 300000; //We wait 5 minutes until we can delete the file
+			for (String fileToDelete : filesToDelete) {
+				boolean deleted = false;
+				while (!deleted) {
+					try {
+						Files.deleteIfExists(targetDirectoryPath.resolve(fileToDelete));
+						deleted = true;
+					} catch (AccessDeniedException e) {
+						if (System.currentTimeMillis() > timeOut)
+							throw e;
+						ThreadUtils.sleep(100, TimeUnit.MILLISECONDS);
+					}
+				}
+			}
 		}
 
 	}
@@ -244,7 +259,7 @@ public interface ReplicationProcess extends Closeable {
 		}
 
 		@Override
-		final public void deleteOldFiles() throws IOException {
+		final public void deleteOldFiles() {
 			// Nothing to do, we already moved the file to the trash directory
 		}
 
