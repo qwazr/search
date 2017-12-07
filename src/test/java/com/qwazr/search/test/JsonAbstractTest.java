@@ -930,7 +930,7 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
-	public void test620getFieldStats() throws IOException, URISyntaxException {
+	public void test620getFieldStats() throws URISyntaxException {
 		final IndexServiceInterface client = getClient();
 		client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME)
 				.keySet()
@@ -976,7 +976,7 @@ public abstract class JsonAbstractTest {
 	}
 
 	@Test
-	public void test810DeleteBackup() throws URISyntaxException, IOException {
+	public void test810DeleteBackup() throws URISyntaxException {
 		final IndexServiceInterface client = getClient();
 		Assert.assertEquals(Integer.valueOf(1),
 				client.deleteBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1));

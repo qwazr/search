@@ -30,7 +30,7 @@ import java.net.URISyntaxException;
 public class DrillDownQueryTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
 	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+	public static void setup() throws IOException, URISyntaxException {
 		initIndexService();
 	}
 

@@ -56,6 +56,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import javax.ws.rs.WebApplicationException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -742,6 +743,18 @@ public abstract class JavaAbstractTest {
 		ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
 		checkCollector(result, "maxQuantity", 20L, 20);
 		checkFacets(result, "dynamic_multi_facet_cat", "news");
+	}
+
+	@Test
+	public void test930queryError() throws IOException, URISyntaxException {
+		final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
+		final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).returnedField("sdflsjdfslkdfjlkj");
+		try {
+			master.searchQuery(builder.build());
+			Assert.fail("Exception not thrown");
+		} catch (WebApplicationException e) {
+			Assert.assertEquals("The field has not been found: null / sdflsjdfslkdfjlkj", e.getMessage());
+		}
 	}
 
 	@Test
