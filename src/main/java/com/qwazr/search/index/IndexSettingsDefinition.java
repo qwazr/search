@@ -344,7 +344,7 @@ public class IndexSettingsDefinition {
 
 	static IndexSettingsDefinition load(final File settingsFile,
 			final Supplier<IndexSettingsDefinition> defaultSettings) throws IOException {
-		return settingsFile != null && settingsFile.exists() && settingsFile.isFile() ?
+		return settingsFile != null && settingsFile.exists() && settingsFile.isFile() && settingsFile.length() > 0 ?
 				ObjectMappers.JSON.readValue(settingsFile, IndexSettingsDefinition.class) :
 				defaultSettings == null ? null : defaultSettings.get();
 	}

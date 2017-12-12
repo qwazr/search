@@ -81,7 +81,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		indexMap = new ConcurrentHashMap<>();
 
 		settingsFile = new File(schemaDirectory, SETTINGS_FILE);
-		settingsDefinition = settingsFile.exists() ?
+		settingsDefinition = settingsFile.exists() && settingsFile.length() > 0 ?
 				ObjectMappers.JSON.readValue(settingsFile, SchemaSettingsDefinition.class) :
 				SchemaSettingsDefinition.EMPTY;
 		checkSettings();
