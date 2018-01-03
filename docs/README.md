@@ -1,0 +1,2 @@
+QWAZR Search documentation
+--------------------------
