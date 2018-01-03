@@ -1,2 +1,1 @@
-QWAZR Search documentation
---------------------------
+* [REST/JSON API](api)
