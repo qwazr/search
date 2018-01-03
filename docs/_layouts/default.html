@@ -37,21 +37,15 @@
     {{ content }}
 </div>
 <br/>
-<footer class="footer">
-    <div class="container-fluid">
-        <div class="bg-dark">
-            <br/>
-            <p class="text-center">
-                <a href="{{site.github.repository_url}}/tree/master/docs{{page.url}}"
-                   class="btn btn-link text-white">Edit on GitHub</a>
-            </p>
-            <hr/>
-            <p class="text-center text-white text-muted">&copy; Copyright 2015-2018 Jaeksoft/OpenSearchServer</p>
-            </p>
-            <br/>
-        </div>
-    </div>
-</footer>
+<nav class="navbar navbar-dark bg-dark">
+    <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+            <a href="{{site.github.repository_url}}/tree/master/docs/{{ page.relative_path }}"
+               class="nav-link">Edit on GitHub</a>
+        </li>
+    </ul>
+    <span class="navbar-text">&copy; 2015-2018 Jaeksoft/OpenSearchServer</span>
+</nav>
 
 {% if site.google_analytics %}
 <script type="text/javascript">
