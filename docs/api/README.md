@@ -1,10 +1,5 @@
 # Search APIs
 
----
-layout: post
-title: Blogging Like a Hacker
----
-
 These pages describe the REST/JSON API of the Search module.
 
 ## Schema
