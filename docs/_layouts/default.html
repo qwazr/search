@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
     {% seo %}
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
           integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 </head>
 <body>
-<nav class="navbar navbar-dark bg-primary">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <a class="navbar-brand" href="/">QWAZR</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,14 +20,14 @@
                 <a class="nav-link" href="#">{{ site.title | default: site.github.repository_name }} <span
                         class="sr-only">(current)</span></a>
             </li>
+            {% if site.github.is_project_page %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ site.github.repository_url }}">View on GitHub</a>
+            </li>
         </ul>
         <span class="navbar-text">
       {{ site.description | default: site.github.project_tagline }}
         </span>
-        {% if site.github.is_project_page %}
-        <form class="form-inline">
-            <a href="{{ site.github.repository_url }}" class="btn btn-outline-success" type="button">View on GitHub</a>
-        </form>
         {% endif %}
     </div>
 </nav>
