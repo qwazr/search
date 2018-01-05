@@ -22,12 +22,12 @@ It is common, for Lucene, to provide several way to achieve the same goal. We tr
 - Updatable fields,
 - Replication, online backup.
 
-Server installation
--------------------
-You can deploy it as a microservice and use its REST/JSON API: 
+Use it as a Microservice
+------------------------
+You can deploy it as a microservice and use the JSON Web service :
 - Using the [Docker image](usage/docker.md)
 - Deployed as a service on a [Linux server](usage/linux.md)
-- How to use the [JON Web service](api)
+- How to use the [JSON Web service](usage/webservice.md)
 
 Used as a JAVA library
 ----------------------
