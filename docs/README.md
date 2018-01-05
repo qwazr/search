@@ -1,4 +1,7 @@
-**QWAZR Search** is a **Search server** and library
+QWAZR Search
+============
+
+A **Search server** and an embeddable JAVA library
 based on [Apache Lucene](http://lucene.apache.org/core).
 
 It is a **production ready** software.

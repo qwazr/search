@@ -1,4 +1,6 @@
-A simple way to start QWAZR Search as a microservice is to use the Docker image.
+QWAZR Search with Docker
+========================
+A simple way to start QWAZR Search as a microservice is to use the provided Docker image.
 
 Check first that you have Docker installed.
 https://docs.docker.com/engine/installation/
