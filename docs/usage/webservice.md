@@ -3,11 +3,16 @@ JSON Web service overview
 
 This page provides a general overview of the JSON API.
 
-## Create a schema
+Create a schema
+---------------
+The indexes are logically grouped in schema. We first have to create a schema : 
 
     curl -XPOST  "http://localhost:9091/indexes/my_schema"
 
-## Create an index
+Create an index
+---------------
+Now that we have a schema, we can create an index :
+
 
      curl -XPOST  "http://localhost:9091/indexes/my_schema/my_index"
   
@@ -22,9 +27,9 @@ It returns:
 }
 ```
 
-## Define some fields
-
-Define some fields in a json file: **my_fields.json**
+Define some fields
+------------------
+Let's define some fields in a json file: **my_fields.json**
  
 Here is the content:
 
@@ -56,9 +61,9 @@ Upload the fields definition by posting the json file:
     curl -XPOST -H 'Content-Type: application/json' -d @my_fields.json \
         "http://localhost:9091/indexes/my_schema/my_index/fields"
         
-## Index documents
-
-Define the documents in a json file: **my_docs.json**
+Index documents
+---------------
+First, we define the documents in a json file: **my_docs.json**
 
 ```json
 [
@@ -83,14 +88,15 @@ Define the documents in a json file: **my_docs.json**
 ]
 ```
 
-Index the documents by posting the json file:
+To index the documents just post the json file:
 
     curl -XPOST -H 'Content-Type: application/json' -d @my_docs.json \
         "http://localhost:9091/indexes/my_schema/my_index/docs"
         
-## Search request
+Search request
+--------------
 
-Define your search query in a json file: **my_search.json**
+Let's define a search query in a json file: **my_search.json**
 
 Here an example of search request:
 
@@ -211,4 +217,4 @@ And here is the result:
 Further
 -------
 
-Discover [the full API](../api)
+Discover [the full API set](../api)
