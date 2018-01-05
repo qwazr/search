@@ -2,8 +2,8 @@ QWAZR Search with Docker
 ========================
 A simple way to start QWAZR Search as a microservice is to use the provided Docker image.
 
-Check first that you have Docker installed.
-https://docs.docker.com/engine/installation/
+Check first that you have Docker installed :
+[Docker installation](https://docs.docker.com/engine/installation/)
 
 Start the service
 -----------------
@@ -90,10 +90,10 @@ Then you can run the service this way:
 
     docker run --mount source=my-indexes,target=/var/lib/qwazr -p 9091:9091 qwazr/search
 
-See the Docker documentation for more information on how to manage Docker volumes.
-https://docs.docker.com/engine/admin/volumes/volumes/
+See the Docker documentation for more information on how to manage
+[Docker volumes](https://docs.docker.com/engine/admin/volumes/volumes/).
 
 Going further
 -------------
 Now that the Search microservice is running,
-let's learn how to use the [JSON Web service](../api)
+let's learn how to use the [JSON Web service](webservice.md)
