@@ -218,7 +218,6 @@ And here is the result:
 }
 ```
 
-# The full API set
+## Further
 
-The full set of REST/JSON API is described here:
-[API documentation](https://www.qwazr.com/documentation/QWAZR/qwazr-search/src/doc/api/)
+[QWAZR Search documentation](http://www.qwazr.com/search)
