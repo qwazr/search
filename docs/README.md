@@ -36,7 +36,7 @@ Thanks to the JAVA annotations, QWAZR Search provides
 an [Object-relational mapping](https://en.wikipedia.org/wiki/Object-relational_mapping)
 over Lucene indexes.
 
-Getting started with the [QWAZR Search JAVA library](usage/maven.md)
+Getting started with the [QWAZR Search JAVA library](usage/java-library.md)
 
 Open source
 -----------
