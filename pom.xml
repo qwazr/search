@@ -193,7 +193,11 @@
                             <reportOutputDirectory>${project.basedir}/docs</reportOutputDirectory>
                             <header>
                                 <![CDATA[
-                                <a href="http://www.qwazr.com/search">QWAZR Search</a>
+                                <a href="http://www.qwazr.com/search" target="_top">QWAZR Search</a>
+                                 ]]>
+                            </header>
+                            <footer>
+                                <![CDATA[
                                 <script type="text/javascript">
                                 (function (i, s, o, g, r, a, m) {
                                 i['GoogleAnalyticsObject'] = r;
@@ -210,7 +214,7 @@
                                 ga('send', 'pageview');
                                 </script>
                                 ]]>
-                            </header>
+                            </footer>
                         </configuration>
                     </plugin>
                 </plugins>
