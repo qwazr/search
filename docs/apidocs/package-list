@@ -1,0 +1,11 @@
+com.qwazr.search
+com.qwazr.search.analysis
+com.qwazr.search.annotations
+com.qwazr.search.collector
+com.qwazr.search.field
+com.qwazr.search.field.Converters
+com.qwazr.search.function
+com.qwazr.search.index
+com.qwazr.search.query
+com.qwazr.search.query.lucene
+com.qwazr.search.replication
