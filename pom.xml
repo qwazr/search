@@ -187,9 +187,10 @@
                         <configuration>
                             <show>public</show>
                             <reportOutputDirectory>${project.basedir}/docs</reportOutputDirectory>
-                            <footer>
-                                &lt;a href="http://www.qwazr.com/search"&gt;QWAZR Search&lt;/a&gt;
-                                &lt;script type="text/javascript"&gt;
+                            <header>
+                                <![CDATA[
+                                <a href="http://www.qwazr.com/search">QWAZR Search</a>
+                                <script type="text/javascript">
                                 (function (i, s, o, g, r, a, m) {
                                 i['GoogleAnalyticsObject'] = r;
                                 i[r] = i[r] || function () {
@@ -203,8 +204,9 @@
                                 })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
                                 ga('create', '{{ site.google_analytics }}', 'auto');
                                 ga('send', 'pageview');
-                                &lt;/script&gt;
-                            </footer>
+                                </script>
+                                ]]>
+                            </header>
                         </configuration>
                     </plugin>
                 </plugins>
