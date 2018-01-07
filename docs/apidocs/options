@@ -5,6 +5,7 @@
 -public
 -sourcepath
 '/Users/ekeller/GIT_repositories/qwazr/search/src/main/java'
+--allow-script-in-comments
 -author
 -bottom
 'Copyright &#169; 2018 <a href="http://www.qwazr.com">Jaeksoft / OpenSearchServer</a>. All rights reserved.'
