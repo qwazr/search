@@ -25,6 +25,7 @@ import com.qwazr.search.index.FacetDefinition;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
+import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
 import org.junit.Test;
@@ -34,6 +35,8 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -73,7 +76,7 @@ public class GettingStarted {
 			this.tags = tags;
 		}
 	}
-	
+
 	@Test
 	public void test() throws IOException, URISyntaxException, InterruptedException {
 
@@ -118,11 +121,14 @@ public class GettingStarted {
 		// We can now do the search
 		ResultDefinition.WithObject<MyIndexRecord> result = myIndexService.searchQuery(queryDefinition);
 
-		// And here are our results
+		// And here is our search result
 		assert result.getTotalHits() == 1L; // The number of results
-		MyIndexRecord myQueryRecord = result.getDocuments().get(0).getRecord(); // Retrieve our object
-		assert myQueryRecord.id.equals(indexRecord1.id); // Check we have the right id
-		assert result.getFacets().get("tags").size() == 2; // Check we have our facet result (news & infos)
+		List<ResultDocumentObject<MyIndexRecord>> records = result.getDocuments(); // Retrieve our found records
+		assert indexRecord1.id.equals(
+				records.get(0).getRecord().id); // Check we found the right record by checking the ID
+		Map<String, Number> facets = result.getFacet("tags"); // Retrieve our facet resuls
+		assert facets.get("infos").intValue() == 1; // Check we have our facet result for the tag "infos"
+		assert facets.get("news").intValue() == 1; // Same for the tag "news"
 
 		/* FREE RESOURCES */
 		indexManager.close(); // IndexManager is closeable (close it only if you will not use the service anymore)
