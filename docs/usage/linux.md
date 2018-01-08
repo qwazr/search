@@ -24,7 +24,7 @@ Test the web service
 --------------------
 
 ```bash
-wget http://localhost:9091/
+curl http://localhost:9091/
 ```
 
 To know more bout the Web service, have a look at the [JSON Web service overview](webservice.md)
@@ -39,18 +39,26 @@ Here is an example:
 - We suppose you have create a "qwazr" user,
 - A working directory is located here: /var/lib/qwarz/search
 
+### User creation
+
 ```bash
 useradd -g daemon -m -b /var/lib/qwazr qwazr
 su - qwazr
 mkdir /var/lib/qwazr/search
 ```
 
-Download the binary:
+### Download the binary:
 
 ```bash
 cd /var/lib/qwazr/search
-wget http://jenkins.opensearchserver.com/view/Docker/job/qwazr-search-docker/com.qwazr$qwazr-search/lastSuccessfulBuild/artifact/com.qwazr/qwazr-search/1.4.0-SNAPSHOT/qwazr-search-1.4.0-SNAPSHOT-exec.jar
+curl "http://jenkins.opensearchserver.com/view/Docker/job/qwazr-search-docker/com.qwazr$qwazr-search/lastSuccessfulBuild/artifact/com.qwazr/qwazr-search/1.4.0-SNAPSHOT/qwazr-search-1.4.0-SNAPSHOT-exec.jar"
 ```
+
+### Systemd init script
+
+Here is a working systemd init script.
+
+You may use the name **qwazr-search.service**.
 
 ```
 [Unit]
@@ -69,6 +77,14 @@ RestartSec=15
 
 [Install]
 WantedBy=multi-user.target
+```
+
+Move this script in the appropriate directory in your Linux distribution.
+Use the systemctl commands.
+
+```bash
+systemctl start qwazr-search
+systemctl stop qwazr-search
 ```
 
 _Documentation in progress..._
