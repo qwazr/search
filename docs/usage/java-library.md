@@ -1,6 +1,12 @@
 JAVA library integration
 ========================
 
+QWAZR Search is a JAVA 8 library.
+
+This page contains everything you need to start using it.
+
+You will be able to create an index, index records, and make a faceted full-text search.
+
 Maven integration
 -----------------
 
@@ -52,14 +58,12 @@ You may declare the snapshot repository:
 Getting Started
 ---------------
 
-QWAZR Search is a JAVA 8 library (JAVA 9 compatibility will be available soon).
-
 The main classes you need are:
 
 - IndexManager: It manages a collection of schemas. A schema is itself a collection of indexes.
 - AnnotatedIndexService: This class represents an index and provides all the methods you need to interact it.
 
-The annotations will be used to define the index and the record:
+Annotations are used to define the index and the record:
 
 - @Index: defines the name of the index, the name of the schema, and several optional properties.
 - @SmartField: defines a field.
