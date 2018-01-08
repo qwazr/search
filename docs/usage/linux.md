@@ -21,7 +21,11 @@ apt-get install openjdk-8-jdk-headless
 Download the binary
 -------------------
 
-[qwazr-search-1.4.0-SNAPSHOT-exec.jar](http://download.opensearchserver.com/qwazr-search/qwazr-search-1.4.0-SNAPSHOT-exec.jar)
+The latest build are available here:
+[download.opensearchserver.com/qwazr-search](http://download.opensearchserver.com/qwazr-search)
+
+The binary is here:
+[download.opensearchserver.com/qwazr-search/qwazr-search-1.4.0-SNAPSHOT-exec.jar](http://download.opensearchserver.com/qwazr-search/qwazr-search-1.4.0-SNAPSHOT-exec.jar)
 
 
 Start the daemon
