@@ -6,6 +6,17 @@ Prerequisites
 
 QWAZR Search requires a JAVA 8 SDK.
 
+On a yum based Linux distribution (Centos, Fedora, Redhat):
+
+```bash
+yum install java-1.8.0-openjdk-headless
+```
+
+On a Debian based Linux distribution (Debian, Ubuntu):
+
+```bash
+apt-get install openjdk-8-jdk-headless
+```
 
 Download the binary
 -------------------
@@ -19,6 +30,11 @@ Start the daemon
 ```bash
 java -jar qwazr-search-1.4.0-SNAPSHOT-exec.jar
 ```
+
+Two directories are created:
+
+- index: this directory contains the schema and the indexes.
+- tmp: this directory contains temporary files.
 
 Test the web service
 --------------------
@@ -51,7 +67,7 @@ mkdir /var/lib/qwazr/search
 
 ```bash
 cd /var/lib/qwazr/search
-curl "http://download.opensearchserver.com/qwazr-search/qwazr-search-1.4.0-SNAPSHOT-exec.jar"
+curl -O "http://download.opensearchserver.com/qwazr-search/qwazr-search-1.4.0-SNAPSHOT-exec.jar"
 ```
 
 ### Systemd init script
@@ -86,5 +102,3 @@ Use the systemctl commands.
 systemctl start qwazr-search
 systemctl stop qwazr-search
 ```
-
-_Documentation in progress..._
