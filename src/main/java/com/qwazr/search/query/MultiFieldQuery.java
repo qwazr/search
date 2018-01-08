@@ -152,7 +152,8 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 				queries = fieldQueries;
 				occur = minNumberShouldMatch != null ? BooleanClause.Occur.SHOULD : defaultOccur;
 			}
-			final Query query = new FieldQueryBuilder(alzr, field, termsFreq).parse(queryString, occur, boost);
+			final Query query = new FieldQueryBuilder(alzr, queryContext.getFieldMap().resolveQueryFieldName(field),
+					termsFreq).parse(queryString, occur, boost);
 			if (query != null)
 				queries.add(query);
 		});

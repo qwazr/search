@@ -1,70 +1,21 @@
-JAVA library integration
-========================
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-Maven integration
------------------
+package com.qwazr.search.docs;
 
-Include the library in your maven project:
-
-```xml
-<dependencies>
-    <dependency>
-        <groupId>com.qwazr</groupId>
-        <artifactId>qwazr-search</artifactId>
-        <version>1.4.0-SNAPSHOT</version>
-    </dependency>
-</dependencies>
-```
-
-We provide a BOM to help managing libraries conflict:
-
-```xml
-<dependencyManagement>
-    <dependencies>
-        <dependency>
-            <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-bom</artifactId>
-            <version>1.4.0-SNAPSHOT</version>
-            <scope>import</scope>
-            <type>pom</type>
-        </dependency>
-    </dependencies>
-</dependencyManagement>
-```
-
-You may declare the snapshot repository:
-
-```xml
-<repositories>
-    <repository>
-        <id>snapshots-repo</id>
-        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        <releases>
-            <enabled>false</enabled>
-        </releases>
-        <snapshots>
-            <enabled>true</enabled>
-        </snapshots>
-    </repository>
-</repositories>
-```
-
-Getting Started
----------------
-
-### Main classes and annotations
-
-The main classes you need are:
-
-- IndexManager: It manages a collection of schemas. A schema is itself a collection of indexes.
-- AnnotatedIndexService: This class represents an index and provides all the methods you need to interact it.
-
-The annotations will be used to define the index and the record:
-
-- @Index: defines the name of the index, the name of the schema, and several optional properties.
-- @SmartField: defines a field.
-
-```java
 import com.qwazr.search.analysis.SmartAnalyzerSet;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.annotations.Index;
@@ -176,13 +127,5 @@ public class GettingStarted {
 		/* FREE RESOURCES */
 		indexManager.close(); // IndexManager is closeable (close it only if you will not use the service anymore)
 	}
+
 }
-```
-
-Javadoc
--------
-
-[The JAVA documentation](../apidocs)
-
-_...documentation in progress..._
-
