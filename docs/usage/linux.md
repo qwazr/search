@@ -1,25 +1,28 @@
 Installation on Linux
 =====================
 
-### Prerequisites
+Prerequisites
+-------------
 
 QWAZR Search requires a JAVA 8 SDK.
 
 
-### Download the binary
+Download the binary
+-------------------
 
 [qwazr-search-1.4.0-SNAPSHOT-exec.jar](http://jenkins.opensearchserver.com/view/Docker/job/qwazr-search-docker/com.qwazr$qwazr-search/lastSuccessfulBuild/artifact/com.qwazr/qwazr-search/1.4.0-SNAPSHOT/qwazr-search-1.4.0-SNAPSHOT-exec.jar)
 
-```bash
-```
 
-### Start the daemon
+Start the daemon
+----------------
 
 ```bash
 java -jar qwazr-search-1.4.0-SNAPSHOT-exec.jar
 ```
 
-### Test the web service
+Test the web service
+--------------------
+
 ```bash
 wget http://localhost:9091/
 ```
@@ -27,7 +30,8 @@ wget http://localhost:9091/
 To know more bout the Web service, have a look at the [JSON Web service overview](webservice.md)
 
 
-### Installation as a daemon
+Installation as a daemon
+------------------------
 
 JAVA daemon are really easy to setup with [systemd](https://en.wikipedia.org/wiki/Systemd).
 
