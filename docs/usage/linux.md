@@ -10,7 +10,7 @@ QWAZR Search requires a JAVA 8 SDK.
 Download the binary
 -------------------
 
-[qwazr-search-1.4.0-SNAPSHOT-exec.jar](http://jenkins.opensearchserver.com/view/Docker/job/qwazr-search-docker/com.qwazr$qwazr-search/lastSuccessfulBuild/artifact/com.qwazr/qwazr-search/1.4.0-SNAPSHOT/qwazr-search-1.4.0-SNAPSHOT-exec.jar)
+[qwazr-search-1.4.0-SNAPSHOT-exec.jar](http://download.opensearchserver.com/qwazr-search/qwazr-search-1.4.0-SNAPSHOT-exec.jar)
 
 
 Start the daemon
@@ -51,7 +51,7 @@ mkdir /var/lib/qwazr/search
 
 ```bash
 cd /var/lib/qwazr/search
-curl "http://jenkins.opensearchserver.com/view/Docker/job/qwazr-search-docker/com.qwazr$qwazr-search/lastSuccessfulBuild/artifact/com.qwazr/qwazr-search/1.4.0-SNAPSHOT/qwazr-search-1.4.0-SNAPSHOT-exec.jar"
+curl "http://download.opensearchserver.com/qwazr-search/qwazr-search-1.4.0-SNAPSHOT-exec.jar"
 ```
 
 ### Systemd init script
