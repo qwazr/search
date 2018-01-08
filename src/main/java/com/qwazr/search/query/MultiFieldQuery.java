@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.TermConsumer;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.StringUtils;
@@ -136,6 +137,8 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 			}
 		});
 
+		final FieldMap fieldMap = queryContext.getFieldMap();
+
 		// Build the per field queries
 		final List<Query> fieldQueries = new ArrayList<>();
 		final List<Query> andFieldQueries = fieldsAndFilter != null ? new ArrayList<>() : null;
@@ -152,8 +155,9 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 				queries = fieldQueries;
 				occur = minNumberShouldMatch != null ? BooleanClause.Occur.SHOULD : defaultOccur;
 			}
-			final Query query = new FieldQueryBuilder(alzr, queryContext.getFieldMap().resolveQueryFieldName(field),
-					termsFreq).parse(queryString, occur, boost);
+			final Query query =
+					new FieldQueryBuilder(alzr, fieldMap == null ? field : fieldMap.resolveQueryFieldName(field),
+							termsFreq).parse(queryString, occur, boost);
 			if (query != null)
 				queries.add(query);
 		});
