@@ -17,7 +17,7 @@ Already used with **heavy load** environment by several companies.
 Features
 --------
 Our goal is to expose the best feature of Lucene. By best, we mean stable and production ready.
-It is common, for Lucene, to provide several way to achieve the same goal. We try to expose the best practice.
+It is common, for Lucene, to provide several ways to achieve the same goal. We try to expose the best practice.
 
 - Multilingual Full-text indexing,
 - Fuzzy search,
@@ -36,7 +36,7 @@ You can deploy it as a microservice and use the JSON Web service :
 
 Used as a JAVA library
 ----------------------
-Developed in JAVA, it can be use embedded as a JAVA library in any JAVA 8 project.
+Developed in JAVA, it can be embedded as a JAVA library in any JAVA 8 project.
 Thanks to the JAVA annotations, QWAZR Search provides
 an [Object-relational mapping](https://en.wikipedia.org/wiki/Object-relational_mapping)
 over Lucene indexes.
@@ -48,5 +48,5 @@ Open source
 The source code of the project is hosted at
 [github/qwazr/search](https://github.com/qwazr/search).
 
-As a QWAZR components it is released under the
+As a QWAZR component it is released under the
 [Apache 2 license](https://www.apache.org/licenses/LICENSE-2.0).
