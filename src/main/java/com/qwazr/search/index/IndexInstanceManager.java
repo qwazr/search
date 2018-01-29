@@ -66,17 +66,13 @@ class IndexInstanceManager implements Closeable {
 			this.analyzerFactoryMap = analyzerFactoryMap;
 			this.readWriteSemaphores = readWriteSemaphores;
 
-			checkDirectoryAndUuid();
+			fileSet.checkIndexDirectory();
+			indexUuid = fileSet.checkUuid();
 			settings = fileSet.loadSettings();
 
 		} catch (IOException e) {
 			throw ServerException.of(e);
 		}
-	}
-
-	private void checkDirectoryAndUuid() throws IOException {
-		fileSet.checkIndexDirectory();
-		indexUuid = fileSet.checkUuid();
 	}
 
 	private IndexInstance ensureOpen() throws ReflectiveOperationException, IOException, URISyntaxException {
