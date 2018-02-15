@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryParser> extends AbstractQueryBuilder<T> {
+public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryParser> extends AbstractQueryParser<T> {
 
 	final public String[] fields;
 	final public LinkedHashMap<String, Float> boosts;
@@ -137,7 +137,8 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
 		return analyzer == null ? queryContext.getQueryAnalyzer() : analyzer;
 	}
 
-	public static abstract class AbstractParserBuilder<T extends AbstractClassicQueryParser> extends AbstractBuilder {
+	public static abstract class AbstractParserBuilder<B extends AbstractParserBuilder, T extends AbstractClassicQueryParser>
+			extends AbstractBuilder<B, T> {
 
 		private Set<String> fields;
 		private LinkedHashMap<String, Float> boosts;
@@ -152,70 +153,74 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
 		private Boolean lowercase_expanded_terms;
 		private Boolean splitOnWhitespace;
 
+		protected AbstractParserBuilder(Class<B> builderClass) {
+			super(builderClass);
+		}
+
 		public abstract T build();
 
-		public AbstractParserBuilder<T> addField(String... fieldSet) {
+		public B addField(String... fieldSet) {
 			if (fields == null)
 				fields = new LinkedHashSet<>();
 			Collections.addAll(fields, fieldSet);
-			return this;
+			return me();
 		}
 
-		public AbstractParserBuilder<T> addBoost(String field, Float boost) {
+		public B addBoost(String field, Float boost) {
 			if (boosts == null)
 				boosts = new LinkedHashMap<>();
 			boosts.put(field, boost);
-			return this;
+			return me();
 		}
 
-		public AbstractParserBuilder<T> setAllowLeadingWildcard(Boolean allow_leading_wildcard) {
+		public B setAllowLeadingWildcard(Boolean allow_leading_wildcard) {
 			this.allow_leading_wildcard = allow_leading_wildcard;
-			return this;
+			return me();
 		}
 
-		public AbstractParserBuilder<T> setDefaultOperator(QueryParserOperator default_operator) {
+		public B setDefaultOperator(QueryParserOperator default_operator) {
 			this.default_operator = default_operator;
-			return this;
+			return me();
 		}
 
-		public AbstractParserBuilder<T> setPhraseSlop(Integer phrase_slop) {
+		public B setPhraseSlop(Integer phrase_slop) {
 			this.phrase_slop = phrase_slop;
-			return this;
+			return me();
 		}
 
-		public AbstractParserBuilder<T> setAutoGeneratePhraseQuery(Boolean auto_generate_phrase_query) {
+		public B setAutoGeneratePhraseQuery(Boolean auto_generate_phrase_query) {
 			this.auto_generate_phrase_query = auto_generate_phrase_query;
-			return this;
+			return me();
 		}
 
-		public AbstractParserBuilder<T> setAnalyzerRangeTerms(Boolean analyzer_range_terms) {
+		public B setAnalyzerRangeTerms(Boolean analyzer_range_terms) {
 			this.analyzer_range_terms = analyzer_range_terms;
-			return this;
+			return me();
 		}
 
-		public AbstractParserBuilder<T> setFuzzyMinSim(Float fuzzy_min_sim) {
+		public B setFuzzyMinSim(Float fuzzy_min_sim) {
 			this.fuzzy_min_sim = fuzzy_min_sim;
-			return this;
+			return me();
 		}
 
-		public AbstractParserBuilder<T> setFuzzyPrefixLength(Integer fuzzy_prefix_length) {
+		public B setFuzzyPrefixLength(Integer fuzzy_prefix_length) {
 			this.fuzzy_prefix_length = fuzzy_prefix_length;
-			return this;
+			return me();
 		}
 
-		public AbstractParserBuilder<T> setMaxDeterminizedStates(Integer max_determinized_states) {
+		public B setMaxDeterminizedStates(Integer max_determinized_states) {
 			this.max_determinized_states = max_determinized_states;
-			return this;
+			return me();
 		}
 
-		public AbstractParserBuilder<T> setLowercaseExpandedTerms(Boolean lowercase_expanded_terms) {
+		public B setLowercaseExpandedTerms(Boolean lowercase_expanded_terms) {
 			this.lowercase_expanded_terms = lowercase_expanded_terms;
-			return this;
+			return me();
 		}
 
-		public AbstractParserBuilder<T> setSplitOnWhitespace(Boolean splitOnWhitespace) {
+		public B setSplitOnWhitespace(Boolean splitOnWhitespace) {
 			this.splitOnWhitespace = splitOnWhitespace;
-			return this;
+			return me();
 		}
 
 	}

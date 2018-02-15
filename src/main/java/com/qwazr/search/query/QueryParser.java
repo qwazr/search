@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,9 +63,13 @@ public class QueryParser extends AbstractClassicQueryParser<QueryParser> {
 		return new Builder().setDefaultField(defaulField);
 	}
 
-	public static class Builder extends AbstractParserBuilder<QueryParser> {
+	public static class Builder extends AbstractParserBuilder<Builder, QueryParser> {
 
 		private String defaulField;
+
+		protected Builder() {
+			super(Builder.class);
+		}
 
 		@Override
 		public QueryParser build() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class SimpleQueryParser extends AbstractQueryBuilder<SimpleQueryParser> {
+public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
 
 	final public LinkedHashMap<String, Float> weights;
 
@@ -152,11 +152,15 @@ public class SimpleQueryParser extends AbstractQueryBuilder<SimpleQueryParser> {
 		return new Builder().setFlags(-1);
 	}
 
-	public static class Builder extends AbstractBuilder<SimpleQueryParser> {
+	public static class Builder extends AbstractBuilder<Builder, SimpleQueryParser> {
 
 		private LinkedHashMap<String, Float> weights;
 		private QueryParserOperator defaultOperator;
 		private int flags;
+
+		protected Builder() {
+			super(Builder.class);
+		}
 
 		public Builder addField(String... fieldSet) {
 			for (String field : fieldSet)

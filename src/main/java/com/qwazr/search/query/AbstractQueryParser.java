@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.apache.lucene.util.QueryBuilder;
 
 import java.util.Objects;
 
-public abstract class AbstractQueryBuilder<T extends AbstractQueryBuilder> extends AbstractQuery<T> {
+public abstract class AbstractQueryParser<T extends AbstractQueryParser> extends AbstractQuery<T> {
 
 	@JsonProperty("enable_position_increments")
 	final public Boolean enablePositionIncrements;
@@ -40,7 +40,7 @@ public abstract class AbstractQueryBuilder<T extends AbstractQueryBuilder> exten
 	@JsonIgnore
 	final protected Analyzer analyzer;
 
-	protected AbstractQueryBuilder(Class<T> queryClass) {
+	protected AbstractQueryParser(Class<T> queryClass) {
 		super(queryClass);
 		analyzer = null;
 		enablePositionIncrements = null;
@@ -49,7 +49,7 @@ public abstract class AbstractQueryBuilder<T extends AbstractQueryBuilder> exten
 		queryString = null;
 	}
 
-	protected AbstractQueryBuilder(Class<T> queryClass, AbstractBuilder builder) {
+	protected AbstractQueryParser(Class<T> queryClass, AbstractBuilder builder) {
 		super(queryClass);
 		this.analyzer = builder.analyzer;
 		this.enablePositionIncrements = builder.enablePositionIncrements;
@@ -78,7 +78,9 @@ public abstract class AbstractQueryBuilder<T extends AbstractQueryBuilder> exten
 				Objects.equals(queryString, q.queryString) && Objects.equals(analyzer, q.analyzer);
 	}
 
-	public static abstract class AbstractBuilder<T extends AbstractQueryBuilder> {
+	public static abstract class AbstractBuilder<B extends AbstractBuilder, T extends AbstractQueryParser> {
+
+		private final Class<B> builderClass;
 
 		private Analyzer analyzer;
 		private Boolean enablePositionIncrements;
@@ -86,32 +88,39 @@ public abstract class AbstractQueryBuilder<T extends AbstractQueryBuilder> exten
 		private Boolean enableGraphQueries;
 		private String queryString;
 
+		protected AbstractBuilder(Class<B> builderClass) {
+			this.builderClass = builderClass;
+		}
+
+		protected B me() {
+			return builderClass.cast(this);
+		}
+
 		public abstract T build();
 
-		final public AbstractBuilder<T> setAnalyzer(Analyzer analyzer) {
+		final public B setAnalyzer(Analyzer analyzer) {
 			this.analyzer = analyzer;
-			return this;
+			return me();
 		}
 
-		final public AbstractBuilder<T> setEnablePositionIncrements(Boolean enablePositionIncrements) {
+		final public B setEnablePositionIncrements(Boolean enablePositionIncrements) {
 			this.enablePositionIncrements = enablePositionIncrements;
-			return this;
+			return me();
 		}
 
-		final public AbstractBuilder<T> setAutoGenerateMultiTermSynonymsPhraseQuery(
-				Boolean autoGenerateMultiTermSynonymsPhraseQuery) {
+		final public B setAutoGenerateMultiTermSynonymsPhraseQuery(Boolean autoGenerateMultiTermSynonymsPhraseQuery) {
 			this.autoGenerateMultiTermSynonymsPhraseQuery = autoGenerateMultiTermSynonymsPhraseQuery;
-			return this;
+			return me();
 		}
 
-		final public AbstractBuilder<T> setEnableGraphQueries(Boolean enableGraphQueries) {
+		final public B setEnableGraphQueries(Boolean enableGraphQueries) {
 			this.enableGraphQueries = enableGraphQueries;
-			return this;
+			return me();
 		}
 
-		final public AbstractBuilder<T> setQueryString(String queryString) {
+		final public B setQueryString(String queryString) {
 			this.queryString = queryString;
-			return this;
+			return me();
 		}
 	}
 }
