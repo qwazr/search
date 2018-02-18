@@ -34,9 +34,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -65,8 +65,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
 	SchemaInstance(final ConstructorParametersImpl instanceFactory,
 			final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap, final IndexServiceInterface service,
-			final File schemaDirectory, final ExecutorService executorService)
-			throws IOException, ReflectiveOperationException, URISyntaxException {
+			final File schemaDirectory, final ExecutorService executorService) throws IOException, URISyntaxException {
 
 		this.readWriteSemaphores = new ReadWriteSemaphores(null, null);
 		this.instanceFactory = instanceFactory;
@@ -147,8 +146,10 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		});
 	}
 
-	Set<String> nameSet() {
-		return indexMap.keySet();
+	Map<String, UUID> getIndexMap() {
+		final TreeMap map = new TreeMap<>();
+		indexMap.forEach((name, index) -> map.put(name, index.getIndexUuid()));
+		return map;
 	}
 
 	final private static Pattern backupNameMatcher = Pattern.compile("[^a-zA-Z0-9-_]");

@@ -47,7 +47,7 @@ class IndexInstanceManager implements Closeable {
 	private final Map<String, AnalyzerFactory> analyzerFactoryMap;
 	private final ReadWriteSemaphores readWriteSemaphores;
 
-	private UUID indexUuid;
+	private final UUID indexUuid;
 	private IndexSettingsDefinition settings;
 	private IndexInstance indexInstance;
 
@@ -123,6 +123,10 @@ class IndexInstanceManager implements Closeable {
 		return rwl.read(() -> indexInstance);
 	}
 
+	UUID getIndexUuid() {
+		return indexUuid;
+	}
+	
 	private void closeIndex() {
 		if (indexInstance == null)
 			return;

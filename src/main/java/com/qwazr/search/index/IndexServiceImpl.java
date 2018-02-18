@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 final class IndexServiceImpl extends AbstractServiceImpl implements IndexServiceInterface, AnnotatedServiceInterface {
@@ -100,10 +101,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	@Override
-	final public Set<String> getIndexes(final String schemaName) {
+	final public Map<String, UUID> getIndexes(final String schemaName) {
 		try {
 			checkRight(schemaName);
-			return indexManager.get(schemaName).nameSet();
+			return indexManager.get(schemaName).getIndexMap();
 		} catch (ServerException e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}

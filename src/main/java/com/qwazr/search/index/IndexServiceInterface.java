@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.UUID;
 
 @RolesAllowed(IndexServiceInterface.SERVICE_NAME)
 @Path("/" + IndexServiceInterface.PATH)
@@ -79,7 +80,7 @@ public interface IndexServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/{schema_name}")
 	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE })
-	Set<String> getIndexes(@PathParam("schema_name") String schema_name);
+	Map<String, UUID> getIndexes(@PathParam("schema_name") String schema_name);
 
 	@POST
 	@Path("/{schema_name}/{index_name}")
@@ -377,6 +378,9 @@ public interface IndexServiceInterface extends ServiceInterface {
 			QueryDefinition query, @PathParam("doc") int docId, @QueryParam("wrap") final Integer descriptionWrapSize);
 
 	GenericType<Set<String>> setStringType = new GenericType<Set<String>>() {
+	};
+
+	GenericType<Map<String, UUID>> mapStringUuidType = new GenericType<Map<String, UUID>>() {
 	};
 
 	GenericType<SortedMap<String, SortedMap<String, BackupStatus>>> mapStringMapStringBackupStatusType =

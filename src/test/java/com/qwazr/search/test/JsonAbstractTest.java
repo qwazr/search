@@ -62,6 +62,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -1146,7 +1147,7 @@ public abstract class JsonAbstractTest {
 		IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
 		Assert.assertEquals(1, indexStatus.active_query_analyzers, 0);
 		Assert.assertEquals(1, indexStatus.active_index_analyzers, 0);
-		indexStatus = indexStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);
+		indexStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);
 		Assert.assertEquals(1, indexStatus.active_query_analyzers, 0);
 		Assert.assertEquals(1, indexStatus.active_index_analyzers, 0);
 	}
@@ -1156,10 +1157,10 @@ public abstract class JsonAbstractTest {
 		checkDelete(INDEX_SLAVE_NAME);
 		checkDelete(INDEX_MASTER_NAME);
 		final IndexServiceInterface client = getClient();
-		Set<String> indexes = client.getIndexes(SCHEMA_NAME);
+		Map<String, UUID> indexes = client.getIndexes(SCHEMA_NAME);
 		Assert.assertNotNull(indexes);
-		Assert.assertFalse(indexes.contains(INDEX_SLAVE_NAME));
-		Assert.assertFalse(indexes.contains(INDEX_MASTER_NAME));
+		Assert.assertFalse(indexes.containsKey(INDEX_SLAVE_NAME));
+		Assert.assertFalse(indexes.containsKey(INDEX_MASTER_NAME));
 	}
 
 	@Test

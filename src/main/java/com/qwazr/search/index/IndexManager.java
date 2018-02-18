@@ -80,7 +80,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 			try {
 				schemaMap.put(schemaDirectory.getName(),
 						new SchemaInstance(this, analyzerFactoryMap, service, schemaDirectory, executorService));
-			} catch (ServerException | IOException | ReflectiveOperationException | URISyntaxException e) {
+			} catch (ServerException | IOException | URISyntaxException e) {
 				LOGGER.log(Level.SEVERE, e, e::getMessage);
 			}
 		}

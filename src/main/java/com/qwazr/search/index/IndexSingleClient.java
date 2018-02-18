@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.UUID;
 
 public class IndexSingleClient extends JsonClient implements IndexServiceInterface {
 
@@ -88,9 +89,9 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 	}
 
 	@Override
-	public Set<String> getIndexes(final String schemaName) {
+	public Map<String, UUID> getIndexes(final String schemaName) {
 		try {
-			return indexTarget.path(schemaName).request(preferedSerializedMediaType).get(setStringType);
+			return indexTarget.path(schemaName).request(preferedSerializedMediaType).get(mapStringUuidType);
 		} catch (WebApplicationException e) {
 			throw ServerException.from(e);
 		}
