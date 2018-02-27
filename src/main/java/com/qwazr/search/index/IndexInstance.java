@@ -580,8 +580,7 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final Explanation explain(final QueryDefinition queryDefinition, final int docId)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+	final Explanation explain(final QueryDefinition queryDefinition, final int docId) throws IOException {
 		try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
 			return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
 				try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader, null)) {

@@ -17,8 +17,6 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.search.annotations.AnnotatedIndexService;
-import com.qwazr.server.ApplicationBuilder;
-import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LoggerUtils;
@@ -97,21 +95,6 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 		if (!Files.isDirectory(indexesDirectory))
 			throw new IOException("This name is not valid. No directory exists for this location: " + indexesDirectory);
 		return indexesDirectory;
-	}
-
-	public IndexManager registerContextAttribute(final GenericServerBuilder builder) {
-		builder.contextAttribute(this);
-		return this;
-	}
-
-	public IndexManager registerWebService(final ApplicationBuilder builder) {
-		builder.singletons(service);
-		return this;
-	}
-
-	public IndexManager registerShutdownListener(final GenericServerBuilder builder) {
-		builder.shutdownListener(server -> close());
-		return this;
 	}
 
 	public IndexManager registerAnalyzerFactory(final String name, final AnalyzerFactory factory) {

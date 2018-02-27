@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,9 @@ import com.qwazr.server.RestApplication;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
 
+import javax.management.JMException;
+import javax.servlet.ServletException;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -42,7 +43,7 @@ public class SearchServer implements BaseServer {
 	private final ClusterManager clusterManager;
 	private final IndexManager indexManager;
 
-	private SearchServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
+	private SearchServer(final ServerConfiguration configuration) throws IOException {
 
 		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final GenericServerBuilder builder = GenericServer.of(configuration, executorService);
@@ -54,14 +55,13 @@ public class SearchServer implements BaseServer {
 		final ApplicationBuilder webServices = ApplicationBuilder.of("/*").classes(RestApplication.JSON_CLASSES).
 				singletons(new WelcomeShutdownService());
 
-		clusterManager = new ClusterManager(executorService, configuration).registerProtocolListener(builder, services)
-				.registerContextAttribute(builder)
-				.registerWebService(webServices);
+		clusterManager = new ClusterManager(executorService, configuration).registerProtocolListener(builder, services);
+		webServices.singletons(clusterManager.getService());
 
 		indexManager = new IndexManager(IndexManager.checkIndexesDirectory(configuration.dataDirectory.toPath()),
-				executorService).registerContextAttribute(builder)
-				.registerWebService(webServices)
-				.registerShutdownListener(builder);
+				executorService);
+		builder.shutdownListener(server -> indexManager.close());
+		webServices.singletons(indexManager.getService());
 
 		builder.getWebServiceContext().jaxrs(webServices);
 		serviceBuilder = new IndexServiceBuilder(clusterManager, indexManager);
@@ -91,7 +91,8 @@ public class SearchServer implements BaseServer {
 		return serviceBuilder;
 	}
 
-	public static synchronized void main(final String... args) throws Exception {
+	public static synchronized void main(final String... args)
+			throws IOException, ServletException, ReflectiveOperationException, JMException {
 		shutdown();
 		INSTANCE = new SearchServer(new ServerConfiguration(args));
 		INSTANCE.start();
