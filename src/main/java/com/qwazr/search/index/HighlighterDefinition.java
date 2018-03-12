@@ -26,6 +26,9 @@ public class HighlighterDefinition {
 
 	final public String field;
 
+	@JsonProperty("stored_field")
+	final public String storedField;
+
 	@JsonProperty("max_passages")
 	final public Integer maxPassages;
 
@@ -83,6 +86,7 @@ public class HighlighterDefinition {
 
 	@JsonCreator
 	HighlighterDefinition(@JsonProperty("field") final String field,
+			@JsonProperty("stored_field") final String storedField,
 			@JsonProperty("max_passages") final Integer maxPassages,
 			@JsonProperty("max_length") final Integer maxLength,
 			@JsonProperty("highlight_phrases_strictly") final Boolean highlightPhrasesStrictly,
@@ -92,6 +96,7 @@ public class HighlighterDefinition {
 			@JsonProperty("ellipsis") final String ellipsis, @JsonProperty("escape") final Boolean escape,
 			@JsonProperty("break_iterator") final BreakIteratorDefinition breakIterator) {
 		this.field = field;
+		this.storedField = storedField;
 		this.maxLength = maxLength;
 		this.highlightPhrasesStrictly = highlightPhrasesStrictly;
 		this.maxNoHighlightPassages = maxNoHighlightPassages;
@@ -111,7 +116,8 @@ public class HighlighterDefinition {
 		if (o == this)
 			return true;
 		final HighlighterDefinition h = (HighlighterDefinition) o;
-		return Objects.equals(field, h.field) && Objects.equals(maxLength, h.maxLength) &&
+		return Objects.equals(field, h.field) && Objects.equals(storedField, h.storedField) &&
+				Objects.equals(maxLength, h.maxLength) &&
 				Objects.equals(highlightPhrasesStrictly, h.highlightPhrasesStrictly) &&
 				Objects.equals(maxNoHighlightPassages, h.maxNoHighlightPassages) &&
 				Objects.equals(maxPassages, h.maxPassages) &&
@@ -122,6 +128,7 @@ public class HighlighterDefinition {
 
 	private HighlighterDefinition(Builder builder) {
 		this.field = builder.field;
+		this.storedField = builder.storedField;
 		this.maxLength = builder.maxLength;
 		this.highlightPhrasesStrictly = builder.highlightPhrasesStrictly;
 		this.maxNoHighlightPassages = builder.maxNoHighlightPassages;
@@ -145,6 +152,8 @@ public class HighlighterDefinition {
 	public static class Builder {
 
 		private String field;
+
+		private String storedField;
 
 		private Integer maxPassages;
 
@@ -176,6 +185,15 @@ public class HighlighterDefinition {
 		 */
 		public Builder setField(String field) {
 			this.field = field;
+			return this;
+		}
+
+		/**
+		 * @param storedField storedField
+		 * @return the current builder
+		 */
+		public Builder setStoredField(String storedField) {
+			this.storedField = storedField;
 			return this;
 		}
 

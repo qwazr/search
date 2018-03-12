@@ -57,6 +57,9 @@ public abstract class IndexRecord<T extends IndexRecord> {
 			analyzerClass = SmartAnalyzerSet.EnglishIndex.class)
 	public String textComplexAnalyzer;
 
+	@IndexField(template = FieldDefinition.Template.TextField, analyzerClass = StandardAnalyzer.class, stored = true)
+	public List<String> storedTextField;
+
 	@IndexField(template = FieldDefinition.Template.StringField)
 	public String stringField;
 
@@ -150,6 +153,12 @@ public abstract class IndexRecord<T extends IndexRecord> {
 
 	public T textField(String textField) {
 		this.textField = textField;
+		return (T) this;
+	}
+
+	public T storedTextField(String... storedTextField) {
+		this.storedTextField = new ArrayList<>();
+		Collections.addAll(this.storedTextField, storedTextField);
 		return (T) this;
 	}
 
