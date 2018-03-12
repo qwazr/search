@@ -27,8 +27,6 @@ import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.concurrent.FunctionEx;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.MatchAllDocsQuery;
 
 import javax.servlet.http.HttpServletRequest;
@@ -454,30 +452,28 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
 	@Override
 	final public <T> int postDocument(final String schemaName, final String indexName, final Map<String, Field> fields,
-			final T document, final Map<String, String> commitUserData) throws IOException, InterruptedException {
+			final T document, final Map<String, String> commitUserData) throws IOException {
 		checkRight(schemaName);
 		return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData, true);
 	}
 
 	@Override
 	final public <T> int postDocuments(final String schemaName, final String indexName, final Map<String, Field> fields,
-			final Collection<T> documents, final Map<String, String> commitUserData)
-			throws IOException, InterruptedException {
+			final Collection<T> documents, final Map<String, String> commitUserData) throws IOException {
 		checkRight(schemaName);
 		return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents, commitUserData, true);
 	}
 
 	@Override
 	final public <T> int addDocument(final String schemaName, final String indexName, final Map<String, Field> fields,
-			final T document, final Map<String, String> commitUserData) throws IOException, InterruptedException {
+			final T document, final Map<String, String> commitUserData) throws IOException {
 		checkRight(schemaName);
 		return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData, false);
 	}
 
 	@Override
 	final public <T> int addDocuments(final String schemaName, final String indexName, final Map<String, Field> fields,
-			final Collection<T> documents, final Map<String, String> commitUserData)
-			throws IOException, InterruptedException {
+			final Collection<T> documents, final Map<String, String> commitUserData) throws IOException {
 		checkRight(schemaName);
 		return indexManager.get(schemaName)
 				.get(indexName, true)
@@ -509,7 +505,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	@Override
 	final public <T> int updateDocValues(final String schemaName, final String indexName,
 			final Map<String, Field> fields, final T document, final Map<String, String> commitUserData)
-			throws IOException, InterruptedException {
+			throws IOException {
 		checkRight(schemaName);
 		return indexManager.get(schemaName).get(indexName, true).updateDocValues(fields, document, commitUserData);
 	}
@@ -517,7 +513,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	@Override
 	final public <T> int updateDocsValues(final String schemaName, final String indexName,
 			final Map<String, Field> fields, final Collection<T> documents, final Map<String, String> commitUserData)
-			throws IOException, InterruptedException {
+			throws IOException {
 		checkRight(schemaName);
 		return indexManager.get(schemaName).get(indexName, true).updateDocsValues(fields, documents, commitUserData);
 	}
@@ -683,14 +679,13 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 	}
 
 	private ResultDefinition doSearchMap(final String schemaName, final String indexName, final QueryDefinition query)
-			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
+			throws IOException {
 		checkRight(schemaName);
 		return indexManager.get(schemaName).get(indexName, false).query(null, context -> context.searchMap(query));
 	}
 
 	private ResultDefinition doSearchObject(final String schemaName, final String indexName,
-			final QueryDefinition query, final FieldMapWrapper<?> wrapper)
-			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
+			final QueryDefinition query, final FieldMapWrapper<?> wrapper) throws IOException {
 		checkRight(schemaName);
 		return indexManager.get(schemaName)
 				.get(indexName, false)

@@ -26,52 +26,52 @@ import java.util.Map;
 public interface AnnotatedServiceInterface {
 
 	default <T> int postDocument(String schemaName, String indexName, Map<String, Field> fields, T document)
-			throws IOException, InterruptedException {
+			throws IOException {
 		return postDocument(schemaName, indexName, fields, document, null);
 	}
 
 	<T> int postDocument(String schemaName, String indexName, Map<String, Field> fields, T document,
-			Map<String, String> commitUserData) throws IOException, InterruptedException;
+			Map<String, String> commitUserData) throws IOException;
 
 	default <T> int postDocuments(String schemaName, String indexName, Map<String, Field> fields,
-			Collection<T> documents) throws IOException, InterruptedException {
+			Collection<T> documents) throws IOException {
 		return postDocuments(schemaName, indexName, fields, documents, null);
 	}
 
 	<T> int postDocuments(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents,
-			Map<String, String> commitUserData) throws IOException, InterruptedException;
+			Map<String, String> commitUserData) throws IOException;
 
 	default <T> int addDocument(String schemaName, String indexName, Map<String, Field> fields, T document)
-			throws IOException, InterruptedException {
+			throws IOException {
 		return addDocument(schemaName, indexName, fields, document, null);
 	}
 
 	<T> int addDocument(String schemaName, String indexName, Map<String, Field> fields, T document,
-			Map<String, String> commitUserData) throws IOException, InterruptedException;
+			Map<String, String> commitUserData) throws IOException;
 
 	default <T> int addDocuments(String schemaName, String indexName, Map<String, Field> fields,
-			Collection<T> documents) throws IOException, InterruptedException {
+			Collection<T> documents) throws IOException {
 		return addDocuments(schemaName, indexName, fields, documents, null);
 	}
 
 	<T> int addDocuments(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents,
-			Map<String, String> commitUserData) throws IOException, InterruptedException;
+			Map<String, String> commitUserData) throws IOException;
 
 	default <T> int updateDocValues(String schemaName, String indexName, Map<String, Field> fields, T document)
-			throws IOException, InterruptedException {
+			throws IOException {
 		return updateDocValues(schemaName, indexName, fields, document, null);
 	}
 
 	<T> int updateDocValues(String schemaName, String indexName, Map<String, Field> fields, T document,
-			Map<String, String> commitUserData) throws IOException, InterruptedException;
+			Map<String, String> commitUserData) throws IOException;
 
 	default <T> int updateDocsValues(String schemaName, String indexName, Map<String, Field> fields,
-			Collection<T> documents) throws IOException, InterruptedException {
+			Collection<T> documents) throws IOException {
 		return updateDocsValues(schemaName, indexName, fields, documents, null);
 	}
 
 	<T> int updateDocsValues(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents,
-			Map<String, String> commitUserData) throws IOException, InterruptedException;
+			Map<String, String> commitUserData) throws IOException;
 
 	<T> T getDocument(String schemaName, String indexName, Object id, FieldMapWrapper<T> fieldMapWrapper);
 
