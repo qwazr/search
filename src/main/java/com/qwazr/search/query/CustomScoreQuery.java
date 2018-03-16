@@ -79,7 +79,6 @@ public class CustomScoreQuery extends AbstractQuery<CustomScoreQuery> {
 		this.customScoreProviderClass = customScoreProviderClass;
 	}
 
-	@JsonCreator
 	public CustomScoreQuery(@JsonProperty("subQuery") final AbstractQuery subQuery,
 			@JsonProperty("customScoreProvider") final String customScoreProviderClass,
 			@JsonProperty("scoringQueries") final FunctionQuery... scoringQueries) {
