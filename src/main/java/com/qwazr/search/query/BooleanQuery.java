@@ -186,6 +186,15 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 			return this;
 		}
 
+		public final Builder setClauses(final BooleanClause... booleanClauses) {
+			if (clauses == null)
+				clauses = new ArrayList<>();
+			else
+				clauses.clear();
+			Collections.addAll(clauses, booleanClauses);
+			return this;
+		}
+
 		public final Builder filter(final AbstractQuery query) {
 			return addClause(Occur.filter, query);
 		}
