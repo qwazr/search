@@ -180,9 +180,13 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 		}
 
 		public final Builder addClause(final Occur occur, final AbstractQuery query) {
+			return addClause(new BooleanClause(occur, query));
+		}
+
+		public final Builder addClause(final BooleanClause booleanClause) {
 			if (clauses == null)
 				clauses = new ArrayList<>();
-			clauses.add(new BooleanClause(occur, query));
+			clauses.add(booleanClause);
 			return this;
 		}
 
