@@ -165,9 +165,13 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 
 	public final static class Builder {
 
-		private List<BooleanClause> clauses;
+		private final List<BooleanClause> clauses;
 		private Boolean disableCoord;
 		private Integer minimumNumberShouldMatch;
+
+		public Builder() {
+			clauses = new ArrayList<>();
+		}
 
 		public final Builder setDisableCoord(final Boolean disableCoord) {
 			this.disableCoord = disableCoord;
@@ -184,19 +188,18 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 		}
 
 		public final Builder addClause(final BooleanClause booleanClause) {
-			if (clauses == null)
-				clauses = new ArrayList<>();
 			clauses.add(booleanClause);
 			return this;
 		}
 
-		public final Builder setClauses(final BooleanClause... booleanClauses) {
-			if (clauses == null)
-				clauses = new ArrayList<>();
-			else
-				clauses.clear();
+		public final Builder addClauses(final BooleanClause... booleanClauses) {
 			Collections.addAll(clauses, booleanClauses);
 			return this;
+		}
+
+		public final Builder setClauses(final BooleanClause... booleanClauses) {
+			clauses.clear();
+			return addClauses(booleanClauses);
 		}
 
 		public final Builder filter(final AbstractQuery query) {
@@ -216,7 +219,7 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 		}
 
 		public final int getSize() {
-			return clauses == null ? 0 : clauses.size();
+			return clauses.size();
 		}
 
 		final public BooleanQuery build() {
