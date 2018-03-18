@@ -95,4 +95,14 @@ public class BooleanQueryTest {
 		Assert.assertEquals(clause1, booleanQuery.clauses.get(0));
 		Assert.assertEquals(clause2, booleanQuery.clauses.get(1));
 	}
+
+	@Test
+	public void setClause() {
+		final BooleanQuery.BooleanClause clause1 =
+				new BooleanQuery.BooleanClause(BooleanQuery.Occur.filter, new MatchAllDocsQuery());
+		BooleanQuery booleanQuery = BooleanQuery.of().setClause(clause1).build();
+		Assert.assertNotNull(booleanQuery.clauses);
+		Assert.assertEquals(1, booleanQuery.clauses.size());
+		Assert.assertEquals(clause1, booleanQuery.clauses.get(0));
+	}
 }

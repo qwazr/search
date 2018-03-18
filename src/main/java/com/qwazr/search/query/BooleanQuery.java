@@ -197,6 +197,11 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 			return this;
 		}
 
+		public final Builder setClause(final BooleanClause booleanClause) {
+			clauses.clear();
+			return addClause(booleanClause);
+		}
+
 		public final Builder setClauses(final BooleanClause... booleanClauses) {
 			clauses.clear();
 			return addClauses(booleanClauses);
