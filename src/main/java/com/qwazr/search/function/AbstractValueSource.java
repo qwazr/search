@@ -21,8 +21,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.qwazr.utils.Equalizer;
 import org.apache.lucene.queries.function.ValueSource;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "source")
@@ -35,6 +33,7 @@ import java.util.Objects;
 		@JsonSubTypes.Type(value = IfFunction.class),
 		@JsonSubTypes.Type(value = IntFieldSource.class),
 		@JsonSubTypes.Type(value = LongFieldSource.class),
+		@JsonSubTypes.Type(value = MaxDocValueSource.class),
 		@JsonSubTypes.Type(value = MaxFloatFunction.class),
 		@JsonSubTypes.Type(value = MinFloatFunction.class),
 		@JsonSubTypes.Type(value = MultiValuedDoubleFieldSource.class),
@@ -64,23 +63,6 @@ public abstract class AbstractValueSource<T extends AbstractValueSource> extends
 	@Override
 	final public boolean isEqual(final T o) {
 		return Objects.equals(valueSource, o.getValueSource());
-	}
-
-	public static ValueSource[] getValueSourceArray(final AbstractValueSource[] sources) {
-		Objects.requireNonNull(sources, "The source list is missing (sources)");
-		final ValueSource[] valueSources = new ValueSource[sources.length];
-		int i = 0;
-		for (AbstractValueSource source : sources)
-			valueSources[i++] = source.getValueSource();
-		return valueSources;
-	}
-
-	public static List<ValueSource> getValueSourceList(final AbstractValueSource[] sources) {
-		Objects.requireNonNull(sources, "The source list is missing (sources)");
-		final List<ValueSource> valueSources = new ArrayList<>(sources.length);
-		for (AbstractValueSource source : sources)
-			valueSources.add(source.getValueSource());
-		return valueSources;
 	}
 
 }

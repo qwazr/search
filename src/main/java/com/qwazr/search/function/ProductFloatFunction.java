@@ -18,12 +18,13 @@ package com.qwazr.search.function;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class ProductFloatFunction extends AbstractValueSource<ProductFloatFunction> {
+public class ProductFloatFunction extends AbstractValueSources<ProductFloatFunction> {
 
 	@JsonCreator
 	public ProductFloatFunction(@JsonProperty("sources") AbstractValueSource... sources) {
-		super(ProductFloatFunction.class, new org.apache.lucene.queries.function.valuesource.ProductFloatFunction(
-				AbstractValueSource.getValueSourceArray(sources)));
+		super(ProductFloatFunction.class,
+				new org.apache.lucene.queries.function.valuesource.ProductFloatFunction(getValueSourceArray(sources)),
+				sources);
 	}
 
 }

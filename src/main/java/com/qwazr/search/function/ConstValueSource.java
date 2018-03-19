@@ -22,10 +22,13 @@ import java.util.Objects;
 
 public class ConstValueSource extends AbstractValueSource<ConstValueSource> {
 
+	public final Float constant;
+
 	@JsonCreator
 	public ConstValueSource(@JsonProperty("constant") Float constant) {
 		super(ConstValueSource.class, new org.apache.lucene.queries.function.valuesource.ConstValueSource(
 				Objects.requireNonNull(constant, "constant value is missing")));
+		this.constant = constant;
 	}
 
 }

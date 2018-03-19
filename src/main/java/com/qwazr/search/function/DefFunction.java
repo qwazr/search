@@ -18,11 +18,11 @@ package com.qwazr.search.function;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefFunction extends AbstractValueSource<DefFunction> {
+public class DefFunction extends AbstractValueSources<DefFunction> {
 
 	@JsonCreator
 	public DefFunction(@JsonProperty("sources") final AbstractValueSource... sources) {
-		super(DefFunction.class, new org.apache.lucene.queries.function.valuesource.DefFunction(
-				AbstractValueSource.getValueSourceList(sources)));
+		super(DefFunction.class,
+				new org.apache.lucene.queries.function.valuesource.DefFunction(getValueSourceList(sources)), sources);
 	}
 }

@@ -23,7 +23,7 @@ public class MultiValuedDoubleFieldSource extends AbstractFieldSelectorSource<Mu
 
 	@JsonCreator
 	public MultiValuedDoubleFieldSource(@JsonProperty("field") String field,
-			@JsonProperty("type") SortedNumericSelector.Type selector) {
+			@JsonProperty("selector") SortedNumericSelector.Type selector) {
 		super(MultiValuedDoubleFieldSource.class, field, selector,
 				new org.apache.lucene.queries.function.valuesource.MultiValuedDoubleFieldSource(field, selector));
 	}

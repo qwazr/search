@@ -18,12 +18,13 @@ package com.qwazr.search.function;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class SumFloatFunction extends AbstractValueSource<SumFloatFunction> {
+public class SumFloatFunction extends AbstractValueSources<SumFloatFunction> {
 
 	@JsonCreator
 	public SumFloatFunction(@JsonProperty("sources") AbstractValueSource... sources) {
-		super(SumFloatFunction.class, new org.apache.lucene.queries.function.valuesource.SumFloatFunction(
-				AbstractValueSource.getValueSourceArray(sources)));
+		super(SumFloatFunction.class,
+				new org.apache.lucene.queries.function.valuesource.SumFloatFunction(getValueSourceArray(sources)),
+				sources);
 	}
 
 }

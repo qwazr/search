@@ -23,7 +23,7 @@ public class MultiValuedIntFieldSource extends AbstractFieldSelectorSource<Multi
 
 	@JsonCreator
 	public MultiValuedIntFieldSource(@JsonProperty("field") String field,
-			@JsonProperty("type") SortedNumericSelector.Type selector) {
+			@JsonProperty("selector") SortedNumericSelector.Type selector) {
 		super(MultiValuedIntFieldSource.class, field, selector,
 				new org.apache.lucene.queries.function.valuesource.MultiValuedIntFieldSource(field, selector));
 	}

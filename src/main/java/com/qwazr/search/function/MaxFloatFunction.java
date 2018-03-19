@@ -18,12 +18,13 @@ package com.qwazr.search.function;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class MaxFloatFunction extends AbstractValueSource<MaxFloatFunction> {
+public class MaxFloatFunction extends AbstractValueSources<MaxFloatFunction> {
 
 	@JsonCreator
 	public MaxFloatFunction(@JsonProperty("sources") AbstractValueSource... sources) {
-		super(MaxFloatFunction.class, new org.apache.lucene.queries.function.valuesource.MaxFloatFunction(
-				AbstractValueSource.getValueSourceArray(sources)));
+		super(MaxFloatFunction.class,
+				new org.apache.lucene.queries.function.valuesource.MaxFloatFunction(getValueSourceArray(sources)),
+				sources);
 	}
 
 }

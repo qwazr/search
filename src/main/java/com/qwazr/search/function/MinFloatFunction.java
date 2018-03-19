@@ -18,12 +18,13 @@ package com.qwazr.search.function;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class MinFloatFunction extends AbstractValueSource<MinFloatFunction> {
+public class MinFloatFunction extends AbstractValueSources<MinFloatFunction> {
 
 	@JsonCreator
-	public MinFloatFunction(@JsonProperty("source") AbstractValueSource... sources) {
-		super(MinFloatFunction.class, new org.apache.lucene.queries.function.valuesource.MinFloatFunction(
-				AbstractValueSource.getValueSourceArray(sources)));
+	public MinFloatFunction(@JsonProperty("sources") AbstractValueSource... sources) {
+		super(MinFloatFunction.class,
+				new org.apache.lucene.queries.function.valuesource.MinFloatFunction(getValueSourceArray(sources)),
+				sources);
 	}
 
 }
