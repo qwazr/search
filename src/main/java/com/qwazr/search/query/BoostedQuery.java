@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,11 +45,11 @@ public class BoostedQuery extends AbstractQuery<BoostedQuery> {
 		Objects.requireNonNull(sub_query, "The sub_query property is missing");
 		Objects.requireNonNull(value_source, "The value_source property is missing");
 		return new org.apache.lucene.queries.function.BoostedQuery(sub_query.getQuery(queryContext),
-				value_source.getValueSource(queryContext));
+				value_source.getValueSource());
 	}
 
 	@Override
-	protected boolean isEqual(BoostedQuery q) {
+	protected boolean isEqual(final BoostedQuery q) {
 		return Objects.equals(sub_query, q.sub_query) && Objects.equals(value_source, q.value_source);
 	}
 }

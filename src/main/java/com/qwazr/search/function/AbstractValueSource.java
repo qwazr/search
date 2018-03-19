@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,12 @@ package com.qwazr.search.function;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.Equalizer;
 import org.apache.lucene.queries.function.ValueSource;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "source")
 @JsonSubTypes({ @JsonSubTypes.Type(value = ConstValueSource.class),
@@ -40,6 +37,10 @@ import java.util.List;
 		@JsonSubTypes.Type(value = LongFieldSource.class),
 		@JsonSubTypes.Type(value = MaxFloatFunction.class),
 		@JsonSubTypes.Type(value = MinFloatFunction.class),
+		@JsonSubTypes.Type(value = MultiValuedDoubleFieldSource.class),
+		@JsonSubTypes.Type(value = MultiValuedFloatFieldSource.class),
+		@JsonSubTypes.Type(value = MultiValuedIntFieldSource.class),
+		@JsonSubTypes.Type(value = MultiValuedLongFieldSource.class),
 		@JsonSubTypes.Type(value = NumDocsValueSource.class),
 		@JsonSubTypes.Type(value = PowFloatFunction.class),
 		@JsonSubTypes.Type(value = ProductFloatFunction.class),
@@ -48,34 +49,37 @@ import java.util.List;
 		@JsonSubTypes.Type(value = SumFloatFunction.class) })
 public abstract class AbstractValueSource<T extends AbstractValueSource> extends Equalizer<T> {
 
-	protected AbstractValueSource(Class<T> ownClass) {
+	private final ValueSource valueSource;
+
+	protected AbstractValueSource(final Class<T> ownClass, final ValueSource valueSource) {
 		super(ownClass);
+		this.valueSource = valueSource;
 	}
 
 	@JsonIgnore
-	public abstract ValueSource getValueSource(QueryContext queryContext)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException;
+	final public ValueSource getValueSource() {
+		return valueSource;
+	}
 
-	@JsonIgnore
-	public static final ValueSource[] getValueSourceArray(QueryContext queryContext, AbstractValueSource[] sources)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
-		if (sources == null)
-			return null;
-		ValueSource[] valueSources = new ValueSource[sources.length];
+	@Override
+	final public boolean isEqual(final T o) {
+		return Objects.equals(valueSource, o.getValueSource());
+	}
+
+	public static ValueSource[] getValueSourceArray(final AbstractValueSource[] sources) {
+		Objects.requireNonNull(sources, "The source list is missing (sources)");
+		final ValueSource[] valueSources = new ValueSource[sources.length];
 		int i = 0;
 		for (AbstractValueSource source : sources)
-			valueSources[i++] = source.getValueSource(queryContext);
+			valueSources[i++] = source.getValueSource();
 		return valueSources;
 	}
 
-	@JsonIgnore
-	public static List<ValueSource> getValueSourceList(QueryContext queryContext, AbstractValueSource[] sources)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
-		if (sources == null)
-			return null;
+	public static List<ValueSource> getValueSourceList(final AbstractValueSource[] sources) {
+		Objects.requireNonNull(sources, "The source list is missing (sources)");
 		final List<ValueSource> valueSources = new ArrayList<>(sources.length);
 		for (AbstractValueSource source : sources)
-			valueSources.add(source.getValueSource(queryContext));
+			valueSources.add(source.getValueSource());
 		return valueSources;
 	}
 

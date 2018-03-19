@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.function.AbstractValueSource;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class FunctionQuery extends AbstractQuery<FunctionQuery> {
@@ -32,19 +29,16 @@ public class FunctionQuery extends AbstractQuery<FunctionQuery> {
 	@JsonCreator
 	public FunctionQuery(@JsonProperty("source") final AbstractValueSource source) {
 		super(FunctionQuery.class);
-		this.source = source;
+		this.source = Objects.requireNonNull(source, "The source property is missing");
 	}
 
 	@Override
-	final public org.apache.lucene.queries.function.FunctionQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		Objects.requireNonNull(source, "The source property is missing");
-		return new org.apache.lucene.queries.function.FunctionQuery(source.getValueSource(queryContext));
+	final public org.apache.lucene.queries.function.FunctionQuery getQuery(final QueryContext queryContext) {
+		return new org.apache.lucene.queries.function.FunctionQuery(source.getValueSource());
 	}
 
-	final public static org.apache.lucene.queries.function.FunctionQuery[] getQueries(
-			final FunctionQuery[] scoringQueries, final QueryContext queryContext)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+	public static org.apache.lucene.queries.function.FunctionQuery[] getQueries(final FunctionQuery[] scoringQueries,
+			final QueryContext queryContext) {
 		if (scoringQueries == null)
 			return null;
 		final org.apache.lucene.queries.function.FunctionQuery[] functionQueries =

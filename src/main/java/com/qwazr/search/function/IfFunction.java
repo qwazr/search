@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,7 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.queries.function.ValueSource;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class IfFunction extends AbstractValueSource<IfFunction> {
@@ -35,25 +30,13 @@ public class IfFunction extends AbstractValueSource<IfFunction> {
 	public IfFunction(@JsonProperty("ifSource") AbstractValueSource ifSource,
 			@JsonProperty("trueSource") AbstractValueSource trueSource,
 			@JsonProperty("falseSource") AbstractValueSource falseSource) {
-		super(IfFunction.class);
+		super(IfFunction.class, new org.apache.lucene.queries.function.valuesource.IfFunction(
+				Objects.requireNonNull(ifSource, "ifSource value source is missing").getValueSource(),
+				Objects.requireNonNull(trueSource, "trueSource value source is missing").getValueSource(),
+				Objects.requireNonNull(falseSource, "falseSource value source is missing").getValueSource()));
 		this.ifSource = ifSource;
 		this.trueSource = trueSource;
 		this.falseSource = falseSource;
 	}
 
-	@Override
-	public ValueSource getValueSource(QueryContext queryContext)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
-		Objects.requireNonNull(ifSource, "ifSource value source is missing");
-		Objects.requireNonNull(trueSource, "trueSource value source is missing");
-		Objects.requireNonNull(falseSource, "falseSource value source is missing");
-		return new org.apache.lucene.queries.function.valuesource.IfFunction(ifSource.getValueSource(queryContext),
-				trueSource.getValueSource(queryContext), falseSource.getValueSource(queryContext));
-	}
-
-	@Override
-	protected boolean isEqual(IfFunction q) {
-		return Objects.equals(ifSource, q.ifSource) && Objects.equals(trueSource, q.trueSource) &&
-				Objects.equals(falseSource, q.falseSource);
-	}
 }

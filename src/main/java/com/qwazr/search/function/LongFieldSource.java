@@ -16,22 +16,13 @@
 package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.queries.function.ValueSource;
 
 public class LongFieldSource extends AbstractFieldSource<LongFieldSource> {
 
 	@JsonCreator
 	public LongFieldSource(@JsonProperty("field") String field) {
-		super(LongFieldSource.class, field);
+		super(LongFieldSource.class, field, new org.apache.lucene.queries.function.valuesource.LongFieldSource(field));
 	}
 
-	@Override
-	@JsonIgnore
-	public ValueSource getValueSource(QueryContext queryContext) {
-		check();
-		return new org.apache.lucene.queries.function.valuesource.LongFieldSource(field);
-	}
 }

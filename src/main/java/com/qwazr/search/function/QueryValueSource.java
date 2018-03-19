@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.query.AbstractQuery;
-import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
@@ -32,23 +31,13 @@ public class QueryValueSource extends AbstractValueSource<QueryValueSource> {
 	final public Float defVal;
 
 	@JsonCreator
-	public QueryValueSource(@JsonProperty("query") AbstractQuery query, @JsonProperty("defVal") Float defVal) {
-		super(QueryValueSource.class);
+	public QueryValueSource(@JsonProperty("query") AbstractQuery query, @JsonProperty("defVal") Float defVal)
+			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
+		super(QueryValueSource.class, new org.apache.lucene.queries.function.valuesource.QueryValueSource(
+				Objects.requireNonNull(query, "The query is missing").getQuery(QueryContext.DEFAULT),
+				Objects.requireNonNull(defVal, "The default value is missing (defVal")));
 		this.query = query;
 		this.defVal = defVal;
 	}
 
-	@Override
-	public ValueSource getValueSource(QueryContext queryContext)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
-		Objects.requireNonNull(query, "The query is missing");
-		Objects.requireNonNull(defVal, "The default value is missing (defVal");
-		return new org.apache.lucene.queries.function.valuesource.QueryValueSource(query.getQuery(queryContext),
-				defVal);
-	}
-
-	@Override
-	protected boolean isEqual(QueryValueSource q) {
-		return Objects.equals(query, q.query) && Objects.equals(defVal, q.defVal);
-	}
 }

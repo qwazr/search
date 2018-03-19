@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,31 +17,13 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.queries.function.ValueSource;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Objects;
-
-public class ProductFloatFunction extends AbstractValueSourceArray {
+public class ProductFloatFunction extends AbstractValueSource<ProductFloatFunction> {
 
 	@JsonCreator
 	public ProductFloatFunction(@JsonProperty("sources") AbstractValueSource... sources) {
-		super(ProductFloatFunction.class, sources);
+		super(ProductFloatFunction.class, new org.apache.lucene.queries.function.valuesource.ProductFloatFunction(
+				AbstractValueSource.getValueSourceArray(sources)));
 	}
 
-	public ProductFloatFunction(Collection<AbstractValueSource> sources) {
-		super(ProductFloatFunction.class, sources);
-	}
-
-	@Override
-	public ValueSource getValueSource(QueryContext queryContext)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
-		Objects.requireNonNull(sources, "The array of value source is missing (sources)");
-		return new org.apache.lucene.queries.function.valuesource.ProductFloatFunction(
-				AbstractValueSource.getValueSourceArray(queryContext, sources));
-	}
 }
