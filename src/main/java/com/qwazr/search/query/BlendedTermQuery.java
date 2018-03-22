@@ -94,7 +94,7 @@ public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) {
 		org.apache.lucene.search.BlendedTermQuery.Builder builder =
 				new org.apache.lucene.search.BlendedTermQuery.Builder();
 		if (terms != null)

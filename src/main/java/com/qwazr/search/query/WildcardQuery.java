@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.MultiTermQuery;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class WildcardQuery extends AbstractMultiTermQuery<WildcardQuery> {
@@ -46,7 +45,7 @@ public class WildcardQuery extends AbstractMultiTermQuery<WildcardQuery> {
 	}
 
 	@Override
-	final public MultiTermQuery getQuery(final QueryContext queryContext) throws IOException {
+	final public MultiTermQuery getQuery(final QueryContext queryContext) {
 		return new org.apache.lucene.search.WildcardQuery(getResolvedTerm(queryContext.getFieldMap(), term));
 	}
 

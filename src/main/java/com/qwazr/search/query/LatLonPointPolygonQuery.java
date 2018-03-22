@@ -23,7 +23,6 @@ import org.apache.lucene.document.LatLonPoint;
 import org.apache.lucene.geo.Polygon;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -85,7 +84,7 @@ public class LatLonPointPolygonQuery extends AbstractFieldQuery<LatLonPointPolyg
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) {
 		if (lucenePolygons == null)
 			lucenePolygons = toPolygons(polygons);
 		return LatLonPoint.newPolygonQuery(resolveField(queryContext.getFieldMap()), lucenePolygons);

@@ -17,13 +17,19 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
 
 public class SortedSetFieldSource extends AbstractFieldSource<SortedSetFieldSource> {
 
 	@JsonCreator
-	public SortedSetFieldSource(@JsonProperty("field") String field) {
-		super(SortedSetFieldSource.class, field,
-				new org.apache.lucene.queries.function.valuesource.SortedSetFieldSource(field));
+	public SortedSetFieldSource(@JsonProperty("field") final String field) {
+		super(SortedSetFieldSource.class, field);
+	}
+
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext) {
+		return new org.apache.lucene.queries.function.valuesource.SortedSetFieldSource(field);
 	}
 
 }

@@ -22,8 +22,6 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.spatial3d.Geo3DPoint;
 
-import java.io.IOException;
-
 public class Geo3DDistanceQuery extends AbstractFieldQuery<Geo3DDistanceQuery> {
 
 	public final double latitude;
@@ -50,13 +48,13 @@ public class Geo3DDistanceQuery extends AbstractFieldQuery<Geo3DDistanceQuery> {
 
 	@Override
 	@JsonIgnore
-	protected boolean isEqual(Geo3DDistanceQuery q) {
+	protected boolean isEqual(final Geo3DDistanceQuery q) {
 		return super.isEqual(q) && latitude == q.latitude && longitude == q.longitude &&
 				radius_meters == q.radius_meters;
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) {
 		return Geo3DPoint.newDistanceQuery(resolveField(queryContext.getFieldMap()), latitude, longitude,
 				radius_meters);
 	}

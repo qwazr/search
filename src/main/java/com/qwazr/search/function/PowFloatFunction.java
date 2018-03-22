@@ -17,7 +17,12 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class PowFloatFunction extends AbstractValueSource<PowFloatFunction> {
@@ -27,11 +32,20 @@ public class PowFloatFunction extends AbstractValueSource<PowFloatFunction> {
 
 	@JsonCreator
 	public PowFloatFunction(@JsonProperty("a") AbstractValueSource a, @JsonProperty("b") AbstractValueSource b) {
-		super(PowFloatFunction.class, new org.apache.lucene.queries.function.valuesource.PowFloatFunction(
-				Objects.requireNonNull(a, "a value source is missing").getValueSource(),
-				Objects.requireNonNull(b, "b value source is missing").getValueSource()));
-		this.a = a;
-		this.b = b;
+		super(PowFloatFunction.class);
+		this.a = Objects.requireNonNull(a, "a value source is missing");
+		this.b = Objects.requireNonNull(b, "b value source is missing");
 	}
 
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext)
+			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+		return new org.apache.lucene.queries.function.valuesource.PowFloatFunction(b.getValueSource(queryContext),
+				b.getValueSource(queryContext));
+	}
+
+	@Override
+	protected boolean isEqual(final PowFloatFunction query) {
+		return Objects.equals(a, query.a) && Objects.equals(b, query.b);
+	}
 }

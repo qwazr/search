@@ -34,8 +34,8 @@ public class SpanWithinQuery extends AbstractSpanQuery<SpanWithinQuery> {
 	public SpanWithinQuery(@JsonProperty("big") final AbstractSpanQuery big,
 			@JsonProperty("little") final AbstractSpanQuery little) {
 		super(SpanWithinQuery.class);
-		this.big = big;
-		this.little = little;
+		this.big = Objects.requireNonNull(big, "the big query is missing");
+		this.little = Objects.requireNonNull(little, "the little query is missing");
 	}
 
 	@Override

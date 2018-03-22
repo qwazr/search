@@ -16,6 +16,7 @@
 
 package com.qwazr.search.function;
 
+import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.RandomUtils;
@@ -30,14 +31,16 @@ import java.io.IOException;
 
 public class ValueSourceTest {
 
-	protected void checkValueSource(AbstractValueSource valueSource) throws IOException {
+	protected void checkValueSource(AbstractValueSource valueSource)
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 
 		final AbstractValueSource valueSource2 =
 				ObjectMappers.JSON.readValue(ObjectMappers.JSON.writeValueAsString(valueSource),
 						AbstractValueSource.class);
 		Assert.assertEquals(valueSource, valueSource2);
-		Assert.assertNotNull(valueSource.getValueSource());
-		Assert.assertEquals(valueSource.getValueSource(), valueSource2.getValueSource());
+		Assert.assertNotNull(valueSource.getValueSource(QueryContext.DEFAULT));
+		Assert.assertEquals(valueSource.getValueSource(QueryContext.DEFAULT),
+				valueSource2.getValueSource(QueryContext.DEFAULT));
 	}
 
 	@Test

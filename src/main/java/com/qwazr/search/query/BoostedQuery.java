@@ -35,17 +35,15 @@ public class BoostedQuery extends AbstractQuery<BoostedQuery> {
 	public BoostedQuery(@JsonProperty("sub_query") final AbstractQuery subQuery,
 			@JsonProperty("value_source") final AbstractValueSource valueSource) {
 		super(BoostedQuery.class);
-		this.sub_query = subQuery;
-		this.value_source = valueSource;
+		this.sub_query = Objects.requireNonNull(subQuery, "The sub_query property is missing");
+		this.value_source = Objects.requireNonNull(valueSource, "The value_source property is missing");
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		Objects.requireNonNull(sub_query, "The sub_query property is missing");
-		Objects.requireNonNull(value_source, "The value_source property is missing");
 		return new org.apache.lucene.queries.function.BoostedQuery(sub_query.getQuery(queryContext),
-				value_source.getValueSource());
+				value_source.getValueSource(queryContext));
 	}
 
 	@Override

@@ -18,8 +18,6 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.join.ScoreMode;
 
@@ -51,8 +49,7 @@ public class JoinQuery extends AbstractQuery<JoinQuery> {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+	final public Query getQuery(final QueryContext queryContext) throws IOException {
 		return queryContext.getIndex(from_index).createJoinQuery(this);
 	}
 

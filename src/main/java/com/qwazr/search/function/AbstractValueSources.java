@@ -15,8 +15,12 @@
  */
 package com.qwazr.search.function;
 
+import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queries.function.ValueSource;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,27 +29,34 @@ public abstract class AbstractValueSources<T extends AbstractValueSources> exten
 
 	public final AbstractValueSource[] sources;
 
-	protected AbstractValueSources(final Class<T> ownClass, final ValueSource valueSource,
-			final AbstractValueSource... sources) {
-		super(ownClass, valueSource);
-		this.sources = sources;
+	protected AbstractValueSources(final Class<T> ownClass, final AbstractValueSource... sources) {
+		super(ownClass);
+		this.sources = Objects.requireNonNull(sources, "The source are mising");
 	}
 
-	protected static ValueSource[] getValueSourceArray(final AbstractValueSource... sources) {
-		Objects.requireNonNull(sources, "The source list is missing (sources)");
+	protected ValueSource[] getValueSourceArray(final QueryContext queryContext)
+			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
 		final ValueSource[] valueSources = new ValueSource[sources.length];
 		int i = 0;
 		for (AbstractValueSource source : sources)
-			valueSources[i++] = source.getValueSource();
+			valueSources[i++] = source.getValueSource(queryContext);
 		return valueSources;
 	}
 
-	protected static List<ValueSource> getValueSourceList(final AbstractValueSource... sources) {
-		Objects.requireNonNull(sources, "The source list is missing (sources)");
+	protected List<ValueSource> getValueSourceList(final QueryContext queryContext)
+			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
 		final List<ValueSource> valueSources = new ArrayList<>(sources.length);
 		for (AbstractValueSource source : sources)
-			valueSources.add(source.getValueSource());
+			valueSources.add(source.getValueSource(queryContext));
 		return valueSources;
 	}
 
+	@Override
+	public boolean isEqual(AbstractValueSources valueSources) {
+		int i = 0;
+		for (AbstractValueSource source : sources)
+			if (!Objects.equals(source, valueSources.sources[i++]))
+				return false;
+		return true;
+	}
 }

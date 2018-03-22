@@ -22,7 +22,6 @@ import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
 import org.apache.lucene.index.Term;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -82,8 +81,7 @@ public class MultiPhraseQuery extends AbstractFieldQuery<MultiPhraseQuery> {
 	}
 
 	@Override
-	final public org.apache.lucene.search.MultiPhraseQuery getQuery(final QueryContext queryContext)
-			throws IOException {
+	final public org.apache.lucene.search.MultiPhraseQuery getQuery(final QueryContext queryContext) {
 		Objects.requireNonNull(field, "The field property should not be null");
 		final String resolvedField = resolveField(queryContext.getFieldMap());
 		final org.apache.lucene.search.MultiPhraseQuery.Builder builder =

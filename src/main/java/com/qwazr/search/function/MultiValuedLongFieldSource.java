@@ -17,6 +17,8 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.search.SortedNumericSelector;
 
 public class MultiValuedLongFieldSource extends AbstractFieldSelectorSource<MultiValuedLongFieldSource> {
@@ -24,8 +26,12 @@ public class MultiValuedLongFieldSource extends AbstractFieldSelectorSource<Mult
 	@JsonCreator
 	public MultiValuedLongFieldSource(@JsonProperty("field") String field,
 			@JsonProperty("selector") SortedNumericSelector.Type selector) {
-		super(MultiValuedLongFieldSource.class, field, selector,
-				new org.apache.lucene.queries.function.valuesource.MultiValuedLongFieldSource(field, selector));
+		super(MultiValuedLongFieldSource.class, field, selector);
+	}
+
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext) {
+		return new org.apache.lucene.queries.function.valuesource.MultiValuedLongFieldSource(field, selector);
 	}
 
 }

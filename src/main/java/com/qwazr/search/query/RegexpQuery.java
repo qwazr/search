@@ -23,7 +23,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.util.automaton.Operations;
 import org.apache.lucene.util.automaton.RegExp;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class RegexpQuery extends AbstractFieldQuery<RegexpQuery> {
@@ -53,7 +52,7 @@ public class RegexpQuery extends AbstractFieldQuery<RegexpQuery> {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) {
 		return new org.apache.lucene.search.RegexpQuery(getResolvedTerm(queryContext.getFieldMap(), text),
 				flags == null ? RegExp.ALL : flags,
 				max_determinized_states == null ? Operations.DEFAULT_MAX_DETERMINIZED_STATES : max_determinized_states);

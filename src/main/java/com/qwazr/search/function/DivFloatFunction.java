@@ -17,7 +17,12 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class DivFloatFunction extends AbstractValueSource<DivFloatFunction> {
@@ -28,11 +33,20 @@ public class DivFloatFunction extends AbstractValueSource<DivFloatFunction> {
 	@JsonCreator
 	public DivFloatFunction(@JsonProperty("aVals") AbstractValueSource aVals,
 			@JsonProperty("bVals") AbstractValueSource bVals) {
-		super(DivFloatFunction.class, new org.apache.lucene.queries.function.valuesource.DivFloatFunction(
-				Objects.requireNonNull(aVals, "aVals value source is missing").getValueSource(),
-				Objects.requireNonNull(aVals, "bVals value source is missing").getValueSource()));
-		this.aVals = aVals;
-		this.bVals = bVals;
+		super(DivFloatFunction.class);
+		this.aVals = Objects.requireNonNull(aVals, "aVals value source is missing");
+		this.bVals = Objects.requireNonNull(bVals, "bVals value source is missing");
 	}
 
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext)
+			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+		return new org.apache.lucene.queries.function.valuesource.DivFloatFunction(aVals.getValueSource(queryContext),
+				bVals.getValueSource(queryContext));
+	}
+
+	@Override
+	protected boolean isEqual(DivFloatFunction query) {
+		return Objects.equals(aVals, query.aVals) && Objects.equals(bVals, query.bVals);
+	}
 }

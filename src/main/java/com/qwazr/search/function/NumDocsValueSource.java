@@ -15,10 +15,22 @@
  */
 package com.qwazr.search.function;
 
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
+
 public class NumDocsValueSource extends AbstractValueSource<NumDocsValueSource> {
 
 	public NumDocsValueSource() {
-		super(NumDocsValueSource.class, new org.apache.lucene.queries.function.valuesource.NumDocsValueSource());
+		super(NumDocsValueSource.class);
 	}
 
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext) {
+		return new org.apache.lucene.queries.function.valuesource.NumDocsValueSource();
+	}
+
+	@Override
+	protected boolean isEqual(NumDocsValueSource query) {
+		return true;
+	}
 }

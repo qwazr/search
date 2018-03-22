@@ -17,7 +17,12 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class IfFunction extends AbstractValueSource<IfFunction> {
@@ -30,13 +35,22 @@ public class IfFunction extends AbstractValueSource<IfFunction> {
 	public IfFunction(@JsonProperty("ifSource") AbstractValueSource ifSource,
 			@JsonProperty("trueSource") AbstractValueSource trueSource,
 			@JsonProperty("falseSource") AbstractValueSource falseSource) {
-		super(IfFunction.class, new org.apache.lucene.queries.function.valuesource.IfFunction(
-				Objects.requireNonNull(ifSource, "ifSource value source is missing").getValueSource(),
-				Objects.requireNonNull(trueSource, "trueSource value source is missing").getValueSource(),
-				Objects.requireNonNull(falseSource, "falseSource value source is missing").getValueSource()));
-		this.ifSource = ifSource;
-		this.trueSource = trueSource;
-		this.falseSource = falseSource;
+		super(IfFunction.class);
+		this.ifSource = Objects.requireNonNull(ifSource, "ifSource value source is missing");
+		this.trueSource = Objects.requireNonNull(trueSource, "trueSource value source is missing");
+		this.falseSource = Objects.requireNonNull(falseSource, "falseSource value source is missing");
 	}
 
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext)
+			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+		return new org.apache.lucene.queries.function.valuesource.IfFunction(ifSource.getValueSource(queryContext),
+				trueSource.getValueSource(queryContext), falseSource.getValueSource(queryContext));
+	}
+
+	@Override
+	protected boolean isEqual(final IfFunction query) {
+		return Objects.equals(ifSource, query.ifSource) && Objects.equals(trueSource, query.trueSource) &&
+				Objects.equals(falseSource, query.falseSource);
+	}
 }

@@ -33,13 +33,12 @@ public class SpanOrQuery extends AbstractSpanQuery<SpanOrQuery> {
 	@JsonCreator
 	public SpanOrQuery(@JsonProperty("clauses") final List<AbstractSpanQuery> clauses) {
 		super(SpanOrQuery.class);
-		this.clauses = clauses;
+		this.clauses = Objects.requireNonNull(clauses, "The clauses are null");
 	}
 
 	@Override
 	final public SpanQuery getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		Objects.requireNonNull(clauses);
 		final SpanQuery[] spanQueries = new SpanQuery[clauses.size()];
 		int i = 0;
 		for (final AbstractSpanQuery query : clauses)

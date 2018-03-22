@@ -32,14 +32,12 @@ public class ConstantScoreQuery extends AbstractQuery<ConstantScoreQuery> {
 	@JsonCreator
 	public ConstantScoreQuery(@JsonProperty("query") final AbstractQuery query) {
 		super(ConstantScoreQuery.class);
-		this.query = query;
+		this.query = Objects.requireNonNull(query, "The embedded query is missing");
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		if (query == null)
-			throw new IOException("No embedded query");
 		return new org.apache.lucene.search.ConstantScoreQuery(query.getQuery(queryContext));
 	}
 

@@ -21,8 +21,6 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LatLonPoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class LatLonPointBBoxQuery extends AbstractGeoBoxQuery<LatLonPointBBoxQuery> {
 
 	@JsonCreator
@@ -40,7 +38,7 @@ public class LatLonPointBBoxQuery extends AbstractGeoBoxQuery<LatLonPointBBoxQue
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) {
 		return LatLonPoint.newBoxQuery(resolveField(queryContext.getFieldMap()), min_latitude, max_latitude,
 				min_longitude, max_longitude);
 	}

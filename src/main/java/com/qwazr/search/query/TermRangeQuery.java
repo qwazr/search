@@ -58,7 +58,7 @@ public class TermRangeQuery extends AbstractFieldQuery<TermRangeQuery> {
 	}
 
 	@Override
-	final public MultiTermQuery getQuery(final QueryContext queryContext) throws IOException {
+	final public MultiTermQuery getQuery(final QueryContext queryContext) {
 		return org.apache.lucene.search.TermRangeQuery.newStringRange(resolveField(queryContext.getFieldMap()),
 				lower_term, upper_term, include_lower == null ? true : include_lower,
 				include_upper == null ? true : include_upper);

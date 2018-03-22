@@ -18,10 +18,13 @@ package com.qwazr.search.function;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.Equalizer;
 import org.apache.lucene.queries.function.ValueSource;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
-import java.util.Objects;
+import java.io.IOException;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "source")
 @JsonSubTypes({ @JsonSubTypes.Type(value = ConstValueSource.class),
@@ -48,21 +51,12 @@ import java.util.Objects;
 		@JsonSubTypes.Type(value = SumFloatFunction.class) })
 public abstract class AbstractValueSource<T extends AbstractValueSource> extends Equalizer<T> {
 
-	private final ValueSource valueSource;
-
-	protected AbstractValueSource(final Class<T> ownClass, final ValueSource valueSource) {
+	protected AbstractValueSource(final Class<T> ownClass) {
 		super(ownClass);
-		this.valueSource = valueSource;
 	}
 
 	@JsonIgnore
-	final public ValueSource getValueSource() {
-		return valueSource;
-	}
-
-	@Override
-	final public boolean isEqual(final T o) {
-		return Objects.equals(valueSource, o.getValueSource());
-	}
+	abstract public ValueSource getValueSource(final QueryContext queryContext)
+			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException;
 
 }

@@ -17,12 +17,23 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+
+import java.io.IOException;
 
 public class DefFunction extends AbstractValueSources<DefFunction> {
 
 	@JsonCreator
 	public DefFunction(@JsonProperty("sources") final AbstractValueSource... sources) {
-		super(DefFunction.class,
-				new org.apache.lucene.queries.function.valuesource.DefFunction(getValueSourceList(sources)), sources);
+		super(DefFunction.class, sources);
+	}
+
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext)
+			throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
+		return new org.apache.lucene.queries.function.valuesource.DefFunction(getValueSourceList(queryContext));
 	}
 }

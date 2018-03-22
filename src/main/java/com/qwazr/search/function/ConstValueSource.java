@@ -17,6 +17,8 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
 
 import java.util.Objects;
 
@@ -26,9 +28,17 @@ public class ConstValueSource extends AbstractValueSource<ConstValueSource> {
 
 	@JsonCreator
 	public ConstValueSource(@JsonProperty("constant") Float constant) {
-		super(ConstValueSource.class, new org.apache.lucene.queries.function.valuesource.ConstValueSource(
-				Objects.requireNonNull(constant, "constant value is missing")));
-		this.constant = constant;
+		super(ConstValueSource.class);
+		this.constant = Objects.requireNonNull(constant, "constant value is missing");
 	}
 
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext) {
+		return new org.apache.lucene.queries.function.valuesource.ConstValueSource(constant);
+	}
+
+	@Override
+	protected boolean isEqual(final ConstValueSource query) {
+		return Objects.equals(constant, query.constant);
+	}
 }

@@ -17,13 +17,19 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
 
 public class DoubleFieldSource extends AbstractFieldSource<DoubleFieldSource> {
 
 	@JsonCreator
 	public DoubleFieldSource(@JsonProperty("field") String field) {
-		super(DoubleFieldSource.class, field,
-				new org.apache.lucene.queries.function.valuesource.DoubleFieldSource(field));
+		super(DoubleFieldSource.class, field);
+	}
+
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext) {
+		return new org.apache.lucene.queries.function.valuesource.DoubleFieldSource(field);
 	}
 
 }

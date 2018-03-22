@@ -15,17 +15,19 @@
  */
 package com.qwazr.search.function;
 
-import org.apache.lucene.queries.function.ValueSource;
-
 import java.util.Objects;
 
 public abstract class AbstractFieldSource<T extends AbstractFieldSource> extends AbstractValueSource<T> {
 
 	public final String field;
 
-	protected AbstractFieldSource(final Class<T> ownClass, final String field, final ValueSource valueSource) {
-		super(ownClass, valueSource);
+	protected AbstractFieldSource(final Class<T> ownClass, final String field) {
+		super(ownClass);
 		this.field = Objects.requireNonNull(field, "The field is missing");
 	}
 
+	@Override
+	public boolean isEqual(AbstractFieldSource source) {
+		return Objects.equals(field, source.field);
+	}
 }

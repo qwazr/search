@@ -121,7 +121,7 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
 		if (fieldnames != null)
 			mlt.setFieldNames(fieldMap == null ?
 					fieldnames :
-					fieldMap.resolveFieldNames(fieldnames, fieldMap::resolveQueryFieldName));
+					FieldMap.resolveFieldNames(fieldnames, fieldMap::resolveQueryFieldName));
 		if (max_doc_freq != null)
 			mlt.setMaxDocFreq(max_doc_freq);
 		if (max_doc_freq_pct != null)

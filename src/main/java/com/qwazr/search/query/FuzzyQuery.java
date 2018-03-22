@@ -22,7 +22,6 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MultiTermQuery;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class FuzzyQuery extends AbstractMultiTermQuery<FuzzyQuery> {
@@ -62,7 +61,7 @@ public class FuzzyQuery extends AbstractMultiTermQuery<FuzzyQuery> {
 	}
 
 	@Override
-	final public MultiTermQuery getQuery(final QueryContext queryContext) throws IOException {
+	final public MultiTermQuery getQuery(final QueryContext queryContext) {
 		return new org.apache.lucene.search.FuzzyQuery(new Term(resolveField(queryContext.getFieldMap()), text),
 				max_edits == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxEdits : max_edits,
 				prefix_length == null ? org.apache.lucene.search.FuzzyQuery.defaultPrefixLength : prefix_length,

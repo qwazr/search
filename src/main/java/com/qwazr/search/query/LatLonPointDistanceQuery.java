@@ -51,7 +51,7 @@ public class LatLonPointDistanceQuery extends AbstractFieldQuery<LatLonPointDist
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) {
 		return LatLonPoint.newDistanceQuery(resolveField(queryContext.getFieldMap()), center_latitude, center_longitude,
 				radius_meters);
 	}

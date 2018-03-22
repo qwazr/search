@@ -24,7 +24,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.BytesRef;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -74,7 +73,7 @@ public class SynonymQuery extends AbstractMultiTermQuery<SynonymQuery> {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) {
 		final Term[] ta;
 		final String resolvedField = resolveField(queryContext.getFieldMap());
 		if (termArray == null) {

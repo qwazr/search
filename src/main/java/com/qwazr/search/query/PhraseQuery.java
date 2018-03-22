@@ -22,7 +22,6 @@ import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
 import org.apache.lucene.index.Term;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -56,7 +55,7 @@ public class PhraseQuery extends AbstractFieldQuery<PhraseQuery> {
 	}
 
 	@Override
-	final public org.apache.lucene.search.PhraseQuery getQuery(final QueryContext queryContext) throws IOException {
+	final public org.apache.lucene.search.PhraseQuery getQuery(final QueryContext queryContext) {
 		Objects.requireNonNull(field, "The field property should not be null");
 		org.apache.lucene.search.PhraseQuery.Builder builder = new org.apache.lucene.search.PhraseQuery.Builder();
 		if (slop != null)

@@ -33,15 +33,13 @@ public class BoostQuery extends AbstractQuery<BoostQuery> {
 	@JsonCreator
 	public BoostQuery(@JsonProperty("query") final AbstractQuery query, @JsonProperty("boost") final Float boost) {
 		super(BoostQuery.class);
-		this.query = query;
-		this.boost = boost;
+		this.query = Objects.requireNonNull(query, "The query property is missing");
+		this.boost = Objects.requireNonNull(boost, "The boost property is missing");
 	}
 
 	@Override
 	final public Query getQuery(final QueryContext queryContext)
 			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		Objects.requireNonNull(query, "The query property is missing");
-		Objects.requireNonNull(boost, "The boost property is missing");
 		return new org.apache.lucene.search.BoostQuery(query.getQuery(queryContext), boost);
 	}
 

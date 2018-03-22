@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.query.AbstractQuery;
+import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
@@ -31,13 +32,21 @@ public class QueryValueSource extends AbstractValueSource<QueryValueSource> {
 	final public Float defVal;
 
 	@JsonCreator
-	public QueryValueSource(@JsonProperty("query") AbstractQuery query, @JsonProperty("defVal") Float defVal)
-			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		super(QueryValueSource.class, new org.apache.lucene.queries.function.valuesource.QueryValueSource(
-				Objects.requireNonNull(query, "The query is missing").getQuery(QueryContext.DEFAULT),
-				Objects.requireNonNull(defVal, "The default value is missing (defVal")));
-		this.query = query;
-		this.defVal = defVal;
+	public QueryValueSource(@JsonProperty("query") AbstractQuery query, @JsonProperty("defVal") Float defVal) {
+		super(QueryValueSource.class);
+		this.query = Objects.requireNonNull(query, "The query is missing");
+		this.defVal = Objects.requireNonNull(defVal, "The default value is missing (defVal)");
 	}
 
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext)
+			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
+		return new org.apache.lucene.queries.function.valuesource.QueryValueSource(query.getQuery(queryContext),
+				defVal);
+	}
+
+	@Override
+	protected boolean isEqual(final QueryValueSource source) {
+		return Objects.equals(query, source.query) && Objects.equals(defVal, source.defVal);
+	}
 }

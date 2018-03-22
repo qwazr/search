@@ -17,13 +17,19 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
 
 public class FloatFieldSource extends AbstractFieldSource<FloatFieldSource> {
 
 	@JsonCreator
 	public FloatFieldSource(@JsonProperty("field") String field) {
-		super(FloatFieldSource.class, field,
-				new org.apache.lucene.queries.function.valuesource.FloatFieldSource(field));
+		super(FloatFieldSource.class, field);
+	}
+
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext) {
+		return new org.apache.lucene.queries.function.valuesource.FloatFieldSource(field);
 	}
 
 }

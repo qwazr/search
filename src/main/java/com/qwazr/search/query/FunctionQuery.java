@@ -19,7 +19,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.function.AbstractValueSource;
 import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class FunctionQuery extends AbstractQuery<FunctionQuery> {
@@ -33,12 +36,14 @@ public class FunctionQuery extends AbstractQuery<FunctionQuery> {
 	}
 
 	@Override
-	final public org.apache.lucene.queries.function.FunctionQuery getQuery(final QueryContext queryContext) {
-		return new org.apache.lucene.queries.function.FunctionQuery(source.getValueSource());
+	final public org.apache.lucene.queries.function.FunctionQuery getQuery(final QueryContext queryContext)
+			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+		return new org.apache.lucene.queries.function.FunctionQuery(source.getValueSource(queryContext));
 	}
 
 	public static org.apache.lucene.queries.function.FunctionQuery[] getQueries(final FunctionQuery[] scoringQueries,
-			final QueryContext queryContext) {
+			final QueryContext queryContext)
+			throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
 		if (scoringQueries == null)
 			return null;
 		final org.apache.lucene.queries.function.FunctionQuery[] functionQueries =

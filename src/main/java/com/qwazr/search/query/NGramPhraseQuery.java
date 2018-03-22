@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class NGramPhraseQuery extends AbstractQuery<NGramPhraseQuery> {
@@ -35,14 +34,12 @@ public class NGramPhraseQuery extends AbstractQuery<NGramPhraseQuery> {
 	public NGramPhraseQuery(@JsonProperty("phrase_query") final PhraseQuery phraseQuery,
 			@JsonProperty("ngram_size") final Integer ngramSize) {
 		super(NGramPhraseQuery.class);
-		this.phraseQuery = phraseQuery;
-		this.nGramSize = ngramSize;
+		this.phraseQuery = Objects.requireNonNull(phraseQuery, "The phrase_query should not be null");
+		this.nGramSize = Objects.requireNonNull(ngramSize, "The ngram_size should not be null");
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		Objects.requireNonNull(phraseQuery, "The phrase_query should not be null");
-		Objects.requireNonNull(phraseQuery, "The ngram_size should not be null");
+	final public Query getQuery(final QueryContext queryContext) {
 		return new org.apache.lucene.search.NGramPhraseQuery(nGramSize, phraseQuery.getQuery(queryContext));
 	}
 

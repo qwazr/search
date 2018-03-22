@@ -17,14 +17,24 @@ package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+
+import java.io.IOException;
 
 public class ProductFloatFunction extends AbstractValueSources<ProductFloatFunction> {
 
 	@JsonCreator
 	public ProductFloatFunction(@JsonProperty("sources") AbstractValueSource... sources) {
-		super(ProductFloatFunction.class,
-				new org.apache.lucene.queries.function.valuesource.ProductFloatFunction(getValueSourceArray(sources)),
-				sources);
+		super(ProductFloatFunction.class, sources);
 	}
 
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext)
+			throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
+		return new org.apache.lucene.queries.function.valuesource.ProductFloatFunction(
+				getValueSourceArray(queryContext));
+	}
 }

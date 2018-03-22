@@ -23,7 +23,6 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class QueryParser extends AbstractClassicQueryParser<QueryParser> {
@@ -49,7 +48,7 @@ public class QueryParser extends AbstractClassicQueryParser<QueryParser> {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
+	final public Query getQuery(final QueryContext queryContext) throws ParseException {
 		final FieldMap fieldMap = queryContext.getFieldMap();
 		final org.apache.lucene.queryparser.classic.QueryParser parser =
 				new org.apache.lucene.queryparser.classic.QueryParser(

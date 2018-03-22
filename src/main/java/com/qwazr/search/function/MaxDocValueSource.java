@@ -16,12 +16,23 @@
 package com.qwazr.search.function;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.qwazr.search.index.QueryContext;
+import org.apache.lucene.queries.function.ValueSource;
 
 public class MaxDocValueSource extends AbstractValueSource<MaxDocValueSource> {
 
 	@JsonCreator
 	public MaxDocValueSource() {
-		super(MaxDocValueSource.class, new org.apache.lucene.queries.function.valuesource.MaxDocValueSource());
+		super(MaxDocValueSource.class);
 	}
 
+	@Override
+	public ValueSource getValueSource(final QueryContext queryContext) {
+		return new org.apache.lucene.queries.function.valuesource.MaxDocValueSource();
+	}
+
+	@Override
+	protected boolean isEqual(MaxDocValueSource query) {
+		return true;
+	}
 }

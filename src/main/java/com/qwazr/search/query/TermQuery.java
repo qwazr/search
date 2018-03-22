@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class TermQuery extends AbstractFieldQuery<TermQuery> {
@@ -46,7 +45,7 @@ public class TermQuery extends AbstractFieldQuery<TermQuery> {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) {
 		return new org.apache.lucene.search.TermQuery(getResolvedTerm(queryContext.getFieldMap(), term));
 	}
 

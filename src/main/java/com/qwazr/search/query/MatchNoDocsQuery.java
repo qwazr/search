@@ -18,8 +18,6 @@ package com.qwazr.search.query;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class MatchNoDocsQuery extends AbstractQuery<MatchNoDocsQuery> {
 
 	public MatchNoDocsQuery() {
@@ -27,7 +25,7 @@ public class MatchNoDocsQuery extends AbstractQuery<MatchNoDocsQuery> {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) {
 		return new org.apache.lucene.search.MatchNoDocsQuery();
 	}
 

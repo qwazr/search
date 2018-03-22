@@ -22,7 +22,6 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class PrefixQuery extends AbstractFieldQuery<PrefixQuery> {
@@ -47,7 +46,7 @@ public class PrefixQuery extends AbstractFieldQuery<PrefixQuery> {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
+	final public Query getQuery(final QueryContext queryContext) {
 		return new org.apache.lucene.search.PrefixQuery(new Term(resolveField(queryContext.getFieldMap()), text));
 	}
 }

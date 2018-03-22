@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.spans.SpanQuery;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class SpanTermQuery extends AbstractFieldSpanQuery<SpanTermQuery> {
@@ -46,7 +45,7 @@ public class SpanTermQuery extends AbstractFieldSpanQuery<SpanTermQuery> {
 	}
 
 	@Override
-	final public SpanQuery getQuery(final QueryContext queryContext) throws IOException {
+	final public SpanQuery getQuery(final QueryContext queryContext) {
 		return new org.apache.lucene.search.spans.SpanTermQuery(getResolvedTerm(queryContext.getFieldMap(), value));
 	}
 }

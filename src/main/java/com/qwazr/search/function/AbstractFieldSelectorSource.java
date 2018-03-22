@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.function;
 
-import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.search.SortedNumericSelector;
 
 import java.util.Objects;
@@ -26,9 +25,13 @@ public abstract class AbstractFieldSelectorSource<T extends AbstractFieldSelecto
 	public final SortedNumericSelector.Type selector;
 
 	protected AbstractFieldSelectorSource(final Class<T> ownClass, final String field,
-			final SortedNumericSelector.Type selector, final ValueSource valueSource) {
-		super(ownClass, field, valueSource);
+			final SortedNumericSelector.Type selector) {
+		super(ownClass, field);
 		this.selector = Objects.requireNonNull(selector, "The selector is missing");
 	}
 
+	@Override
+	public boolean isEqual(final AbstractFieldSelectorSource source) {
+		return super.isEqual(source) && Objects.equals(selector, source.selector);
+	}
 }

@@ -18,11 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
-
-import java.io.IOException;
 
 public class FieldValueQuery extends AbstractFieldQuery<FieldValueQuery> {
 
@@ -37,8 +33,7 @@ public class FieldValueQuery extends AbstractFieldQuery<FieldValueQuery> {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+	final public Query getQuery(final QueryContext queryContext) {
 		return new org.apache.lucene.search.FieldValueQuery(resolveField(queryContext.getFieldMap()));
 	}
 }

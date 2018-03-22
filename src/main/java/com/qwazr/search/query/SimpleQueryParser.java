@@ -21,11 +21,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
-import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -118,7 +116,7 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
 	}
 
 	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
+	final public Query getQuery(final QueryContext queryContext) {
 
 		final FieldMap fieldMap = queryContext.getFieldMap();
 

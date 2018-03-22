@@ -109,7 +109,7 @@ public class CustomScoreQuery extends AbstractQuery<CustomScoreQuery> {
 
 	private org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQuery(final Query query,
 			final QueryContext queryContext)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
 		if (scoringQueries != null)
 			return new org.apache.lucene.queries.CustomScoreQuery(query,
 					FunctionQuery.getQueries(scoringQueries, queryContext));
@@ -119,8 +119,7 @@ public class CustomScoreQuery extends AbstractQuery<CustomScoreQuery> {
 			return new org.apache.lucene.queries.CustomScoreQuery(query);
 	}
 
-	private Class<? extends CustomScoreProvider> getProviderClass()
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+	private Class<? extends CustomScoreProvider> getProviderClass() throws ReflectiveOperationException {
 		Class<? extends CustomScoreProvider> customScoreProviderClass =
 				ClassLoaderUtils.findClass(customScoreProviderClassName);
 		Objects.requireNonNull(customScoreProviderClass, "Cannot find the class for " + customScoreProviderClassName);
@@ -129,7 +128,7 @@ public class CustomScoreQuery extends AbstractQuery<CustomScoreQuery> {
 
 	private org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQueryProvider(final Query query,
 			final QueryContext queryContext, final Class<? extends CustomScoreProvider> customScoreProviderClass)
-			throws ParseException, IOException, QueryNodeException, ReflectiveOperationException {
+			throws ReflectiveOperationException, ParseException, IOException, QueryNodeException {
 
 		final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor =
 				customScoreProviderClass.getConstructor(LeafReaderContext.class);
@@ -145,7 +144,7 @@ public class CustomScoreQuery extends AbstractQuery<CustomScoreQuery> {
 	}
 
 	@Override
-	protected boolean isEqual(CustomScoreQuery q) {
+	protected boolean isEqual(final CustomScoreQuery q) {
 		return Objects.equals(subQuery, q.subQuery) && Objects.equals(scoringQuery, q.scoringQuery) &&
 				Arrays.equals(scoringQueries, q.scoringQueries) &&
 				Objects.equals(customScoreProviderClassName, q.customScoreProviderClassName) &&
@@ -157,27 +156,26 @@ public class CustomScoreQuery extends AbstractQuery<CustomScoreQuery> {
 		private final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor;
 
 		private CustomScoreQueryWithProvider(
-				final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor, final Query subQuery)
-				throws NoSuchMethodException {
+				final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor, final Query subQuery) {
 			super(subQuery);
 			this.customScoreProviderConstructor = customScoreProviderConstructor;
 		}
 
 		private CustomScoreQueryWithProvider(
 				final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor, final Query subQuery,
-				final org.apache.lucene.queries.function.FunctionQuery scoringQuery) throws NoSuchMethodException {
+				final org.apache.lucene.queries.function.FunctionQuery scoringQuery) {
 			super(subQuery, scoringQuery);
 			this.customScoreProviderConstructor = customScoreProviderConstructor;
 		}
 
 		private CustomScoreQueryWithProvider(
 				final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor, final Query subQuery,
-				final org.apache.lucene.queries.function.FunctionQuery[] scoringQueries) throws NoSuchMethodException {
+				final org.apache.lucene.queries.function.FunctionQuery[] scoringQueries) {
 			super(subQuery, scoringQueries);
 			this.customScoreProviderConstructor = customScoreProviderConstructor;
 		}
 
-		protected CustomScoreProvider getCustomScoreProvider(final LeafReaderContext context) throws IOException {
+		protected CustomScoreProvider getCustomScoreProvider(final LeafReaderContext context) {
 			try {
 				return customScoreProviderConstructor.newInstance(context);
 			} catch (ReflectiveOperationException e) {
