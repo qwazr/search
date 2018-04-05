@@ -93,7 +93,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		indexMap.forEachValue(1, IOUtils::closeQuietly);
 	}
 
@@ -134,12 +134,16 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	}
 
 	void delete() {
-		indexMap.forEachValue(1, IndexInstanceManager::delete);
-		if (Files.exists(schemaDirectory))
-			FileUtils.deleteDirectoryQuietly(schemaDirectory);
+		for (IndexInstanceManager indexInstanceManager : indexMap.values())
+			indexInstanceManager.delete();
+		if (!Files.exists(schemaDirectory))
+			return;
+		final IOException e = FileUtils.deleteDirectoryQuietly(schemaDirectory);
+		if (e != null)
+			throw ServerException.of(e);
 	}
 
-	void delete(final String indexName) throws ServerException, IOException {
+	void delete(final String indexName) throws ServerException {
 		indexMap.compute(indexName, (name, indexInstanceManager) -> {
 			checkIndexExists(indexName, indexInstanceManager).delete();
 			return null;
@@ -226,7 +230,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 	}
 
 	SortedMap<String, SortedMap<String, BackupStatus>> getBackups(final String indexName, final String backupName,
-			final boolean extractVersion) throws IOException {
+			final boolean extractVersion) {
 		return backupLock.readEx(() -> {
 			checkBackupConfig();
 			final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
@@ -270,31 +274,29 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		}
 	}
 
-	int deleteBackups(final String indexName, final String backupName) throws IOException {
+	int deleteBackups(final String indexName, final String backupName) {
 		return backupLock.writeEx(() -> {
 			checkBackupConfig();
 			final AtomicInteger counter = new AtomicInteger();
 
-			backupIterator(backupName, backupDirectory -> {
+			backupIterator(backupName, backupDirectory -> backupIndexDirectoryIterator(backupDirectory, indexName,
+					backupIndexDirectory -> {
 
-				backupIndexDirectoryIterator(backupDirectory, indexName, backupIndexDirectory -> {
+						try {
+							FileUtils.deleteDirectory(backupIndexDirectory);
+							counter.incrementAndGet();
+						} catch (IOException e) {
+							throw ServerException.of(e);
+						}
 
-					try {
-						FileUtils.deleteDirectory(backupIndexDirectory);
-						counter.incrementAndGet();
-					} catch (IOException e) {
-						throw ServerException.of(e);
-					}
-
-					try {
-						if (Files.exists(backupDirectory))
-							if (Files.list(backupDirectory).count() == 0)
-								Files.deleteIfExists(backupDirectory);
-					} catch (IOException e) {
-						throw ServerException.of(e);
-					}
-				});
-			});
+						try {
+							if (Files.exists(backupDirectory))
+								if (Files.list(backupDirectory).count() == 0)
+									Files.deleteIfExists(backupDirectory);
+						} catch (IOException e) {
+							throw ServerException.of(e);
+						}
+					}));
 			return counter.get();
 		});
 	}
@@ -313,7 +315,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 		return settingsDefinition;
 	}
 
-	private synchronized void checkSettings() throws IOException, URISyntaxException {
+	private synchronized void checkSettings() {
 		if (settingsDefinition == null) {
 			readWriteSemaphores.setReadSize(null);
 			readWriteSemaphores.setWriteSize(null);

@@ -218,7 +218,7 @@ class IndexInstanceBuilder {
 		}
 	}
 
-	private void buildSlave() throws IOException, URISyntaxException {
+	private void buildSlave() throws IOException {
 
 		openOrCreateDataIndex(true);
 

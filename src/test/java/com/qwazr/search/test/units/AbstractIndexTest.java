@@ -51,8 +51,7 @@ public abstract class AbstractIndexTest {
 		}
 	}
 
-	protected static <T> AnnotatedIndexService<T> initIndexService(Class<T> recordClass)
-			throws URISyntaxException, IOException {
+	protected static <T> AnnotatedIndexService<T> initIndexService(Class<T> recordClass) throws URISyntaxException {
 		if (indexManager == null)
 			initIndexManager();
 		final AnnotatedIndexService<T> indexService = indexManager.getService(recordClass);
@@ -85,7 +84,7 @@ public abstract class AbstractIndexTest {
 	}
 
 	@AfterClass
-	public static void afterClass() throws IOException {
+	public static void afterClass() {
 		if (indexManager != null) {
 			indexManager.close();
 			indexManager = null;
@@ -132,11 +131,7 @@ public abstract class AbstractIndexTest {
 				indexService = service;
 			}
 
-			IndexRecord.WithTaxonomy getNewRecord() {
-				return new IndexRecord.WithTaxonomy();
-			}
-
-			IndexRecord.WithTaxonomy getNewRecord(String id) {
+			public IndexRecord.WithTaxonomy getNewRecord(String id) {
 				return new IndexRecord.WithTaxonomy(id);
 			}
 		}
@@ -154,13 +149,10 @@ public abstract class AbstractIndexTest {
 				indexService = service;
 			}
 
-			IndexRecord.NoTaxonomy getNewRecord() {
-				return new IndexRecord.NoTaxonomy();
-			}
-
-			IndexRecord.NoTaxonomy getNewRecord(String id) {
+			public IndexRecord.NoTaxonomy getNewRecord(String id) {
 				return new IndexRecord.NoTaxonomy(id);
 			}
+
 		}
 	}
 }

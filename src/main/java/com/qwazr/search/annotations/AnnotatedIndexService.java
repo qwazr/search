@@ -425,8 +425,7 @@ public class AnnotatedIndexService<T> {
 	 * @throws IOException          if any I/O error occurs
 	 * @throws InterruptedException if the process is interrupted
 	 */
-	public void updateDocumentValues(final T row, final Map<String, String> commitUserData)
-			throws IOException, InterruptedException {
+	public void updateDocumentValues(final T row, final Map<String, String> commitUserData) throws IOException {
 		checkParameters();
 		Objects.requireNonNull(row, "The document (row) cannot be null");
 		if (annotatedService != null)

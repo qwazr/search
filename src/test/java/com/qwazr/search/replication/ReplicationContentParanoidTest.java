@@ -111,7 +111,7 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 	}
 
 	@Test
-	public void contentTest() throws IOException, URISyntaxException, InterruptedException {
+	public void contentTest() throws IOException, InterruptedException {
 
 		Assert.assertNotNull(master);
 

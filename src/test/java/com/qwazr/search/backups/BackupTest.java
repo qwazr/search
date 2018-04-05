@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test.units;
+package com.qwazr.search.backups;
 
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.index.BackupStatus;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.SchemaSettingsDefinition;
+import com.qwazr.search.test.units.AbstractIndexTest;
+import com.qwazr.search.test.units.IndexRecord;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,7 +43,7 @@ public class BackupTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 	private static IndexServiceInterface service;
 
 	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
+	public static void setup() throws IOException {
 		initIndexManager();
 		service = indexManager.getService();
 		backupPath = Files.createTempDirectory("backup");

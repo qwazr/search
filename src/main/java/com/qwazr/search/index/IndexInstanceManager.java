@@ -126,7 +126,7 @@ class IndexInstanceManager implements Closeable {
 	UUID getIndexUuid() {
 		return indexUuid;
 	}
-	
+
 	private void closeIndex() {
 		if (indexInstance == null)
 			return;
@@ -135,15 +135,18 @@ class IndexInstanceManager implements Closeable {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		rwl.writeEx(this::closeIndex);
 	}
 
 	public void delete() {
 		rwl.writeEx(() -> {
 			closeIndex();
-			if (Files.exists(fileSet.mainDirectory))
-				FileUtils.deleteDirectoryQuietly(fileSet.mainDirectory);
+			if (Files.exists(fileSet.mainDirectory)) {
+				final IOException e = FileUtils.deleteDirectoryQuietly(fileSet.mainDirectory);
+				if (e != null)
+					throw ServerException.of(e);
+			}
 		});
 	}
 
