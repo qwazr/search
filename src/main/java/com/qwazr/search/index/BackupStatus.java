@@ -43,32 +43,37 @@ public class BackupStatus {
 
 	final private static Logger LOGGER = LoggerUtils.getLogger(BackupStatus.class);
 
-	final public Long index_version;
-	final public Long taxonomy_version;
-	final public String human_date;
+	@JsonProperty("index_version")
+	final public Long indexVersion;
+	@JsonProperty("taxonomy_version")
+	final public Long taxonomyVersion;
+	@JsonProperty("human_date")
+	final public String humanDate;
 	final public Long date;
-	final public Long bytes_size;
-	final public Integer files_count;
+	@JsonProperty("bytes_size")
+	final public Long bytesSize;
+	@JsonProperty("files_count")
+	final public Integer filesCount;
 
 	private final int hashCode;
 
 	@JsonCreator
-	BackupStatus(@JsonProperty("index_version") Long index_version,
-			@JsonProperty("taxonomy_version") Long taxonomy_version, @JsonProperty("date") Long date,
-			@JsonProperty("human_date") String human_date, @JsonProperty("bytes_size") Long bytes_size,
-			@JsonProperty("files_count") Integer files_count) {
+	BackupStatus(@JsonProperty("index_version") Long indexVersion,
+			@JsonProperty("taxonomy_version") Long taxonomyVersion, @JsonProperty("date") Long date,
+			@JsonProperty("human_date") String humanDate, @JsonProperty("bytes_size") Long bytesSize,
+			@JsonProperty("files_count") Integer filesCount) {
 
-		this.index_version = index_version;
-		this.taxonomy_version = taxonomy_version;
-		this.human_date = human_date;
+		this.indexVersion = indexVersion;
+		this.taxonomyVersion = taxonomyVersion;
+		this.humanDate = humanDate;
 		this.date = date;
-		this.bytes_size = bytes_size;
-		this.files_count = files_count;
+		this.bytesSize = bytesSize;
+		this.filesCount = filesCount;
 
 		this.hashCode = new HashCodeBuilder().append(date)
-				.append(bytes_size)
-				.append(index_version)
-				.append(taxonomy_version)
+				.append(bytesSize)
+				.append(indexVersion)
+				.append(taxonomyVersion)
 				.build();
 	}
 
@@ -115,8 +120,16 @@ public class BackupStatus {
 		}
 
 		final FileTime lastFileTime = lastModified.get();
-		return new BackupStatus(indexVersion, taxonomyVersion, lastFileTime.toMillis(),
-				lastFileTime.toInstant().toString(), size.get(), count.get());
+		final Long date;
+		final String humanDate;
+		if (lastFileTime != null) {
+			date = lastFileTime.toMillis();
+			humanDate = lastFileTime.toInstant().toString();
+		} else {
+			date = null;
+			humanDate = null;
+		}
+		return new BackupStatus(indexVersion, taxonomyVersion, date, humanDate, size.get(), count.get());
 	}
 
 	private static Long getIndexVersion(final Path indexPath) throws IOException {
@@ -149,15 +162,15 @@ public class BackupStatus {
 		if (o == this)
 			return true;
 		final BackupStatus s = (BackupStatus) o;
-		return Objects.equals(index_version, s.index_version) && Objects.equals(taxonomy_version, s.taxonomy_version) &&
-				Objects.equals(date, s.date) && Objects.equals(bytes_size, s.bytes_size) &&
-				Objects.equals(files_count, s.files_count);
+		return Objects.equals(indexVersion, s.indexVersion) && Objects.equals(taxonomyVersion, s.taxonomyVersion) &&
+				Objects.equals(date, s.date) && Objects.equals(bytesSize, s.bytesSize) &&
+				Objects.equals(filesCount, s.filesCount);
 	}
 
 	@Override
 	public String toString() {
-		return "Index version: " + index_version + " - Taxo version: " + taxonomy_version + " - Date: " + date +
-				" - Size: " + bytes_size + " - Count:" + files_count + " - Hash: " + hashCode;
+		return "Index version: " + indexVersion + " - Taxo version: " + taxonomyVersion + " - Date: " + date +
+				" - Size: " + bytesSize + " - Count:" + filesCount + " - Hash: " + hashCode;
 	}
 
 }

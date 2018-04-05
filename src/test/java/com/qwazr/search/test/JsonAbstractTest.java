@@ -507,10 +507,10 @@ public abstract class JsonAbstractTest {
 		BackupStatus status = indexMap.get(INDEX_MASTER_NAME);
 		Assert.assertNotNull(status);
 		Assert.assertNotNull(status.date);
-		Assert.assertNotNull(status.bytes_size);
-		Assert.assertTrue(status.bytes_size > 0);
-		Assert.assertNotNull(status.files_count);
-		Assert.assertTrue(status.files_count > 0);
+		Assert.assertNotNull(status.bytesSize);
+		Assert.assertTrue(status.bytesSize > 0);
+		Assert.assertNotNull(status.filesCount);
+		Assert.assertTrue(status.filesCount > 0);
 		return status;
 	}
 

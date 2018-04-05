@@ -54,6 +54,11 @@ public class BackupTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
 		// Backup one index without fields
 		service.createUpdateIndex(SCHEMA_NAME, "test1");
+
+		// Check backup API without having made any backup
+		Assert.assertTrue(service.getBackups("*", "*", "*", true).isEmpty());
+
+		//Do a backup
 		service.doBackup("*", "*", "backup");
 
 		// Backup index with taxo
@@ -87,6 +92,10 @@ public class BackupTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 		// Backup deletion
 		Assert.assertEquals(3, service.deleteBackups("*", "*", "backup"), 0);
 		Assert.assertEquals(0, service.deleteBackups("*", "*", "backup"), 0);
+
+		// Check backup status after deleting all backups
+		Assert.assertTrue(service.getBackups("*", "*", "*", true).isEmpty());
+
 	}
 
 	private BackupStatus checkBackup(SortedMap<String, BackupStatus> backupIndexMap, final String indexName,
@@ -95,11 +104,11 @@ public class BackupTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 		final BackupStatus backupStatus = backupIndexMap.get(indexName);
 		Assert.assertNotNull(backupStatus);
 		Assert.assertNotNull(backupStatus.date);
-		Assert.assertNotNull(backupStatus.human_date);
-		Assert.assertNotNull(backupStatus.bytes_size);
-		Assert.assertTrue(backupStatus.bytes_size > 0);
-		Assert.assertNotNull(backupStatus.files_count);
-		Assert.assertTrue(backupStatus.files_count > 0);
+		Assert.assertNotNull(backupStatus.humanDate);
+		Assert.assertNotNull(backupStatus.bytesSize);
+		Assert.assertTrue(backupStatus.bytesSize > 0);
+		Assert.assertNotNull(backupStatus.filesCount);
+		Assert.assertTrue(backupStatus.filesCount > 0);
 		if (status != null)
 			Assert.assertEquals(backupStatus, status);
 		return backupStatus;

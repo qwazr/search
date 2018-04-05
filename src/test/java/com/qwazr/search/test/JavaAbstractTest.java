@@ -657,7 +657,7 @@ public abstract class JavaAbstractTest {
 		final BackupStatus backupStatus = schemaStatus.get(master.getIndexName());
 		Assert.assertNotNull(backupStatus);
 		Assert.assertNotNull(backupStatus.date);
-		Assert.assertNotNull(backupStatus.files_count);
+		Assert.assertNotNull(backupStatus.filesCount);
 	}
 
 	@Test
