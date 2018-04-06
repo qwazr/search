@@ -33,275 +33,271 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.rmi.ServerException;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public interface ReplicationProcess extends Closeable {
 
-	enum Source {
-		data, taxonomy, resources, metadata
-	}
+    enum Source {
+        data, taxonomy, resources, metadata
+    }
 
-	@FunctionalInterface
-	interface SourceFileProvider {
-		InputStream obtain(Source source, String fileName) throws IOException;
-	}
+    @FunctionalInterface
+    interface SourceFileProvider {
+        InputStream obtain(Source source, String fileName) throws IOException;
+    }
 
-	void obtainNewFiles() throws IOException;
+    void obtainNewFiles() throws IOException;
 
-	void moveInPlaceNewFiles() throws IOException;
+    void moveInPlaceNewFiles() throws IOException;
 
-	void deleteOldFiles() throws IOException;
+    void deleteOldFiles() throws IOException;
 
-	class Builder {
+    class Builder {
 
-		private final Path workDirectory;
-		private final SourceFileProvider sourceFileProvider;
-		private final ReplicationSession session;
-		private final ReplicationStatus.Strategy strategy;
+        private final Path workDirectory;
+        private final SourceFileProvider sourceFileProvider;
+        private final ReplicationSession session;
+        private final ReplicationStatus.Strategy strategy;
 
-		public Builder(final Path workDirectory, final SourceFileProvider sourceFileProvider,
-				final ReplicationStatus.Strategy strategy, final ReplicationSession session) {
-			this.workDirectory = workDirectory;
-			this.sourceFileProvider = sourceFileProvider;
-			this.strategy = strategy;
-			this.session = session;
-		}
+        public Builder(final Path workDirectory, final SourceFileProvider sourceFileProvider,
+                       final ReplicationStatus.Strategy strategy, final ReplicationSession session) {
+            this.workDirectory = workDirectory;
+            this.sourceFileProvider = sourceFileProvider;
+            this.strategy = strategy;
+            this.session = session;
+        }
 
-		private ReplicationProcess full(final Path targetDirectoryPath, final Source source,
-				final SourceView sourceView) throws IOException {
-			return new Full(workDirectory, targetDirectoryPath, source, sourceFileProvider, sourceView, session);
-		}
+        private ReplicationProcess full(final Path targetDirectoryPath, final Source source,
+                                        final SourceView sourceView) throws IOException {
+            return new Full(workDirectory, targetDirectoryPath, source, sourceFileProvider, sourceView, session);
+        }
 
-		private ReplicationProcess incremental(final Path targetDirectoryPath, final Source source,
-				final SourceView sourceView) {
-			return new Differential(workDirectory, targetDirectoryPath, source, sourceFileProvider, sourceView,
-					session);
-		}
+        private ReplicationProcess incremental(final Path targetDirectoryPath, final Source source,
+                                               final SourceView sourceView) {
+            return new Differential(workDirectory, targetDirectoryPath, source, sourceFileProvider, sourceView,
+                    session);
+        }
 
-		public ReplicationProcess metadata(final Path metadataDirectoryPath, final String... metadataItems)
-				throws IOException {
-			final SourceView sourceView = new SourceView.FromPathFiles(metadataDirectoryPath, metadataItems);
-			switch (strategy) {
-			case full:
-				return full(metadataDirectoryPath, Source.metadata, sourceView);
-			case incremental:
-				return incremental(metadataDirectoryPath, Source.resources, sourceView);
-			}
-			throw new ServerException("Unknown replication strategy: " + strategy);
-		}
+        public ReplicationProcess metadata(final Path metadataDirectoryPath, final String... metadataItems)
+                throws IOException {
+            final SourceView sourceView = new SourceView.FromPathFiles(metadataDirectoryPath, metadataItems);
+            switch (strategy) {
+                case full:
+                    return full(metadataDirectoryPath, Source.metadata, sourceView);
+                case incremental:
+                    return incremental(metadataDirectoryPath, Source.resources, sourceView);
+            }
+            throw new ServerException("Unknown replication strategy: " + strategy);
+        }
 
-		public ReplicationProcess resources(final Path resourcesPath) throws IOException {
-			final SourceView sourceView = new SourceView.FromPathDirectory(resourcesPath);
-			switch (strategy) {
-			case full:
-				return full(resourcesPath, Source.resources, sourceView);
-			case incremental:
-				return incremental(resourcesPath, Source.resources, sourceView);
-			}
-			throw new ServerException("Unknown replication strategy: " + strategy);
-		}
+        public ReplicationProcess resources(final Path resourcesPath) throws IOException {
+            final SourceView sourceView = new SourceView.FromPathDirectory(resourcesPath);
+            switch (strategy) {
+                case full:
+                    return full(resourcesPath, Source.resources, sourceView);
+                case incremental:
+                    return incremental(resourcesPath, Source.resources, sourceView);
+            }
+            throw new ServerException("Unknown replication strategy: " + strategy);
+        }
 
-		private ReplicationProcess index(final Source source, final Path indexDirectoryPath,
-				final Directory indexDirectory) throws IOException {
-			final SourceView sourceView = indexDirectory == null ?
-					new SourceView.FromPathDirectory(indexDirectoryPath) :
-					new SourceView.FromDirectory(indexDirectoryPath, indexDirectory);
-			switch (strategy) {
-			case full:
-				return full(indexDirectoryPath, source, sourceView);
-			case incremental:
-				return incremental(indexDirectoryPath, source, sourceView);
-			}
-			throw new ServerException("Unknown replication strategy: " + strategy);
-		}
+        private ReplicationProcess index(final Source source, final Path indexDirectoryPath,
+                                         final Directory indexDirectory) throws IOException {
+            final SourceView sourceView = indexDirectory == null ?
+                    new SourceView.FromPathDirectory(indexDirectoryPath) :
+                    new SourceView.FromDirectory(indexDirectoryPath, indexDirectory);
+            switch (strategy) {
+                case full:
+                    return full(indexDirectoryPath, source, sourceView);
+                case incremental:
+                    return incremental(indexDirectoryPath, source, sourceView);
+            }
+            throw new ServerException("Unknown replication strategy: " + strategy);
+        }
 
-		public ReplicationProcess dataIndex(final Path indexDirectoryPath, final Directory indexDirectory)
-				throws IOException {
-			return index(Source.data, indexDirectoryPath, indexDirectory);
-		}
+        public ReplicationProcess dataIndex(final Path indexDirectoryPath, final Directory indexDirectory)
+                throws IOException {
+            return index(Source.data, indexDirectoryPath, indexDirectory);
+        }
 
-		public ReplicationProcess taxoIndex(final Path taxoDirectoryPath, final Directory taxoDirectory)
-				throws IOException {
-			return index(Source.taxonomy, taxoDirectoryPath, taxoDirectory);
-		}
+        public ReplicationProcess taxoIndex(final Path taxoDirectoryPath, final Directory taxoDirectory)
+                throws IOException {
+            return index(Source.taxonomy, taxoDirectoryPath, taxoDirectory);
+        }
 
-		public ReplicationProcess build(final ReplicationProcess... processes) {
-			if (processes == null || processes.length == 0)
-				return null;
-			if (processes.length == 1)
-				return processes[0];
-			return new Chain(processes);
-		}
+        public ReplicationProcess build(final ReplicationProcess... processes) {
+            if (processes == null || processes.length == 0)
+                return null;
+            if (processes.length == 1)
+                return processes[0];
+            return new Chain(processes);
+        }
 
-	}
+    }
 
-	abstract class Common implements ReplicationProcess {
+    abstract class Common implements ReplicationProcess {
 
-		protected final Source source;
-		protected final SourceFileProvider sourceFileProvider;
-		protected final Path sourceWorkDirectory;
-		protected final Path targetDirectoryPath;
-		protected final Map<String, ReplicationSession.Item> filesToObtain;
-		protected final Collection<String> filesToDelete;
+        protected final Source source;
+        protected final SourceFileProvider sourceFileProvider;
+        protected final Path sourceWorkDirectory;
+        protected final Path targetDirectoryPath;
+        protected final Map<String, ReplicationSession.Item> filesToObtain;
+        protected final Collection<String> filesToDelete;
 
-		protected Common(final Path workDirectory, final Path targetDirectoryPath, final Source source,
-				final SourceFileProvider sourceFileProvider) {
-			this.source = source;
-			this.sourceFileProvider = sourceFileProvider;
-			this.sourceWorkDirectory = workDirectory.resolve(source.name());
-			this.targetDirectoryPath = targetDirectoryPath;
-			this.filesToObtain = new LinkedHashMap<>();
-			this.filesToDelete = new LinkedHashSet<>();
-		}
+        protected Common(final Path workDirectory, final Path targetDirectoryPath, final Source source,
+                         final SourceFileProvider sourceFileProvider) {
+            this.source = source;
+            this.sourceFileProvider = sourceFileProvider;
+            this.sourceWorkDirectory = workDirectory.resolve(source.name());
+            this.targetDirectoryPath = targetDirectoryPath;
+            this.filesToObtain = new LinkedHashMap<>();
+            this.filesToDelete = new LinkedHashSet<>();
+        }
 
-		@Override
-		final public void obtainNewFiles() throws IOException {
-			if (!Files.exists(sourceWorkDirectory))
-				Files.createDirectory(sourceWorkDirectory);
-			ConcurrentUtils.forEachEx(filesToObtain, (name, item) -> {
-				final Path path = sourceWorkDirectory.resolve(name);
-				try (final InputStream input = sourceFileProvider.obtain(source, name)) {
-					IOUtils.copy(input, path);
-					Files.setLastModifiedTime(path, FileTime.fromMillis(item.version));
-					final long itemSize = Files.size(path);
-					if (!Objects.equals(itemSize, item.size))
-						throw new IOException(
-								"Wrong file size for " + path + ". Expected: " + item.size + " - Got: " + itemSize);
-				}
-			});
-		}
+        @Override
+        final public void obtainNewFiles() throws IOException {
+            if (!Files.exists(sourceWorkDirectory))
+                Files.createDirectory(sourceWorkDirectory);
+            ConcurrentUtils.forEachEx(filesToObtain, (name, item) -> {
+                final Path path = sourceWorkDirectory.resolve(name);
+                try (final InputStream input = sourceFileProvider.obtain(source, name)) {
+                    IOUtils.copy(input, path);
+                    Files.setLastModifiedTime(path, FileTime.fromMillis(item.version));
+                    final long itemSize = Files.size(path);
+                    if (!Objects.equals(itemSize, item.size))
+                        throw new IOException(
+                                "Wrong file size for " + path + ". Expected: " + item.size + " - Got: " + itemSize);
+                }
+            });
+        }
 
-		@Override
-		public void close() throws IOException {
-			if (!Files.exists(sourceWorkDirectory))
-				FileUtils.deleteDirectory(sourceWorkDirectory);
-		}
-	}
+        @Override
+        public void close() throws IOException {
+            if (Files.exists(sourceWorkDirectory))
+                FileUtils.deleteDirectory(sourceWorkDirectory);
+        }
+    }
 
-	/**
-	 * Implements an differential replication process.
-	 */
-	final class Differential extends Common {
+    /**
+     * Implements an differential replication process.
+     */
+    final class Differential extends Common {
 
-		Differential(final Path workDirectory, final Path targetDirectoryPath, final Source source,
-				final SourceFileProvider sourceFileProvider, final SourceView sourceView,
-				final ReplicationSession session) {
-			super(workDirectory, targetDirectoryPath, source, sourceFileProvider);
-			sourceView.differential(session.getSourceFiles(source), filesToObtain, filesToDelete);
-		}
+        Differential(final Path workDirectory, final Path targetDirectoryPath, final Source source,
+                     final SourceFileProvider sourceFileProvider, final SourceView sourceView,
+                     final ReplicationSession session) {
+            super(workDirectory, targetDirectoryPath, source, sourceFileProvider);
+            sourceView.differential(session.getSourceFiles(source), filesToObtain, filesToDelete);
+        }
 
-		@Override
-		public void moveInPlaceNewFiles() throws IOException {
-			for (final String fileToMove : filesToObtain.keySet()) {
-				final Path source = sourceWorkDirectory.resolve(fileToMove);
-				final Path target = targetDirectoryPath.resolve(fileToMove);
-				Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-			}
-		}
+        @Override
+        public void moveInPlaceNewFiles() throws IOException {
+            for (final String fileToMove : filesToObtain.keySet()) {
+                final Path source = sourceWorkDirectory.resolve(fileToMove);
+                final Path target = targetDirectoryPath.resolve(fileToMove);
+                Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
 
-		@Override
-		public void deleteOldFiles() throws IOException {
-			for (String fileToDelete : filesToDelete) {
-				final Path pathToDelete = targetDirectoryPath.resolve(fileToDelete);
-				if (Files.exists(pathToDelete)) {
-					try (final FileChannel fileChannel = FileChannel.open(pathToDelete, StandardOpenOption.WRITE,
-							StandardOpenOption.DELETE_ON_CLOSE)) {
-						fileChannel.lock().close();
-					} catch (FileNotFoundException e) {
-						//That's ok
-					}
-					if (Files.exists(pathToDelete))
-						throw new IOException("Can't delete the file: " + pathToDelete);
-				}
-			}
-		}
-	}
+        @Override
+        public void deleteOldFiles() throws IOException {
+            for (String fileToDelete : filesToDelete) {
+                final Path pathToDelete = targetDirectoryPath.resolve(fileToDelete);
+                if (Files.exists(pathToDelete)) {
+                    try (final FileChannel fileChannel = FileChannel.open(pathToDelete, StandardOpenOption.WRITE,
+                            StandardOpenOption.DELETE_ON_CLOSE)) {
+                        fileChannel.lock().close();
+                    } catch (FileNotFoundException e) {
+                        //That's ok
+                    }
+                    if (Files.exists(pathToDelete))
+                        throw new IOException("Can't delete the file: " + pathToDelete);
+                }
+            }
+        }
+    }
 
-	/**
-	 * Implements a full replication. Everything will be copied.
-	 */
-	final class Full extends Common {
+    /**
+     * Implements a full replication. Everything will be copied.
+     */
+    final class Full extends Common {
 
-		private final Path sourceTrashPath;
+        private final Path sourceTrashPath;
 
-		protected Full(final Path workDirectory, final Path targetDirectoryPath, final Source source,
-				final SourceFileProvider sourceFileProvider, final SourceView sourceView,
-				final ReplicationSession session) throws IOException {
-			super(workDirectory, targetDirectoryPath, source, sourceFileProvider);
-			this.sourceTrashPath = workDirectory.resolve("trash-" + source.name());
-			if (!Files.exists(sourceTrashPath))
-				Files.createDirectory(sourceTrashPath);
-			sourceView.full(session.getSourceFiles(source), filesToObtain, filesToDelete);
-		}
+        protected Full(final Path workDirectory, final Path targetDirectoryPath, final Source source,
+                       final SourceFileProvider sourceFileProvider, final SourceView sourceView,
+                       final ReplicationSession session) throws IOException {
+            super(workDirectory, targetDirectoryPath, source, sourceFileProvider);
+            this.sourceTrashPath = workDirectory.resolve("trash-" + source.name());
+            if (!Files.exists(sourceTrashPath))
+                Files.createDirectory(sourceTrashPath);
+            sourceView.full(session.getSourceFiles(source), filesToObtain, filesToDelete);
+        }
 
-		@Override
-		final public void moveInPlaceNewFiles() throws IOException {
-			for (String fileToMove : filesToDelete) {
-				final Path source = targetDirectoryPath.resolve(fileToMove);
-				final Path target = sourceTrashPath.resolve(fileToMove);
-				Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
-			}
-			if (!filesToObtain.isEmpty()) {
-				if (!Files.exists(targetDirectoryPath))
-					Files.createDirectory(targetDirectoryPath);
-				for (String fileToMove : filesToObtain.keySet()) {
-					final Path source = sourceWorkDirectory.resolve(fileToMove);
-					final Path target = targetDirectoryPath.resolve(fileToMove);
-					Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-				}
-			}
-		}
+        @Override
+        final public void moveInPlaceNewFiles() throws IOException {
+            for (String fileToMove : filesToDelete) {
+                final Path source = targetDirectoryPath.resolve(fileToMove);
+                final Path target = sourceTrashPath.resolve(fileToMove);
+                Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
+            }
+            if (!filesToObtain.isEmpty()) {
+                if (!Files.exists(targetDirectoryPath))
+                    Files.createDirectory(targetDirectoryPath);
+                for (String fileToMove : filesToObtain.keySet()) {
+                    final Path source = sourceWorkDirectory.resolve(fileToMove);
+                    final Path target = targetDirectoryPath.resolve(fileToMove);
+                    Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+        }
 
-		@Override
-		final public void deleteOldFiles() {
-			// Nothing to do, we already moved the file to the trash directory
-		}
+        @Override
+        final public void deleteOldFiles() {
+            // Nothing to do, we already moved the file to the trash directory
+        }
 
-		@Override
-		final public void close() throws IOException {
-			super.close();
-			if (Files.exists(sourceTrashPath))
-				FileUtils.deleteDirectory(sourceTrashPath);
-		}
-	}
+        @Override
+        final public void close() throws IOException {
+            super.close();
+            if (Files.exists(sourceTrashPath))
+                FileUtils.deleteDirectory(sourceTrashPath);
+        }
+    }
 
-	/**
-	 * Implements a chain of replicationProcess
-	 */
-	final class Chain implements ReplicationProcess {
+    /**
+     * Implements a chain of replicationProcess
+     */
+    final class Chain implements ReplicationProcess {
 
-		private final ReplicationProcess[] processes;
+        private final ReplicationProcess[] processes;
 
-		Chain(final ReplicationProcess... processes) {
-			this.processes = processes;
-		}
+        Chain(final ReplicationProcess... processes) {
+            this.processes = processes;
+        }
 
-		@Override
-		final public void obtainNewFiles() throws IOException {
-			for (ReplicationProcess process : processes)
-				process.obtainNewFiles();
-		}
+        @Override
+        final public void obtainNewFiles() throws IOException {
+            for (ReplicationProcess process : processes)
+                process.obtainNewFiles();
+        }
 
-		@Override
-		final public void moveInPlaceNewFiles() throws IOException {
-			for (ReplicationProcess process : processes)
-				process.moveInPlaceNewFiles();
-		}
+        @Override
+        final public void moveInPlaceNewFiles() throws IOException {
+            for (ReplicationProcess process : processes)
+                process.moveInPlaceNewFiles();
+        }
 
-		@Override
-		final public void deleteOldFiles() throws IOException {
-			for (ReplicationProcess process : processes)
-				process.deleteOldFiles();
-		}
+        @Override
+        final public void deleteOldFiles() throws IOException {
+            for (ReplicationProcess process : processes)
+                process.deleteOldFiles();
+        }
 
-		@Override
-		final public void close() throws IOException {
-			for (ReplicationProcess process : processes)
-				process.close();
-		}
-	}
+        @Override
+        final public void close() throws IOException {
+            for (ReplicationProcess process : processes)
+                process.close();
+        }
+    }
 }
