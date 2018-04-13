@@ -34,7 +34,11 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,7 +62,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     private final ExecutorService executorService;
 
     public IndexManager(final Path indexesDirectory, final ExecutorService executorService,
-                        final ConstructorParameters constructorParameters) throws IOException {
+                        final ConstructorParameters constructorParameters) {
         super(constructorParameters == null ? new ConcurrentHashMap<>() : constructorParameters.getMap());
         this.rootDirectory = indexesDirectory.toFile();
         this.executorService = executorService;
@@ -74,13 +78,13 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
             try {
                 schemaMap.put(schemaDirectory.getName(),
                         new SchemaInstance(this, analyzerFactoryMap, service, schemaDirectory, executorService));
-            } catch (ServerException | IOException | URISyntaxException e) {
+            } catch (ServerException | IOException e) {
                 LOGGER.log(Level.SEVERE, e, e::getMessage);
             }
         }
     }
 
-    public IndexManager(final Path indexesDirectory, final ExecutorService executorService) throws IOException {
+    public IndexManager(final Path indexesDirectory, final ExecutorService executorService) {
         this(indexesDirectory, executorService, null);
     }
 
@@ -114,7 +118,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     }
 
     SchemaSettingsDefinition createUpdate(String schemaName, SchemaSettingsDefinition settings)
-            throws IOException, URISyntaxException {
+            throws IOException {
         synchronized (schemaMap) {
             SchemaInstance schemaInstance = schemaMap.get(schemaName);
             if (schemaInstance == null) {

@@ -18,7 +18,6 @@ package com.qwazr.search.index;
 import com.qwazr.search.field.Converters.MultiReader;
 import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.field.FieldTypeInterface;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 
@@ -31,81 +30,75 @@ import java.util.Map;
 import java.util.Set;
 
 abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
-		implements ResultDocuments<T>, ResultDocumentsInterface {
+        implements ResultDocuments<T>, ResultDocumentsInterface {
 
-	private final IndexReader indexReader;
-	private final FieldMap fieldMap;
-	private final List<ResultDocumentBuilder<T>> documentsBuilder;
-	private final Set<String> returnedFields;
-	private final Map<String, String> storedFields;
-	private final Map<String, ValueConverter> returnedFieldsConverter;
-	protected final int start;
+    private final List<ResultDocumentBuilder<T>> documentsBuilder;
+    private final Map<String, String> storedFields;
+    private final Map<String, ValueConverter> returnedFieldsConverter;
+    protected final int start;
 
-	ResultDocumentsList(final QueryContextImpl context, final QueryDefinition queryDefinition,
-			final Set<String> returnedFields) {
-		this.indexReader = context.indexReader;
-		this.fieldMap = context.fieldMap;
-		this.start = queryDefinition.getStartValue();
-		this.returnedFields = returnedFields != null ?
-				returnedFields :
-				queryDefinition.returned_fields != null && !queryDefinition.returned_fields.isEmpty() ?
-						queryDefinition.returned_fields :
-						null;
-		if (this.returnedFields != null && !this.returnedFields.isEmpty()) {
-			this.storedFields = new HashMap<>();
-			this.returnedFieldsConverter = new LinkedHashMap<>();
-			final MultiReader multiReader = new MultiReader(indexReader);
-			for (final String fieldName : this.returnedFields) {
-				final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
-				if (fieldType == null)
-					continue;
-				final String storedFieldName = fieldType.getStoredFieldName(fieldName);
-				if (storedFieldName != null)
-					storedFields.put(storedFieldName, fieldName);
-				final ValueConverter converter = fieldType.getConverter(fieldName, multiReader);
-				if (converter != null)
-					returnedFieldsConverter.put(fieldName, converter);
-			}
-		} else {
-			this.storedFields = null;
-			this.returnedFieldsConverter = null;
-		}
-		this.documentsBuilder = new ArrayList<>();
-	}
+    ResultDocumentsList(final QueryContextImpl context, final QueryDefinition queryDefinition,
+                        Set<String> returnedFields) {
+        this.start = queryDefinition.getStartValue();
 
-	protected abstract ResultDocumentBuilder<T> newResultDocumentBuilder(int absolutePos, ScoreDoc scoreDoc)
-			throws IOException;
+        if (returnedFields == null)
+            if (queryDefinition.returned_fields != null && !queryDefinition.returned_fields.isEmpty())
+                returnedFields = queryDefinition.returned_fields;
+        if (returnedFields != null) {
+            this.storedFields = new HashMap<>();
+            this.returnedFieldsConverter = new LinkedHashMap<>();
+            final MultiReader multiReader = new MultiReader(context.indexReader);
+            for (final String fieldName : returnedFields) {
+                final FieldTypeInterface fieldType = context.fieldMap.getFieldType(null, fieldName);
+                if (fieldType == null)
+                    continue;
+                final String storedFieldName = fieldType.getStoredFieldName(fieldName);
+                if (storedFieldName != null)
+                    storedFields.put(storedFieldName, fieldName);
+                final ValueConverter converter = fieldType.getConverter(fieldName, multiReader);
+                if (converter != null)
+                    returnedFieldsConverter.put(fieldName, converter);
+            }
+        } else {
+            this.storedFields = null;
+            this.returnedFieldsConverter = null;
+        }
+        this.documentsBuilder = new ArrayList<>();
+    }
 
-	protected abstract ResultDefinition<T> newResultDefinition(ResultDocumentsBuilder resultDocumentsBuilder,
-			List<T> documents);
+    protected abstract ResultDocumentBuilder<T> newResultDocumentBuilder(int absolutePos, ScoreDoc scoreDoc)
+            throws IOException;
 
-	@Override
-	final public void doc(IndexSearcher searcher, int pos, ScoreDoc scoreDoc) throws IOException {
-		final ResultDocumentBuilder<T> builder = newResultDocumentBuilder(start + pos, scoreDoc);
-		if (builder == null)
-			return;
-		if (storedFields != null && !storedFields.isEmpty())
-			builder.extractStoredReturnedFields(searcher, storedFields);
-		if (returnedFieldsConverter != null && !returnedFieldsConverter.isEmpty())
-			builder.extractDocValuesReturnedFields(returnedFieldsConverter);
-		documentsBuilder.add(builder);
-	}
+    protected abstract ResultDefinition<T> newResultDefinition(ResultDocumentsBuilder resultDocumentsBuilder,
+                                                               List<T> documents);
 
-	@Override
-	final public void highlight(int pos, String name, String snippet) {
-		documentsBuilder.get(pos).setHighlight(name, snippet);
-	}
+    @Override
+    final public void doc(IndexSearcher searcher, int pos, ScoreDoc scoreDoc) throws IOException {
+        final ResultDocumentBuilder<T> builder = newResultDocumentBuilder(start + pos, scoreDoc);
+        if (builder == null)
+            return;
+        if (storedFields != null && !storedFields.isEmpty())
+            builder.extractStoredReturnedFields(searcher, storedFields);
+        if (returnedFieldsConverter != null && !returnedFieldsConverter.isEmpty())
+            builder.extractDocValuesReturnedFields(returnedFieldsConverter);
+        documentsBuilder.add(builder);
+    }
 
-	@Override
-	final public ResultDefinition<T> apply(ResultDocumentsBuilder resultDocumentsBuilder) {
-		final List<T> documents = new ArrayList<>(documentsBuilder.size());
-		documentsBuilder.forEach(builder -> documents.add(builder.build()));
-		return newResultDefinition(resultDocumentsBuilder, documents);
-	}
+    @Override
+    final public void highlight(int pos, String name, String snippet) {
+        documentsBuilder.get(pos).setHighlight(name, snippet);
+    }
 
-	@Override
-	final public ResultDocumentsInterface getResultDocuments() {
-		return this;
-	}
+    @Override
+    final public ResultDefinition<T> apply(ResultDocumentsBuilder resultDocumentsBuilder) {
+        final List<T> documents = new ArrayList<>(documentsBuilder.size());
+        documentsBuilder.forEach(builder -> documents.add(builder.build()));
+        return newResultDefinition(resultDocumentsBuilder, documents);
+    }
+
+    @Override
+    final public ResultDocumentsInterface getResultDocuments() {
+        return this;
+    }
 
 }

@@ -30,89 +30,87 @@ import java.util.Map;
 
 class MixedDrillSideways extends DrillSideways {
 
-	private final String stateIndexField;
-	private final FieldMap fieldMap;
+    private final String stateIndexField;
 
-	MixedDrillSideways(QueryExecution queryExecution) {
-		super(queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
-				queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState,
-				queryExecution.queryContext.executorService);
-		this.fieldMap = queryExecution.queryContext.fieldMap;
-		this.stateIndexField = state == null ? null : state.getField();
-	}
+    MixedDrillSideways(QueryExecution queryExecution) {
+        super(queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
+                queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState,
+                queryExecution.queryContext.executorService);
+        this.stateIndexField = state == null ? null : state.getField();
+    }
 
-	protected Facets buildFacetsResult(final FacetsCollector drillDowns, final FacetsCollector[] drillSideways,
-			final String[] drillSidewaysDims) throws IOException {
+    protected Facets buildFacetsResult(final FacetsCollector drillDowns, final FacetsCollector[] drillSideways,
+                                       final String[] drillSidewaysDims) throws IOException {
 
-		final Map<String, Facets> drillSidewaysFacets = new HashMap<>();
+        final Map<String, Facets> drillSidewaysFacets = new HashMap<>();
 
-		final FastTaxonomyFacetCounts fastTaxonomyFacets = taxoReader == null ? null : new FastTaxonomyFacetCounts(
-				taxoReader, config, drillDowns);
+        final FastTaxonomyFacetCounts fastTaxonomyFacets = taxoReader == null ? null : new FastTaxonomyFacetCounts(
+                taxoReader, config, drillDowns);
 
-		final SortedSetDocValuesFacetCounts docValuesFacets = state == null ? null : new SortedSetDocValuesFacetCounts(
-				state, drillDowns);
+        final SortedSetDocValuesFacetCounts docValuesFacets = state == null ? null : new SortedSetDocValuesFacetCounts(
+                state, drillDowns);
 
-		if (drillSideways != null) {
-			for (int i = 0; i < drillSideways.length; i++) {
-				final String dim = drillSidewaysDims[i];
-				final Facets facets;
-				final String indexFieldName = config.getDimConfig(dim).indexFieldName;
-				if (state != null && stateIndexField.equals(indexFieldName)) {
-					facets = new SortedSetDocValuesFacetCounts(state, drillSideways[i]);
-				} else if (taxoReader != null) {
-					facets = new FastTaxonomyFacetCounts(taxoReader, config, drillSideways[i]);
-				} else
-					facets = null;
-				if (facets != null)
-					drillSidewaysFacets.put(dim, facets);
-			}
-		}
+        if (drillSideways != null) {
+            for (int i = 0; i < drillSideways.length; i++) {
+                final String dim = drillSidewaysDims[i];
+                final Facets facets;
+                final String indexFieldName = config.getDimConfig(dim).indexFieldName;
+                if (state != null && stateIndexField.equals(indexFieldName)) {
+                    facets = new SortedSetDocValuesFacetCounts(state, drillSideways[i]);
+                } else if (taxoReader != null) {
+                    facets = new FastTaxonomyFacetCounts(taxoReader, config, drillSideways[i]);
+                } else
+                    facets = null;
+                if (facets != null)
+                    drillSidewaysFacets.put(dim, facets);
+            }
+        }
 
-		final Facets facets = new MixedFacets(docValuesFacets, fastTaxonomyFacets);
+        final Facets facets = new MixedFacets(docValuesFacets, fastTaxonomyFacets);
 
-		return drillSidewaysFacets.isEmpty() ? facets : new MultiFacets(drillSidewaysFacets, facets);
-	}
+        return drillSidewaysFacets.isEmpty() ? facets : new MultiFacets(drillSidewaysFacets, facets);
+    }
 
-	class MixedFacets extends Facets {
+    class MixedFacets extends Facets {
 
-		private final SortedSetDocValuesFacetCounts docValuesFacets;
-		private final FastTaxonomyFacetCounts taxonomyFacets;
+        private final SortedSetDocValuesFacetCounts docValuesFacets;
+        private final FastTaxonomyFacetCounts taxonomyFacets;
 
-		private MixedFacets(final SortedSetDocValuesFacetCounts docValuesFacets,
-				final FastTaxonomyFacetCounts taxonomyFacets) {
-			this.docValuesFacets = docValuesFacets;
-			this.taxonomyFacets = taxonomyFacets;
+        private MixedFacets(final SortedSetDocValuesFacetCounts docValuesFacets,
+                            final FastTaxonomyFacetCounts taxonomyFacets) {
+            this.docValuesFacets = docValuesFacets;
+            this.taxonomyFacets = taxonomyFacets;
 
-		}
+        }
 
-		private Facets getFacets(String dim) {
-			if (stateIndexField != null && stateIndexField.equals(config.getDimConfig(dim).indexFieldName))
-				return docValuesFacets;
-			return taxonomyFacets;
-		}
+        private Facets getFacets(String dim) {
+            if (stateIndexField != null && stateIndexField.equals(config.getDimConfig(dim).indexFieldName))
+                return docValuesFacets;
+            return taxonomyFacets;
+        }
 
-		@Override
-		public FacetResult getTopChildren(int topN, String dim, String... path) throws IOException {
-			final Facets facets = getFacets(dim);
-			return facets == null ? null : facets.getTopChildren(topN, dim, path);
-		}
+        @Override
+        public FacetResult getTopChildren(int topN, String dim, String... path) throws IOException {
+            final Facets facets = getFacets(dim);
+            return facets == null ? null : facets.getTopChildren(topN, dim, path);
+        }
 
-		@Override
-		public Number getSpecificValue(String dim, String... path) throws IOException {
-			final Facets facets = getFacets(dim);
-			return facets == null ? -1 : facets.getSpecificValue(dim, path);
-		}
+        @Override
+        public Number getSpecificValue(String dim, String... path) throws IOException {
+            final Facets facets = getFacets(dim);
+            return facets == null ? -1 : facets.getSpecificValue(dim, path);
+        }
 
-		@Override
-		public List<FacetResult> getAllDims(int topN) throws IOException {
-			if (docValuesFacets == null) {
-				return taxonomyFacets == null ? null : taxonomyFacets.getAllDims(topN);
-			}
-			if (taxonomyFacets == null)
-				return docValuesFacets.getAllDims(topN);
-			final List<FacetResult> facetResultList = taxonomyFacets.getAllDims(topN);
-			facetResultList.addAll(docValuesFacets.getAllDims(topN));
-			return facetResultList;
-		}
-	}
+        @Override
+        public List<FacetResult> getAllDims(int topN) throws IOException {
+            if (docValuesFacets == null) {
+                return taxonomyFacets == null ? null : taxonomyFacets.getAllDims(topN);
+            }
+            if (taxonomyFacets == null)
+                return docValuesFacets.getAllDims(topN);
+            final List<FacetResult> facetResultList = taxonomyFacets.getAllDims(topN);
+            facetResultList.addAll(docValuesFacets.getAllDims(topN));
+            return facetResultList;
+        }
+    }
 }

@@ -28,45 +28,45 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TermEnumDefinition {
 
-	public final Object term;
-	public final Integer doc_freq;
-	public final Long total_term_freq;
+    public final Object term;
+    public final Integer doc_freq;
+    public final Long total_term_freq;
 
-	public TermEnumDefinition() {
-		term = null;
-		doc_freq = null;
-		total_term_freq = null;
-	}
+    public TermEnumDefinition() {
+        term = null;
+        doc_freq = null;
+        total_term_freq = null;
+    }
 
-	TermEnumDefinition(final FieldTypeInterface field, final TermsEnum termsEnum) throws IOException {
-		term = field.toTerm(termsEnum.term());
-		doc_freq = termsEnum.docFreq();
-		total_term_freq = termsEnum.totalTermFreq();
-	}
+    TermEnumDefinition(final FieldTypeInterface field, final TermsEnum termsEnum) throws IOException {
+        term = field.toTerm(termsEnum.term());
+        doc_freq = termsEnum.docFreq();
+        total_term_freq = termsEnum.totalTermFreq();
+    }
 
-	final static List<TermEnumDefinition> buildTermList(final FieldTypeInterface field, final TermsEnum termsEnum,
-			final String prefix, int start, int rows) throws IOException {
-		final List<TermEnumDefinition> termList = new ArrayList<>();
-		if (prefix != null) {
-			TermsEnum.SeekStatus status = termsEnum.seekCeil(new BytesRef(prefix));
-			if (status == null || status == TermsEnum.SeekStatus.END)
-				return termList;
-		} else if (termsEnum.next() == null)
-			return termList;
+    static List<TermEnumDefinition> buildTermList(final FieldTypeInterface field, final TermsEnum termsEnum,
+                                                  final String prefix, int start, int rows) throws IOException {
+        final List<TermEnumDefinition> termList = new ArrayList<>();
+        if (prefix != null) {
+            TermsEnum.SeekStatus status = termsEnum.seekCeil(new BytesRef(prefix));
+            if (status == null || status == TermsEnum.SeekStatus.END)
+                return termList;
+        } else if (termsEnum.next() == null)
+            return termList;
 
-		while (start-- > 0)
-			if (termsEnum.next() == null)
-				return termList;
+        while (start-- > 0)
+            if (termsEnum.next() == null)
+                return termList;
 
-		while (rows-- > 0) {
-			termList.add(new TermEnumDefinition(field, termsEnum));
-			if (termsEnum.next() == null)
-				break;
-		}
-		return termList;
-	}
+        while (rows-- > 0) {
+            termList.add(new TermEnumDefinition(field, termsEnum));
+            if (termsEnum.next() == null)
+                break;
+        }
+        return termList;
+    }
 
-	public final static TypeReference<List<TermEnumDefinition>> ListTermEnumDefinitionRef =
-			new TypeReference<List<TermEnumDefinition>>() {
-			};
+    public final static TypeReference<List<TermEnumDefinition>> ListTermEnumDefinitionRef =
+            new TypeReference<List<TermEnumDefinition>>() {
+            };
 }

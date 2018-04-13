@@ -14,42 +14,42 @@ import java.io.IOException;
  */
 public class ClassicMaxCollector extends BaseCollector<Long> {
 
-	private long max = 0;
+    private long max = 0;
 
-	public ClassicMaxCollector(final String name) {
-		super(name);
-	}
+    public ClassicMaxCollector(final String name) {
+        super(name);
+    }
 
-	@Override
-	public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
-		return new RandomCollector(context.reader());
-	}
+    @Override
+    public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
+        return new RandomCollector(context.reader());
+    }
 
-	@Override
-	public Long getResult() {
-		return max;
-	}
+    @Override
+    public Long getResult() {
+        return max;
+    }
 
-	public class RandomCollector implements LeafCollector {
+    public class RandomCollector implements LeafCollector {
 
-		private final NumericDocValues qtyDocValues;
+        private final NumericDocValues qtyDocValues;
 
-		RandomCollector(final LeafReader reader) throws IOException {
-			qtyDocValues = reader.getNumericDocValues(AnnotatedRecord.DV_QUANTITY_FIELD);
-		}
+        RandomCollector(final LeafReader reader) throws IOException {
+            qtyDocValues = reader.getNumericDocValues(AnnotatedRecord.DV_QUANTITY_FIELD);
+        }
 
-		@Override
-		final public void setScorer(final Scorer scorer) throws IOException {
+        @Override
+        final public void setScorer(final Scorer scorer) {
 
-		}
+        }
 
-		@Override
-		final public void collect(final int doc) throws IOException {
-			if (qtyDocValues == null)
-				return;
-			final long m = qtyDocValues.get(doc);
-			if (m > max)
-				max = m;
-		}
-	}
+        @Override
+        final public void collect(final int doc) {
+            if (qtyDocValues == null)
+                return;
+            final long m = qtyDocValues.get(doc);
+            if (m > max)
+                max = m;
+        }
+    }
 }

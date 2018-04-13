@@ -29,7 +29,6 @@ import javax.ws.rs.core.Response;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -66,7 +65,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
     SchemaInstance(final ConstructorParametersImpl instanceFactory,
                    final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap, final IndexServiceInterface service,
-                   final File schemaDirectory, final ExecutorService executorService) throws IOException, URISyntaxException {
+                   final File schemaDirectory, final ExecutorService executorService) throws IOException {
 
         this.readWriteSemaphores = new ReadWriteSemaphores(null, null);
         this.instanceFactory = instanceFactory;
@@ -152,7 +151,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
     }
 
     Map<String, UUID> getIndexMap() {
-        final TreeMap map = new TreeMap<>();
+        final TreeMap<String, UUID> map = new TreeMap<>();
         indexMap.forEach((name, index) -> map.put(name, index.getIndexUuid()));
         return map;
     }
