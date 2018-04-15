@@ -13,6 +13,7 @@
         <groupId>com.qwazr</groupId>
         <artifactId>qwazr-parent</artifactId>
         <version>1.4.0-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <scm>
