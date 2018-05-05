@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,8 @@ public class IntRangeQuery extends AbstractRangeQuery<Integer, IntRangeQuery> {
 	public IntRangeQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
 			@JsonProperty("upper_value") final Integer upperValue) {
-		super(IntRangeQuery.class, genericField, field, lowerValue == null ? Integer.MIN_VALUE : lowerValue,
-				upperValue == null ? Integer.MAX_VALUE : upperValue);
+		super(IntRangeQuery.class, genericField, field, lowerValue == null ? IntDocValuesRangeQuery.MIN : lowerValue,
+				upperValue == null ? IntDocValuesRangeQuery.MAX : upperValue);
 	}
 
 	public IntRangeQuery(final String field, final Integer lowerValue, final Integer upperValue) {

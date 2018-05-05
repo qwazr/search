@@ -102,8 +102,7 @@ final public class IndexInstance implements Closeable {
 		this.readWriteSemaphores = builder.readWriteSemaphores;
 		this.indexProvider = builder.indexProvider;
 		this.fileSet = builder.fileSet;
-		this.indexName = Objects.requireNonNull(
-				Objects.requireNonNull(Objects.requireNonNull(fileSet).mainDirectory).getFileName()).toString();
+		this.indexName = builder.indexName;
 		this.indexUuid = builder.indexUuid;
 		this.dataDirectory = builder.dataDirectory;
 		this.taxonomyDirectory = builder.taxonomyDirectory;

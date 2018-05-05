@@ -48,6 +48,7 @@ class IndexInstanceManager implements Closeable {
 	private final ReadWriteSemaphores readWriteSemaphores;
 
 	private final UUID indexUuid;
+	private final String indexName;
 	private IndexSettingsDefinition settings;
 	private IndexInstance indexInstance;
 
@@ -66,9 +67,9 @@ class IndexInstanceManager implements Closeable {
 			this.analyzerFactoryMap = analyzerFactoryMap;
 			this.readWriteSemaphores = readWriteSemaphores;
 
-			fileSet.checkIndexDirectory();
-			indexUuid = fileSet.checkUuid();
-			settings = fileSet.loadSettings();
+			this.indexName = fileSet.checkIndexDirectory();
+			this.indexUuid = fileSet.checkUuid();
+			this.settings = fileSet.loadSettings();
 
 		} catch (IOException e) {
 			throw ServerException.of(e);
@@ -79,7 +80,7 @@ class IndexInstanceManager implements Closeable {
 		if (indexInstance == null)
 			indexInstance =
 					new IndexInstanceBuilder(indexProvider, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
-							executorService, indexServiceInterface, fileSet, settings, indexUuid).build();
+							executorService, indexServiceInterface, fileSet, settings, indexUuid, indexName).build();
 		return indexInstance;
 	}
 

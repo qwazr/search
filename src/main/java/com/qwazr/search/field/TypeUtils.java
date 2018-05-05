@@ -31,14 +31,14 @@ interface TypeUtils {
 		if (value == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"Cannot extract an integer from a null value for the field " + fieldName);
-		return value instanceof Number ? ((Number) value).intValue() : Integer.valueOf(value.toString());
+		return value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
 	}
 
 	static long getLongNumber(final String fieldName, final Object value) {
 		if (value == null)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
 					"Cannot extract an long from a null value for the field " + fieldName);
-		return value instanceof Number ? ((Number) value).longValue() : Long.valueOf(value.toString());
+		return value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString());
 	}
 
 	static float getFloatNumber(final String fieldName, final Object value) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ public class SortedIntDocValuesRangeQuery extends AbstractRangeQuery<Integer, So
 			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
 			@JsonProperty("upper_value") final Integer upperValue) {
 		super(SortedIntDocValuesRangeQuery.class, genericField, field,
-				lowerValue == null ? Integer.MIN_VALUE : lowerValue,
-				upperValue == null ? Integer.MAX_VALUE : upperValue);
+				lowerValue == null ? IntDocValuesRangeQuery.MIN : lowerValue,
+				upperValue == null ? IntDocValuesRangeQuery.MAX : upperValue);
 	}
 
 	public SortedIntDocValuesRangeQuery(final String field, final Integer lowerValue, final Integer upperValue) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,15 @@ import java.io.IOException;
 
 public class IntDocValuesRangeQuery extends AbstractRangeQuery<Integer, IntDocValuesRangeQuery> {
 
+	final static Integer MIN = Integer.MIN_VALUE;
+	final static Integer MAX = Integer.MAX_VALUE;
+
 	@JsonCreator
 	public IntDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
 			@JsonProperty("upper_value") final Integer upperValue) {
-		super(IntDocValuesRangeQuery.class, genericField, field, lowerValue == null ? Integer.MIN_VALUE : lowerValue,
-				upperValue == null ? Integer.MAX_VALUE : upperValue);
+		super(IntDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
+				upperValue == null ? MAX : upperValue);
 	}
 
 	public IntDocValuesRangeQuery(final String field, final Integer lowerValue, final Integer upperValue) {

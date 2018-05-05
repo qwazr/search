@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,15 @@ import java.io.IOException;
 
 public class LongDocValuesRangeQuery extends AbstractRangeQuery<Long, LongDocValuesRangeQuery> {
 
+	final static Long MIN = Long.MIN_VALUE;
+	final static Long MAX = Long.MAX_VALUE;
+
 	@JsonCreator
 	public LongDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
 			@JsonProperty("upper_value") final Long upperValue) {
-		super(LongDocValuesRangeQuery.class, genericField, field, lowerValue == null ? Long.MIN_VALUE : lowerValue,
-				upperValue == null ? Long.MAX_VALUE : upperValue);
+		super(LongDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
+				upperValue == null ? MAX : upperValue);
 	}
 
 	public LongDocValuesRangeQuery(final String field, final Long lowerValue, final Long upperValue) {

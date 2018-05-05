@@ -444,7 +444,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 					.path(indexName)
 					.path("backup")
 					.path(backupName)
-					.queryParam("extractVersion", extractVersion == null ? false : extractVersion)
+					.queryParam("extractVersion", extractVersion == null ? Boolean.FALSE : extractVersion)
 					.request(preferedSerializedMediaType)
 					.get(mapStringMapStringMapStringBackupStatusType);
 		} catch (WebApplicationException e) {

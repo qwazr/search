@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,8 @@ public class SortedDocValuesRangeQuery extends AbstractRangeQuery<String, Sorted
 		super(SortedDocValuesRangeQuery.class, genericField, field,
 				Objects.requireNonNull(lowerValue, "The lower value is null"),
 				Objects.requireNonNull(upperValue, "The upper value is null"));
-		this.lowerInclusive = lowerInclusive == null ? true : lowerInclusive;
-		this.upperInclusive = upperInclusive == null ? false : upperInclusive;
+		this.lowerInclusive = lowerInclusive == null ? Boolean.TRUE : lowerInclusive;
+		this.upperInclusive = upperInclusive == null ? Boolean.FALSE : upperInclusive;
 	}
 
 	public SortedDocValuesRangeQuery(final String field, final String lowerValue, final String upperValue,

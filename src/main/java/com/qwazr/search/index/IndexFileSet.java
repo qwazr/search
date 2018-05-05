@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.UUID;
 
 class IndexFileSet {
@@ -65,12 +66,14 @@ class IndexFileSet {
 		this.replWorkPath = mainDirectory.resolve(REPL_WORK);
 	}
 
-	void checkIndexDirectory() throws IOException {
+	String checkIndexDirectory() throws IOException {
 		if (!Files.exists(mainDirectory))
 			Files.createDirectory(mainDirectory);
 		if (!Files.isDirectory(mainDirectory))
 			throw new IOException(
 					"This name is not valid. No directory exists for this location: " + mainDirectory.toAbsolutePath());
+		return Objects.requireNonNull(mainDirectory.getFileName(), "Can't extract directory name: " + mainDirectory)
+				.toString();
 	}
 
 	/**

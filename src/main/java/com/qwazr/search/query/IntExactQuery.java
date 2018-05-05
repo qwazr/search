@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ public class IntExactQuery extends AbstractExactQuery<Integer, IntExactQuery> {
 	@JsonCreator
 	public IntExactQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("value") final Integer value) {
-		super(IntExactQuery.class, genericField, field, value == null ? 0 : value);
+		super(IntExactQuery.class, genericField, field, value == null ? IntDocValuesExactQuery.ZERO : value);
 		this.value = value;
 	}
 

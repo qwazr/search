@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +26,15 @@ import java.io.IOException;
 
 public class DoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, DoubleDocValuesRangeQuery> {
 
+	final static Double MIN = Double.MIN_VALUE;
+	final static Double MAX = Double.MAX_VALUE;
+
 	@JsonCreator
 	public DoubleDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
 			@JsonProperty("upper_value") final Double upperValue) {
-		super(DoubleDocValuesRangeQuery.class, genericField, field, lowerValue == null ? Double.MIN_VALUE : lowerValue,
-				upperValue == null ? Double.MAX_VALUE : upperValue);
+		super(DoubleDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
+				upperValue == null ? MAX : upperValue);
 	}
 
 	public DoubleDocValuesRangeQuery(final String field, final Double lowerValue, final Double upperValue) {

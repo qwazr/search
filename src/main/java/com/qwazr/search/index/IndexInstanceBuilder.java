@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,6 +64,7 @@ class IndexInstanceBuilder {
 	final ConstructorParametersImpl instanceFactory;
 	final FileResourceLoader fileResourceLoader;
 	final UUID indexUuid;
+	final String indexName;
 
 	Directory dataDirectory;
 	Directory taxonomyDirectory;
@@ -89,7 +90,7 @@ class IndexInstanceBuilder {
 	IndexInstanceBuilder(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
 			final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
 			final ExecutorService executorService, final IndexServiceInterface indexService, final IndexFileSet fileSet,
-			final IndexSettingsDefinition settings, UUID indexUuid) {
+			final IndexSettingsDefinition settings, final UUID indexUuid, final String indexName) {
 		this.fileSet = fileSet;
 		this.executorService = executorService;
 		this.readWriteSemaphores = readWriteSemaphores;
@@ -100,6 +101,7 @@ class IndexInstanceBuilder {
 		this.indexService = indexService;
 		this.fileResourceLoader = new FileResourceLoader(null, fileSet.resourcesDirectoryPath);
 		this.indexUuid = indexUuid;
+		this.indexName = indexName;
 	}
 
 	private void buildCommon() throws IOException, ReflectiveOperationException, URISyntaxException {

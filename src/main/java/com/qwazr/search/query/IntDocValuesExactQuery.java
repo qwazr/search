@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,12 @@ import java.io.IOException;
 
 public class IntDocValuesExactQuery extends AbstractExactQuery<Integer, IntDocValuesExactQuery> {
 
+	final static Integer ZERO = 0;
+
 	@JsonCreator
 	public IntDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("value") final Integer value) {
-		super(IntDocValuesExactQuery.class, genericField, field, value == null ? 0 : value);
+		super(IntDocValuesExactQuery.class, genericField, field, value == null ? ZERO : value);
 	}
 
 	public IntDocValuesExactQuery(final String field, final Integer value) {

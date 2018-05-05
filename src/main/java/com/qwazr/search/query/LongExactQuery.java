@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ public class LongExactQuery extends AbstractExactQuery<Long, LongExactQuery> {
 	@JsonCreator
 	public LongExactQuery(@JsonProperty("generic_field") final String genericField,
 			@JsonProperty("field") final String field, @JsonProperty("value") final Long value) {
-		super(LongExactQuery.class, genericField, field, value == null ? 0L : value);
+		super(LongExactQuery.class, genericField, field, value == null ? LongDocValuesExactQuery.ZERO : value);
 	}
 
 	public LongExactQuery(final String field, final long value) {

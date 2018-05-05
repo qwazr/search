@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package com.qwazr.search.index;
 import com.qwazr.search.query.AbstractQuery;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.similarities.Similarity;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -32,8 +31,6 @@ public class QueryBuilder {
 	Integer rows;
 	Boolean queryDebug;
 	LinkedHashSet<String> returnedFields;
-
-	Similarity similarity;
 
 	LinkedHashMap<String, FacetDefinition> facets;
 
@@ -161,11 +158,6 @@ public class QueryBuilder {
 		if (facetName == null || facetDefinition == null)
 			return this;
 		return facet(facetName.name(), facetDefinition);
-	}
-
-	public QueryBuilder similarity(final Similarity similarity) {
-		this.similarity = similarity;
-		return this;
 	}
 
 	public QueryBuilder sorts(final Map<String, QueryDefinition.SortEnum> sorts) {
