@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,10 +53,10 @@ public class FieldMap {
 			final FieldTypeInterface fieldType;
 			if (name.indexOf('*') != -1 || name.indexOf('?') != -1) {
 				final WildcardMatcher wildcardMatcher = new WildcardMatcher(name);
-				fieldType = FieldTypeInterface.build(name, wildcardMatcher, definition);
+				fieldType = definition.newFieldType(name, wildcardMatcher);
 				wildcardMap.add(Pair.of(wildcardMatcher, fieldType));
 			} else {
-				fieldType = FieldTypeInterface.build(name, null, definition);
+				fieldType = definition.newFieldType(name, null);
 			}
 			nameDefMap.put(name, fieldType);
 		});

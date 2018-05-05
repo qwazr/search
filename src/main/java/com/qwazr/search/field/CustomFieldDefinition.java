@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.IndexField;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
@@ -74,11 +75,11 @@ public class CustomFieldDefinition extends FieldDefinition {
 			@JsonProperty("facet_multivalued") final Boolean facetMultivalued,
 			@JsonProperty("facet_hierarchical") final Boolean facetHierarchical,
 			@JsonProperty("facet_require_dim_count") final Boolean facetRequireDimCount,
-			@JsonProperty("numeric_type")            final FieldType.LegacyNumericType numericType,
-			@JsonProperty("index_options")            final IndexOptions indexOptions,
-			@JsonProperty("docvalues_type")    final DocValuesType docValuesType,
-			@JsonProperty("dimension_count")    final Integer dimensionCount,
-			@JsonProperty("dimension_num_bytes")    final Integer dimensionNumBytes,
+			@JsonProperty("numeric_type") final FieldType.LegacyNumericType numericType,
+			@JsonProperty("index_options") final IndexOptions indexOptions,
+			@JsonProperty("docvalues_type") final DocValuesType docValuesType,
+			@JsonProperty("dimension_count") final Integer dimensionCount,
+			@JsonProperty("dimension_num_bytes") final Integer dimensionNumBytes,
 			@JsonProperty("copy_from") String[] copyFrom) {
 		super(null, analyzer, queryAnalyzer, copyFrom);
 		this.template = template;
@@ -142,46 +143,32 @@ public class CustomFieldDefinition extends FieldDefinition {
 
 	@Override
 	public boolean equals(final Object o) {
-		if (o == null || !(o instanceof CustomFieldDefinition))
+		if (!(o instanceof CustomFieldDefinition))
 			return false;
 		if (o == this)
 			return true;
 		if (!super.equals(o))
 			return false;
 		final CustomFieldDefinition f = (CustomFieldDefinition) o;
-		if (!Objects.equals(template, f.template))
-			return false;
-		if (!Objects.equals(tokenized, f.tokenized))
-			return false;
-		if (!Objects.equals(stored, f.stored))
-			return false;
-		if (!Objects.equals(storeTermVectors, f.storeTermVectors))
-			return false;
-		if (!Objects.equals(storeTermVectorOffsets, f.storeTermVectorOffsets))
-			return false;
-		if (!Objects.equals(storeTermVectorPositions, f.storeTermVectorPositions))
-			return false;
-		if (!Objects.equals(storeTermVectorPayloads, f.storeTermVectorPayloads))
-			return false;
-		if (!Objects.equals(omitNorms, f.omitNorms))
-			return false;
-		if (!Objects.equals(numericType, f.numericType))
-			return false;
-		if (!Objects.equals(indexOptions, f.indexOptions))
-			return false;
-		if (!Objects.equals(docValuesType, f.docValuesType))
-			return false;
-		if (!Objects.equals(dimensionCount, f.dimensionCount))
-			return false;
-		if (!Objects.equals(dimensionNumBytes, f.dimensionNumBytes))
-			return false;
-		if (!Objects.equals(facetMultivalued, f.facetMultivalued))
-			return false;
-		if (!Objects.equals(facetHierarchical, f.facetHierarchical))
-			return false;
-		if (!Objects.equals(facetRequireDimCount, f.facetRequireDimCount))
-			return false;
-		return true;
+		return Objects.equals(template, f.template) && Objects.equals(tokenized, f.tokenized) &&
+				Objects.equals(stored, f.stored) && Objects.equals(storeTermVectors, f.storeTermVectors) &&
+				Objects.equals(storeTermVectorOffsets, f.storeTermVectorOffsets) &&
+				Objects.equals(storeTermVectorPositions, f.storeTermVectorPositions) &&
+				Objects.equals(storeTermVectorPayloads, f.storeTermVectorPayloads) &&
+				Objects.equals(omitNorms, f.omitNorms) && Objects.equals(numericType, f.numericType) &&
+				Objects.equals(indexOptions, f.indexOptions) && Objects.equals(docValuesType, f.docValuesType) &&
+				Objects.equals(dimensionCount, f.dimensionCount) &&
+				Objects.equals(dimensionNumBytes, f.dimensionNumBytes) &&
+				Objects.equals(facetMultivalued, f.facetMultivalued) &&
+				Objects.equals(facetHierarchical, f.facetHierarchical) &&
+				Objects.equals(facetRequireDimCount, f.facetRequireDimCount);
+	}
+
+	@Override
+	public FieldTypeInterface newFieldType(String genericFieldName, WildcardMatcher wildcardMatcher) {
+		return template == null ?
+				new CustomFieldType(genericFieldName, wildcardMatcher, this) :
+				template.newFieldType(genericFieldName, wildcardMatcher, this);
 	}
 
 	public static CustomBuilder of() {

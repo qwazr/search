@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,12 @@
 package com.qwazr.search.field;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.SmartField;
+import com.qwazr.utils.WildcardMatcher;
 
 import java.util.Map;
 import java.util.Objects;
@@ -67,22 +69,21 @@ public class SmartFieldDefinition extends FieldDefinition {
 
 	@Override
 	public boolean equals(final Object o) {
-		if (o == null || !(o instanceof SmartFieldDefinition))
+		if (!(o instanceof SmartFieldDefinition))
 			return false;
 		if (o == this)
 			return true;
 		if (!super.equals(o))
 			return false;
 		final SmartFieldDefinition f = (SmartFieldDefinition) o;
-		if (!Objects.equals(facet, f.facet))
-			return false;
-		if (!Objects.equals(index, f.index))
-			return false;
-		if (!Objects.equals(sort, f.sort))
-			return false;
-		if (!Objects.equals(stored, f.stored))
-			return false;
-		return true;
+		return Objects.equals(facet, f.facet) && Objects.equals(index, f.index) && Objects.equals(sort, f.sort) &&
+				Objects.equals(stored, f.stored);
+	}
+
+	@Override
+	@JsonIgnore
+	public FieldTypeInterface newFieldType(String genericFieldName, WildcardMatcher wildcardMatcher) {
+		return new SmartFieldType(genericFieldName, wildcardMatcher, this);
 	}
 
 	public static SmartBuilder of() {

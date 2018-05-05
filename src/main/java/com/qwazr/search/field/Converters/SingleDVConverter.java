@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public abstract class SingleDVConverter<T> extends ValueConverter<T> {
 
 		@Override
 		final public Double convert(final int docId) throws IOException {
-			return NumericUtils.sortableLongToDouble(multiReader.getNumericDocValues(docId, field));
+			return NumericUtils.sortableLongToDouble(reader.getNumericDocValues(docId, field));
 		}
 
 		@Override
@@ -51,7 +51,7 @@ public abstract class SingleDVConverter<T> extends ValueConverter<T> {
 
 		@Override
 		final public Float convert(final int docId) throws IOException {
-			return NumericUtils.sortableIntToFloat((int) multiReader.getNumericDocValues(docId, field));
+			return NumericUtils.sortableIntToFloat((int) reader.getNumericDocValues(docId, field));
 		}
 
 		@Override
@@ -68,7 +68,7 @@ public abstract class SingleDVConverter<T> extends ValueConverter<T> {
 
 		@Override
 		final public Long convert(int docId) throws IOException {
-			return multiReader.getNumericDocValues(docId, field);
+			return reader.getNumericDocValues(docId, field);
 		}
 
 		@Override
@@ -85,7 +85,7 @@ public abstract class SingleDVConverter<T> extends ValueConverter<T> {
 
 		@Override
 		final public Integer convert(final int docId) throws IOException {
-			return (int) multiReader.getNumericDocValues(docId, field);
+			return (int) reader.getNumericDocValues(docId, field);
 		}
 
 		@Override
@@ -102,7 +102,7 @@ public abstract class SingleDVConverter<T> extends ValueConverter<T> {
 
 		@Override
 		final public String convert(final int docId) throws IOException {
-			return multiReader.getBinaryDocValues(docId, field).utf8ToString();
+			return reader.getBinaryDocValues(docId, field).utf8ToString();
 		}
 
 		@Override
@@ -119,7 +119,7 @@ public abstract class SingleDVConverter<T> extends ValueConverter<T> {
 
 		@Override
 		final public String convert(final int docId) throws IOException {
-			return multiReader.getSortedDocValues(docId, field).utf8ToString();
+			return reader.getSortedDocValues(docId, field).utf8ToString();
 		}
 
 		@Override

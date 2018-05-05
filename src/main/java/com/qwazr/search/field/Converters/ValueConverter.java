@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,16 +21,23 @@ import java.io.IOException;
 
 public abstract class ValueConverter<T> {
 
-	final MultiReader multiReader;
+	final MultiReader reader;
 	final String field;
 
-	protected ValueConverter(final MultiReader multiReader, final String field) {
-		this.multiReader = multiReader;
+	protected ValueConverter(final MultiReader reader, final String field) {
+		this.reader = reader;
 		this.field = field;
 	}
 
 	public abstract T convert(final int docId) throws IOException;
 
 	public abstract void fill(final Object record, final FieldSetter fieldSetter, final int docId) throws IOException;
+
+	@FunctionalInterface
+	public interface Supplier<T> {
+		ValueConverter<T> getConverter(final MultiReader reader, final String field);
+	}
+
+	public final static ValueConverter.Supplier NullSupplier = (reader, field) -> null;
 
 }

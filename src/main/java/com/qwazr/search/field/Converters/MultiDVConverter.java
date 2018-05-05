@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public abstract class MultiDVConverter<T, A> extends ValueConverter<A> {
 
 		@Override
 		final public double[] convert(final int docId) throws IOException {
-			final long[] sources = multiReader.getSortedNumericDocValues(docId, field);
+			final long[] sources = reader.getSortedNumericDocValues(docId, field);
 			if (sources.length == 0)
 				return EMPTY;
 			final double[] set = new double[sources.length];
@@ -67,7 +67,7 @@ public abstract class MultiDVConverter<T, A> extends ValueConverter<A> {
 
 		@Override
 		final public float[] convert(final int docId) throws IOException {
-			final long[] sources = multiReader.getSortedNumericDocValues(docId, field);
+			final long[] sources = reader.getSortedNumericDocValues(docId, field);
 			final float[] set = new float[sources.length];
 			for (int i = 0; i < set.length; i++)
 				set[i] = NumericUtils.sortableIntToFloat((int) sources[i]);
@@ -95,7 +95,7 @@ public abstract class MultiDVConverter<T, A> extends ValueConverter<A> {
 
 		@Override
 		final public long[] convert(final int docId) throws IOException {
-			return multiReader.getSortedNumericDocValues(docId, field);
+			return reader.getSortedNumericDocValues(docId, field);
 		}
 
 		@Override
@@ -119,7 +119,7 @@ public abstract class MultiDVConverter<T, A> extends ValueConverter<A> {
 
 		@Override
 		final public int[] convert(final int docId) throws IOException {
-			final long[] sources = multiReader.getSortedNumericDocValues(docId, field);
+			final long[] sources = reader.getSortedNumericDocValues(docId, field);
 			final int[] set = new int[sources.length];
 			for (int i = 0; i < set.length; i++)
 				set[i] = (int) sources[i];
@@ -147,7 +147,7 @@ public abstract class MultiDVConverter<T, A> extends ValueConverter<A> {
 
 		@Override
 		final public List<String> convert(final int docId) throws IOException {
-			return multiReader.getSortedSetDocValues(docId, field);
+			return reader.getSortedSetDocValues(docId, field);
 		}
 
 		@Override

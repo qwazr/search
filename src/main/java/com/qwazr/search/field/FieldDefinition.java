@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,18 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.annotations.Copy;
+import com.qwazr.search.field.Converters.MultiDVConverter;
+import com.qwazr.search.field.Converters.MultiReader;
+import com.qwazr.search.field.Converters.SingleDVConverter;
+import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.FacetsConfig;
 
+import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,36 +61,63 @@ import java.util.function.Supplier;
 public abstract class FieldDefinition {
 
 	/* Used by CustomFieldDefinition */
-	public enum Template {
-		NONE,
-		DoublePoint,
-		FloatPoint,
-		IntPoint,
-		LongPoint,
-		DoubleField,
-		FloatField,
-		IntField,
-		LongField,
-		LongDocValuesField,
-		IntDocValuesField,
-		FloatDocValuesField,
-		DoubleDocValuesField,
-		LatLonPoint,
-		Geo3DPoint,
-		SortedDocValuesField,
-		SortedLongDocValuesField,
-		SortedIntDocValuesField,
-		SortedDoubleDocValuesField,
-		SortedFloatDocValuesField,
-		SortedSetDocValuesField,
-		BinaryDocValuesField,
-		StoredField,
-		StringField,
-		TextField,
-		FacetField,
-		IntAssociatedField,
-		FloatAssociatedField,
-		SortedSetDocValuesFacetField
+	public enum Template implements ValueConverter.Supplier, FieldTypeInterface.Supplier {
+		NONE(CustomFieldType::new),
+		DoublePoint(DoublePointType::new),
+		FloatPoint(FloatPointType::new),
+		IntPoint(IntPointType::new),
+		LongPoint(LongPointType::new),
+		DoubleField(DoublePointType::new),
+		FloatField(FloatPointType::new),
+		IntField(IntPointType::new),
+		LongField(LongPointType::new),
+		LongDocValuesField(LongDocValuesType::new, SingleDVConverter.LongDVConverter::new),
+		IntDocValuesField(IntDocValuesType::new, SingleDVConverter.IntegerDVConverter::new),
+		FloatDocValuesField(FloatDocValuesType::new, SingleDVConverter.FloatDVConverter::new),
+		DoubleDocValuesField(DoubleDocValuesType::new, SingleDVConverter.DoubleDVConverter::new),
+		LatLonPoint(LatLonPointType::new),
+		Geo3DPoint(Geo3DPointType::new),
+		SortedDocValuesField(SortedDocValuesType::new, SingleDVConverter.SortedDVConverter::new),
+		SortedLongDocValuesField(SortedLongDocValuesType::new, MultiDVConverter.LongSetDVConverter::new),
+		SortedIntDocValuesField(SortedIntDocValuesType::new, MultiDVConverter.IntegerSetDVConverter::new),
+		SortedDoubleDocValuesField(SortedDoubleDocValuesType::new, MultiDVConverter.DoubleSetDVConverter::new),
+		SortedFloatDocValuesField(SortedFloatDocValuesType::new, MultiDVConverter.FloatSetDVConverter::new),
+		SortedSetDocValuesField(SortedSetDocValuesType::new, MultiDVConverter.SortedSetDVConverter::new),
+		BinaryDocValuesField(BinaryDocValuesType::new, SingleDVConverter.BinaryDVConverter::new),
+		StoredField(StoredFieldType::new),
+		StringField(StringFieldType::new),
+		TextField(TextFieldType::new),
+		FacetField(FacetType::new),
+		IntAssociatedField(IntAssociationFacetType::new),
+		FloatAssociatedField(FloatAssociationFacetType::new),
+		SortedSetDocValuesFacetField(SortedSetDocValuesFacetType::new);
+
+		@NotNull
+		private final FieldTypeInterface.Supplier fieldTypeSupplier;
+
+		@NotNull
+		private final ValueConverter.Supplier valueConverterSupplier;
+
+		Template(final FieldTypeInterface.Supplier fieldTypeSupplier) {
+			this(fieldTypeSupplier, (reader, field) -> null);
+		}
+
+		Template(final FieldTypeInterface.Supplier fieldTypeSupplier,
+				final ValueConverter.Supplier valueConverterSupplier) {
+			this.fieldTypeSupplier = fieldTypeSupplier;
+			this.valueConverterSupplier = valueConverterSupplier;
+		}
+
+		@Override
+		final public ValueConverter getConverter(final MultiReader reader, final String field) {
+			return valueConverterSupplier.getConverter(reader, field);
+		}
+
+		@Override
+		final public FieldTypeInterface newFieldType(final String genericFieldName,
+				final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+			return fieldTypeSupplier.newFieldType(genericFieldName, wildcardMatcher, definition);
+		}
 	}
 
 	public final String analyzer;
@@ -115,23 +149,18 @@ public abstract class FieldDefinition {
 		this.queryAnalyzer = builder.queryAnalyzer;
 		this.copyFrom = builder.copyFrom == null || builder.copyFrom.isEmpty() ?
 				null :
-				builder.copyFrom.toArray(new String[builder.copyFrom.size()]);
+				builder.copyFrom.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
 	}
 
 	@Override
 	public boolean equals(final Object o) {
-		if (o == null || !(o instanceof FieldDefinition))
+		if (!(o instanceof FieldDefinition))
 			return false;
 		if (o == this)
 			return true;
 		final FieldDefinition f = (FieldDefinition) o;
-		if (!Objects.equals(type, f.type))
-			return false;
-		if (!Objects.equals(analyzer, f.analyzer))
-			return false;
-		if (!Objects.equals(queryAnalyzer, f.queryAnalyzer))
-			return false;
-		return true;
+		return Objects.equals(type, f.type) && Objects.equals(analyzer, f.analyzer) &&
+				Objects.equals(queryAnalyzer, f.queryAnalyzer);
 	}
 
 	public final static TypeReference<LinkedHashMap<String, FieldDefinition>> mapStringFieldTypeRef =
@@ -197,8 +226,11 @@ public abstract class FieldDefinition {
 
 		final List<String> globalCopyFromList = new ArrayList<>();
 		map.forEach((order, copyFromList) -> globalCopyFromList.addAll(copyFromList));
-		return globalCopyFromList.toArray(new String[globalCopyFromList.size()]);
+		return globalCopyFromList.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
 	}
+
+	public abstract FieldTypeInterface newFieldType(final String genericFieldName,
+			final WildcardMatcher wildcardMatcher);
 
 	static class Builder {
 

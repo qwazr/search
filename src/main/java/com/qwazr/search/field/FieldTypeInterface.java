@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,13 +73,10 @@ public interface FieldTypeInterface {
 		SortField sortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
 	}
 
-	static FieldTypeInterface build(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		if (definition instanceof CustomFieldDefinition)
-			return CustomFieldType.build(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition);
-		if (definition instanceof SmartFieldDefinition)
-			return SmartFieldType.build(genericFieldName, wildcardMatcher, (SmartFieldDefinition) definition);
-		return null;
+	@FunctionalInterface
+	interface Supplier {
+		FieldTypeInterface newFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+				final FieldDefinition definition);
 	}
 
 }
