@@ -153,6 +153,11 @@ public abstract class FieldDefinition {
 	}
 
 	@Override
+	public int hashCode() {
+		return Objects.hashCode(type);
+	}
+
+	@Override
 	public boolean equals(final Object o) {
 		if (!(o instanceof FieldDefinition))
 			return false;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,8 +81,13 @@ public class QueryDefinition extends BaseQueryDefinition {
 		}
 
 		@Override
+		public int hashCode() {
+			return Objects.hashCode(classname);
+		}
+
+		@Override
 		public boolean equals(Object o) {
-			if (o == null || !(o instanceof CollectorDefinition))
+			if (!(o instanceof CollectorDefinition))
 				return false;
 			if (o == this)
 				return true;
@@ -123,8 +128,13 @@ public class QueryDefinition extends BaseQueryDefinition {
 	}
 
 	@Override
+	public int hashCode() {
+		return Objects.hashCode(query);
+	}
+
+	@Override
 	public boolean equals(Object o) {
-		if (o == null || !(o instanceof QueryDefinition))
+		if (!(o instanceof QueryDefinition))
 			return false;
 		if (o == this)
 			return true;

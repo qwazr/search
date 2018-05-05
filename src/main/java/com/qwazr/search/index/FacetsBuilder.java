@@ -197,6 +197,8 @@ abstract class FacetsBuilder {
 					case FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD:
 						flag = flag | FACET_IS_TAXO_FLOAT;
 						break;
+					default:
+						break;
 					}
 				}
 			}
@@ -220,6 +222,8 @@ abstract class FacetsBuilder {
 					return intTaxonomyCounts;
 				case FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD:
 					return floatTaxonomyCounts;
+				default:
+					break;
 				}
 			}
 			return null;

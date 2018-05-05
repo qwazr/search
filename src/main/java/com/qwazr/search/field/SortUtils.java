@@ -48,9 +48,13 @@ public class SortUtils {
 		case ascending_missing_last:
 		case descending_missing_first:
 			sortField.setMissingValue(SortField.STRING_LAST);
+			return;
 		case ascending_missing_first:
 		case descending_missing_last:
 			sortField.setMissingValue(SortField.STRING_FIRST);
+			return;
+		default:
+			break;
 		}
 	}
 
@@ -64,9 +68,13 @@ public class SortUtils {
 		case ascending_missing_last:
 		case descending_missing_first:
 			sortField.setMissingValue(Double.MAX_VALUE);
+			return;
 		case ascending_missing_first:
 		case descending_missing_last:
 			sortField.setMissingValue(Double.MIN_VALUE);
+			return;
+		default:
+			break;
 		}
 	}
 
@@ -80,9 +88,13 @@ public class SortUtils {
 		case ascending_missing_last:
 		case descending_missing_first:
 			sortField.setMissingValue(Long.MAX_VALUE);
+			return;
 		case ascending_missing_first:
 		case descending_missing_last:
 			sortField.setMissingValue(Long.MIN_VALUE);
+			return;
+		default:
+			break;
 		}
 	}
 
@@ -96,9 +108,13 @@ public class SortUtils {
 		case ascending_missing_last:
 		case descending_missing_first:
 			sortField.setMissingValue(Float.MAX_VALUE);
+			return;
 		case ascending_missing_first:
 		case descending_missing_last:
 			sortField.setMissingValue(Float.MIN_VALUE);
+			return;
+		default:
+			break;
 		}
 	}
 
@@ -112,9 +128,13 @@ public class SortUtils {
 		case ascending_missing_last:
 		case descending_missing_first:
 			sortField.setMissingValue(Integer.MAX_VALUE);
+			return;
 		case ascending_missing_first:
 		case descending_missing_last:
 			sortField.setMissingValue(Integer.MIN_VALUE);
+			return;
+		default:
+			break;
 		}
 	}
 

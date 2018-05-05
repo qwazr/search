@@ -28,7 +28,7 @@ import java.util.Objects;
 
 public class LatLonPointPolygonQuery extends AbstractFieldQuery<LatLonPointPolygonQuery> {
 
-	public final class GeoPolygon {
+	public static final class GeoPolygon {
 
 		public final double[] polyLats;
 		public final double[] polyLons;
@@ -48,8 +48,13 @@ public class LatLonPointPolygonQuery extends AbstractFieldQuery<LatLonPointPolyg
 		}
 
 		@Override
+		public int hashCode() {
+			return 31 * Arrays.hashCode(polyLats) + Arrays.hashCode(polyLons);
+		}
+
+		@Override
 		public boolean equals(Object o) {
-			if (o == null || !(o instanceof GeoPolygon))
+			if (!(o instanceof GeoPolygon))
 				return false;
 			if (o == this)
 				return true;

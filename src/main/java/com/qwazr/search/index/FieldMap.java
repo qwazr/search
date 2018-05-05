@@ -147,6 +147,8 @@ public class FieldMap {
 			case FloatAssociatedField:
 				facetsConfig.setIndexFieldName(concreteFieldName, FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD);
 				break;
+			default:
+				break;
 			}
 		}
 	}

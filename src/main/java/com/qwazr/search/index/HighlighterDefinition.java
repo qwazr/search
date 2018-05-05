@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Emmanuel Keller / QWAZR
+ * Copyright 2016-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,8 +71,13 @@ public class HighlighterDefinition {
 		}
 
 		@Override
+		public int hashCode() {
+			return Objects.hash(type, language);
+		}
+
+		@Override
 		public boolean equals(final Object o) {
-			if (o == null || !(o instanceof BreakIteratorDefinition))
+			if (!(o instanceof BreakIteratorDefinition))
 				return false;
 			if (o == this)
 				return true;
@@ -110,8 +115,13 @@ public class HighlighterDefinition {
 	}
 
 	@Override
+	public int hashCode() {
+		return Objects.hashCode(field);
+	}
+
+	@Override
 	public boolean equals(final Object o) {
-		if (o == null || !(o instanceof HighlighterDefinition))
+		if (!(o instanceof HighlighterDefinition))
 			return false;
 		if (o == this)
 			return true;

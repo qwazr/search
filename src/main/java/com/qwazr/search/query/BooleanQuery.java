@@ -71,8 +71,13 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 		}
 
 		@Override
+		public int hashCode() {
+			return Objects.hash(occur, query);
+		}
+
+		@Override
 		public boolean equals(Object o) {
-			if (o == null || !(o instanceof BooleanClause))
+			if (!(o instanceof BooleanClause))
 				return false;
 			if (o == this)
 				return true;

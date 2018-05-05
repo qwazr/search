@@ -68,6 +68,11 @@ public class SmartFieldDefinition extends FieldDefinition {
 	}
 
 	@Override
+	public int hashCode() {
+		return Objects.hashCode(type);
+	}
+
+	@Override
 	public boolean equals(final Object o) {
 		if (!(o instanceof SmartFieldDefinition))
 			return false;

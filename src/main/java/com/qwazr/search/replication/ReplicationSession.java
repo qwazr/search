@@ -91,11 +91,16 @@ public class ReplicationSession {
 		}
 
 		@Override
+		public int hashCode() {
+			return Objects.hash(size, version);
+		}
+
+		@Override
 		public boolean equals(final Object object) {
+			if (!(object instanceof Item))
+				return false;
 			if (object == this)
 				return true;
-			if (object == null || !(object instanceof Item))
-				return false;
 			final Item item = (Item) object;
 			return Objects.equals(size, item.size) && Objects.equals(version, item.version);
 		}

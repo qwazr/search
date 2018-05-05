@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,8 +49,13 @@ public class SchemaSettingsDefinition {
 	}
 
 	@Override
+	public int hashCode() {
+		return Objects.hash(maxSimultaneousWrite, maxSimultaneousRead, maxSize, backupDirectoryPath);
+	}
+
+	@Override
 	public boolean equals(final Object e) {
-		if (e == null || !(e instanceof SchemaSettingsDefinition))
+		if (!(e instanceof SchemaSettingsDefinition))
 			return false;
 		final SchemaSettingsDefinition def = (SchemaSettingsDefinition) e;
 		if (!Objects.equals(maxSimultaneousWrite, def.maxSimultaneousWrite))

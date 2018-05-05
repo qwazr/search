@@ -104,7 +104,9 @@ public final class FilteredQuery extends org.apache.lucene.search.Query {
 
 	@Override
 	public boolean equals(Object o) {
-		return sameClassAs(o) && Objects.equals(((FilteredQuery) o).docIdSetMap, docIdSetMap);
+		if (!(o instanceof FilteredQuery))
+			return false;
+		return Objects.equals(((FilteredQuery) o).docIdSetMap, docIdSetMap);
 	}
 
 	@Override
