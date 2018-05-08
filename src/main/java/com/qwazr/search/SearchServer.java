@@ -58,8 +58,8 @@ public class SearchServer implements BaseServer {
 		clusterManager = new ClusterManager(executorService, configuration).registerProtocolListener(builder, services);
 		webServices.singletons(clusterManager.getService());
 
-		indexManager = new IndexManager(IndexManager.checkIndexesDirectory(configuration.dataDirectory.toPath()),
-				executorService);
+		indexManager =
+				new IndexManager(IndexManager.checkIndexesDirectory(configuration.dataDirectory), executorService);
 		builder.shutdownListener(server -> indexManager.close());
 		webServices.singletons(indexManager.getService());
 
@@ -91,8 +91,7 @@ public class SearchServer implements BaseServer {
 		return serviceBuilder;
 	}
 
-	public static synchronized void main(final String... args)
-			throws IOException, ServletException, ReflectiveOperationException, JMException {
+	public static synchronized void main(final String... args) throws IOException, ServletException, JMException {
 		shutdown();
 		INSTANCE = new SearchServer(new ServerConfiguration(args));
 		INSTANCE.start();
