@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
@@ -85,12 +86,13 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
                 SchemaSettingsDefinition.EMPTY;
         checkSettings();
 
-        try (final Stream<Path> stream = Files.list(this.schemaDirectory)) {
-            stream.filter(path -> Files.isDirectory(path)).forEach(indexPath -> indexMap.put(indexPath.toFile().getName(),
-                    new IndexInstanceManager(this, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
-                            executorService, service, indexPath)));
-        }
-    }
+		try (final Stream<Path> stream = Files.list(this.schemaDirectory)) {
+			stream.filter(path -> Files.isDirectory(path))
+					.forEach(indexPath -> indexMap.put(indexPath.toFile().getName(),
+							new IndexInstanceManager(this, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
+									executorService, service, indexPath)));
+		}
+	}
 
     @Override
     public void close() {
@@ -203,7 +205,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
         return backupLock.writeEx(() -> {
             checkBackupConfig();
             final Path backupDirectory = getBackupDirectory(backupName, true);
-            final SortedMap<String, BackupStatus> results = new TreeMap<>();
+            final SortedMap<String, BackupStatus> results = Collections.synchronizedSortedMap(new TreeMap<>());
             indexIterator(indexName, (idxName, indexInstance) -> {
                 try {
                     results.put(idxName, indexInstance.backup(backupDirectory.resolve(idxName)));
@@ -235,11 +237,12 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
                                                                   final boolean extractVersion) {
         return backupLock.readEx(() -> {
             checkBackupConfig();
-            final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
+            final SortedMap<String, SortedMap<String, BackupStatus>> results =
+                    Collections.synchronizedSortedMap(new TreeMap<>());
 
             backupIterator(backupName, backupDirectory -> {
 
-                final SortedMap<String, BackupStatus> backupResults = new TreeMap<>();
+                final SortedMap<String, BackupStatus> backupResults = Collections.synchronizedSortedMap(new TreeMap<>());
 
                 indexIterator(indexName, (idxName, indexInstance) -> {
                     try {
@@ -289,11 +292,12 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
                         try {
 
-                            final IndexInstance indexInstance = get(backupIndexDirectory.getFileName().toString(), false);
-                            if (indexInstance != null)
-                                indexInstance.deleteBackup(backupIndexDirectory);
-                            else
-                                FileUtils.deleteDirectory(backupIndexDirectory);
+							final IndexInstance indexInstance =
+									get(backupIndexDirectory.getFileName().toString(), false);
+							if (indexInstance != null)
+								indexInstance.deleteBackup(backupIndexDirectory);
+							else
+								FileUtils.deleteDirectory(backupIndexDirectory);
 
                             counter.incrementAndGet();
 
@@ -312,19 +316,19 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
         });
     }
 
-    synchronized void setSettings(SchemaSettingsDefinition settings) throws IOException {
-        if (settings == null) {
-            settings = SchemaSettingsDefinition.EMPTY;
-            settingsFile.delete();
-        } else
-            ObjectMappers.JSON.writeValue(settingsFile, settings);
-        this.settingsDefinition = settings;
-        checkSettings();
-    }
+	synchronized void setSettings(SchemaSettingsDefinition settings) throws IOException {
+		if (settings == null) {
+			settings = SchemaSettingsDefinition.EMPTY;
+			settingsFile.delete();
+		} else
+			ObjectMappers.JSON.writeValue(settingsFile, settings);
+		this.settingsDefinition = settings;
+		checkSettings();
+	}
 
-    SchemaSettingsDefinition getSettings() {
-        return settingsDefinition;
-    }
+	 SchemaSettingsDefinition getSettings() {
+		return settingsDefinition;
+	}
 
     private synchronized void checkSettings() {
         if (settingsDefinition == null) {
