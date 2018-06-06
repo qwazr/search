@@ -4,7 +4,7 @@
 
     <artifactId>qwazr-search</artifactId>
     <name>QWAZR Search</name>
-    <version>1.4.0.1-SNAPSHOT</version>
+    <version>1.4.0.1</version>
     <description>A Search Engine microservice with indexing and search features based on Apache Lucene</description>
     <packaging>jar</packaging>
 
@@ -19,7 +19,8 @@
         <connection>scm:git:git@github.com:qwazr/search.git</connection>
         <developerConnection>scm:git:git@github.com:qwazr/search.git</developerConnection>
         <url>git@github.com:qwazr/search.git</url>
-    </scm>
+      <tag>v1.4.0.1</tag>
+  </scm>
 
     <properties>
         <lucene.version>6.6.3</lucene.version>
