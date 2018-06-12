@@ -21,40 +21,38 @@ import com.qwazr.search.test.units.AbstractIndexTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 
 public class SmartFieldBuilderTest extends AbstractIndexTest {
 
-	private static IndexServiceInterface indexService;
+    private static IndexServiceInterface indexService;
 
-	private final static String SCHEMA = "smartFieldTestSchema";
-	private final static String INDEX = "smartFieldTestIndex";
+    private final static String SCHEMA = "smartFieldTestSchema";
+    private final static String INDEX = "smartFieldTestIndex";
 
-	@BeforeClass
-	public static void setup() throws IOException, URISyntaxException, InterruptedException {
-		initIndexManager();
-		indexService = indexManager.getService();
-		indexService.createUpdateSchema(SCHEMA);
-		indexService.createUpdateIndex(SCHEMA, INDEX);
-	}
+    @BeforeClass
+    public static void setup() {
+        initIndexManager();
+        indexService = indexManager.getService();
+        indexService.createUpdateSchema(SCHEMA);
+        indexService.createUpdateIndex(SCHEMA, INDEX);
+    }
 
-	@Test
-	public void testSetField() {
-		indexService.setField(SCHEMA, INDEX, "emptyField", SmartFieldDefinition.of().build());
-		indexService.setField(SCHEMA, INDEX, "doubleField",
-				SmartFieldDefinition.of().type(SmartFieldDefinition.Type.DOUBLE).build());
-		indexService.setField(SCHEMA, INDEX, "indexField", SmartFieldDefinition.of().index(true).build());
-	}
+    @Test
+    public void testSetField() {
+        indexService.setField(SCHEMA, INDEX, "emptyField", SmartFieldDefinition.of().build());
+        indexService.setField(SCHEMA, INDEX, "doubleField",
+                SmartFieldDefinition.of().type(SmartFieldDefinition.Type.DOUBLE).build());
+        indexService.setField(SCHEMA, INDEX, "indexField", SmartFieldDefinition.of().index(true).build());
+    }
 
-	@Test
-	public void testSetFields() {
-		LinkedHashMap<String, FieldDefinition> fields = new LinkedHashMap<>();
-		fields.put("emptyField2", SmartFieldDefinition.of().build());
-		fields.put("doubleField2", SmartFieldDefinition.of().type(SmartFieldDefinition.Type.DOUBLE).build());
-		fields.put("indexField2", SmartFieldDefinition.of().index(true).build());
-		indexService.setFields(SCHEMA, INDEX, fields);
+    @Test
+    public void testSetFields() {
+        LinkedHashMap<String, FieldDefinition> fields = new LinkedHashMap<>();
+        fields.put("emptyField2", SmartFieldDefinition.of().build());
+        fields.put("doubleField2", SmartFieldDefinition.of().type(SmartFieldDefinition.Type.DOUBLE).build());
+        fields.put("indexField2", SmartFieldDefinition.of().index(true).build());
+        indexService.setFields(SCHEMA, INDEX, fields);
 
-	}
+    }
 }
