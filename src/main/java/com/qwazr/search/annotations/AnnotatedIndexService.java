@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
+import java.util.concurrent.CompletionStage;
 
 public class AnnotatedIndexService<T> {
 
@@ -91,13 +92,13 @@ public class AnnotatedIndexService<T> {
      * @throws URISyntaxException if the syntax of the remote URI is wrong
      */
     public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass,
-                                 final String schemaName, final String indexName, final IndexSettingsDefinition settings)
-            throws URISyntaxException {
+        final String schemaName, final String indexName, final IndexSettingsDefinition settings)
+        throws URISyntaxException {
         Objects.requireNonNull(indexService, "The indexService parameter is null");
         Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
         this.indexService = indexService;
         this.annotatedService =
-                indexService instanceof AnnotatedServiceInterface ? (AnnotatedServiceInterface) indexService : null;
+            indexService instanceof AnnotatedServiceInterface ? (AnnotatedServiceInterface) indexService : null;
         Index index = indexDefinitionClass.getAnnotation(Index.class);
         Objects.requireNonNull(index, "This class does not declare any Index annotation: " + indexDefinitionClass);
 
@@ -136,9 +137,9 @@ public class AnnotatedIndexService<T> {
         });
 
         smartFieldMap.forEach((name, propertyField) -> fieldDefinitions.put(name,
-                new SmartFieldDefinition(name, propertyField, copyMap)));
+            new SmartFieldDefinition(name, propertyField, copyMap)));
         indexFieldMap.forEach((name, propertyField) -> fieldDefinitions.put(name,
-                new CustomFieldDefinition(name, propertyField, copyMap)));
+            new CustomFieldDefinition(name, propertyField, copyMap)));
 
         this.fieldMapWrappers = new FieldMapWrappers(fieldMap.keySet());
         this.schemaFieldMapWrapper = fieldMapWrappers.get(indexDefinitionClass);
@@ -148,12 +149,12 @@ public class AnnotatedIndexService<T> {
         final F duplicateField = map.put(fieldName, newField);
         if (duplicateField != null)
             throw new NotAcceptableException(
-                    "This field name has been defined twice: " + fieldName + " - Fields: " + duplicateField + "/" +
-                            newField);
+                "This field name has been defined twice: " + fieldName + " - Fields: " + duplicateField + "/" +
+                    newField);
     }
 
     public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass)
-            throws URISyntaxException {
+        throws URISyntaxException {
         this(indexService, indexDefinitionClass, null, null, null);
     }
 
@@ -310,14 +311,14 @@ public class AnnotatedIndexService<T> {
      * @throws InterruptedException if the process is interrupted
      */
     public void addDocument(final T row, final Map<String, String> commitUserData)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         checkParameters();
         Objects.requireNonNull(row, "The document (row) cannot be null");
         if (annotatedService != null)
             annotatedService.addDocument(schemaName, indexName, fieldMap, row, commitUserData);
         else
             indexService.postMappedDocument(schemaName, indexName,
-                    PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData, false));
+                PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData, false));
     }
 
     /**
@@ -340,14 +341,14 @@ public class AnnotatedIndexService<T> {
      * @throws InterruptedException if the process is interrupted
      */
     public void addDocuments(final Collection<T> row, final Map<String, String> commitUserData)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         checkParameters();
         Objects.requireNonNull(row, "The document (row) cannot be null");
         if (annotatedService != null)
             annotatedService.addDocuments(schemaName, indexName, fieldMap, row, commitUserData);
         else
             indexService.postMappedDocuments(schemaName, indexName,
-                    PostDefinition.of(schemaFieldMapWrapper.newMapCollection(row), commitUserData, false));
+                PostDefinition.of(schemaFieldMapWrapper.newMapCollection(row), commitUserData, false));
     }
 
     public void addDocuments(final Collection<T> documents) throws IOException, InterruptedException {
@@ -363,14 +364,14 @@ public class AnnotatedIndexService<T> {
      * @throws InterruptedException if the process is interrupted
      */
     public void postDocument(final T row, final Map<String, String> commitUserData)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         checkParameters();
         Objects.requireNonNull(row, "The document (row) cannot be null");
         if (annotatedService != null)
             annotatedService.postDocument(schemaName, indexName, fieldMap, row, commitUserData);
         else
             indexService.postMappedDocument(schemaName, indexName,
-                    PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData));
+                PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData));
     }
 
     /**
@@ -393,14 +394,14 @@ public class AnnotatedIndexService<T> {
      * @throws InterruptedException if the process is interrupted
      */
     public void postDocuments(final Collection<T> rows, final Map<String, String> commitUserData)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         checkParameters();
         Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
         if (annotatedService != null)
             annotatedService.postDocuments(schemaName, indexName, fieldMap, rows, commitUserData);
         else
             indexService.postMappedDocuments(schemaName, indexName,
-                    PostDefinition.of(schemaFieldMapWrapper.newMapCollection(rows), commitUserData));
+                PostDefinition.of(schemaFieldMapWrapper.newMapCollection(rows), commitUserData));
     }
 
     /**
@@ -429,7 +430,7 @@ public class AnnotatedIndexService<T> {
             annotatedService.updateDocValues(schemaName, indexName, fieldMap, row, commitUserData);
         else
             indexService.updateMappedDocValues(schemaName, indexName,
-                    PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData));
+                PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData));
     }
 
     /**
@@ -452,14 +453,14 @@ public class AnnotatedIndexService<T> {
      * @throws InterruptedException if the process is interrupted
      */
     public void updateDocumentsValues(final Collection<T> rows, final Map<String, String> commitUserData)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         checkParameters();
         Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
         if (annotatedService != null)
             annotatedService.updateDocsValues(schemaName, indexName, fieldMap, rows, commitUserData);
         else
             indexService.updateMappedDocsValues(schemaName, indexName,
-                    PostDefinition.of(schemaFieldMapWrapper.newMapCollection(rows), commitUserData));
+                PostDefinition.of(schemaFieldMapWrapper.newMapCollection(rows), commitUserData));
     }
 
     /**
@@ -474,7 +475,7 @@ public class AnnotatedIndexService<T> {
     }
 
     private <C> C getDocument(final Object id, final FieldMapWrapper<C> wrapper)
-            throws ReflectiveOperationException, IOException {
+        throws ReflectiveOperationException, IOException {
         checkParameters();
         Objects.requireNonNull(id, "The id cannot be empty");
         if (annotatedService != null)
@@ -491,7 +492,7 @@ public class AnnotatedIndexService<T> {
      * @throws ReflectiveOperationException if the document cannot be created
      */
     public <C> C getDocument(final Object id, final Class<C> objectClass)
-            throws ReflectiveOperationException, IOException {
+        throws ReflectiveOperationException, IOException {
         return getDocument(id, fieldMapWrappers.get(objectClass));
     }
 
@@ -505,7 +506,7 @@ public class AnnotatedIndexService<T> {
     }
 
     private <C> List<C> getDocuments(final Integer start, final Integer rows, final FieldMapWrapper<C> wrapper)
-            throws IOException, ReflectiveOperationException {
+        throws IOException, ReflectiveOperationException {
         checkParameters();
         if (annotatedService != null)
             return annotatedService.getDocuments(schemaName, indexName, start, rows, wrapper);
@@ -514,13 +515,13 @@ public class AnnotatedIndexService<T> {
     }
 
     public <C> List<C> getDocuments(final Integer start, final Integer rows, final Class<C> clazz)
-            throws IOException, ReflectiveOperationException {
+        throws IOException, ReflectiveOperationException {
         checkParameters();
         return getDocuments(start, rows, fieldMapWrappers.get(clazz));
     }
 
     public List<T> getDocuments(final Integer start, final Integer rows)
-            throws IOException, ReflectiveOperationException {
+        throws IOException, ReflectiveOperationException {
         checkParameters();
         return getDocuments(start, rows, schemaFieldMapWrapper);
     }
@@ -574,7 +575,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String analyzerName,
-                                                                  final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+        final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
         checkParameters();
         return indexService.setAnalyzers(schemaName, indexName, analyzers);
     }
@@ -600,7 +601,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String backupName,
-                                                                                            final boolean extractVersion) {
+        final boolean extractVersion) {
         checkParameters();
         return indexService.getBackups(schemaName, indexName, backupName, extractVersion);
     }
@@ -616,7 +617,7 @@ public class AnnotatedIndexService<T> {
     }
 
     private <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query,
-                                                           final FieldMapWrapper<C> wrapper) {
+        final FieldMapWrapper<C> wrapper) {
         checkParameters();
         if (annotatedService != null)
             return annotatedService.searchQuery(schemaName, indexName, query, wrapper);
@@ -637,7 +638,7 @@ public class AnnotatedIndexService<T> {
      * @return the results
      */
     public <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query, final Class<C> objectClass)
-            throws IOException, ReflectiveOperationException {
+        throws IOException, ReflectiveOperationException {
         checkParameters();
         return searchQuery(query, fieldMapWrappers.get(objectClass));
     }
@@ -663,7 +664,7 @@ public class AnnotatedIndexService<T> {
      * @return the results
      */
     public ResultDefinition.Empty searchQuery(final QueryDefinition query,
-                                              final ResultDocumentsInterface resultDocuments) {
+        final ResultDocumentsInterface resultDocuments) {
         checkParameters();
         if (annotatedService != null)
             return annotatedService.searchQuery(schemaName, indexName, query, resultDocuments);
@@ -719,7 +720,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public List<TermEnumDefinition> doExtractTerms(final String fieldName, final String prefix, final Integer start,
-                                                   final Integer rows) {
+        final Integer rows) {
         checkParameters();
         return indexService.doExtractTerms(schemaName, indexName, fieldName, prefix, start, rows);
     }
@@ -739,12 +740,12 @@ public class AnnotatedIndexService<T> {
         fieldMapWrappers.newFieldMapWrapper(objectClass);
     }
 
-    public ReplicationStatus replicationCheck() {
+    public CompletionStage<ReplicationStatus> replicationCheck() {
         return indexService.replicationCheck(schemaName, indexName);
     }
 
     private <C> ResultDefinition.WithObject<C> toRecords(final ResultDefinition<?> result,
-                                                         final FieldMapWrapper<C> wrapper) {
+        final FieldMapWrapper<C> wrapper) {
         if (result == null)
             return null;
         if (!(result instanceof ResultDefinition.WithMap))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -46,6 +45,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
 final class IndexServiceImpl extends AbstractServiceImpl implements IndexServiceInterface, AnnotatedServiceInterface {
@@ -73,8 +75,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     @Context
     private HttpServletResponse response;
 
-    IndexServiceImpl(final IndexManager indexManager) {
+    private final ExecutorService executorService;
+
+    IndexServiceImpl(final ExecutorService executorService, final IndexManager indexManager) {
         this.indexManager = indexManager;
+        this.executorService = executorService;
     }
 
     /**
@@ -591,28 +596,21 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public ReplicationStatus replicationCheck(final String schemaName, final String indexName) {
-        try {
-            checkRight(null);
-            LOGGER.info(() -> "Start replication " + schemaName + '/' + indexName);
-            final ReplicationStatus status = indexManager.get(schemaName).get(indexName, false).replicationCheck();
-            LOGGER.info(
-                () -> "End replication " + schemaName + '/' + indexName + " - time: " + status.time + "ms - size: " +
-                    status.size);
-            return status;
-        } catch (Exception e) {
-            throw ServerException.getJsonException(LOGGER, e);
-        }
-    }
-
-    @Override
-    public void replicationCheckAsync(final String schema_name, final String index_name,
-        final AsyncResponse asyncResponse) {
-        try {
-            asyncResponse.resume(replicationCheck(schema_name, index_name));
-        } catch (Exception e) {
-            asyncResponse.resume(e);
-        }
+    final public CompletionStage<ReplicationStatus> replicationCheck(final String schemaName, final String indexName) {
+        final CompletableFuture<ReplicationStatus> completionStage = new CompletableFuture<>();
+        executorService.submit(() -> {
+            try {
+                checkRight(null);
+                LOGGER.info(() -> "Start replication " + schemaName + '/' + indexName);
+                final ReplicationStatus status = indexManager.get(schemaName).get(indexName, false).replicationCheck();
+                LOGGER.info(() -> "End replication " + schemaName + '/' + indexName + " - time: " + status.time +
+                    "ms - size: " + status.size);
+                completionStage.complete(status);
+            } catch (Exception e) {
+                throw ServerException.getJsonException(LOGGER, e);
+            }
+        });
+        return completionStage;
     }
 
     @Override

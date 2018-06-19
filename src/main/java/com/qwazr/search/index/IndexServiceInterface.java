@@ -34,8 +34,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -47,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.UUID;
+import java.util.concurrent.CompletionStage;
 
 @RolesAllowed(IndexServiceInterface.SERVICE_NAME)
 @Path("/" + IndexServiceInterface.PATH)
@@ -321,15 +320,11 @@ public interface IndexServiceInterface extends ServiceInterface {
     ReplicationSession replicationUpdate(@PathParam("schema_name") String schema_name,
         @PathParam("index_name") String index_name, String current_version);
 
-    ReplicationStatus replicationCheck(String schema_name, String index_name);
-
     @GET
     @Path("/{schema_name}/{index_name}/replication")
     @Produces({ ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE })
-    default void replicationCheckAsync(@PathParam("schema_name") String schema_name,
-        @PathParam("index_name") String index_name, @Suspended AsyncResponse asyncResponse) {
-        throw new NotImplementedException("Use replicationCheck instead");
-    }
+    CompletionStage<ReplicationStatus> replicationCheck(@PathParam("schema_name") String schema_name,
+        @PathParam("index_name") String index_name);
 
     @GET
     @Path("/{schema_name}/{index_name}/resources")

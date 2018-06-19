@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -33,46 +34,48 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class ReplicationTestManager extends ReplicationTestBase<AnnotatedRecord> {
 
-	protected static ExecutorService executorService;
-	protected static IndexManager indexManager;
-	protected static Path rootDirectory;
+    protected static ExecutorService executorService;
+    protected static IndexManager indexManager;
+    protected static Path rootDirectory;
 
-	public ReplicationTestManager() {
-		super(indexManager.getService(), AnnotatedRecord.class);
-	}
+    public ReplicationTestManager() {
+        super(indexManager.getService(), AnnotatedRecord.class);
+    }
 
-	@BeforeClass
-	public static void setupClass() throws IOException {
-		executorService = Executors.newCachedThreadPool();
-		rootDirectory = Files.createTempDirectory("ReplicationTestManager");
-		indexManager = new IndexManager(rootDirectory, executorService);
-		indexManager.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME,
-				resourceLoader -> new AnnotatedRecord.TestAnalyzer(new AtomicInteger()));
-	}
+    @BeforeClass
+    public static void setupClass() throws IOException {
+        executorService = Executors.newCachedThreadPool();
+        rootDirectory = Files.createTempDirectory("ReplicationTestManager");
+        indexManager = new IndexManager(rootDirectory, executorService);
+        indexManager.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME,
+            resourceLoader -> new AnnotatedRecord.TestAnalyzer(new AtomicInteger()));
+    }
 
-	@AfterClass
-	public static void cleanupClass() throws InterruptedException {
-		indexManager.close();
-		executorService.shutdown();
-		executorService.awaitTermination(1, TimeUnit.MINUTES);
-	}
+    @AfterClass
+    public static void cleanupClass() throws InterruptedException {
+        indexManager.close();
+        executorService.shutdown();
+        executorService.awaitTermination(1, TimeUnit.MINUTES);
+    }
 
-	public void test() throws IOException, InterruptedException {
-		master.postDocuments(AnnotatedRecord.randomList(1000, count -> count));
-		checkReplicationStatus(slaves.get(0).replicationCheck(), ReplicationStatus.Strategy.full, 100);
-		compareMasterAndSlaveRecords(null);
+    public void test() throws IOException, InterruptedException, ExecutionException {
+        master.postDocuments(AnnotatedRecord.randomList(1000, count -> count));
+        checkReplicationStatus(slaves.get(0).replicationCheck().toCompletableFuture().get(),
+            ReplicationStatus.Strategy.full, 100);
+        compareMasterAndSlaveRecords(null);
 
-		Assert.assertEquals(0,
-				checkReplicationStatus(slaves.get(0).replicationCheck(), ReplicationStatus.Strategy.incremental,
-						0).bytes);
-		compareMasterAndSlaveRecords(null);
+        Assert.assertEquals(0, checkReplicationStatus(slaves.get(0).replicationCheck().toCompletableFuture().get(),
+            ReplicationStatus.Strategy.incremental, 0).bytes);
 
-		master.checkIndex();
-		slaves.get(0).checkIndex();
+        compareMasterAndSlaveRecords(null);
 
-		master.postDocuments(AnnotatedRecord.randomList(1000, count -> count + 1000));
-		checkReplicationStatus(slaves.get(0).replicationCheck(), ReplicationStatus.Strategy.incremental, null);
-		compareMasterAndSlaveRecords(null);
+        master.checkIndex();
+        slaves.get(0).checkIndex();
 
-	}
+        master.postDocuments(AnnotatedRecord.randomList(1000, count -> count + 1000));
+        checkReplicationStatus(slaves.get(0).replicationCheck().toCompletableFuture().get(),
+            ReplicationStatus.Strategy.incremental, null);
+        compareMasterAndSlaveRecords(null);
+
+    }
 }

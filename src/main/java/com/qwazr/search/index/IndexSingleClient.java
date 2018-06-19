@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CompletionStage;
 
 public class IndexSingleClient extends JsonClient implements IndexServiceInterface {
 
@@ -514,19 +514,16 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
-    public ReplicationStatus replicationCheck(final String schemaName, final String indexName) {
+    public CompletionStage<ReplicationStatus> replicationCheck(final String schemaName, final String indexName) {
         try {
             return indexTarget.path(schemaName)
                 .path(indexName)
                 .path("replication")
                 .request(preferedSerializedMediaType)
-                .async()
-                .get(ReplicationStatus.class)
-                .get();
+                .rx()
+                .get(ReplicationStatus.class);
         } catch (WebApplicationException e) {
             throw ServerException.from(e);
-        } catch (InterruptedException | ExecutionException e) {
-            throw ServerException.of(e);
         }
     }
 

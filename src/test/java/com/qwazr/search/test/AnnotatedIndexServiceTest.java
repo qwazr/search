@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,189 +58,189 @@ import java.util.concurrent.atomic.AtomicInteger;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AnnotatedIndexServiceTest {
 
-	private static IndexManager indexManager;
-	private static ExecutorService executor;
-	private static Path workDirectory;
-	private static AnnotatedIndexService<IndexRecord> service;
+    private static IndexManager indexManager;
+    private static ExecutorService executor;
+    private static Path workDirectory;
+    private static AnnotatedIndexService<IndexRecord> service;
 
-	@BeforeClass
-	public static void beforeClass() throws Exception {
-		executor = Executors.newCachedThreadPool();
-		workDirectory = Files.createTempDirectory("MultiFieldQueryTest");
-	}
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        executor = Executors.newCachedThreadPool();
+        workDirectory = Files.createTempDirectory("MultiFieldQueryTest");
+    }
 
-	@AfterClass
-	public static void afterClass() throws Exception {
-		if (indexManager != null) {
-			indexManager.close();
-			indexManager = null;
-		}
-		if (executor != null) {
-			executor.shutdown();
-			executor = null;
-		}
-	}
+    @AfterClass
+    public static void afterClass() throws Exception {
+        if (indexManager != null) {
+            indexManager.close();
+            indexManager = null;
+        }
+        if (executor != null) {
+            executor.shutdown();
+            executor = null;
+        }
+    }
 
-	@Test
-	public void test100createService() throws IOException, URISyntaxException {
+    @Test
+    public void test100createService() throws IOException, URISyntaxException {
 
-		// Create the indexManager
-		indexManager = new IndexManager(workDirectory, executor);
-		Assert.assertNotNull(indexManager);
+        // Create the indexManager
+        indexManager = new IndexManager(workDirectory, executor);
+        Assert.assertNotNull(indexManager);
 
-		// Register a named analyzer
-		final AtomicInteger factoryCallCount = new AtomicInteger();
-		final AtomicInteger analyzerCallCount = new AtomicInteger();
-		final AnalyzerFactory analyzerFactory = resourceLoader -> {
-			Assert.assertNotNull(resourceLoader);
-			factoryCallCount.incrementAndGet();
-			return new AnnotatedRecord.TestAnalyzer(analyzerCallCount);
-		};
-		indexManager.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME, analyzerFactory);
+        // Register a named analyzer
+        final AtomicInteger factoryCallCount = new AtomicInteger();
+        final AtomicInteger analyzerCallCount = new AtomicInteger();
+        final AnalyzerFactory analyzerFactory = resourceLoader -> {
+            Assert.assertNotNull(resourceLoader);
+            factoryCallCount.incrementAndGet();
+            return new AnnotatedRecord.TestAnalyzer(analyzerCallCount);
+        };
+        indexManager.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME, analyzerFactory);
 
-		// Get the service
-		service = indexManager.getService(IndexRecord.class);
-		Assert.assertNotNull(service);
+        // Get the service
+        service = indexManager.getService(IndexRecord.class);
+        Assert.assertNotNull(service);
 
-		// Create the schema
-		SchemaSettingsDefinition schema = service.createUpdateSchema();
-		Assert.assertNotNull(schema);
+        // Create the schema
+        SchemaSettingsDefinition schema = service.createUpdateSchema();
+        Assert.assertNotNull(schema);
 
-		// Create the index
-		IndexStatus index = service.createUpdateIndex();
-		Assert.assertNotNull(index);
+        // Create the index
+        IndexStatus index = service.createUpdateIndex();
+        Assert.assertNotNull(index);
 
-		Map<String, FieldDefinition> fields = service.createUpdateFields();
-		Assert.assertNotNull(fields);
-		Assert.assertEquals(3, fields.size());
+        Map<String, FieldDefinition> fields = service.createUpdateFields();
+        Assert.assertNotNull(fields);
+        Assert.assertEquals(3, fields.size());
 
-		// Check analyzer creation
-		service.testAnalyzer(AnnotatedRecord.INJECTED_ANALYZER_NAME, "Test");
-		Assert.assertEquals(1, factoryCallCount.get());
-		Assert.assertEquals(1, analyzerCallCount.get());
-	}
+        // Check analyzer creation
+        service.testAnalyzer(AnnotatedRecord.INJECTED_ANALYZER_NAME, "Test");
+        Assert.assertEquals(1, factoryCallCount.get());
+        Assert.assertEquals(1, analyzerCallCount.get());
+    }
 
-	@Test
-	public void test200addDocuments() {
-		try {
-			service.addDocument(new IndexRecord("This is the title", "Few terms in the content"));
-			Assert.assertEquals(Long.valueOf(1), service.getIndexStatus().num_docs);
-		} catch (Exception e) {
-			Assert.fail(e.getMessage());
-		}
-	}
+    @Test
+    public void test200addDocuments() {
+        try {
+            service.addDocument(new IndexRecord("This is the title", "Few terms in the content"));
+            Assert.assertEquals(Long.valueOf(1), service.getIndexStatus().numDocs);
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+    }
 
-	@Test
-	public void test400checkQuery() throws IOException {
-		Assert.assertEquals("Test", service.query(context -> {
-			Assert.assertNotNull(context.getIndexReader());
-			Assert.assertNotNull(context.getIndexSearcher());
-			return "Test";
-		}));
-	}
+    @Test
+    public void test400checkQuery() throws IOException {
+        Assert.assertEquals("Test", service.query(context -> {
+            Assert.assertNotNull(context.getIndexReader());
+            Assert.assertNotNull(context.getIndexSearcher());
+            return "Test";
+        }));
+    }
 
-	@Test
-	public void test400checkWrite() throws IOException {
-		Assert.assertEquals("Test", service.write(context -> {
-			Assert.assertNotNull(context.getIndexWriter());
-			return "Test";
-		}));
-	}
+    @Test
+    public void test400checkWrite() throws IOException {
+        Assert.assertEquals("Test", service.write(context -> {
+            Assert.assertNotNull(context.getIndexWriter());
+            return "Test";
+        }));
+    }
 
-	@Test
-	public void test500query() throws IOException, ReflectiveOperationException {
+    @Test
+    public void test500query() throws IOException, ReflectiveOperationException {
 
-		MultiFieldQuery multiFieldQuery = MultiFieldQuery.of()
-				.fieldBoost("title", 10F)
-				.fieldBoost("content", 1F)
-				.fieldBoost("full", 0.5F)
-				.fieldDisableGraph("title", "content")
-				.defaultOperator(QueryParserOperator.AND)
-				.queryString("Title terms")
-				.build();
+        MultiFieldQuery multiFieldQuery = MultiFieldQuery.of()
+            .fieldBoost("title", 10F)
+            .fieldBoost("content", 1F)
+            .fieldBoost("full", 0.5F)
+            .fieldDisableGraph("title", "content")
+            .defaultOperator(QueryParserOperator.AND)
+            .queryString("Title terms")
+            .build();
 
-		QueryBuilder builder = QueryDefinition.of(multiFieldQuery).queryDebug(true);
-		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
-		Assert.assertEquals(
-				"(+Synonym(title:titl title:title) +Synonym(title:term title:terms))^10.0 (+Synonym(content:titl content:title) +Synonym(content:term content:terms)) (+Synonym(full:titl full:title) +Synonym(full:term full:terms))^0.5",
-				results.query);
-		Assert.assertEquals(Long.valueOf(1), results.total_hits);
-	}
+        QueryBuilder builder = QueryDefinition.of(multiFieldQuery).queryDebug(true);
+        ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
+        Assert.assertEquals(
+            "(+Synonym(title:titl title:title) +Synonym(title:term title:terms))^10.0 (+Synonym(content:titl content:title) +Synonym(content:term content:terms)) (+Synonym(full:titl full:title) +Synonym(full:term full:terms))^0.5",
+            results.query);
+        Assert.assertEquals(Long.valueOf(1), results.total_hits);
+    }
 
-	@Test
-	public void test501query() throws IOException, InterruptedException {
-		Long result = service.query(context -> {
-			ResultDefinition.WithObject<IndexRecord> res =
-					context.searchObject(QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
-			return res.total_hits + context.getIndexReader().numDocs();
-		});
-		Assert.assertEquals(Long.valueOf(2), result);
-	}
+    @Test
+    public void test501query() throws IOException, InterruptedException {
+        Long result = service.query(context -> {
+            ResultDefinition.WithObject<IndexRecord> res =
+                context.searchObject(QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
+            return res.total_hits + context.getIndexReader().numDocs();
+        });
+        Assert.assertEquals(Long.valueOf(2), result);
+    }
 
-	@Test
-	public void test510explain() {
-		MultiFieldQuery mfq = MultiFieldQuery.of()
-				.defaultOperator(QueryParserOperator.AND)
-				.queryString("Title terms")
-				.fieldBoost("title", 10F)
-				.fieldBoost("content", 1.0F)
-				.fieldBoost("full", 0.5f)
-				.fieldAndFilter("full")
-				.build();
-		QueryDefinition query = QueryDefinition.of(mfq).build();
-		ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);
-		Assert.assertNotNull(results);
-		int docId = results.getDocuments().get(0).getDoc();
-		ExplainDefinition explain = service.explainQuery(query, docId);
-		Assert.assertNotNull(explain);
-		String explainText = service.explainQueryText(query, docId);
-		Assert.assertNotNull(explainText);
-		String explainDot = service.explainQueryDot(query, docId, 30);
-		Assert.assertNotNull(explainDot);
-	}
+    @Test
+    public void test510explain() {
+        MultiFieldQuery mfq = MultiFieldQuery.of()
+            .defaultOperator(QueryParserOperator.AND)
+            .queryString("Title terms")
+            .fieldBoost("title", 10F)
+            .fieldBoost("content", 1.0F)
+            .fieldBoost("full", 0.5f)
+            .fieldAndFilter("full")
+            .build();
+        QueryDefinition query = QueryDefinition.of(mfq).build();
+        ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);
+        Assert.assertNotNull(results);
+        int docId = results.getDocuments().get(0).getDoc();
+        ExplainDefinition explain = service.explainQuery(query, docId);
+        Assert.assertNotNull(explain);
+        String explainText = service.explainQueryText(query, docId);
+        Assert.assertNotNull(explainText);
+        String explainDot = service.explainQueryDot(query, docId, 30);
+        Assert.assertNotNull(explainDot);
+    }
 
-	@Test
-	public void test900close() {
-		indexManager.close();
-		indexManager = null;
-	}
+    @Test
+    public void test900close() {
+        indexManager.close();
+        indexManager = null;
+    }
 
-	@Index(schema = "schemaName", name = "indexName")
-	public static class IndexRecord {
+    @Index(schema = "schemaName", name = "indexName")
+    public static class IndexRecord {
 
-		@IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class, stored = true)
-		@Copy(to = @Copy.To(order = 1, field = "full"))
-		final public String title;
+        @IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class, stored = true)
+        @Copy(to = @Copy.To(order = 1, field = "full"))
+        final public String title;
 
-		@IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class, stored = true)
-		@Copy(to = @Copy.To(order = 2, field = "full"))
-		final public String content;
+        @IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class, stored = true)
+        @Copy(to = @Copy.To(order = 2, field = "full"))
+        final public String content;
 
-		@IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class)
-		final public String full;
+        @IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class)
+        final public String full;
 
-		public IndexRecord(String title, String content) {
-			this.title = title;
-			this.content = content;
-			this.full = null;
-		}
+        public IndexRecord(String title, String content) {
+            this.title = title;
+            this.content = content;
+            this.full = null;
+        }
 
-		public IndexRecord() {
-			this(null, null);
-		}
-	}
+        public IndexRecord() {
+            this(null, null);
+        }
+    }
 
-	public static class MyAnalyzer extends Analyzer {
+    public static class MyAnalyzer extends Analyzer {
 
-		@Override
-		protected TokenStreamComponents createComponents(String fieldName) {
-			Tokenizer source = new StandardTokenizer();
-			TokenStream filter = new KeywordRepeatFilter(source);
-			filter = new SnowballFilter(filter, "English");
-			filter = new LowerCaseFilter(filter);
-			filter = new RemoveDuplicatesTokenFilter(filter);
-			return new TokenStreamComponents(source, filter);
-		}
+        @Override
+        protected TokenStreamComponents createComponents(String fieldName) {
+            Tokenizer source = new StandardTokenizer();
+            TokenStream filter = new KeywordRepeatFilter(source);
+            filter = new SnowballFilter(filter, "English");
+            filter = new LowerCaseFilter(filter);
+            filter = new RemoveDuplicatesTokenFilter(filter);
+            return new TokenStreamComponents(source, filter);
+        }
 
-	}
+    }
 }

@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class ReplicationNoTaxo extends ReplicationTestManager {
 
@@ -47,7 +48,7 @@ public class ReplicationNoTaxo extends ReplicationTestManager {
 	}
 
 	@Test
-	public void test() throws IOException, InterruptedException {
+	public void test() throws IOException, InterruptedException, ExecutionException {
 		super.test();
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,20 +27,20 @@ import java.net.URISyntaxException;
 
 public class DeleteByQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
-		initIndexService();
-	}
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+        initIndexService();
+    }
 
-	@Test
-	public void test() throws IOException, InterruptedException {
-		indexService.postDocument(getNewRecord("1").textField("Hello World").stringField("Hello World"));
-		indexService.postDocument(getNewRecord("2").textField("Hello World 2").stringField("Hello World 2"));
-		Assert.assertEquals(Long.valueOf(2), indexService.getIndexStatus().num_docs);
-		QueryDefinition queryDef =
-				QueryDefinition.of(TermsQuery.of(null, FieldDefinition.ID_FIELD).add("1", "2").build()).build();
-		indexService.deleteByQuery(queryDef);
-		Assert.assertEquals(Long.valueOf(0), indexService.getIndexStatus().num_docs);
-	}
+    @Test
+    public void test() throws IOException, InterruptedException {
+        indexService.postDocument(getNewRecord("1").textField("Hello World").stringField("Hello World"));
+        indexService.postDocument(getNewRecord("2").textField("Hello World 2").stringField("Hello World 2"));
+        Assert.assertEquals(Long.valueOf(2), indexService.getIndexStatus().numDocs);
+        QueryDefinition queryDef =
+            QueryDefinition.of(TermsQuery.of(null, FieldDefinition.ID_FIELD).add("1", "2").build()).build();
+        indexService.deleteByQuery(queryDef);
+        Assert.assertEquals(Long.valueOf(0), indexService.getIndexStatus().numDocs);
+    }
 
 }

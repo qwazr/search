@@ -15,13 +15,13 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.LoggerUtils;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.FieldInfo;
@@ -42,415 +42,547 @@ import org.apache.lucene.store.NRTCachingDirectory;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    creatorVisibility = JsonAutoDetect.Visibility.NONE,
+    fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public class IndexStatus {
 
-	private final static Logger LOGGER = LoggerUtils.getLogger(IndexStatus.class);
+    private final static Logger LOGGER = LoggerUtils.getLogger(IndexStatus.class);
 
-	final public Long num_docs;
-	final public Long num_deleted_docs;
-	final public Boolean has_pending_merges;
-	final public Boolean has_uncommitted_changes;
-	final public Boolean has_deletions;
-	final public Double ram_buffer_size_mb;
-	final public String index_uuid;
-	final public String master_uuid;
-	final public Long version;
-	final public Set<String> analyzers;
-	final public Set<String> fields;
-	final public IndexSettingsDefinition settings;
-	final public Map<String, Set<FieldInfoStatus>> field_infos;
-	final public Integer segment_count;
-	final public Long segments_bytes_size;
-	final public String segments_size;
-	final public Collection<String> commit_filenames;
-	final public Long commit_generation;
-	final public MergePolicyStatus merge_policy;
-	final public QueryCacheStats query_cache;
-	final public Map<String, String> commit_user_data;
-	final public String directory_class;
-	final public String[] directory_cached_files;
-	final public String directory_cached_ram_used;
-	final public Integer active_index_analyzers;
-	final public Integer active_query_analyzers;
+    @JsonProperty("num_docs")
+    final public Long numDocs;
 
-	@JsonCreator
-	IndexStatus(@JsonProperty("num_docs") Long num_docs, @JsonProperty("num_deleted_docs") Long num_deleted_docs,
-			@JsonProperty("has_pending_merges") Boolean has_pending_merges,
-			@JsonProperty("has_uncommitted_changes") Boolean has_uncommitted_changes,
-			@JsonProperty("has_deletions") Boolean has_deletions,
-			@JsonProperty("ram_buffer_size_mb") Double ram_buffer_size_mb,
-			@JsonProperty("index_uuid") String index_uuid, @JsonProperty("master_uuid") String master_uuid,
-			@JsonProperty("version") Long version, @JsonProperty("analyzers") Set<String> analyzers,
-			@JsonProperty("fields") Set<String> fields, @JsonProperty("settings") IndexSettingsDefinition settings,
-			@JsonProperty("field_infos") Map<String, Set<FieldInfoStatus>> field_infos,
-			@JsonProperty("segment_count") Integer segment_count,
-			@JsonProperty("segments_bytes_size") Long segments_bytes_size,
-			@JsonProperty("segments_size") String segments_size,
-			@JsonProperty("commit_filenames") Collection<String> commit_filenames,
-			@JsonProperty("commit_generation") Long commit_generation,
-			@JsonProperty("merge_policy") MergePolicyStatus merge_policy,
-			@JsonProperty("query_cache") QueryCacheStats query_cache,
-			@JsonProperty("commit_user_data") Map<String, String> commit_user_data,
-			@JsonProperty("directory_class") String directory_class,
-			@JsonProperty("directory_cached_files") String[] directory_cached_files,
-			@JsonProperty("directory_cached_ram_used") String directory_cached_ram_used,
-			@JsonProperty("active_index_analyzers") Integer active_index_analyzers,
-			@JsonProperty("active_query_analyzers") Integer active_query_analyzers) {
-		this.num_docs = num_docs;
-		this.num_deleted_docs = num_deleted_docs;
-		this.merge_policy = merge_policy;
-		this.has_pending_merges = has_pending_merges;
-		this.has_uncommitted_changes = has_uncommitted_changes;
-		this.ram_buffer_size_mb = ram_buffer_size_mb;
-		this.has_deletions = has_deletions;
-		this.index_uuid = index_uuid;
-		this.master_uuid = master_uuid;
-		this.version = version;
-		this.analyzers = analyzers;
-		this.fields = fields;
-		this.settings = settings;
-		this.field_infos = field_infos;
-		this.segment_count = segment_count;
-		this.segments_bytes_size = segments_bytes_size;
-		this.segments_size = segments_size;
-		this.commit_filenames = commit_filenames;
-		this.commit_generation = commit_generation;
-		this.query_cache = query_cache;
-		this.commit_user_data = commit_user_data;
-		this.directory_class = directory_class;
-		this.directory_cached_files = directory_cached_files;
-		this.directory_cached_ram_used = directory_cached_ram_used;
-		this.active_index_analyzers = active_index_analyzers;
-		this.active_query_analyzers = active_query_analyzers;
-	}
+    @JsonProperty("num_deleted_docs")
+    final public Long numDeletedDocs;
 
-	public IndexStatus(final UUID indexUuid, final UUID masterUuid, final Directory directory,
-			final IndexSearcher indexSearcher, final IndexWriter indexWriter, final IndexSettingsDefinition settings,
-			final Set<String> analyzers, final Set<String> fields, final int activeIndexAnalyzers,
-			final int activeQueryAnalyzers) throws IOException {
-		final IndexReader indexReader = indexSearcher.getIndexReader();
-		num_docs = (long) indexReader.numDocs();
-		num_deleted_docs = (long) indexReader.numDeletedDocs();
-		field_infos = new TreeMap<>();
-		fillFieldInfos(field_infos, indexReader.leaves());
+    @JsonProperty("has_pending_merges")
+    final public Boolean hasPendingMerges;
 
-		if (indexWriter == null) {
-			merge_policy = null;
-			has_pending_merges = null;
-			has_uncommitted_changes = null;
-			has_deletions = null;
-			ram_buffer_size_mb = null;
-		} else {
-			final LiveIndexWriterConfig config = indexWriter.getConfig();
-			final MergePolicy mergePolicy = config.getMergePolicy();
-			merge_policy = mergePolicy == null ? null : new MergePolicyStatus(mergePolicy);
-			has_pending_merges = indexWriter.hasPendingMerges();
-			has_uncommitted_changes = indexWriter.hasUncommittedChanges();
-			has_deletions = indexWriter.hasDeletions();
-			ram_buffer_size_mb = config.getRAMBufferSizeMB();
-		}
+    @JsonProperty("has_uncommitted_changes")
+    final public Boolean hasUncommittedChanges;
 
-		final DirectoryReader directoryReader =
-				indexReader instanceof DirectoryReader ? (DirectoryReader) indexReader : null;
+    @JsonProperty("has_deletions")
+    final public Boolean hasDeletions;
 
-		final IndexCommit indexCommit;
-		if (directoryReader != null) {
-			indexCommit = directoryReader.getIndexCommit();
-			version = directoryReader.getVersion();
-		} else {
-			indexCommit = null;
-			version = null;
-		}
+    @JsonProperty("ram_buffer_size_mb")
+    final public Double ramBufferSizeMb;
 
-		if (indexCommit != null) {
-			commit_user_data = indexCommit.getUserData();
-			segment_count = indexCommit.getSegmentCount();
-			commit_filenames = indexCommit.getFileNames();
-			commit_generation = indexCommit.getGeneration();
-			if (directory != null && commit_filenames != null) {
-				long size = 0;
-				for (String filename : commit_filenames) {
-					try {
-						size += directory.fileLength(filename);
-					} catch (IOException e) {
-						LOGGER.log(Level.FINE, e, e::getMessage);
-					}
-				}
-				segments_bytes_size = size;
-				segments_size = FileUtils.byteCountToDisplaySize(size);
-			} else {
-				segments_bytes_size = null;
-				segments_size = null;
-			}
-		} else {
-			commit_user_data = null;
-			segment_count = null;
-			segments_bytes_size = null;
-			segments_size = null;
-			commit_filenames = null;
-			commit_generation = null;
-		}
+    @JsonProperty("index_uuid")
+    final public String indexUuid;
 
-		this.index_uuid = indexUuid == null ? null : indexUuid.toString();
-		this.master_uuid = masterUuid == null ? null : masterUuid.toString();
-		this.settings = settings;
-		this.analyzers = analyzers;
-		this.active_index_analyzers = activeIndexAnalyzers;
-		this.active_query_analyzers = activeQueryAnalyzers;
-		this.fields = fields;
+    @JsonProperty("master_uuid")
+    final public String masterUuid;
 
-		final QueryCache queryCache = indexSearcher.getQueryCache();
-		this.query_cache = queryCache != null && queryCache instanceof LRUQueryCache ?
-				new QueryCacheStats((LRUQueryCache) queryCache) :
-				null;
+    final public Long version;
 
-		if (directory != null) {
-			if (directory instanceof NRTCachingDirectory) {
-				final NRTCachingDirectory nrtCachingDirectory = (NRTCachingDirectory) directory;
-				directory_class = nrtCachingDirectory.getDelegate().getClass().getName();
-				directory_cached_files = nrtCachingDirectory.listCachedFiles();
-				directory_cached_ram_used = FileUtils.byteCountToDisplaySize(nrtCachingDirectory.ramBytesUsed());
-			} else {
-				directory_class = directory.getClass().getName();
-				directory_cached_files = null;
-				directory_cached_ram_used = null;
-			}
-		} else {
-			directory_class = null;
-			directory_cached_files = null;
-			directory_cached_ram_used = null;
-		}
-	}
+    final public Set<String> analyzers;
 
-	private void fillFieldInfos(final Map<String, Set<FieldInfoStatus>> field_infos,
-			final List<LeafReaderContext> leaves) {
-		if (field_infos == null || leaves == null || leaves.isEmpty())
-			return;
-		leaves.forEach(leafReaderContext -> {
-			final FieldInfos fieldInfos = leafReaderContext.reader().getFieldInfos();
-			if (fieldInfos == null)
-				return;
-			fieldInfos.forEach(fieldInfo -> {
-				final Set<FieldInfoStatus> set =
-						field_infos.computeIfAbsent(fieldInfo.name, s -> new LinkedHashSet<>());
-				set.add(new FieldInfoStatus(fieldInfo));
-			});
-		});
-	}
+    final public Set<String> fields;
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(index_uuid, num_docs);
-	}
+    final public IndexSettingsDefinition settings;
 
-	@Override
-	final public boolean equals(final Object o) {
-		if (!(o instanceof IndexStatus))
-			return false;
-		final IndexStatus s = (IndexStatus) o;
-		if (!Objects.equals(num_docs, s.num_docs))
-			return false;
-		if (!Objects.equals(num_deleted_docs, s.num_deleted_docs))
-			return false;
-		if (!Objects.equals(index_uuid, s.index_uuid))
-			return false;
-		if (!Objects.equals(master_uuid, s.master_uuid))
-			return false;
-		if (!Objects.equals(version, s.version))
-			return false;
-		if (!Objects.equals(settings, s.settings))
-			return false;
-		if (!Objects.deepEquals(analyzers, s.analyzers))
-			return false;
-		if (!Objects.deepEquals(fields, s.fields))
-			return false;
-		if (!Objects.equals(active_index_analyzers, s.active_index_analyzers))
-			return false;
-		if (!Objects.equals(active_query_analyzers, s.active_query_analyzers))
-			return false;
-		return true;
-	}
+    @JsonProperty("field_infos")
+    final public SortedMap<String, Set<FieldInfoStatus>> fieldInfos;
 
-	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	public static class MergePolicyStatus {
+    @JsonProperty("segment_count")
+    final public Integer segmentCount;
 
-		final public String type;
-		final public Double max_cfs_segment_size_mb;
-		final public Double no_cfs_ratio;
+    @JsonProperty("segments_bytes_size")
+    final public Long segmentsBytesSize;
 
-		//TieredMergePolicy
-		final public Integer max_merge_at_once;
-		final public Double max_merged_segment_mb;
-		final public Double segments_per_tier;
+    @JsonProperty("segments_size")
+    final public String segmentsSize;
 
-		@JsonCreator
-		MergePolicyStatus(@JsonProperty("type") String type,
-				@JsonProperty("max_cfs_segment_size_mb") Double max_cfs_segment_size_mb,
-				@JsonProperty("no_cfs_ratio") Double no_cfs_ratio,
-				@JsonProperty("max_merge_at_once") Integer max_merge_at_once,
-				@JsonProperty("max_merged_segment_mb") Double max_merged_segment_mb,
-				@JsonProperty("segments_per_tier") Double segments_per_tier) {
-			this.type = type;
-			this.max_cfs_segment_size_mb = max_cfs_segment_size_mb;
-			this.no_cfs_ratio = no_cfs_ratio;
+    @JsonProperty("commit_filenames")
+    final public Collection<String> commitFilenames;
 
-			this.max_merge_at_once = max_merge_at_once;
-			this.max_merged_segment_mb = max_merged_segment_mb;
-			this.segments_per_tier = segments_per_tier;
-		}
+    @JsonProperty("commit_generation")
+    final public Long commitGeneration;
 
-		MergePolicyStatus(final MergePolicy mergePolicy) {
-			type = mergePolicy.getClass().getTypeName();
-			max_cfs_segment_size_mb = mergePolicy.getMaxCFSSegmentSizeMB();
-			no_cfs_ratio = mergePolicy.getNoCFSRatio();
-			if (mergePolicy instanceof TieredMergePolicy) {
-				TieredMergePolicy tmp = (TieredMergePolicy) mergePolicy;
-				max_merge_at_once = tmp.getMaxMergeAtOnce();
-				max_merged_segment_mb = tmp.getMaxMergedSegmentMB();
-				segments_per_tier = tmp.getSegmentsPerTier();
-			} else {
-				max_merge_at_once = null;
-				max_merged_segment_mb = null;
-				segments_per_tier = null;
-			}
-		}
-	}
+    @JsonProperty("merge_policy")
+    final public MergePolicyStatus mergePolicy;
 
-	public static class FieldInfoStatus {
+    @JsonProperty("query_cache")
+    final public QueryCacheStats queryCache;
 
-		public final Integer number;
-		public final Boolean omit_norms;
-		public final Boolean has_norms;
-		public final Boolean has_payloads;
-		public final Boolean has_vectors;
-		public final Long doc_values_gen;
-		public final DocValuesType doc_values_type;
-		public final IndexOptions index_options;
-		public final Integer point_dimension_count;
-		public final Integer point_num_bytes;
+    @JsonProperty("commit_user_data")
+    final public Map<String, String> commitUserData;
 
-		@JsonIgnore
-		private final int hashCode;
+    @JsonProperty("directory_class")
+    final public String directoryClass;
 
-		@JsonCreator
-		FieldInfoStatus(@JsonProperty("number") Integer number, @JsonProperty("omit_norms") Boolean omit_norms,
-				@JsonProperty("has_norms") Boolean has_norms, @JsonProperty("has_payloads") Boolean has_payloads,
-				@JsonProperty("has_vectors") Boolean has_vectors, @JsonProperty("doc_values_gen") Long doc_values_gen,
-				@JsonProperty("doc_values_type") DocValuesType doc_values_type,
-				@JsonProperty("index_options") IndexOptions index_options,
-				@JsonProperty("point_dimension_count") Integer point_dimension_count,
-				@JsonProperty("point_num_bytes") Integer point_num_bytes) {
-			this.number = number;
-			this.omit_norms = omit_norms;
-			this.has_norms = has_norms;
-			this.has_payloads = has_payloads;
-			this.has_vectors = has_vectors;
-			this.doc_values_gen = doc_values_gen;
-			this.doc_values_type = doc_values_type;
-			this.index_options = index_options;
-			this.point_dimension_count = point_dimension_count;
-			this.point_num_bytes = point_num_bytes;
-			hashCode = buildHashCode();
-		}
+    @JsonProperty("directory_cached_files")
+    final public String[] directoryCachedFiles;
 
-		private FieldInfoStatus(final FieldInfo info) {
-			this(info.number, info.omitsNorms(), info.hasNorms(), info.hasPayloads(), info.hasVectors(),
-					info.getDocValuesGen(), info.getDocValuesType(), info.getIndexOptions(),
-					info.getPointDimensionCount(), info.getPointNumBytes());
-		}
+    @JsonProperty("directory_cached_ram_used")
+    final public String directoryCachedRamUsed;
 
-		private int buildHashCode() {
-			final HashCodeBuilder builder = new HashCodeBuilder();
-			builder.append(number);
-			builder.append(omit_norms);
-			builder.append(has_norms);
-			builder.append(has_payloads);
-			builder.append(has_vectors);
-			builder.append(doc_values_gen);
-			builder.append(doc_values_type);
-			builder.append(index_options);
-			builder.append(point_dimension_count);
-			builder.append(point_num_bytes);
-			return builder.toHashCode();
-		}
+    @JsonProperty("active_index_analyzers")
+    final public Integer activeIndexAnalyzers;
 
-		@Override
-		public int hashCode() {
-			return hashCode;
-		}
+    @JsonProperty("active_query_analyzers")
+    final public Integer activeQueryAnalyzers;
 
-		@Override
-		public boolean equals(final Object o) {
-			if (o == null || !(o instanceof FieldInfoStatus))
-				return false;
-			final FieldInfoStatus info = (FieldInfoStatus) o;
-			if (!Objects.equals(number, info.number))
-				return false;
-			if (!Objects.equals(omit_norms, info.omit_norms))
-				return false;
-			if (!Objects.equals(has_norms, info.has_norms))
-				return false;
-			if (!Objects.equals(has_payloads, info.has_payloads))
-				return false;
-			if (!Objects.equals(has_vectors, info.has_vectors))
-				return false;
-			if (!Objects.equals(doc_values_gen, info.doc_values_gen))
-				return false;
-			if (!Objects.equals(doc_values_type, info.doc_values_type))
-				return false;
-			if (!Objects.equals(index_options, info.index_options))
-				return false;
-			if (!Objects.equals(point_dimension_count, info.point_dimension_count))
-				return false;
-			if (!Objects.equals(point_num_bytes, info.point_num_bytes))
-				return false;
-			return true;
-		}
-	}
+    @JsonCreator
+    IndexStatus(@JsonProperty("num_docs") Long numDocs, @JsonProperty("num_deleted_docs") Long numDeletedDocs,
+        @JsonProperty("has_pending_merges") Boolean hasPendingMerges,
+        @JsonProperty("has_uncommitted_changes") Boolean hasUncommittedChanges,
+        @JsonProperty("has_deletions") Boolean hasDeletions, @JsonProperty("ram_buffer_size_mb") Double ramBufferSizeMb,
+        @JsonProperty("index_uuid") String indexUuid, @JsonProperty("master_uuid") String masterUuid,
+        @JsonProperty("version") Long version, @JsonProperty("analyzers") Set<String> analyzers,
+        @JsonProperty("fields") Set<String> fields, @JsonProperty("settings") IndexSettingsDefinition settings,
+        @JsonProperty("field_infos") SortedMap<String, Set<FieldInfoStatus>> fieldInfos,
+        @JsonProperty("segment_count") Integer segmentCount,
+        @JsonProperty("segments_bytes_size") Long segmentsBytesSize, @JsonProperty("segments_size") String segmentsSize,
+        @JsonProperty("commit_filenames") Collection<String> commitFilenames,
+        @JsonProperty("commit_generation") Long commitGeneration,
+        @JsonProperty("merge_policy") MergePolicyStatus mergePolicy,
+        @JsonProperty("query_cache") QueryCacheStats queryCache,
+        @JsonProperty("commit_user_data") Map<String, String> commitUserData,
+        @JsonProperty("directory_class") String directoryClass,
+        @JsonProperty("directory_cached_files") String[] directoryCachedFiles,
+        @JsonProperty("directory_cached_ram_used") String directoryCachedRamUsed,
+        @JsonProperty("active_index_analyzers") Integer activeIndexAnalyzers,
+        @JsonProperty("active_query_analyzers") Integer activeQueryAnalyzers) {
+        this.numDocs = numDocs;
+        this.numDeletedDocs = numDeletedDocs;
+        this.mergePolicy = mergePolicy;
+        this.hasPendingMerges = hasPendingMerges;
+        this.hasUncommittedChanges = hasUncommittedChanges;
+        this.ramBufferSizeMb = ramBufferSizeMb;
+        this.hasDeletions = hasDeletions;
+        this.indexUuid = indexUuid;
+        this.masterUuid = masterUuid;
+        this.version = version;
+        this.analyzers = analyzers;
+        this.fields = fields;
+        this.settings = settings;
+        this.fieldInfos = fieldInfos;
+        this.segmentCount = segmentCount;
+        this.segmentsBytesSize = segmentsBytesSize;
+        this.segmentsSize = segmentsSize;
+        this.commitFilenames = commitFilenames;
+        this.commitGeneration = commitGeneration;
+        this.queryCache = queryCache;
+        this.commitUserData = commitUserData;
+        this.directoryClass = directoryClass;
+        this.directoryCachedFiles = directoryCachedFiles;
+        this.directoryCachedRamUsed = directoryCachedRamUsed;
+        this.activeIndexAnalyzers = activeIndexAnalyzers;
+        this.activeQueryAnalyzers = activeQueryAnalyzers;
+    }
 
-	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	public static class QueryCacheStats {
+    public IndexStatus(final UUID indexUuid, final UUID masterUuid, final Directory directory,
+        final IndexSearcher indexSearcher, final IndexWriter indexWriter, final IndexSettingsDefinition settings,
+        final Set<String> analyzers, final Set<String> fields, final int activeIndexAnalyzers,
+        final int activeQueryAnalyzers) throws IOException {
+        final IndexReader indexReader = indexSearcher.getIndexReader();
+        this.numDocs = (long) indexReader.numDocs();
+        this.numDeletedDocs = (long) indexReader.numDeletedDocs();
+        final TreeMap<String, Set<FieldInfoStatus>> m = new TreeMap<>();
+        fillFieldInfos(m, indexReader.leaves());
+        this.fieldInfos = Collections.unmodifiableSortedMap(m);
 
-		public final Long cache_count;
-		public final Long cache_size;
-		public final Long eviction_count;
-		public final Long hit_count;
-		public final Long miss_count;
-		public final Long total_count;
-		public final Float hit_rate;
-		public final Float miss_rate;
+        if (indexWriter == null) {
+            this.mergePolicy = null;
+            this.hasPendingMerges = null;
+            this.hasUncommittedChanges = null;
+            this.hasDeletions = null;
+            this.ramBufferSizeMb = null;
+        } else {
+            final LiveIndexWriterConfig config = indexWriter.getConfig();
+            final MergePolicy mergePolicy = config.getMergePolicy();
+            this.mergePolicy = mergePolicy == null ? null : new MergePolicyStatus(mergePolicy);
+            this.hasPendingMerges = indexWriter.hasPendingMerges();
+            this.hasUncommittedChanges = indexWriter.hasUncommittedChanges();
+            this.hasDeletions = indexWriter.hasDeletions();
+            this.ramBufferSizeMb = config.getRAMBufferSizeMB();
+        }
 
-		@JsonCreator
-		QueryCacheStats(@JsonProperty("cache_count") Long cache_count, @JsonProperty("cache_size") Long cache_size,
-				@JsonProperty("eviction_count") Long eviction_count, @JsonProperty("hit_count") Long hit_count,
-				@JsonProperty("miss_count") Long miss_count, @JsonProperty("total_count") Long total_count,
-				@JsonProperty("hit_rate") Float hit_rate, @JsonProperty("miss_rate") Float miss_rate) {
-			this.cache_count = cache_count;
-			this.cache_size = cache_size;
-			this.eviction_count = eviction_count;
-			this.hit_count = hit_count;
-			this.miss_count = miss_count;
-			this.total_count = total_count;
-			this.hit_rate = hit_rate;
-			this.miss_rate = miss_rate;
-		}
+        final DirectoryReader directoryReader =
+            indexReader instanceof DirectoryReader ? (DirectoryReader) indexReader : null;
 
-		private QueryCacheStats(final LRUQueryCache queryCache) {
-			this(queryCache.getCacheCount(), queryCache.getCacheSize(), queryCache.getEvictionCount(),
-					queryCache.getHitCount(), queryCache.getMissCount(), queryCache.getTotalCount(),
-					(float) (queryCache.getHitCount() * 100) / queryCache.getTotalCount(),
-					(float) (queryCache.getMissCount() * 100) / queryCache.getTotalCount());
-		}
-	}
+        final IndexCommit indexCommit;
+        if (directoryReader != null) {
+            indexCommit = directoryReader.getIndexCommit();
+            version = directoryReader.getVersion();
+        } else {
+            indexCommit = null;
+            version = null;
+        }
+
+        if (indexCommit != null) {
+            this.commitUserData = indexCommit.getUserData();
+            this.segmentCount = indexCommit.getSegmentCount();
+            this.commitFilenames = indexCommit.getFileNames();
+            this.commitGeneration = indexCommit.getGeneration();
+            if (directory != null) {
+                long size = 0;
+                for (String filename : this.commitFilenames) {
+                    try {
+                        size += directory.fileLength(filename);
+                    } catch (IOException e) {
+                        LOGGER.log(Level.FINE, e, e::getMessage);
+                    }
+                }
+                this.segmentsBytesSize = size;
+                this.segmentsSize = FileUtils.byteCountToDisplaySize(size);
+            } else {
+                this.segmentsBytesSize = null;
+                this.segmentsSize = null;
+            }
+        } else {
+            this.commitUserData = null;
+            this.segmentCount = null;
+            this.segmentsBytesSize = null;
+            this.segmentsSize = null;
+            this.commitFilenames = null;
+            this.commitGeneration = null;
+        }
+
+        this.indexUuid = indexUuid == null ? null : indexUuid.toString();
+        this.masterUuid = masterUuid == null ? null : masterUuid.toString();
+        this.settings = settings;
+        this.analyzers = analyzers;
+        this.activeIndexAnalyzers = activeIndexAnalyzers;
+        this.activeQueryAnalyzers = activeQueryAnalyzers;
+        this.fields = fields;
+
+        final QueryCache queryCache = indexSearcher.getQueryCache();
+        this.queryCache = queryCache instanceof LRUQueryCache ? new QueryCacheStats((LRUQueryCache) queryCache) : null;
+
+        if (directory != null) {
+            if (directory instanceof NRTCachingDirectory) {
+                final NRTCachingDirectory nrtCachingDirectory = (NRTCachingDirectory) directory;
+                this.directoryClass = nrtCachingDirectory.getDelegate().getClass().getName();
+                this.directoryCachedFiles = nrtCachingDirectory.listCachedFiles();
+                this.directoryCachedRamUsed = FileUtils.byteCountToDisplaySize(nrtCachingDirectory.ramBytesUsed());
+            } else {
+                this.directoryClass = directory.getClass().getName();
+                this.directoryCachedFiles = null;
+                this.directoryCachedRamUsed = null;
+            }
+        } else {
+            this.directoryClass = null;
+            this.directoryCachedFiles = null;
+            this.directoryCachedRamUsed = null;
+        }
+    }
+
+    private void fillFieldInfos(final Map<String, Set<FieldInfoStatus>> field_infos,
+        final List<LeafReaderContext> leaves) {
+        if (field_infos == null || leaves == null || leaves.isEmpty())
+            return;
+        leaves.forEach(leafReaderContext -> {
+            final FieldInfos fieldInfos = leafReaderContext.reader().getFieldInfos();
+            if (fieldInfos == null)
+                return;
+            fieldInfos.forEach(fieldInfo -> {
+                final Set<FieldInfoStatus> set =
+                    field_infos.computeIfAbsent(fieldInfo.name, s -> new LinkedHashSet<>());
+                set.add(new FieldInfoStatus(fieldInfo));
+            });
+        });
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(indexUuid, numDocs);
+    }
+
+    @Override
+    final public boolean equals(final Object o) {
+        if (!(o instanceof IndexStatus))
+            return false;
+        final IndexStatus s = (IndexStatus) o;
+        if (!Objects.equals(numDocs, s.numDocs))
+            return false;
+        if (!Objects.equals(numDeletedDocs, s.numDeletedDocs))
+            return false;
+        if (!Objects.equals(indexUuid, s.indexUuid))
+            return false;
+        if (!Objects.equals(masterUuid, s.masterUuid))
+            return false;
+        if (!Objects.equals(version, s.version))
+            return false;
+        if (!Objects.equals(settings, s.settings))
+            return false;
+        if (!Objects.deepEquals(analyzers, s.analyzers))
+            return false;
+        if (!Objects.deepEquals(fields, s.fields))
+            return false;
+        if (!Objects.equals(activeIndexAnalyzers, s.activeIndexAnalyzers))
+            return false;
+        if (!Objects.equals(activeQueryAnalyzers, s.activeQueryAnalyzers))
+            return false;
+        return true;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+    public static class MergePolicyStatus {
+
+        final public String type;
+
+        @JsonProperty("max_cfs_segment_size_mb")
+        final public Double maxCfsSegmentSizeMb;
+
+        @JsonProperty("no_cfs_ratio")
+        final public Double noCfsRatio;
+
+        //TieredMergePolicy
+        @JsonProperty("max_merge_at_once")
+        final public Integer maxMergeAtOnce;
+
+        @JsonProperty("max_merged_segment_mb")
+        final public Double maxMergedSegmentMb;
+
+        @JsonProperty("segments_per_tier")
+        final public Double segmentsPerTier;
+
+        @JsonCreator
+        MergePolicyStatus(@JsonProperty("type") String type,
+            @JsonProperty("max_cfs_segment_size_mb") Double max_cfs_segment_size_mb,
+            @JsonProperty("no_cfs_ratio") Double no_cfs_ratio,
+            @JsonProperty("max_merge_at_once") Integer max_merge_at_once,
+            @JsonProperty("max_merged_segment_mb") Double max_merged_segment_mb,
+            @JsonProperty("segments_per_tier") Double segments_per_tier) {
+            this.type = type;
+            this.maxCfsSegmentSizeMb = max_cfs_segment_size_mb;
+            this.noCfsRatio = no_cfs_ratio;
+
+            this.maxMergeAtOnce = max_merge_at_once;
+            this.maxMergedSegmentMb = max_merged_segment_mb;
+            this.segmentsPerTier = segments_per_tier;
+        }
+
+        MergePolicyStatus(final MergePolicy mergePolicy) {
+            type = mergePolicy.getClass().getTypeName();
+            maxCfsSegmentSizeMb = mergePolicy.getMaxCFSSegmentSizeMB();
+            noCfsRatio = mergePolicy.getNoCFSRatio();
+            if (mergePolicy instanceof TieredMergePolicy) {
+                TieredMergePolicy tmp = (TieredMergePolicy) mergePolicy;
+                maxMergeAtOnce = tmp.getMaxMergeAtOnce();
+                maxMergedSegmentMb = tmp.getMaxMergedSegmentMB();
+                segmentsPerTier = tmp.getSegmentsPerTier();
+            } else {
+                maxMergeAtOnce = null;
+                maxMergedSegmentMb = null;
+                segmentsPerTier = null;
+            }
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+    public static class FieldInfoStatus {
+
+        public final Integer number;
+
+        @JsonProperty("omit_norms")
+        public final Boolean omitNorms;
+
+        @JsonProperty("has_norms")
+        public final Boolean hasNorms;
+
+        @JsonProperty("has_payloads")
+        public final Boolean hasPayloads;
+
+        @JsonProperty("has_vectors")
+        public final Boolean hasVectors;
+
+        @JsonProperty("doc_values_gen")
+        public final Long docValuesGen;
+
+        @JsonProperty("doc_values_type")
+        public final DocValuesType docValuesType;
+
+        @JsonProperty("index_options")
+        public final IndexOptions indexOptions;
+
+        @JsonProperty("point_dimension_count")
+        public final Integer pointDimensionCount;
+
+        @JsonProperty("point_num_bytes")
+        public final Integer pointNumBytes;
+
+        @JsonIgnore
+        private final int hashCode;
+
+        @JsonCreator
+        FieldInfoStatus(@JsonProperty("number") Integer number, @JsonProperty("omit_norms") Boolean omitNorms,
+            @JsonProperty("has_norms") Boolean hasNorms, @JsonProperty("has_payloads") Boolean hasPayloads,
+            @JsonProperty("has_vectors") Boolean hasVectors, @JsonProperty("doc_values_gen") Long docValuesGen,
+            @JsonProperty("doc_values_type") DocValuesType docValuesType,
+            @JsonProperty("index_options") IndexOptions indexOptions,
+            @JsonProperty("point_dimension_count") Integer pointDimensionCount,
+            @JsonProperty("point_num_bytes") Integer pointNumBytes) {
+            this.number = number;
+            this.omitNorms = omitNorms;
+            this.hasNorms = hasNorms;
+            this.hasPayloads = hasPayloads;
+            this.hasVectors = hasVectors;
+            this.docValuesGen = docValuesGen;
+            this.docValuesType = docValuesType;
+            this.indexOptions = indexOptions;
+            this.pointDimensionCount = pointDimensionCount;
+            this.pointNumBytes = pointNumBytes;
+            hashCode = buildHashCode();
+        }
+
+        private FieldInfoStatus(final FieldInfo info) {
+            this(info.number, info.omitsNorms(), info.hasNorms(), info.hasPayloads(), info.hasVectors(),
+                info.getDocValuesGen(), info.getDocValuesType(), info.getIndexOptions(), info.getPointDimensionCount(),
+                info.getPointNumBytes());
+        }
+
+        private int buildHashCode() {
+            return Objects.hash(number, omitNorms, hasNorms, hasPayloads, hasVectors, docValuesGen, docValuesType,
+                indexOptions, pointDimensionCount, pointNumBytes);
+        }
+
+        @Override
+        public int hashCode() {
+            return hashCode;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (!(o instanceof FieldInfoStatus))
+                return false;
+            final FieldInfoStatus info = (FieldInfoStatus) o;
+            if (!Objects.equals(number, info.number))
+                return false;
+            if (!Objects.equals(omitNorms, info.omitNorms))
+                return false;
+            if (!Objects.equals(hasNorms, info.hasNorms))
+                return false;
+            if (!Objects.equals(hasPayloads, info.hasPayloads))
+                return false;
+            if (!Objects.equals(hasVectors, info.hasVectors))
+                return false;
+            if (!Objects.equals(docValuesGen, info.docValuesGen))
+                return false;
+            if (!Objects.equals(docValuesType, info.docValuesType))
+                return false;
+            if (!Objects.equals(indexOptions, info.indexOptions))
+                return false;
+            if (!Objects.equals(pointDimensionCount, info.pointDimensionCount))
+                return false;
+            if (!Objects.equals(pointNumBytes, info.pointNumBytes))
+                return false;
+            return true;
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+    public static class QueryCacheStats {
+
+        @JsonProperty("cache_count")
+        public final Long cacheCount;
+
+        @JsonProperty("cache_size")
+        public final Long cacheSize;
+
+        @JsonProperty("eviction_count")
+        public final Long evictionCount;
+
+        @JsonProperty("hit_count")
+        public final Long hitCount;
+
+        @JsonProperty("miss_count")
+        public final Long missCount;
+
+        @JsonProperty("total_count")
+        public final Long totalCount;
+
+        @JsonProperty("hit_rate")
+        public final Float hitRate;
+
+        @JsonProperty("miss_rate")
+        public final Float missRate;
+
+        private final int hashCode;
+
+        @JsonCreator
+        QueryCacheStats(@JsonProperty("cache_count") Long cacheCount, @JsonProperty("cache_size") Long cacheSize,
+            @JsonProperty("eviction_count") Long evictionCount, @JsonProperty("hit_count") Long hitCount,
+            @JsonProperty("miss_count") Long missCount, @JsonProperty("total_count") Long totalCount,
+            @JsonProperty("hit_rate") Float hitRate, @JsonProperty("miss_rate") Float missRate) {
+            this.cacheCount = cacheCount;
+            this.cacheSize = cacheSize;
+            this.evictionCount = evictionCount;
+            this.hitCount = hitCount;
+            this.missCount = missCount;
+            this.totalCount = totalCount;
+            this.hitRate = hitRate;
+            this.missRate = missRate;
+            this.hashCode =
+                Objects.hash(cacheCount, cacheSize, evictionCount, hitCount, missCount, totalCount, hitRate, missRate);
+        }
+
+        private QueryCacheStats(final LRUQueryCache queryCache) {
+            this(queryCache.getCacheCount(), queryCache.getCacheSize(), queryCache.getEvictionCount(),
+                queryCache.getHitCount(), queryCache.getMissCount(), queryCache.getTotalCount(),
+                (float) (queryCache.getHitCount() * 100) / queryCache.getTotalCount(),
+                (float) (queryCache.getMissCount() * 100) / queryCache.getTotalCount());
+        }
+
+        @Override
+        public int hashCode() {
+            return hashCode;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (!(o instanceof QueryCacheStats))
+                return false;
+            final QueryCacheStats cache = (QueryCacheStats) o;
+            if (!Objects.equals(cacheCount, cache.cacheCount))
+                return false;
+            if (!Objects.equals(cacheSize, cache.cacheSize))
+                return false;
+            if (!Objects.equals(evictionCount, cache.evictionCount))
+                return false;
+            if (!Objects.equals(hitCount, cache.hitCount))
+                return false;
+            if (!Objects.equals(missCount, cache.missCount))
+                return false;
+            if (!Objects.equals(totalCount, cache.totalCount))
+                return false;
+            if (!Objects.equals(hitRate, cache.hitRate))
+                return false;
+            if (!Objects.equals(missRate, cache.missRate))
+                return false;
+            return true;
+        }
+    }
 }
