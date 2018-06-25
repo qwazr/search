@@ -27,11 +27,10 @@ import java.util.concurrent.ExecutionException;
 public class ReplicationChangeMasterTest extends ReplicationNoTaxo {
 
     private void putDocumentAndCheckReplication(int loopNumber, ReplicationStatus.Strategy expectedStrategy,
-        Integer expectedRadio) throws IOException, InterruptedException, ExecutionException {
+            Integer expectedRadio) throws IOException, InterruptedException, ExecutionException {
         for (int i = 0; i < loopNumber; i++)
             master.postDocuments(AnnotatedRecord.randomList(1000, count -> count));
-        checkReplicationStatus(slaves.get(0).replicationCheck().toCompletableFuture().get(), expectedStrategy,
-            expectedRadio);
+        checkReplicationStatus(slaves.get(0).replicationCheck(), expectedStrategy, expectedRadio);
         Assert.assertEquals(master.getIndexStatus().numDocs, slaves.get(0).getIndexStatus().numDocs);
         compareMasterAndSlaveRecords(null);
     }

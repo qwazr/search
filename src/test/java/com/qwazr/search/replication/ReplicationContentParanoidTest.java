@@ -63,22 +63,22 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
     @Override
     public AnnotatedIndexService<AnnotatedRecord> getMaster() throws URISyntaxException {
         return new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, MASTER, IndexSettingsDefinition.of()
-            .mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
-            .mergedSegmentWarmer(true)
-            .indexReaderWarmer(false)
-            .useCompoundFile(false)
-            .build());
+                .mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
+                .mergedSegmentWarmer(true)
+                .indexReaderWarmer(false)
+                .useCompoundFile(false)
+                .build());
     }
 
     @Override
     public List<AnnotatedIndexService<AnnotatedRecord>> getSlaves() throws URISyntaxException {
         return Arrays.asList(
 
-            new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "replication-slave1",
-                IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(false).build()),
+                new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "replication-slave1",
+                        IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(false).build()),
 
-            new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "replication-slave2",
-                IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(true).build()));
+                new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "replication-slave2",
+                        IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(true).build()));
     }
 
     private Map<String, String> getCommitData(UUID version) {
@@ -134,7 +134,7 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 
             // Post the documents
             final List<AnnotatedRecord> records =
-                AnnotatedRecord.randomList(BATCH_SIZE, val -> RandomUtils.nextInt(0, ID_RANGE));
+                    AnnotatedRecord.randomList(BATCH_SIZE, val -> RandomUtils.nextInt(0, ID_RANGE));
             final Map<String, String> commitData = getCommitData(HashUtils.newTimeBasedUUID());
             master.postDocuments(records, commitData);
             final IndexStatus masterStatus = master.getIndexStatus();
@@ -142,19 +142,20 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 
             // Do the replication
             final ReplicationStatus.Strategy expectedStrategy =
-                i == 0 ? ReplicationStatus.Strategy.full : ReplicationStatus.Strategy.incremental;
-            checkReplicationStatus(slave1.replicationCheck().toCompletableFuture().get(), expectedStrategy, null);
-            checkReplicationStatus(slave2.replicationCheck().toCompletableFuture().get(), expectedStrategy, null);
+                    i == 0 ? ReplicationStatus.Strategy.full : ReplicationStatus.Strategy.incremental;
+            checkReplicationStatus(slave1.replicationCheck(), expectedStrategy, null);
+            checkReplicationStatus(slave2.replicationCheck(), expectedStrategy, null);
             checkSlaveStatusEqualsMasterStatus();
 
             // Compare content
 
-            final QueryDefinition queryIterator =
-                QueryDefinition.of(new MatchAllDocsQuery()).returnedField(FieldDefinition.ID_FIELD, "title").build();
+            final QueryDefinition queryIterator = QueryDefinition.of(new MatchAllDocsQuery())
+                    .returnedField(FieldDefinition.ID_FIELD, "title")
+                    .build();
 
             switch (indexMinTime(timeTracker(() -> master.searchQuery(queryIterator)),
-                timeTracker(() -> slave1.searchQuery(queryIterator)),
-                timeTracker(() -> slave2.searchQuery(queryIterator)))) {
+                    timeTracker(() -> slave1.searchQuery(queryIterator)),
+                    timeTracker(() -> slave2.searchQuery(queryIterator)))) {
             case 1:
                 masterTotalQueryTimeWins++;
                 break;
@@ -172,8 +173,8 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
             });
 
             LOGGER.info(
-                () -> "num_docs: " + masterStatus.numDocs + " - num_deleted_docs: " + masterStatus.numDeletedDocs +
-                    " - segment_count: " + masterStatus.segmentCount);
+                    () -> "num_docs: " + masterStatus.numDocs + " - num_deleted_docs: " + masterStatus.numDeletedDocs +
+                            " - segment_count: " + masterStatus.segmentCount);
 
             LOGGER.info("Master first Query wins: " + masterTotalQueryTimeWins);
             LOGGER.info("Slave 1 first Query wins: " + slave1TotalQueryTimeWins);

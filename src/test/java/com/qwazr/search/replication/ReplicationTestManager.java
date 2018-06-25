@@ -48,7 +48,7 @@ public abstract class ReplicationTestManager extends ReplicationTestBase<Annotat
         rootDirectory = Files.createTempDirectory("ReplicationTestManager");
         indexManager = new IndexManager(rootDirectory, executorService);
         indexManager.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME,
-            resourceLoader -> new AnnotatedRecord.TestAnalyzer(new AtomicInteger()));
+                resourceLoader -> new AnnotatedRecord.TestAnalyzer(new AtomicInteger()));
     }
 
     @AfterClass
@@ -60,12 +60,12 @@ public abstract class ReplicationTestManager extends ReplicationTestBase<Annotat
 
     public void test() throws IOException, InterruptedException, ExecutionException {
         master.postDocuments(AnnotatedRecord.randomList(1000, count -> count));
-        checkReplicationStatus(slaves.get(0).replicationCheck().toCompletableFuture().get(),
-            ReplicationStatus.Strategy.full, 100);
+        checkReplicationStatus(slaves.get(0).replicationCheck(), ReplicationStatus.Strategy.full, 100);
         compareMasterAndSlaveRecords(null);
 
-        Assert.assertEquals(0, checkReplicationStatus(slaves.get(0).replicationCheck().toCompletableFuture().get(),
-            ReplicationStatus.Strategy.incremental, 0).bytes);
+        Assert.assertEquals(0,
+                checkReplicationStatus(slaves.get(0).replicationCheck(), ReplicationStatus.Strategy.incremental,
+                        0).bytes);
 
         compareMasterAndSlaveRecords(null);
 
@@ -73,8 +73,7 @@ public abstract class ReplicationTestManager extends ReplicationTestBase<Annotat
         slaves.get(0).checkIndex();
 
         master.postDocuments(AnnotatedRecord.randomList(1000, count -> count + 1000));
-        checkReplicationStatus(slaves.get(0).replicationCheck().toCompletableFuture().get(),
-            ReplicationStatus.Strategy.incremental, null);
+        checkReplicationStatus(slaves.get(0).replicationCheck(), ReplicationStatus.Strategy.incremental, null);
         compareMasterAndSlaveRecords(null);
 
     }

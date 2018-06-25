@@ -30,6 +30,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.SortedMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by ekeller on 29/05/2017.
@@ -52,7 +53,7 @@ public class BackupTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
     }
 
     @Test
-    public void test() throws URISyntaxException {
+    public void test() throws URISyntaxException, ExecutionException, InterruptedException {
 
         // Backup one index without fields
         service.createUpdateIndex(SCHEMA_NAME, "test1");
@@ -101,7 +102,7 @@ public class BackupTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
     }
 
     private BackupStatus checkBackup(SortedMap<String, BackupStatus> backupIndexMap, final String indexName,
-                                     final BackupStatus status) {
+            final BackupStatus status) {
         Assert.assertNotNull(backupIndexMap);
         final BackupStatus backupStatus = backupIndexMap.get(indexName);
         Assert.assertNotNull(backupStatus);
@@ -117,13 +118,13 @@ public class BackupTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
     }
 
     private BackupStatus checkBackupSchema(SortedMap<String, SortedMap<String, BackupStatus>> backup,
-                                           final String indexName, final BackupStatus status) {
+            final String indexName, final BackupStatus status) {
         Assert.assertNotNull(backup);
         return checkBackup(backup.get(SCHEMA_NAME), indexName, status);
     }
 
     private BackupStatus checkBackups(SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups,
-                                      final String indexName, final BackupStatus status) {
+            final String indexName, final BackupStatus status) {
         Assert.assertNotNull(backups);
         final SortedMap<String, SortedMap<String, BackupStatus>> schemaMap = backups.get(SCHEMA_NAME);
         Assert.assertNotNull(schemaMap);

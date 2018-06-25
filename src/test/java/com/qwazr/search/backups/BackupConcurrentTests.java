@@ -42,75 +42,75 @@ import java.util.logging.Logger;
 
 public class BackupConcurrentTests extends AbstractIndexTest {
 
-	private final static String SCHEMA_NAME = "backup_schema";
+    private final static String SCHEMA_NAME = "backup_schema";
 
-	private static Path backupPath;
+    private static Path backupPath;
 
-	private static IndexServiceInterface service;
+    private static IndexServiceInterface service;
 
-	private final static Logger LOGGER = LoggerUtils.getLogger(BackupConcurrentTests.class);
+    private final static Logger LOGGER = LoggerUtils.getLogger(BackupConcurrentTests.class);
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
-		initIndexManager();
-		service = indexManager.getService();
-		backupPath = Files.createTempDirectory("backup");
-		service.createUpdateSchema(SCHEMA_NAME,
-				SchemaSettingsDefinition.of().backupDirectoryPath(backupPath.toAbsolutePath().toString()).build());
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+        initIndexManager();
+        service = indexManager.getService();
+        backupPath = Files.createTempDirectory("backup");
+        service.createUpdateSchema(SCHEMA_NAME,
+                SchemaSettingsDefinition.of().backupDirectoryPath(backupPath.toAbsolutePath().toString()).build());
 
-		AnnotatedIndexService<IndexRecord.NoTaxonomy> indexNoTaxo =
-				new AnnotatedIndexService<>(service, IndexRecord.NoTaxonomy.class, SCHEMA_NAME, "test1", null);
-		indexNoTaxo.createUpdateIndex();
-		indexNoTaxo.createUpdateFields();
+        AnnotatedIndexService<IndexRecord.NoTaxonomy> indexNoTaxo =
+                new AnnotatedIndexService<>(service, IndexRecord.NoTaxonomy.class, SCHEMA_NAME, "test1", null);
+        indexNoTaxo.createUpdateIndex();
+        indexNoTaxo.createUpdateFields();
 
-		Collection<IndexRecord.NoTaxonomy> indexNoTaxonomyRecords = new ArrayList<>();
-		for (int i = 0; i < 1000; i++)
-			indexNoTaxonomyRecords.add(new IndexRecord.NoTaxonomy("id" + i));
-		indexNoTaxo.postDocuments(indexNoTaxonomyRecords);
+        Collection<IndexRecord.NoTaxonomy> indexNoTaxonomyRecords = new ArrayList<>();
+        for (int i = 0; i < 1000; i++)
+            indexNoTaxonomyRecords.add(new IndexRecord.NoTaxonomy("id" + i));
+        indexNoTaxo.postDocuments(indexNoTaxonomyRecords);
 
-		AnnotatedIndexService<IndexRecord.WithTaxonomy> indexWithTaxo =
-				new AnnotatedIndexService<>(service, IndexRecord.WithTaxonomy.class, SCHEMA_NAME, "test1", null);
-		indexNoTaxo.createUpdateIndex();
-		indexNoTaxo.createUpdateFields();
+        AnnotatedIndexService<IndexRecord.WithTaxonomy> indexWithTaxo =
+                new AnnotatedIndexService<>(service, IndexRecord.WithTaxonomy.class, SCHEMA_NAME, "test1", null);
+        indexNoTaxo.createUpdateIndex();
+        indexNoTaxo.createUpdateFields();
 
-		Collection<IndexRecord.WithTaxonomy> indexWithTaxonomyRecords = new ArrayList<>();
-		for (int i = 0; i < 1000; i++)
-			indexWithTaxonomyRecords.add(new IndexRecord.WithTaxonomy("id" + i));
-		indexWithTaxo.postDocuments(indexWithTaxonomyRecords);
-	}
+        Collection<IndexRecord.WithTaxonomy> indexWithTaxonomyRecords = new ArrayList<>();
+        for (int i = 0; i < 1000; i++)
+            indexWithTaxonomyRecords.add(new IndexRecord.WithTaxonomy("id" + i));
+        indexWithTaxo.postDocuments(indexWithTaxonomyRecords);
+    }
 
-	private void doBackup() {
-		Assert.assertFalse(service.doBackup("*", "*", "backup1").isEmpty());
-		Assert.assertFalse(service.doBackup("*", "*", "backup2").isEmpty());
-		service.deleteBackups("*", "*", "backup2");
-		service.deleteBackups("*", "*", "backup1");
-		Assert.assertNotNull(service.getBackups("*", "*", "*", false));
-	}
+    private void doBackup() {
+        Assert.assertFalse(service.doBackup("*", "*", "backup1").isEmpty());
+        Assert.assertFalse(service.doBackup("*", "*", "backup2").isEmpty());
+        service.deleteBackups("*", "*", "backup2");
+        service.deleteBackups("*", "*", "backup1");
+        Assert.assertNotNull(service.getBackups("*", "*", "*", false));
+    }
 
-	@Test
-	public void test() throws InterruptedException, ExecutionException {
-		final ExecutorService executors = Executors.newCachedThreadPool();
-		final AtomicInteger counter = new AtomicInteger(100);
-		final long endTime = System.currentTimeMillis() + 1000 * 10;
-		final Collection<Future> futures = new ArrayList<>();
-		try {
-			for (int i = 0; i < 4; i++) {
-				final int threadId = i;
-				futures.add(executors.submit(() -> {
-					int count = 0;
-					while (System.currentTimeMillis() < endTime || counter.get() > 0) {
-						doBackup();
-						counter.decrementAndGet();
-						count++;
-					}
-					LOGGER.info("Done: " + threadId + " - " + count);
-				}));
-			}
-			for (Future future : futures)
-				future.get();
-		} finally {
-			executors.shutdown();
-			executors.awaitTermination(1, TimeUnit.MINUTES);
-		}
-	}
+    @Test
+    public void test() throws InterruptedException, ExecutionException {
+        final ExecutorService executors = Executors.newCachedThreadPool();
+        final AtomicInteger counter = new AtomicInteger(100);
+        final long endTime = System.currentTimeMillis() + 1000 * 10;
+        final Collection<Future> futures = new ArrayList<>();
+        try {
+            for (int i = 0; i < 4; i++) {
+                final int threadId = i;
+                futures.add(executors.submit(() -> {
+                    int count = 0;
+                    while (System.currentTimeMillis() < endTime || counter.get() > 0) {
+                        doBackup();
+                        counter.decrementAndGet();
+                        count++;
+                    }
+                    LOGGER.info("Done: " + threadId + " - " + count);
+                }));
+            }
+            for (Future future : futures)
+                future.get();
+        } finally {
+            executors.shutdown();
+            executors.awaitTermination(1, TimeUnit.MINUTES);
+        }
+    }
 }
