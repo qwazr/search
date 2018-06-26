@@ -45,8 +45,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
@@ -127,7 +125,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public SchemaSettingsDefinition createUpdateSchema(final String schemaName,
-            final SchemaSettingsDefinition settings) {
+                                                             final SchemaSettingsDefinition settings) {
         try {
             checkRight(null);
             return indexManager.createUpdate(schemaName, settings);
@@ -159,7 +157,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public IndexStatus createUpdateIndex(final String schemaName, final String indexName,
-            final IndexSettingsDefinition settings) {
+                                               final IndexSettingsDefinition settings) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName)
@@ -201,7 +199,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     final public LinkedHashMap<String, FieldDefinition> setFields(final String schemaName, final String indexName,
-            final LinkedHashMap<String, FieldDefinition> fields) {
+                                                                  final LinkedHashMap<String, FieldDefinition> fields) {
         try {
             checkRight(schemaName);
             indexManager.get(schemaName).get(indexName, false).setFields(fields);
@@ -212,7 +210,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     private List<TermDefinition> doAnalyzer(final String schemaName, final String indexName, final String fieldName,
-            final String text, final boolean index) throws IOException {
+                                            final String text, final boolean index) throws IOException {
         checkRight(schemaName);
         final IndexInstance indexInstance = indexManager.get(schemaName).get(indexName, false);
         final FunctionEx<Analyzer, List<TermDefinition>, IOException> analyzerFunction = analyzer -> {
@@ -229,7 +227,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public List<TermDefinition> doAnalyzeIndex(final String schemaName, final String indexName,
-            final String fieldName, final String text) {
+                                                     final String fieldName, final String text) {
         try {
             return doAnalyzer(schemaName, indexName, fieldName, text, true);
         } catch (Exception e) {
@@ -249,13 +247,13 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public List<TermEnumDefinition> doExtractTerms(final String schemaName, final String indexName,
-            final String fieldName, final Integer start, final Integer rows) {
+                                                         final String fieldName, final Integer start, final Integer rows) {
         return doExtractTerms(schemaName, indexName, fieldName, null, start, rows);
     }
 
     @Override
     final public List<TermEnumDefinition> doExtractTerms(final String schemaName, final String indexName,
-            final String fieldName, final String prefix, final Integer start, final Integer rows) {
+                                                         final String fieldName, final String prefix, final Integer start, final Integer rows) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).get(indexName, false).getTermsEnum(fieldName, prefix, start, rows);
@@ -266,7 +264,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public List<TermDefinition> doAnalyzeQuery(final String schemaName, final String indexName,
-            final String fieldName, final String text) {
+                                                     final String fieldName, final String text) {
         try {
             return doAnalyzer(schemaName, indexName, fieldName, text, false);
         } catch (Exception e) {
@@ -276,7 +274,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public FieldDefinition setField(final String schemaName, final String indexName, final String fieldName,
-            final FieldDefinition field) {
+                                          final FieldDefinition field) {
         try {
             checkRight(schemaName);
             indexManager.get(schemaName).get(indexName, false).setField(fieldName, field);
@@ -299,7 +297,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(final String schemaName,
-            final String indexName) {
+                                                                        final String indexName) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).get(indexName, false).getAnalyzers();
@@ -310,7 +308,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public AnalyzerDefinition getAnalyzer(final String schemaName, final String indexName,
-            final String analyzerName) {
+                                                final String analyzerName) {
         try {
             checkRight(schemaName);
             final Map<String, AnalyzerDefinition> analyzerMap =
@@ -337,7 +335,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public AnalyzerDefinition setAnalyzer(final String schemaName, final String indexName,
-            final String analyzerName, final AnalyzerDefinition analyzer) {
+                                                final String analyzerName, final AnalyzerDefinition analyzer) {
         try {
             checkRight(schemaName);
             indexManager.get(schemaName).get(indexName, false).setAnalyzer(analyzerName, analyzer);
@@ -348,7 +346,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     final public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String schemaName, final String indexName,
-            final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+                                                                        final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
         try {
             checkRight(schemaName);
             indexManager.get(schemaName).get(indexName, false).setAnalyzers(analyzers);
@@ -371,7 +369,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public List<TermDefinition> testAnalyzer(final String schemaName, final String indexName,
-            final String analyzerName, final String text) {
+                                                   final String analyzerName, final String text) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text);
@@ -382,7 +380,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     public String testAnalyzerDot(final String schemaName, final String indexName, final String analyzerName,
-            final String text) {
+                                  final String text) {
         try {
             checkRight(schemaName);
             return TermDefinition.toDot(
@@ -404,7 +402,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public IndexStatus mergeIndex(final String schemaName, final String indexName, final String mergedIndexName,
-            final Map<String, String> commitUserData) {
+                                        final Map<String, String> commitUserData) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).mergeIndex(indexName, mergedIndexName, commitUserData);
@@ -436,7 +434,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public Integer postMappedDocument(final String schemaName, final String indexName,
-            final PostDefinition.Document post) {
+                                            final PostDefinition.Document post) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).get(indexName, true).postMappedDocument(post);
@@ -447,7 +445,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public Integer postMappedDocuments(final String schemaName, final String indexName,
-            final PostDefinition.Documents post) {
+                                             final PostDefinition.Documents post) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).get(indexName, true).postMappedDocuments(post);
@@ -458,28 +456,28 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public <T> int postDocument(final String schemaName, final String indexName, final Map<String, Field> fields,
-            final T document, final Map<String, String> commitUserData) throws IOException {
+                                      final T document, final Map<String, String> commitUserData) throws IOException {
         checkRight(schemaName);
         return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData, true);
     }
 
     @Override
     final public <T> int postDocuments(final String schemaName, final String indexName, final Map<String, Field> fields,
-            final Collection<T> documents, final Map<String, String> commitUserData) throws IOException {
+                                       final Collection<T> documents, final Map<String, String> commitUserData) throws IOException {
         checkRight(schemaName);
         return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents, commitUserData, true);
     }
 
     @Override
     final public <T> int addDocument(final String schemaName, final String indexName, final Map<String, Field> fields,
-            final T document, final Map<String, String> commitUserData) throws IOException {
+                                     final T document, final Map<String, String> commitUserData) throws IOException {
         checkRight(schemaName);
         return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData, false);
     }
 
     @Override
     final public <T> int addDocuments(final String schemaName, final String indexName, final Map<String, Field> fields,
-            final Collection<T> documents, final Map<String, String> commitUserData) throws IOException {
+                                      final Collection<T> documents, final Map<String, String> commitUserData) throws IOException {
         checkRight(schemaName);
         return indexManager.get(schemaName)
                 .get(indexName, true)
@@ -488,7 +486,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public Integer updateMappedDocValues(final String schemaName, final String indexName,
-            final PostDefinition.Document post) {
+                                               final PostDefinition.Document post) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).get(indexName, true).updateMappedDocValues(post);
@@ -499,7 +497,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public Integer updateMappedDocsValues(final String schemaName, final String indexName,
-            final PostDefinition.Documents post) {
+                                                final PostDefinition.Documents post) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).get(indexName, true).updateMappedDocsValues(post);
@@ -510,7 +508,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public <T> int updateDocValues(final String schemaName, final String indexName,
-            final Map<String, Field> fields, final T document, final Map<String, String> commitUserData)
+                                         final Map<String, Field> fields, final T document, final Map<String, String> commitUserData)
             throws IOException {
         checkRight(schemaName);
         return indexManager.get(schemaName).get(indexName, true).updateDocValues(fields, document, commitUserData);
@@ -518,41 +516,26 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public <T> int updateDocsValues(final String schemaName, final String indexName,
-            final Map<String, Field> fields, final Collection<T> documents, final Map<String, String> commitUserData)
+                                          final Map<String, Field> fields, final Collection<T> documents, final Map<String, String> commitUserData)
             throws IOException {
         checkRight(schemaName);
         return indexManager.get(schemaName).get(indexName, true).updateDocsValues(fields, documents, commitUserData);
     }
 
     @Override
-    final public CompletionStage<SortedMap<String, SortedMap<String, BackupStatus>>> doBackupAsync(
+    final public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(
             final String schemaName, final String indexName, final String backupName) {
         checkRight(null);
-        final CompletableFuture<SortedMap<String, SortedMap<String, BackupStatus>>> completion =
-                new CompletableFuture<>();
-        executorService.submit(() -> {
-            try {
-                completion.complete(indexManager.backups(schemaName, indexName, backupName));
-            } catch (final Exception e) {
-                completion.completeExceptionally(ServerException.getJsonException(LOGGER, e));
-            }
-        });
-        return completion;
-    }
-
-    @Override
-    public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(String schemaName, String indexName,
-            String backupName) {
         try {
             return indexManager.backups(schemaName, indexName, backupName);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
     public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
-            final String indexName, final String backupName, final Boolean extractVersion) {
+                                                                                            final String indexName, final String backupName, final Boolean extractVersion) {
         try {
             checkRight(null);
             return indexManager.getBackups(schemaName, indexName, backupName, extractVersion != null && extractVersion);
@@ -573,7 +556,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public InputStream replicationObtain(final String schemaName, final String indexName, final String sessionID,
-            final String source, final String fileName) {
+                                               final String source, final String fileName) {
         try {
             checkRight(null);
             final InputStream input = indexManager.get(schemaName)
@@ -601,7 +584,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public ReplicationSession replicationUpdate(final String schemaName, final String indexName,
-            final String currentVersion) {
+                                                      final String currentVersion) {
         try {
             checkRight(null);
             return indexManager.get(schemaName).get(indexName, false).replicationUpdate(currentVersion);
@@ -611,22 +594,17 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public CompletionStage<ReplicationStatus> replicationCheckAsync(final String schemaName,
-            final String indexName) {
+    final public ReplicationStatus replicationCheck(final String schemaName, final String indexName) {
         checkRight(null);
-        final CompletableFuture<ReplicationStatus> completion = new CompletableFuture<>();
-        executorService.submit(() -> {
-            try {
-                LOGGER.info(() -> "Start replication " + schemaName + '/' + indexName);
-                final ReplicationStatus status = indexManager.get(schemaName).get(indexName, false).replicationCheck();
-                LOGGER.info(() -> "End replication " + schemaName + '/' + indexName + " - time: " + status.time +
-                        "ms - size: " + status.size);
-                completion.complete(status);
-            } catch (final Throwable t) {
-                completion.completeExceptionally(t);
-            }
-        });
-        return completion;
+        try {
+            LOGGER.info(() -> "Start replication " + schemaName + '/' + indexName);
+            final ReplicationStatus status = indexManager.get(schemaName).get(indexName, false).replicationCheck();
+            LOGGER.info(() -> "End replication " + schemaName + '/' + indexName + " - time: " + status.time +
+                    "ms - size: " + status.size);
+            return status;
+        } catch (final Exception e) {
+            throw ServerException.getJsonException(LOGGER, e);
+        }
     }
 
     @Override
@@ -655,7 +633,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     public boolean postResource(final String schemaName, final String indexName, final String resourceName,
-            final Long lastModified, final InputStream inputStream) {
+                                final Long lastModified, final InputStream inputStream) {
         try {
             checkRight(null);
             indexManager.get(schemaName).get(indexName, false).postResource(resourceName, lastModified, inputStream);
@@ -695,7 +673,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     private QueryDefinition getMatchAllDocQuery(final Integer start, final Integer rows,
-            final FieldMapWrapper<?> wrapper) {
+                                                final FieldMapWrapper<?> wrapper) {
         final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).start(start).rows(rows);
         if (wrapper == null)
             builder.returnedField("*");
@@ -711,7 +689,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     private ResultDefinition doSearchObject(final String schemaName, final String indexName,
-            final QueryDefinition query, final FieldMapWrapper<?> wrapper) throws IOException {
+                                            final QueryDefinition query, final FieldMapWrapper<?> wrapper) throws IOException {
         checkRight(schemaName);
         return indexManager.get(schemaName)
                 .get(indexName, false)
@@ -720,7 +698,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public LinkedHashMap<String, Object> getDocument(final String schemaName, final String indexName,
-            final String id) {
+                                                           final String id) {
         try {
             if (id != null) {
                 final ResultDefinition result = doSearchMap(schemaName, indexName, getDocumentQuery(id));
@@ -740,7 +718,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public List<Map<String, Object>> getDocuments(final String schemaName, final String indexName,
-            final Integer start, final Integer rows) {
+                                                        final Integer start, final Integer rows) {
         try {
             final ResultDefinition result = doSearchMap(schemaName, indexName, getMatchAllDocQuery(start, rows, null));
             if (result == null)
@@ -758,7 +736,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public <T> T getDocument(final String schemaName, final String indexName, final Object id,
-            final FieldMapWrapper<T> wrapper) {
+                                   final FieldMapWrapper<T> wrapper) {
         try {
             final ResultDefinition result = doSearchObject(schemaName, indexName, getDocumentQuery(id), wrapper);
             if (result == null)
@@ -774,7 +752,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public <T> List<T> getDocuments(final String schemaName, final String indexName, final Integer start,
-            final Integer rows, final FieldMapWrapper<T> wrapper) {
+                                          final Integer rows, final FieldMapWrapper<T> wrapper) {
         try {
             final ResultDefinition result =
                     doSearchObject(schemaName, indexName, getMatchAllDocQuery(start, rows, wrapper), wrapper);
@@ -793,7 +771,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public ResultDefinition.WithMap searchQuery(final String schemaName, final String indexName,
-            final QueryDefinition query, final Boolean delete) {
+                                                      final QueryDefinition query, final Boolean delete) {
         try {
             checkRight(schemaName);
             final IndexInstance index = indexManager.get(schemaName).get(indexName, delete != null && delete);
@@ -808,7 +786,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     final public <T> ResultDefinition.WithObject<T> searchQuery(final String schemaName, final String indexName,
-            final QueryDefinition query, final FieldMapWrapper<T> wrapper) {
+                                                                final QueryDefinition query, final FieldMapWrapper<T> wrapper) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName)
@@ -821,7 +799,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     public ResultDefinition.Empty searchQuery(String schemaName, String indexName, QueryDefinition query,
-            ResultDocumentsInterface resultDocuments) {
+                                              ResultDocumentsInterface resultDocuments) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName)
@@ -834,7 +812,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     public ExplainDefinition explainQuery(final String schemaName, final String indexName, final QueryDefinition query,
-            int docId) {
+                                          int docId) {
         try {
             checkRight(schemaName);
             final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
@@ -846,7 +824,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     public String explainQueryText(final String schemaName, final String indexName, final QueryDefinition query,
-            final int docId) {
+                                   final int docId) {
         try {
             checkRight(schemaName);
             final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
@@ -858,7 +836,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     public String explainQueryDot(final String schemaName, final String indexName, final QueryDefinition query,
-            final int docId, final Integer descriptionWrapSize) {
+                                  final int docId, final Integer descriptionWrapSize) {
         try {
             return ExplainDefinition.toDot(explainQuery(schemaName, indexName, query, docId),
                     descriptionWrapSize == null ? 28 : descriptionWrapSize);
@@ -869,7 +847,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     @Override
     public <T> T query(final String schemaName, final String indexName, final FieldMapWrapper.Cache fieldMapWrappers,
-            final QueryActions<T> actions) throws IOException {
+                       final QueryActions<T> actions) throws IOException {
         checkRight(schemaName);
         final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
         return index.query(fieldMapWrappers, actions);

@@ -74,7 +74,7 @@ import static com.qwazr.search.test.JsonAbstractTest.checkErrorStatusCode;
 public abstract class JavaAbstractTest {
 
     public static final String[] RETURNED_FIELDS =
-            { FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue" };
+            {FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue"};
 
     protected abstract IndexServiceInterface getIndexService() throws URISyntaxException, IOException;
 
@@ -83,13 +83,13 @@ public abstract class JavaAbstractTest {
     private final IndexSettingsDefinition indexSlaveDefinition;
 
     public static synchronized <T> AnnotatedIndexService<T> getService(final IndexServiceInterface indexService,
-            final Class<T> indexClass, final String indexName, final IndexSettingsDefinition settings)
+                                                                       final Class<T> indexClass, final String indexName, final IndexSettingsDefinition settings)
             throws URISyntaxException {
         return new AnnotatedIndexService<>(indexService, indexClass, null, indexName, settings);
     }
 
     public static synchronized <T> AnnotatedIndexService<T> getService(final IndexServiceInterface indexService,
-            final Class<T> indexClass) throws URISyntaxException {
+                                                                       final Class<T> indexClass) throws URISyntaxException {
         return getService(indexService, indexClass, null, null);
     }
 
@@ -346,7 +346,7 @@ public abstract class JavaAbstractTest {
     }
 
     private void checkEqualsReturnedFields(AnnotatedRecord record, AnnotatedRecord recordRef,
-            AnnotatedRecord docValueRef) {
+                                           AnnotatedRecord docValueRef) {
         Assert.assertEquals(recordRef.title, record.title);
         Assert.assertEquals(recordRef.content, record.content);
         Assert.assertEquals(docValueRef.price, record.price);
@@ -402,7 +402,7 @@ public abstract class JavaAbstractTest {
     }
 
     private void testSort(QueryBuilder queryBuilder, int resultCount,
-            BiFunction<AnnotatedRecord, AnnotatedRecord, Boolean> checker) throws URISyntaxException, IOException {
+                          BiFunction<AnnotatedRecord, AnnotatedRecord, Boolean> checker) throws URISyntaxException, IOException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(queryBuilder.build());
         Assert.assertNotNull(result);
@@ -590,7 +590,7 @@ public abstract class JavaAbstractTest {
     @Test
     public void test800replicationCheck()
             throws URISyntaxException, IOException, ExecutionException, InterruptedException {
-        final AnnotatedIndexService master = getMaster();
+        final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final IndexStatus masterStatus = master.getIndexStatus();
         Assert.assertNotNull(masterStatus);
         Assert.assertNotNull(masterStatus.indexUuid);
@@ -599,7 +599,7 @@ public abstract class JavaAbstractTest {
         final LinkedHashMap<String, FieldDefinition> masterFields = master.getFields();
         final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers = master.getAnalyzers();
 
-        final AnnotatedIndexService slave = getSlave();
+        final AnnotatedIndexService<AnnotatedRecord> slave = getSlave();
 
         // Let's first create an empty index (without master)
         final IndexStatus nonSlaveStatus =
@@ -649,22 +649,22 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test850backup() throws IOException, URISyntaxException, ExecutionException, InterruptedException {
-        final AnnotatedIndexService master = getMaster();
-        SortedMap<String, SortedMap<String, BackupStatus>> globalStatus = master.getBackups("*", true);
+        final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
+        final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> globalStatus = master.getBackups("*", true);
         Assert.assertNotNull(globalStatus);
-        globalStatus = master.doBackup(BACKUP_NAME);
+        final SortedMap<String, SortedMap<String, BackupStatus>> backupStatus = master.doBackup(BACKUP_NAME);
         Assert.assertNotNull(globalStatus);
-        final SortedMap<String, BackupStatus> schemaStatus = globalStatus.get(master.getSchemaName());
+        final SortedMap<String, BackupStatus> schemaStatus = backupStatus.get(master.getSchemaName());
         Assert.assertNotNull(schemaStatus);
-        final BackupStatus backupStatus = schemaStatus.get(master.getIndexName());
-        Assert.assertNotNull(backupStatus);
-        Assert.assertNotNull(backupStatus.date);
-        Assert.assertNotNull(backupStatus.filesCount);
+        final BackupStatus indexBackupStatus = schemaStatus.get(master.getIndexName());
+        Assert.assertNotNull(indexBackupStatus);
+        Assert.assertNotNull(indexBackupStatus.date);
+        Assert.assertNotNull(indexBackupStatus.filesCount);
     }
 
     @Test
     public void test900join() throws URISyntaxException, IOException {
-        final AnnotatedIndexService master = getMaster();
+        final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final QueryBuilder builder = QueryDefinition.of(
                 new JoinQuery(AnnotatedRecord.INDEX_NAME_SLAVE, "docValuesCategory", "storedCategory", true,
                         ScoreMode.Max, new MatchAllDocsQuery()));
@@ -694,7 +694,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test910collector() throws URISyntaxException, IOException {
-        final AnnotatedIndexService master = getMaster();
+        final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
         builder.collector("minPrice", MinNumericCollector.MinDouble.class, "price");
         builder.collector("maxPrice", MaxNumericCollector.MaxDouble.class, "price");
@@ -709,7 +709,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test920ClassicCollector() throws URISyntaxException, IOException {
-        final AnnotatedIndexService master = getMaster();
+        final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
         builder.collector("maxQuantity", ClassicMaxCollector.class);
         ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
@@ -738,7 +738,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test935ClassicCollectorWithFacets() throws URISyntaxException, IOException {
-        final AnnotatedIndexService master = getMaster();
+        final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
         builder.collector("maxQuantity", ClassicMaxCollector.class);
         builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10));

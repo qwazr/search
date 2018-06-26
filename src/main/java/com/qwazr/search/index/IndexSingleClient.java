@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.UUID;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
 public class IndexSingleClient extends JsonClient implements IndexServiceInterface {
@@ -62,7 +61,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public SchemaSettingsDefinition createUpdateSchema(final String schemaName,
-            final SchemaSettingsDefinition settings) {
+                                                       final SchemaSettingsDefinition settings) {
         try {
             return indexTarget.path(schemaName)
                     .request(preferedSerializedMediaType)
@@ -106,7 +105,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public IndexStatus createUpdateIndex(final String schemaName, final String indexName,
-            final IndexSettingsDefinition settings) {
+                                         final IndexSettingsDefinition settings) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -132,7 +131,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public LinkedHashMap<String, FieldDefinition> setFields(final String schemaName, final String indexName,
-            final LinkedHashMap<String, FieldDefinition> fields) {
+                                                            final LinkedHashMap<String, FieldDefinition> fields) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -146,7 +145,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public List<TermDefinition> doAnalyzeQuery(final String schemaName, final String indexName, final String fieldName,
-            final String text) {
+                                               final String text) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -163,7 +162,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public List<TermDefinition> doAnalyzeIndex(final String schemaName, final String indexName, final String fieldName,
-            final String text) {
+                                               final String text) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -195,13 +194,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public List<TermEnumDefinition> doExtractTerms(final String schemaName, final String indexName,
-            final String fieldName, final Integer start, final Integer rows) {
+                                                   final String fieldName, final Integer start, final Integer rows) {
         return doExtractTerms(schemaName, indexName, fieldName, null, start, rows);
     }
 
     @Override
     public List<TermEnumDefinition> doExtractTerms(final String schemaName, final String indexName,
-            final String fieldName, final String prefix, final Integer start, final Integer rows) {
+                                                   final String fieldName, final String prefix, final Integer start, final Integer rows) {
         try {
             WebTarget target =
                     indexTarget.path(schemaName).path(indexName).path("fields").path(fieldName).path("terms");
@@ -229,7 +228,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public FieldDefinition setField(final String schemaName, final String indexName, final String fieldName,
-            final FieldDefinition field) {
+                                    final FieldDefinition field) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -301,7 +300,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public AnalyzerDefinition setAnalyzer(final String schemaName, final String indexName, final String analyzerName,
-            final AnalyzerDefinition analyzer) {
+                                          final AnalyzerDefinition analyzer) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -316,7 +315,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String schemaName, final String indexName,
-            final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+                                                                  final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -344,7 +343,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public List<TermDefinition> testAnalyzer(final String schemaName, final String indexName, final String analyzerName,
-            final String text) {
+                                             final String text) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -359,7 +358,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public String testAnalyzerDot(final String schemaName, final String indexName, final String analyzerName,
-            final String text) {
+                                  final String text) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -388,7 +387,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public IndexStatus mergeIndex(final String schemaName, final String indexName, String mergedIndex,
-            final Map<String, String> commitUserData) {
+                                  final Map<String, String> commitUserData) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -424,32 +423,25 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
-    public CompletionStage<SortedMap<String, SortedMap<String, BackupStatus>>> doBackupAsync(final String schemaName,
-            final String indexName, final String backupName) {
-        return indexTarget.path(schemaName)
-                .path(indexName)
-                .path("backup")
-                .path(backupName)
-                .request(preferedSerializedMediaType)
-                .rx()
-                .post(Entity.entity(null, MediaType.TEXT_PLAIN_TYPE), mapStringMapStringBackupStatusType);
-    }
-
-    @Override
-    public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(String schemaName, String indexName,
-            String backup_name) {
+    public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(final String schemaName,
+                                                                       final String indexName, final String backupName) {
         try {
-            return doBackupAsync(schemaName, indexName, backup_name).toCompletableFuture().get();
-        } catch (ExecutionException e) {
-            throw ServerException.of(e.getCause());
-        } catch (InterruptedException e) {
+            return indexTarget.path(schemaName)
+                    .path(indexName)
+                    .path("backup")
+                    .path(backupName)
+                    .request(preferedSerializedMediaType)
+                    .async()
+                    .post(Entity.entity(null, MediaType.TEXT_PLAIN_TYPE), mapStringMapStringBackupStatusType)
+                    .get();
+        } catch (InterruptedException | ExecutionException e) {
             throw ServerException.of(e);
         }
     }
 
     @Override
     public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
-            final String indexName, final String backupName, final Boolean extractVersion) {
+                                                                                            final String indexName, final String backupName, final Boolean extractVersion) {
         return indexTarget.path(schemaName)
                 .path(indexName)
                 .path("backup")
@@ -475,7 +467,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public InputStream replicationObtain(final String schemaName, final String indexName, final String sessionID,
-            final String source, final String fileName) {
+                                         final String source, final String fileName) {
         try {
             return new AutoCloseInputStream(indexTarget.path(schemaName)
                     .path(indexName)
@@ -506,7 +498,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public ReplicationSession replicationUpdate(final String schemaName, final String indexName,
-            final String currentVersion) {
+                                                final String currentVersion) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -520,22 +512,24 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
-    public CompletionStage<ReplicationStatus> replicationCheckAsync(final String schemaName, final String indexName) {
+    public ReplicationStatus replicationCheck(final String schemaName, final String indexName) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
                     .path("replication")
                     .request(preferedSerializedMediaType)
-                    .rx()
-                    .get(ReplicationStatus.class);
+                    .async()
+                    .get(ReplicationStatus.class).get();
         } catch (WebApplicationException e) {
             throw ServerException.from(e);
+        } catch (InterruptedException | ExecutionException e) {
+            throw ServerException.of(e);
         }
     }
 
     @Override
     public LinkedHashMap<String, IndexInstance.ResourceInfo> getResources(final String schemaName,
-            final String indexName) {
+                                                                          final String indexName) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -563,7 +557,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public boolean postResource(final String schemaName, final String indexName, final String resourceName,
-            final Long lastModified, final InputStream inputStream) {
+                                final Long lastModified, final InputStream inputStream) {
         try {
             WebTarget target = indexTarget.path(schemaName).path(indexName).path("resources").path(resourceName);
             if (lastModified != null)
@@ -590,7 +584,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public Integer postMappedDocument(final String schemaName, final String indexName,
-            final PostDefinition.Document post) {
+                                      final PostDefinition.Document post) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -604,7 +598,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public Integer postMappedDocuments(final String schemaName, final String indexName,
-            final PostDefinition.Documents post) {
+                                       final PostDefinition.Documents post) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -618,7 +612,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public Integer updateMappedDocValues(final String schemaName, final String indexName,
-            final PostDefinition.Document post) {
+                                         final PostDefinition.Document post) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -633,7 +627,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public Integer updateMappedDocsValues(final String schemaName, final String indexName,
-            final PostDefinition.Documents post) {
+                                          final PostDefinition.Documents post) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -661,7 +655,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public LinkedHashMap<String, Object> getDocument(final String schemaName, final String indexName,
-            final String docId) {
+                                                     final String docId) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -676,7 +670,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public List<Map<String, Object>> getDocuments(final String schemaName, final String indexName, final Integer start,
-            final Integer rows) {
+                                                  final Integer rows) {
         try {
             WebTarget target = indexTarget.path(schemaName).path(indexName).path("doc");
             if (start != null)
@@ -691,7 +685,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public ResultDefinition.WithMap searchQuery(final String schemaName, final String indexName,
-            final QueryDefinition query, final Boolean delete) {
+                                                final QueryDefinition query, final Boolean delete) {
         try {
             WebTarget target = indexTarget.path(schemaName).path(indexName).path("search");
             if (delete != null)
@@ -705,7 +699,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public ExplainDefinition explainQuery(final String schemaName, final String indexName, final QueryDefinition query,
-            int docId) {
+                                          int docId) {
         try {
             return indexTarget.path(schemaName)
                     .path(indexName)
@@ -736,7 +730,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
 
     @Override
     public String explainQueryDot(String schemaName, String indexName, QueryDefinition query, int docId,
-            Integer descriptionWrapSize) {
+                                  Integer descriptionWrapSize) {
         try {
             WebTarget target = indexTarget.path(schemaName)
                     .path(indexName)
