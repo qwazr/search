@@ -9,6 +9,8 @@ This page contains everything you need to start using it. You will be able to cr
 Maven integration
 -----------------
 
+### Release
+
 Include the library in your maven project:
 
 ```xml
@@ -16,7 +18,7 @@ Include the library in your maven project:
     <dependency>
         <groupId>com.qwazr</groupId>
         <artifactId>qwazr-search</artifactId>
-        <version>1.4.0-SNAPSHOT</version>
+        <version>1.4.0</version>
     </dependency>
 </dependencies>
 ```
@@ -29,7 +31,7 @@ We provide a BOM to help managing libraries conflict:
         <dependency>
             <groupId>com.qwazr</groupId>
             <artifactId>qwazr-bom</artifactId>
-            <version>1.4.0-SNAPSHOT</version>
+            <version>1.4.0</version>
             <scope>import</scope>
             <type>pom</type>
         </dependency>
@@ -37,7 +39,38 @@ We provide a BOM to help managing libraries conflict:
 </dependencyManagement>
 ```
 
-You may declare the snapshot repository:
+
+### Snapshot
+
+If you want to use the last snapshot (development):
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>com.qwazr</groupId>
+        <artifactId>qwazr-search</artifactId>
+        <version>1.4.1-SNAPSHOT</version>
+    </dependency>
+</dependencies>
+```
+
+We provide a BOM to help managing libraries conflict:
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.qwazr</groupId>
+            <artifactId>qwazr-bom</artifactId>
+            <version>1.4.1-SNAPSHOT</version>
+            <scope>import</scope>
+            <type>pom</type>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+You may declare the Sonatype snapshot repository:
 
 ```xml
 <repositories>
