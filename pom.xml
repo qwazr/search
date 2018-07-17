@@ -24,7 +24,7 @@
   </scm>
 
   <properties>
-    <lucene.version>6.6.4</lucene.version>
+    <lucene.version>6.6.5</lucene.version>
   </properties>
 
   <dependencies>
@@ -124,7 +124,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-shade-plugin</artifactId>
-            <version>3.0.0</version>
             <executions>
               <execution>
                 <phase>package</phase>

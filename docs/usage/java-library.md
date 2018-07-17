@@ -217,6 +217,7 @@ public class GettingStarted {
 
 		/* FREE RESOURCES */
 		indexManager.close(); // IndexManager is closeable (close it only if you will not use the service anymore)
+		executorService.shutdown();
 	}
 
 }
