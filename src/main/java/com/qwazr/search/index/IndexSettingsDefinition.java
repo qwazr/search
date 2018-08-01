@@ -32,333 +32,329 @@ import java.util.function.Supplier;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexSettingsDefinition {
 
-	public enum Type {
-		FSDirectory, RAMDirectory
-	}
+    public enum Type {
+        FSDirectory, RAMDirectory
+    }
 
-	public enum MergeScheduler {
-		NO, CONCURRENT, SERIAL
-	}
+    public enum MergeScheduler {
+        NO, CONCURRENT, SERIAL
+    }
 
-	public static final int DEFAULT_MAX_MERGE_AT_ONCE = 10;
-	public static final int DEFAULT_SEGMENTS_PER_TIER = 10;
-	public static final double DEFAULT_MAX_MERGED_SEGMENT_MB = 5 * 1024 * 1024;
-	public static final double DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB = 5;
-	public static final double DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB = 60;
+    public static final int DEFAULT_MAX_MERGE_AT_ONCE = 10;
+    public static final int DEFAULT_SEGMENTS_PER_TIER = 10;
+    public static final double DEFAULT_MAX_MERGED_SEGMENT_MB = 5 * 1024 * 1024;
+    public static final double DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB = 5;
+    public static final double DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB = 60;
 
-	// TODO: Name reservation
-	@JsonProperty("replication")
-	final public String replication = null;
+    @JsonProperty("similarity_class")
+    final public String similarityClass;
 
-	@JsonProperty("similarity_class")
-	final public String similarityClass;
+    final public RemoteIndex master;
 
-	final public RemoteIndex master;
+    @JsonProperty("directory_type")
+    final public Type directoryType;
 
-	@JsonProperty("directory_type")
-	final public Type directoryType;
+    @JsonProperty("merge_scheduler")
+    final public MergeScheduler mergeScheduler;
 
-	@JsonProperty("merge_scheduler")
-	final public MergeScheduler mergeScheduler;
+    @JsonProperty("ram_buffer_size")
+    final public Double ramBufferSize;
 
-	@JsonProperty("ram_buffer_size")
-	final public Double ramBufferSize;
+    @JsonProperty("use_compound_file")
+    final public Boolean useCompoundFile;
 
-	@JsonProperty("use_compound_file")
-	final public Boolean useCompoundFile;
+    @JsonProperty("max_merge_at_once")
+    final public Integer maxMergeAtOnce;
 
-	@JsonProperty("max_merge_at_once")
-	final public Integer maxMergeAtOnce;
+    @JsonProperty("max_merged_segment_mb")
+    final public Double maxMergedSegmentMB;
 
-	@JsonProperty("max_merged_segment_mb")
-	final public Double maxMergedSegmentMB;
+    @JsonProperty("segments_per_tier")
+    final public Double segmentsPerTier;
 
-	@JsonProperty("segments_per_tier")
-	final public Double segmentsPerTier;
+    @JsonProperty("enable_taxonomy_index")
+    final public Boolean enableTaxonomyIndex;
 
-	@JsonProperty("enable_taxonomy_index")
-	final public Boolean enableTaxonomyIndex;
+    @JsonProperty("sorted_set_facet_field")
+    final public String sortedSetFacetField;
 
-	@JsonProperty("sorted_set_facet_field")
-	final public String sortedSetFacetField;
+    @JsonProperty("index_reader_warmer")
+    final public Boolean indexReaderWarmer;
 
-	@JsonProperty("index_reader_warmer")
-	final public Boolean indexReaderWarmer;
+    @JsonProperty("merged_segment_warmer")
+    final public Boolean mergedSegmentWarmer;
 
-	@JsonProperty("merged_segment_warmer")
-	final public Boolean mergedSegmentWarmer;
+    @JsonProperty("nrt_caching_directory_max_merge_size_mb")
+    final public Double nrtCachingDirectoryMaxMergeSizeMB;
 
-	@JsonProperty("nrt_caching_directory_max_merge_size_mb")
-	final public Double nrtCachingDirectoryMaxMergeSizeMB;
+    @JsonProperty("nrt_caching_directory_max_cached_mb")
+    final public Double nrtCachingDirectoryMaxCachedMB;
 
-	@JsonProperty("nrt_caching_directory_max_cached_mb")
-	final public Double nrtCachingDirectoryMaxCachedMB;
+    public IndexSettingsDefinition() {
+        directoryType = null;
+        mergeScheduler = null;
+        similarityClass = null;
+        master = null;
+        ramBufferSize = null;
+        useCompoundFile = null;
+        maxMergeAtOnce = null;
+        maxMergedSegmentMB = null;
+        segmentsPerTier = null;
+        enableTaxonomyIndex = null;
+        sortedSetFacetField = null;
+        indexReaderWarmer = null;
+        mergedSegmentWarmer = null;
+        nrtCachingDirectoryMaxMergeSizeMB = null;
+        nrtCachingDirectoryMaxCachedMB = null;
+    }
 
-	public IndexSettingsDefinition() {
-		directoryType = null;
-		mergeScheduler = null;
-		similarityClass = null;
-		master = null;
-		ramBufferSize = null;
-		useCompoundFile = null;
-		maxMergeAtOnce = null;
-		maxMergedSegmentMB = null;
-		segmentsPerTier = null;
-		enableTaxonomyIndex = null;
-		sortedSetFacetField = null;
-		indexReaderWarmer = null;
-		mergedSegmentWarmer = null;
-		nrtCachingDirectoryMaxMergeSizeMB = null;
-		nrtCachingDirectoryMaxCachedMB = null;
-	}
+    private IndexSettingsDefinition(final Builder builder) {
+        this.directoryType = builder.directoryType;
+        this.mergeScheduler = builder.mergeScheduler;
+        this.similarityClass = builder.similarityClass;
+        this.master = builder.master;
+        this.ramBufferSize = builder.ramBufferSize;
+        this.useCompoundFile = builder.useCompoundFile;
+        this.maxMergeAtOnce = builder.maxMergeAtOnce;
+        this.maxMergedSegmentMB = builder.maxMergedSegmentMB;
+        this.segmentsPerTier = builder.segmentsPerTier;
+        this.enableTaxonomyIndex = builder.enableTaxonomyIndex;
+        this.sortedSetFacetField = builder.sortedSetFacetField;
+        this.indexReaderWarmer = builder.indexReaderWarmer;
+        this.mergedSegmentWarmer = builder.mergedSegmentWarmer;
+        this.nrtCachingDirectoryMaxMergeSizeMB = builder.nrtCachingDirectoryMaxMergeSizeMB;
+        this.nrtCachingDirectoryMaxCachedMB = builder.nrtCachingDirectoryMaxCachedMB;
+    }
 
-	private IndexSettingsDefinition(final Builder builder) {
-		this.directoryType = builder.directoryType;
-		this.mergeScheduler = builder.mergeScheduler;
-		this.similarityClass = builder.similarityClass;
-		this.master = builder.master;
-		this.ramBufferSize = builder.ramBufferSize;
-		this.useCompoundFile = builder.useCompoundFile;
-		this.maxMergeAtOnce = builder.maxMergeAtOnce;
-		this.maxMergedSegmentMB = builder.maxMergedSegmentMB;
-		this.segmentsPerTier = builder.segmentsPerTier;
-		this.enableTaxonomyIndex = builder.enableTaxonomyIndex;
-		this.sortedSetFacetField = builder.sortedSetFacetField;
-		this.indexReaderWarmer = builder.indexReaderWarmer;
-		this.mergedSegmentWarmer = builder.mergedSegmentWarmer;
-		this.nrtCachingDirectoryMaxMergeSizeMB = builder.nrtCachingDirectoryMaxMergeSizeMB;
-		this.nrtCachingDirectoryMaxCachedMB = builder.nrtCachingDirectoryMaxCachedMB;
-	}
+    final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
 
-	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
+    public static IndexSettingsDefinition newSettings(final String jsonString) throws IOException {
+        if (StringUtils.isEmpty(jsonString))
+            return null;
+        return ObjectMappers.JSON.readValue(jsonString, IndexSettingsDefinition.class);
+    }
 
-	public static IndexSettingsDefinition newSettings(final String jsonString) throws IOException {
-		if (StringUtils.isEmpty(jsonString))
-			return null;
-		return ObjectMappers.JSON.readValue(jsonString, IndexSettingsDefinition.class);
-	}
+    public static boolean useTaxonomyIndex(final IndexSettingsDefinition settings) {
+        return settings != null && (settings.enableTaxonomyIndex == null ? false : settings.enableTaxonomyIndex);
+    }
 
-	public static boolean useTaxonomyIndex(final IndexSettingsDefinition settings) {
-		return settings != null && (settings.enableTaxonomyIndex == null ? false : settings.enableTaxonomyIndex);
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(directoryType, ramBufferSize, useCompoundFile);
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(directoryType, ramBufferSize, useCompoundFile);
-	}
+    @Override
+    public final boolean equals(final Object o) {
+        if (!(o instanceof IndexSettingsDefinition))
+            return false;
+        final IndexSettingsDefinition s = (IndexSettingsDefinition) o;
+        if (!Objects.equals(directoryType, s.directoryType))
+            return false;
+        if (!Objects.equals(mergeScheduler, s.mergeScheduler))
+            return false;
+        if (!Objects.equals(similarityClass, s.similarityClass))
+            return false;
+        if (!Objects.equals(master, s.master))
+            return false;
+        if (!Objects.equals(ramBufferSize, s.ramBufferSize))
+            return false;
+        if (!Objects.equals(useCompoundFile, s.useCompoundFile))
+            return false;
+        if (!Objects.equals(maxMergeAtOnce, s.maxMergeAtOnce))
+            return false;
+        if (!Objects.equals(maxMergedSegmentMB, s.maxMergedSegmentMB))
+            return false;
+        if (!Objects.equals(segmentsPerTier, s.segmentsPerTier))
+            return false;
+        if (!Objects.equals(enableTaxonomyIndex, s.enableTaxonomyIndex))
+            return false;
+        if (!Objects.equals(sortedSetFacetField, s.sortedSetFacetField))
+            return false;
+        if (!Objects.equals(indexReaderWarmer, s.indexReaderWarmer))
+            return false;
+        if (!Objects.equals(mergedSegmentWarmer, s.mergedSegmentWarmer))
+            return false;
+        if (!Objects.equals(nrtCachingDirectoryMaxMergeSizeMB, s.nrtCachingDirectoryMaxMergeSizeMB))
+            return false;
+        if (!Objects.equals(nrtCachingDirectoryMaxCachedMB, s.nrtCachingDirectoryMaxCachedMB))
+            return false;
+        return true;
+    }
 
-	@Override
-	public final boolean equals(final Object o) {
-		if (!(o instanceof IndexSettingsDefinition))
-			return false;
-		final IndexSettingsDefinition s = (IndexSettingsDefinition) o;
-		if (!Objects.equals(directoryType, s.directoryType))
-			return false;
-		if (!Objects.equals(mergeScheduler, s.mergeScheduler))
-			return false;
-		if (!Objects.equals(similarityClass, s.similarityClass))
-			return false;
-		if (!Objects.equals(master, s.master))
-			return false;
-		if (!Objects.equals(ramBufferSize, s.ramBufferSize))
-			return false;
-		if (!Objects.equals(useCompoundFile, s.useCompoundFile))
-			return false;
-		if (!Objects.equals(maxMergeAtOnce, s.maxMergeAtOnce))
-			return false;
-		if (!Objects.equals(maxMergedSegmentMB, s.maxMergedSegmentMB))
-			return false;
-		if (!Objects.equals(segmentsPerTier, s.segmentsPerTier))
-			return false;
-		if (!Objects.equals(enableTaxonomyIndex, s.enableTaxonomyIndex))
-			return false;
-		if (!Objects.equals(sortedSetFacetField, s.sortedSetFacetField))
-			return false;
-		if (!Objects.equals(indexReaderWarmer, s.indexReaderWarmer))
-			return false;
-		if (!Objects.equals(mergedSegmentWarmer, s.mergedSegmentWarmer))
-			return false;
-		if (!Objects.equals(nrtCachingDirectoryMaxMergeSizeMB, s.nrtCachingDirectoryMaxMergeSizeMB))
-			return false;
-		if (!Objects.equals(nrtCachingDirectoryMaxCachedMB, s.nrtCachingDirectoryMaxCachedMB))
-			return false;
-		return true;
-	}
+    public static Builder of(final Index index) throws URISyntaxException {
+        return new Builder(index);
+    }
 
-	public static Builder of(final Index index) throws URISyntaxException {
-		return new Builder(index);
-	}
+    public static Builder of(final IndexSettingsDefinition indexSettings) {
+        return new Builder(indexSettings);
+    }
 
-	public static Builder of(final IndexSettingsDefinition indexSettings) {
-		return new Builder(indexSettings);
-	}
+    public static Builder of() {
+        return new Builder();
+    }
 
-	public static Builder of() {
-		return new Builder();
-	}
+    public static class Builder {
 
-	public static class Builder {
+        private Type directoryType;
+        private MergeScheduler mergeScheduler;
+        private String similarityClass;
+        private RemoteIndex master;
+        private Double ramBufferSize;
+        private Boolean useCompoundFile;
+        private Integer maxMergeAtOnce;
+        private Double maxMergedSegmentMB;
+        private Double segmentsPerTier;
+        private Boolean enableTaxonomyIndex;
+        private String sortedSetFacetField;
+        private Boolean indexReaderWarmer;
+        private Boolean mergedSegmentWarmer;
+        private Double nrtCachingDirectoryMaxMergeSizeMB;
+        private Double nrtCachingDirectoryMaxCachedMB;
 
-		private Type directoryType;
-		private MergeScheduler mergeScheduler;
-		private String similarityClass;
-		private RemoteIndex master;
-		private Double ramBufferSize;
-		private Boolean useCompoundFile;
-		private Integer maxMergeAtOnce;
-		private Double maxMergedSegmentMB;
-		private Double segmentsPerTier;
-		private Boolean enableTaxonomyIndex;
-		private String sortedSetFacetField;
-		private Boolean indexReaderWarmer;
-		private Boolean mergedSegmentWarmer;
-		private Double nrtCachingDirectoryMaxMergeSizeMB;
-		private Double nrtCachingDirectoryMaxCachedMB;
+        private Builder() {
+        }
 
-		private Builder() {
-		}
+        private Builder(final Index annotatedIndex) throws URISyntaxException {
+            directoryType = annotatedIndex.type();
+            mergeScheduler = annotatedIndex.mergeScheduler();
+            similarityClass(annotatedIndex.similarityClass());
+            master(annotatedIndex.replicationMaster());
+            ramBufferSize(annotatedIndex.ramBufferSize());
+            useCompoundFile(annotatedIndex.useCompoundFile());
+            maxMergeAtOnce(annotatedIndex.maxMergeAtOnce());
+            maxMergedSegmentMB(annotatedIndex.maxMergedSegmentMB());
+            segmentsPerTier(annotatedIndex.segmentsPerTier());
+            enableTaxonomyIndex = annotatedIndex.enableTaxonomyIndex();
+            sortedSetFacetField = annotatedIndex.sortedSetFacetField();
+            indexReaderWarmer = annotatedIndex.indexReaderWarmer();
+            mergedSegmentWarmer = annotatedIndex.mergedSegmentWarmer();
+            nrtCachingDirectoryMaxMergeSizeMB = annotatedIndex.nrtCachingDirectoryMaxMergeSizeMB();
+            nrtCachingDirectoryMaxCachedMB = annotatedIndex.nrtCachingDirectoryMaxCachedMB();
+        }
 
-		private Builder(final Index annotatedIndex) throws URISyntaxException {
-			directoryType = annotatedIndex.type();
-			mergeScheduler = annotatedIndex.mergeScheduler();
-			similarityClass(annotatedIndex.similarityClass());
-			master(annotatedIndex.replicationMaster());
-			ramBufferSize(annotatedIndex.ramBufferSize());
-			useCompoundFile(annotatedIndex.useCompoundFile());
-			maxMergeAtOnce(annotatedIndex.maxMergeAtOnce());
-			maxMergedSegmentMB(annotatedIndex.maxMergedSegmentMB());
-			segmentsPerTier(annotatedIndex.segmentsPerTier());
-			enableTaxonomyIndex = annotatedIndex.enableTaxonomyIndex();
-			sortedSetFacetField = annotatedIndex.sortedSetFacetField();
-			indexReaderWarmer = annotatedIndex.indexReaderWarmer();
-			mergedSegmentWarmer = annotatedIndex.mergedSegmentWarmer();
-			nrtCachingDirectoryMaxMergeSizeMB = annotatedIndex.nrtCachingDirectoryMaxMergeSizeMB();
-			nrtCachingDirectoryMaxCachedMB = annotatedIndex.nrtCachingDirectoryMaxCachedMB();
-		}
+        private Builder(final IndexSettingsDefinition settings) {
+            this.directoryType = settings.directoryType;
+            this.mergeScheduler = settings.mergeScheduler;
+            this.similarityClass = settings.similarityClass;
+            this.master = settings.master;
+            this.ramBufferSize = settings.ramBufferSize;
+            this.useCompoundFile = settings.useCompoundFile;
+            this.maxMergeAtOnce = settings.maxMergeAtOnce;
+            this.maxMergedSegmentMB = settings.maxMergedSegmentMB;
+            this.segmentsPerTier = settings.segmentsPerTier;
+            this.enableTaxonomyIndex = settings.enableTaxonomyIndex;
+            this.sortedSetFacetField = settings.sortedSetFacetField;
+            this.indexReaderWarmer = settings.indexReaderWarmer;
+            this.mergedSegmentWarmer = settings.mergedSegmentWarmer;
+            this.nrtCachingDirectoryMaxMergeSizeMB = settings.nrtCachingDirectoryMaxMergeSizeMB;
+            this.nrtCachingDirectoryMaxCachedMB = settings.nrtCachingDirectoryMaxCachedMB;
+        }
 
-		private Builder(final IndexSettingsDefinition settings) {
-			this.directoryType = settings.directoryType;
-			this.mergeScheduler = settings.mergeScheduler;
-			this.similarityClass = settings.similarityClass;
-			this.master = settings.master;
-			this.ramBufferSize = settings.ramBufferSize;
-			this.useCompoundFile = settings.useCompoundFile;
-			this.maxMergeAtOnce = settings.maxMergeAtOnce;
-			this.maxMergedSegmentMB = settings.maxMergedSegmentMB;
-			this.segmentsPerTier = settings.segmentsPerTier;
-			this.enableTaxonomyIndex = settings.enableTaxonomyIndex;
-			this.sortedSetFacetField = settings.sortedSetFacetField;
-			this.indexReaderWarmer = settings.indexReaderWarmer;
-			this.mergedSegmentWarmer = settings.mergedSegmentWarmer;
-			this.nrtCachingDirectoryMaxMergeSizeMB = settings.nrtCachingDirectoryMaxMergeSizeMB;
-			this.nrtCachingDirectoryMaxCachedMB = settings.nrtCachingDirectoryMaxCachedMB;
-		}
+        public Builder type(final Type directoryType) {
+            this.directoryType = directoryType;
+            return this;
+        }
 
-		public Builder type(final Type directoryType) {
-			this.directoryType = directoryType;
-			return this;
-		}
+        public Builder mergeScheduler(final MergeScheduler mergeScheduler) {
+            this.mergeScheduler = mergeScheduler;
+            return this;
+        }
 
-		public Builder mergeScheduler(final MergeScheduler mergeScheduler) {
-			this.mergeScheduler = mergeScheduler;
-			return this;
-		}
+        public Builder similarityClass(final Class<? extends Similarity> similarityClass) {
+            this.similarityClass = similarityClass == null ? null : similarityClass.getName();
+            return this;
+        }
 
-		public Builder similarityClass(final Class<? extends Similarity> similarityClass) {
-			this.similarityClass = similarityClass == null ? null : similarityClass.getName();
-			return this;
-		}
+        public Builder master(final String master) throws URISyntaxException {
+            if (master != null)
+                master(RemoteIndex.build(master));
+            else
+                this.master = null;
+            return this;
+        }
 
-		public Builder master(final String master) throws URISyntaxException {
-			if (master != null)
-				master(RemoteIndex.build(master));
-			else
-				this.master = null;
-			return this;
-		}
+        public Builder master(final RemoteIndex master) {
+            this.master = master;
+            return this;
+        }
 
-		public Builder master(final RemoteIndex master) {
-			this.master = master;
-			return this;
-		}
+        public Builder master(final String schema, final String index) {
+            this.master = new RemoteIndex(schema, index);
+            return this;
+        }
 
-		public Builder master(final String schema, final String index) {
-			this.master = new RemoteIndex(schema, index);
-			return this;
-		}
+        public Builder ramBufferSize(final Double ramBufferSize) {
+            this.ramBufferSize = ramBufferSize;
+            return this;
+        }
 
-		public Builder ramBufferSize(final Double ramBufferSize) {
-			this.ramBufferSize = ramBufferSize;
-			return this;
-		}
+        public Builder useCompoundFile(final Boolean useCompoundFile) {
+            this.useCompoundFile = useCompoundFile;
+            return this;
+        }
 
-		public Builder useCompoundFile(final Boolean useCompoundFile) {
-			this.useCompoundFile = useCompoundFile;
-			return this;
-		}
+        public Builder maxMergeAtOnce(final Integer maxMergeAtOnce) {
+            this.maxMergeAtOnce = maxMergeAtOnce;
+            return this;
+        }
 
-		public Builder maxMergeAtOnce(final Integer maxMergeAtOnce) {
-			this.maxMergeAtOnce = maxMergeAtOnce;
-			return this;
-		}
+        public Builder maxMergedSegmentMB(final Double maxMergedSegmentMB) {
+            this.maxMergedSegmentMB = maxMergedSegmentMB;
+            return this;
+        }
 
-		public Builder maxMergedSegmentMB(final Double maxMergedSegmentMB) {
-			this.maxMergedSegmentMB = maxMergedSegmentMB;
-			return this;
-		}
+        public Builder segmentsPerTier(final Double segmentsPerTier) {
+            this.segmentsPerTier = segmentsPerTier;
+            return this;
+        }
 
-		public Builder segmentsPerTier(final Double segmentsPerTier) {
-			this.segmentsPerTier = segmentsPerTier;
-			return this;
-		}
+        public Builder enableTaxonomyIndex(final Boolean enableTaxonomyIndex) {
+            this.enableTaxonomyIndex = enableTaxonomyIndex;
+            return this;
+        }
 
-		public Builder enableTaxonomyIndex(final Boolean enableTaxonomyIndex) {
-			this.enableTaxonomyIndex = enableTaxonomyIndex;
-			return this;
-		}
+        public Builder sortedSetFacetField(final String sortedSetFacetField) {
+            this.sortedSetFacetField = sortedSetFacetField;
+            return this;
+        }
 
-		public Builder sortedSetFacetField(final String sortedSetFacetField) {
-			this.sortedSetFacetField = sortedSetFacetField;
-			return this;
-		}
+        public Builder indexReaderWarmer(final Boolean indexReaderWarmer) {
+            this.indexReaderWarmer = indexReaderWarmer;
+            return this;
+        }
 
-		public Builder indexReaderWarmer(final Boolean indexReaderWarmer) {
-			this.indexReaderWarmer = indexReaderWarmer;
-			return this;
-		}
+        public Builder mergedSegmentWarmer(final Boolean mergedSegmentWarmer) {
+            this.mergedSegmentWarmer = mergedSegmentWarmer;
+            return this;
+        }
 
-		public Builder mergedSegmentWarmer(final Boolean mergedSegmentWarmer) {
-			this.mergedSegmentWarmer = mergedSegmentWarmer;
-			return this;
-		}
+        public Builder nrtCachingDirectoryMaxMergeSizeMB(final Double nrtCachingDirectoryMaxMergeSizeMB) {
+            this.nrtCachingDirectoryMaxMergeSizeMB = nrtCachingDirectoryMaxMergeSizeMB;
+            return this;
+        }
 
-		public Builder nrtCachingDirectoryMaxMergeSizeMB(final Double nrtCachingDirectoryMaxMergeSizeMB) {
-			this.nrtCachingDirectoryMaxMergeSizeMB = nrtCachingDirectoryMaxMergeSizeMB;
-			return this;
-		}
+        public Builder nrtCachingDirectoryMaxCachedMB(final Double nrtCachingDirectoryMaxCachedMB) {
+            this.nrtCachingDirectoryMaxCachedMB = nrtCachingDirectoryMaxCachedMB;
+            return this;
+        }
 
-		public Builder nrtCachingDirectoryMaxCachedMB(final Double nrtCachingDirectoryMaxCachedMB) {
-			this.nrtCachingDirectoryMaxCachedMB = nrtCachingDirectoryMaxCachedMB;
-			return this;
-		}
+        public IndexSettingsDefinition build() {
+            return new IndexSettingsDefinition(this);
+        }
+    }
 
-		public IndexSettingsDefinition build() {
-			return new IndexSettingsDefinition(this);
-		}
-	}
+    static IndexSettingsDefinition load(final File settingsFile,
+                                        final Supplier<IndexSettingsDefinition> defaultSettings) throws IOException {
+        return settingsFile != null && settingsFile.exists() && settingsFile.isFile() && settingsFile.length() > 0 ?
+                ObjectMappers.JSON.readValue(settingsFile, IndexSettingsDefinition.class) :
+                defaultSettings == null ? null : defaultSettings.get();
+    }
 
-	static IndexSettingsDefinition load(final File settingsFile,
-			final Supplier<IndexSettingsDefinition> defaultSettings) throws IOException {
-		return settingsFile != null && settingsFile.exists() && settingsFile.isFile() && settingsFile.length() > 0 ?
-				ObjectMappers.JSON.readValue(settingsFile, IndexSettingsDefinition.class) :
-				defaultSettings == null ? null : defaultSettings.get();
-	}
-
-	static void save(final IndexSettingsDefinition settings, final File settingsFile) throws IOException {
-		if (settings == null)
-			Files.deleteIfExists(settingsFile.toPath());
-		else
-			ObjectMappers.JSON.writeValue(settingsFile, settings);
-	}
+    static void save(final IndexSettingsDefinition settings, final File settingsFile) throws IOException {
+        if (settings == null)
+            Files.deleteIfExists(settingsFile.toPath());
+        else
+            ObjectMappers.JSON.writeValue(settingsFile, settings);
+    }
 
 }
