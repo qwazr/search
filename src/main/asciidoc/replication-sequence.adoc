@@ -5,38 +5,40 @@ participant SlaveReplWorkDir
 participant SlaveIndexDir
 participant Slave
 participant Master
+participant MasterIndexDir
+
 ==== starting the replication process ====
-Slave->Master : request replication session
-Master->Master : Take a snapshot
-Master->Slave : return the file list and the index_uuid
+Slave->Master : replication session request
+Master<->MasterIndexDir : takes a snapshot
+Master->Slave : returns the file list and the index UUID
 
 ==== choosing a replication strategy ====
-Slave->Slave : Choose the replicaton strategy
+Slave->Slave : Chooses the replication strategy
 note left
-  If the master index_uuid did not changed
-  use the incremental strategy, if not use
-  the full copy strategy.
+  If the master index UUID did not changed
+  the incremental strategy is choosen,
+  if not the full copy strategy is choosen.
 end note
 
 ==== Alternative: Incremental replication process ====
-Slave<->SlaveIndexDir : compare local files and the given file list
-Slave->Master : request the diff files
-Master->Slave : return the requested files
-Slave->SlaveReplWorkDir : store the new files
-SlaveReplWorkDir->SlaveIndexDir : move the new files
-Slave->SlaveIndexDir : reload the IndexSearcher/IndexReader
-Slave->SlaveIndexDir : delete the old files
+Slave<->SlaveIndexDir : compares local files and the given file list
+Slave->MasterIndexDir : requests the diff files
+MasterIndexDir->Slave : returns the requested files
+Slave->SlaveReplWorkDir : stores the new files
+SlaveReplWorkDir->SlaveIndexDir : moves the new files
+Slave->SlaveIndexDir : reloads the IndexSearcher/IndexReader
+Slave->SlaveIndexDir : deletes the old files
 
 ==== Alternative: Full replication process ====
-Slave->Master : request every index files
-Master->Slave : return the requested files
-Slave->SlaveReplWorkDir : store the new files
-SlaveIndexDir->SlaveReplWorkTrashDir : move the old files
-SlaveReplWorkDir->SlaveIndexDir : move the new files
-Slave->SlaveIndexDir : reload the IndexSearcher/IndexReader
-Slave->SlaveReplWorkTrashDir : delete the old files
+Slave->MasterIndexDir : requests every index files
+MasterIndexDir->Slave : returns the requested files
+Slave->SlaveReplWorkDir : stores the new files
+SlaveIndexDir->SlaveReplWorkTrashDir : moves the old files
+SlaveReplWorkDir->SlaveIndexDir : moves the new files
+Slave->SlaveIndexDir : reloads the IndexSearcher/IndexReader
+Slave->SlaveReplWorkTrashDir : deletes the old files
 
 ==== ending the replication process ====
 Slave->Master : release replication session
-Master->Master : release snapshot
+Master->MasterIndexDir : release snapshot
 ....
