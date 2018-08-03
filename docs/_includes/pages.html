@@ -1,7 +1,6 @@
 <ul class="list-unstyled ml-0 pl-0">
   {% assign doclist = site.pages | sort: 'weight' %}
   {% for item in doclist %}
-  {% if item.lang == page.lang %}
   <li>
     {% if item.url == page.url %}
     <a href="{{ site.github.url }}{{ item.url }}"><strong>{{ item.title }}</strong></a>
@@ -13,6 +12,5 @@
     {% endif %}
     <hr/>
   </li>
-  {% endif %}
   {% endfor %}
 </ul>
