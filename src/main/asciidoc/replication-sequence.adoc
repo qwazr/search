@@ -1,0 +1,42 @@
+[plantuml,replication-sequence, svg]
+....
+participant SlaveReplWorkTrashDir
+participant SlaveReplWorkDir
+participant SlaveIndexDir
+participant Slave
+participant Master
+==== starting the replication process ====
+Slave->Master : request replication session
+Master->Master : Take a snapshot
+Master->Slave : return the file list
+
+==== choosing a replication strategy ====
+Slave->Slave : Choose the replicaton strategy
+note left
+  If the master index_uuid did not changed
+  use the incremental strategy, if not use
+  the full copy strategy.
+end note
+
+==== Alternative: Incremental replication process ====
+Slave->Slave : compare local files and the given file list
+Slave->Master : request the diff files
+Master->Slave : return the requested files
+Slave->SlaveReplWorkDir : store the new files
+SlaveReplWorkDir->SlaveIndexDir : move the new files
+Slave->SlaveIndexDir : reload the IndexSearcher/IndexReader
+Slave->SlaveIndexDir : delete the old files
+
+==== Alternative: Full replication process ====
+Slave->Master : request every index files
+Master->Slave : return the requested files
+Slave->SlaveReplWorkDir : store the new files
+SlaveIndexDir->SlaveReplWorkTrashDir : move the old files
+SlaveReplWorkDir->SlaveIndexDir : move the new files
+Slave->SlaveIndexDir : reload the IndexSearcher/IndexReader
+Slave->SlaveReplWorkTrashDir : delete the old files
+
+==== ending the replication process ====
+Slave->Master : release replication session
+Master->Master : release snapshot
+....
