@@ -44,6 +44,10 @@ over Lucene indexes.
 
 Getting started with the [QWAZR Search JAVA library](usage/java-library.md)
 
+Other useful stuffs
+-------------------
+Description of the [replication sequence](misc/replication-sequence.md)
+
 Open source
 -----------
 The source code of the project is hosted at

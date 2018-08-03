@@ -8,7 +8,7 @@ participant Master
 ==== starting the replication process ====
 Slave->Master : request replication session
 Master->Master : Take a snapshot
-Master->Slave : return the file list
+Master->Slave : return the file list and the index_uuid
 
 ==== choosing a replication strategy ====
 Slave->Slave : Choose the replicaton strategy
@@ -19,7 +19,7 @@ note left
 end note
 
 ==== Alternative: Incremental replication process ====
-Slave->Slave : compare local files and the given file list
+Slave<->SlaveIndexDir : compare local files and the given file list
 Slave->Master : request the diff files
 Master->Slave : return the requested files
 Slave->SlaveReplWorkDir : store the new files
