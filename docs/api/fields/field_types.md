@@ -35,10 +35,10 @@ Those fields can be updated without having to index again all the document.
 Name                              |Indexed|Tokenized|Stored|Facet|Sort |Filter
 ----------------------------------|:-----:|:-------:|:----:|:---:|:---:|:----:
 BinaryDocValuesField              | No    | No      | Yes  | No  | Yes | No
-LongDocValuesField                | No    | No      | Yes  | No  | Yes | No
-IntDocValuesField                 | No    | No      | Yes  | No  | Yes | No
-FloatDocValuesField               | No    | No      | Yes  | No  | Yes | No
-DoubleDocValuesField              | No    | No      | Yes  | No  | Yes | No
+LongDocValuesField                | No    | No      | Yes  | No  | Yes | Yes
+IntDocValuesField                 | No    | No      | Yes  | No  | Yes | Yes
+FloatDocValuesField               | No    | No      | Yes  | No  | Yes | Yes
+DoubleDocValuesField              | No    | No      | Yes  | No  | Yes | Yes
 
 ### Sorted DocValues fields
 

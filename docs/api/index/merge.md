@@ -1,8 +1,9 @@
 # Merge two indexes
 
 This API will copy the content of the **merged_index** to the **index_name**.
-Be aware that the merge does not honor any primary key.
-If you have two records with the same ID they will both exists after the merge operation.
+
+The merge does not honor any primary key.
+If you have two records with the same ID they will both exist after the merge operation.
 
 - **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}/merge/{merged_index}
 - **HTTP method**: POST
