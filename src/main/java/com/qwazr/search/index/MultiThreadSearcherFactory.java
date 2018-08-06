@@ -29,68 +29,68 @@ import java.util.concurrent.ExecutorService;
 
 class MultiThreadSearcherFactory extends SearcherFactory {
 
-	static MultiThreadSearcherFactory of(final ExecutorService executorService, final boolean useWarmer,
-			final Similarity similarity, final String stateFacetField) {
-		return similarity == null ?
-				new MultiThreadSearcherFactory(executorService, useWarmer, stateFacetField) :
-				new WithSimilarity(executorService, useWarmer, similarity, stateFacetField);
-	}
+    static MultiThreadSearcherFactory of(final ExecutorService executorService, final boolean useWarmer,
+                                         final Similarity similarity, final String stateFacetField) {
+        return similarity == null ?
+                new MultiThreadSearcherFactory(executorService, useWarmer, stateFacetField) :
+                new WithSimilarity(executorService, useWarmer, similarity, stateFacetField);
+    }
 
-	private static final SimpleMergedSegmentWarmer WARMER = new SimpleMergedSegmentWarmer(InfoStream.getDefault());
+    private static final SimpleMergedSegmentWarmer WARMER = new SimpleMergedSegmentWarmer(InfoStream.getDefault());
 
-	protected final ExecutorService executorService;
-	private final boolean useWarmer;
-	private final String stateFacetField;
+    protected final ExecutorService executorService;
+    private final boolean useWarmer;
+    private final String stateFacetField;
 
-	private MultiThreadSearcherFactory(final ExecutorService executorService, boolean useWarmer,
-			final String stateFacetField) {
-		this.executorService = executorService;
-		this.useWarmer = useWarmer;
-		this.stateFacetField = stateFacetField;
-	}
+    private MultiThreadSearcherFactory(final ExecutorService executorService, boolean useWarmer,
+                                       final String stateFacetField) {
+        this.executorService = executorService;
+        this.useWarmer = useWarmer;
+        this.stateFacetField = stateFacetField;
+    }
 
-	protected StateIndexSearcher warm(final IndexReader indexReader, final StateIndexSearcher indexSearcher)
-			throws IOException {
-		if (!useWarmer)
-			return indexSearcher;
+    protected StateIndexSearcher warm(final IndexReader indexReader, final StateIndexSearcher indexSearcher)
+            throws IOException {
+        if (!useWarmer)
+            return indexSearcher;
 
-		for (final LeafReaderContext context : indexReader.leaves())
-			WARMER.warm(context.reader());
+        for (final LeafReaderContext context : indexReader.leaves())
+            WARMER.warm(context.reader());
 
-		return indexSearcher;
-	}
+        return indexSearcher;
+    }
 
-	public StateIndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader)
-			throws IOException {
-		return warm(reader, new StateIndexSearcher(reader));
-	}
+    public StateIndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader)
+            throws IOException {
+        return warm(reader, new StateIndexSearcher(reader));
+    }
 
-	static class WithSimilarity extends MultiThreadSearcherFactory {
+    static class WithSimilarity extends MultiThreadSearcherFactory {
 
-		private final Similarity similarity;
+        private final Similarity similarity;
 
-		private WithSimilarity(final ExecutorService executorService, final boolean useWarmer,
-				final Similarity similarity, final String stateFacetField) {
-			super(executorService, useWarmer, stateFacetField);
-			this.similarity = similarity;
-		}
+        private WithSimilarity(final ExecutorService executorService, final boolean useWarmer,
+                               final Similarity similarity, final String stateFacetField) {
+            super(executorService, useWarmer, stateFacetField);
+            this.similarity = similarity;
+        }
 
-		public StateIndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader)
-				throws IOException {
-			final StateIndexSearcher searcher = new StateIndexSearcher(reader);
-			searcher.setSimilarity(similarity);
-			return warm(reader, searcher);
-		}
-	}
+        public StateIndexSearcher newSearcher(final IndexReader reader, final IndexReader previousReader)
+                throws IOException {
+            final StateIndexSearcher searcher = new StateIndexSearcher(reader);
+            searcher.setSimilarity(similarity);
+            return warm(reader, searcher);
+        }
+    }
 
-	class StateIndexSearcher extends IndexSearcher {
+    class StateIndexSearcher extends IndexSearcher {
 
-		final SortedSetDocValuesReaderState state;
+        final SortedSetDocValuesReaderState state;
 
-		StateIndexSearcher(IndexReader reader) throws IOException {
-			super(reader, executorService);
-			state = IndexUtils.getNewFacetsState(reader, stateFacetField);
-		}
+        StateIndexSearcher(IndexReader reader) throws IOException {
+            super(reader, executorService);
+            state = IndexUtils.getNewFacetsState(reader, stateFacetField);
+        }
 
-	}
+    }
 }
