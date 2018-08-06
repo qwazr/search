@@ -21,21 +21,22 @@ import org.apache.lucene.search.ScoreDoc;
 import java.io.IOException;
 
 public interface ResultDocumentsInterface {
-	
-	/**
-	 * @param searcher the IndexSearcher used for the query
-	 * @param pos      the position of the current document
-	 * @param scoreDoc the ScoreDoc defining the document
-	 */
-	default void doc(IndexSearcher searcher, int pos, ScoreDoc scoreDoc) throws IOException {
-	}
 
-	/**
-	 * @param pos     the position of the document
-	 * @param name    the name of the snippet
-	 * @param snippet the extracted snippet
-	 */
-	default void highlight(int pos, String name, String snippet) {
-	}
+    /**
+     * @param searcher the IndexSearcher used for the query
+     * @param pos      the position of the current document
+     * @param scoreDoc the ScoreDoc defining the document
+     * @throws IOException if any I/O error occurs
+     */
+    default void doc(IndexSearcher searcher, int pos, ScoreDoc scoreDoc) throws IOException {
+    }
+
+    /**
+     * @param pos     the position of the document
+     * @param name    the name of the snippet
+     * @param snippet the extracted snippet
+     */
+    default void highlight(int pos, String name, String snippet) {
+    }
 
 }

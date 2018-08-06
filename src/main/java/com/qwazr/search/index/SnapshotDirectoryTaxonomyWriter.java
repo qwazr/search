@@ -30,58 +30,67 @@ import java.io.IOException;
  */
 public final class SnapshotDirectoryTaxonomyWriter extends DirectoryTaxonomyWriter {
 
-	private SnapshotDeletionPolicy sdp;
-	private IndexWriter writer;
+    private SnapshotDeletionPolicy sdp;
+    private IndexWriter writer;
 
-	/**
-	 * @see DirectoryTaxonomyWriter#DirectoryTaxonomyWriter(Directory, * IndexWriterConfig.OpenMode, TaxonomyWriterCache)
-	 */
-	public SnapshotDirectoryTaxonomyWriter(Directory directory, IndexWriterConfig.OpenMode openMode,
-			TaxonomyWriterCache cache) throws IOException {
-		super(directory, openMode, cache);
-	}
+    /**
+     * @param directory the directory to use
+     * @param openMode  the opening mode to use
+     * @param cache     the cache to use
+     * @throws IOException if any I/O error occurs
+     * @see DirectoryTaxonomyWriter#DirectoryTaxonomyWriter(Directory, IndexWriterConfig.OpenMode, TaxonomyWriterCache)
+     */
+    public SnapshotDirectoryTaxonomyWriter(Directory directory, IndexWriterConfig.OpenMode openMode,
+                                           TaxonomyWriterCache cache) throws IOException {
+        super(directory, openMode, cache);
+    }
 
-	/**
-	 * @see DirectoryTaxonomyWriter#DirectoryTaxonomyWriter(Directory, IndexWriterConfig.OpenMode)
-	 */
-	public SnapshotDirectoryTaxonomyWriter(Directory directory, IndexWriterConfig.OpenMode openMode)
-			throws IOException {
-		super(directory, openMode);
-	}
+    /**
+     * @param directory the directory to use
+     * @param openMode  the opening mode to use
+     * @throws IOException if any I/O error occurs
+     * @see DirectoryTaxonomyWriter#DirectoryTaxonomyWriter(Directory, IndexWriterConfig.OpenMode)
+     */
+    public SnapshotDirectoryTaxonomyWriter(Directory directory, IndexWriterConfig.OpenMode openMode)
+            throws IOException {
+        super(directory, openMode);
+    }
 
-	/**
-	 * @see DirectoryTaxonomyWriter#DirectoryTaxonomyWriter(Directory)
-	 */
-	public SnapshotDirectoryTaxonomyWriter(Directory d) throws IOException {
-		super(d);
-	}
+    /**
+     * @param d the directory to use
+     * @throws IOException if any I/O error occurs
+     * @see DirectoryTaxonomyWriter#DirectoryTaxonomyWriter(Directory)
+     */
+    public SnapshotDirectoryTaxonomyWriter(Directory d) throws IOException {
+        super(d);
+    }
 
-	@Override
-	protected IndexWriterConfig createIndexWriterConfig(IndexWriterConfig.OpenMode openMode) {
-		IndexWriterConfig conf = super.createIndexWriterConfig(openMode);
-		sdp = new SnapshotDeletionPolicy(conf.getIndexDeletionPolicy());
-		conf.setIndexDeletionPolicy(sdp);
-		return conf;
-	}
+    @Override
+    protected IndexWriterConfig createIndexWriterConfig(IndexWriterConfig.OpenMode openMode) {
+        IndexWriterConfig conf = super.createIndexWriterConfig(openMode);
+        sdp = new SnapshotDeletionPolicy(conf.getIndexDeletionPolicy());
+        conf.setIndexDeletionPolicy(sdp);
+        return conf;
+    }
 
-	@Override
-	protected IndexWriter openIndexWriter(Directory directory, IndexWriterConfig config) throws IOException {
-		writer = super.openIndexWriter(directory, config);
-		return writer;
-	}
+    @Override
+    protected IndexWriter openIndexWriter(Directory directory, IndexWriterConfig config) throws IOException {
+        writer = super.openIndexWriter(directory, config);
+        return writer;
+    }
 
-	/**
-	 * Returns the {@link SnapshotDeletionPolicy} used by the underlying {@link IndexWriter}.
-	 */
-	public SnapshotDeletionPolicy getDeletionPolicy() {
-		return sdp;
-	}
+    /**
+     * @return the {@link SnapshotDeletionPolicy} used by the underlying {@link IndexWriter}.
+     */
+    public SnapshotDeletionPolicy getDeletionPolicy() {
+        return sdp;
+    }
 
-	/**
-	 * Returns the {@link IndexWriter} used by this {@link DirectoryTaxonomyWriter}.
-	 */
-	public IndexWriter getIndexWriter() {
-		return writer;
-	}
+    /**
+     * @return the {@link IndexWriter} used by this {@link DirectoryTaxonomyWriter}.
+     */
+    public IndexWriter getIndexWriter() {
+        return writer;
+    }
 
 }
