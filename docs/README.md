@@ -46,8 +46,8 @@ Getting started with the [QWAZR Search JAVA library](usage/java-library.md)
 
 Other useful stuffs
 -------------------
-** [Main concepts](misc/main-concepts.md)
-** Description of the [replication sequence](misc/replication-sequence.md)
+* [Main concepts](misc/main-concepts.md)
+* Description of the [replication sequence](misc/replication-sequence.md)
 
 Open source
 -----------
