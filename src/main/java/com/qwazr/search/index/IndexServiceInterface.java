@@ -30,6 +30,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -37,6 +38,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -77,6 +79,11 @@ public interface IndexServiceInterface extends ServiceInterface {
     @Path("/{schema_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
     boolean deleteSchema(@PathParam("schema_name") String schema_name);
+
+    @HEAD
+    @Path("/{schema_name}")
+    @Produces({MediaType.TEXT_PLAIN})
+    Response getSchema(@PathParam("schema_name") String schema_name);
 
     @GET
     @Path("/{schema_name}")

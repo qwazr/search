@@ -156,6 +156,17 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
+    public Response getSchema(final String schemaName) {
+        try {
+            checkRight(null);
+            indexManager.get(schemaName);
+            return Response.ok().build();
+        } catch (Exception e) {
+            throw ServerException.getTextException(LOGGER, e);
+        }
+    }
+
+    @Override
     final public IndexStatus createUpdateIndex(final String schemaName, final String indexName,
                                                final IndexSettingsDefinition settings) {
         try {

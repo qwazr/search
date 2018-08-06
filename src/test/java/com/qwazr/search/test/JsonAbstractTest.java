@@ -155,6 +155,7 @@ public abstract class JsonAbstractTest {
     public void test055GetDummySchema() throws URISyntaxException {
         IndexServiceInterface client = getClient();
         checkErrorStatusCode(() -> client.getIndexes(SCHEMA_DUMMY_NAME), 404);
+        checkErrorStatusCode(() -> client.getSchema(SCHEMA_DUMMY_NAME), 404);
     }
 
     @Test
@@ -415,7 +416,7 @@ public abstract class JsonAbstractTest {
     }
 
     private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, String index,
-            QueryDefinition queryDef, int expectedCount) throws IOException {
+                                                     QueryDefinition queryDef, int expectedCount) throws IOException {
         checkErrorStatusCode(() -> client.searchQuery(SCHEMA_NAME, INDEX_DUMMY_NAME, queryDef, null), 404);
         final ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, index, queryDef, null);
         Assert.assertNotNull(result);
@@ -425,12 +426,12 @@ public abstract class JsonAbstractTest {
     }
 
     private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef,
-            int expectedCount) throws IOException {
+                                                     int expectedCount) throws IOException {
         return checkQueryIndex(client, INDEX_MASTER_NAME, queryDef, expectedCount);
     }
 
     private ResultDefinition.WithMap checkQuerySlaveIndex(IndexServiceInterface client, QueryDefinition queryDef,
-            int expectedCount) throws IOException {
+                                                          int expectedCount) throws IOException {
         return checkQueryIndex(client, INDEX_SLAVE_NAME, queryDef, expectedCount);
     }
 
@@ -515,7 +516,7 @@ public abstract class JsonAbstractTest {
     }
 
     private BackupStatus checkBackup(SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups,
-            String backupName) {
+                                     String backupName) {
         Assert.assertNotNull(backups);
         final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults = backups.get(SCHEMA_NAME);
         Assert.assertNotNull(schemaResults);
@@ -527,7 +528,7 @@ public abstract class JsonAbstractTest {
     }
 
     private BackupStatus getAndCheckBackup(IndexServiceInterface client, String backupName,
-            final boolean extractVersion) {
+                                           final boolean extractVersion) {
         return checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, backupName, extractVersion), backupName);
     }
 
@@ -685,7 +686,7 @@ public abstract class JsonAbstractTest {
     }
 
     private <T extends Comparable> void checkDescending(T startValue, String field,
-            Collection<ResultDocumentMap> documents) {
+                                                        Collection<ResultDocumentMap> documents) {
         T old = startValue;
         for (ResultDocumentMap document : documents) {
             Assert.assertNotNull(document.fields);
@@ -697,7 +698,7 @@ public abstract class JsonAbstractTest {
     }
 
     private <T extends Comparable> void checkAscending(T startValue, String field,
-            Collection<ResultDocumentMap> documents) {
+                                                       Collection<ResultDocumentMap> documents) {
         T old = startValue;
         for (ResultDocumentMap document : documents) {
             Assert.assertNotNull(document.fields);
@@ -760,7 +761,7 @@ public abstract class JsonAbstractTest {
     }
 
     private void checkSynonyms(final IndexServiceInterface client, final String queryString,
-            final String... multiWordsHighlights) throws IOException {
+                               final String... multiWordsHighlights) throws IOException {
         final QueryBuilder builder = QueryDefinition.of(QUERY_HIGHLIGHT);
         builder.query(QueryParser.of("description")
                 .setDefaultOperator(QueryParserOperator.AND)
@@ -905,7 +906,7 @@ public abstract class JsonAbstractTest {
 
     @Test
     public void test600FieldAnalyzer() throws URISyntaxException {
-        final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
+        final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(
                 () -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),

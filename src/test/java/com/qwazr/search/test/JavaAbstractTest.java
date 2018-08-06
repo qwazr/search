@@ -133,6 +133,7 @@ public abstract class JavaAbstractTest {
                 SchemaSettingsDefinition.of().backupDirectoryPath(backupDir.getAbsolutePath()).build();
         final SchemaSettingsDefinition settings3 = service.createUpdateSchema(settings);
         Assert.assertEquals(settings, settings3);
+        Assert.assertEquals(200, getIndexService().getSchema(service.getSchemaName()).getStatus());
     }
 
     @Test

@@ -90,6 +90,18 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
+    public Response getSchema(String schemaName) {
+        try {
+            final Response response = indexTarget.path(schemaName).request(MediaType.TEXT_PLAIN).head();
+            if (response.getStatus() != 200)
+                throw new WebApplicationException(response);
+            return response;
+        } catch (WebApplicationException e) {
+            throw ServerException.from(e);
+        }
+    }
+
+    @Override
     public Map<String, UUID> getIndexes(final String schemaName) {
         try {
             return indexTarget.path(schemaName).request(preferedSerializedMediaType).get(mapStringUuidType);
