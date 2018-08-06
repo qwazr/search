@@ -26,14 +26,14 @@ Where the payload file (my_payload) contains the settings:
 
 ```json
 {
-    "max_size": 100000,
     "max_simultaneous_read": 5,
-    "max_simultaneous_write": 2
-}'
+    "max_simultaneous_write": 2,
+    "backup_directory_path" : "/mnt/backups"
+}
 ```
 
 ## Settings parameters
 
-* **max_size**: The maximum number of documents in the schema.
 * **max_simultaneous_read**: The maximum number of simultaneous read access.
 * **max_simultaneous_write**: The maximum number of simultaneous write access.
+* **backup_directory_path**: A path to the backup to directory.
