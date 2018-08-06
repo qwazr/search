@@ -17,6 +17,8 @@ The available parameters are:
 
 The settings are stored in a file named **settings.json** stored in the root of the directory.
 
+[Schema JSON API](/search/api/schema/)
+
 Index
 -----
 
@@ -24,8 +26,10 @@ An index is stored in a Schema directory.
 The name of the index is the name of the directory
 (some file system restrictions must be considered).
 
-The available settings are:
-_to be documented_
+Several configuration parameters are available. See the JSON API to see whose are available.
+
+[Index JSON API](/search/api/index/)
+
 
 Analyzers
 ---------

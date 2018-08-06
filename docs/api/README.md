@@ -5,20 +5,19 @@ These pages describe the API of the Search module.
 
 Schema
 ------
-A schema is a collection of indexes.
-
 - [Create/update a schema](schema/create.md)
+- [Test if a schema exists](schema/exists.md)
 - [List all schemas](schema/list.md)
 - [Delete a schema](schema/delete.md)
 
 Index
 -----
-An index is a collection of documents.
-
 - [List all indexes](index/list.md)
 - [Create/update an index and its settings](index/create.md)
 - [Getting the status of an index](index/status.md)
+- [Check an index](index/check.md)
 - [Delete an index](index/delete.md)
+- [Merge two indexes](index/merge.md)
 
 Analyzers
 ---------

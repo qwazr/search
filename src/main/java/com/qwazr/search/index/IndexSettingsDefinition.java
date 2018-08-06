@@ -15,6 +15,8 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Index;
@@ -30,6 +32,9 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonAutoDetect(creatorVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public class IndexSettingsDefinition {
 
     public enum Type {
@@ -90,22 +95,55 @@ public class IndexSettingsDefinition {
     @JsonProperty("nrt_caching_directory_max_cached_mb")
     final public Double nrtCachingDirectoryMaxCachedMB;
 
-    public IndexSettingsDefinition() {
-        directoryType = null;
-        mergeScheduler = null;
-        similarityClass = null;
-        master = null;
-        ramBufferSize = null;
-        useCompoundFile = null;
-        maxMergeAtOnce = null;
-        maxMergedSegmentMB = null;
-        segmentsPerTier = null;
-        enableTaxonomyIndex = null;
-        sortedSetFacetField = null;
-        indexReaderWarmer = null;
-        mergedSegmentWarmer = null;
-        nrtCachingDirectoryMaxMergeSizeMB = null;
-        nrtCachingDirectoryMaxCachedMB = null;
+    private IndexSettingsDefinition() {
+        this.directoryType = null;
+        this.mergeScheduler = null;
+        this.similarityClass = null;
+        this.master = null;
+        this.ramBufferSize = null;
+        this.useCompoundFile = null;
+        this.maxMergeAtOnce = null;
+        this.maxMergedSegmentMB = null;
+        this.segmentsPerTier = null;
+        this.enableTaxonomyIndex = null;
+        this.sortedSetFacetField = null;
+        this.indexReaderWarmer = null;
+        this.mergedSegmentWarmer = null;
+        this.nrtCachingDirectoryMaxMergeSizeMB = null;
+        this.nrtCachingDirectoryMaxCachedMB = null;
+    }
+
+    @JsonCreator
+    private IndexSettingsDefinition(@JsonProperty("similarity_class") final String similarityClass,
+                                    @JsonProperty("master") final RemoteIndex master,
+                                    @JsonProperty("directory_type") final Type directoryType,
+                                    @JsonProperty("merge_scheduler") final MergeScheduler mergeScheduler,
+                                    @JsonProperty("ram_buffer_size") final Double ramBufferSize,
+                                    @JsonProperty("use_compound_file") final Boolean useCompoundFile,
+                                    @JsonProperty("max_merge_at_once") final Integer maxMergeAtOnce,
+                                    @JsonProperty("max_merged_segment_mb") final Double maxMergedSegmentMB,
+                                    @JsonProperty("segments_per_tier") final Double segmentsPerTier,
+                                    @JsonProperty("enable_taxonomy_index") final Boolean enableTaxonomyIndex,
+                                    @JsonProperty("sorted_set_facet_field") final String sortedSetFacetField,
+                                    @JsonProperty("index_reader_warmer") final Boolean indexReaderWarmer,
+                                    @JsonProperty("merged_segment_warmer") final Boolean mergedSegmentWarmer,
+                                    @JsonProperty("nrt_caching_directory_max_merge_size_mb") final Double nrtCachingDirectoryMaxMergeSizeMB,
+                                    @JsonProperty("nrt_caching_directory_max_cached_mb") final Double nrtCachingDirectoryMaxCachedMB) {
+        this.directoryType = directoryType;
+        this.mergeScheduler = mergeScheduler;
+        this.similarityClass = similarityClass;
+        this.master = master;
+        this.ramBufferSize = ramBufferSize;
+        this.useCompoundFile = useCompoundFile;
+        this.maxMergeAtOnce = maxMergeAtOnce;
+        this.maxMergedSegmentMB = maxMergedSegmentMB;
+        this.segmentsPerTier = segmentsPerTier;
+        this.enableTaxonomyIndex = enableTaxonomyIndex;
+        this.sortedSetFacetField = sortedSetFacetField;
+        this.indexReaderWarmer = indexReaderWarmer;
+        this.mergedSegmentWarmer = mergedSegmentWarmer;
+        this.nrtCachingDirectoryMaxMergeSizeMB = nrtCachingDirectoryMaxMergeSizeMB;
+        this.nrtCachingDirectoryMaxCachedMB = nrtCachingDirectoryMaxCachedMB;
     }
 
     private IndexSettingsDefinition(final Builder builder) {
