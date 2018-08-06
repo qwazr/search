@@ -34,19 +34,35 @@ Several configuration parameters are available. See the JSON API to see whose ar
 Analyzers
 ---------
 
-...
+Analyzers are a set of rules that will be apply to a text.
+
+They are used at indexing time to build tokens that will be indexed.
+
+The text is first divided into tokens, and on each tokens, a collection of transformations can be applied.
+
+There are different kind of **tokenizer**, as well as different kind of **filters**.
+
+A tokenizer can create a new token when a blank character (space, tabulation) is found.
+Words can be divided when case changes, or when digits follow letter.
+
+Filters can remove plural, reject words because they are part of the stop words.
+
+At querying time, the analyzer is used to create the word list which will be use to build the search query.
+ 
+[Analyzer JSON API](/search/api/analyzer/)
+
 
 Fields
 ------
 
-...
+Depending on how you want to query the index, for each kind of field, you have to choose a type.
+In an index, the typical options for a fields are:
+- Enabling full-text indexing
+- Shall we sort the result on this field ?
+- Will it be used as a filter ?
+- Shall we compute counting on this field ?
+- Do we want the field to be returned in the response ? With or without highlighting ?
 
-Replication
------------
-
-...
-
-Backups
--------
-
-...
+To go further:
+- [Field types](/search/api/fields/field_types.md)
+- [Fields JSON API](/search/api/fields/)
