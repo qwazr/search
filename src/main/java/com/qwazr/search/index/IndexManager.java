@@ -67,7 +67,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     private final ExecutorService executorService;
 
     public IndexManager(final Path indexesDirectory, final ExecutorService executorService,
-        final ConstructorParameters constructorParameters) {
+                        final ConstructorParameters constructorParameters) {
         super(constructorParameters == null ? new ConcurrentHashMap<>() : constructorParameters.getMap());
         this.rootDirectory = indexesDirectory.toFile();
         this.executorService = executorService;
@@ -83,7 +83,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         for (File schemaDirectory : directories) {
             try {
                 schemaMap.put(schemaDirectory.getName(),
-                    new SchemaInstance(this, analyzerFactoryMap, service, schemaDirectory, executorService));
+                        new SchemaInstance(this, analyzerFactoryMap, service, schemaDirectory, executorService));
             } catch (ServerException | IOException e) {
                 LOGGER.log(Level.SEVERE, e, e::getMessage);
             }
@@ -127,12 +127,12 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     }
 
     SchemaSettingsDefinition createUpdate(final String schemaName, final SchemaSettingsDefinition settings)
-        throws IOException {
+            throws IOException {
         shemaLock.lock();
         try {
             final SchemaInstance schemaInstance = schemaMap.computeIfAbsent(schemaName, sc -> ExceptionUtils.bypass(
-                () -> new SchemaInstance(this, analyzerFactoryMap, service, new File(rootDirectory, schemaName),
-                    executorService)));
+                    () -> new SchemaInstance(this, analyzerFactoryMap, service, new File(rootDirectory, schemaName),
+                            executorService)));
             if (settings != null)
                 schemaInstance.setSettings(settings);
             return schemaInstance.getSettings();
@@ -177,7 +177,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     }
 
     private void schemaIterator(final String schemaName,
-        final BiConsumerEx<String, SchemaInstance, IOException> consumer) throws IOException {
+                                final BiConsumerEx<String, SchemaInstance, IOException> consumer) throws IOException {
         shemaLock.lock();
         try {
             if ("*".equals(schemaName)) {
@@ -191,7 +191,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     }
 
     SortedMap<String, SortedMap<String, BackupStatus>> backups(final String schemaName, final String indexName,
-        final String backupName) throws IOException {
+                                                               final String backupName) throws IOException {
         final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
         schemaIterator(schemaName, (schName, schemaInstance) -> {
             synchronized (results) {
@@ -206,12 +206,12 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     }
 
     SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
-        final String indexName, final String backupName, final boolean extractVersion) throws IOException {
+                                                                                     final String indexName, final String backupName, final boolean extractVersion) throws IOException {
         final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> results = new TreeMap<>();
         schemaIterator(schemaName, (schName, schemaInstance) -> {
             synchronized (results) {
                 final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults =
-                    schemaInstance.getBackups(indexName, backupName, extractVersion);
+                        schemaInstance.getBackups(indexName, backupName, extractVersion);
                 if (schemaResults != null && !schemaResults.isEmpty())
                     results.put(schName, schemaResults);
             }
@@ -222,7 +222,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     int deleteBackups(final String schemaName, final String indexName, final String backupName) throws IOException {
         final AtomicInteger counter = new AtomicInteger();
         schemaIterator(schemaName,
-            (schName, schemaInstance) -> counter.addAndGet(schemaInstance.deleteBackups(indexName, backupName)));
+                (schName, schemaInstance) -> counter.addAndGet(schemaInstance.deleteBackups(indexName, backupName)));
         return counter.get();
     }
 

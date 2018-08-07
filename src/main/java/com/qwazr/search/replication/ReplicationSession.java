@@ -28,82 +28,99 @@ import java.util.Map;
 import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY,
-		getterVisibility = JsonAutoDetect.Visibility.NONE,
-		setterVisibility = JsonAutoDetect.Visibility.NONE)
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE)
 public class ReplicationSession {
 
-	public final String masterUuid;
-	public final String sessionUuid;
-	public final Map<String, Map<String, Item>> items;
-	public final long size;
+    @JsonProperty("master_uuid")
+    public final String masterUuid;
 
-	@JsonCreator
-	ReplicationSession(@JsonProperty("master_uuid") final String masterUuid,
-			@JsonProperty("session_uuid") final String sessionUuid,
-			@JsonProperty("files") final Map<String, Map<String, Item>> items, @JsonProperty("size") final long size) {
-		this.masterUuid = masterUuid;
-		this.sessionUuid = sessionUuid;
-		this.items = items;
-		this.size = size;
-	}
+    @JsonProperty("session_uuid")
+    public final String sessionUuid;
 
-	ReplicationSession(final String masterUuid, final String sessionUuid, final Map<String, Map<String, Item>> files) {
-		this(masterUuid, sessionUuid, files, computeTotalSize(files));
-	}
+    @JsonProperty("files")
+    public final Map<String, Map<String, Item>> items;
 
-	static long computeTotalSize(final Map<String, Map<String, Item>> items) {
-		long totalSize = 0;
-		for (final Map<String, Item> sourceItems : items.values())
-			for (final Item item : sourceItems.values())
-				if (item != null && item.size != null)
-					totalSize += item.size;
-		return totalSize;
-	}
+    @JsonProperty("size")
+    public final long size;
 
-	@JsonIgnore
-	public Map<String, Item> getSourceFiles(final ReplicationProcess.Source source) {
-		return source == null ? null : items.get(source.name());
-	}
+    @JsonProperty("start_time")
+    public final long startTime;
 
-	@JsonIgnore
-	public Item getItem(final ReplicationProcess.Source source, final String name) {
-		final Map<String, Item> sourceItems = getSourceFiles(source);
-		return sourceItems == null ? null : sourceItems.get(name);
-	}
+    @JsonCreator
+    ReplicationSession(@JsonProperty("master_uuid") final String masterUuid,
+                       @JsonProperty("session_uuid") final String sessionUuid,
+                       @JsonProperty("files") final Map<String, Map<String, Item>> items,
+                       @JsonProperty("size") final long size,
+                       @JsonProperty("start_time") final long startTime) {
+        this.masterUuid = masterUuid;
+        this.sessionUuid = sessionUuid;
+        this.items = items;
+        this.size = size;
+        this.startTime = startTime;
+    }
 
-	@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY,
-			getterVisibility = JsonAutoDetect.Visibility.NONE,
-			setterVisibility = JsonAutoDetect.Visibility.NONE)
-	public static final class Item {
+    ReplicationSession(final String masterUuid, final String sessionUuid, final Map<String, Map<String, Item>> files) {
+        this(masterUuid, sessionUuid, files, computeTotalSize(files), System.currentTimeMillis());
+    }
 
-		public final Long size;
-		public final Long version;
+    static long computeTotalSize(final Map<String, Map<String, Item>> items) {
+        long totalSize = 0;
+        for (final Map<String, Item> sourceItems : items.values())
+            for (final Item item : sourceItems.values())
+                if (item != null && item.size != null)
+                    totalSize += item.size;
+        return totalSize;
+    }
 
-		@JsonCreator
-		Item(@JsonProperty("size") final Long size, @JsonProperty("version") final Long version) {
-			this.size = size;
-			this.version = version;
-		}
+    @JsonIgnore
+    public Map<String, Item> getSourceFiles(final ReplicationProcess.Source source) {
+        return source == null ? null : items.get(source.name());
+    }
 
-		Item(Path itemPath) throws IOException {
-			this(Files.size(itemPath), Objects.requireNonNull(Files.getLastModifiedTime(itemPath),
-					"Cannot extract last modified on: " + itemPath).toMillis());
-		}
+    @JsonIgnore
+    public Item getItem(final ReplicationProcess.Source source, final String name) {
+        final Map<String, Item> sourceItems = getSourceFiles(source);
+        return sourceItems == null ? null : sourceItems.get(name);
+    }
 
-		@Override
-		public int hashCode() {
-			return Objects.hash(size, version);
-		}
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY,
+            getterVisibility = JsonAutoDetect.Visibility.NONE,
+            setterVisibility = JsonAutoDetect.Visibility.NONE,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            creatorVisibility = JsonAutoDetect.Visibility.NONE)
+    public static final class Item {
 
-		@Override
-		public boolean equals(final Object object) {
-			if (!(object instanceof Item))
-				return false;
-			if (object == this)
-				return true;
-			final Item item = (Item) object;
-			return Objects.equals(size, item.size) && Objects.equals(version, item.version);
-		}
-	}
+        public final Long size;
+        public final Long version;
+
+        @JsonCreator
+        Item(@JsonProperty("size") final Long size, @JsonProperty("version") final Long version) {
+            this.size = size;
+            this.version = version;
+        }
+
+        Item(Path itemPath) throws IOException {
+            this(Files.size(itemPath), Objects.requireNonNull(Files.getLastModifiedTime(itemPath),
+                    "Cannot extract last modified on: " + itemPath).toMillis());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(size, version);
+        }
+
+        @Override
+        public boolean equals(final Object object) {
+            if (!(object instanceof Item))
+                return false;
+            if (object == this)
+                return true;
+            final Item item = (Item) object;
+            return Objects.equals(size, item.size) && Objects.equals(version, item.version);
+        }
+    }
 
 }

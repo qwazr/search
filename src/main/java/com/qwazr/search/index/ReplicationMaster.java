@@ -19,79 +19,123 @@ package com.qwazr.search.index;
 import com.qwazr.search.replication.MasterNode;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
+import com.qwazr.utils.LoggerUtils;
 import org.apache.lucene.index.IndexWriter;
 
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 interface ReplicationMaster extends Closeable {
 
-	ReplicationSession newReplicationSession() throws IOException;
+    ReplicationSession newReplicationSession() throws IOException;
 
-	InputStream getItem(final String sessionId, final ReplicationProcess.Source source, final String itemName)
-			throws FileNotFoundException;
+    InputStream getItem(final String sessionId, final ReplicationProcess.Source source, final String itemName)
+            throws FileNotFoundException;
 
-	void releaseSession(String sessionId) throws IOException;
+    void releaseSession(String sessionId) throws IOException;
 
-	abstract class Base implements ReplicationMaster {
+    void expireInactiveSessions(TimeUnit unit, long time);
 
-		private final MasterNode masterNode;
+    abstract class Base implements ReplicationMaster {
 
-		private final ConcurrentHashMap<String, ReplicationSession> sessions;
+        private final static Logger LOGGER = LoggerUtils.getLogger(Base.class);
 
-		private Base(final MasterNode masterNode) {
-			this.masterNode = masterNode;
-			sessions = new ConcurrentHashMap<>();
-		}
+        private final MasterNode masterNode;
 
-		@Override
-		final public ReplicationSession newReplicationSession() throws IOException {
-			final ReplicationSession newSession = masterNode.newSession();
-			sessions.put(newSession.sessionUuid, newSession);
-			return newSession;
-		}
+        private final ConcurrentHashMap<String, ReplicationSession> sessions;
+        private final ConcurrentHashMap<String, Long> sessionsLastActive;
 
-		@Override
-		final public InputStream getItem(final String sessionId, final ReplicationProcess.Source source,
-				final String fileName) throws FileNotFoundException {
-			return masterNode.getItem(sessionId, source, fileName);
-		}
+        private final ThreadLocal<List<String>> expiredSessions;
 
-		@Override
-		final public void releaseSession(final String id) throws IOException {
-			masterNode.releaseSession(id);
-			sessions.remove(id);
-		}
+        private Base(final MasterNode masterNode) {
+            this.masterNode = masterNode;
+            sessions = new ConcurrentHashMap<>();
+            sessionsLastActive = new ConcurrentHashMap<>();
+            expiredSessions = ThreadLocal.withInitial(ArrayList::new);
+        }
 
-		@Override
-		final public void close() throws IOException {
-			for (final ReplicationSession session : sessions.values())
-				releaseSession(session.sessionUuid);
-			masterNode.close();
-		}
+        @Override
+        final public ReplicationSession newReplicationSession() throws IOException {
+            final ReplicationSession newSession = masterNode.newSession();
+            sessions.put(newSession.sessionUuid, newSession);
+            sessionsLastActive.put(newSession.sessionUuid, newSession.startTime);
+            return newSession;
+        }
 
-	}
+        @Override
+        final public InputStream getItem(final String sessionId, final ReplicationProcess.Source source,
+                                         final String fileName) throws FileNotFoundException {
+            sessionsLastActive.put(sessionId, System.currentTimeMillis());
+            return masterNode.getItem(sessionId, source, fileName);
+        }
 
-	final class WithIndex extends Base {
+        @Override
+        final public void expireInactiveSessions(final TimeUnit unit, final long duration) {
+            final long expirationTime = System.currentTimeMillis() - unit.toMillis(duration);
+            synchronized (this) {
+                final List<String> sessionsToRelease = expiredSessions.get();
+                sessionsLastActive.forEach((id, activeTime) -> {
+                    if (activeTime < expirationTime)
+                        sessionsToRelease.add(id);
+                });
+                for (final String sessionId : sessionsToRelease) {
+                    try {
+                        releaseSession(sessionId);
+                        LOGGER.warning(() -> "The replication session has been released due to expiration: " + sessionId);
+                    } catch (IOException e) {
+                        LOGGER.log(Level.SEVERE, e, () -> "Error while trying to expire the replication session: " + sessionId);
+                    }
+                }
+            }
+        }
 
-		WithIndex(final String masterUuid, final IndexFileSet indexFileSet, final IndexWriter indexWriter)
-				throws IOException {
-			super(new MasterNode.WithIndex(masterUuid, indexFileSet.resourcesDirectoryPath, indexFileSet.dataDirectory,
-					indexWriter, indexFileSet.mainDirectory, IndexFileSet.ANALYZERS_FILE, IndexFileSet.FIELDS_FILE));
-		}
-	}
+        @Override
+        final public void releaseSession(final String id) throws IOException {
+            synchronized (this) {
+                masterNode.releaseSession(id);
+                sessions.remove(id);
+                sessionsLastActive.remove(id);
+            }
+        }
 
-	final class WithIndexAndTaxo extends Base {
+        @Override
+        final public void close() throws IOException {
+            synchronized (this) {
+                for (final ReplicationSession session : sessions.values())
+                    releaseSession(session.sessionUuid);
+                sessions.clear();
+                sessionsLastActive.clear();
+                masterNode.close();
+                expiredSessions.remove();
+            }
+        }
 
-		WithIndexAndTaxo(final String masterUuid, final IndexFileSet indexFileSet, final IndexWriter indexWriter,
-				final SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException {
-			super(new MasterNode.WithIndexAndTaxo(masterUuid, indexFileSet.resourcesDirectoryPath,
-					indexFileSet.dataDirectory, indexWriter, indexFileSet.taxonomyDirectory, taxonomyWriter,
-					indexFileSet.mainDirectory, IndexFileSet.ANALYZERS_FILE, IndexFileSet.FIELDS_FILE));
-		}
-	}
+    }
+
+    final class WithIndex extends Base {
+
+        WithIndex(final String masterUuid, final IndexFileSet indexFileSet, final IndexWriter indexWriter) {
+            super(new MasterNode.WithIndex(masterUuid, indexFileSet.resourcesDirectoryPath, indexFileSet.dataDirectory,
+                    indexWriter, indexFileSet.mainDirectory, IndexFileSet.ANALYZERS_FILE, IndexFileSet.FIELDS_FILE));
+        }
+    }
+
+    final class WithIndexAndTaxo extends Base {
+
+        WithIndexAndTaxo(final String masterUuid, final IndexFileSet indexFileSet, final IndexWriter indexWriter,
+                         final SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException {
+            super(new MasterNode.WithIndexAndTaxo(masterUuid, indexFileSet.resourcesDirectoryPath,
+                    indexFileSet.dataDirectory, indexWriter, indexFileSet.taxonomyDirectory, taxonomyWriter,
+                    indexFileSet.mainDirectory, IndexFileSet.ANALYZERS_FILE, IndexFileSet.FIELDS_FILE));
+        }
+    }
 
 }
