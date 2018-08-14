@@ -1,0 +1,33 @@
+[plantuml,qwazr-lucene-internal, svg]
+....
+digraph qwazr {
+                "qwazr-search" -> "qwazr-cluster";
+                "qwazr-search" -> "qwazr-binder";
+                "qwazr-cluster" -> "qwazr-server";
+                "qwazr-server" -> "qwazr-utils";
+                "qwazr-binder" -> "qwazr-utils";
+                "qwazr-utils" -> "qwazr-externalizor";
+                "qwazr-library" -> "qwazr-cluster";
+                "qwazr-library" -> "qwazr-server";
+                "qwazr-library-test" -> "qwazr-extractor";
+                "qwazr-library-test" -> "qwazr-database";
+                "qwazr-database" -> "qwazr-cluster";
+                "qwazr-database" -> "qwazr-binder";
+                "qwazr-webapps" -> "qwazr-scripts";
+                "qwazr-webapps" -> "qwazr-library-freemarker";
+                "qwazr-webapps" -> "qwazr-library-asciidoctor";
+                "qwazr-scripts" -> "qwazr-library";
+                "qwazr-scripts" -> "qwazr-cluster";
+                "qwazr-library-freemarker" -> "qwazr-library";
+                "qwazr-library-freemarker" -> "qwazr-library-test";
+                "qwazr-library-freemarker" -> "qwazr-extractor";
+                "qwazr-library-asciidoctor" -> "qwazr-library";
+                "qwazr-library-asciidoctor" -> "qwazr-library-test";
+                "qwazr-library-asciidoctor" -> "qwazr-extractor";
+                "qwazr-library-asciidoctor" -> "qwazr-library-markdown";
+                "qwazr-library-markdown" -> "qwazr-library";
+                "qwazr-library-markdown" -> "qwazr-library-test";
+                "qwazr-library-markdown" -> "qwazr-extractor";
+                "qwazr-extractor" -> "qwazr-cluster";
+}
+...

@@ -1,0 +1,41 @@
+[plantuml,cluster-typology, svg]
+....
+
+folder [Indexing] {
+  [IndexWriter] -->[RamBuffer]
+}
+
+folder segment1 [
+001.fdx
+001.fim
+001.fdt
+segment_001
+]
+
+folder segment2 [
+002.fdx
+002.fim
+002.fdt
+segment_002
+]
+
+folder segment3 [
+003.fdx
+003.fim
+003.fdt
+segment_003
+]
+
+[RamBuffer] --> [segment1]
+[RamBuffer] --> [segment2]
+
+folder [MergePolicy] {
+  [IndexDeletionPolicy]<--[segment1]
+  [IndexDeletionPolicy]<--[segment2]
+  [IndexDeletionPolicy]-->[segment3]
+}
+
+folder [SearcherManager] {
+[indexSearcher]
+[IndexReader]
+}
