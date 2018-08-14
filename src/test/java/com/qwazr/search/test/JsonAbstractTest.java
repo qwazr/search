@@ -81,6 +81,7 @@ public abstract class JsonAbstractTest {
     public static final String SCHEMA_ERROR_NAME = "test_error_schema";
     public static final String INDEX_ERROR_NAME = "test_error_index";
     public static final String INDEX_MASTER_NAME = "index-test-master-json";
+    public static final String INDEX_TEST_NAME = "index-test-json";
     public static final String INDEX_BACKUP_NAME1 = "my_backup-1";
     public static final String INDEX_BACKUP_NAME2 = "my_backup-2";
     public static final String INDEX_BACKUP_NAME3 = "my_backup-3";
@@ -99,6 +100,7 @@ public abstract class JsonAbstractTest {
     public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
     public static final IndexSettingsDefinition INDEX_MASTER_SETTINGS = getIndexSettings("index_master_settings.json");
     public static final IndexSettingsDefinition INDEX_SLAVE_SETTINGS = getIndexSettings("index_slave_settings.json");
+    public static final IndexSettingsDefinition INDEX_TEST_SETTINGS = getIndexSettings("index_test_settings.json");
     public static final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
     public static final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
     public static final QueryDefinition FACETS_DRILLDOWN_QUERY = getQuery("query_facets_drilldown.json");
@@ -250,6 +252,22 @@ public abstract class JsonAbstractTest {
         Assert.assertNotNull(indexStatus);
         Assert.assertNotNull(indexStatus.settings);
         Assert.assertNotNull(indexStatus.settings.similarityClass);
+        Assert.assertNull(indexStatus.settings.indexReaderWarmer);
+        Assert.assertNull(indexStatus.settings.useSimpleTextCodec);
+        checkAllSizes(client, 0);
+    }
+
+    @Test
+    public void test107CreateIndexWithOtherSettings() throws URISyntaxException, IOException {
+        IndexServiceInterface client = getClient();
+        IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_TEST_NAME, INDEX_TEST_SETTINGS);
+        Assert.assertNotNull(indexStatus);
+        Assert.assertNotNull(indexStatus.settings);
+        Assert.assertNull(indexStatus.settings.similarityClass);
+        Assert.assertNotNull(indexStatus.settings.indexReaderWarmer);
+        Assert.assertFalse(indexStatus.settings.indexReaderWarmer);
+        Assert.assertNotNull(indexStatus.settings.useSimpleTextCodec);
+        Assert.assertTrue(indexStatus.settings.useSimpleTextCodec);
         checkAllSizes(client, 0);
     }
 
@@ -982,7 +1000,7 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         Assert.assertEquals(Integer.valueOf(1),
                 client.deleteBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1));
-        Assert.assertEquals(Integer.valueOf(2), client.deleteBackups(SCHEMA_NAME, "*", "*"));
+        Assert.assertEquals(Integer.valueOf(3), client.deleteBackups(SCHEMA_NAME, "*", "*"));
     }
 
     private void checkReplication(final IndexServiceInterface client) {
