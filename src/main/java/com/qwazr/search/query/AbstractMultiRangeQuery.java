@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,33 +21,34 @@ import java.util.List;
 
 abstract class AbstractMultiRangeQuery<T extends AbstractMultiRangeQuery> extends AbstractFieldQuery<T> {
 
-	protected AbstractMultiRangeQuery(Class<T> queryClass, final String genericField, final String field) {
-		super(queryClass, genericField, field);
-	}
+    protected AbstractMultiRangeQuery(Class<T> queryClass, final String genericField, final String field) {
+        super(queryClass, genericField, field);
+    }
 
-	public abstract static class AbstractBuilder<T> extends AbstractFieldBuilder {
+    public abstract static class AbstractBuilder<T, Builder extends AbstractBuilder>
+            extends AbstractFieldBuilder<Builder> {
 
-		private final List<T> lowerValues;
-		private final List<T> upperValues;
+        private final List<T> lowerValues;
+        private final List<T> upperValues;
 
-		protected AbstractBuilder(String genericField, String field) {
-			super(genericField, field);
-			lowerValues = new ArrayList<>();
-			upperValues = new ArrayList<>();
-		}
+        protected AbstractBuilder(String genericField, String field) {
+            super(genericField, field);
+            lowerValues = new ArrayList<>();
+            upperValues = new ArrayList<>();
+        }
 
-		public AbstractBuilder<T> addRange(T lowerValue, T upperValue) {
-			lowerValues.add(lowerValue);
-			upperValues.add(upperValue);
-			return this;
-		}
+        public Builder addRange(T lowerValue, T upperValue) {
+            lowerValues.add(lowerValue);
+            upperValues.add(upperValue);
+            return me();
+        }
 
-		protected abstract AbstractMultiRangeQuery build(String field, Collection<T> lowerValues,
-				Collection<T> upperValues);
+        protected abstract AbstractMultiRangeQuery build(String field, Collection<T> lowerValues,
+                Collection<T> upperValues);
 
-		public AbstractMultiRangeQuery build() {
-			return build(field, lowerValues, upperValues);
-		}
+        public AbstractMultiRangeQuery build() {
+            return build(field, lowerValues, upperValues);
+        }
 
-	}
+    }
 }

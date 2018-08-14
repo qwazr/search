@@ -26,46 +26,61 @@ import java.util.Objects;
 
 public class FuzzyQuery extends AbstractMultiTermQuery<FuzzyQuery> {
 
-	final public String text;
-	final public Integer max_edits;
-	final public Integer max_expansions;
-	final public Boolean transpositions;
-	final public Integer prefix_length;
+    final public String text;
+    final public Integer max_edits;
+    final public Integer max_expansions;
+    final public Boolean transpositions;
+    final public Integer prefix_length;
 
-	@JsonCreator
-	public FuzzyQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("text") final String text,
-			@JsonProperty("max_edits") final Integer maxEdits,
-			@JsonProperty("max_expansions") final Integer maxExpansions,
-			@JsonProperty("transpositions") final Boolean transpositions,
-			@JsonProperty("prefix_length") final Integer prefixLength) {
-		super(FuzzyQuery.class, genericField, field);
-		this.text = text;
-		this.max_edits = maxEdits;
-		this.max_expansions = maxExpansions;
-		this.transpositions = transpositions;
-		this.prefix_length = prefixLength;
-	}
+    @JsonCreator
+    private FuzzyQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("text") final String text,
+            @JsonProperty("max_edits") final Integer maxEdits,
+            @JsonProperty("max_expansions") final Integer maxExpansions,
+            @JsonProperty("transpositions") final Boolean transpositions,
+            @JsonProperty("prefix_length") final Integer prefixLength) {
+        super(FuzzyQuery.class, genericField, field, null);
+        this.text = text;
+        this.max_edits = maxEdits;
+        this.max_expansions = maxExpansions;
+        this.transpositions = transpositions;
+        this.prefix_length = prefixLength;
+    }
 
-	public FuzzyQuery(final String field, final String text, final Integer maxEdits, final Integer maxExpansions,
-			final Boolean transpositions, final Integer prefixLength) {
-		this(null, field, text, maxEdits, maxExpansions, transpositions, prefixLength);
-	}
+    public FuzzyQuery(final String field, final String text, final Integer maxEdits, final Integer maxExpansions,
+            final Boolean transpositions, final Integer prefixLength) {
+        this(null, field, text, maxEdits, maxExpansions, transpositions, prefixLength);
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(FuzzyQuery q) {
-		return super.isEqual(q) && Objects.equals(text, q.text) && Objects.equals(max_edits, q.max_edits) &&
-				Objects.equals(max_expansions, q.max_expansions) && Objects.equals(transpositions, q.transpositions) &&
-				Objects.equals(prefix_length, q.prefix_length);
-	}
+    public FuzzyQuery(final String field, final String text, final Integer maxEdits, final Integer maxExpansions,
+            final Boolean transpositions, final Integer prefixLength,
+            final MultiTermQuery.RewriteMethod rewriteMethod) {
+        super(FuzzyQuery.class, null, field, rewriteMethod);
+        this.text = text;
+        this.max_edits = maxEdits;
+        this.max_expansions = maxExpansions;
+        this.transpositions = transpositions;
+        this.prefix_length = prefixLength;
+    }
 
-	@Override
-	final public MultiTermQuery getQuery(final QueryContext queryContext) {
-		return new org.apache.lucene.search.FuzzyQuery(new Term(resolveField(queryContext.getFieldMap()), text),
-				max_edits == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxEdits : max_edits,
-				prefix_length == null ? org.apache.lucene.search.FuzzyQuery.defaultPrefixLength : prefix_length,
-				max_expansions == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxExpansions : max_expansions,
-				transpositions == null ? org.apache.lucene.search.FuzzyQuery.defaultTranspositions : transpositions);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(FuzzyQuery q) {
+        return super.isEqual(q) && Objects.equals(text, q.text) && Objects.equals(max_edits, q.max_edits) &&
+                Objects.equals(max_expansions, q.max_expansions) && Objects.equals(transpositions, q.transpositions) &&
+                Objects.equals(prefix_length, q.prefix_length);
+    }
+
+    @Override
+    final public MultiTermQuery getQuery(final QueryContext queryContext) {
+        return applyRewriteMethod(
+                new org.apache.lucene.search.FuzzyQuery(new Term(resolveField(queryContext.getFieldMap()), text),
+                        max_edits == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxEdits : max_edits,
+                        prefix_length == null ? org.apache.lucene.search.FuzzyQuery.defaultPrefixLength : prefix_length,
+                        max_expansions == null ?
+                                org.apache.lucene.search.FuzzyQuery.defaultMaxExpansions :
+                                max_expansions, transpositions == null ?
+                        org.apache.lucene.search.FuzzyQuery.defaultTranspositions :
+                        transpositions));
+    }
 }

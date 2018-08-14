@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,50 +29,55 @@ import java.util.Collection;
 
 public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<DoubleMultiRangeQuery> {
 
-	final public double[] lower_values;
-	final public double[] upper_values;
+    final public double[] lower_values;
+    final public double[] upper_values;
 
-	@JsonCreator
-	public DoubleMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("lower_values") final double[] lowerValues,
-			@JsonProperty("upper_values") final double[] upperValues) {
-		super(DoubleMultiRangeQuery.class, genericField, field);
-		this.lower_values = lowerValues;
-		this.upper_values = upperValues;
-	}
+    @JsonCreator
+    public DoubleMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("lower_values") final double[] lowerValues,
+            @JsonProperty("upper_values") final double[] upperValues) {
+        super(DoubleMultiRangeQuery.class, genericField, field);
+        this.lower_values = lowerValues;
+        this.upper_values = upperValues;
+    }
 
-	public DoubleMultiRangeQuery(final String field, final double[] lowerValues, final double[] upperValues) {
-		this(null, field, lowerValues, upperValues);
-	}
+    public DoubleMultiRangeQuery(final String field, final double[] lowerValues, final double[] upperValues) {
+        this(null, field, lowerValues, upperValues);
+    }
 
-	public DoubleMultiRangeQuery(final String field, final double lowerValue, final double upperValue) {
-		this(field, new double[] { lowerValue }, new double[] { upperValue });
-	}
+    public DoubleMultiRangeQuery(final String field, final double lowerValue, final double upperValue) {
+        this(field, new double[] { lowerValue }, new double[] { upperValue });
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(DoubleMultiRangeQuery q) {
-		return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
-				Arrays.equals(upper_values, q.upper_values);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(DoubleMultiRangeQuery q) {
+        return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
+                Arrays.equals(upper_values, q.upper_values);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return DoublePoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_values, upper_values);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) throws IOException {
+        return DoublePoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_values, upper_values);
+    }
 
-	public static class Builder extends AbstractBuilder<Double> {
+    public static class Builder extends AbstractBuilder<Double, Builder> {
 
-		public Builder(String genericField, String field) {
-			super(genericField, field);
-		}
+        public Builder(String genericField, String field) {
+            super(genericField, field);
+        }
 
-		@Override
-		protected DoubleMultiRangeQuery build(final String field, final Collection<Double> lowerValues,
-				final Collection<Double> upperValues) {
-			return new DoubleMultiRangeQuery(field, ArrayUtils.toPrimitiveDouble(lowerValues),
-					ArrayUtils.toPrimitiveDouble(upperValues));
-		}
-	}
+        @Override
+        protected Builder me() {
+            return this;
+        }
+
+        @Override
+        protected DoubleMultiRangeQuery build(final String field, final Collection<Double> lowerValues,
+                final Collection<Double> upperValues) {
+            return new DoubleMultiRangeQuery(field, ArrayUtils.toPrimitiveDouble(lowerValues),
+                    ArrayUtils.toPrimitiveDouble(upperValues));
+        }
+    }
 
 }

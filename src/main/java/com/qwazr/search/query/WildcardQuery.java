@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,28 +25,34 @@ import java.util.Objects;
 
 public class WildcardQuery extends AbstractMultiTermQuery<WildcardQuery> {
 
-	final public String term;
+    final public String term;
 
-	@JsonCreator
-	public WildcardQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("term") final String term) {
-		super(WildcardQuery.class, genericField, field);
-		this.term = term;
-	}
+    @JsonCreator
+    private WildcardQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("term") final String term) {
+        super(WildcardQuery.class, genericField, field, null);
+        this.term = term;
+    }
 
-	public WildcardQuery(final String field, final String term) {
-		this(null, field, term);
-	}
+    public WildcardQuery(final String field, final String term, final MultiTermQuery.RewriteMethod rewriteMethod) {
+        super(null, field, term, rewriteMethod);
+        this.term = term;
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(WildcardQuery q) {
-		return super.isEqual(q) && Objects.equals(term, q.term);
-	}
+    public WildcardQuery(final String field, final String term) {
+        this(null, field, term);
+    }
 
-	@Override
-	final public MultiTermQuery getQuery(final QueryContext queryContext) {
-		return new org.apache.lucene.search.WildcardQuery(getResolvedTerm(queryContext.getFieldMap(), term));
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(WildcardQuery q) {
+        return super.isEqual(q) && Objects.equals(term, q.term);
+    }
+
+    @Override
+    final public MultiTermQuery getQuery(final QueryContext queryContext) {
+        return applyRewriteMethod(
+                new org.apache.lucene.search.WildcardQuery(getResolvedTerm(queryContext.getFieldMap(), term)));
+    }
 
 }

@@ -30,9 +30,9 @@ import java.util.Objects;
 import java.util.logging.Logger;
 
 @RunWith(Parameterized.class)
-public abstract class PriorityQueueTest {
+public class PriorityQueue2Test {
 
-    private final static Logger LOGGER = LoggerUtils.getLogger(PriorityQueueTest.class);
+    private final static Logger LOGGER = LoggerUtils.getLogger(PriorityQueue2Test.class);
 
     private final static int COUNT = 100_000;
 

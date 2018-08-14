@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,55 +26,57 @@ import java.util.Objects;
 
 public abstract class AbstractFieldQuery<T extends AbstractFieldQuery> extends AbstractQuery<T> {
 
-	@JsonProperty("generic_field")
-	final public String genericField;
+    @JsonProperty("generic_field")
+    final public String genericField;
 
-	final public String field;
+    final public String field;
 
-	protected AbstractFieldQuery(final Class<T> queryClass, final String genericField, final String field) {
-		super(queryClass);
-		this.genericField = genericField;
-		this.field = Objects.requireNonNull(field, "The field is null");
-	}
+    protected AbstractFieldQuery(final Class<T> queryClass, final String genericField, final String field) {
+        super(queryClass);
+        this.genericField = genericField;
+        this.field = Objects.requireNonNull(field, "The field is null");
+    }
 
-	protected AbstractFieldQuery(final Class<T> queryClass, final AbstractFieldBuilder builder) {
-		this(queryClass, builder.genericField, builder.field);
-	}
+    protected AbstractFieldQuery(final Class<T> queryClass, final AbstractFieldBuilder builder) {
+        this(queryClass, builder.genericField, builder.field);
+    }
 
-	static String resolveField(final FieldMap fieldMap, final String genericFieldName, final String field) {
-		return fieldMap == null ? field : fieldMap.resolveQueryFieldName(genericFieldName, field);
-	}
+    static String resolveField(final FieldMap fieldMap, final String genericFieldName, final String field) {
+        return fieldMap == null ? field : fieldMap.resolveQueryFieldName(genericFieldName, field);
+    }
 
-	final protected String resolveField(final FieldMap fieldMap) {
-		return resolveField(fieldMap, genericField, field);
-	}
+    final protected String resolveField(final FieldMap fieldMap) {
+        return resolveField(fieldMap, genericField, field);
+    }
 
-	static Term getResolvedTerm(final FieldMap fieldMap, final String genericFieldName, final String concreteFieldName,
-			final Object value) {
-		return fieldMap == null ?
-				new Term(concreteFieldName, BytesRefUtils.fromAny(value)) :
-				Objects.requireNonNull(fieldMap.getFieldType(genericFieldName, concreteFieldName),
-						"Unknown field: " + concreteFieldName).term(concreteFieldName, value);
-	}
+    static Term getResolvedTerm(final FieldMap fieldMap, final String genericFieldName, final String concreteFieldName,
+            final Object value) {
+        return fieldMap == null ?
+                new Term(concreteFieldName, BytesRefUtils.fromAny(value)) :
+                Objects.requireNonNull(fieldMap.getFieldType(genericFieldName, concreteFieldName),
+                        "Unknown field: " + concreteFieldName).term(concreteFieldName, value);
+    }
 
-	final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {
-		return getResolvedTerm(fieldMap, genericField, field, value);
-	}
+    final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {
+        return getResolvedTerm(fieldMap, genericField, field, value);
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(T q) {
-		return Objects.equals(genericField, q.genericField) && Objects.equals(field, q.field);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(T q) {
+        return Objects.equals(genericField, q.genericField) && Objects.equals(field, q.field);
+    }
 
-	public static abstract class AbstractFieldBuilder {
+    public static abstract class AbstractFieldBuilder<Builder extends AbstractFieldBuilder> {
 
-		final public String genericField;
-		final public String field;
+        final public String genericField;
+        final public String field;
 
-		protected AbstractFieldBuilder(final String genericField, final String field) {
-			this.genericField = genericField;
-			this.field = field;
-		}
-	}
+        protected AbstractFieldBuilder(final String genericField, final String field) {
+            this.genericField = genericField;
+            this.field = field;
+        }
+
+        protected abstract Builder me();
+    }
 }

@@ -32,58 +32,63 @@ import java.util.Objects;
 
 public class TermsQuery extends AbstractMultiTermQuery<TermsQuery> {
 
-	final public Collection<Object> terms;
+    final public Collection<Object> terms;
 
-	@JsonIgnore
-	final private Collection<BytesRef> bytesRefCollection;
+    @JsonIgnore
+    final private Collection<BytesRef> bytesRefCollection;
 
-	@JsonCreator
-	TermsQuery(@JsonProperty("generic_field") final String genericField, @JsonProperty("field") final String field,
-			@JsonProperty("terms") final Collection<Object> terms) {
-		super(TermsQuery.class, genericField, field);
-		this.terms = Objects.requireNonNull(terms, "The term list is null");
-		this.bytesRefCollection = null;
-	}
+    @JsonCreator
+    private TermsQuery(@JsonProperty("generic_field") final String genericField, @JsonProperty("field") final String field,
+            @JsonProperty("terms") final Collection<Object> terms) {
+        super(TermsQuery.class, genericField, field, null);
+        this.terms = Objects.requireNonNull(terms, "The term list is null");
+        this.bytesRefCollection = null;
+    }
 
-	private TermsQuery(final Builder builder) {
-		super(TermsQuery.class, builder);
-		this.terms = builder.objects;
-		this.bytesRefCollection = builder.bytesRefs;
-	}
+    private TermsQuery(final Builder builder) {
+        super(TermsQuery.class, builder);
+        this.terms = builder.objects;
+        this.bytesRefCollection = builder.bytesRefs;
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(TermsQuery q) {
-		return super.isEqual(q) && CollectionsUtils.equals(terms, q.terms);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(TermsQuery q) {
+        return super.isEqual(q) && CollectionsUtils.equals(terms, q.terms);
+    }
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		final Collection<BytesRef> bytesRefs;
-		if (bytesRefCollection == null) {
-			bytesRefs = new ArrayList<>();
-			terms.forEach(term -> bytesRefs.add(BytesRefUtils.fromAny(term)));
-		} else
-			bytesRefs = bytesRefCollection;
-		return new TermInSetQuery(resolveField(queryContext.getFieldMap()), bytesRefs);
-	}
+    @Override
+    final public Query getQuery(final QueryContext queryContext) throws IOException {
+        final Collection<BytesRef> bytesRefs;
+        if (bytesRefCollection == null) {
+            bytesRefs = new ArrayList<>();
+            terms.forEach(term -> bytesRefs.add(BytesRefUtils.fromAny(term)));
+        } else
+            bytesRefs = bytesRefCollection;
+        return new TermInSetQuery(resolveField(queryContext.getFieldMap()), bytesRefs);
+    }
 
-	public static Builder of(final String genericField, final String field) {
-		return new Builder(genericField, field);
-	}
+    public static Builder of(final String genericField, final String field) {
+        return new Builder(genericField, field);
+    }
 
-	public static Builder of(final String field) {
-		return of(null, field);
-	}
+    public static Builder of(final String field) {
+        return of(null, field);
+    }
 
-	public static class Builder extends MultiTermBuilder<TermsQuery> {
+    public static class Builder extends MultiTermBuilder<TermsQuery, Builder> {
 
-		private Builder(final String genericField, final String field) {
-			super(genericField, field);
-		}
+        private Builder(final String genericField, final String field) {
+            super(genericField, field);
+        }
 
-		final public TermsQuery build() {
-			return new TermsQuery(this);
-		}
-	}
+        @Override
+        protected Builder me() {
+            return this;
+        }
+
+        final public TermsQuery build() {
+            return new TermsQuery(this);
+        }
+    }
 }

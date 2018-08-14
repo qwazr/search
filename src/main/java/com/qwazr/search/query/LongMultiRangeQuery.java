@@ -61,13 +61,18 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery<LongMultiRangeQ
 			return LongPoint.newRangeQuery(resolvedField, lower_values, upper_values);
 	}
 
-	public static class Builder extends AbstractBuilder<Long> {
+	public static class Builder extends AbstractBuilder<Long, Builder> {
 
 		public Builder(String genericField, String field) {
 			super(genericField, field);
 		}
 
-		@Override
+        @Override
+        protected Builder me() {
+            return this;
+        }
+
+        @Override
 		protected LongMultiRangeQuery build(final String field, final Collection<Long> lowerValues,
 				final Collection<Long> upperValues) {
 			return new LongMultiRangeQuery(genericField, field, ArrayUtils.toPrimitiveLong(lowerValues),
