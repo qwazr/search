@@ -47,6 +47,8 @@ public @interface Index {
 
 	boolean useCompoundFile() default IndexWriterConfig.DEFAULT_USE_COMPOUND_FILE_SYSTEM;
 
+	boolean useSimpleTextCodec() default false;
+
 	int maxMergeAtOnce() default IndexSettingsDefinition.DEFAULT_MAX_MERGE_AT_ONCE;
 
 	double maxMergedSegmentMB() default IndexSettingsDefinition.DEFAULT_MAX_MERGED_SEGMENT_MB;

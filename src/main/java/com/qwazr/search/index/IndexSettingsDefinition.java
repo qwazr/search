@@ -68,6 +68,9 @@ public class IndexSettingsDefinition {
     @JsonProperty("use_compound_file")
     final public Boolean useCompoundFile;
 
+    @JsonProperty("use_simple_text_codec")
+    final public Boolean useSimpleTextCodec;
+
     @JsonProperty("max_merge_at_once")
     final public Integer maxMergeAtOnce;
 
@@ -102,6 +105,7 @@ public class IndexSettingsDefinition {
         this.master = null;
         this.ramBufferSize = null;
         this.useCompoundFile = null;
+        this.useSimpleTextCodec = null;
         this.maxMergeAtOnce = null;
         this.maxMergedSegmentMB = null;
         this.segmentsPerTier = null;
@@ -120,6 +124,7 @@ public class IndexSettingsDefinition {
                                     @JsonProperty("merge_scheduler") final MergeScheduler mergeScheduler,
                                     @JsonProperty("ram_buffer_size") final Double ramBufferSize,
                                     @JsonProperty("use_compound_file") final Boolean useCompoundFile,
+                                    @JsonProperty("use_simple_text_codec") final Boolean useSimpleTextCodec,
                                     @JsonProperty("max_merge_at_once") final Integer maxMergeAtOnce,
                                     @JsonProperty("max_merged_segment_mb") final Double maxMergedSegmentMB,
                                     @JsonProperty("segments_per_tier") final Double segmentsPerTier,
@@ -135,6 +140,7 @@ public class IndexSettingsDefinition {
         this.master = master;
         this.ramBufferSize = ramBufferSize;
         this.useCompoundFile = useCompoundFile;
+        this.useSimpleTextCodec = useSimpleTextCodec;
         this.maxMergeAtOnce = maxMergeAtOnce;
         this.maxMergedSegmentMB = maxMergedSegmentMB;
         this.segmentsPerTier = segmentsPerTier;
@@ -153,6 +159,7 @@ public class IndexSettingsDefinition {
         this.master = builder.master;
         this.ramBufferSize = builder.ramBufferSize;
         this.useCompoundFile = builder.useCompoundFile;
+        this.useSimpleTextCodec = builder.useSimpleTextCodec;
         this.maxMergeAtOnce = builder.maxMergeAtOnce;
         this.maxMergedSegmentMB = builder.maxMergedSegmentMB;
         this.segmentsPerTier = builder.segmentsPerTier;
@@ -198,6 +205,8 @@ public class IndexSettingsDefinition {
             return false;
         if (!Objects.equals(useCompoundFile, s.useCompoundFile))
             return false;
+        if (!Objects.equals(useSimpleTextCodec, s.useSimpleTextCodec))
+            return false;
         if (!Objects.equals(maxMergeAtOnce, s.maxMergeAtOnce))
             return false;
         if (!Objects.equals(maxMergedSegmentMB, s.maxMergedSegmentMB))
@@ -239,6 +248,7 @@ public class IndexSettingsDefinition {
         private RemoteIndex master;
         private Double ramBufferSize;
         private Boolean useCompoundFile;
+        private Boolean useSimpleTextCodec;
         private Integer maxMergeAtOnce;
         private Double maxMergedSegmentMB;
         private Double segmentsPerTier;
@@ -259,6 +269,7 @@ public class IndexSettingsDefinition {
             master(annotatedIndex.replicationMaster());
             ramBufferSize(annotatedIndex.ramBufferSize());
             useCompoundFile(annotatedIndex.useCompoundFile());
+            useSimpleTextCodec(annotatedIndex.useSimpleTextCodec());
             maxMergeAtOnce(annotatedIndex.maxMergeAtOnce());
             maxMergedSegmentMB(annotatedIndex.maxMergedSegmentMB());
             segmentsPerTier(annotatedIndex.segmentsPerTier());
@@ -277,6 +288,7 @@ public class IndexSettingsDefinition {
             this.master = settings.master;
             this.ramBufferSize = settings.ramBufferSize;
             this.useCompoundFile = settings.useCompoundFile;
+            this.useSimpleTextCodec = settings.useSimpleTextCodec;
             this.maxMergeAtOnce = settings.maxMergeAtOnce;
             this.maxMergedSegmentMB = settings.maxMergedSegmentMB;
             this.segmentsPerTier = settings.segmentsPerTier;
@@ -328,6 +340,11 @@ public class IndexSettingsDefinition {
 
         public Builder useCompoundFile(final Boolean useCompoundFile) {
             this.useCompoundFile = useCompoundFile;
+            return this;
+        }
+
+        public Builder useSimpleTextCodec(final Boolean useSimpleTextCodec) {
+            this.useSimpleTextCodec = useSimpleTextCodec;
             return this;
         }
 

@@ -24,6 +24,7 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
+import org.apache.lucene.codecs.simpletext.SimpleTextCodec;
 import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexWriter;
@@ -160,6 +161,8 @@ class IndexInstanceBuilder {
                 indexWriterConfig.setRAMBufferSizeMB(settings.ramBufferSize);
             if (settings.useCompoundFile != null)
                 indexWriterConfig.setUseCompoundFile(settings.useCompoundFile);
+            if(settings.useSimpleTextCodec != null && settings.useSimpleTextCodec)
+                indexWriterConfig.setCodec(new SimpleTextCodec());
 
             final TieredMergePolicy mergePolicy = new TieredMergePolicy();
             if (settings.maxMergeAtOnce != null)
