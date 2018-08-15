@@ -15,107 +15,38 @@
  */
 package com.qwazr.search.experimental;
 
-import com.qwazr.utils.FileUtils;
-import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.RandomUtils;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.util.PriorityQueue;
-import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-import java.util.Objects;
-import java.util.logging.Logger;
+public class PriorityQueue2Test extends PriorityQueueAbstractTest {
 
-@RunWith(Parameterized.class)
-public class PriorityQueue2Test {
+    private final static ScoreDoc2[] scoreDocs2 = new ScoreDoc2[COUNT];
 
-    private final static Logger LOGGER = LoggerUtils.getLogger(PriorityQueue2Test.class);
-
-    private final static int COUNT = 100_000;
-
-    @Parameterized.Parameters
-    public static Object[][] data() {
-        return new Object[10][0];
-    }
-
-    private long getMemoryUsage() {
-        Runtime.getRuntime().gc();
-        return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-    }
-
-    private final static ScoreDoc[] ScoreDocs = new ScoreDoc[COUNT];
+    private ScoreDocQueue2 scoreDocQueue2;
 
     @BeforeClass
     public static void setup() {
         for (int i = 0; i < COUNT; i++)
-            ScoreDocs[i] = new ScoreDoc(i, RandomUtils.nextFloat(0, 5), 1);
+            scoreDocs2[i] = new ScoreDoc2(i, RandomUtils.nextFloat(0, 5), 1);
     }
 
-    @Test
-    public void testScoreDocArray() {
-        final long before = getMemoryUsage();
-        final long start = System.nanoTime();
+    @Override
+    public Object initQueue() {
+        scoreDocQueue2 = new ScoreDocQueue2(COUNT);
+        return scoreDocQueue2;
+    }
 
-        final ScoreDocQueue scoreDocQueue = new ScoreDocQueue(COUNT);
-
+    @Override
+    public void fillQueue() {
         for (int i = 0; i < COUNT; i++)
-            scoreDocQueue.insertWithOverflow(ScoreDocs[i]);
-
-        final long duration = System.nanoTime() - start;
-        final long after = getMemoryUsage();
-
-        LOGGER.info("SCOREDOC: " + FileUtils.byteCountToDisplaySize(after - before) + " - " + duration + " ns");
-        Assert.assertNotNull(scoreDocQueue);
-    }
-
-    @Test
-    public void testPrimitiveArrays() {
-        final long before = getMemoryUsage();
-        final long start = System.nanoTime();
-
-        int docs[] = new int[COUNT];
-        float scores[] = new float[COUNT];
-        int shards[] = new int[COUNT];
-        for (int i = 0; i < COUNT; i++) {
-            docs[i] = 1;
-            scores[i] = 1f;
-            shards[i] = 0;
-        }
-
-        final long duration = System.nanoTime() - start;
-        final long after = getMemoryUsage();
-
-        LOGGER.info("ARRAYS: " + FileUtils.byteCountToDisplaySize(after - before) + " - " + duration + " ns");
-        Assert.assertNotNull(docs);
-        Assert.assertNotNull(scores);
-        Assert.assertNotNull(shards);
-    }
-
-    public class ScoreDocQueue extends PriorityQueue<ScoreDoc> {
-
-        public ScoreDocQueue(int maxSize) {
-            super(maxSize, true);
-        }
-
-        @Override
-        protected boolean lessThan(ScoreDoc a, ScoreDoc b) {
-            return a.score < b.score;
-        }
-
-        protected ScoreDoc getSentinelObject() {
-            return new ScoreDoc(1, 1f);
-        }
+            scoreDocQueue2.insertWithOverflow(scoreDocs2[i]);
     }
 
     public static class ScoreDocQueue2 extends PriorityQueue2<ScoreDoc2> {
 
-        private final ScoreDoc2 nullDoc = new ScoreDoc2(-3, 0);
-        private final ScoreDoc2 sentinel = new ScoreDoc2(-2, 0);
-        private final ScoreDoc2 doc1 = new ScoreDoc2(-1, 0);
-        private final ScoreDoc2 doc2 = new ScoreDoc2(-1, 0);
+        private final ScoreDoc2 sentinel = new ScoreDoc2(-2, 0, -1);
+        private final ScoreDoc2 doc1 = new ScoreDoc2(-1, 0, -1);
+        private final ScoreDoc2 doc2 = new ScoreDoc2(-1, 0, -1);
 
         private final int[] docs;
         private final float[] scores;
@@ -161,26 +92,4 @@ public class PriorityQueue2Test {
         }
     }
 
-    private static class ScoreDoc2 extends ScoreDoc {
-
-        private final int hashCode;
-
-        public ScoreDoc2(int doc, float score) {
-            super(doc, score);
-            hashCode = Objects.hash(doc, score, shardIndex);
-        }
-
-        @Override
-        public int hashCode() {
-            return hashCode;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (!(o instanceof ScoreDoc2))
-                return false;
-            final ScoreDoc2 sc = (ScoreDoc2) o;
-            return sc.doc == doc && sc.score == score && sc.shardIndex == shardIndex;
-        }
-    }
 }
