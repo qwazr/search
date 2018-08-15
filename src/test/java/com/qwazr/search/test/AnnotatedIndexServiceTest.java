@@ -62,6 +62,7 @@ public class AnnotatedIndexServiceTest {
     private static ExecutorService executor;
     private static Path workDirectory;
     private static AnnotatedIndexService<IndexRecord> service;
+    private static AnnotatedIndexService<BasicRecord> basicService;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -109,6 +110,11 @@ public class AnnotatedIndexServiceTest {
         // Create the index
         IndexStatus index = service.createUpdateIndex();
         Assert.assertNotNull(index);
+        Assert.assertNotNull(index.settings);
+        Assert.assertNotNull(index.settings.useSimpleTextCodec);
+        Assert.assertFalse(index.settings.useSimpleTextCodec);
+        Assert.assertNotNull(index.settings.indexReaderWarmer);
+        Assert.assertTrue(index.settings.indexReaderWarmer);
 
         Map<String, FieldDefinition> fields = service.createUpdateFields();
         Assert.assertNotNull(fields);
@@ -118,6 +124,24 @@ public class AnnotatedIndexServiceTest {
         service.testAnalyzer(AnnotatedRecord.INJECTED_ANALYZER_NAME, "Test");
         Assert.assertEquals(1, factoryCallCount.get());
         Assert.assertEquals(1, analyzerCallCount.get());
+    }
+
+    @Test
+    public void test150createBasicService() throws URISyntaxException {
+
+        // Get the service
+        basicService = indexManager.getService(BasicRecord.class);
+        Assert.assertNotNull(basicService);
+
+        // Create the index
+        IndexStatus index = basicService.createUpdateIndex();
+        Assert.assertNotNull(index);
+        Assert.assertNotNull(index.settings);
+        Assert.assertNotNull(index.settings.similarityClass);
+        Assert.assertNotNull(index.settings.useSimpleTextCodec);
+        Assert.assertTrue(index.settings.useSimpleTextCodec);
+        Assert.assertNotNull(index.settings.indexReaderWarmer);
+        Assert.assertFalse(index.settings.indexReaderWarmer);
     }
 
     @Test
@@ -227,6 +251,21 @@ public class AnnotatedIndexServiceTest {
 
         public IndexRecord() {
             this(null, null);
+        }
+    }
+
+    @Index(schema = "schemaName", name = "basicIndex", useSimpleTextCodec = true, indexReaderWarmer = false)
+    public static class BasicRecord {
+
+        @IndexField(template = FieldDefinition.Template.TextField)
+        final public String title;
+
+        public BasicRecord(String title) {
+            this.title = title;
+        }
+
+        public BasicRecord() {
+            this(null);
         }
     }
 

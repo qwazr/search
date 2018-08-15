@@ -534,6 +534,9 @@ public abstract class JavaAbstractTest {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         IndexCheckStatus status = master.checkIndex();
         Assert.assertNotNull(status);
+        Assert.assertNotNull(master.getIndexStatus().settings);
+        Assert.assertNotNull(master.getIndexStatus().settings.useSimpleTextCodec);
+        Assert.assertFalse(master.getIndexStatus().settings.useSimpleTextCodec);
     }
 
     private void checkMultiField(final MultiFieldQuery query, final String check, final int size)
