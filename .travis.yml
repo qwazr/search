@@ -4,6 +4,10 @@ jdk:
   - oraclejdk9
   - oraclejdk10
 sudo: false
+cache:
+  directories:
+  - .autoconf
+  - $HOME/.m2
 addons:
   apt:
     packages:
