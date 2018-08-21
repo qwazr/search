@@ -37,118 +37,120 @@ import java.util.concurrent.ExecutorService;
 
 class IndexInstanceManager implements Closeable {
 
-	private final ReadWriteLock rwl;
+    private final ReadWriteLock rwl;
 
-	private final IndexInstance.Provider indexProvider;
-	private final ConstructorParametersImpl instanceFactory;
-	private final ExecutorService executorService;
-	private final IndexServiceInterface indexServiceInterface;
-	private final IndexFileSet fileSet;
-	private final Map<String, AnalyzerFactory> analyzerFactoryMap;
-	private final ReadWriteSemaphores readWriteSemaphores;
+    private final IndexInstance.Provider indexProvider;
+    private final ConstructorParametersImpl instanceFactory;
+    private final ExecutorService executorService;
+    private final IndexServiceInterface indexServiceInterface;
+    private final IndexFileSet fileSet;
+    private final Map<String, AnalyzerFactory> analyzerFactoryMap;
+    private final ReadWriteSemaphores readWriteSemaphores;
 
-	private final UUID indexUuid;
-	private final String indexName;
-	private IndexSettingsDefinition settings;
-	private IndexInstance indexInstance;
+    private final UUID indexUuid;
+    private final String indexName;
+    private IndexSettingsDefinition settings;
+    private IndexInstance indexInstance;
 
-	IndexInstanceManager(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
-			final Map<String, AnalyzerFactory> analyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
-			final ExecutorService executorService, final IndexServiceInterface indexServiceInterface,
-			final Path indexDirectory) {
+    IndexInstanceManager(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
+            final Map<String, AnalyzerFactory> analyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
+            final ExecutorService executorService, final IndexServiceInterface indexServiceInterface,
+            final Path indexDirectory) {
 
-		try {
-			rwl = ReadWriteLock.stamped();
-			this.indexProvider = indexProvider;
-			this.instanceFactory = instanceFactory;
-			this.executorService = executorService;
-			this.indexServiceInterface = indexServiceInterface;
-			this.fileSet = new IndexFileSet(indexDirectory);
-			this.analyzerFactoryMap = analyzerFactoryMap;
-			this.readWriteSemaphores = readWriteSemaphores;
+        try {
+            rwl = ReadWriteLock.stamped();
+            this.indexProvider = indexProvider;
+            this.instanceFactory = instanceFactory;
+            this.executorService = executorService;
+            this.indexServiceInterface = indexServiceInterface;
+            this.fileSet = new IndexFileSet(indexDirectory);
+            this.analyzerFactoryMap = analyzerFactoryMap;
+            this.readWriteSemaphores = readWriteSemaphores;
 
-			this.indexName = fileSet.checkIndexDirectory();
-			this.indexUuid = fileSet.checkUuid();
-			this.settings = fileSet.loadSettings();
+            this.indexName = fileSet.checkIndexDirectory();
+            this.indexUuid = fileSet.checkUuid();
+            this.settings = fileSet.loadSettings();
 
-		} catch (IOException e) {
-			throw ServerException.of(e);
-		}
-	}
+        } catch (IOException e) {
+            throw ServerException.of(e);
+        }
+    }
 
-	private IndexInstance ensureOpen() throws ReflectiveOperationException, IOException, URISyntaxException {
-		if (indexInstance == null)
-			indexInstance =
-					new IndexInstanceBuilder(indexProvider, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
-							executorService, indexServiceInterface, fileSet, settings, indexUuid, indexName).build();
-		return indexInstance;
-	}
+    private IndexInstance ensureOpen() throws ReflectiveOperationException, IOException, URISyntaxException {
+        if (indexInstance == null)
+            indexInstance =
+                    new IndexInstanceBuilder(indexProvider, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
+                            executorService, indexServiceInterface, fileSet, settings, indexUuid, indexName).build();
+        return indexInstance;
+    }
 
-	IndexInstance open() throws Exception {
-		return rwl.writeEx(this::ensureOpen);
-	}
+    IndexInstance open() throws Exception {
+        return rwl.writeEx(this::ensureOpen);
+    }
 
-	IndexInstance createUpdate(final IndexSettingsDefinition newSettings) throws Exception {
-		return rwl.writeEx(() -> {
-			final boolean same = Objects.equals(newSettings, settings);
-			if (same && indexInstance != null)
-				return indexInstance;
-			closeIndex();
-			if (!same) {
-				fileSet.writeSettings(newSettings);
-				settings = newSettings;
-			}
-			return ensureOpen();
-		});
-	}
+    IndexInstance createUpdate(final IndexSettingsDefinition newSettings) throws Exception {
+        return rwl.writeEx(() -> {
+            final boolean same = Objects.equals(newSettings, settings);
+            if (same && indexInstance != null)
+                return indexInstance;
+            closeIndex();
+            if (!same) {
+                fileSet.writeSettings(newSettings);
+                settings = newSettings;
+            }
+            return ensureOpen();
+        });
+    }
 
-	CheckIndex.Status check() throws Exception {
-		return rwl.writeEx(() -> {
-			closeIndex();
-			try (final Directory directory = IndexInstanceBuilder.getDirectory(settings, fileSet.dataDirectory)) {
-				try (final CheckIndex checkIndex = new CheckIndex(directory)) {
-					return checkIndex.checkIndex();
-				}
-			} finally {
-				ensureOpen();
-			}
-		});
-	}
+    CheckIndex.Status check() throws Exception {
+        return rwl.writeEx(() -> {
+            closeIndex();
+            try (final Directory directory = IndexInstanceBuilder.getDirectory(settings, fileSet.dataDirectory)) {
+                try (final CheckIndex checkIndex = new CheckIndex(directory)) {
+                    return checkIndex.checkIndex();
+                }
+            } finally {
+                ensureOpen();
+            }
+        });
+    }
 
-	/**
-	 * Return the loaded instance or null if the index cannot be loaded
-	 *
-	 * @return the loaded instance
-	 */
-	IndexInstance getIndexInstance() {
-		return rwl.read(() -> indexInstance);
-	}
+    /**
+     * Return the loaded instance or null if the index cannot be loaded
+     *
+     * @return the loaded instance
+     */
+    IndexInstance getIndexInstance() {
+        return rwl.read(() -> indexInstance);
+    }
 
-	UUID getIndexUuid() {
-		return indexUuid;
-	}
+    UUID getIndexUuid() {
+        return indexUuid;
+    }
 
-	private void closeIndex() {
-		if (indexInstance == null)
-			return;
-		IOUtils.closeQuietly(indexInstance);
-		indexInstance = null;
-	}
+    private void closeIndex() {
+        if (indexInstance == null)
+            return;
+        IOUtils.closeQuietly(indexInstance);
+        indexInstance = null;
+    }
 
-	@Override
-	public void close() {
-		rwl.writeEx(this::closeIndex);
-	}
+    @Override
+    public void close() {
+        rwl.writeEx(this::closeIndex);
+    }
 
-	public void delete() {
-		rwl.writeEx(() -> {
-			closeIndex();
-			if (Files.exists(fileSet.mainDirectory)) {
-				final IOException e = FileUtils.deleteDirectoryQuietly(fileSet.mainDirectory);
-				if (e != null)
-					throw ServerException.of(e);
-			}
-		});
-	}
+    public void delete() {
+        rwl.writeEx(() -> {
+            closeIndex();
+            if (Files.exists(fileSet.mainDirectory)) {
+                try {
+                    FileUtils.deleteDirectory(fileSet.mainDirectory);
+                } catch (IOException e) {
+                    throw ServerException.of(e);
+                }
+            }
+        });
+    }
 
 }

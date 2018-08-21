@@ -35,124 +35,124 @@ import java.util.logging.Logger;
 
 public abstract class AbstractIndexTest {
 
-	private static Path rootDirectory;
-	protected static IndexManager indexManager;
-	private static ExecutorService executor;
+    private static Path rootDirectory;
+    protected static IndexManager indexManager;
+    private static ExecutorService executor;
 
-	static final Logger LOGGER = LoggerUtils.getLogger(AbstractIndexTest.class);
+    static final Logger LOGGER = LoggerUtils.getLogger(AbstractIndexTest.class);
 
-	protected static IndexManager initIndexManager() {
-		try {
-			executor = Executors.newCachedThreadPool();
-			rootDirectory = Files.createTempDirectory("qwazr_index_test");
-			return indexManager = new IndexManager(rootDirectory, executor);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+    protected static IndexManager initIndexManager() {
+        try {
+            executor = Executors.newCachedThreadPool();
+            rootDirectory = Files.createTempDirectory("qwazr_index_test");
+            return indexManager = new IndexManager(rootDirectory, executor);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	protected static <T> AnnotatedIndexService<T> initIndexService(Class<T> recordClass) throws URISyntaxException {
-		if (indexManager == null)
-			initIndexManager();
-		final AnnotatedIndexService<T> indexService = indexManager.getService(recordClass);
-		indexService.createUpdateSchema();
-		indexService.createUpdateIndex();
-		indexService.createUpdateFields();
-		return indexService;
-	}
+    protected static <T> AnnotatedIndexService<T> initIndexService(Class<T> recordClass) throws URISyntaxException {
+        if (indexManager == null)
+            initIndexManager();
+        final AnnotatedIndexService<T> indexService = indexManager.getService(recordClass);
+        indexService.createUpdateSchema();
+        indexService.createUpdateIndex();
+        indexService.createUpdateFields();
+        return indexService;
+    }
 
-	<T> ResultDefinition.WithObject<T> checkQuery(AnnotatedIndexService<T> indexService, QueryDefinition queryDef,
-			Long hitsExpected, String queryDebug) {
-		final ResultDefinition.WithObject<T> result = indexService.searchQuery(queryDef);
-		Assert.assertNotNull(result);
-		if (result.query != null)
-			LOGGER.info(result.query);
-		if (hitsExpected != null) {
-			Assert.assertEquals(hitsExpected, result.total_hits);
-			if (hitsExpected > 0) {
-				ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
-				Assert.assertNotNull(explain);
-			}
-		}
-		if (queryDebug != null)
-			Assert.assertEquals(queryDebug, result.getQuery());
-		return result;
-	}
+    <T> ResultDefinition.WithObject<T> checkQuery(AnnotatedIndexService<T> indexService, QueryDefinition queryDef,
+            Long hitsExpected, String queryDebug) {
+        final ResultDefinition.WithObject<T> result = indexService.searchQuery(queryDef);
+        Assert.assertNotNull(result);
+        if (result.query != null)
+            LOGGER.info(result.query);
+        if (hitsExpected != null) {
+            Assert.assertEquals(hitsExpected, result.total_hits);
+            if (hitsExpected > 0) {
+                ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
+                Assert.assertNotNull(explain);
+            }
+        }
+        if (queryDebug != null)
+            Assert.assertEquals(queryDebug, result.getQuery());
+        return result;
+    }
 
-	<T> ResultDefinition.WithObject<T> checkQuery(AnnotatedIndexService<T> indexService, QueryDefinition queryDef) {
-		return checkQuery(indexService, queryDef, 1L, null);
-	}
+    <T> ResultDefinition.WithObject<T> checkQuery(AnnotatedIndexService<T> indexService, QueryDefinition queryDef) {
+        return checkQuery(indexService, queryDef, 1L, null);
+    }
 
-	@AfterClass
-	public static void afterClass() {
-		if (indexManager != null) {
-			indexManager.close();
-			indexManager = null;
-		}
-		if (rootDirectory != null)
-			FileUtils.deleteDirectoryQuietly(rootDirectory);
-		if (executor != null) {
-			executor.shutdown();
-			executor = null;
-		}
-	}
+    @AfterClass
+    public static void afterClass() throws IOException {
+        if (indexManager != null) {
+            indexManager.close();
+            indexManager = null;
+        }
+        if (executor != null) {
+            executor.shutdown();
+            executor = null;
+        }
+        if (rootDirectory != null)
+            FileUtils.deleteDirectory(rootDirectory);
+    }
 
-	public static abstract class WithIndexRecord<T extends IndexRecord> extends AbstractIndexTest {
+    public static abstract class WithIndexRecord<T extends IndexRecord> extends AbstractIndexTest {
 
-		protected AnnotatedIndexService<T> service;
+        protected AnnotatedIndexService<T> service;
 
-		protected WithIndexRecord(Class<T> indexRecordClass) {
-			try {
-				service = indexManager.getService(indexRecordClass);
-			} catch (URISyntaxException e) {
-				throw new RuntimeException(e);
-			}
-		}
+        protected WithIndexRecord(Class<T> indexRecordClass) {
+            try {
+                service = indexManager.getService(indexRecordClass);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
-		public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef, Long hitsExpected,
-				String queryDebug) {
-			return checkQuery(service, queryDef, hitsExpected, queryDebug);
-		}
+        public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef, Long hitsExpected,
+                String queryDebug) {
+            return checkQuery(service, queryDef, hitsExpected, queryDebug);
+        }
 
-		public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef) {
-			return checkQuery(queryDef, 1L, null);
-		}
+        public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef) {
+            return checkQuery(queryDef, 1L, null);
+        }
 
-		public static abstract class WithTaxonomy extends WithIndexRecord<IndexRecord.WithTaxonomy> {
+        public static abstract class WithTaxonomy extends WithIndexRecord<IndexRecord.WithTaxonomy> {
 
-			public static AnnotatedIndexService<IndexRecord.WithTaxonomy> indexService;
+            public static AnnotatedIndexService<IndexRecord.WithTaxonomy> indexService;
 
-			public static void initIndexService() throws IOException, URISyntaxException {
-				indexService = AbstractIndexTest.initIndexService(IndexRecord.WithTaxonomy.class);
-			}
+            public static void initIndexService() throws URISyntaxException {
+                indexService = AbstractIndexTest.initIndexService(IndexRecord.WithTaxonomy.class);
+            }
 
-			protected WithTaxonomy() {
-				super(IndexRecord.WithTaxonomy.class);
-				indexService = service;
-			}
+            protected WithTaxonomy() {
+                super(IndexRecord.WithTaxonomy.class);
+                indexService = service;
+            }
 
-			public IndexRecord.WithTaxonomy getNewRecord(String id) {
-				return new IndexRecord.WithTaxonomy(id);
-			}
-		}
+            public IndexRecord.WithTaxonomy getNewRecord(String id) {
+                return new IndexRecord.WithTaxonomy(id);
+            }
+        }
 
-		public static abstract class NoTaxonomy extends WithIndexRecord<IndexRecord.NoTaxonomy> {
+        public static abstract class NoTaxonomy extends WithIndexRecord<IndexRecord.NoTaxonomy> {
 
-			public static AnnotatedIndexService<IndexRecord.NoTaxonomy> indexService;
+            public static AnnotatedIndexService<IndexRecord.NoTaxonomy> indexService;
 
-			protected static void initIndexService() throws IOException, URISyntaxException {
-				indexService = AbstractIndexTest.initIndexService(IndexRecord.NoTaxonomy.class);
-			}
+            protected static void initIndexService() throws IOException, URISyntaxException {
+                indexService = AbstractIndexTest.initIndexService(IndexRecord.NoTaxonomy.class);
+            }
 
-			protected NoTaxonomy() {
-				super(IndexRecord.NoTaxonomy.class);
-				indexService = service;
-			}
+            protected NoTaxonomy() {
+                super(IndexRecord.NoTaxonomy.class);
+                indexService = service;
+            }
 
-			public IndexRecord.NoTaxonomy getNewRecord(String id) {
-				return new IndexRecord.NoTaxonomy(id);
-			}
+            public IndexRecord.NoTaxonomy getNewRecord(String id) {
+                return new IndexRecord.NoTaxonomy(id);
+            }
 
-		}
-	}
+        }
+    }
 }

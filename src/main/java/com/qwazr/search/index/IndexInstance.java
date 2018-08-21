@@ -29,6 +29,7 @@ import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.FunctionEx;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
@@ -69,9 +70,13 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 final public class IndexInstance implements Closeable {
+
+    private final static Logger LOGGER = LoggerUtils.getLogger(IndexInstance.class);
 
     @FunctionalInterface
     public interface Provider {
@@ -286,7 +291,7 @@ final public class IndexInstance implements Closeable {
     }
 
     private <T> T useAnalyzer(final UpdatableAnalyzers updatableAnalyzers, final String field,
-                              final FunctionEx<Analyzer, T, IOException> analyzerConsumer) throws ServerException, IOException {
+            final FunctionEx<Analyzer, T, IOException> analyzerConsumer) throws ServerException, IOException {
         try (final UpdatableAnalyzers.Analyzers analyzers = updatableAnalyzers.getAnalyzers()) {
             return analyzerConsumer.apply(analyzers.getWrappedAnalyzer(field));
         }
@@ -343,8 +348,14 @@ final public class IndexInstance implements Closeable {
                 return new ReplicationBackup(this, backupIndexDirectory, taxonomyDirectory != null).backup();
             } catch (IOException e) {
                 // If any error occurred, we delete the backup directory
-                if (Files.exists(backupIndexDirectory))
-                    FileUtils.deleteDirectoryQuietly(backupIndexDirectory);
+                if (Files.exists(backupIndexDirectory)) {
+                    try {
+                        FileUtils.deleteDirectory(backupIndexDirectory);
+                    } catch (IOException ioe) {
+                        LOGGER.log(Level.WARNING, e,
+                                () -> "Cannot delete the backup directory: " + backupIndexDirectory);
+                    }
+                }
                 throw e;
             }
         } finally {
@@ -453,8 +464,7 @@ final public class IndexInstance implements Closeable {
         }
     }
 
-    private WriteContextImpl buildWriteContext(final IndexWriter indexWriter, final TaxonomyWriter taxonomyWriter)
-            throws IOException {
+    private WriteContextImpl buildWriteContext(final IndexWriter indexWriter, final TaxonomyWriter taxonomyWriter) {
         return new WriteContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzers, queryAnalyzers,
                 fieldMap, indexWriter, taxonomyWriter);
     }
@@ -480,14 +490,14 @@ final public class IndexInstance implements Closeable {
     }
 
     final <T> int postDocument(final Map<String, Field> fields, final T document,
-                               final Map<String, String> commitUserData, boolean update) throws IOException {
+            final Map<String, String> commitUserData, boolean update) throws IOException {
         checkIsMaster();
         return write(
                 context -> checkCommit(context.postDocument(fields, document, commitUserData, update), commitUserData));
     }
 
     final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents,
-                                final Map<String, String> commitUserData, final boolean update) throws IOException {
+            final Map<String, String> commitUserData, final boolean update) throws IOException {
         checkIsMaster();
         return write(context -> checkCommit(context.postDocuments(fields, documents, commitUserData, update),
                 commitUserData));
@@ -504,13 +514,13 @@ final public class IndexInstance implements Closeable {
     }
 
     final <T> int updateDocValues(final Map<String, Field> fields, final T document,
-                                  final Map<String, String> commitUserData) throws IOException {
+            final Map<String, String> commitUserData) throws IOException {
         checkIsMaster();
         return write(context -> checkCommit(context.updateDocValues(fields, document, commitUserData), commitUserData));
     }
 
     final <T> int updateDocsValues(final Map<String, Field> fields, final Collection<T> documents,
-                                   final Map<String, String> commitUserData) throws IOException {
+            final Map<String, String> commitUserData) throws IOException {
         checkIsMaster();
         return write(
                 context -> checkCommit(context.updateDocsValues(fields, documents, commitUserData), commitUserData));
@@ -550,7 +560,7 @@ final public class IndexInstance implements Closeable {
     }
 
     final List<TermEnumDefinition> getTermsEnum(final String fieldName, final String prefix, final Integer start,
-                                                final Integer rows) throws InterruptedException, IOException {
+            final Integer rows) throws InterruptedException, IOException {
         Objects.requireNonNull(fieldName, "The field name is missing - Index: " + indexName);
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
@@ -568,13 +578,13 @@ final public class IndexInstance implements Closeable {
     }
 
     private QueryContextImpl buildQueryContext(final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
-                                               final FieldMapWrapper.Cache fieldMapWrappers) throws IOException {
+            final FieldMapWrapper.Cache fieldMapWrappers) throws IOException {
         return new QueryContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzers, queryAnalyzers,
                 fieldMap, fieldMapWrappers, indexSearcher, taxonomyReader);
     }
 
     final <T> T query(final FieldMapWrapper.Cache fieldMapWrappers,
-                      final IndexServiceInterface.QueryActions<T> queryActions) throws IOException {
+            final IndexServiceInterface.QueryActions<T> queryActions) throws IOException {
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader,
