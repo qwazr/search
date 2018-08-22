@@ -1,11 +1,11 @@
 {
   "query": {
-    "query": "BooleanQuery",
+    "type": "BooleanQuery",
     "clauses": [
       {
         "occur": "must",
         "query": {
-          "query": "QueryParser",
+          "type": "QueryParser",
           "default_field": "name",
           "query_string": "name"
         }
@@ -13,12 +13,12 @@
       {
         "occur": "filter",
         "query": {
-          "query": "BooleanQuery",
+          "type": "BooleanQuery",
           "clauses": [
             {
               "occur": "should",
               "query": {
-                "query": "FacetPathQuery",
+                "type": "FacetPathQuery",
                 "dimension": "category",
                 "path": [
                   "cat3"
@@ -28,7 +28,7 @@
             {
               "occur": "should",
               "query": {
-                "query": "FacetPathQuery",
+                "type": "FacetPathQuery",
                 "dimension": "category",
                 "path": [
                   "cat5"
@@ -38,7 +38,7 @@
             {
               "occur": "must",
               "query": {
-                "query": "FacetPathQuery",
+                "type": "FacetPathQuery",
                 "dimension": "dynamic_multi_facet_cat",
                 "path": [
                   "dyn_cat4"

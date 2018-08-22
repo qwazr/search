@@ -33,90 +33,94 @@ import java.util.Objects;
 
 public class PayloadScoreQuery extends AbstractQuery<PayloadScoreQuery> {
 
-	public final AbstractSpanQuery wrapped_query;
-	public final Boolean include_span_score;
-	public final String payload_function;
+    @JsonProperty("wrapped_query")
+    public final AbstractSpanQuery wrappedQuery;
 
-	@JsonIgnore
-	private PayloadFunction payloadFunction;
+    @JsonProperty("include_span_score")
+    public final Boolean includeSpanScore;
 
-	public enum FunctionType {
-		MIN, MAX, AVERAGE
-	}
+    @JsonProperty("payload_function")
+    public final String payloadFunction;
 
-	public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final PayloadFunction payloadFunction,
-			final Boolean includeSpanScore) {
-		super(PayloadScoreQuery.class);
-		this.wrapped_query = wrappedQuery;
-		this.payloadFunction = payloadFunction;
-		this.payload_function = null;
-		this.include_span_score = includeSpanScore == null ? Boolean.FALSE : includeSpanScore;
-	}
+    @JsonIgnore
+    private PayloadFunction payloadFunctionInstance;
 
-	@JsonCreator
-	public PayloadScoreQuery(@JsonProperty("wrapped_query") final AbstractSpanQuery wrappedQuery,
-			@JsonProperty("payload_function") final String payloadFunction,
-			@JsonProperty("include_span_score") final Boolean includeSpanScore) {
-		super(PayloadScoreQuery.class);
-		this.wrapped_query = wrappedQuery;
-		this.payload_function = payloadFunction;
-		this.payloadFunction = null;
-		this.include_span_score = includeSpanScore == null ? Boolean.FALSE : includeSpanScore;
-	}
+    public enum FunctionType {
+        MIN, MAX, AVERAGE
+    }
 
-	public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final FunctionType type,
-			final Boolean includeSpanScore) {
-		super(PayloadScoreQuery.class);
-		this.wrapped_query = wrappedQuery;
-		if (type != null) {
-			switch (type) {
-			case AVERAGE:
-				payloadFunction = new AveragePayloadFunction();
-				break;
-			case MAX:
-				payloadFunction = new MaxPayloadFunction();
-				break;
-			case MIN:
-				payloadFunction = new MinPayloadFunction();
-				break;
-			default:
-				payloadFunction = null;
-				break;
-			}
-			payload_function = null;
-		} else {
-			payloadFunction = null;
-			payload_function = null;
-		}
-		this.include_span_score = includeSpanScore == null ? Boolean.TRUE : includeSpanScore;
-	}
+    public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final PayloadFunction payloadFunction,
+            final Boolean includeSpanScore) {
+        super(PayloadScoreQuery.class);
+        this.wrappedQuery = wrappedQuery;
+        this.payloadFunctionInstance = payloadFunction;
+        this.payloadFunction = payloadFunction == null ? null : payloadFunction.getClass().getName();
+        this.includeSpanScore = includeSpanScore == null ? Boolean.FALSE : includeSpanScore;
+    }
 
-	@Override
-	protected boolean isEqual(final PayloadScoreQuery q) {
-		return Objects.equals(wrapped_query, q.wrapped_query) &&
-				Objects.equals(include_span_score, q.include_span_score) &&
-				Objects.equals(payload_function, q.payload_function) &&
-				Objects.equals(payloadFunction, q.payloadFunction);
-	}
+    @JsonCreator
+    public PayloadScoreQuery(@JsonProperty("wrapped_query") final AbstractSpanQuery wrappedQuery,
+            @JsonProperty("payload_function") final String payloadFunction,
+            @JsonProperty("include_span_score") final Boolean includeSpanScore) {
+        super(PayloadScoreQuery.class);
+        this.wrappedQuery = wrappedQuery;
+        this.payloadFunction = payloadFunction;
+        this.payloadFunctionInstance = null;
+        this.includeSpanScore = includeSpanScore == null ? Boolean.FALSE : includeSpanScore;
+    }
 
-	final static String[] payloadFunctionClassPrefixes = { "", "org.apache.lucene.queries.payloads." };
+    public PayloadScoreQuery(final AbstractSpanQuery wrappedQuery, final FunctionType type,
+            final Boolean includeSpanScore) {
+        super(PayloadScoreQuery.class);
+        this.wrappedQuery = wrappedQuery;
+        if (type != null) {
+            switch (type) {
+            case AVERAGE:
+                payloadFunctionInstance = new AveragePayloadFunction();
+                break;
+            case MAX:
+                payloadFunctionInstance = new MaxPayloadFunction();
+                break;
+            case MIN:
+                payloadFunctionInstance = new MinPayloadFunction();
+                break;
+            default:
+                payloadFunctionInstance = null;
+                break;
+            }
+            payloadFunction = null;
+        } else {
+            payloadFunction = null;
+            payloadFunctionInstance = null;
+        }
+        this.includeSpanScore = includeSpanScore == null ? Boolean.TRUE : includeSpanScore;
+    }
 
-	private static PayloadFunction getPayloadFunction(final String payloadFunction)
-			throws ReflectiveOperationException {
-		return (PayloadFunction) ClassLoaderUtils.findClass(payloadFunction, payloadFunctionClassPrefixes)
-				.newInstance();
-	}
+    @Override
+    protected boolean isEqual(final PayloadScoreQuery q) {
+        return Objects.equals(wrappedQuery, q.wrappedQuery) && Objects.equals(includeSpanScore, q.includeSpanScore) &&
+                Objects.equals(payloadFunctionInstance, q.payloadFunctionInstance) &&
+                Objects.equals(payloadFunction, q.payloadFunction);
+    }
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		Objects.requireNonNull(wrapped_query, "The wrapped span query is missing");
-		if (payloadFunction == null) {
-			Objects.requireNonNull(payload_function, "The payload function is missing");
-			payloadFunction = getPayloadFunction(payload_function);
-		}
-		Objects.requireNonNull(payloadFunction, "The payload function is missing");
-		return new org.apache.lucene.queries.payloads.PayloadScoreQuery(wrapped_query.getQuery(queryContext),
-				payloadFunction, include_span_score);
-	}
+    final static String[] payloadFunctionClassPrefixes = { "", "org.apache.lucene.queries.payloads." };
+
+    private static PayloadFunction getPayloadFunction(final String payloadFunction)
+            throws ReflectiveOperationException {
+        return (PayloadFunction) ClassLoaderUtils.findClass(payloadFunction, payloadFunctionClassPrefixes)
+                .newInstance();
+    }
+
+    @Override
+    final public Query getQuery(final QueryContext queryContext)
+            throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+        Objects.requireNonNull(wrappedQuery, "The wrapped span query is missing");
+        if (payloadFunctionInstance == null) {
+            Objects.requireNonNull(payloadFunction, "The payload function is missing");
+            payloadFunctionInstance = getPayloadFunction(payloadFunction);
+        }
+        Objects.requireNonNull(payloadFunction, "The payload function is missing");
+        return new org.apache.lucene.queries.payloads.PayloadScoreQuery(wrappedQuery.getQuery(queryContext),
+                payloadFunctionInstance, includeSpanScore);
+    }
 }

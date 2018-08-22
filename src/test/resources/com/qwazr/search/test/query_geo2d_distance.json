@@ -1,6 +1,6 @@
 {
   "query": {
-    "query": "LatLonPointDistanceQuery",
+    "type": "LatLonPointDistanceQuery",
     "field": "geo2d",
     "center_latitude": 48.8568,
     "center_longitude": 2.3509,

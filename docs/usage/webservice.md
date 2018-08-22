@@ -105,12 +105,12 @@ Here an example of search request:
   "start": 0,
   "rows": 10,
   "query": {
-    "query": "BooleanQuery",
+    "type": "BooleanQuery",
     "clauses": [
       {
         "occur": "must",
         "query": {
-          "query": "MultiFieldQueryParser",
+          "type": "MultiFieldQueryParser",
           "fields": [
             "name",
             "description"
@@ -125,12 +125,12 @@ Here an example of search request:
       {
         "occur": "filter",
         "query": {
-          "query": "BooleanQuery",
+          "type": "BooleanQuery",
           "clauses": [
             {
               "occur": "must",
               "query": {
-                "query": "FacetPathQuery",
+                "type": "FacetPathQuery",
                 "dimension": "category",
                 "path": [
                   "news"

@@ -1,6 +1,6 @@
 {
   "query": {
-    "query": "MultiFieldQuery",
+    "type": "MultiFieldQuery",
     "query_string": "fifth search",
     "fields_boosts": {
       "name": 10,

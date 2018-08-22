@@ -1,11 +1,11 @@
 {
   "query": {
-    "query": "PayloadScoreQuery",
+    "type": "PayloadScoreQuery",
     "payload_function": "AveragePayloadFunction",
     "wrapped_query": {
-      "query": "SpanQueryWrapper",
+      "type": "SpanQueryWrapper",
       "wrapped_query": {
-        "query": "TermQuery",
+        "type": "TermQuery",
         "field": "integer_payload",
         "term": "3"
       }

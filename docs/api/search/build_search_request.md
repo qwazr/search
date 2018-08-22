@@ -17,12 +17,12 @@ It includes:
 ```json
 {
     "query": {
-        "query": "BooleanQuery",
+        "type": "BooleanQuery",
         "clauses": [
             {
                 "occur": "must",
                 "query": {
-                    "query": "QueryParser",
+                    "type": "QueryParser",
                     "default_field": "name",
                     "query_string": "name"
                 }
@@ -30,12 +30,12 @@ It includes:
             {
                 "occur": "filter",
                 "query": {
-                    "query": "BooleanQuery",
+                    "type": "BooleanQuery",
                     "clauses": [
                         {
                             "occur": "should",
                             "query": {
-                                "query": "FacetPathQuery",
+                                "type": "FacetPathQuery",
                                 "dimension": "category",
                                 "path": [
                                   "cat3"

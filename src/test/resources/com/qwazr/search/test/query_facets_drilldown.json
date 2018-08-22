@@ -1,8 +1,8 @@
 {
   "query": {
-    "query": "DrillDownQuery",
+    "type": "DrillDownQuery",
     "baseQuery": {
-      "query": "QueryParser",
+      "type": "QueryParser",
       "default_field": "name",
       "query_string": "name"
     },

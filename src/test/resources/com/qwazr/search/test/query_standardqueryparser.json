@@ -1,6 +1,6 @@
 {
   "query": {
-    "query": "QueryParser",
+    "type": "QueryParser",
     "default_field": "fulltext",
     "query_string": "search engine"
   },

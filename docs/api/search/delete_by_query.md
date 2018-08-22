@@ -22,7 +22,7 @@ Where the payload file (my_payload) contains the search request:
 ```json
 {
   "query": {
-    "query": "FacetPathQuery",
+    "type": "FacetPathQuery",
     "dimension": "category",
     "path": [
       "cat4"

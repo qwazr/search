@@ -22,7 +22,7 @@ Where the payload file (my_payload) contains the search request:
 ```json
 {
   "query": {
-    "query": "QueryParser",
+    "type": "QueryParser",
     "default_field": "name",
     "query_string": "name"
   },

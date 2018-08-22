@@ -1,6 +1,6 @@
 {
   "query": {
-    "query": "Geo3DDistanceQuery",
+    "type": "Geo3DDistanceQuery",
     "field": "geo3d",
     "latitude": 48.8568,
     "longitude": 2.3509,

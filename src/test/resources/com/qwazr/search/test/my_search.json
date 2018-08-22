@@ -2,12 +2,12 @@
   "start": 0,
   "rows": 10,
   "query": {
-    "query": "BooleanQuery",
+    "type": "BooleanQuery",
     "clauses": [
       {
         "occur": "must",
         "query": {
-          "query": "MultiFieldQueryParser",
+          "type": "MultiFieldQueryParser",
           "fields": [
             "name",
             "description"
@@ -22,12 +22,12 @@
       {
         "occur": "filter",
         "query": {
-          "query": "BooleanQuery",
+          "type": "BooleanQuery",
           "clauses": [
             {
               "occur": "must",
               "query": {
-                "query": "FacetPathQuery",
+                "type": "FacetPathQuery",
                 "dimension": "category",
                 "path": [
                   "news"
