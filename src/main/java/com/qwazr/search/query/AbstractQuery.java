@@ -34,7 +34,7 @@ import java.io.IOException;
         @JsonSubTypes.Type(value = BoostedQuery.class),
         @JsonSubTypes.Type(value = BoostingQuery.class),
         @JsonSubTypes.Type(value = BoostQuery.class),
-        @JsonSubTypes.Type(value = ConstantScoreQuery.class),
+        @JsonSubTypes.Type(value = CommonTermsQuery.class), @JsonSubTypes.Type(value = ConstantScoreQuery.class),
         @JsonSubTypes.Type(value = CustomScoreQuery.class),
         @JsonSubTypes.Type(value = DisjunctionMaxQuery.class),
         @JsonSubTypes.Type(value = DoubleDocValuesExactQuery.class),

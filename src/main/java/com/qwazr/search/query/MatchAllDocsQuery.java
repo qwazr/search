@@ -19,22 +19,25 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class MatchAllDocsQuery extends AbstractQuery<MatchAllDocsQuery> {
 
-	@JsonCreator
-	public MatchAllDocsQuery() {
-		super(MatchAllDocsQuery.class);
-	}
+    @JsonCreator
+    public MatchAllDocsQuery() {
+        super(MatchAllDocsQuery.class);
+    }
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext) {
-		return new org.apache.lucene.search.MatchAllDocsQuery();
-	}
+    @Override
+    final public Query getQuery(final QueryContext queryContext) {
+        return new org.apache.lucene.search.MatchAllDocsQuery();
+    }
 
-	@Override
-	protected boolean isEqual(MatchAllDocsQuery query) {
-		return query != null;
-	}
+    @Override
+    protected boolean isEqual(MatchAllDocsQuery query) {
+        return query != null;
+    }
+
+    @Override
+    public int hashCode() {
+        return MatchAllDocsQuery.class.hashCode();
+    }
 }
