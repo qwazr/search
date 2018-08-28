@@ -30,65 +30,64 @@ import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RealTimeSynonymsResourcesTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	public final static String[] EN_FR_SYNONYMS = new String[] { "hello world", "bonjour le monde" };
-	public final static String[] EN_FR_DE_SYNONYMS = new String[] { "hello world", "bonjour le monde", "hallo welt" };
+    public final static String[] EN_FR_SYNONYMS = new String[]{"hello world", "bonjour le monde"};
+    public final static String[] EN_FR_DE_SYNONYMS = new String[]{"hello world", "bonjour le monde", "hallo welt"};
 
-	public final static Analyzer WHITESPACE_ANALYZER = new WhitespaceAnalyzer();
+    public final static Analyzer WHITESPACE_ANALYZER = new WhitespaceAnalyzer();
 
-	@BeforeClass
-	public static void setup() throws IOException, ParseException, InterruptedException, URISyntaxException {
-		initIndexManager();
-		indexManager.registerConstructorParameter(SynonymMap.class, getSynonymMap(WHITESPACE_ANALYZER, EN_FR_SYNONYMS));
-		initIndexService();
-		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textSynonymsField1("hello world"));
-	}
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+        initIndexManager();
+        indexManager.registerConstructorParameter(SynonymMap.class, getSynonymMap(WHITESPACE_ANALYZER, EN_FR_SYNONYMS));
+        initIndexService();
+        indexService.postDocument(new IndexRecord.NoTaxonomy("1").textSynonymsField1("hello world"));
+    }
 
-	public static SynonymMap getSynonymMap(Analyzer analyzer, String[]... synonymsList)
-			throws IOException, ParseException {
-		final SynonymMapBuilder builder = new SynonymMapBuilder(analyzer, true, true);
-		for (String[] synonyms : synonymsList)
-			builder.add(true, synonyms);
-		return builder.build();
-	}
+    public static SynonymMap getSynonymMap(Analyzer analyzer, String[]... synonymsList)
+            throws IOException {
+        final SynonymMapBuilder builder = new SynonymMapBuilder(analyzer, true, true);
+        for (String[] synonyms : synonymsList)
+            builder.add(true, synonyms);
+        return builder.build();
+    }
 
-	@Test
-	public void test001_check_en_fr() throws IOException, org.apache.lucene.queryparser.classic.ParseException {
-		final MultiFieldQueryParser.Builder builder = (MultiFieldQueryParser.Builder) MultiFieldQueryParser.of()
-				.addField("textSynonymsField1")
-				.setSplitOnWhitespace(false);
+    @Test
+    public void test001_check_en_fr() {
+        final MultiFieldQueryParser.Builder builder = MultiFieldQueryParser.of()
+                .addField("textSynonymsField1")
+                .setSplitOnWhitespace(false);
 
-		Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
-				QueryDefinition.of(builder.setQueryString("hello world").build()).build()).total_hits);
-		Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
-				QueryDefinition.of(builder.setQueryString("bonjour le monde").build()).build()).total_hits);
-		Assert.assertEquals(Long.valueOf(0), indexService.searchQuery(
-				QueryDefinition.of(new PhraseQuery("textSynonymsField1", 1, "hallo", "welt")).build()).total_hits);
-	}
+        Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
+                QueryDefinition.of(builder.setQueryString("hello world").build()).build()).total_hits);
+        Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
+                QueryDefinition.of(builder.setQueryString("bonjour le monde").build()).build()).total_hits);
+        Assert.assertEquals(Long.valueOf(0), indexService.searchQuery(
+                QueryDefinition.of(new PhraseQuery("textSynonymsField1", 1, "hallo", "welt")).build()).total_hits);
+    }
 
-	@Test
-	public void test002_updateSynonymMap() throws IOException, ParseException {
-		indexManager.registerConstructorParameter(SynonymMap.class,
-				getSynonymMap(WHITESPACE_ANALYZER, EN_FR_DE_SYNONYMS));
-		indexService.refreshAnalyzers();
-	}
+    @Test
+    public void test002_updateSynonymMap() throws IOException {
+        indexManager.registerConstructorParameter(SynonymMap.class,
+                getSynonymMap(WHITESPACE_ANALYZER, EN_FR_DE_SYNONYMS));
+        indexService.refreshAnalyzers();
+    }
 
-	@Test
-	public void test003_check_en_fr_de() {
-		final MultiFieldQueryParser.Builder builder = (MultiFieldQueryParser.Builder) MultiFieldQueryParser.of()
-				.addField("textSynonymsField1")
-				.setSplitOnWhitespace(false);
+    @Test
+    public void test003_check_en_fr_de() {
+        final MultiFieldQueryParser.Builder builder = MultiFieldQueryParser.of()
+                .addField("textSynonymsField1")
+                .setSplitOnWhitespace(false);
 
-		Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
-				QueryDefinition.of(builder.setQueryString("hello world").build()).build()).total_hits);
-		Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
-				QueryDefinition.of(builder.setQueryString("bonjour le monde").build()).build()).total_hits);
-		Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
-				QueryDefinition.of(builder.setQueryString("hallo welt").build()).build()).total_hits);
-	}
+        Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
+                QueryDefinition.of(builder.setQueryString("hello world").build()).build()).total_hits);
+        Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
+                QueryDefinition.of(builder.setQueryString("bonjour le monde").build()).build()).total_hits);
+        Assert.assertEquals(Long.valueOf(1), indexService.searchQuery(
+                QueryDefinition.of(builder.setQueryString("hallo welt").build()).build()).total_hits);
+    }
 
 }
