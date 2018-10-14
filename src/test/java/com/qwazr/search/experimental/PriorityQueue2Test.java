@@ -16,7 +16,9 @@
 package com.qwazr.search.experimental;
 
 import com.qwazr.utils.RandomUtils;
+import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class PriorityQueue2Test extends PriorityQueueAbstractTest {
 
@@ -42,54 +44,20 @@ public class PriorityQueue2Test extends PriorityQueueAbstractTest {
             scoreDocQueue2.insertWithOverflow(scoreDocs2[i]);
     }
 
-    public static class ScoreDocQueue2 extends PriorityQueue2<ScoreDoc2> {
-
-        private final ScoreDoc2 sentinel = new ScoreDoc2(-2, 0, -1);
-        private final ScoreDoc2 doc1 = new ScoreDoc2(-1, 0, -1);
-        private final ScoreDoc2 doc2 = new ScoreDoc2(-1, 0, -1);
-
-        private final int[] docs;
-        private final float[] scores;
-        private final int[] shards;
-
-        public ScoreDocQueue2(int maxSize) {
-            super(maxSize, true);
-            docs = new int[heapSize];
-            scores = new float[heapSize];
-            shards = new int[heapSize];
+    @Test
+    final public void functionalTest() {
+        initQueue();
+        scoreDocQueue2.insertWithOverflow(scoreDocs2[0]);
+        scoreDocQueue2.insertWithOverflow(scoreDocs2[1]);
+        scoreDocQueue2.insertWithOverflow(scoreDocs2[2]);
+        Assert.assertEquals(3, scoreDocQueue2.size());
+        int i = 0;
+        for (ScoreDoc2 scoreDoc2 : scoreDocQueue2) {
+            Assert.assertTrue(scoreDoc2.doc >= 0);
+            Assert.assertTrue(scoreDoc2.doc < COUNT);
+            i++;
         }
-
-        @Override
-        protected void setHeap(int pos, ScoreDoc2 doc) {
-            docs[pos] = doc.doc;
-            scores[pos] = doc.score;
-            shards[pos] = doc.shardIndex;
-        }
-
-        @Override
-        protected ScoreDoc2 getHeap(int pos) {
-            doc1.doc = docs[pos];
-            doc1.score = scores[pos];
-            doc1.shardIndex = shards[pos];
-            return doc1;
-        }
-
-        @Override
-        protected ScoreDoc2 getHeap2(int pos) {
-            doc2.doc = docs[pos];
-            doc2.score = scores[pos];
-            doc2.shardIndex = shards[pos];
-            return doc2;
-        }
-
-        @Override
-        protected boolean lessThan(ScoreDoc2 a, ScoreDoc2 b) {
-            return a.score < b.score;
-        }
-
-        protected ScoreDoc2 getSentinelObject() {
-            return sentinel;
-        }
+        Assert.assertEquals(3, i);
     }
 
 }
