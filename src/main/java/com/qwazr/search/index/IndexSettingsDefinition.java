@@ -51,6 +51,9 @@ public class IndexSettingsDefinition {
     public static final double DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB = 5;
     public static final double DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB = 60;
 
+    @JsonProperty("similarity")
+    final public String similarity;
+
     @JsonProperty("similarity_class")
     final public String similarityClass;
 
@@ -101,6 +104,7 @@ public class IndexSettingsDefinition {
     private IndexSettingsDefinition() {
         this.directoryType = null;
         this.mergeScheduler = null;
+        this.similarity = null;
         this.similarityClass = null;
         this.master = null;
         this.ramBufferSize = null;
@@ -118,7 +122,8 @@ public class IndexSettingsDefinition {
     }
 
     @JsonCreator
-    private IndexSettingsDefinition(@JsonProperty("similarity_class") final String similarityClass,
+    private IndexSettingsDefinition(@JsonProperty("similarity") final String similarity,
+                                    @JsonProperty("similarity_class") final String similarityClass,
                                     @JsonProperty("master") final RemoteIndex master,
                                     @JsonProperty("directory_type") final Type directoryType,
                                     @JsonProperty("merge_scheduler") final MergeScheduler mergeScheduler,
@@ -136,6 +141,7 @@ public class IndexSettingsDefinition {
                                     @JsonProperty("nrt_caching_directory_max_cached_mb") final Double nrtCachingDirectoryMaxCachedMB) {
         this.directoryType = directoryType;
         this.mergeScheduler = mergeScheduler;
+        this.similarity = similarity;
         this.similarityClass = similarityClass;
         this.master = master;
         this.ramBufferSize = ramBufferSize;
@@ -155,6 +161,7 @@ public class IndexSettingsDefinition {
     private IndexSettingsDefinition(final Builder builder) {
         this.directoryType = builder.directoryType;
         this.mergeScheduler = builder.mergeScheduler;
+        this.similarity = builder.similarity;
         this.similarityClass = builder.similarityClass;
         this.master = builder.master;
         this.ramBufferSize = builder.ramBufferSize;
@@ -196,6 +203,8 @@ public class IndexSettingsDefinition {
         if (!Objects.equals(directoryType, s.directoryType))
             return false;
         if (!Objects.equals(mergeScheduler, s.mergeScheduler))
+            return false;
+        if (!Objects.equals(similarity, s.similarity))
             return false;
         if (!Objects.equals(similarityClass, s.similarityClass))
             return false;
@@ -244,6 +253,7 @@ public class IndexSettingsDefinition {
 
         private Type directoryType;
         private MergeScheduler mergeScheduler;
+        private String similarity;
         private String similarityClass;
         private RemoteIndex master;
         private Double ramBufferSize;
@@ -265,6 +275,7 @@ public class IndexSettingsDefinition {
         private Builder(final Index annotatedIndex) throws URISyntaxException {
             directoryType = annotatedIndex.type();
             mergeScheduler = annotatedIndex.mergeScheduler();
+            similarity(annotatedIndex.similarity());
             similarityClass(annotatedIndex.similarityClass());
             master(annotatedIndex.replicationMaster());
             ramBufferSize(annotatedIndex.ramBufferSize());
@@ -284,6 +295,7 @@ public class IndexSettingsDefinition {
         private Builder(final IndexSettingsDefinition settings) {
             this.directoryType = settings.directoryType;
             this.mergeScheduler = settings.mergeScheduler;
+            this.similarity = settings.similarity;
             this.similarityClass = settings.similarityClass;
             this.master = settings.master;
             this.ramBufferSize = settings.ramBufferSize;
@@ -307,6 +319,11 @@ public class IndexSettingsDefinition {
 
         public Builder mergeScheduler(final MergeScheduler mergeScheduler) {
             this.mergeScheduler = mergeScheduler;
+            return this;
+        }
+
+        public Builder similarity(final String similarity) {
+            this.similarity = similarity;
             return this;
         }
 

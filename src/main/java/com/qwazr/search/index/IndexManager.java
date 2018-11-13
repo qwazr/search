@@ -62,6 +62,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 
     private final IndexServiceInterface service;
 
+    private final ConcurrentHashMap<String, SimilarityFactory> similarityFactoryMap;
     private final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap;
 
     private final ExecutorService executorService;
@@ -75,6 +76,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         service = new IndexServiceImpl(executorService, this);
         schemaMap = new ConcurrentHashMap<>();
         shemaLock = new ReentrantLock(true);
+        similarityFactoryMap = new ConcurrentHashMap<>();
         analyzerFactoryMap = new ConcurrentHashMap<>();
 
         final File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -83,7 +85,8 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         for (File schemaDirectory : directories) {
             try {
                 schemaMap.put(schemaDirectory.getName(),
-                        new SchemaInstance(this, analyzerFactoryMap, service, schemaDirectory, executorService));
+                        new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, service,
+                                schemaDirectory, executorService));
             } catch (ServerException | IOException e) {
                 LOGGER.log(Level.SEVERE, e, e::getMessage);
             }
@@ -101,6 +104,11 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         if (!Files.isDirectory(indexesDirectory))
             throw new IOException("This name is not valid. No directory exists for this location: " + indexesDirectory);
         return indexesDirectory;
+    }
+
+    public IndexManager registerSimilarityFactory(final String name, final SimilarityFactory factory) {
+        similarityFactoryMap.put(name, factory);
+        return this;
     }
 
     public IndexManager registerAnalyzerFactory(final String name, final AnalyzerFactory factory) {
@@ -131,8 +139,8 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         shemaLock.lock();
         try {
             final SchemaInstance schemaInstance = schemaMap.computeIfAbsent(schemaName, sc -> ExceptionUtils.bypass(
-                    () -> new SchemaInstance(this, analyzerFactoryMap, service, new File(rootDirectory, schemaName),
-                            executorService)));
+                    () -> new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, service,
+                            new File(rootDirectory, schemaName), executorService)));
             if (settings != null)
                 schemaInstance.setSettings(settings);
             return schemaInstance.getSettings();

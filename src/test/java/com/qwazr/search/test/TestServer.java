@@ -19,6 +19,7 @@ import com.google.common.io.Files;
 import com.qwazr.search.SearchServer;
 import com.qwazr.search.index.IndexServiceBuilder;
 import com.qwazr.search.index.IndexServiceInterface;
+import com.qwazr.search.similarity.CustomSimilarity;
 import com.qwazr.server.RemoteService;
 import com.qwazr.utils.FileUtils;
 
@@ -47,7 +48,9 @@ public class TestServer {
 		SearchServer.getInstance()
 				.getIndexManager()
 				.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME,
-						resourceLoader -> new AnnotatedRecord.TestAnalyzer(injectedAnalyzerCount));
+						resourceLoader -> new AnnotatedRecord.TestAnalyzer(injectedAnalyzerCount))
+                .registerSimilarityFactory(CustomSimilarity.CUSTOM_SIMILARITY,
+                        resourceLoader -> new CustomSimilarity(1.2f));
 		IndexServiceBuilder indexServiceBuilder = SearchServer.getInstance().getServiceBuilder();
 		service = indexServiceBuilder.local();
 		remote = indexServiceBuilder.remote(RemoteService.of(BASE_URL).build());

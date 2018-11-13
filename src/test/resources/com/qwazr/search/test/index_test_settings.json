@@ -1,4 +1,5 @@
 {
+  "similarity": "customSimilarity",
   "use_simple_text_codec": true,
   "index_reader_warmer": false
 }

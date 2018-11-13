@@ -16,26 +16,13 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.utils.ClassLoaderUtils;
-import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.IOException;
 
 class IndexUtils {
-
-	final static String[] similarityClassPrefixes =
-			{ "", "com.qwazr.search.similarity.", "org.apache.lucene.search.similarities." };
-
-	static Similarity findSimilarity(final ConstructorParametersImpl instanceFactory, final String similarityClassname)
-			throws ReflectiveOperationException, IOException {
-		final Class<Similarity> similarityClass =
-				ClassLoaderUtils.findClass(similarityClassname, similarityClassPrefixes);
-		return instanceFactory.findBestMatchingConstructor(similarityClass).newInstance();
-	}
 
 	static SortedSetDocValuesReaderState getNewFacetsState(final IndexReader indexReader, final String stateFacetField)
 			throws IOException {

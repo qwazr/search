@@ -31,6 +31,8 @@ import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
+import com.qwazr.search.similarity.SimilarityForTest;
+import com.qwazr.search.similarity.CustomSimilarity;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.TokenStream;
@@ -39,6 +41,7 @@ import org.apache.lucene.analysis.miscellaneous.KeywordRepeatFilter;
 import org.apache.lucene.analysis.miscellaneous.RemoveDuplicatesTokenFilter;
 import org.apache.lucene.analysis.snowball.SnowballFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.apache.lucene.search.similarities.BM25Similarity;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -71,7 +74,7 @@ public class AnnotatedIndexServiceTest {
     }
 
     @AfterClass
-    public static void afterClass() throws Exception {
+    public static void afterClass() {
         if (indexManager != null) {
             indexManager.close();
             indexManager = null;
@@ -83,7 +86,7 @@ public class AnnotatedIndexServiceTest {
     }
 
     @Test
-    public void test100createService() throws IOException, URISyntaxException {
+    public void test100createService() throws URISyntaxException {
 
         // Create the indexManager
         indexManager = new IndexManager(workDirectory, executor);
@@ -111,6 +114,7 @@ public class AnnotatedIndexServiceTest {
         IndexStatus index = service.createUpdateIndex();
         Assert.assertNotNull(index);
         Assert.assertNotNull(index.settings);
+        Assert.assertEquals(SimilarityForTest.class.getName(), index.settings.similarityClass);
         Assert.assertNotNull(index.settings.useSimpleTextCodec);
         Assert.assertFalse(index.settings.useSimpleTextCodec);
         Assert.assertNotNull(index.settings.indexReaderWarmer);
@@ -127,6 +131,28 @@ public class AnnotatedIndexServiceTest {
     }
 
     @Test
+    public void test120createServiceWithSimilarityFactory() throws URISyntaxException {
+
+        // Register a named similarity
+        indexManager.registerSimilarityFactory(CustomSimilarity.CUSTOM_SIMILARITY,
+                resourceLoader -> new CustomSimilarity(1.2f));
+
+        // Get the service
+        AnnotatedIndexService<PartialRecord> partialService = indexManager.getService(PartialRecord.class);
+        Assert.assertNotNull(partialService);
+
+        // Create the schema
+        SchemaSettingsDefinition schema = partialService.createUpdateSchema();
+        Assert.assertNotNull(schema);
+
+        // Create the index
+        IndexStatus index = partialService.createUpdateIndex();
+        Assert.assertNotNull(index);
+        Assert.assertNotNull(index.settings);
+        Assert.assertEquals(CustomSimilarity.CUSTOM_SIMILARITY, index.settings.similarity);
+    }
+
+    @Test
     public void test150createBasicService() throws URISyntaxException {
 
         // Get the service
@@ -137,7 +163,7 @@ public class AnnotatedIndexServiceTest {
         IndexStatus index = basicService.createUpdateIndex();
         Assert.assertNotNull(index);
         Assert.assertNotNull(index.settings);
-        Assert.assertNotNull(index.settings.similarityClass);
+        Assert.assertEquals(BM25Similarity.class.getName(), index.settings.similarityClass);
         Assert.assertNotNull(index.settings.useSimpleTextCodec);
         Assert.assertTrue(index.settings.useSimpleTextCodec);
         Assert.assertNotNull(index.settings.indexReaderWarmer);
@@ -172,7 +198,7 @@ public class AnnotatedIndexServiceTest {
     }
 
     @Test
-    public void test500query() throws IOException, ReflectiveOperationException {
+    public void test500query() {
 
         MultiFieldQuery multiFieldQuery = MultiFieldQuery.of()
             .fieldBoost("title", 10F)
@@ -192,7 +218,7 @@ public class AnnotatedIndexServiceTest {
     }
 
     @Test
-    public void test501query() throws IOException, InterruptedException {
+    public void test501query() throws IOException {
         Long result = service.query(context -> {
             ResultDefinition.WithObject<IndexRecord> res =
                 context.searchObject(QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
@@ -229,7 +255,7 @@ public class AnnotatedIndexServiceTest {
         indexManager = null;
     }
 
-    @Index(schema = "schemaName", name = "indexName")
+    @Index(schema = "schemaName", name = "indexName", similarityClass = SimilarityForTest.class)
     public static class IndexRecord {
 
         @IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class, stored = true)
@@ -251,6 +277,21 @@ public class AnnotatedIndexServiceTest {
 
         public IndexRecord() {
             this(null, null);
+        }
+    }
+
+    @Index(schema = "schemaName", name = "partialName", similarity = CustomSimilarity.CUSTOM_SIMILARITY)
+    public static class PartialRecord {
+
+        @IndexField(template = FieldDefinition.Template.TextField, stored = true)
+        final public String content;
+
+        public PartialRecord(String content) {
+            this.content = content;
+        }
+
+        public PartialRecord() {
+            this(null);
         }
     }
 

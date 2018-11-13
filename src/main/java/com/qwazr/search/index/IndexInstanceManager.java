@@ -27,7 +27,6 @@ import org.apache.lucene.store.Directory;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -44,6 +43,7 @@ class IndexInstanceManager implements Closeable {
     private final ExecutorService executorService;
     private final IndexServiceInterface indexServiceInterface;
     private final IndexFileSet fileSet;
+    private final Map<String, SimilarityFactory> similarityFactoryMap;
     private final Map<String, AnalyzerFactory> analyzerFactoryMap;
     private final ReadWriteSemaphores readWriteSemaphores;
 
@@ -53,6 +53,7 @@ class IndexInstanceManager implements Closeable {
     private IndexInstance indexInstance;
 
     IndexInstanceManager(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
+            final Map<String, SimilarityFactory> similarityFactoryMap,
             final Map<String, AnalyzerFactory> analyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
             final ExecutorService executorService, final IndexServiceInterface indexServiceInterface,
             final Path indexDirectory) {
@@ -64,6 +65,7 @@ class IndexInstanceManager implements Closeable {
             this.executorService = executorService;
             this.indexServiceInterface = indexServiceInterface;
             this.fileSet = new IndexFileSet(indexDirectory);
+            this.similarityFactoryMap = similarityFactoryMap;
             this.analyzerFactoryMap = analyzerFactoryMap;
             this.readWriteSemaphores = readWriteSemaphores;
 
@@ -76,11 +78,12 @@ class IndexInstanceManager implements Closeable {
         }
     }
 
-    private IndexInstance ensureOpen() throws ReflectiveOperationException, IOException, URISyntaxException {
+    private IndexInstance ensureOpen() throws ReflectiveOperationException, IOException {
         if (indexInstance == null)
             indexInstance =
-                    new IndexInstanceBuilder(indexProvider, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
-                            executorService, indexServiceInterface, fileSet, settings, indexUuid, indexName).build();
+                    new IndexInstanceBuilder(indexProvider, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
+                            readWriteSemaphores, executorService, indexServiceInterface, fileSet, settings, indexUuid, indexName)
+                            .build();
         return indexInstance;
     }
 
