@@ -50,6 +50,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
     private final static String SETTINGS_FILE = "settings.json";
 
     private final ConcurrentHashMap<String, IndexInstanceManager> indexMap;
+    private final ConcurrentHashMap<String, SimilarityFactory> similarityFactoryMap;
     private final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap;
 
     private final ReadWriteSemaphores readWriteSemaphores;
@@ -65,11 +66,13 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
     private final ReadWriteLock backupLock = ReadWriteLock.stamped();
 
     SchemaInstance(final ConstructorParametersImpl instanceFactory,
+            final ConcurrentHashMap<String, SimilarityFactory> similarityFactoryMap,
             final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap, final IndexServiceInterface service,
             final File schemaDirectory, final ExecutorService executorService) throws IOException {
 
         this.readWriteSemaphores = new ReadWriteSemaphores(null, null);
         this.instanceFactory = instanceFactory;
+        this.similarityFactoryMap = similarityFactoryMap;
         this.analyzerFactoryMap = analyzerFactoryMap;
         this.executorService = executorService;
         this.service = service;
@@ -89,8 +92,8 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
         try (final Stream<Path> stream = Files.list(this.schemaDirectory)) {
             stream.filter(path -> Files.isDirectory(path))
                     .forEach(indexPath -> indexMap.put(indexPath.toFile().getName(),
-                            new IndexInstanceManager(this, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
-                                    executorService, service, indexPath)));
+                            new IndexInstanceManager(this, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
+                                    readWriteSemaphores, executorService, service, indexPath)));
         }
     }
 
@@ -102,8 +105,8 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
     IndexInstance createUpdate(final String indexName, final IndexSettingsDefinition settings) throws Exception {
         Objects.requireNonNull(settings, "The settings cannot be null");
         return indexMap.computeIfAbsent(indexName,
-                name -> new IndexInstanceManager(this, instanceFactory, analyzerFactoryMap, readWriteSemaphores,
-                        executorService, service, schemaDirectory.resolve(name))).createUpdate(settings);
+                name -> new IndexInstanceManager(this, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
+                        readWriteSemaphores, executorService, service, schemaDirectory.resolve(name))).createUpdate(settings);
     }
 
     private IndexInstanceManager checkIndexExists(final String indexName,

@@ -35,6 +35,8 @@ public @interface Index {
 
 	String schema();
 
+    String similarity() default StringUtils.EMPTY;
+
 	Class<? extends Similarity> similarityClass() default BM25Similarity.class;
 
 	String replicationMaster() default StringUtils.EMPTY;

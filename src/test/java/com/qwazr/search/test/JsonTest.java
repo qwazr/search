@@ -19,8 +19,6 @@ import com.qwazr.search.index.IndexServiceInterface;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import java.net.URISyntaxException;
-
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ JsonTest.JsonLocalTest.class, JsonTest.JsonRemoteTest.class })
 public class JsonTest {
@@ -28,7 +26,7 @@ public class JsonTest {
 	public static class JsonLocalTest extends JsonAbstractTest {
 
 		@Override
-		protected IndexServiceInterface getClient() throws URISyntaxException {
+		protected IndexServiceInterface getClient() {
 			return TestServer.service;
 		}
 	}
@@ -36,7 +34,7 @@ public class JsonTest {
 	public static class JsonRemoteTest extends JsonAbstractTest {
 
 		@Override
-		protected IndexServiceInterface getClient() throws URISyntaxException {
+		protected IndexServiceInterface getClient() {
 			return TestServer.remote;
 		}
 	}

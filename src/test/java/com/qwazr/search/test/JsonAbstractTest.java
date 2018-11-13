@@ -35,6 +35,7 @@ import com.qwazr.search.index.TermDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.QueryParser;
 import com.qwazr.search.query.QueryParserOperator;
+import com.qwazr.search.similarity.CustomSimilarity;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.ObjectMappers;
@@ -266,6 +267,7 @@ public abstract class JsonAbstractTest {
         Assert.assertNull(indexStatus.settings.similarityClass);
         Assert.assertNotNull(indexStatus.settings.indexReaderWarmer);
         Assert.assertFalse(indexStatus.settings.indexReaderWarmer);
+        Assert.assertEquals(CustomSimilarity.CUSTOM_SIMILARITY, indexStatus.settings.similarity);
         Assert.assertNotNull(indexStatus.settings.useSimpleTextCodec);
         Assert.assertTrue(indexStatus.settings.useSimpleTextCodec);
         checkAllSizes(client, 0);

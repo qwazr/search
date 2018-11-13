@@ -21,9 +21,11 @@ import com.qwazr.search.analysis.CustomAnalyzer;
 import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
+import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.codecs.simpletext.SimpleTextCodec;
 import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
@@ -53,6 +55,9 @@ import java.util.concurrent.ExecutorService;
 
 class IndexInstanceBuilder {
 
+    private final static String[] similarityClassPrefixes =
+            { "", "com.qwazr.search.similarity.", "org.apache.lucene.search.similarities." };
+
     final IndexFileSet fileSet;
     final ExecutorService executorService;
     final ReadWriteSemaphores readWriteSemaphores;
@@ -72,6 +77,7 @@ class IndexInstanceBuilder {
     private IndexWriter indexWriter;
     private SnapshotDirectoryTaxonomyWriter taxonomyWriter;
 
+    private final Map<String, SimilarityFactory> similarityFactoryMap;
     final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap;
     LinkedHashMap<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap;
 
@@ -88,6 +94,7 @@ class IndexInstanceBuilder {
     private SearcherFactory searcherFactory;
 
     IndexInstanceBuilder(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
+            final Map<String, SimilarityFactory> similarityFactoryMap,
             final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
             final ExecutorService executorService, final IndexServiceInterface indexService, final IndexFileSet fileSet,
             final IndexSettingsDefinition settings, final UUID indexUuid, final String indexName) {
@@ -97,6 +104,7 @@ class IndexInstanceBuilder {
         this.indexProvider = indexProvider;
         this.instanceFactory = instanceFactory;
         this.settings = settings;
+        this.similarityFactoryMap = similarityFactoryMap;
         this.globalAnalyzerFactoryMap = globalAnalyzerFactoryMap;
         this.indexService = indexService;
         this.fileResourceLoader = new FileResourceLoader(null, fileSet.resourcesDirectoryPath);
@@ -106,8 +114,7 @@ class IndexInstanceBuilder {
 
     private void buildCommon() throws IOException, ReflectiveOperationException {
 
-        if (settings.similarityClass != null && !settings.similarityClass.isEmpty())
-            similarity = IndexUtils.findSimilarity(instanceFactory, settings.similarityClass);
+        similarity = findSimilarity(settings.similarity, settings.similarityClass, fileResourceLoader);
 
         searcherFactory = MultiThreadSearcherFactory.of(executorService,
                 settings.indexReaderWarmer == null ? true : settings.indexReaderWarmer, similarity,
@@ -129,6 +136,32 @@ class IndexInstanceBuilder {
         taxonomyDirectory = IndexSettingsDefinition.useTaxonomyIndex(settings) ?
                 getDirectory(settings, fileSet.taxonomyDirectory) :
                 null;
+    }
+
+    private Similarity findSimilarity(final String similarityName,
+                                      final String similarityClassName,
+                                      final ResourceLoader resourceLoader)
+            throws IOException, ReflectiveOperationException {
+        Similarity similarity = null;
+        if(similarityName != null && !similarityName.isEmpty()) {
+            similarity = getFromFactory(resourceLoader, similarityName, similarityFactoryMap);
+        }
+        if (similarity == null && similarityClassName != null && !similarityClassName.isEmpty()) {
+            final Class<Similarity> similarityClass =
+                    ClassLoaderUtils.findClass(similarityClassName, similarityClassPrefixes);
+            similarity = instanceFactory.findBestMatchingConstructor(similarityClass).newInstance();
+        }
+        return similarity;
+    }
+
+    private Similarity getFromFactory(final ResourceLoader resourceLoader,
+                                    final String similarityName,
+                                    final Map<String, ? extends SimilarityFactory> similarityFactoryMap)
+            throws IOException, ReflectiveOperationException {
+        if (similarityFactoryMap == null)
+            return null;
+        final SimilarityFactory factory = similarityFactoryMap.get(similarityName);
+        return factory == null ? null : factory.createSimilarity(resourceLoader);
     }
 
     static Directory getDirectory(IndexSettingsDefinition settings, Path dataDirectory) throws IOException {
