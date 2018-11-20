@@ -133,7 +133,7 @@ public abstract class AbstractIndexTest {
 
         public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef, Long hitsExpected,
                 String queryDebug) {
-            return checkQuery(service, queryDef, hitsExpected, queryDebug);
+            return checkQuery(getIndexService(), queryDef, hitsExpected, queryDebug);
         }
 
         public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef) {
