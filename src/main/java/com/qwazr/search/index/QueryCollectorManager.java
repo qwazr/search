@@ -17,10 +17,13 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.collector.BaseCollector;
 import com.qwazr.search.collector.ConcurrentCollector;
+import com.qwazr.utils.ExceptionUtils;
+import com.qwazr.utils.LoggerUtils;
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.CollectorManager;
+import org.apache.lucene.search.TimeLimitingCollector;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopFieldCollector;
 import org.apache.lucene.search.TopFieldDocs;
@@ -31,136 +34,148 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 class QueryCollectorManager extends QueryCollectors implements CollectorManager<Collector, QueryCollectors> {
 
-	private final Collection<QueryCollectorsClassic> queryCollectorsList;
-	private FacetsCollector facetsCollector;
+    private final static Logger LOGGER = LoggerUtils.getLogger(QueryCollectorManager.class);
 
-	QueryCollectorManager(final QueryExecution queryExecution) {
-		super(queryExecution);
-		this.queryCollectorsList = new ArrayList<>();
-	}
+    private final Collection<QueryCollectorsClassic> queryCollectorsList;
+    private FacetsCollector facetsCollector;
 
-	@Override
-	final public FacetsBuilder execute() throws Exception {
+    QueryCollectorManager(final QueryExecution queryExecution) {
+        super(queryExecution);
+        this.queryCollectorsList = new ArrayList<>();
+    }
 
-		final FacetsBuilder facetsBuilder;
+    @Override
+    final public FacetsBuilder execute() throws Exception {
 
-		if (queryExecution.useDrillSideways) {
+        final FacetsBuilder facetsBuilder;
 
-			final DrillSideways.ConcurrentDrillSidewaysResult<QueryCollectors> drillSidewaysResult =
-					new MixedDrillSideways(queryExecution).search(
-							(org.apache.lucene.facet.DrillDownQuery) queryExecution.query, this);
-			facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.facetsConfig,
-					queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
-					drillSidewaysResult).build();
+        if (queryExecution.useDrillSideways) {
 
-		} else {
+            final DrillSideways.ConcurrentDrillSidewaysResult<QueryCollectors> drillSidewaysResult =
+                    new MixedDrillSideways(queryExecution).search(
+                            (org.apache.lucene.facet.DrillDownQuery) queryExecution.query, this);
+            facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.facetsConfig,
+                    queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+                    drillSidewaysResult).build();
 
-			queryExecution.queryContext.indexSearcher.search(queryExecution.query, this);
-			facetsCollector = getFacetsCollector();
-			facetsBuilder = facetsCollector == null ?
-					null :
-					new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
-							queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
-							facetsCollector).build();
-		}
+        } else {
 
-		return facetsBuilder;
-	}
+            try {
+                queryExecution.queryContext.indexSearcher.search(queryExecution.query, this);
+            } catch (RuntimeException e) {
+                if (ExceptionUtils.getRootCause(e) instanceof TimeLimitingCollector.TimeExceededException)
+                    LOGGER.log(Level.WARNING, e, e::getMessage);
+                else
+                    throw e;
+            }
 
-	@Override
-	final public Collector newCollector() throws IOException {
-		final QueryCollectorsClassic queryCollectors;
-		try {
-			queryCollectors = new QueryCollectorsClassic(queryExecution);
-		} catch (ReflectiveOperationException e) {
-			throw new IOException(e);
-		}
-		queryCollectorsList.add(queryCollectors);
-		return queryCollectors.finalCollector;
-	}
+            facetsCollector = getFacetsCollector();
+            facetsBuilder = facetsCollector == null ?
+                    null :
+                    new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
+                            queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+                            facetsCollector).build();
+        }
 
-	@Override
-	final public QueryCollectors reduce(final Collection collectors) throws IOException {
-		return this;
-	}
+        return facetsBuilder;
+    }
 
-	@Override
-	public final Integer getTotalHits() {
-		if (queryCollectorsList == null || queryCollectorsList.isEmpty())
-			return 0;
-		int totalHits = 0;
-		for (QueryCollectorsClassic queryCollectors : queryCollectorsList) {
-			if (queryCollectors.totalHitCountCollector != null)
-				totalHits += queryCollectors.totalHitCountCollector.getTotalHits();
-			else if (queryCollectors.topDocsCollector != null)
-				totalHits += queryCollectors.topDocsCollector.getTotalHits();
-		}
-		return totalHits;
-	}
+    @Override
+    final public Collector newCollector() throws IOException {
+        final QueryCollectorsClassic queryCollectors;
+        try {
+            queryCollectors = new QueryCollectorsClassic(queryExecution);
+        } catch (ReflectiveOperationException e) {
+            throw new IOException(e);
+        }
+        queryCollectorsList.add(queryCollectors);
+        return queryCollectors.finalCollector;
+    }
 
-	@Override
-	public final TopDocs getTopDocs() throws IOException {
-		if (queryCollectorsList == null || queryCollectorsList.isEmpty())
-			return null;
-		if (queryExecution.sort != null)
-			return getTopFieldDocs();
-		final List<TopDocs> topDocsList = new ArrayList<>(queryCollectorsList.size());
-		for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
-			if (queryCollectors.topDocsCollector != null)
-				topDocsList.add(queryCollectors.topDocsCollector.topDocs());
-		return TopDocs.merge(queryExecution.start, queryExecution.rows,
-				topDocsList.toArray(new TopDocs[topDocsList.size()]), true);
-	}
+    @Override
+    final public QueryCollectors reduce(final Collection collectors) {
+        return this;
+    }
 
-	private TopDocs getTopFieldDocs() throws IOException {
-		final List<TopFieldDocs> topFieldDocsList = new ArrayList<>(queryCollectorsList.size());
-		for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
-			if (queryCollectors.topDocsCollector != null)
-				topFieldDocsList.add(((TopFieldCollector) queryCollectors.topDocsCollector).topDocs());
-		return TopFieldDocs.merge(queryExecution.sort, queryExecution.start, queryExecution.rows,
-				topFieldDocsList.toArray(new TopFieldDocs[topFieldDocsList.size()]), true);
-	}
+    @Override
+    public final Integer getTotalHits() {
+        if (queryCollectorsList == null || queryCollectorsList.isEmpty())
+            return 0;
+        int totalHits = 0;
+        for (QueryCollectorsClassic queryCollectors : queryCollectorsList) {
+            if (queryCollectors.totalHitCountCollector != null)
+                totalHits += queryCollectors.totalHitCountCollector.getTotalHits();
+            else if (queryCollectors.topDocsCollector != null)
+                totalHits += queryCollectors.topDocsCollector.getTotalHits();
+        }
+        return totalHits;
+    }
 
-	private final static FacetsCollector EMPTY_FACETS_COLLECTOR = new FacetsCollector();
+    @Override
+    public final TopDocs getTopDocs() {
+        if (queryCollectorsList == null || queryCollectorsList.isEmpty())
+            return null;
+        if (queryExecution.sort != null)
+            return getTopFieldDocs();
+        final List<TopDocs> topDocsList = new ArrayList<>(queryCollectorsList.size());
+        for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
+            if (queryCollectors.topDocsCollector != null)
+                topDocsList.add(queryCollectors.topDocsCollector.topDocs());
+        return TopDocs.merge(queryExecution.start, queryExecution.rows,
+                topDocsList.toArray(new TopDocs[topDocsList.size()]), true);
+    }
 
-	@Override
-	public final FacetsCollector getFacetsCollector() throws IOException {
-		if (facetsCollector != null) // cache
-			return facetsCollector;
-		if (queryExecution.queryDef.facets == null || queryExecution.queryDef.facets.isEmpty())
-			return null;
-		if (queryCollectorsList == null || queryCollectorsList.isEmpty())
-			return EMPTY_FACETS_COLLECTOR;
-		facetsCollector = new FacetsCollector();
-		final List<FacetsCollector.MatchingDocs> matchingDocs = facetsCollector.getMatchingDocs();
-		for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
-			if (queryCollectors.facetsCollector != null)
-				matchingDocs.addAll(queryCollectors.facetsCollector.getMatchingDocs());
-		return facetsCollector;
-	}
+    private TopDocs getTopFieldDocs() {
+        final List<TopFieldDocs> topFieldDocsList = new ArrayList<>(queryCollectorsList.size());
+        for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
+            if (queryCollectors.topDocsCollector != null)
+                topFieldDocsList.add(((TopFieldCollector) queryCollectors.topDocsCollector).topDocs());
+        return TopFieldDocs.merge(queryExecution.sort, queryExecution.start, queryExecution.rows,
+                topFieldDocsList.toArray(new TopFieldDocs[topFieldDocsList.size()]), true);
+    }
 
-	@Override
-	public final Map<String, Object> getExternalResults() {
-		if (queryCollectorsList == null || queryCollectorsList.isEmpty())
-			return null;
-		if (queryExecution.queryDef.collectors == null)
-			return null;
-		final Map<String, Object> results = new HashMap<>();
-		int i = 0;
-		for (String name : queryExecution.queryDef.collectors.keySet()) {
-			final List<BaseCollector> externalCollectors = new ArrayList<>();
-			for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
-				if (queryCollectors.userCollectors != null)
-					externalCollectors.add(queryCollectors.userCollectors.get(i));
-			if (!externalCollectors.isEmpty()) {
-				results.put(name,
-						((ConcurrentCollector) externalCollectors.get(0)).getReducedResult(externalCollectors));
-			}
-			i++;
-		}
-		return results;
-	}
+    private final static FacetsCollector EMPTY_FACETS_COLLECTOR = new FacetsCollector();
+
+    @Override
+    public final FacetsCollector getFacetsCollector() {
+        if (facetsCollector != null) // cache
+            return facetsCollector;
+        if (queryExecution.queryDef.facets == null || queryExecution.queryDef.facets.isEmpty())
+            return null;
+        if (queryCollectorsList == null || queryCollectorsList.isEmpty())
+            return EMPTY_FACETS_COLLECTOR;
+        facetsCollector = new FacetsCollector();
+        final List<FacetsCollector.MatchingDocs> matchingDocs = facetsCollector.getMatchingDocs();
+        for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
+            if (queryCollectors.facetsCollector != null)
+                matchingDocs.addAll(queryCollectors.facetsCollector.getMatchingDocs());
+        return facetsCollector;
+    }
+
+    @Override
+    public final Map<String, Object> getExternalResults() {
+        if (queryCollectorsList == null || queryCollectorsList.isEmpty())
+            return null;
+        if (queryExecution.queryDef.collectors == null)
+            return null;
+        final Map<String, Object> results = new HashMap<>();
+        int i = 0;
+        for (String name : queryExecution.queryDef.collectors.keySet()) {
+            final List<BaseCollector> externalCollectors = new ArrayList<>();
+            for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
+                if (queryCollectors.userCollectors != null)
+                    externalCollectors.add(queryCollectors.userCollectors.get(i));
+            if (!externalCollectors.isEmpty()) {
+                results.put(name,
+                        ((ConcurrentCollector) externalCollectors.get(0)).getReducedResult(externalCollectors));
+            }
+            i++;
+        }
+        return results;
+    }
 }

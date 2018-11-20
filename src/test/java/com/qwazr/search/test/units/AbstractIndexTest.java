@@ -41,9 +41,11 @@ public abstract class AbstractIndexTest {
 
     static final Logger LOGGER = LoggerUtils.getLogger(AbstractIndexTest.class);
 
-    protected static IndexManager initIndexManager() {
+    protected static IndexManager initIndexManager(boolean withExecutorService) {
         try {
-            executor = Executors.newCachedThreadPool();
+            if (executor != null || rootDirectory != null || indexManager != null)
+                throw new RuntimeException("IndexManager already setup");
+            executor = withExecutorService ? Executors.newCachedThreadPool() : null;
             rootDirectory = Files.createTempDirectory("qwazr_index_test");
             return indexManager = new IndexManager(rootDirectory, executor);
         } catch (Exception e) {
@@ -51,14 +53,23 @@ public abstract class AbstractIndexTest {
         }
     }
 
-    protected static <T> AnnotatedIndexService<T> initIndexService(Class<T> recordClass) throws URISyntaxException {
+    protected static IndexManager initIndexManager() {
+        return initIndexManager(true);
+    }
+
+    protected static <T> AnnotatedIndexService<T> initIndexService(boolean withExecutorService, Class<T> recordClass)
+            throws URISyntaxException {
         if (indexManager == null)
-            initIndexManager();
+            initIndexManager(withExecutorService);
         final AnnotatedIndexService<T> indexService = indexManager.getService(recordClass);
         indexService.createUpdateSchema();
         indexService.createUpdateIndex();
         indexService.createUpdateFields();
         return indexService;
+    }
+
+    protected static <T> AnnotatedIndexService<T> initIndexService(Class<T> recordClass) throws URISyntaxException {
+        return initIndexService(true, recordClass);
     }
 
     <T> ResultDefinition.WithObject<T> checkQuery(AnnotatedIndexService<T> indexService, QueryDefinition queryDef,
@@ -84,7 +95,7 @@ public abstract class AbstractIndexTest {
     }
 
     @AfterClass
-    public static void afterClass() throws IOException {
+    public static void releaseIndexManager() throws IOException {
         if (indexManager != null) {
             indexManager.close();
             indexManager = null;
@@ -93,20 +104,31 @@ public abstract class AbstractIndexTest {
             executor.shutdown();
             executor = null;
         }
-        if (rootDirectory != null)
+        if (rootDirectory != null) {
             FileUtils.deleteDirectory(rootDirectory);
+            rootDirectory = null;
+        }
     }
 
-    public static abstract class WithIndexRecord<T extends IndexRecord> extends AbstractIndexTest {
+    public static class WithIndexRecord<T extends IndexRecord> extends AbstractIndexTest {
 
-        protected AnnotatedIndexService<T> service;
+        private final Class<T> indexRecordClass;
+
+        private AnnotatedIndexService<T> service;
 
         protected WithIndexRecord(Class<T> indexRecordClass) {
-            try {
-                service = indexManager.getService(indexRecordClass);
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
+            this.indexRecordClass = indexRecordClass;
+        }
+
+        public synchronized AnnotatedIndexService<T> getIndexService() {
+            if (service == null) {
+                try {
+                    service = indexManager.getService(indexRecordClass);
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
             }
+            return service;
         }
 
         public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef, Long hitsExpected,
@@ -118,7 +140,7 @@ public abstract class AbstractIndexTest {
             return checkQuery(queryDef, 1L, null);
         }
 
-        public static abstract class WithTaxonomy extends WithIndexRecord<IndexRecord.WithTaxonomy> {
+        public static class WithTaxonomy extends WithIndexRecord<IndexRecord.WithTaxonomy> {
 
             public static AnnotatedIndexService<IndexRecord.WithTaxonomy> indexService;
 
@@ -128,7 +150,6 @@ public abstract class AbstractIndexTest {
 
             protected WithTaxonomy() {
                 super(IndexRecord.WithTaxonomy.class);
-                indexService = service;
             }
 
             public IndexRecord.WithTaxonomy getNewRecord(String id) {
@@ -136,17 +157,20 @@ public abstract class AbstractIndexTest {
             }
         }
 
-        public static abstract class NoTaxonomy extends WithIndexRecord<IndexRecord.NoTaxonomy> {
+        public static class NoTaxonomy extends WithIndexRecord<IndexRecord.NoTaxonomy> {
 
             public static AnnotatedIndexService<IndexRecord.NoTaxonomy> indexService;
 
-            protected static void initIndexService() throws IOException, URISyntaxException {
+            protected static void initIndexService() throws URISyntaxException {
                 indexService = AbstractIndexTest.initIndexService(IndexRecord.NoTaxonomy.class);
+            }
+
+            protected static void initIndexService(boolean withExecutorService) throws URISyntaxException {
+                indexService = AbstractIndexTest.initIndexService(withExecutorService, IndexRecord.NoTaxonomy.class);
             }
 
             protected NoTaxonomy() {
                 super(IndexRecord.NoTaxonomy.class);
-                indexService = service;
             }
 
             public IndexRecord.NoTaxonomy getNewRecord(String id) {
