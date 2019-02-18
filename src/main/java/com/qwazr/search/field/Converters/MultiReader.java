@@ -34,93 +34,96 @@ import java.util.List;
 
 public class MultiReader {
 
-	final int[] docBases;
-	final LeafReader[] leafReaders;
+    final int[] docBases;
+    final LeafReader[] leafReaders;
 
-	public MultiReader(final IndexReader reader) {
-		docBases = new int[reader.leaves().size()];
-		leafReaders = new LeafReader[docBases.length];
-		int i = 0;
-		for (LeafReaderContext leafReaderContext : reader.leaves()) {
-			docBases[i] = leafReaderContext.docBase;
-			leafReaders[i++] = leafReaderContext.reader();
-		}
-	}
+    public MultiReader(final IndexReader reader) {
+        docBases = new int[reader.leaves().size()];
+        leafReaders = new LeafReader[docBases.length];
+        int i = 0;
+        for (LeafReaderContext leafReaderContext : reader.leaves()) {
+            docBases[i] = leafReaderContext.docBase;
+            leafReaders[i++] = leafReaderContext.reader();
+        }
+    }
 
-	final static int NOT_FOUND = -1;
+    final static int NOT_FOUND = -1;
 
-	int getLeafReader(final int docId) {
-		int i = NOT_FOUND;
-		for (final int docBase : docBases) {
-			if (docBase > docId)
-				break;
-			i++;
-		}
-		return i <= docBases.length ? i : NOT_FOUND;
-	}
+    int getLeafReader(final int docId) {
+        int i = NOT_FOUND;
+        for (final int docBase : docBases) {
+            if (docBase > docId)
+                break;
+            i++;
+        }
+        return i <= docBases.length ? i : NOT_FOUND;
+    }
 
-	long getNumericDocValues(final int docId, final String field) throws IOException {
-		final int pos = getLeafReader(docId);
-		if (pos == NOT_FOUND)
-			return 0;
-		final NumericDocValues docValues = leafReaders[pos].getNumericDocValues(field);
-		if (docValues == null)
-			return 0;
-		return docValues.get(docId - docBases[pos]);
-	}
+    long getNumericDocValues(final int docId, final String field) throws IOException {
+        final int pos = getLeafReader(docId);
+        if (pos == NOT_FOUND)
+            return 0;
+        final NumericDocValues docValues = leafReaders[pos].getNumericDocValues(field);
+        if (docValues == null)
+            return 0;
+        docValues.advance(docId - docBases[pos]);
+        return docValues.longValue();
+    }
 
-	BytesRef getSortedDocValues(final int docId, final String field) throws IOException {
-		final int pos = getLeafReader(docId);
-		if (pos == NOT_FOUND)
-			return BytesRefUtils.EMPTY;
-		final SortedDocValues docValues = leafReaders[pos].getSortedDocValues(field);
-		if (docValues == null)
-			return BytesRefUtils.EMPTY;
-		return BytesRef.deepCopyOf(docValues.get(docId - docBases[pos]));
-	}
+    BytesRef getSortedDocValues(final int docId, final String field) throws IOException {
+        final int pos = getLeafReader(docId);
+        if (pos == NOT_FOUND)
+            return BytesRefUtils.EMPTY;
+        final SortedDocValues docValues = leafReaders[pos].getSortedDocValues(field);
+        if (docValues == null)
+            return BytesRefUtils.EMPTY;
+        docValues.advance(docId - docBases[pos]);
+        return BytesRef.deepCopyOf(docValues.binaryValue());
+    }
 
-	BytesRef getBinaryDocValues(final int docId, final String field) throws IOException {
-		final int pos = getLeafReader(docId);
-		if (pos == NOT_FOUND)
-			return BytesRefUtils.EMPTY;
-		final BinaryDocValues docValues = leafReaders[pos].getBinaryDocValues(field);
-		if (docValues == null)
-			return BytesRefUtils.EMPTY;
-		return docValues.get(docId - docBases[pos]);
-	}
+    BytesRef getBinaryDocValues(final int docId, final String field) throws IOException {
+        final int pos = getLeafReader(docId);
+        if (pos == NOT_FOUND)
+            return BytesRefUtils.EMPTY;
+        final BinaryDocValues docValues = leafReaders[pos].getBinaryDocValues(field);
+        if (docValues == null)
+            return BytesRefUtils.EMPTY;
+        docValues.advance(docId - docBases[pos]);
+        return docValues.binaryValue();
+    }
 
-	final static long[] empty = new long[0];
+    final static long[] empty = new long[0];
 
-	long[] getSortedNumericDocValues(final int docId, final String field) throws IOException {
-		final int pos = getLeafReader(docId);
-		if (pos == NOT_FOUND)
-			return empty;
-		final SortedNumericDocValues docValues = leafReaders[pos].getSortedNumericDocValues(field);
-		if (docValues == null)
-			return empty;
-		docValues.setDocument(docId - docBases[pos]);
-		final int count = docValues.count();
-		if (count == 0)
-			return empty;
-		final long[] values = new long[count];
-		for (int i = 0; i < count; i++)
-			values[i] = docValues.valueAt(i);
-		return values;
-	}
+    long[] getSortedNumericDocValues(final int docId, final String field) throws IOException {
+        final int pos = getLeafReader(docId);
+        if (pos == NOT_FOUND)
+            return empty;
+        final SortedNumericDocValues docValues = leafReaders[pos].getSortedNumericDocValues(field);
+        if (docValues == null)
+            return empty;
+        docValues.advance(docId - docBases[pos]);
+        final int count = docValues.docValueCount();
+        if (count == 0)
+            return empty;
+        final long[] values = new long[count];
+        for (int i = 0; i < count; i++)
+            values[i] = docValues.nextValue();
+        return values;
+    }
 
-	List<String> getSortedSetDocValues(final int docId, final String field) throws IOException {
-		final int pos = getLeafReader(docId);
-		if (pos == NOT_FOUND)
-			return Collections.emptyList();
-		final SortedSetDocValues docValues = leafReaders[pos].getSortedSetDocValues(field);
-		if (docValues == null)
-			return Collections.emptyList();
-		docValues.setDocument(docId - docBases[pos]);
-		final List<String> values = new ArrayList<>();
-		long ord;
-		while ((ord = docValues.nextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
-			values.add(docValues.lookupOrd(ord).utf8ToString());
-		return values;
-	}
+    List<String> getSortedSetDocValues(final int docId, final String field) throws IOException {
+        final int pos = getLeafReader(docId);
+        if (pos == NOT_FOUND)
+            return Collections.emptyList();
+        final SortedSetDocValues docValues = leafReaders[pos].getSortedSetDocValues(field);
+        if (docValues == null)
+            return Collections.emptyList();
+        docValues.advance(docId - docBases[pos]);
+        final List<String> values = new ArrayList<>();
+        long ord;
+        while ((ord = docValues.nextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
+            values.add(docValues.lookupOrd(ord).utf8ToString());
+        return values;
+    }
 
 }

@@ -18,7 +18,6 @@ package com.qwazr.search.annotations;
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 
@@ -31,62 +30,44 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 public @interface IndexField {
 
-	String name() default StringUtils.EMPTY;
+    String name() default StringUtils.EMPTY;
 
-	FieldDefinition.Template template() default FieldDefinition.Template.NONE;
+    FieldDefinition.Template template() default FieldDefinition.Template.NONE;
 
-	String analyzer() default StringUtils.EMPTY;
+    String analyzer() default StringUtils.EMPTY;
 
-	String queryAnalyzer() default StringUtils.EMPTY;
+    String queryAnalyzer() default StringUtils.EMPTY;
 
-	Class<? extends Analyzer> analyzerClass() default Analyzer.class;
+    Class<? extends Analyzer> analyzerClass() default Analyzer.class;
 
-	Class<? extends Analyzer> queryAnalyzerClass() default Analyzer.class;
+    Class<? extends Analyzer> queryAnalyzerClass() default Analyzer.class;
 
-	boolean tokenized() default false;
+    boolean tokenized() default false;
 
-	boolean stored() default false;
+    boolean stored() default false;
 
-	boolean storeTermVectors() default false;
+    boolean storeTermVectors() default false;
 
-	boolean storeTermVectorOffsets() default false;
+    boolean storeTermVectorOffsets() default false;
 
-	boolean storeTermVectorPositions() default false;
+    boolean storeTermVectorPositions() default false;
 
-	boolean storeTermVectorPayloads() default false;
+    boolean storeTermVectorPayloads() default false;
 
-	boolean omitNorms() default false;
+    boolean omitNorms() default false;
 
-	@Deprecated FieldTypeNumeric numericType() default FieldTypeNumeric.NONE;
+    IndexOptions indexOptions() default IndexOptions.NONE;
 
-	IndexOptions indexOptions() default IndexOptions.NONE;
+    DocValuesType docValuesType() default DocValuesType.NONE;
 
-	DocValuesType docValuesType() default DocValuesType.NONE;
+    int dimensionCount() default 0;
 
-	int dimensionCount() default 0;
+    int dimensionNumBytes() default 0;
 
-	int dimensionNumBytes() default 0;
+    boolean facetMultivalued() default false;
 
-	boolean facetMultivalued() default false;
+    boolean facetHierarchical() default false;
 
-	boolean facetHierarchical() default false;
-
-	boolean facetRequireDimCount() default false;
-
-	@Deprecated
-	enum FieldTypeNumeric {
-
-		NONE(null),
-		INT(FieldType.LegacyNumericType.INT),
-		FLOAT(FieldType.LegacyNumericType.FLOAT),
-		DOUBLE(FieldType.LegacyNumericType.DOUBLE),
-		LONG(FieldType.LegacyNumericType.LONG);
-
-		final public FieldType.LegacyNumericType type;
-
-		FieldTypeNumeric(FieldType.LegacyNumericType type) {
-			this.type = type;
-		}
-	}
+    boolean facetRequireDimCount() default false;
 
 }

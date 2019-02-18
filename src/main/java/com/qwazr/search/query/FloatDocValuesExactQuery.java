@@ -26,21 +26,21 @@ import java.io.IOException;
 
 public class FloatDocValuesExactQuery extends AbstractExactQuery<Float, FloatDocValuesExactQuery> {
 
-	final static Float ZERO = 0F;
+    final static Float ZERO = 0F;
 
-	@JsonCreator
-	public FloatDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final Float value) {
-		super(FloatDocValuesExactQuery.class, genericField, field, value == null ? ZERO : value);
-	}
+    @JsonCreator
+    public FloatDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("value") final Float value) {
+        super(FloatDocValuesExactQuery.class, genericField, field, value == null ? ZERO : value);
+    }
 
-	public FloatDocValuesExactQuery(final String field, final Float value) {
-		this(null, field, value);
-	}
+    public FloatDocValuesExactQuery(final String field, final Float value) {
+        this(null, field, value);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return NumericDocValuesField.newExactQuery(resolveField(queryContext.getFieldMap()),
-				NumericUtils.floatToSortableInt(value));
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) throws IOException {
+        return NumericDocValuesField.newSlowExactQuery(resolveField(queryContext.getFieldMap()),
+                NumericUtils.floatToSortableInt(value));
+    }
 }

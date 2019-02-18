@@ -74,7 +74,7 @@ import static com.qwazr.search.test.JsonAbstractTest.checkErrorStatusCode;
 public abstract class JavaAbstractTest {
 
     public static final String[] RETURNED_FIELDS =
-            {FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue"};
+            { FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory", "serialValue", "externalValue" };
 
     protected abstract IndexServiceInterface getIndexService() throws URISyntaxException, IOException;
 
@@ -83,13 +83,13 @@ public abstract class JavaAbstractTest {
     private final IndexSettingsDefinition indexSlaveDefinition;
 
     public static synchronized <T> AnnotatedIndexService<T> getService(final IndexServiceInterface indexService,
-                                                                       final Class<T> indexClass, final String indexName, final IndexSettingsDefinition settings)
+            final Class<T> indexClass, final String indexName, final IndexSettingsDefinition settings)
             throws URISyntaxException {
         return new AnnotatedIndexService<>(indexService, indexClass, null, indexName, settings);
     }
 
     public static synchronized <T> AnnotatedIndexService<T> getService(final IndexServiceInterface indexService,
-                                                                       final Class<T> indexClass) throws URISyntaxException {
+            final Class<T> indexClass) throws URISyntaxException {
         return getService(indexService, indexClass, null, null);
     }
 
@@ -347,7 +347,7 @@ public abstract class JavaAbstractTest {
     }
 
     private void checkEqualsReturnedFields(AnnotatedRecord record, AnnotatedRecord recordRef,
-                                           AnnotatedRecord docValueRef) {
+            AnnotatedRecord docValueRef) {
         Assert.assertEquals(recordRef.title, record.title);
         Assert.assertEquals(recordRef.content, record.content);
         Assert.assertEquals(docValueRef.price, record.price);
@@ -362,7 +362,7 @@ public abstract class JavaAbstractTest {
         builder.returnedField(returnedFields);
         ResultDefinition.WithObject<AnnotatedRecord> result = service.searchQuery(builder.build());
         Assert.assertNotNull(result);
-        Assert.assertEquals(new Long(1), result.total_hits);
+        Assert.assertEquals(Long.valueOf(1), result.total_hits);
         AnnotatedRecord returnedRecord = checkResultDocument(result, 0).record;
         checkEqualsReturnedFields(returnedRecord, record2, docValue2);
     }
@@ -403,7 +403,7 @@ public abstract class JavaAbstractTest {
     }
 
     private void testSort(QueryBuilder queryBuilder, int resultCount,
-                          BiFunction<AnnotatedRecord, AnnotatedRecord, Boolean> checker) throws URISyntaxException, IOException {
+            BiFunction<AnnotatedRecord, AnnotatedRecord, Boolean> checker) throws URISyntaxException, IOException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(queryBuilder.build());
         Assert.assertNotNull(result);
@@ -654,7 +654,8 @@ public abstract class JavaAbstractTest {
     @Test
     public void test850backup() throws IOException, URISyntaxException, ExecutionException, InterruptedException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
-        final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> globalStatus = master.getBackups("*", true);
+        final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> globalStatus =
+                master.getBackups("*", true);
         Assert.assertNotNull(globalStatus);
         final SortedMap<String, SortedMap<String, BackupStatus>> backupStatus = master.doBackup(BACKUP_NAME);
         Assert.assertNotNull(globalStatus);
@@ -675,7 +676,7 @@ public abstract class JavaAbstractTest {
         final ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
         Assert.assertNotNull(result);
         Assert.assertNotNull(result.total_hits);
-        Assert.assertEquals(new Long(2), result.total_hits);
+        Assert.assertEquals(Long.valueOf(2), result.total_hits);
     }
 
     static void checkCollector(ResultDefinition result, String name, Object... possibleValues) {

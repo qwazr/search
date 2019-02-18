@@ -44,10 +44,11 @@ public class ClassicMaxCollector extends BaseCollector<Long> {
         }
 
         @Override
-        final public void collect(final int doc) {
+        final public void collect(final int doc) throws IOException {
             if (qtyDocValues == null)
                 return;
-            final long m = qtyDocValues.get(doc);
+            qtyDocValues.advance(doc);
+            final long m = qtyDocValues.longValue();
             if (m > max)
                 max = m;
         }

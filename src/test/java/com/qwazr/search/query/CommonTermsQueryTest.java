@@ -41,7 +41,6 @@ public class CommonTermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTa
                 .highFreqOccur(BooleanQuery.Occur.must)
                 .lowFreqOccur(BooleanQuery.Occur.should)
                 .term("textComplexAnalyzer", "How")
-                .disableCoord(false)
                 .maxTermFrequency(10)
                 .term("textComplexAnalyzer", "is")
                 .build();

@@ -23,40 +23,35 @@ import java.util.Collection;
 
 final class FakeScorer extends Scorer {
 
-	float score;
-	int doc;
+    float score;
+    int doc;
 
-	FakeScorer() {
-		super(null);
-	}
+    FakeScorer() {
+        super(null);
+    }
 
-	@Override
-	public int docID() {
-		return doc;
-	}
+    @Override
+    public int docID() {
+        return doc;
+    }
 
-	@Override
-	public int freq() {
-		return -1;
-	}
+    @Override
+    public float score() {
+        return score;
+    }
 
-	@Override
-	public float score() {
-		return score;
-	}
+    @Override
+    public DocIdSetIterator iterator() {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public DocIdSetIterator iterator() {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public Weight getWeight() {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public Weight getWeight() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Collection<ChildScorer> getChildren() {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public Collection<ChildScorer> getChildren() {
+        throw new UnsupportedOperationException();
+    }
 }

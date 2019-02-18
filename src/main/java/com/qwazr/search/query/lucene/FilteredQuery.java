@@ -33,85 +33,90 @@ import java.util.Objects;
 
 public final class FilteredQuery extends org.apache.lucene.search.Query {
 
-	private final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap;
+    private final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap;
 
-	public FilteredQuery(final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap) {
-		this.docIdSetMap = docIdSetMap;
-	}
+    public FilteredQuery(final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap) {
+        this.docIdSetMap = docIdSetMap;
+    }
 
-	public void merge(final FilteredQuery filteredQuery) {
-		docIdSetMap.putAll(filteredQuery.docIdSetMap);
-	}
+    public void merge(final FilteredQuery filteredQuery) {
+        docIdSetMap.putAll(filteredQuery.docIdSetMap);
+    }
 
-	@Override
-	final public Weight createWeight(final IndexSearcher searcher, final boolean needsScores) {
-		return new ConstantScoreWeight(this) {
-			@Override
-			final public String toString() {
-				return "weight(" + FilteredQuery.this + ")";
-			}
+    @Override
+    final public Weight createWeight(final IndexSearcher searcher, final boolean needsScores, final float boost) {
+        return new ConstantScoreWeight(this, boost) {
+            @Override
+            public boolean isCacheable(LeafReaderContext ctx) {
+                return false;
+            }
 
-			@Override
-			final public Scorer scorer(final LeafReaderContext context) throws IOException {
-				final RoaringDocIdSet docIdSet = docIdSetMap.get(context);
-				final DocIdSetIterator docIdSetIterator = docIdSet == null ? null : docIdSet.iterator();
-				return new ConstantScoreScorer(this, score(),
-						docIdSetIterator == null ? DocIdSetIterator.empty() : docIdSetIterator);
-			}
+            @Override
+            final public String toString() {
+                return "weight(" + FilteredQuery.this + ")";
+            }
 
-			@Override
-			final public BulkScorer bulkScorer(final LeafReaderContext context) throws IOException {
+            @Override
+            final public Scorer scorer(final LeafReaderContext context) throws IOException {
+                final RoaringDocIdSet docIdSet = docIdSetMap.get(context);
+                final DocIdSetIterator docIdSetIterator = docIdSet == null ? null : docIdSet.iterator();
+                return new ConstantScoreScorer(this, score(),
+                        docIdSetIterator == null ? DocIdSetIterator.empty() : docIdSetIterator);
+            }
 
-				final float score = score();
-				final int maxDoc = context.reader().maxDoc();
-				final RoaringDocIdSet docIdSet = docIdSetMap.get(context);
-				final int cost = docIdSet.cardinality();
+            @Override
+            final public BulkScorer bulkScorer(final LeafReaderContext context) throws IOException {
 
-				return new BulkScorer() {
-					@Override
-					final public int score(final LeafCollector collector, final Bits acceptDocs, final int min, int max)
-							throws IOException {
-						max = Math.min(max, maxDoc);
-						final FakeScorer scorer = new FakeScorer();
-						scorer.score = score;
-						collector.setScorer(scorer);
-						int doc;
-						final DocIdSetIterator it = docIdSet.iterator();
-						if (it != null) {
-							while ((doc = it.nextDoc()) != DocIdSetIterator.NO_MORE_DOCS) {
-								if (acceptDocs == null || acceptDocs.get(doc)) {
-									scorer.doc = doc;
-									collector.collect(doc);
-								}
-							}
-						}
-						return max == maxDoc ? DocIdSetIterator.NO_MORE_DOCS : max;
-					}
+                final float score = score();
+                final int maxDoc = context.reader().maxDoc();
+                final RoaringDocIdSet docIdSet = docIdSetMap.get(context);
+                final int cost = docIdSet.cardinality();
 
-					@Override
-					final public long cost() {
-						return cost;
-					}
-				};
-			}
-		};
-	}
+                return new BulkScorer() {
+                    @Override
+                    final public int score(final LeafCollector collector, final Bits acceptDocs, final int min, int max)
+                            throws IOException {
+                        max = Math.min(max, maxDoc);
+                        final FakeScorer scorer = new FakeScorer();
+                        scorer.score = score;
+                        collector.setScorer(scorer);
+                        int doc;
+                        final DocIdSetIterator it = docIdSet.iterator();
+                        if (it != null) {
+                            while ((doc = it.nextDoc()) != DocIdSetIterator.NO_MORE_DOCS) {
+                                if (acceptDocs == null || acceptDocs.get(doc)) {
+                                    scorer.doc = doc;
+                                    collector.collect(doc);
+                                }
+                            }
+                        }
+                        return max == maxDoc ? DocIdSetIterator.NO_MORE_DOCS : max;
+                    }
 
-	@Override
-	public String toString(String field) {
-		return "(f)";
-	}
+                    @Override
+                    final public long cost() {
+                        return cost;
+                    }
+                };
+            }
+        };
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		if (!(o instanceof FilteredQuery))
-			return false;
-		return Objects.equals(((FilteredQuery) o).docIdSetMap, docIdSetMap);
-	}
+    @Override
+    public String toString(String field) {
+        return "(f)";
+    }
 
-	@Override
-	public int hashCode() {
-		return classHash();
-	}
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof FilteredQuery))
+            return false;
+        return Objects.equals(((FilteredQuery) o).docIdSetMap, docIdSetMap);
+    }
+
+    @Override
+    public int hashCode() {
+        return classHash();
+    }
 
 }

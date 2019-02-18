@@ -25,23 +25,24 @@ import java.io.IOException;
 
 public class LongDocValuesRangeQuery extends AbstractRangeQuery<Long, LongDocValuesRangeQuery> {
 
-	final static Long MIN = Long.MIN_VALUE;
-	final static Long MAX = Long.MAX_VALUE;
+    final static Long MIN = Long.MIN_VALUE;
+    final static Long MAX = Long.MAX_VALUE;
 
-	@JsonCreator
-	public LongDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
-			@JsonProperty("upper_value") final Long upperValue) {
-		super(LongDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
-				upperValue == null ? MAX : upperValue);
-	}
+    @JsonCreator
+    public LongDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
+            @JsonProperty("upper_value") final Long upperValue) {
+        super(LongDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
+                upperValue == null ? MAX : upperValue);
+    }
 
-	public LongDocValuesRangeQuery(final String field, final Long lowerValue, final Long upperValue) {
-		this(null, field, lowerValue, upperValue);
-	}
+    public LongDocValuesRangeQuery(final String field, final Long lowerValue, final Long upperValue) {
+        this(null, field, lowerValue, upperValue);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return NumericDocValuesField.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value, upper_value);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) throws IOException {
+        return NumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()), lower_value,
+                upper_value);
+    }
 }

@@ -26,19 +26,19 @@ import java.io.IOException;
 
 public class DoubleDocValuesExactQuery extends AbstractExactQuery<Double, DoubleDocValuesExactQuery> {
 
-	@JsonCreator
-	public DoubleDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final Double value) {
-		super(DoubleDocValuesExactQuery.class, genericField, field, value == null ? DoubleExactQuery.ZERO : value);
-	}
+    @JsonCreator
+    public DoubleDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("value") final Double value) {
+        super(DoubleDocValuesExactQuery.class, genericField, field, value == null ? DoubleExactQuery.ZERO : value);
+    }
 
-	public DoubleDocValuesExactQuery(final String field, final Double value) {
-		this(null, field, value);
-	}
+    public DoubleDocValuesExactQuery(final String field, final Double value) {
+        this(null, field, value);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return NumericDocValuesField.newExactQuery(resolveField(queryContext.getFieldMap()),
-				NumericUtils.doubleToSortableLong(value));
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) throws IOException {
+        return NumericDocValuesField.newSlowExactQuery(resolveField(queryContext.getFieldMap()),
+                NumericUtils.doubleToSortableLong(value));
+    }
 }

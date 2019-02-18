@@ -42,9 +42,6 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
     @JsonProperty("max_term_frequency")
     public final Float maxTermFrequency;
 
-    @JsonProperty("disable_coord")
-    public final Boolean disableCoord;
-
     @JsonProperty("terms")
     public final List<Term> terms;
 
@@ -84,25 +81,23 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
     private CommonTermsQuery(@JsonProperty("high_freq_occur") final BooleanQuery.Occur highFreqOccur,
             @JsonProperty("low_freq_occur") final BooleanQuery.Occur lowFreqOccur,
             @JsonProperty("max_term_frequency") final Float maxTermFrequency,
-            @JsonProperty("disable_coord") final Boolean disableCoord, @JsonProperty("terms") final List<Term> terms) {
+            @JsonProperty("terms") final List<Term> terms) {
         super(CommonTermsQuery.class);
         this.highFreqOccur = highFreqOccur;
         this.lowFreqOccur = lowFreqOccur;
         this.maxTermFrequency = maxTermFrequency;
-        this.disableCoord = disableCoord;
         this.terms = terms;
     }
 
     @Override
     protected boolean isEqual(final CommonTermsQuery other) {
         return Objects.equals(highFreqOccur, other.highFreqOccur) && Objects.equals(lowFreqOccur, other.lowFreqOccur) &&
-                Objects.equals(maxTermFrequency, other.maxTermFrequency) &&
-                Objects.equals(disableCoord, other.disableCoord) && Objects.equals(terms, other.terms);
+                Objects.equals(maxTermFrequency, other.maxTermFrequency) && Objects.equals(terms, other.terms);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(highFreqOccur, lowFreqOccur, maxTermFrequency, disableCoord, terms);
+        return Objects.hash(highFreqOccur, lowFreqOccur, maxTermFrequency, terms);
     }
 
     @Override
@@ -110,7 +105,7 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
             throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
         final org.apache.lucene.queries.CommonTermsQuery commonTermsQuery =
                 new org.apache.lucene.queries.CommonTermsQuery(highFreqOccur.occur, lowFreqOccur.occur,
-                        maxTermFrequency == null ? 1f : maxTermFrequency, disableCoord == null ? false : disableCoord);
+                        maxTermFrequency == null ? 1f : maxTermFrequency);
         if (terms != null)
             terms.forEach(term -> commonTermsQuery.add(term.toTerm()));
         return commonTermsQuery;
@@ -125,12 +120,10 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
         private BooleanQuery.Occur highFreqOccur;
         private BooleanQuery.Occur lowFreqOccur;
         private float maxTermFrequency;
-        private boolean disableCoord;
         private final List<Term> terms;
 
         private Builder() {
             terms = new ArrayList<>();
-            disableCoord = false;
             maxTermFrequency = 1;
         }
 
@@ -149,19 +142,13 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
             return this;
         }
 
-        public Builder disableCoord(boolean disableCoord) {
-            this.disableCoord = disableCoord;
-            return this;
-        }
-
         public Builder term(String field, Object value) {
             terms.add(new Term(field, value));
             return this;
         }
 
         public CommonTermsQuery build() {
-            return new CommonTermsQuery(highFreqOccur, lowFreqOccur, maxTermFrequency, disableCoord,
-                    new ArrayList<>(terms));
+            return new CommonTermsQuery(highFreqOccur, lowFreqOccur, maxTermFrequency, new ArrayList<>(terms));
         }
 
     }

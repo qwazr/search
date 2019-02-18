@@ -25,21 +25,21 @@ import java.io.IOException;
 
 public class LongDocValuesExactQuery extends AbstractExactQuery<Long, LongDocValuesExactQuery> {
 
-	final static Long ZERO = 0L;
+    final static Long ZERO = 0L;
 
-	@JsonCreator
-	public LongDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final Long value) {
-		super(LongDocValuesExactQuery.class, genericField, field, value == null ? ZERO : value);
-		this.value = value;
-	}
+    @JsonCreator
+    public LongDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("value") final Long value) {
+        super(LongDocValuesExactQuery.class, genericField, field, value == null ? ZERO : value);
+        this.value = value;
+    }
 
-	public LongDocValuesExactQuery(final String field, final Long value) {
-		this(null, field, value);
-	}
+    public LongDocValuesExactQuery(final String field, final Long value) {
+        this(null, field, value);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return NumericDocValuesField.newExactQuery(resolveField(queryContext.getFieldMap()), value);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) throws IOException {
+        return NumericDocValuesField.newSlowExactQuery(resolveField(queryContext.getFieldMap()), value);
+    }
 }

@@ -25,111 +25,97 @@ import java.util.Map;
 @JsonInclude(Include.NON_EMPTY)
 public class IndexCheckStatus {
 
-	/**
-	 * True if no problems were found with the index.
-	 */
-	final public boolean clean;
+    /**
+     * True if no problems were found with the index.
+     */
+    final public boolean clean;
 
-	/**
-	 * True if we were unable to locate and load the segments_N file.
-	 */
-	final public boolean missingSegments;
+    /**
+     * True if we were unable to locate and load the segments_N file.
+     */
+    final public boolean missingSegments;
 
-	/**
-	 * True if we were unable to open the segments_N file.
-	 */
-	final public boolean cantOpenSegments;
+    /**
+     * Name of latest segments_N file in the index.
+     */
+    final public String segmentsFileName;
 
-	/**
-	 * True if we were unable to read the version number from segments_N file.
-	 */
-	final public boolean missingSegmentVersion;
+    /**
+     * Number of segments in the index.
+     */
+    final public int numSegments;
 
-	/**
-	 * Name of latest segments_N file in the index.
-	 */
-	final public String segmentsFileName;
+    /**
+     * Empty unless you passed specific segments list to check as optional 3rd argument.
+     *
+     * @see CheckIndex#checkIndex(List)
+     */
+    final public List<String> segmentsChecked;
 
-	/**
-	 * Number of segments in the index.
-	 */
-	final public int numSegments;
+    /**
+     * True if the index was created with a newer version of Lucene than the CheckIndex tool.
+     */
+    final public boolean toolOutOfDate;
 
-	/**
-	 * Empty unless you passed specific segments list to check as optional 3rd argument.
-	 *
-	 * @see CheckIndex#checkIndex(List)
-	 */
-	final public List<String> segmentsChecked;
+    /**
+     * How many documents will be lost to bad segments.
+     */
+    final public int totLoseDocCount;
 
-	/**
-	 * True if the index was created with a newer version of Lucene than the CheckIndex tool.
-	 */
-	final public boolean toolOutOfDate;
+    /**
+     * How many bad segments were found.
+     */
+    final public int numBadSegments;
 
-	/**
-	 * How many documents will be lost to bad segments.
-	 */
-	final public int totLoseDocCount;
+    /**
+     * True if we checked only specific segments
+     * checkIndex(List)}) was called with non-null
+     * argument).
+     */
+    final public boolean partial;
 
-	/**
-	 * How many bad segments were found.
-	 */
-	final public int numBadSegments;
+    /**
+     * The greatest segment name.
+     */
+    final public long maxSegmentName;
 
-	/**
-	 * True if we checked only specific segments
-	 * checkIndex(List)}) was called with non-null
-	 * argument).
-	 */
-	final public boolean partial;
+    /**
+     * Whether the SegmentInfos.counter is greater than any of the segments' names.
+     */
+    final public boolean validCounter;
 
-	/**
-	 * The greatest segment name.
-	 */
-	final public int maxSegmentName;
+    /**
+     * Holds the userData of the last commit in the index
+     */
+    final public Map<String, String> userData;
 
-	/**
-	 * Whether the SegmentInfos.counter is greater than any of the segments' names.
-	 */
-	final public boolean validCounter;
+    public IndexCheckStatus() {
+        clean = false;
+        missingSegments = false;
+        segmentsFileName = null;
+        numSegments = 0;
+        segmentsChecked = null;
+        toolOutOfDate = false;
+        totLoseDocCount = 0;
+        numBadSegments = 0;
+        partial = false;
+        maxSegmentName = 0;
+        validCounter = false;
+        userData = null;
+    }
 
-	/**
-	 * Holds the userData of the last commit in the index
-	 */
-	final public Map<String, String> userData;
-
-	public IndexCheckStatus() {
-		clean = false;
-		missingSegments = false;
-		cantOpenSegments = false;
-		missingSegmentVersion = false;
-		segmentsFileName = null;
-		numSegments = 0;
-		segmentsChecked = null;
-		toolOutOfDate = false;
-		totLoseDocCount = 0;
-		numBadSegments = 0;
-		partial = false;
-		maxSegmentName = 0;
-		validCounter = false;
-		userData = null;
-	}
-
-	public IndexCheckStatus(final CheckIndex.Status status) {
-		clean = status.clean;
-		missingSegments = status.missingSegments;
-		cantOpenSegments = status.cantOpenSegments;
-		missingSegmentVersion = status.missingSegmentVersion;
-		segmentsFileName = status.segmentsFileName;
-		numSegments = status.numSegments;
-		segmentsChecked = status.segmentsChecked;
-		toolOutOfDate = status.toolOutOfDate;
-		totLoseDocCount = status.totLoseDocCount;
-		numBadSegments = status.numBadSegments;
-		partial = status.partial;
-		maxSegmentName = status.maxSegmentName;
-		validCounter = status.validCounter;
-		userData = status.userData;
-	}
+    public IndexCheckStatus(final CheckIndex.Status status) {
+        clean = status.clean;
+        missingSegments = status.missingSegments;
+        segmentsFileName = status.segmentsFileName;
+        numSegments = status.numSegments;
+        segmentsChecked = status.segmentsChecked;
+        toolOutOfDate = status.toolOutOfDate;
+        totLoseDocCount = status.totLoseDocCount;
+        numBadSegments = status.numBadSegments;
+        partial = status.partial;
+        maxSegmentName = status.maxSegmentName;
+        validCounter = status.validCounter;
+        userData = status.userData;
+    }
 }

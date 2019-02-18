@@ -26,20 +26,20 @@ import java.io.IOException;
 
 public class SortedDoubleDocValuesExactQuery extends AbstractExactQuery<Double, SortedDoubleDocValuesExactQuery> {
 
-	@JsonCreator
-	public SortedDoubleDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final Double value) {
-		super(SortedDoubleDocValuesExactQuery.class, genericField, field,
-				value == null ? DoubleExactQuery.ZERO : value);
-	}
+    @JsonCreator
+    public SortedDoubleDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("value") final Double value) {
+        super(SortedDoubleDocValuesExactQuery.class, genericField, field,
+                value == null ? DoubleExactQuery.ZERO : value);
+    }
 
-	public SortedDoubleDocValuesExactQuery(final String field, final Double value) {
-		this(null, field, value);
-	}
+    public SortedDoubleDocValuesExactQuery(final String field, final Double value) {
+        this(null, field, value);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return SortedNumericDocValuesField.newExactQuery(resolveField(queryContext.getFieldMap()),
-				NumericUtils.doubleToSortableLong(value));
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) throws IOException {
+        return SortedNumericDocValuesField.newSlowExactQuery(resolveField(queryContext.getFieldMap()),
+                NumericUtils.doubleToSortableLong(value));
+    }
 }

@@ -38,9 +38,6 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
     @JsonProperty("clauses")
     final public List<BooleanClause> clauses;
 
-    @JsonProperty("disable_coord")
-    final public Boolean disableCoord;
-
     @JsonProperty("minimum_number_should_match")
     final public Integer minimumNumberShouldMatch;
 
@@ -95,54 +92,33 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
     }
 
     @JsonCreator
-    public BooleanQuery(@JsonProperty("disable_coord") final Boolean disableCoord,
-            @JsonProperty("minimum_number_should_match") final Integer minimumNumberShouldMatch,
+    public BooleanQuery(@JsonProperty("minimum_number_should_match") final Integer minimumNumberShouldMatch,
             @JsonProperty("clauses") final List<BooleanClause> clauses) {
         super(BooleanQuery.class);
-        this.disableCoord = disableCoord;
         this.minimumNumberShouldMatch = minimumNumberShouldMatch;
         this.clauses = clauses;
     }
 
     public BooleanQuery(final List<BooleanClause> clauses) {
         super(BooleanQuery.class);
-        this.disableCoord = null;
         this.minimumNumberShouldMatch = null;
         this.clauses = clauses;
     }
 
     public BooleanQuery(final BooleanClause... clauses) {
         super(BooleanQuery.class);
-        this.disableCoord = null;
         this.minimumNumberShouldMatch = null;
         this.clauses = Arrays.asList(clauses);
     }
 
-    public BooleanQuery(final Boolean disableCoord, final List<BooleanClause> clauses) {
+    public BooleanQuery(final Integer minimumNumberShouldMatch, final BooleanClause... clauses) {
         super(BooleanQuery.class);
-        this.disableCoord = disableCoord;
-        this.minimumNumberShouldMatch = null;
-        this.clauses = clauses;
-    }
-
-    public BooleanQuery(final Boolean disableCoord, final BooleanClause... clauses) {
-        super(BooleanQuery.class);
-        this.disableCoord = disableCoord;
-        this.minimumNumberShouldMatch = null;
-        this.clauses = Arrays.asList(clauses);
-    }
-
-    public BooleanQuery(final Boolean disableCoord, final Integer minimumNumberShouldMatch,
-            final BooleanClause... clauses) {
-        super(BooleanQuery.class);
-        this.disableCoord = disableCoord;
         this.minimumNumberShouldMatch = minimumNumberShouldMatch;
         this.clauses = Arrays.asList(clauses);
     }
 
     private BooleanQuery(final Builder builder) {
         super(BooleanQuery.class);
-        this.disableCoord = builder.disableCoord;
         this.minimumNumberShouldMatch = builder.minimumNumberShouldMatch;
         this.clauses = builder.clauses == null ? Collections.emptyList() : new ArrayList<>(builder.clauses);
     }
@@ -152,8 +128,6 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
             throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
         final org.apache.lucene.search.BooleanQuery.Builder builder =
                 new org.apache.lucene.search.BooleanQuery.Builder();
-        if (disableCoord != null)
-            builder.setDisableCoord(disableCoord);
         if (minimumNumberShouldMatch != null)
             builder.setMinimumNumberShouldMatch(minimumNumberShouldMatch);
         if (clauses != null)
@@ -164,36 +138,30 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 
     @Override
     protected boolean isEqual(final BooleanQuery query) {
-        return CollectionsUtils.equals(clauses, query.clauses) && Objects.equals(disableCoord, query.disableCoord) &&
+        return CollectionsUtils.equals(clauses, query.clauses) &&
                 Objects.equals(minimumNumberShouldMatch, query.minimumNumberShouldMatch);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(clauses, disableCoord, minimumNumberShouldMatch);
+        return Objects.hash(clauses, minimumNumberShouldMatch);
     }
 
     public static Builder of() {
         return new Builder();
     }
 
-    public static Builder of(final Boolean disableCoord, final Integer minimumNumberShouldMatch) {
-        return of().setDisableCoord(disableCoord).setMinimumNumberShouldMatch(minimumNumberShouldMatch);
+    public static Builder of(final Integer minimumNumberShouldMatch) {
+        return of().setMinimumNumberShouldMatch(minimumNumberShouldMatch);
     }
 
     public final static class Builder {
 
         private final List<BooleanClause> clauses;
-        private Boolean disableCoord;
         private Integer minimumNumberShouldMatch;
 
         public Builder() {
             clauses = new ArrayList<>();
-        }
-
-        public final Builder setDisableCoord(final Boolean disableCoord) {
-            this.disableCoord = disableCoord;
-            return this;
         }
 
         public final Builder setMinimumNumberShouldMatch(final Integer minimumNumberShouldMatch) {

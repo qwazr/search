@@ -47,7 +47,7 @@ public class PriorityQueue1Test extends PriorityQueueAbstractTest {
     public class ScoreDocQueue extends PriorityQueue<ScoreDoc> {
 
         public ScoreDocQueue(int maxSize) {
-            super(maxSize, true);
+            super(maxSize, () -> null);
         }
 
         @Override

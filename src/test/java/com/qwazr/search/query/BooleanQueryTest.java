@@ -25,13 +25,12 @@ import java.util.function.Consumer;
 
 public class BooleanQueryTest {
 
-    private BooleanQuery check(Integer mmsm, Boolean coord, int size, BooleanQuery.Builder builder) {
-        builder.setDisableCoord(coord).setMinimumNumberShouldMatch(mmsm);
+    private BooleanQuery check(Integer mmsm, int size, BooleanQuery.Builder builder) {
+        builder.setMinimumNumberShouldMatch(mmsm);
         Assert.assertEquals(size, builder.getSize());
         final BooleanQuery booleanQuery = builder.build();
         Assert.assertNotNull(booleanQuery);
         Assert.assertEquals(mmsm, booleanQuery.minimumNumberShouldMatch);
-        Assert.assertEquals(coord, booleanQuery.disableCoord);
         if (size == 0)
             Assert.assertTrue(booleanQuery.clauses == null || booleanQuery.clauses.isEmpty());
         else
@@ -42,15 +41,14 @@ public class BooleanQueryTest {
     @Test
     public void empty() {
         final BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        check(null, null, 0, builder);
+        check(null, 0, builder);
     }
 
     @Test
     public void noClause() {
         final Integer mmsm = RandomUtils.nextInt(0, 100);
-        final Boolean coord = RandomUtils.nextBoolean();
         final BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        check(mmsm, coord, 0, builder);
+        check(mmsm, 0, builder);
     }
 
     BooleanQuery checkClauses(Consumer<BooleanQuery.Builder> consumer) {
@@ -58,7 +56,7 @@ public class BooleanQueryTest {
         final int count = RandomUtils.nextInt(1, 5);
         for (int i = 0; i < count; i++)
             consumer.accept(builder);
-        return check(null, null, count, builder);
+        return check(null, count, builder);
     }
 
     @Test

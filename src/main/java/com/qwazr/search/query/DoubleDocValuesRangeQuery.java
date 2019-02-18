@@ -26,24 +26,24 @@ import java.io.IOException;
 
 public class DoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, DoubleDocValuesRangeQuery> {
 
-	final static Double MIN = Double.MIN_VALUE;
-	final static Double MAX = Double.MAX_VALUE;
+    final static Double MIN = Double.MIN_VALUE;
+    final static Double MAX = Double.MAX_VALUE;
 
-	@JsonCreator
-	public DoubleDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
-			@JsonProperty("upper_value") final Double upperValue) {
-		super(DoubleDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
-				upperValue == null ? MAX : upperValue);
-	}
+    @JsonCreator
+    public DoubleDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
+            @JsonProperty("upper_value") final Double upperValue) {
+        super(DoubleDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
+                upperValue == null ? MAX : upperValue);
+    }
 
-	public DoubleDocValuesRangeQuery(final String field, final Double lowerValue, final Double upperValue) {
-		this(null, field, lowerValue, upperValue);
-	}
+    public DoubleDocValuesRangeQuery(final String field, final Double lowerValue, final Double upperValue) {
+        this(null, field, lowerValue, upperValue);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return NumericDocValuesField.newRangeQuery(resolveField(queryContext.getFieldMap()),
-				NumericUtils.doubleToSortableLong(lower_value), NumericUtils.doubleToSortableLong(upper_value));
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) throws IOException {
+        return NumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()),
+                NumericUtils.doubleToSortableLong(lower_value), NumericUtils.doubleToSortableLong(upper_value));
+    }
 }

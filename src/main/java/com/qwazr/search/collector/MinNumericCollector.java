@@ -22,7 +22,8 @@ import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
 
-public abstract class MinNumericCollector<R extends Comparable<R>> extends DocValuesCollector.Numeric<R> implements NumericCollector<R> {
+public abstract class MinNumericCollector<R extends Comparable<R>> extends DocValuesCollector.Numeric<R>
+        implements NumericCollector<R> {
 
     public MinNumericCollector(final String collectorName, final String fieldName) {
         super(collectorName, fieldName);
@@ -65,9 +66,10 @@ public abstract class MinNumericCollector<R extends Comparable<R>> extends DocVa
             }
 
             @Override
-            final public void collect(final int doc) {
+            final public void collect(final int doc) throws IOException {
                 count++;
-                final long value = docValues.get(doc);
+                docValues.advance(doc);
+                final long value = docValues.longValue();
                 if (value < result)
                     result = value;
             }
@@ -101,9 +103,10 @@ public abstract class MinNumericCollector<R extends Comparable<R>> extends DocVa
             }
 
             @Override
-            final public void collect(final int doc) {
+            final public void collect(final int doc) throws IOException {
                 count++;
-                final int value = (int) docValues.get(doc);
+                docValues.advance(doc);
+                final int value = (int) docValues.longValue();
                 if (value < result)
                     result = value;
             }
@@ -137,9 +140,10 @@ public abstract class MinNumericCollector<R extends Comparable<R>> extends DocVa
             }
 
             @Override
-            final public void collect(final int doc) {
+            final public void collect(final int doc) throws IOException {
                 count++;
-                final double value = NumericUtils.sortableLongToDouble(docValues.get(doc));
+                docValues.advance(doc);
+                final double value = NumericUtils.sortableLongToDouble(docValues.longValue());
                 if (value < result)
                     result = value;
             }
@@ -173,9 +177,10 @@ public abstract class MinNumericCollector<R extends Comparable<R>> extends DocVa
             }
 
             @Override
-            final public void collect(final int doc) {
+            final public void collect(final int doc) throws IOException {
                 count++;
-                final float value = NumericUtils.sortableIntToFloat((int) docValues.get(doc));
+                docValues.advance(doc);
+                final float value = NumericUtils.sortableIntToFloat((int) docValues.longValue());
                 if (value < result)
                     result = value;
             }

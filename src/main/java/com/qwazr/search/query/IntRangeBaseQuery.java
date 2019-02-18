@@ -25,21 +25,22 @@ import java.io.IOException;
 
 public class IntRangeBaseQuery extends AbstractRangeQuery<Integer, IntRangeBaseQuery> {
 
-	@JsonCreator
-	public IntRangeBaseQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
-			@JsonProperty("upper_value") final Integer upperValue) {
-		super(IntRangeBaseQuery.class, genericField, field,
-				lowerValue == null ? IntDocValuesRangeQuery.MIN : lowerValue,
-				upperValue == null ? IntDocValuesRangeQuery.MAX : upperValue);
-	}
+    @JsonCreator
+    public IntRangeBaseQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
+            @JsonProperty("upper_value") final Integer upperValue) {
+        super(IntRangeBaseQuery.class, genericField, field,
+                lowerValue == null ? IntDocValuesRangeQuery.MIN : lowerValue,
+                upperValue == null ? IntDocValuesRangeQuery.MAX : upperValue);
+    }
 
-	public IntRangeBaseQuery(final String field, final Integer lowerValue, final Integer upperValue) {
-		this(null, field, lowerValue, upperValue);
-	}
+    public IntRangeBaseQuery(final String field, final Integer lowerValue, final Integer upperValue) {
+        this(null, field, lowerValue, upperValue);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return NumericDocValuesField.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value, upper_value);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) throws IOException {
+        return NumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()), lower_value,
+                upper_value);
+    }
 }

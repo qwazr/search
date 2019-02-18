@@ -26,18 +26,18 @@ import java.io.IOException;
 
 public class SortedDocValuesExactQuery extends AbstractExactQuery<String, SortedDocValuesExactQuery> {
 
-	@JsonCreator
-	public SortedDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final String value) {
-		super(SortedDocValuesExactQuery.class, genericField, field, value);
-	}
+    @JsonCreator
+    public SortedDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("value") final String value) {
+        super(SortedDocValuesExactQuery.class, genericField, field, value);
+    }
 
-	public SortedDocValuesExactQuery(final String field, final String value) {
-		this(null, field, value);
-	}
+    public SortedDocValuesExactQuery(final String field, final String value) {
+        this(null, field, value);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return SortedDocValuesField.newExactQuery(resolveField(queryContext.getFieldMap()), new BytesRef(value));
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) throws IOException {
+        return SortedDocValuesField.newSlowExactQuery(resolveField(queryContext.getFieldMap()), new BytesRef(value));
+    }
 }

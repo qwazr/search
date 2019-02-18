@@ -126,15 +126,21 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
         }
 
         void reduce(final GroupQueue groupQueue) {
-            docIds.keySet()
-                    .forEach((IntConsumer) ord -> groupQueue.offer(sdv.lookupOrd(ord), scores.get(ord), count.get(ord),
+            docIds.keySet().forEach((IntConsumer) ord -> {
+                try {
+                    groupQueue.offer(sdv.lookupOrd(ord), scores.get(ord), count.get(ord),
                             (bytesRef, score, collapsedCount) -> new GroupLeader(context, bytesRef, docIds.get(ord),
-                                    score, collapsedCount)));
+                                    score, collapsedCount));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
 
         @Override
         final public void collect(final int doc) throws IOException {
-            final int ord = sdv.getOrd(doc);
+            sdv.advance(doc);
+            final int ord = sdv.ordValue();
             if (ord == -1)
                 return;
             final float score = scorer.score();

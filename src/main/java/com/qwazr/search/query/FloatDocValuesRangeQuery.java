@@ -26,24 +26,24 @@ import java.io.IOException;
 
 public class FloatDocValuesRangeQuery extends AbstractRangeQuery<Float, FloatDocValuesRangeQuery> {
 
-	final static Float MIN = Float.MIN_VALUE;
-	final static Float MAX = Float.MAX_VALUE;
+    final static Float MIN = Float.MIN_VALUE;
+    final static Float MAX = Float.MAX_VALUE;
 
-	@JsonCreator
-	public FloatDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Float lowerValue,
-			@JsonProperty("upper_value") final Float upperValue) {
-		super(FloatDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
-				upperValue == null ? MAX : upperValue);
-	}
+    @JsonCreator
+    public FloatDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Float lowerValue,
+            @JsonProperty("upper_value") final Float upperValue) {
+        super(FloatDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
+                upperValue == null ? MAX : upperValue);
+    }
 
-	public FloatDocValuesRangeQuery(final String field, final Float lowerValue, final Float upperValue) {
-		this(null, field, lowerValue, upperValue);
-	}
+    public FloatDocValuesRangeQuery(final String field, final Float lowerValue, final Float upperValue) {
+        this(null, field, lowerValue, upperValue);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return NumericDocValuesField.newRangeQuery(resolveField(queryContext.getFieldMap()),
-				NumericUtils.floatToSortableInt(lower_value), NumericUtils.floatToSortableInt(upper_value));
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) throws IOException {
+        return NumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()),
+                NumericUtils.floatToSortableInt(lower_value), NumericUtils.floatToSortableInt(upper_value));
+    }
 }

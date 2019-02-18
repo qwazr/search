@@ -25,22 +25,22 @@ import java.io.IOException;
 
 public class SortedLongDocValuesRangeQuery extends AbstractRangeQuery<Long, SortedLongDocValuesRangeQuery> {
 
-	@JsonCreator
-	public SortedLongDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
-			@JsonProperty("upper_value") final Long upperValue) {
-		super(SortedLongDocValuesRangeQuery.class, genericField, field,
-				lowerValue == null ? LongDocValuesRangeQuery.MIN : lowerValue,
-				upperValue == null ? LongDocValuesRangeQuery.MAX : upperValue);
-	}
+    @JsonCreator
+    public SortedLongDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
+            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
+            @JsonProperty("upper_value") final Long upperValue) {
+        super(SortedLongDocValuesRangeQuery.class, genericField, field,
+                lowerValue == null ? LongDocValuesRangeQuery.MIN : lowerValue,
+                upperValue == null ? LongDocValuesRangeQuery.MAX : upperValue);
+    }
 
-	public SortedLongDocValuesRangeQuery(final String field, final Long lowerValue, final Long upperValue) {
-		this(null, field, lowerValue, upperValue);
-	}
+    public SortedLongDocValuesRangeQuery(final String field, final Long lowerValue, final Long upperValue) {
+        this(null, field, lowerValue, upperValue);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return SortedNumericDocValuesField.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value,
-				upper_value);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) throws IOException {
+        return SortedNumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()), lower_value,
+                upper_value);
+    }
 }

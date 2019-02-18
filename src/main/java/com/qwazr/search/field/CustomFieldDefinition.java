@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 
@@ -51,9 +50,6 @@ public class CustomFieldDefinition extends FieldDefinition {
     public final Boolean facetHierarchical;
     @JsonProperty("facet_require_dim_count")
     public final Boolean facetRequireDimCount;
-    @Deprecated
-    @JsonProperty("numeric_type")
-    public final FieldType.LegacyNumericType numericType;
     @JsonProperty("index_options")
     public final IndexOptions indexOptions;
     @JsonProperty("docvalues_type")
@@ -65,22 +61,21 @@ public class CustomFieldDefinition extends FieldDefinition {
 
     @JsonCreator
     public CustomFieldDefinition(@JsonProperty("template") final Template template,
-                                 @JsonProperty("analyzer") final String analyzer, @JsonProperty("query_analyzer") final String queryAnalyzer,
-                                 @JsonProperty("tokenized") final Boolean tokenized, @JsonProperty("stored") final Boolean stored,
-                                 @JsonProperty("store_termvectors") final Boolean storeTermVectors,
-                                 @JsonProperty("store_termvector_offsets") final Boolean storeTermVectorOffsets,
-                                 @JsonProperty("store_termvector_positions") final Boolean storeTermVectorPositions,
-                                 @JsonProperty("store_termvector_payloads") final Boolean storeTermVectorPayloads,
-                                 @JsonProperty("omit_norms") final Boolean omitNorms,
-                                 @JsonProperty("facet_multivalued") final Boolean facetMultivalued,
-                                 @JsonProperty("facet_hierarchical") final Boolean facetHierarchical,
-                                 @JsonProperty("facet_require_dim_count") final Boolean facetRequireDimCount,
-                                 @JsonProperty("numeric_type") final FieldType.LegacyNumericType numericType,
-                                 @JsonProperty("index_options") final IndexOptions indexOptions,
-                                 @JsonProperty("docvalues_type") final DocValuesType docValuesType,
-                                 @JsonProperty("dimension_count") final Integer dimensionCount,
-                                 @JsonProperty("dimension_num_bytes") final Integer dimensionNumBytes,
-                                 @JsonProperty("copy_from") String[] copyFrom) {
+            @JsonProperty("analyzer") final String analyzer, @JsonProperty("query_analyzer") final String queryAnalyzer,
+            @JsonProperty("tokenized") final Boolean tokenized, @JsonProperty("stored") final Boolean stored,
+            @JsonProperty("store_termvectors") final Boolean storeTermVectors,
+            @JsonProperty("store_termvector_offsets") final Boolean storeTermVectorOffsets,
+            @JsonProperty("store_termvector_positions") final Boolean storeTermVectorPositions,
+            @JsonProperty("store_termvector_payloads") final Boolean storeTermVectorPayloads,
+            @JsonProperty("omit_norms") final Boolean omitNorms,
+            @JsonProperty("facet_multivalued") final Boolean facetMultivalued,
+            @JsonProperty("facet_hierarchical") final Boolean facetHierarchical,
+            @JsonProperty("facet_require_dim_count") final Boolean facetRequireDimCount,
+            @JsonProperty("index_options") final IndexOptions indexOptions,
+            @JsonProperty("docvalues_type") final DocValuesType docValuesType,
+            @JsonProperty("dimension_count") final Integer dimensionCount,
+            @JsonProperty("dimension_num_bytes") final Integer dimensionNumBytes,
+            @JsonProperty("copy_from") String[] copyFrom) {
         super(null, analyzer, queryAnalyzer, copyFrom);
         this.template = template;
         this.tokenized = tokenized;
@@ -93,7 +88,6 @@ public class CustomFieldDefinition extends FieldDefinition {
         this.facetMultivalued = facetMultivalued;
         this.facetHierarchical = facetHierarchical;
         this.facetRequireDimCount = facetRequireDimCount;
-        this.numericType = numericType;
         this.indexOptions = indexOptions;
         this.docValuesType = docValuesType;
         this.dimensionCount = dimensionCount;
@@ -113,7 +107,6 @@ public class CustomFieldDefinition extends FieldDefinition {
         this.facetMultivalued = builder.facetMultivalued;
         this.facetHierarchical = builder.facetHierarchical;
         this.facetRequireDimCount = builder.facetRequireDimCount;
-        this.numericType = builder.numericType;
         this.indexOptions = builder.indexOptions;
         this.docValuesType = builder.docValuesType;
         this.dimensionCount = builder.dimensionCount;
@@ -131,7 +124,6 @@ public class CustomFieldDefinition extends FieldDefinition {
         storeTermVectorPositions = indexField.storeTermVectorPositions();
         storeTermVectorPayloads = indexField.storeTermVectorPayloads();
         omitNorms = indexField.omitNorms();
-        numericType = indexField.numericType().type;
         indexOptions = indexField.indexOptions();
         docValuesType = indexField.docValuesType();
         dimensionCount = indexField.dimensionCount();
@@ -160,9 +152,8 @@ public class CustomFieldDefinition extends FieldDefinition {
                 Objects.equals(storeTermVectorOffsets, f.storeTermVectorOffsets) &&
                 Objects.equals(storeTermVectorPositions, f.storeTermVectorPositions) &&
                 Objects.equals(storeTermVectorPayloads, f.storeTermVectorPayloads) &&
-                Objects.equals(omitNorms, f.omitNorms) && Objects.equals(numericType, f.numericType) &&
-                Objects.equals(indexOptions, f.indexOptions) && Objects.equals(docValuesType, f.docValuesType) &&
-                Objects.equals(dimensionCount, f.dimensionCount) &&
+                Objects.equals(omitNorms, f.omitNorms) && Objects.equals(indexOptions, f.indexOptions) &&
+                Objects.equals(docValuesType, f.docValuesType) && Objects.equals(dimensionCount, f.dimensionCount) &&
                 Objects.equals(dimensionNumBytes, f.dimensionNumBytes) &&
                 Objects.equals(facetMultivalued, f.facetMultivalued) &&
                 Objects.equals(facetHierarchical, f.facetHierarchical) &&
@@ -194,7 +185,6 @@ public class CustomFieldDefinition extends FieldDefinition {
         private Boolean storeTermVectorPositions;
         private Boolean storeTermVectorPayloads;
         private Boolean omitNorms;
-        private FieldType.LegacyNumericType numericType;
         private IndexOptions indexOptions;
         private DocValuesType docValuesType;
         private Integer dimensionCount;
@@ -240,11 +230,6 @@ public class CustomFieldDefinition extends FieldDefinition {
 
         public CustomBuilder omitNorms(Boolean omitNorms) {
             this.omitNorms = omitNorms;
-            return this;
-        }
-
-        public CustomBuilder numericType(FieldType.LegacyNumericType numericType) {
-            this.numericType = numericType;
             return this;
         }
 
