@@ -21,7 +21,7 @@ import com.qwazr.server.RemoteService;
 
 public class IndexServiceBuilder extends ServiceBuilderAbstract<IndexServiceInterface> {
 
-	public IndexServiceBuilder(final ClusterManager clusterManager, final IndexManager indexManager) {
+    public IndexServiceBuilder(final ClusterManager clusterManager, final IndexManager indexManager) {
 		super(clusterManager, IndexServiceInterface.SERVICE_NAME,
 				indexManager == null ? null : indexManager.getService());
 	}

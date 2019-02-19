@@ -22,6 +22,7 @@ import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.LoggerUtils;
+import com.qwazr.utils.concurrent.ExecutorUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 
@@ -31,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public abstract class AbstractIndexTest {
@@ -95,13 +97,13 @@ public abstract class AbstractIndexTest {
     }
 
     @AfterClass
-    public static void releaseIndexManager() throws IOException {
+    public static void releaseIndexManager() throws IOException, InterruptedException {
         if (indexManager != null) {
             indexManager.close();
             indexManager = null;
         }
         if (executor != null) {
-            executor.shutdown();
+            ExecutorUtils.close(executor, 5, TimeUnit.MINUTES);
             executor = null;
         }
         if (rootDirectory != null) {

@@ -138,6 +138,9 @@ public class IndexStatus {
     @JsonProperty("active_query_analyzers")
     final public Integer activeQueryAnalyzers;
 
+    @JsonProperty("index_sort_fields")
+    final public Set<String> indexSortFields;
+
     @JsonCreator
     IndexStatus(@JsonProperty("num_docs") Long numDocs, @JsonProperty("num_deleted_docs") Long numDeletedDocs,
             @JsonProperty("has_pending_merges") Boolean hasPendingMerges,
@@ -160,7 +163,8 @@ public class IndexStatus {
             @JsonProperty("directory_cached_files") String[] directoryCachedFiles,
             @JsonProperty("directory_cached_ram_used") String directoryCachedRamUsed,
             @JsonProperty("active_index_analyzers") Integer activeIndexAnalyzers,
-            @JsonProperty("active_query_analyzers") Integer activeQueryAnalyzers) {
+            @JsonProperty("active_query_analyzers") Integer activeQueryAnalyzers,
+            @JsonProperty("index_sort_fields") Set<String> indexSortFields) {
         this.numDocs = numDocs;
         this.numDeletedDocs = numDeletedDocs;
         this.mergePolicy = mergePolicy;
@@ -187,6 +191,7 @@ public class IndexStatus {
         this.directoryCachedRamUsed = directoryCachedRamUsed;
         this.activeIndexAnalyzers = activeIndexAnalyzers;
         this.activeQueryAnalyzers = activeQueryAnalyzers;
+        this.indexSortFields = indexSortFields;
     }
 
     public IndexStatus(final UUID indexUuid, final UUID masterUuid, final Directory directory,
@@ -206,6 +211,7 @@ public class IndexStatus {
             this.hasUncommittedChanges = null;
             this.hasDeletions = null;
             this.ramBufferSizeMb = null;
+            this.indexSortFields = null;
         } else {
             final LiveIndexWriterConfig config = indexWriter.getConfig();
             final MergePolicy mergePolicy = config.getMergePolicy();
@@ -214,6 +220,7 @@ public class IndexStatus {
             this.hasUncommittedChanges = indexWriter.hasUncommittedChanges();
             this.hasDeletions = indexWriter.hasDeletions();
             this.ramBufferSizeMb = config.getRAMBufferSizeMB();
+            this.indexSortFields = config.getIndexSortFields();
         }
 
         final DirectoryReader directoryReader =
@@ -331,6 +338,8 @@ public class IndexStatus {
         if (!Objects.equals(activeIndexAnalyzers, s.activeIndexAnalyzers))
             return false;
         if (!Objects.equals(activeQueryAnalyzers, s.activeQueryAnalyzers))
+            return false;
+        if (!Objects.equals(indexSortFields, s.indexSortFields))
             return false;
         return true;
     }

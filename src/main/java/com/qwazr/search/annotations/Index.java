@@ -40,7 +40,7 @@ public @interface Index {
     Class<? extends Similarity> similarityClass() default BM25Similarity.class;
 
     String sort() default StringUtils.EMPTY;
-
+    
     String replicationMaster() default StringUtils.EMPTY;
 
     IndexSettingsDefinition.Type type() default IndexSettingsDefinition.Type.FSDirectory;
