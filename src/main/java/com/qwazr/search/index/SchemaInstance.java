@@ -24,6 +24,7 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteLock;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
+import org.apache.lucene.search.Sort;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
@@ -49,9 +50,10 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
     private final static String SETTINGS_FILE = "settings.json";
 
-    private final ConcurrentHashMap<String, IndexInstanceManager> indexMap;
-    private final ConcurrentHashMap<String, SimilarityFactory> similarityFactoryMap;
-    private final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap;
+    private final Map<String, IndexInstanceManager> indexMap;
+    private final Map<String, SimilarityFactory> similarityFactoryMap;
+    private final Map<String, AnalyzerFactory> analyzerFactoryMap;
+    private final Map<String, Sort> sortMap;
 
     private final ReadWriteSemaphores readWriteSemaphores;
     private final ConstructorParametersImpl instanceFactory;
@@ -66,14 +68,16 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
     private final ReadWriteLock backupLock = ReadWriteLock.stamped();
 
     SchemaInstance(final ConstructorParametersImpl instanceFactory,
-            final ConcurrentHashMap<String, SimilarityFactory> similarityFactoryMap,
-            final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap, final IndexServiceInterface service,
-            final File schemaDirectory, final ExecutorService executorService) throws IOException {
+            final Map<String, SimilarityFactory> similarityFactoryMap,
+            final Map<String, AnalyzerFactory> analyzerFactoryMap, final Map<String, Sort> sortMap,
+            final IndexServiceInterface service, final File schemaDirectory, final ExecutorService executorService)
+            throws IOException {
 
         this.readWriteSemaphores = new ReadWriteSemaphores(null, null);
         this.instanceFactory = instanceFactory;
         this.similarityFactoryMap = similarityFactoryMap;
         this.analyzerFactoryMap = analyzerFactoryMap;
+        this.sortMap = sortMap;
         this.executorService = executorService;
         this.service = service;
         this.schemaName = schemaDirectory.getName();
@@ -93,20 +97,21 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
             stream.filter(path -> Files.isDirectory(path))
                     .forEach(indexPath -> indexMap.put(indexPath.toFile().getName(),
                             new IndexInstanceManager(this, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
-                                    readWriteSemaphores, executorService, service, indexPath)));
+                                    sortMap, readWriteSemaphores, executorService, service, indexPath)));
         }
     }
 
     @Override
     public void close() {
-        indexMap.forEachValue(1, IOUtils::closeQuietly);
+        indexMap.values().forEach(IOUtils::closeQuietly);
     }
 
     IndexInstance createUpdate(final String indexName, final IndexSettingsDefinition settings) throws Exception {
         Objects.requireNonNull(settings, "The settings cannot be null");
         return indexMap.computeIfAbsent(indexName,
                 name -> new IndexInstanceManager(this, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
-                        readWriteSemaphores, executorService, service, schemaDirectory.resolve(name))).createUpdate(settings);
+                        sortMap, readWriteSemaphores, executorService, service, schemaDirectory.resolve(name)))
+                .createUpdate(settings);
     }
 
     private IndexInstanceManager checkIndexExists(final String indexName,
@@ -195,7 +200,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
     private void indexIterator(final String indexName, final BiConsumer<String, IndexInstance> consumer) {
         if ("*".equals(indexName)) {
-            indexMap.forEach(1, (name, indexInstanceManager) -> {
+            indexMap.forEach((name, indexInstanceManager) -> {
                 try {
                     consumer.accept(name, indexInstanceManager.open());
                 } catch (Exception e) {

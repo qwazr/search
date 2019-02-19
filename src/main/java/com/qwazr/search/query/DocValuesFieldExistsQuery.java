@@ -18,24 +18,22 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.lucene.search.Query;
 
-public class FieldValueQuery extends AbstractFieldQuery<FieldValueQuery> {
+public class DocValuesFieldExistsQuery extends AbstractFieldQuery<DocValuesFieldExistsQuery> {
 
     @JsonCreator
-    public FieldValueQuery(@JsonProperty("generic_field") final String genericField,
+    public DocValuesFieldExistsQuery(@JsonProperty("generic_field") final String genericField,
             @JsonProperty("field") final String field) {
-        super(FieldValueQuery.class, genericField, field);
+        super(DocValuesFieldExistsQuery.class, genericField, field);
     }
 
-    public FieldValueQuery(final String field) {
+    public DocValuesFieldExistsQuery(final String field) {
         this(null, field);
     }
 
     @Override
     final public Query getQuery(final QueryContext queryContext) {
-        throw new NotImplementedException("org.apache.lucene.search.FieldValueQuery");
-        //return new org.apache.lucene.search.FieldValueQuery(resolveField(queryContext.getFieldMap()));
+        return new org.apache.lucene.search.DocValuesFieldExistsQuery(resolveField(queryContext.getFieldMap()));
     }
 }

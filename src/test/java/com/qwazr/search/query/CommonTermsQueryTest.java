@@ -50,7 +50,7 @@ public class CommonTermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTa
     public void test() {
         ResultDefinition result = indexService.searchQuery(QueryDefinition.of(getCommonTermsQuery()).build());
         Assert.assertNotNull(result);
-        Assert.assertEquals(Long.valueOf(1), result.total_hits);
+        Assert.assertEquals(1, result.totalHits);
     }
 
     @Test

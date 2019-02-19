@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Emmanuel Keller / QWAZR
+ * Copyright 2016-2019 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,9 @@ public @interface IndexField {
 
     DocValuesType docValuesType() default DocValuesType.NONE;
 
-    int dimensionCount() default 0;
+    int indexDimensionCount() default 0;
+
+    int dataDimensionCount() default 0;
 
     int dimensionNumBytes() default 0;
 

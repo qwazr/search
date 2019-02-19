@@ -26,6 +26,7 @@ import com.qwazr.utils.concurrent.BiConsumerEx;
 import com.qwazr.utils.reflection.ConstructorParameters;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.lucene.search.Sort;
 
 import javax.ws.rs.core.Response.Status;
 import java.io.Closeable;
@@ -63,12 +64,13 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     private final IndexServiceInterface service;
 
     private final ConcurrentHashMap<String, SimilarityFactory> similarityFactoryMap;
+    private final ConcurrentHashMap<String, Sort> sortMap;
     private final ConcurrentHashMap<String, AnalyzerFactory> analyzerFactoryMap;
 
     private final ExecutorService executorService;
 
     public IndexManager(final Path indexesDirectory, final ExecutorService executorService,
-                        final ConstructorParameters constructorParameters) {
+            final ConstructorParameters constructorParameters) {
         super(constructorParameters == null ? new ConcurrentHashMap<>() : constructorParameters.getMap());
         this.rootDirectory = indexesDirectory.toFile();
         this.executorService = executorService;
@@ -77,6 +79,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         schemaMap = new ConcurrentHashMap<>();
         shemaLock = new ReentrantLock(true);
         similarityFactoryMap = new ConcurrentHashMap<>();
+        sortMap = new ConcurrentHashMap<>();
         analyzerFactoryMap = new ConcurrentHashMap<>();
 
         final File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
@@ -85,7 +88,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         for (File schemaDirectory : directories) {
             try {
                 schemaMap.put(schemaDirectory.getName(),
-                        new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, service,
+                        new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, sortMap, service,
                                 schemaDirectory, executorService));
             } catch (ServerException | IOException e) {
                 LOGGER.log(Level.SEVERE, e, e::getMessage);
@@ -116,6 +119,11 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         return this;
     }
 
+    public IndexManager registerSort(final String name, final Sort sort) {
+        sortMap.put(name, sort);
+        return this;
+    }
+
     final public IndexServiceInterface getService() {
         return service;
     }
@@ -139,7 +147,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         shemaLock.lock();
         try {
             final SchemaInstance schemaInstance = schemaMap.computeIfAbsent(schemaName, sc -> ExceptionUtils.bypass(
-                    () -> new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, service,
+                    () -> new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, sortMap, service,
                             new File(rootDirectory, schemaName), executorService)));
             if (settings != null)
                 schemaInstance.setSettings(settings);
@@ -185,7 +193,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     }
 
     private void schemaIterator(final String schemaName,
-                                final BiConsumerEx<String, SchemaInstance, IOException> consumer) throws IOException {
+            final BiConsumerEx<String, SchemaInstance, IOException> consumer) throws IOException {
         shemaLock.lock();
         try {
             if ("*".equals(schemaName)) {
@@ -199,7 +207,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     }
 
     SortedMap<String, SortedMap<String, BackupStatus>> backups(final String schemaName, final String indexName,
-                                                               final String backupName) throws IOException {
+            final String backupName) throws IOException {
         final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
         schemaIterator(schemaName, (schName, schemaInstance) -> {
             synchronized (results) {
@@ -214,7 +222,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     }
 
     SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
-                                                                                     final String indexName, final String backupName, final boolean extractVersion) throws IOException {
+            final String indexName, final String backupName, final boolean extractVersion) throws IOException {
         final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> results = new TreeMap<>();
         schemaIterator(schemaName, (schName, schemaInstance) -> {
             synchronized (results) {

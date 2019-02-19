@@ -26,8 +26,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 
 import static com.qwazr.search.test.JsonAbstractTest.getDocs;
@@ -50,26 +48,26 @@ public class GettingStartedTest {
     }
 
     @Test
-    public void test0100CreateSchema() throws URISyntaxException {
+    public void test0100CreateSchema() {
         Assert.assertNotNull(TestServer.remote.createUpdateSchema(MY_SCHEMA));
     }
 
     @Test
-    public void test0110CreateIndex() throws URISyntaxException, IOException {
+    public void test0110CreateIndex() {
         IndexServiceInterface client = TestServer.remote;
         IndexStatus indexStatus = client.createUpdateIndex(MY_SCHEMA, MY_INDEX, null);
         Assert.assertNotNull(indexStatus);
     }
 
     @Test
-    public void test130SetFields() throws URISyntaxException, IOException {
+    public void test130SetFields() {
         IndexServiceInterface client = TestServer.remote;
         final LinkedHashMap<String, FieldDefinition> fields = client.setFields(MY_SCHEMA, MY_INDEX, MY_FIELDS_JSON);
         Assert.assertEquals(fields.size(), MY_FIELDS_JSON.size());
     }
 
     @Test
-    public void test200UpdateDocs() throws URISyntaxException, IOException {
+    public void test200UpdateDocs() {
         IndexServiceInterface client = TestServer.remote;
         final Integer result = client.postMappedDocuments(MY_SCHEMA, MY_INDEX, MY_DOCS_JSON);
         Assert.assertNotNull(result);
@@ -82,12 +80,11 @@ public class GettingStartedTest {
     }
 
     @Test
-    public void test300Query() throws URISyntaxException, IOException {
+    public void test300Query() {
         IndexServiceInterface client = TestServer.remote;
         final ResultDefinition.WithMap result = client.searchQuery(MY_SCHEMA, MY_INDEX, MY_SEARCH_JSON, null);
         Assert.assertNotNull(result);
-        Assert.assertNotNull(result.total_hits);
-        Assert.assertEquals(2, result.total_hits.intValue());
+        Assert.assertEquals(2, result.totalHits);
     }
 
 }

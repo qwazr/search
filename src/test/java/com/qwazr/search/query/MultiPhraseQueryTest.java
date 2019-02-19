@@ -28,26 +28,26 @@ import java.net.URISyntaxException;
 
 public class MultiPhraseQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
-		initIndexService();
-		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World"));
-		indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?"));
-	}
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+        initIndexService();
+        indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World"));
+        indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?"));
+    }
 
-	@Test
-	public void withoutPositions() {
-		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new MultiPhraseQuery("textField", 1).add("hello", "world")).build());
-		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
-	}
+    @Test
+    public void withoutPositions() {
+        ResultDefinition result = indexService.searchQuery(
+                QueryDefinition.of(new MultiPhraseQuery("textField", 1).add("hello", "world")).build());
+        Assert.assertNotNull(result);
+        Assert.assertEquals(1, result.totalHits);
+    }
 
-	@Test
-	public void withPositions() {
-		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new MultiPhraseQuery("textField", 1).add(1, "how", "are")).build());
-		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
-	}
+    @Test
+    public void withPositions() {
+        ResultDefinition result = indexService.searchQuery(
+                QueryDefinition.of(new MultiPhraseQuery("textField", 1).add(1, "how", "are")).build());
+        Assert.assertNotNull(result);
+        Assert.assertEquals(1, result.totalHits);
+    }
 }

@@ -24,7 +24,9 @@ import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -54,10 +56,14 @@ public class CustomFieldDefinition extends FieldDefinition {
     public final IndexOptions indexOptions;
     @JsonProperty("docvalues_type")
     public final DocValuesType docValuesType;
-    @JsonProperty("dimension_count")
-    public final Integer dimensionCount;
+    @JsonProperty("data_dimension_count")
+    public final Integer dataDimensionCount;
+    @JsonProperty("index_dimension_count")
+    public final Integer indexDimensionCount;
     @JsonProperty("dimension_num_bytes")
     public final Integer dimensionNumBytes;
+    @JsonProperty("attributes")
+    public final Map<String, String> attributes;
 
     @JsonCreator
     public CustomFieldDefinition(@JsonProperty("template") final Template template,
@@ -73,8 +79,10 @@ public class CustomFieldDefinition extends FieldDefinition {
             @JsonProperty("facet_require_dim_count") final Boolean facetRequireDimCount,
             @JsonProperty("index_options") final IndexOptions indexOptions,
             @JsonProperty("docvalues_type") final DocValuesType docValuesType,
-            @JsonProperty("dimension_count") final Integer dimensionCount,
+            @JsonProperty("index_dimension_count") final Integer indexDimensionCount,
+            @JsonProperty("data_dimension_count") final Integer dataDimensionCount,
             @JsonProperty("dimension_num_bytes") final Integer dimensionNumBytes,
+            @JsonProperty("attributes") final Map<String, String> attributes,
             @JsonProperty("copy_from") String[] copyFrom) {
         super(null, analyzer, queryAnalyzer, copyFrom);
         this.template = template;
@@ -90,8 +98,10 @@ public class CustomFieldDefinition extends FieldDefinition {
         this.facetRequireDimCount = facetRequireDimCount;
         this.indexOptions = indexOptions;
         this.docValuesType = docValuesType;
-        this.dimensionCount = dimensionCount;
+        this.indexDimensionCount = indexDimensionCount;
+        this.dataDimensionCount = dataDimensionCount;
         this.dimensionNumBytes = dimensionNumBytes;
+        this.attributes = attributes;
     }
 
     private CustomFieldDefinition(CustomBuilder builder) {
@@ -109,7 +119,11 @@ public class CustomFieldDefinition extends FieldDefinition {
         this.facetRequireDimCount = builder.facetRequireDimCount;
         this.indexOptions = builder.indexOptions;
         this.docValuesType = builder.docValuesType;
-        this.dimensionCount = builder.dimensionCount;
+        this.indexDimensionCount = builder.indexDimensionCount;
+        this.dataDimensionCount = builder.dataDimensionCount;
+        this.attributes = builder.attributes == null || builder.attributes.isEmpty() ?
+                null :
+                Collections.unmodifiableMap(new LinkedHashMap<>(builder.attributes));
         this.dimensionNumBytes = builder.dimensionNumBytes;
     }
 
@@ -126,11 +140,13 @@ public class CustomFieldDefinition extends FieldDefinition {
         omitNorms = indexField.omitNorms();
         indexOptions = indexField.indexOptions();
         docValuesType = indexField.docValuesType();
-        dimensionCount = indexField.dimensionCount();
+        indexDimensionCount = indexField.indexDimensionCount();
+        dataDimensionCount = indexField.dataDimensionCount();
         dimensionNumBytes = indexField.dimensionNumBytes();
         facetMultivalued = indexField.facetMultivalued();
         facetHierarchical = indexField.facetHierarchical();
         facetRequireDimCount = indexField.facetRequireDimCount();
+        attributes = null;
     }
 
     @Override
@@ -153,8 +169,10 @@ public class CustomFieldDefinition extends FieldDefinition {
                 Objects.equals(storeTermVectorPositions, f.storeTermVectorPositions) &&
                 Objects.equals(storeTermVectorPayloads, f.storeTermVectorPayloads) &&
                 Objects.equals(omitNorms, f.omitNorms) && Objects.equals(indexOptions, f.indexOptions) &&
-                Objects.equals(docValuesType, f.docValuesType) && Objects.equals(dimensionCount, f.dimensionCount) &&
-                Objects.equals(dimensionNumBytes, f.dimensionNumBytes) &&
+                Objects.equals(docValuesType, f.docValuesType) &&
+                Objects.equals(indexDimensionCount, f.indexDimensionCount) &&
+                Objects.equals(dataDimensionCount, f.dataDimensionCount) &&
+                Objects.equals(dimensionNumBytes, f.dimensionNumBytes) && Objects.equals(attributes, f.attributes) &&
                 Objects.equals(facetMultivalued, f.facetMultivalued) &&
                 Objects.equals(facetHierarchical, f.facetHierarchical) &&
                 Objects.equals(facetRequireDimCount, f.facetRequireDimCount);
@@ -187,8 +205,10 @@ public class CustomFieldDefinition extends FieldDefinition {
         private Boolean omitNorms;
         private IndexOptions indexOptions;
         private DocValuesType docValuesType;
-        private Integer dimensionCount;
+        private Integer indexDimensionCount;
+        private Integer dataDimensionCount;
         private Integer dimensionNumBytes;
+        private Map<String, String> attributes;
         private Boolean facetMultivalued;
         private Boolean facetHierarchical;
         private Boolean facetRequireDimCount;
@@ -243,13 +263,25 @@ public class CustomFieldDefinition extends FieldDefinition {
             return this;
         }
 
-        public CustomBuilder dimensionCount(Integer dimensionCount) {
-            this.dimensionCount = dimensionCount;
+        public CustomBuilder indexDimensionCount(Integer indexDimensionCount) {
+            this.indexDimensionCount = indexDimensionCount;
+            return this;
+        }
+
+        public CustomBuilder dataDimensionCount(Integer dataDimensionCount) {
+            this.dataDimensionCount = dataDimensionCount;
             return this;
         }
 
         public CustomBuilder dimensionNumBytes(Integer dimensionNumBytes) {
             this.dimensionNumBytes = dimensionNumBytes;
+            return this;
+        }
+
+        public CustomBuilder attribute(String name, String value) {
+            if (this.attributes == null)
+                this.attributes = new LinkedHashMap<>();
+            this.attributes.put(name, value);
             return this;
         }
 

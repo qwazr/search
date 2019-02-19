@@ -31,41 +31,43 @@ import java.lang.annotation.Target;
 @Target({ ElementType.TYPE })
 public @interface Index {
 
-	String name();
+    String name();
 
-	String schema();
+    String schema();
 
     String similarity() default StringUtils.EMPTY;
 
-	Class<? extends Similarity> similarityClass() default BM25Similarity.class;
+    Class<? extends Similarity> similarityClass() default BM25Similarity.class;
 
-	String replicationMaster() default StringUtils.EMPTY;
-	
-	IndexSettingsDefinition.Type type() default IndexSettingsDefinition.Type.FSDirectory;
+    String sort() default StringUtils.EMPTY;
 
-	IndexSettingsDefinition.MergeScheduler mergeScheduler() default IndexSettingsDefinition.MergeScheduler.SERIAL;
+    String replicationMaster() default StringUtils.EMPTY;
 
-	double ramBufferSize() default IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
+    IndexSettingsDefinition.Type type() default IndexSettingsDefinition.Type.FSDirectory;
 
-	boolean useCompoundFile() default IndexWriterConfig.DEFAULT_USE_COMPOUND_FILE_SYSTEM;
+    IndexSettingsDefinition.MergeScheduler mergeScheduler() default IndexSettingsDefinition.MergeScheduler.SERIAL;
 
-	boolean useSimpleTextCodec() default false;
+    double ramBufferSize() default IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
 
-	int maxMergeAtOnce() default IndexSettingsDefinition.DEFAULT_MAX_MERGE_AT_ONCE;
+    boolean useCompoundFile() default IndexWriterConfig.DEFAULT_USE_COMPOUND_FILE_SYSTEM;
 
-	double maxMergedSegmentMB() default IndexSettingsDefinition.DEFAULT_MAX_MERGED_SEGMENT_MB;
+    boolean useSimpleTextCodec() default false;
 
-	double segmentsPerTier() default IndexSettingsDefinition.DEFAULT_SEGMENTS_PER_TIER;
+    int maxMergeAtOnce() default IndexSettingsDefinition.DEFAULT_MAX_MERGE_AT_ONCE;
 
-	boolean enableTaxonomyIndex() default false;
+    double maxMergedSegmentMB() default IndexSettingsDefinition.DEFAULT_MAX_MERGED_SEGMENT_MB;
 
-	String sortedSetFacetField() default FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD;
+    double segmentsPerTier() default IndexSettingsDefinition.DEFAULT_SEGMENTS_PER_TIER;
 
-	boolean indexReaderWarmer() default true;
+    boolean enableTaxonomyIndex() default false;
 
-	boolean mergedSegmentWarmer() default true;
+    String sortedSetFacetField() default FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD;
 
-	double nrtCachingDirectoryMaxMergeSizeMB() default IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB;
+    boolean indexReaderWarmer() default true;
 
-	double nrtCachingDirectoryMaxCachedMB() default IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB;
+    boolean mergedSegmentWarmer() default true;
+
+    double nrtCachingDirectoryMaxMergeSizeMB() default IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB;
+
+    double nrtCachingDirectoryMaxCachedMB() default IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB;
 }

@@ -201,28 +201,28 @@ public class AnnotatedIndexServiceTest {
     public void test500query() {
 
         MultiFieldQuery multiFieldQuery = MultiFieldQuery.of()
-            .fieldBoost("title", 10F)
-            .fieldBoost("content", 1F)
-            .fieldBoost("full", 0.5F)
-            .fieldDisableGraph("title", "content")
-            .defaultOperator(QueryParserOperator.AND)
-            .queryString("Title terms")
-            .build();
+                .fieldBoost("title", 10F)
+                .fieldBoost("content", 1F)
+                .fieldBoost("full", 0.5F)
+                .fieldDisableGraph("title", "content")
+                .defaultOperator(QueryParserOperator.AND)
+                .queryString("Title terms")
+                .build();
 
         QueryBuilder builder = QueryDefinition.of(multiFieldQuery).queryDebug(true);
         ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(builder.build());
         Assert.assertEquals(
-            "(+Synonym(title:titl title:title) +Synonym(title:term title:terms))^10.0 (+Synonym(content:titl content:title) +Synonym(content:term content:terms)) (+Synonym(full:titl full:title) +Synonym(full:term full:terms))^0.5",
-            results.query);
-        Assert.assertEquals(Long.valueOf(1), results.total_hits);
+                "(+Synonym(title:titl title:title) +Synonym(title:term title:terms))^10.0 (+Synonym(content:titl content:title) +Synonym(content:term content:terms)) (+Synonym(full:titl full:title) +Synonym(full:term full:terms))^0.5",
+                results.query);
+        Assert.assertEquals(1, results.totalHits);
     }
 
     @Test
     public void test501query() throws IOException {
         Long result = service.query(context -> {
             ResultDefinition.WithObject<IndexRecord> res =
-                context.searchObject(QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
-            return res.total_hits + context.getIndexReader().numDocs();
+                    context.searchObject(QueryDefinition.of(new MatchAllDocsQuery()).build(), IndexRecord.class);
+            return res.totalHits + context.getIndexReader().numDocs();
         });
         Assert.assertEquals(Long.valueOf(2), result);
     }
@@ -230,13 +230,13 @@ public class AnnotatedIndexServiceTest {
     @Test
     public void test510explain() {
         MultiFieldQuery mfq = MultiFieldQuery.of()
-            .defaultOperator(QueryParserOperator.AND)
-            .queryString("Title terms")
-            .fieldBoost("title", 10F)
-            .fieldBoost("content", 1.0F)
-            .fieldBoost("full", 0.5f)
-            .fieldAndFilter("full")
-            .build();
+                .defaultOperator(QueryParserOperator.AND)
+                .queryString("Title terms")
+                .fieldBoost("title", 10F)
+                .fieldBoost("content", 1.0F)
+                .fieldBoost("full", 0.5f)
+                .fieldAndFilter("full")
+                .build();
         QueryDefinition query = QueryDefinition.of(mfq).build();
         ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);
         Assert.assertNotNull(results);

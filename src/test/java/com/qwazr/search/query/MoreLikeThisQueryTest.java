@@ -28,30 +28,30 @@ import java.net.URISyntaxException;
 
 public class MoreLikeThisQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
-		initIndexService();
-		indexService.postDocument(new IndexRecord.NoTaxonomy("1").mlt("Hello World"));
-		indexService.postDocument(new IndexRecord.NoTaxonomy("2").mlt("Hello world again"));
-		indexService.postDocument(new IndexRecord.NoTaxonomy("3").mlt("absolutely nothing to match"));
-	}
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+        initIndexService();
+        indexService.postDocument(new IndexRecord.NoTaxonomy("1").mlt("Hello World"));
+        indexService.postDocument(new IndexRecord.NoTaxonomy("2").mlt("Hello world again"));
+        indexService.postDocument(new IndexRecord.NoTaxonomy("3").mlt("absolutely nothing to match"));
+    }
 
-	@Test
-	public void mltTest() {
-		ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result;
-		result = indexService.searchQuery(
-				QueryDefinition.of(MoreLikeThisQuery.of("hello again", "mlt").minDocFreq(1).minTermFreq(1).build())
-						.build());
-		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(2), result.total_hits);
+    @Test
+    public void mltTest() {
+        ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result;
+        result = indexService.searchQuery(
+                QueryDefinition.of(MoreLikeThisQuery.of("hello again", "mlt").minDocFreq(1).minTermFreq(1).build())
+                        .build());
+        Assert.assertNotNull(result);
+        Assert.assertEquals(2, result.totalHits);
 
-		result = indexService.searchQuery(QueryDefinition.of(MoreLikeThisQuery.of(result.getDocuments().get(0).getDoc())
-				.minDocFreq(1)
-				.minTermFreq(1)
-				.fieldnames("mlt")
-				.isBoost(true)
-				.build()).build());
-		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(2), result.total_hits);
-	}
+        result = indexService.searchQuery(QueryDefinition.of(MoreLikeThisQuery.of(result.getDocuments().get(0).getDoc())
+                .minDocFreq(1)
+                .minTermFreq(1)
+                .fieldnames("mlt")
+                .isBoost(true)
+                .build()).build());
+        Assert.assertNotNull(result);
+        Assert.assertEquals(2, result.totalHits);
+    }
 }

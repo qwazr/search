@@ -19,6 +19,7 @@ import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
+import org.apache.lucene.search.DocValuesFieldExistsQuery;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,22 +27,22 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class FieldValueQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
+public class DocValuesFieldExistsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
-		initIndexService();
-		indexService.postDocument(new IndexRecord.NoTaxonomy("1").intDocValue(1));
-		indexService.postDocument(new IndexRecord.NoTaxonomy("2").intDocValue(2));
-		indexService.postDocument(new IndexRecord.NoTaxonomy("3"));
-	}
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+        initIndexService();
+        indexService.postDocument(new IndexRecord.NoTaxonomy("1").intDocValue(1));
+        indexService.postDocument(new IndexRecord.NoTaxonomy("2").intDocValue(2));
+        indexService.postDocument(new IndexRecord.NoTaxonomy("3"));
+    }
 
-	@Test
-	public void hasValue() {
-		ResultDefinition result =
-				indexService.searchQuery(QueryDefinition.of(new FieldValueQuery("intDocValue")).build());
-		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(2), result.total_hits);
-	}
+    @Test
+    public void hasValue() {
+        ResultDefinition result =
+                indexService.searchQuery(QueryDefinition.of(new DocValuesFieldExistsQuery("intDocValue")).build());
+        Assert.assertNotNull(result);
+        Assert.assertEquals(2, result.totalHits);
+    }
 
 }

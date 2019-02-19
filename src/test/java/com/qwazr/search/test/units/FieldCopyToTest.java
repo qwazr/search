@@ -27,26 +27,26 @@ import java.net.URISyntaxException;
 
 public class FieldCopyToTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
-		initIndexService();
-		indexService.postDocument(
-				new IndexRecord.NoTaxonomy("1").copyText2("Boosted Text 1").copyText1("Copied Text 2"));
-	}
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+        initIndexService();
+        indexService.postDocument(
+                new IndexRecord.NoTaxonomy("1").copyText2("Boosted Text 1").copyText1("Copied Text 2"));
+    }
 
-	@Test
-	public void testBoostedText() {
-		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new PhraseQuery("textField", 1, "boosted", "text", "1")).build());
-		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
-	}
+    @Test
+    public void testBoostedText() {
+        ResultDefinition result = indexService.searchQuery(
+                QueryDefinition.of(new PhraseQuery("textField", 1, "boosted", "text", "1")).build());
+        Assert.assertNotNull(result);
+        Assert.assertEquals(1, result.totalHits);
+    }
 
-	@Test
-	public void testCopiedText() {
-		ResultDefinition result = indexService.searchQuery(
-				QueryDefinition.of(new PhraseQuery("textField", 1, "copied", "text", "2")).build());
-		Assert.assertNotNull(result);
-		Assert.assertEquals(Long.valueOf(1), result.total_hits);
-	}
+    @Test
+    public void testCopiedText() {
+        ResultDefinition result = indexService.searchQuery(
+                QueryDefinition.of(new PhraseQuery("textField", 1, "copied", "text", "2")).build());
+        Assert.assertNotNull(result);
+        Assert.assertEquals(1, result.totalHits);
+    }
 }

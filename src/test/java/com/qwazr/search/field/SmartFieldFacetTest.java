@@ -39,78 +39,77 @@ import java.util.logging.Logger;
 
 public class SmartFieldFacetTest extends AbstractIndexTest {
 
-	private final static Logger LOGGER = LoggerUtils.getLogger(SmartFieldFacetTest.class);
+    private final static Logger LOGGER = LoggerUtils.getLogger(SmartFieldFacetTest.class);
 
-	private static AnnotatedIndexService<Record> indexService;
+    private static AnnotatedIndexService<Record> indexService;
 
-	@BeforeClass
-	public static void setup() throws IOException, URISyntaxException, InterruptedException {
-		indexService = initIndexService(Record.class);
-		indexService.postDocument(new Record(1, new String[] { "tag1", "tag1and2" }));
-		indexService.postDocument(new Record(2, new String[] { "tag2", "tag1and2" }));
-	}
+    @BeforeClass
+    public static void setup() throws IOException, URISyntaxException, InterruptedException {
+        indexService = initIndexService(Record.class);
+        indexService.postDocument(new Record(1, new String[] { "tag1", "tag1and2" }));
+        indexService.postDocument(new Record(2, new String[] { "tag2", "tag1and2" }));
+    }
 
-	ResultDefinition.WithObject<Record> checkResult(AbstractQuery query, String queryExplain, long... expectedIds)
-			throws IOException, ReflectiveOperationException {
-		final ResultDefinition.WithObject<Record> result = indexService.searchQuery(QueryDefinition.of(query)
-				.returnedField("*")
-				.queryDebug(true)
-				.facet("tags", FacetDefinition.of().build())
-				.build(), Record.class);
-		if (queryExplain != null)
-			Assert.assertEquals(queryExplain, result.query);
-		else
-			LOGGER.info(result.query);
-		if (expectedIds == null)
-			Assert.assertEquals(0, result.total_hits, 0);
-		else
-			Assert.assertEquals(expectedIds.length, result.total_hits, 0);
-		return result;
-	}
+    ResultDefinition.WithObject<Record> checkResult(AbstractQuery query, String queryExplain, long... expectedIds) {
+        final ResultDefinition.WithObject<Record> result = indexService.searchQuery(QueryDefinition.of(query)
+                .returnedField("*")
+                .queryDebug(true)
+                .facet("tags", FacetDefinition.of().build())
+                .build(), Record.class);
+        if (queryExplain != null)
+            Assert.assertEquals(queryExplain, result.query);
+        else
+            LOGGER.info(result.query);
+        if (expectedIds == null)
+            Assert.assertEquals(0, result.totalHits, 0);
+        else
+            Assert.assertEquals(expectedIds.length, result.totalHits, 0);
+        return result;
+    }
 
-	@Test
-	public void drillDownQueryTest() throws IOException, ReflectiveOperationException {
-		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).filter("tags", "tag1"),
-				"+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
-		checkResult(new DrillDownQuery(null, false).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
-		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).filter("tags", "tag1and2"),
-				"+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
+    @Test
+    public void drillDownQueryTest() {
+        checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).filter("tags", "tag1"),
+                "+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
+        checkResult(new DrillDownQuery(null, false).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
+        checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).filter("tags", "tag1and2"),
+                "+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
 
-		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).filter("tags", "tag1"),
-				"+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
-		checkResult(new DrillDownQuery(null, true).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
-		checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).filter("tags", "tag1and2"),
-				"+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
-	}
+        checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).filter("tags", "tag1"),
+                "+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
+        checkResult(new DrillDownQuery(null, true).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
+        checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).filter("tags", "tag1and2"),
+                "+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
+    }
 
-	@Test
-	public void facetPathQueryTest() throws IOException, ReflectiveOperationException {
-		checkResult(FacetPathQuery.of("tags").path("tag1").build(), "$facets$sdv:ft€tags\u001Ftag1", 1);
-		checkResult(FacetPathQuery.of("tags").path("tag1and2").build(), "$facets$sdv:ft€tags\u001Ftag1and2", 1, 2);
-	}
+    @Test
+    public void facetPathQueryTest() {
+        checkResult(FacetPathQuery.of("tags").path("tag1").build(), "$facets$sdv:ft€tags\u001Ftag1", 1);
+        checkResult(FacetPathQuery.of("tags").path("tag1and2").build(), "$facets$sdv:ft€tags\u001Ftag1and2", 1, 2);
+    }
 
-	@Test
-	public void computeFacetsTest() throws IOException, ReflectiveOperationException {
-		checkResult(new MatchAllDocsQuery(), "*:*", 1, 2);
-	}
+    @Test
+    public void computeFacetsTest() {
+        checkResult(new MatchAllDocsQuery(), "*:*", 1, 2);
+    }
 
-	@Index(name = "SmartFieldSorted", schema = "TestQueries")
-	static public class Record {
+    @Index(name = "SmartFieldSorted", schema = "TestQueries")
+    static public class Record {
 
-		@SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.LONG, index = true, stored = true)
-		final public long id;
+        @SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.LONG, index = true, stored = true)
+        final public long id;
 
-		@SmartField(type = SmartFieldDefinition.Type.TEXT, facet = true)
-		@Copy(to = { @Copy.To(order = 3, field = "full") })
-		final public String[] tags;
+        @SmartField(type = SmartFieldDefinition.Type.TEXT, facet = true)
+        @Copy(to = { @Copy.To(order = 3, field = "full") })
+        final public String[] tags;
 
-		Record(long id, String[] tags) {
-			this.id = id;
-			this.tags = tags;
-		}
+        Record(long id, String[] tags) {
+            this.id = id;
+            this.tags = tags;
+        }
 
-		public Record() {
-			this(0, null);
-		}
-	}
+        public Record() {
+            this(0, null);
+        }
+    }
 }

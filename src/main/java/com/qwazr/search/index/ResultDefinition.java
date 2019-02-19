@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.TimeTracker;
 
 import javax.validation.constraints.NotNull;
@@ -29,166 +30,163 @@ import java.util.function.Function;
 
 public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 
-	final public TimeTracker.Status timer;
-	final public Long total_hits;
-	final public Float max_score;
-	final public List<T> documents;
-	final public Map<String, Map<String, Number>> facets;
-	final public String query;
-	final public Map<String, Object> collectors;
+    final public TimeTracker.Status timer;
+    @JsonProperty("total_hits")
+    final public long totalHits;
+    @JsonProperty("max_score")
+    final public float maxScore;
+    final public List<T> documents;
+    final public Map<String, Map<String, Number>> facets;
+    final public String query;
+    final public Map<String, Object> collectors;
 
-	public ResultDefinition() {
-		this.timer = null;
-		this.total_hits = null;
-		this.documents = null;
-		this.facets = null;
-		this.collectors = null;
-		this.max_score = null;
-		this.query = null;
-	}
+    public ResultDefinition() {
+        this.timer = null;
+        this.totalHits = 0L;
+        this.documents = null;
+        this.facets = null;
+        this.collectors = null;
+        this.maxScore = 0f;
+        this.query = null;
+    }
 
-	protected ResultDefinition(final ResultDocumentsBuilder builder, @NotNull final List<T> documents) {
-		this.query = builder.queryDebug;
-		this.timer = builder.timeTrackerStatus;
-		this.total_hits = builder.totalHits;
-		this.max_score = builder.maxScore;
-		this.documents = documents;
-		this.facets = builder.facets;
-		this.collectors = builder.collectors;
-	}
+    protected ResultDefinition(final ResultDocumentsBuilder builder, @NotNull final List<T> documents) {
+        this.query = builder.queryDebug;
+        this.timer = builder.timeTrackerStatus;
+        this.totalHits = builder.totalHits;
+        this.maxScore = builder.maxScore;
+        this.documents = documents;
+        this.facets = builder.facets;
+        this.collectors = builder.collectors;
+    }
 
-	protected ResultDefinition(final ResultDefinition<?> src, @NotNull final List<T> documents) {
-		this.query = src.query;
-		this.timer = src.timer;
-		this.total_hits = src.total_hits;
-		this.max_score = src.max_score;
-		this.documents = documents;
-		this.facets = src.facets;
-		this.collectors = src.collectors;
-	}
+    protected ResultDefinition(final ResultDefinition<?> src, @NotNull final List<T> documents) {
+        this.query = src.query;
+        this.timer = src.timer;
+        this.totalHits = src.totalHits;
+        this.maxScore = src.maxScore;
+        this.documents = documents;
+        this.facets = src.facets;
+        this.collectors = src.collectors;
+    }
 
-	ResultDefinition(TimeTracker timeTracker) {
-		query = null;
-		total_hits = 0L;
-		documents = Collections.emptyList();
-		facets = null;
-		collectors = null;
-		max_score = null;
-		this.timer = timeTracker != null ? timeTracker.getStatus() : null;
-	}
+    ResultDefinition(final TimeTracker timeTracker) {
+        query = null;
+        totalHits = 0L;
+        documents = Collections.emptyList();
+        facets = null;
+        collectors = null;
+        maxScore = 0f;
+        this.timer = timeTracker != null ? timeTracker.getStatus() : null;
+    }
 
-	protected ResultDefinition(long total_hits) {
-		query = null;
-		this.total_hits = total_hits;
-		documents = Collections.emptyList();
-		facets = null;
-		collectors = null;
-		max_score = null;
-		this.timer = null;
-	}
+    protected ResultDefinition(final long totalHits) {
+        query = null;
+        this.totalHits = totalHits;
+        documents = Collections.emptyList();
+        facets = null;
+        collectors = null;
+        maxScore = 0f;
+        this.timer = null;
+    }
 
-	@JsonIgnore
-	public Long getTotalHits() {
-		return total_hits;
-	}
+    @JsonIgnore
+    public long getTotalHits() {
+        return totalHits;
+    }
 
-	@Deprecated
-	public Long getTotal_hits() {
-		return total_hits;
-	}
+    @JsonIgnore
+    public float getMaxScore() {
+        return maxScore;
+    }
 
-	@JsonIgnore
-	public Float getMaxScore() {
-		return max_score;
-	}
+    public List<T> getDocuments() {
+        return documents == null ? Collections.emptyList() : documents;
+    }
 
-	@Deprecated
-	public Float getMax_score() {
-		return max_score;
-	}
+    public Map<String, Map<String, Number>> getFacets() {
+        return facets == null ? Collections.emptyMap() : facets;
+    }
 
-	public List<T> getDocuments() {
-		return documents == null ? Collections.emptyList() : documents;
-	}
+    @JsonIgnore
+    public boolean isAnyFacet() {
+        if (facets == null)
+            return false;
+        for (final Map<String, Number> facet : facets.values())
+            if (!facet.isEmpty())
+                return true;
+        return false;
+    }
 
-	public Map<String, Map<String, Number>> getFacets() {
-		return facets == null ? Collections.emptyMap() : facets;
-	}
+    @JsonIgnore
+    public Map<String, Number> getFacet(String facetName) {
+        return facets == null ? Collections.emptyMap() : facets.get(facetName);
+    }
 
-	@JsonIgnore
-	public boolean isAnyFacet() {
-		if (facets == null)
-			return false;
-		for (final Map<String, Number> facet : facets.values())
-			if (!facet.isEmpty())
-				return true;
-		return false;
-	}
+    public TimeTracker.Status getTimer() {
+        return timer;
+    }
 
-	@JsonIgnore
-	public Map<String, Number> getFacet(String facetName) {
-		return facets == null ? Collections.emptyMap() : facets.get(facetName);
-	}
+    public String getQuery() {
+        return query;
+    }
 
-	public TimeTracker.Status getTimer() {
-		return timer;
-	}
+    public Object getCollector(final String name) {
+        return getCollector(name, Object.class);
+    }
 
-	public String getQuery() {
-		return query;
-	}
+    @JsonIgnore
+    public <RESULT_TYPE> RESULT_TYPE getCollector(final String name, Class<RESULT_TYPE> resultType) {
+        return collectors == null ? null : resultType.cast(collectors.get(name));
+    }
 
-	public <O> O getCollector(String name) {
-		return collectors == null ? null : (O) collectors.get(name);
-	}
+    final public void forEach(final Consumer<T> consumer) {
+        if (documents != null)
+            for (T document : documents)
+                consumer.accept(document);
+    }
 
-	final public void forEach(final Consumer<T> consumer) {
-		if (documents != null)
-			for (T document : documents)
-				consumer.accept(document);
-	}
+    @JsonInclude(Include.NON_NULL)
+    public static class WithMap extends ResultDefinition<ResultDocumentMap> {
 
-	@JsonInclude(Include.NON_NULL)
-	public static class WithMap extends ResultDefinition<ResultDocumentMap> {
+        public WithMap() {
+        }
 
-		public WithMap() {
-		}
+        WithMap(ResultDocumentsBuilder builder, List<ResultDocumentMap> documents) {
+            super(builder, documents);
+        }
 
-		WithMap(ResultDocumentsBuilder builder, List<ResultDocumentMap> documents) {
-			super(builder, documents);
-		}
+        public WithMap(int docs) {
+            super(docs);
+        }
+    }
 
-		public WithMap(int docs) {
-			super(docs);
-		}
-	}
+    public static class WithObject<T> extends ResultDefinition<ResultDocumentObject<T>> {
 
-	public static class WithObject<T> extends ResultDefinition<ResultDocumentObject<T>> {
+        WithObject(ResultDocumentsBuilder builder, List<ResultDocumentObject<T>> documents) {
+            super(builder, documents);
+        }
 
-		WithObject(ResultDocumentsBuilder builder, List<ResultDocumentObject<T>> documents) {
-			super(builder, documents);
-		}
+        public WithObject(final ResultDefinition<?> result, final List<ResultDocumentObject<T>> documents) {
+            super(result, documents);
+        }
 
-		public WithObject(final ResultDefinition<?> result, final List<ResultDocumentObject<T>> documents) {
-			super(result, documents);
-		}
+        public WithObject(long totalHits) {
+            super(totalHits);
+        }
 
-		public WithObject(long totalHits) {
-			super(totalHits);
-		}
+    }
 
-	}
+    public static class Empty extends ResultDefinition {
 
-	public static class Empty extends ResultDefinition {
+        Empty(final ResultDocumentsBuilder builder) {
+            super(builder, null);
+        }
 
-		Empty(final ResultDocumentsBuilder builder) {
-			super(builder, null);
-		}
+    }
 
-	}
-
-	interface Builder<T extends ResultDocumentAbstract> extends Function<ResultDocumentsBuilder, ResultDefinition<T>> {
-		ResultDocumentsInterface getResultDocuments();
-	}
+    interface Builder<T extends ResultDocumentAbstract> extends Function<ResultDocumentsBuilder, ResultDefinition<T>> {
+        ResultDocumentsInterface getResultDocuments();
+    }
 
 }

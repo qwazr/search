@@ -32,55 +32,55 @@ import java.net.URISyntaxException;
 
 public class BoostingQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
-		initIndexService();
-		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World").stringField("de"));
-	}
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+        initIndexService();
+        indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World").stringField("de"));
+    }
 
-	private AbstractQuery getMatchQuery() {
-		return new TermQuery("stringField", "de");
-	}
+    private AbstractQuery getMatchQuery() {
+        return new TermQuery("stringField", "de");
+    }
 
-	private AbstractQuery getContextQuery() {
-		return new TermQuery("textField", "hello");
-	}
+    private AbstractQuery getContextQuery() {
+        return new TermQuery("textField", "hello");
+    }
 
-	private BoostingQuery getBoostingQuery(float boost) {
-		return new BoostingQuery(getMatchQuery(), getContextQuery(), boost);
-	}
+    private BoostingQuery getBoostingQuery(float boost) {
+        return new BoostingQuery(getMatchQuery(), getContextQuery(), boost);
+    }
 
-	@Test
-	public void testEquality() {
-		Assert.assertEquals(getBoostingQuery(1.0f), getBoostingQuery(1.0f));
-		Assert.assertNotEquals(getBoostingQuery(1.0f), getBoostingQuery(2.0f));
-	}
+    @Test
+    public void testEquality() {
+        Assert.assertEquals(getBoostingQuery(1.0f), getBoostingQuery(1.0f));
+        Assert.assertNotEquals(getBoostingQuery(1.0f), getBoostingQuery(2.0f));
+    }
 
-	@Test
-	public void testBoost() {
-		final ResultDefinition.WithObject<? extends IndexRecord> contextResult =
-				indexService.searchQuery(QueryDefinition.of(getContextQuery()).build());
-		Assert.assertNotNull(contextResult);
-		Assert.assertEquals(1L, contextResult.total_hits, 0);
+    @Test
+    public void testBoost() {
+        final ResultDefinition.WithObject<? extends IndexRecord> contextResult =
+                indexService.searchQuery(QueryDefinition.of(getContextQuery()).build());
+        Assert.assertNotNull(contextResult);
+        Assert.assertEquals(1L, contextResult.totalHits);
 
-		final ResultDefinition.WithObject<? extends IndexRecord> boosted1Result =
-				indexService.searchQuery(QueryDefinition.of(getBoostingQuery(1)).build());
-		Assert.assertNotNull(boosted1Result);
-		Assert.assertEquals(1L, boosted1Result.total_hits, 0);
+        final ResultDefinition.WithObject<? extends IndexRecord> boosted1Result =
+                indexService.searchQuery(QueryDefinition.of(getBoostingQuery(1)).build());
+        Assert.assertNotNull(boosted1Result);
+        Assert.assertEquals(1L, boosted1Result.totalHits);
 
-		final ResultDefinition.WithObject<? extends IndexRecord> boosted2Result =
-				indexService.searchQuery(QueryDefinition.of(getBoostingQuery(2)).build());
-		Assert.assertNotNull(boosted2Result);
-		Assert.assertEquals(1L, boosted2Result.total_hits, 0);
+        final ResultDefinition.WithObject<? extends IndexRecord> boosted2Result =
+                indexService.searchQuery(QueryDefinition.of(getBoostingQuery(2)).build());
+        Assert.assertNotNull(boosted2Result);
+        Assert.assertEquals(1L, boosted2Result.totalHits);
 
-		Assert.assertEquals(boosted1Result.max_score * 2, boosted2Result.max_score, 0);
-		Assert.assertEquals(boosted2Result.documents.get(0).score, boosted2Result.max_score, 0);
-	}
+        Assert.assertEquals(boosted1Result.maxScore * 2, boosted2Result.maxScore, 0);
+        Assert.assertEquals(boosted2Result.getDocuments().get(0).score, boosted2Result.maxScore, 0);
+    }
 
-	@Test
-	public void luceneQuery() throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		Query luceneQuery = getBoostingQuery(2).getQuery(QueryContext.DEFAULT);
-		Assert.assertEquals("stringField:de/textField:hello", luceneQuery.toString());
-	}
+    @Test
+    public void luceneQuery() throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
+        Query luceneQuery = getBoostingQuery(2).getQuery(QueryContext.DEFAULT);
+        Assert.assertEquals("stringField:de/textField:hello", luceneQuery.toString());
+    }
 
 }

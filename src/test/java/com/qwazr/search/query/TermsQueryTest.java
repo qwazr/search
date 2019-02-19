@@ -32,34 +32,35 @@ import java.net.URISyntaxException;
 
 public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
-		initIndexService();
-		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World").stringField("Hello World"));
-		indexService.postDocument(
-				new IndexRecord.NoTaxonomy("2").textField("Hello World 2").stringField("Hello World 2"));
-	}
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+        initIndexService();
+        indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World").stringField("Hello World"));
+        indexService.postDocument(
+                new IndexRecord.NoTaxonomy("2").textField("Hello World 2").stringField("Hello World 2"));
+    }
 
-	private void checkQuery(QueryDefinition queryDef, Long totalHits) {
-		ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(queryDef);
-		Assert.assertNotNull(result);
-		Assert.assertEquals(totalHits, result.total_hits);
-		ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
-		Assert.assertNotNull(explain);
-	}
+    private void checkQuery(QueryDefinition queryDef, long totalHits) {
+        ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(queryDef);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(totalHits, result.totalHits);
+        Assert.assertNotNull(result.documents);
+        ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
+        Assert.assertNotNull(explain);
+    }
 
-	@Test
-	public void testArray() {
-		QueryDefinition queryDef =
-				QueryDefinition.of(TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build()).build();
-		checkQuery(queryDef, 2L);
-	}
+    @Test
+    public void testArray() {
+        QueryDefinition queryDef =
+                QueryDefinition.of(TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build()).build();
+        checkQuery(queryDef, 2L);
+    }
 
-	@Test
-	public void luceneQuery() throws IOException, ReflectiveOperationException {
-		Query luceneQuery =
-				TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build().getQuery(QueryContext.DEFAULT);
-		Assert.assertNotNull(luceneQuery);
-	}
+    @Test
+    public void luceneQuery() throws IOException {
+        Query luceneQuery =
+                TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build().getQuery(QueryContext.DEFAULT);
+        Assert.assertNotNull(luceneQuery);
+    }
 
 }

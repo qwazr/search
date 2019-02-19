@@ -92,7 +92,7 @@ public class AnnotatedIndexService<T> {
      * @throws URISyntaxException if the syntax of the remote URI is wrong
      */
     public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass,
-                                 final String schemaName, final String indexName, final IndexSettingsDefinition settings)
+            final String schemaName, final String indexName, final IndexSettingsDefinition settings)
             throws URISyntaxException {
         Objects.requireNonNull(indexService, "The indexService parameter is null");
         Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
@@ -577,7 +577,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String analyzerName,
-                                                                  final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+            final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
         checkParameters();
         return indexService.setAnalyzers(schemaName, indexName, analyzers);
     }
@@ -603,7 +603,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String backupName,
-                                                                                            final boolean extractVersion) {
+            final boolean extractVersion) {
         checkParameters();
         return indexService.getBackups(schemaName, indexName, backupName, extractVersion);
     }
@@ -620,7 +620,7 @@ public class AnnotatedIndexService<T> {
     }
 
     private <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query,
-                                                           final FieldMapWrapper<C> wrapper) {
+            final FieldMapWrapper<C> wrapper) {
         checkParameters();
         if (annotatedService != null)
             return annotatedService.searchQuery(schemaName, indexName, query, wrapper);
@@ -666,7 +666,7 @@ public class AnnotatedIndexService<T> {
      * @return the results
      */
     public ResultDefinition.Empty searchQuery(final QueryDefinition query,
-                                              final ResultDocumentsInterface resultDocuments) {
+            final ResultDocumentsInterface resultDocuments) {
         checkParameters();
         if (annotatedService != null)
             return annotatedService.searchQuery(schemaName, indexName, query, resultDocuments);
@@ -722,7 +722,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public List<TermEnumDefinition> doExtractTerms(final String fieldName, final String prefix, final Integer start,
-                                                   final Integer rows) {
+            final Integer rows) {
         checkParameters();
         return indexService.doExtractTerms(schemaName, indexName, fieldName, prefix, start, rows);
     }
@@ -742,16 +742,16 @@ public class AnnotatedIndexService<T> {
         fieldMapWrappers.newFieldMapWrapper(objectClass);
     }
 
-    public ReplicationStatus replicationCheck() throws ExecutionException, InterruptedException {
+    public ReplicationStatus replicationCheck() {
         return indexService.replicationCheck(schemaName, indexName);
     }
 
     private <C> ResultDefinition.WithObject<C> toRecords(final ResultDefinition<?> result,
-                                                         final FieldMapWrapper<C> wrapper) {
+            final FieldMapWrapper<C> wrapper) {
         if (result == null)
             return null;
         if (!(result instanceof ResultDefinition.WithMap))
-            return new ResultDefinition.WithObject<>(result.total_hits);
+            return new ResultDefinition.WithObject<>(result.totalHits);
         final ResultDefinition.WithMap resultWithMap = (ResultDefinition.WithMap) result;
         final List<ResultDocumentObject<C>> documents = new ArrayList<>();
         try {

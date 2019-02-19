@@ -283,7 +283,7 @@ public abstract class JavaAbstractTest {
         ResultDefinition.WithObject<AnnotatedRecord> result = service.searchQuery(builder.build());
         Assert.assertNotNull(result);
         if (expectedHits != null)
-            Assert.assertEquals(expectedHits, result.total_hits);
+            Assert.assertEquals(expectedHits.longValue(), result.totalHits);
         return result;
     }
 
@@ -362,7 +362,7 @@ public abstract class JavaAbstractTest {
         builder.returnedField(returnedFields);
         ResultDefinition.WithObject<AnnotatedRecord> result = service.searchQuery(builder.build());
         Assert.assertNotNull(result);
-        Assert.assertEquals(Long.valueOf(1), result.total_hits);
+        Assert.assertEquals(1, result.totalHits);
         AnnotatedRecord returnedRecord = checkResultDocument(result, 0).record;
         checkEqualsReturnedFields(returnedRecord, record2, docValue2);
     }
@@ -407,7 +407,7 @@ public abstract class JavaAbstractTest {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(queryBuilder.build());
         Assert.assertNotNull(result);
-        Assert.assertEquals(Long.valueOf(resultCount), result.total_hits);
+        Assert.assertEquals(resultCount, result.totalHits);
         Assert.assertNotNull(result.documents);
         Assert.assertEquals(resultCount, result.documents.size());
         AnnotatedRecord current = null;
@@ -675,14 +675,13 @@ public abstract class JavaAbstractTest {
                         ScoreMode.Max, new MatchAllDocsQuery()));
         final ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
         Assert.assertNotNull(result);
-        Assert.assertNotNull(result.total_hits);
-        Assert.assertEquals(Long.valueOf(2), result.total_hits);
+        Assert.assertEquals(2, result.totalHits);
     }
 
     static void checkCollector(ResultDefinition result, String name, Object... possibleValues) {
         Assert.assertNotNull(result);
         Assert.assertNotNull(result.collectors);
-        Object collectorResult = result.getCollector(name);
+        Object collectorResult = result.getCollector(name, Object.class);
         if (possibleValues == null || possibleValues.length == 0) {
             Assert.assertNull(collectorResult);
         } else {

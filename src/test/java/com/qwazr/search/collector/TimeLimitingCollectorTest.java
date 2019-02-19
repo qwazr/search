@@ -57,7 +57,7 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
                 .build();
         ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
-        Assert.assertThat(results.total_hits, lessThan(20L));
+        Assert.assertThat(results.totalHits, lessThan(20L));
     }
 
     @Test
@@ -68,6 +68,6 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
                 .build();
         ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
-        Assert.assertThat(results.total_hits, lessThan(20L));
+        Assert.assertThat(results.totalHits, lessThan(20L));
     }
 }

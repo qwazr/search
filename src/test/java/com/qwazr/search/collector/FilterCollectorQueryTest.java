@@ -31,31 +31,32 @@ import java.util.Collection;
 
 public class FilterCollectorQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
-		initIndexService();
-		Collection<IndexRecord.NoTaxonomy> indexRecords = new ArrayList<>();
-		int k = 0;
-		for (int i = 0; i < 10; i++) {
-			indexRecords.clear();
-			for (int j = 0; j < 100; j++)
-				indexRecords.add(new IndexRecord.NoTaxonomy(Integer.toString(k)).intPoint((k++) % 2 == 0 ? 1 : 0));
-			indexService.postDocuments(indexRecords);
-		}
-	}
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+        initIndexService();
+        Collection<IndexRecord.NoTaxonomy> indexRecords = new ArrayList<>();
+        int k = 0;
+        for (int i = 0; i < 10; i++) {
+            indexRecords.clear();
+            for (int j = 0; j < 100; j++)
+                indexRecords.add(new IndexRecord.NoTaxonomy(Integer.toString(k)).intPoint((k++) % 2 == 0 ? 1 : 0));
+            indexService.postDocuments(indexRecords);
+        }
+    }
 
-	@Test
-	public void test() {
-		QueryDefinition queryDef =
-				QueryDefinition.of(new IntExactQuery("intPoint", 0)).collector("filter", FilterCollector.class).build();
-		FilterCollector.Query filterQuery = indexService.searchQuery(queryDef).getCollector("filter");
-		Assert.assertNotNull(filterQuery);
-		queryDef = QueryDefinition.of(filterQuery).queryDebug(true).build();
-		ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
-		Assert.assertNotNull(results);
-		Assert.assertEquals(Long.valueOf(500), results.total_hits);
-		Assert.assertEquals(Float.valueOf(1.0F), results.max_score);
-		Assert.assertEquals("(f)", results.getQuery());
-	}
+    @Test
+    public void test() {
+        QueryDefinition queryDef =
+                QueryDefinition.of(new IntExactQuery("intPoint", 0)).collector("filter", FilterCollector.class).build();
+        FilterCollector.Query filterQuery =
+                indexService.searchQuery(queryDef).getCollector("filter", FilterCollector.Query.class);
+        Assert.assertNotNull(filterQuery);
+        queryDef = QueryDefinition.of(filterQuery).queryDebug(true).build();
+        ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
+        Assert.assertNotNull(results);
+        Assert.assertEquals(500, results.totalHits);
+        Assert.assertEquals(1.0F, results.maxScore, 0);
+        Assert.assertEquals("(f)", results.getQuery());
+    }
 
 }

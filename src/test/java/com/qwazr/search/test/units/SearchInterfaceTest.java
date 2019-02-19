@@ -35,32 +35,32 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class SearchInterfaceTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	private static List<IndexRecord.NoTaxonomy> documents;
+    private static List<IndexRecord.NoTaxonomy> documents;
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
-		initIndexService();
-		documents = new ArrayList<>();
-		for (int i = 0; i < RandomUtils.nextInt(1, 10); i++)
-			documents.add(new IndexRecord.NoTaxonomy(RandomUtils.alphanumeric(RandomUtils.nextInt(2, 5))).intDocValue(
-					RandomUtils.nextInt(2, 5)));
-		indexService.postDocuments(documents);
-	}
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+        initIndexService();
+        documents = new ArrayList<>();
+        for (int i = 0; i < RandomUtils.nextInt(1, 10); i++)
+            documents.add(new IndexRecord.NoTaxonomy(RandomUtils.alphanumeric(RandomUtils.nextInt(2, 5))).intDocValue(
+                    RandomUtils.nextInt(2, 5)));
+        indexService.postDocuments(documents);
+    }
 
-	@Test
-	public void searchQuery() throws ReflectiveOperationException {
-		IndexRecord indexRecord = documents.get(RandomUtils.nextInt(0, documents.size()));
-		AtomicReference<String> idRef = new AtomicReference<>();
-		ResultDefinition.Empty results = indexService.searchQuery(
-				QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, indexRecord.id)).build(),
-				new ResultDocumentsInterface() {
-					@Override
-					public void doc(IndexSearcher searcher, int pos, ScoreDoc scoreDoc) throws IOException {
-						idRef.set(searcher.doc(scoreDoc.doc).get(FieldDefinition.ID_FIELD));
-					}
-				});
-		Assert.assertNotNull(results);
-		Assert.assertEquals(Long.valueOf(1), results.total_hits);
-		Assert.assertEquals(indexRecord.id, idRef.get());
-	}
+    @Test
+    public void searchQuery() {
+        IndexRecord indexRecord = documents.get(RandomUtils.nextInt(0, documents.size()));
+        AtomicReference<String> idRef = new AtomicReference<>();
+        ResultDefinition.Empty results = indexService.searchQuery(
+                QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, indexRecord.id)).build(),
+                new ResultDocumentsInterface() {
+                    @Override
+                    public void doc(IndexSearcher searcher, int pos, ScoreDoc scoreDoc) throws IOException {
+                        idRef.set(searcher.doc(scoreDoc.doc).get(FieldDefinition.ID_FIELD));
+                    }
+                });
+        Assert.assertNotNull(results);
+        Assert.assertEquals(1, results.totalHits);
+        Assert.assertEquals(indexRecord.id, idRef.get());
+    }
 }

@@ -22,7 +22,6 @@ import com.qwazr.search.field.Converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.search.SortField;
 
@@ -64,8 +63,12 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
             ts.add(type -> type.setIndexOptions(definition.indexOptions));
         if (definition.docValuesType != null)
             ts.add(type -> type.setDocValuesType(definition.docValuesType));
-        if (definition.dimensionCount != null && definition.dimensionNumBytes != null)
-            ts.add(type -> type.setDimensions(definition.dimensionCount, definition.dimensionNumBytes));
+        if (definition.indexDimensionCount != null && definition.dataDimensionCount != null &&
+                definition.dimensionNumBytes != null)
+            ts.add(type -> type.setDimensions(definition.dataDimensionCount, definition.indexDimensionCount,
+                    definition.dimensionNumBytes));
+        if (definition.attributes != null)
+            ts.add(type -> definition.attributes.forEach(type::putAttribute));
         return ts;
     }
 
@@ -103,11 +106,9 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
         case NONE:
             return null;
         case NUMERIC:
-            //TODO
-            throw new NotImplementedException("DOCVALUE NUMERIC");
+            return new SingleDVConverter.LongDVConverter(reader, field);
         case SORTED_NUMERIC:
-            //TODO
-            throw new NotImplementedException("DOCVALUE SORTED_NUMERIC");
+            return new SingleDVConverter.LongDVConverter(reader, field);
         case SORTED:
             return new SingleDVConverter.SortedDVConverter(reader, field);
         case SORTED_SET:
@@ -122,7 +123,22 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
         if (!(definition instanceof CustomFieldDefinition))
             return null;
         final CustomFieldDefinition customDef = (CustomFieldDefinition) definition;
-        throw new NotImplementedException("BytesRefUtils.Converter getConverter");
+        if (customDef.docValuesType == null)
+            return BytesRefUtils.Converter.STRING;
+        switch (customDef.docValuesType) {
+        case NONE:
+            return null;
+        case NUMERIC:
+            return BytesRefUtils.Converter.LONG;
+        case SORTED_NUMERIC:
+            return BytesRefUtils.Converter.LONG;
+        case SORTED_SET:
+            return BytesRefUtils.Converter.STRING;
+        case BINARY:
+            return BytesRefUtils.Converter.BYTESREF;
+        default:
+            return BytesRefUtils.Converter.STRING;
+        }
     }
 
 }

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
+import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.File;
@@ -32,9 +33,11 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonAutoDetect(creatorVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+@JsonAutoDetect(creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.NONE)
 public class IndexSettingsDefinition {
 
     public enum Type {
@@ -57,6 +60,13 @@ public class IndexSettingsDefinition {
     @JsonProperty("similarity_class")
     final public String similarityClass;
 
+    @JsonProperty("sort")
+    final public String sort;
+
+    @JsonProperty("sort_class")
+    final public String sortClass;
+
+    @JsonProperty("master")
     final public RemoteIndex master;
 
     @JsonProperty("directory_type")
@@ -101,48 +111,30 @@ public class IndexSettingsDefinition {
     @JsonProperty("nrt_caching_directory_max_cached_mb")
     final public Double nrtCachingDirectoryMaxCachedMB;
 
-    private IndexSettingsDefinition() {
-        this.directoryType = null;
-        this.mergeScheduler = null;
-        this.similarity = null;
-        this.similarityClass = null;
-        this.master = null;
-        this.ramBufferSize = null;
-        this.useCompoundFile = null;
-        this.useSimpleTextCodec = null;
-        this.maxMergeAtOnce = null;
-        this.maxMergedSegmentMB = null;
-        this.segmentsPerTier = null;
-        this.enableTaxonomyIndex = null;
-        this.sortedSetFacetField = null;
-        this.indexReaderWarmer = null;
-        this.mergedSegmentWarmer = null;
-        this.nrtCachingDirectoryMaxMergeSizeMB = null;
-        this.nrtCachingDirectoryMaxCachedMB = null;
-    }
-
     @JsonCreator
     private IndexSettingsDefinition(@JsonProperty("similarity") final String similarity,
-                                    @JsonProperty("similarity_class") final String similarityClass,
-                                    @JsonProperty("master") final RemoteIndex master,
-                                    @JsonProperty("directory_type") final Type directoryType,
-                                    @JsonProperty("merge_scheduler") final MergeScheduler mergeScheduler,
-                                    @JsonProperty("ram_buffer_size") final Double ramBufferSize,
-                                    @JsonProperty("use_compound_file") final Boolean useCompoundFile,
-                                    @JsonProperty("use_simple_text_codec") final Boolean useSimpleTextCodec,
-                                    @JsonProperty("max_merge_at_once") final Integer maxMergeAtOnce,
-                                    @JsonProperty("max_merged_segment_mb") final Double maxMergedSegmentMB,
-                                    @JsonProperty("segments_per_tier") final Double segmentsPerTier,
-                                    @JsonProperty("enable_taxonomy_index") final Boolean enableTaxonomyIndex,
-                                    @JsonProperty("sorted_set_facet_field") final String sortedSetFacetField,
-                                    @JsonProperty("index_reader_warmer") final Boolean indexReaderWarmer,
-                                    @JsonProperty("merged_segment_warmer") final Boolean mergedSegmentWarmer,
-                                    @JsonProperty("nrt_caching_directory_max_merge_size_mb") final Double nrtCachingDirectoryMaxMergeSizeMB,
-                                    @JsonProperty("nrt_caching_directory_max_cached_mb") final Double nrtCachingDirectoryMaxCachedMB) {
+            @JsonProperty("similarity_class") final String similarityClass, @JsonProperty("sort") final String sort,
+            @JsonProperty("sort_class") final String sortClass, @JsonProperty("master") final RemoteIndex master,
+            @JsonProperty("directory_type") final Type directoryType,
+            @JsonProperty("merge_scheduler") final MergeScheduler mergeScheduler,
+            @JsonProperty("ram_buffer_size") final Double ramBufferSize,
+            @JsonProperty("use_compound_file") final Boolean useCompoundFile,
+            @JsonProperty("use_simple_text_codec") final Boolean useSimpleTextCodec,
+            @JsonProperty("max_merge_at_once") final Integer maxMergeAtOnce,
+            @JsonProperty("max_merged_segment_mb") final Double maxMergedSegmentMB,
+            @JsonProperty("segments_per_tier") final Double segmentsPerTier,
+            @JsonProperty("enable_taxonomy_index") final Boolean enableTaxonomyIndex,
+            @JsonProperty("sorted_set_facet_field") final String sortedSetFacetField,
+            @JsonProperty("index_reader_warmer") final Boolean indexReaderWarmer,
+            @JsonProperty("merged_segment_warmer") final Boolean mergedSegmentWarmer,
+            @JsonProperty("nrt_caching_directory_max_merge_size_mb") final Double nrtCachingDirectoryMaxMergeSizeMB,
+            @JsonProperty("nrt_caching_directory_max_cached_mb") final Double nrtCachingDirectoryMaxCachedMB) {
         this.directoryType = directoryType;
         this.mergeScheduler = mergeScheduler;
         this.similarity = similarity;
         this.similarityClass = similarityClass;
+        this.sort = sort;
+        this.sortClass = sortClass;
         this.master = master;
         this.ramBufferSize = ramBufferSize;
         this.useCompoundFile = useCompoundFile;
@@ -163,6 +155,8 @@ public class IndexSettingsDefinition {
         this.mergeScheduler = builder.mergeScheduler;
         this.similarity = builder.similarity;
         this.similarityClass = builder.similarityClass;
+        this.sort = builder.sort;
+        this.sortClass = builder.sortClass;
         this.master = builder.master;
         this.ramBufferSize = builder.ramBufferSize;
         this.useCompoundFile = builder.useCompoundFile;
@@ -178,7 +172,7 @@ public class IndexSettingsDefinition {
         this.nrtCachingDirectoryMaxCachedMB = builder.nrtCachingDirectoryMaxCachedMB;
     }
 
-    final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();
+    final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition(new Builder());
 
     public static IndexSettingsDefinition newSettings(final String jsonString) throws IOException {
         if (StringUtils.isEmpty(jsonString))
@@ -207,6 +201,10 @@ public class IndexSettingsDefinition {
         if (!Objects.equals(similarity, s.similarity))
             return false;
         if (!Objects.equals(similarityClass, s.similarityClass))
+            return false;
+        if (!Objects.equals(sort, s.sort))
+            return false;
+        if (!Objects.equals(sortClass, s.sortClass))
             return false;
         if (!Objects.equals(master, s.master))
             return false;
@@ -255,6 +253,8 @@ public class IndexSettingsDefinition {
         private MergeScheduler mergeScheduler;
         private String similarity;
         private String similarityClass;
+        private String sort;
+        private String sortClass;
         private RemoteIndex master;
         private Double ramBufferSize;
         private Boolean useCompoundFile;
@@ -277,6 +277,7 @@ public class IndexSettingsDefinition {
             mergeScheduler = annotatedIndex.mergeScheduler();
             similarity(annotatedIndex.similarity());
             similarityClass(annotatedIndex.similarityClass());
+            sort(annotatedIndex.sort());
             master(annotatedIndex.replicationMaster());
             ramBufferSize(annotatedIndex.ramBufferSize());
             useCompoundFile(annotatedIndex.useCompoundFile());
@@ -297,6 +298,8 @@ public class IndexSettingsDefinition {
             this.mergeScheduler = settings.mergeScheduler;
             this.similarity = settings.similarity;
             this.similarityClass = settings.similarityClass;
+            this.sort = settings.sort;
+            this.sortClass = settings.sortClass;
             this.master = settings.master;
             this.ramBufferSize = settings.ramBufferSize;
             this.useCompoundFile = settings.useCompoundFile;
@@ -329,6 +332,16 @@ public class IndexSettingsDefinition {
 
         public Builder similarityClass(final Class<? extends Similarity> similarityClass) {
             this.similarityClass = similarityClass == null ? null : similarityClass.getName();
+            return this;
+        }
+
+        public Builder sort(final String sort) {
+            this.sort = sort;
+            return this;
+        }
+
+        public Builder sortClass(final Class<? extends Sort> sortClass) {
+            this.sortClass = sortClass == null ? null : sortClass.getName();
             return this;
         }
 
@@ -416,7 +429,7 @@ public class IndexSettingsDefinition {
     }
 
     static IndexSettingsDefinition load(final File settingsFile,
-                                        final Supplier<IndexSettingsDefinition> defaultSettings) throws IOException {
+            final Supplier<IndexSettingsDefinition> defaultSettings) throws IOException {
         return settingsFile != null && settingsFile.exists() && settingsFile.isFile() && settingsFile.length() > 0 ?
                 ObjectMappers.JSON.readValue(settingsFile, IndexSettingsDefinition.class) :
                 defaultSettings == null ? null : defaultSettings.get();

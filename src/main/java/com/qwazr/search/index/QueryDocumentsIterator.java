@@ -36,7 +36,7 @@ public class QueryDocumentsIterator<T> implements Iterator<T> {
     private int currentPos;
 
     public QueryDocumentsIterator(@NotNull final AnnotatedIndexService<?> service,
-                                  @NotNull final QueryDefinition queryDefinition, @NotNull final Class<T> recordClass) {
+            @NotNull final QueryDefinition queryDefinition, @NotNull final Class<T> recordClass) {
         this.service = service;
         this.recordClass = recordClass;
         this.queryBuilder = new QueryBuilder(queryDefinition);
@@ -50,7 +50,7 @@ public class QueryDocumentsIterator<T> implements Iterator<T> {
 
     private synchronized boolean nextExecution() {
         final ResultDefinition.WithObject<T> result = service.searchQuery(queryBuilder.build(), recordClass);
-        count = result.total_hits;
+        count = result.totalHits;
         currentPos = 0;
         currentDocuments = result.documents;
         queryBuilder.start(queryBuilder.start + queryBuilder.rows);

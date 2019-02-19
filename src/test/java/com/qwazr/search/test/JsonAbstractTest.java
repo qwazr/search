@@ -436,26 +436,26 @@ public abstract class JsonAbstractTest {
     }
 
     private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, String index,
-                                                     QueryDefinition queryDef, int expectedCount) throws IOException {
+            QueryDefinition queryDef, int expectedCount) {
         checkErrorStatusCode(() -> client.searchQuery(SCHEMA_NAME, INDEX_DUMMY_NAME, queryDef, null), 404);
         final ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, index, queryDef, null);
         Assert.assertNotNull(result);
-        Assert.assertNotNull(result.total_hits);
-        Assert.assertEquals(expectedCount, result.total_hits.intValue());
+        Assert.assertNotNull(result.totalHits);
+        Assert.assertEquals(expectedCount, result.totalHits);
         return result;
     }
 
     private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef,
-                                                     int expectedCount) throws IOException {
+            int expectedCount) throws IOException {
         return checkQueryIndex(client, INDEX_MASTER_NAME, queryDef, expectedCount);
     }
 
     private ResultDefinition.WithMap checkQuerySlaveIndex(IndexServiceInterface client, QueryDefinition queryDef,
-                                                          int expectedCount) throws IOException {
+            int expectedCount) throws IOException {
         return checkQueryIndex(client, INDEX_SLAVE_NAME, queryDef, expectedCount);
     }
 
-    private void checkIndexSize(IndexServiceInterface client, long expectedCount) throws IOException {
+    private void checkIndexSize(IndexServiceInterface client, long expectedCount) {
         checkErrorStatusCode(() -> client.getIndex(SCHEMA_NAME, INDEX_DUMMY_NAME), 404);
         IndexStatus status = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(status);
@@ -536,7 +536,7 @@ public abstract class JsonAbstractTest {
     }
 
     private BackupStatus checkBackup(SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups,
-                                     String backupName) {
+            String backupName) {
         Assert.assertNotNull(backups);
         final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults = backups.get(SCHEMA_NAME);
         Assert.assertNotNull(schemaResults);
@@ -548,7 +548,7 @@ public abstract class JsonAbstractTest {
     }
 
     private BackupStatus getAndCheckBackup(IndexServiceInterface client, String backupName,
-                                           final boolean extractVersion) {
+            final boolean extractVersion) {
         return checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, backupName, extractVersion), backupName);
     }
 
@@ -706,7 +706,7 @@ public abstract class JsonAbstractTest {
     }
 
     private <T extends Comparable> void checkDescending(T startValue, String field,
-                                                        Collection<ResultDocumentMap> documents) {
+            Collection<ResultDocumentMap> documents) {
         T old = startValue;
         for (ResultDocumentMap document : documents) {
             Assert.assertNotNull(document.fields);
@@ -718,7 +718,7 @@ public abstract class JsonAbstractTest {
     }
 
     private <T extends Comparable> void checkAscending(T startValue, String field,
-                                                       Collection<ResultDocumentMap> documents) {
+            Collection<ResultDocumentMap> documents) {
         T old = startValue;
         for (ResultDocumentMap document : documents) {
             Assert.assertNotNull(document.fields);
@@ -781,7 +781,7 @@ public abstract class JsonAbstractTest {
     }
 
     private void checkSynonyms(final IndexServiceInterface client, final String queryString,
-                               final String... multiWordsHighlights) throws IOException {
+            final String... multiWordsHighlights) throws IOException {
         final QueryBuilder builder = QueryDefinition.of(QUERY_HIGHLIGHT);
         builder.query(QueryParser.of("description")
                 .setDefaultOperator(QueryParserOperator.AND)
@@ -926,7 +926,7 @@ public abstract class JsonAbstractTest {
 
     @Test
     public void test600FieldAnalyzer() throws URISyntaxException {
-        final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
+        final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(
                 () -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),
@@ -967,17 +967,17 @@ public abstract class JsonAbstractTest {
         builder.start(0).rows(0);
         ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, builder.build(), false);
         Assert.assertNotNull(result);
-        Assert.assertNotNull(result.total_hits);
-        Assert.assertTrue(result.total_hits > 0);
+        Assert.assertNotNull(result.totalHits);
+        Assert.assertTrue(result.totalHits > 0);
         builder.rows(1);
         Set<Integer> idSet = new HashSet<>();
-        for (int i = 0; i < result.total_hits; i++) {
+        for (int i = 0; i < result.totalHits; i++) {
             builder.start(i);
             ResultDefinition.WithMap result2 =
                     client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, builder.build(), false);
             idSet.add(result2.getDocuments().get(0).getDoc());
         }
-        Assert.assertEquals(result.total_hits.intValue(), idSet.size());
+        Assert.assertEquals(result.totalHits, idSet.size());
     }
 
     @Test
@@ -1150,8 +1150,7 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         final ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, DELETE_QUERY, true);
         Assert.assertNotNull(result);
-        Assert.assertNotNull(result.total_hits);
-        Assert.assertEquals(3L, (long) result.total_hits);
+        Assert.assertEquals(3L, result.totalHits);
         checkAllSizes(client, 3);
     }
 

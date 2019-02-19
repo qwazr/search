@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2019 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.qwazr.utils.concurrent.ReadWriteLock;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.index.CheckIndex;
+import org.apache.lucene.search.Sort;
 import org.apache.lucene.store.Directory;
 
 import java.io.Closeable;
@@ -45,6 +46,7 @@ class IndexInstanceManager implements Closeable {
     private final IndexFileSet fileSet;
     private final Map<String, SimilarityFactory> similarityFactoryMap;
     private final Map<String, AnalyzerFactory> analyzerFactoryMap;
+    private final Map<String, Sort> sortMap;
     private final ReadWriteSemaphores readWriteSemaphores;
 
     private final UUID indexUuid;
@@ -54,9 +56,9 @@ class IndexInstanceManager implements Closeable {
 
     IndexInstanceManager(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
             final Map<String, SimilarityFactory> similarityFactoryMap,
-            final Map<String, AnalyzerFactory> analyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
-            final ExecutorService executorService, final IndexServiceInterface indexServiceInterface,
-            final Path indexDirectory) {
+            final Map<String, AnalyzerFactory> analyzerFactoryMap, final Map<String, Sort> sortMap,
+            final ReadWriteSemaphores readWriteSemaphores, final ExecutorService executorService,
+            final IndexServiceInterface indexServiceInterface, final Path indexDirectory) {
 
         try {
             rwl = ReadWriteLock.stamped();
@@ -67,6 +69,7 @@ class IndexInstanceManager implements Closeable {
             this.fileSet = new IndexFileSet(indexDirectory);
             this.similarityFactoryMap = similarityFactoryMap;
             this.analyzerFactoryMap = analyzerFactoryMap;
+            this.sortMap = sortMap;
             this.readWriteSemaphores = readWriteSemaphores;
 
             this.indexName = fileSet.checkIndexDirectory();
@@ -82,8 +85,8 @@ class IndexInstanceManager implements Closeable {
         if (indexInstance == null)
             indexInstance =
                     new IndexInstanceBuilder(indexProvider, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
-                            readWriteSemaphores, executorService, indexServiceInterface, fileSet, settings, indexUuid, indexName)
-                            .build();
+                            sortMap, readWriteSemaphores, executorService, indexServiceInterface, fileSet, settings,
+                            indexUuid, indexName).build();
         return indexInstance;
     }
 

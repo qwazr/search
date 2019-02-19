@@ -39,6 +39,7 @@ import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.TieredMergePolicy;
 import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.SearcherManager;
+import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -79,6 +80,8 @@ class IndexInstanceBuilder {
 
     private final Map<String, SimilarityFactory> similarityFactoryMap;
     final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap;
+    private final Map<String, Sort> sortMap;
+
     LinkedHashMap<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap;
 
     FieldMap fieldMap = null;
@@ -91,12 +94,14 @@ class IndexInstanceBuilder {
     WriterAndSearcher writerAndSearcher = null;
 
     private Similarity similarity;
+    private Sort sort;
     private SearcherFactory searcherFactory;
 
     IndexInstanceBuilder(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
             final Map<String, SimilarityFactory> similarityFactoryMap,
-            final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap, final ReadWriteSemaphores readWriteSemaphores,
-            final ExecutorService executorService, final IndexServiceInterface indexService, final IndexFileSet fileSet,
+            final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap, final Map<String, Sort> sortMap,
+            final ReadWriteSemaphores readWriteSemaphores, final ExecutorService executorService,
+            final IndexServiceInterface indexService, final IndexFileSet fileSet,
             final IndexSettingsDefinition settings, final UUID indexUuid, final String indexName) {
         this.fileSet = fileSet;
         this.executorService = executorService;
@@ -105,6 +110,7 @@ class IndexInstanceBuilder {
         this.instanceFactory = instanceFactory;
         this.settings = settings;
         this.similarityFactoryMap = similarityFactoryMap;
+        this.sortMap = sortMap;
         this.globalAnalyzerFactoryMap = globalAnalyzerFactoryMap;
         this.indexService = indexService;
         this.fileResourceLoader = new FileResourceLoader(null, fileSet.resourcesDirectoryPath);
@@ -115,6 +121,7 @@ class IndexInstanceBuilder {
     private void buildCommon() throws IOException, ReflectiveOperationException {
 
         similarity = findSimilarity(settings.similarity, settings.similarityClass, fileResourceLoader);
+        sort = findSort(settings.sort, settings.sortClass);
 
         searcherFactory = MultiThreadSearcherFactory.of(executorService,
                 settings.indexReaderWarmer == null ? true : settings.indexReaderWarmer, similarity,
@@ -138,25 +145,34 @@ class IndexInstanceBuilder {
                 null;
     }
 
-    private Similarity findSimilarity(final String similarityName,
-                                      final String similarityClassName,
-                                      final ResourceLoader resourceLoader)
-            throws IOException, ReflectiveOperationException {
-        Similarity similarity = null;
-        if(similarityName != null && !similarityName.isEmpty()) {
-            similarity = getFromFactory(resourceLoader, similarityName, similarityFactoryMap);
+    private Similarity findSimilarity(final String similarityName, final String similarityClassName,
+            final ResourceLoader resourceLoader) throws IOException, ReflectiveOperationException {
+        if (similarityName != null && !similarityName.isEmpty()) {
+            final Similarity similarity = getFromFactory(resourceLoader, similarityName, similarityFactoryMap);
+            if (similarity != null)
+                return similarity;
         }
-        if (similarity == null && similarityClassName != null && !similarityClassName.isEmpty()) {
-            final Class<Similarity> similarityClass =
-                    ClassLoaderUtils.findClass(similarityClassName, similarityClassPrefixes);
-            similarity = instanceFactory.findBestMatchingConstructor(similarityClass).newInstance();
-        }
-        return similarity;
+        if (similarityClassName == null)
+            return null;
+        final Class<Similarity> similarityClass =
+                ClassLoaderUtils.findClass(similarityClassName, similarityClassPrefixes);
+        return instanceFactory.findBestMatchingConstructor(similarityClass).newInstance();
     }
 
-    private Similarity getFromFactory(final ResourceLoader resourceLoader,
-                                    final String similarityName,
-                                    final Map<String, ? extends SimilarityFactory> similarityFactoryMap)
+    private Sort findSort(final String sortName, final String sortClassName) throws ReflectiveOperationException {
+        if (sortName != null && !sortName.isEmpty()) {
+            final Sort sort = sortMap.get(sortName);
+            if (sort != null)
+                return sort;
+        }
+        if (sortClassName == null)
+            return null;
+        final Class<Sort> sortClass = ClassLoaderUtils.findClass(sortClassName);
+        return instanceFactory.findBestMatchingConstructor(sortClass).newInstance();
+    }
+
+    private Similarity getFromFactory(final ResourceLoader resourceLoader, final String similarityName,
+            final Map<String, ? extends SimilarityFactory> similarityFactoryMap)
             throws IOException, ReflectiveOperationException {
         if (similarityFactoryMap == null)
             return null;
@@ -190,11 +206,13 @@ class IndexInstanceBuilder {
         if (settings != null) {
             if (similarity != null)
                 indexWriterConfig.setSimilarity(similarity);
+            if (sort != null)
+                indexWriterConfig.setIndexSort(sort);
             if (settings.ramBufferSize != null)
                 indexWriterConfig.setRAMBufferSizeMB(settings.ramBufferSize);
             if (settings.useCompoundFile != null)
                 indexWriterConfig.setUseCompoundFile(settings.useCompoundFile);
-            if(settings.useSimpleTextCodec != null && settings.useSimpleTextCodec)
+            if (settings.useSimpleTextCodec != null && settings.useSimpleTextCodec)
                 indexWriterConfig.setCodec(new SimpleTextCodec());
 
             final TieredMergePolicy mergePolicy = new TieredMergePolicy();

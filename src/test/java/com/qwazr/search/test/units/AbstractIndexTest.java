@@ -79,7 +79,7 @@ public abstract class AbstractIndexTest {
         if (result.query != null)
             LOGGER.info(result.query);
         if (hitsExpected != null) {
-            Assert.assertEquals(hitsExpected, result.total_hits);
+            Assert.assertEquals(hitsExpected.longValue(), result.totalHits);
             if (hitsExpected > 0) {
                 ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
                 Assert.assertNotNull(explain);
