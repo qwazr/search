@@ -25,35 +25,36 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.util.Objects;
 
+@Deprecated
 public class BoostingQuery extends AbstractQuery<BoostingQuery> {
 
-	@JsonProperty("match_query")
-	public final AbstractQuery matchQuery;
+    @JsonProperty("match_query")
+    public final AbstractQuery matchQuery;
 
-	@JsonProperty("context_query")
-	public final AbstractQuery contextQuery;
+    @JsonProperty("context_query")
+    public final AbstractQuery contextQuery;
 
-	public final Float boost;
+    public final Float boost;
 
-	@JsonCreator
-	public BoostingQuery(@JsonProperty("match_query") final AbstractQuery matchQuery,
-			@JsonProperty("context_query") final AbstractQuery contextQuery, @JsonProperty("boost") final Float boost) {
-		super(BoostingQuery.class);
-		this.matchQuery = Objects.requireNonNull(matchQuery, "The match query is missing");
-		this.contextQuery = Objects.requireNonNull(contextQuery, "The context query is missing");
-		this.boost = boost;
-	}
+    @JsonCreator
+    public BoostingQuery(@JsonProperty("match_query") final AbstractQuery matchQuery,
+                         @JsonProperty("context_query") final AbstractQuery contextQuery, @JsonProperty("boost") final Float boost) {
+        super(BoostingQuery.class);
+        this.matchQuery = Objects.requireNonNull(matchQuery, "The match query is missing");
+        this.contextQuery = Objects.requireNonNull(contextQuery, "The context query is missing");
+        this.boost = boost;
+    }
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		return new org.apache.lucene.queries.BoostingQuery(matchQuery.getQuery(queryContext),
-				contextQuery.getQuery(queryContext), boost == null ? 1.0f : boost);
-	}
+    @Override
+    final public Query getQuery(final QueryContext queryContext)
+            throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+        return new org.apache.lucene.queries.BoostingQuery(matchQuery.getQuery(queryContext),
+                contextQuery.getQuery(queryContext), boost == null ? 1.0f : boost);
+    }
 
-	@Override
-	protected boolean isEqual(final BoostingQuery q) {
-		return Objects.equals(matchQuery, q.matchQuery) && Objects.equals(contextQuery, q.contextQuery) &&
-				Objects.equals(boost, q.boost);
-	}
+    @Override
+    protected boolean isEqual(final BoostingQuery q) {
+        return Objects.equals(matchQuery, q.matchQuery) && Objects.equals(contextQuery, q.contextQuery) &&
+                Objects.equals(boost, q.boost);
+    }
 }

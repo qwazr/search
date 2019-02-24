@@ -79,12 +79,12 @@ class QueryCollectorsClassic extends QueryCollectors {
 
     private Collector getFinalCollector() {
         switch (collectors.size()) {
-        case 0:
-            return null;
-        case 1:
-            return collectors.get(0);
-        default:
-            return MultiCollector.wrap(collectors);
+            case 0:
+                return null;
+            case 1:
+                return collectors.get(0);
+            default:
+                return MultiCollector.wrap(collectors);
         }
     }
 
@@ -97,13 +97,12 @@ class QueryCollectorsClassic extends QueryCollectors {
         return null;
     }
 
-    private TopDocsCollector buildTopDocCollector(final Sort sort, final int numHits, final boolean bNeedScore)
-            throws IOException {
+    private TopDocsCollector buildTopDocCollector(final Sort sort, final int numHits, final boolean bNeedScore) {
         if (numHits == 0)
             return null;
         final TopDocsCollector topDocsCollector;
         if (sort != null)
-            topDocsCollector = TopFieldCollector.create(sort, numHits, true, bNeedScore, bNeedScore);
+            topDocsCollector = TopFieldCollector.create(sort, numHits, true, bNeedScore, bNeedScore, true);
         else
             topDocsCollector = TopScoreDocCollector.create(numHits);
         return add(topDocsCollector);

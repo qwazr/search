@@ -30,50 +30,50 @@ import java.util.Objects;
 
 class FileResourceLoader implements ResourceLoader {
 
-	private final ResourceLoader delegate;
-	private final Path directory;
+    private final ResourceLoader delegate;
+    private final Path directory;
 
-	FileResourceLoader(final ResourceLoader delegate, final Path directory) {
-		this.delegate = delegate;
-		this.directory = directory;
-	}
+    FileResourceLoader(final ResourceLoader delegate, final Path directory) {
+        this.delegate = delegate;
+        this.directory = directory;
+    }
 
-	final Path checkResourceName(final String resourceName) {
-		Objects.requireNonNull(resourceName, "The resource name is missing");
-		final String expectedResourceName = FilenameUtils.getName(FilenameUtils.normalize(resourceName));
-		if (!resourceName.equals(expectedResourceName))
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"The resource name is not valid. Expected: " + expectedResourceName);
-		return directory.resolve(expectedResourceName);
-	}
+    final Path checkResourceName(final String resourceName) {
+        Objects.requireNonNull(resourceName, "The resource name is missing");
+        final String expectedResourceName = FilenameUtils.getName(FilenameUtils.normalize(resourceName));
+        if (!resourceName.equals(expectedResourceName))
+            throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+                    "The resource name is not valid. Expected: " + expectedResourceName);
+        return directory.resolve(expectedResourceName);
+    }
 
-	@Override
-	public InputStream openResource(final String resourceName) throws IOException {
-		if (Files.exists(directory)) {
-			final Path resourceFilePath = checkResourceName(resourceName);
-			if (Files.exists(resourceFilePath))
-				return new FileInputStream(resourceFilePath.toFile());
-		}
-		if (delegate != null)
-			return delegate.openResource(resourceName);
-		throw new ServerException(Response.Status.NOT_FOUND, "Resource not found : " + resourceName);
-	}
+    @Override
+    public InputStream openResource(final String resourceName) throws IOException {
+        if (Files.exists(directory)) {
+            final Path resourceFilePath = checkResourceName(resourceName);
+            if (Files.exists(resourceFilePath))
+                return new FileInputStream(resourceFilePath.toFile());
+        }
+        if (delegate != null)
+            return delegate.openResource(resourceName);
+        throw new ServerException(Response.Status.NOT_FOUND, "Resource not found : " + resourceName);
+    }
 
-	@Override
-	public <T> Class<? extends T> findClass(final String cname, final Class<T> expectedType) {
-		try {
-			return ClassLoaderUtils.findClass(cname);
-		} catch (ClassNotFoundException e) {
-			throw ServerException.of("Cannot find class " + cname, e);
-		}
-	}
+    @Override
+    public <T> Class<? extends T> findClass(final String cname, final Class<T> expectedType) {
+        try {
+            return ClassLoaderUtils.findClass(cname);
+        } catch (ClassNotFoundException e) {
+            throw ServerException.of("Cannot find class " + cname, e);
+        }
+    }
 
-	@Override
-	public <T> T newInstance(final String className, final Class<T> expectedType) {
-		try {
-			return findClass(className, expectedType).newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
-			throw ServerException.of("Cannot create an instance of class " + className, e);
-		}
-	}
+    @Override
+    public <T> T newInstance(final String className, final Class<T> expectedType) {
+        try {
+            return findClass(className, expectedType).getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw ServerException.of("Cannot create an instance of class " + className, e);
+        }
+    }
 }

@@ -4,3 +4,7 @@ target
 .settings
 .idea
 qwazr-search.iml
+.gradle/
+build/
+bin/
+out/

@@ -31,156 +31,157 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Objects;
 
+@Deprecated
 public class CustomScoreQuery extends AbstractQuery<CustomScoreQuery> {
 
-	public final AbstractQuery subQuery;
-	public final FunctionQuery scoringQuery;
-	public final FunctionQuery[] scoringQueries;
-	@JsonProperty("customScoreProvider")
-	public final String customScoreProviderClassName;
-	@JsonIgnore
-	public final Class<? extends CustomScoreProvider> customScoreProviderClass;
+    public final AbstractQuery subQuery;
+    public final FunctionQuery scoringQuery;
+    public final FunctionQuery[] scoringQueries;
+    @JsonProperty("customScoreProvider")
+    public final String customScoreProviderClassName;
+    @JsonIgnore
+    public final Class<? extends CustomScoreProvider> customScoreProviderClass;
 
-	@JsonCreator
-	private CustomScoreQuery(@JsonProperty("subQuery") final AbstractQuery subQuery,
-			@JsonProperty("customScoreProvider") final String customScoreProviderClassName,
-			@JsonProperty("scoringQuery") final FunctionQuery scoringQuery,
-			@JsonProperty("scoringQueries") final FunctionQuery... scoringQueries) {
-		super(CustomScoreQuery.class);
-		this.subQuery = subQuery;
-		this.scoringQuery = scoringQuery;
-		this.scoringQueries = scoringQueries;
-		this.customScoreProviderClassName = customScoreProviderClassName;
-		this.customScoreProviderClass = null;
-	}
+    @JsonCreator
+    private CustomScoreQuery(@JsonProperty("subQuery") final AbstractQuery subQuery,
+                             @JsonProperty("customScoreProvider") final String customScoreProviderClassName,
+                             @JsonProperty("scoringQuery") final FunctionQuery scoringQuery,
+                             @JsonProperty("scoringQueries") final FunctionQuery... scoringQueries) {
+        super(CustomScoreQuery.class);
+        this.subQuery = subQuery;
+        this.scoringQuery = scoringQuery;
+        this.scoringQueries = scoringQueries;
+        this.customScoreProviderClassName = customScoreProviderClassName;
+        this.customScoreProviderClass = null;
+    }
 
-	public CustomScoreQuery(final AbstractQuery subQuery, final FunctionQuery... scoringQueries) {
-		this(subQuery, null, (String) null, scoringQueries);
-	}
+    public CustomScoreQuery(final AbstractQuery subQuery, final FunctionQuery... scoringQueries) {
+        this(subQuery, null, (String) null, scoringQueries);
+    }
 
-	public CustomScoreQuery(final AbstractQuery subQuery,
-			final Class<? extends CustomScoreProvider> customScoreProviderClass,
-			final String customScoreProviderClassName, final FunctionQuery... scoringQueries) {
-		super(CustomScoreQuery.class);
-		this.subQuery = subQuery;
-		if (scoringQueries == null || scoringQueries.length == 0) {
-			this.scoringQuery = null;
-			this.scoringQueries = null;
-		} else {
-			if (scoringQueries.length == 1) {
-				this.scoringQuery = scoringQueries[0];
-				this.scoringQueries = null;
-			} else {
-				this.scoringQuery = null;
-				this.scoringQueries = scoringQueries;
-			}
-		}
-		this.customScoreProviderClassName = customScoreProviderClassName;
-		this.customScoreProviderClass = customScoreProviderClass;
-	}
+    public CustomScoreQuery(final AbstractQuery subQuery,
+                            final Class<? extends CustomScoreProvider> customScoreProviderClass,
+                            final String customScoreProviderClassName, final FunctionQuery... scoringQueries) {
+        super(CustomScoreQuery.class);
+        this.subQuery = subQuery;
+        if (scoringQueries == null || scoringQueries.length == 0) {
+            this.scoringQuery = null;
+            this.scoringQueries = null;
+        } else {
+            if (scoringQueries.length == 1) {
+                this.scoringQuery = scoringQueries[0];
+                this.scoringQueries = null;
+            } else {
+                this.scoringQuery = null;
+                this.scoringQueries = scoringQueries;
+            }
+        }
+        this.customScoreProviderClassName = customScoreProviderClassName;
+        this.customScoreProviderClass = customScoreProviderClass;
+    }
 
-	public CustomScoreQuery(@JsonProperty("subQuery") final AbstractQuery subQuery,
-			@JsonProperty("customScoreProvider") final String customScoreProviderClass,
-			@JsonProperty("scoringQueries") final FunctionQuery... scoringQueries) {
-		this(subQuery, null, customScoreProviderClass, scoringQueries);
-	}
+    public CustomScoreQuery(@JsonProperty("subQuery") final AbstractQuery subQuery,
+                            @JsonProperty("customScoreProvider") final String customScoreProviderClass,
+                            @JsonProperty("scoringQueries") final FunctionQuery... scoringQueries) {
+        this(subQuery, null, customScoreProviderClass, scoringQueries);
+    }
 
-	public CustomScoreQuery(final AbstractQuery subQuery,
-			final Class<? extends CustomScoreProvider> customScoreProviderClass,
-			final FunctionQuery... scoringQueries) {
-		this(subQuery, customScoreProviderClass, null, scoringQueries);
-	}
+    public CustomScoreQuery(final AbstractQuery subQuery,
+                            final Class<? extends CustomScoreProvider> customScoreProviderClass,
+                            final FunctionQuery... scoringQueries) {
+        this(subQuery, customScoreProviderClass, null, scoringQueries);
+    }
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		Objects.requireNonNull(subQuery, "Missing subQuery property");
-		final Query query = subQuery.getQuery(queryContext);
-		final org.apache.lucene.queries.CustomScoreQuery customScoreQuery;
+    @Override
+    final public Query getQuery(final QueryContext queryContext)
+            throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+        Objects.requireNonNull(subQuery, "Missing subQuery property");
+        final Query query = subQuery.getQuery(queryContext);
+        final org.apache.lucene.queries.CustomScoreQuery customScoreQuery;
 
-		if (customScoreProviderClass != null)
-			customScoreQuery = buildCustomScoreQueryProvider(query, queryContext, customScoreProviderClass);
-		else if (customScoreProviderClassName != null)
-			customScoreQuery = buildCustomScoreQueryProvider(query, queryContext, getProviderClass());
-		else
-			customScoreQuery = buildCustomScoreQuery(query, queryContext);
-		return customScoreQuery;
-	}
+        if (customScoreProviderClass != null)
+            customScoreQuery = buildCustomScoreQueryProvider(query, queryContext, customScoreProviderClass);
+        else if (customScoreProviderClassName != null)
+            customScoreQuery = buildCustomScoreQueryProvider(query, queryContext, getProviderClass());
+        else
+            customScoreQuery = buildCustomScoreQuery(query, queryContext);
+        return customScoreQuery;
+    }
 
-	private org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQuery(final Query query,
-			final QueryContext queryContext)
-			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
-		if (scoringQueries != null)
-			return new org.apache.lucene.queries.CustomScoreQuery(query,
-					FunctionQuery.getQueries(scoringQueries, queryContext));
-		else if (scoringQuery != null)
-			return new org.apache.lucene.queries.CustomScoreQuery(query, scoringQuery.getQuery(queryContext));
-		else
-			return new org.apache.lucene.queries.CustomScoreQuery(query);
-	}
+    private org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQuery(final Query query,
+                                                                             final QueryContext queryContext)
+            throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+        if (scoringQueries != null)
+            return new org.apache.lucene.queries.CustomScoreQuery(query,
+                    FunctionQuery.getQueries(scoringQueries, queryContext));
+        else if (scoringQuery != null)
+            return new org.apache.lucene.queries.CustomScoreQuery(query, scoringQuery.getQuery(queryContext));
+        else
+            return new org.apache.lucene.queries.CustomScoreQuery(query);
+    }
 
-	private Class<? extends CustomScoreProvider> getProviderClass() throws ReflectiveOperationException {
-		Class<? extends CustomScoreProvider> customScoreProviderClass =
-				ClassLoaderUtils.findClass(customScoreProviderClassName);
-		Objects.requireNonNull(customScoreProviderClass, "Cannot find the class for " + customScoreProviderClassName);
-		return customScoreProviderClass;
-	}
+    private Class<? extends CustomScoreProvider> getProviderClass() throws ReflectiveOperationException {
+        Class<? extends CustomScoreProvider> customScoreProviderClass =
+                ClassLoaderUtils.findClass(customScoreProviderClassName);
+        Objects.requireNonNull(customScoreProviderClass, "Cannot find the class for " + customScoreProviderClassName);
+        return customScoreProviderClass;
+    }
 
-	private org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQueryProvider(final Query query,
-			final QueryContext queryContext, final Class<? extends CustomScoreProvider> customScoreProviderClass)
-			throws ReflectiveOperationException, ParseException, IOException, QueryNodeException {
+    private org.apache.lucene.queries.CustomScoreQuery buildCustomScoreQueryProvider(final Query query,
+                                                                                     final QueryContext queryContext, final Class<? extends CustomScoreProvider> customScoreProviderClass)
+            throws ReflectiveOperationException, ParseException, IOException, QueryNodeException {
 
-		final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor =
-				customScoreProviderClass.getConstructor(LeafReaderContext.class);
+        final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor =
+                customScoreProviderClass.getConstructor(LeafReaderContext.class);
 
-		if (scoringQueries != null)
-			return new CustomScoreQueryWithProvider(customScoreProviderConstructor, query,
-					FunctionQuery.getQueries(scoringQueries, queryContext));
-		else if (scoringQuery != null)
-			return new CustomScoreQueryWithProvider(customScoreProviderConstructor, query,
-					scoringQuery.getQuery(queryContext));
-		else
-			return new CustomScoreQueryWithProvider(customScoreProviderConstructor, query);
-	}
+        if (scoringQueries != null)
+            return new CustomScoreQueryWithProvider(customScoreProviderConstructor, query,
+                    FunctionQuery.getQueries(scoringQueries, queryContext));
+        else if (scoringQuery != null)
+            return new CustomScoreQueryWithProvider(customScoreProviderConstructor, query,
+                    scoringQuery.getQuery(queryContext));
+        else
+            return new CustomScoreQueryWithProvider(customScoreProviderConstructor, query);
+    }
 
-	@Override
-	protected boolean isEqual(final CustomScoreQuery q) {
-		return Objects.equals(subQuery, q.subQuery) && Objects.equals(scoringQuery, q.scoringQuery) &&
-				Arrays.equals(scoringQueries, q.scoringQueries) &&
-				Objects.equals(customScoreProviderClassName, q.customScoreProviderClassName) &&
-				Objects.equals(customScoreProviderClass, q.customScoreProviderClass);
-	}
+    @Override
+    protected boolean isEqual(final CustomScoreQuery q) {
+        return Objects.equals(subQuery, q.subQuery) && Objects.equals(scoringQuery, q.scoringQuery) &&
+                Arrays.equals(scoringQueries, q.scoringQueries) &&
+                Objects.equals(customScoreProviderClassName, q.customScoreProviderClassName) &&
+                Objects.equals(customScoreProviderClass, q.customScoreProviderClass);
+    }
 
-	private static class CustomScoreQueryWithProvider extends org.apache.lucene.queries.CustomScoreQuery {
+    private static class CustomScoreQueryWithProvider extends org.apache.lucene.queries.CustomScoreQuery {
 
-		private final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor;
+        private final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor;
 
-		private CustomScoreQueryWithProvider(
-				final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor, final Query subQuery) {
-			super(subQuery);
-			this.customScoreProviderConstructor = customScoreProviderConstructor;
-		}
+        private CustomScoreQueryWithProvider(
+                final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor, final Query subQuery) {
+            super(subQuery);
+            this.customScoreProviderConstructor = customScoreProviderConstructor;
+        }
 
-		private CustomScoreQueryWithProvider(
-				final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor, final Query subQuery,
-				final org.apache.lucene.queries.function.FunctionQuery scoringQuery) {
-			super(subQuery, scoringQuery);
-			this.customScoreProviderConstructor = customScoreProviderConstructor;
-		}
+        private CustomScoreQueryWithProvider(
+                final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor, final Query subQuery,
+                final org.apache.lucene.queries.function.FunctionQuery scoringQuery) {
+            super(subQuery, scoringQuery);
+            this.customScoreProviderConstructor = customScoreProviderConstructor;
+        }
 
-		private CustomScoreQueryWithProvider(
-				final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor, final Query subQuery,
-				final org.apache.lucene.queries.function.FunctionQuery[] scoringQueries) {
-			super(subQuery, scoringQueries);
-			this.customScoreProviderConstructor = customScoreProviderConstructor;
-		}
+        private CustomScoreQueryWithProvider(
+                final Constructor<? extends CustomScoreProvider> customScoreProviderConstructor, final Query subQuery,
+                final org.apache.lucene.queries.function.FunctionQuery[] scoringQueries) {
+            super(subQuery, scoringQueries);
+            this.customScoreProviderConstructor = customScoreProviderConstructor;
+        }
 
-		protected CustomScoreProvider getCustomScoreProvider(final LeafReaderContext context) {
-			try {
-				return customScoreProviderConstructor.newInstance(context);
-			} catch (ReflectiveOperationException e) {
-				throw new RuntimeException(e);
-			}
-		}
-	}
+        protected CustomScoreProvider getCustomScoreProvider(final LeafReaderContext context) {
+            try {
+                return customScoreProviderConstructor.newInstance(context);
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 }

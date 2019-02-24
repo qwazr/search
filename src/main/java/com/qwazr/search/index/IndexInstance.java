@@ -291,7 +291,7 @@ final public class IndexInstance implements Closeable {
     }
 
     private <T> T useAnalyzer(final UpdatableAnalyzers updatableAnalyzers, final String field,
-            final FunctionEx<Analyzer, T, IOException> analyzerConsumer) throws ServerException, IOException {
+                              final FunctionEx<Analyzer, T, IOException> analyzerConsumer) throws ServerException, IOException {
         try (final UpdatableAnalyzers.Analyzers analyzers = updatableAnalyzers.getAnalyzers()) {
             return analyzerConsumer.apply(analyzers.getWrappedAnalyzer(field));
         }
@@ -490,14 +490,14 @@ final public class IndexInstance implements Closeable {
     }
 
     final <T> int postDocument(final Map<String, Field> fields, final T document,
-            final Map<String, String> commitUserData, boolean update) throws IOException {
+                               final Map<String, String> commitUserData, boolean update) throws IOException {
         checkIsMaster();
         return write(
                 context -> checkCommit(context.postDocument(fields, document, commitUserData, update), commitUserData));
     }
 
     final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents,
-            final Map<String, String> commitUserData, final boolean update) throws IOException {
+                                final Map<String, String> commitUserData, final boolean update) throws IOException {
         checkIsMaster();
         return write(context -> checkCommit(context.postDocuments(fields, documents, commitUserData, update),
                 commitUserData));
@@ -514,13 +514,13 @@ final public class IndexInstance implements Closeable {
     }
 
     final <T> int updateDocValues(final Map<String, Field> fields, final T document,
-            final Map<String, String> commitUserData) throws IOException {
+                                  final Map<String, String> commitUserData) throws IOException {
         checkIsMaster();
         return write(context -> checkCommit(context.updateDocValues(fields, document, commitUserData), commitUserData));
     }
 
     final <T> int updateDocsValues(final Map<String, Field> fields, final Collection<T> documents,
-            final Map<String, String> commitUserData) throws IOException {
+                                   final Map<String, String> commitUserData) throws IOException {
         checkIsMaster();
         return write(
                 context -> checkCommit(context.updateDocsValues(fields, documents, commitUserData), commitUserData));
@@ -545,12 +545,12 @@ final public class IndexInstance implements Closeable {
                 try (final QueryContext queryContext = buildQueryContext(indexSearcher, taxonomyReader, null)) {
                     final Query query = queryDefinition.query.getQuery(queryContext);
                     final IndexWriter indexWriter = writerAndSearcher.getIndexWriter();
-                    int docs = indexWriter.numDocs();
+                    int docs = indexWriter.getDocStats().numDocs;
                     indexWriter.deleteDocuments(query);
                     if (queryDefinition.commitUserData != null)
                         indexWriter.setLiveCommitData(queryDefinition.commitUserData.entrySet());
                     nrtCommit();
-                    docs -= indexWriter.numDocs();
+                    docs -= indexWriter.getDocStats().numDocs;
                     return new ResultDefinition.WithMap(docs);
                 } catch (ParseException | ReflectiveOperationException | QueryNodeException e) {
                     throw ServerException.of(e);
@@ -560,7 +560,7 @@ final public class IndexInstance implements Closeable {
     }
 
     final List<TermEnumDefinition> getTermsEnum(final String fieldName, final String prefix, final Integer start,
-            final Integer rows) throws InterruptedException, IOException {
+                                                final Integer rows) throws InterruptedException, IOException {
         Objects.requireNonNull(fieldName, "The field name is missing - Index: " + indexName);
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
@@ -578,13 +578,13 @@ final public class IndexInstance implements Closeable {
     }
 
     private QueryContextImpl buildQueryContext(final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
-            final FieldMapWrapper.Cache fieldMapWrappers) throws IOException {
+                                               final FieldMapWrapper.Cache fieldMapWrappers) throws IOException {
         return new QueryContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzers, queryAnalyzers,
                 fieldMap, fieldMapWrappers, indexSearcher, taxonomyReader);
     }
 
     final <T> T query(final FieldMapWrapper.Cache fieldMapWrappers,
-            final IndexServiceInterface.QueryActions<T> queryActions) throws IOException {
+                      final IndexServiceInterface.QueryActions<T> queryActions) throws IOException {
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader,

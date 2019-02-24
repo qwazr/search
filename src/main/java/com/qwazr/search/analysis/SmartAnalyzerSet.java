@@ -72,611 +72,610 @@ import java.util.Arrays;
  */
 public enum SmartAnalyzerSet {
 
-	LOWERCASE(LowercaseIndex.class, LowercaseQuery.class),
-	ASCII(AsciiIndex.class, AsciiQuery.class),
-	ARABIC(ArabicIndex.class, ArabicQuery.class),
-	BULGARIAN(BulgarianIndex.class, BulgarianQuery.class),
-	CJK(CJKIndex.class, CJKQuery.class),
-	CZECH(CzechIndex.class, CzechQuery.class),
-	DANISH(DanishIndex.class, DanishQuery.class),
-	DUTCH(DutchIndex.class, DutchQuery.class),
-	FRENCH(FrenchIndex.class, FrenchQuery.class),
-	GERMAN(GermanIndex.class, GermanQuery.class),
-	GREEK(GreekIndex.class, GreekQuery.class),
-	ENGLISH(EnglishIndex.class, EnglishQuery.class),
-	FINNISH(FinnishIndex.class, FinnishQuery.class),
-	IRISH(IrishIndex.class, IrishQuery.class),
-	HINDI(HindiIndex.class, HindiQuery.class),
-	HUNGARIAN(HungarianIndex.class, HungarianQuery.class),
-	ITALIAN(ItalianIndex.class, ItalianQuery.class),
-	LITHUANIAN(LithuanianIndex.class, LithuanianQuery.class),
-	LATVIAN(LatvianIndex.class, LatvianQuery.class),
-	NORWEGIAN(NorwegianIndex.class, NorwegianQuery.class),
-	POLISH(PolishIndex.class, PolishQuery.class),
-	PORTUGUESE(PortugueseIndex.class, PortugueseQuery.class),
-	ROMANIAN(RomanianIndex.class, RomanianQuery.class),
-	RUSSIAN(RussianIndex.class, RussianQuery.class),
-	SPANISH(SpanishIndex.class, SpanishQuery.class),
-	SWEDISH(SwedishIndex.class, SwedishQuery.class),
-	TURKISH(TurkishIndex.class, TurkishQuery.class);
-
-	public final Class<? extends Analyzer> indexAnalyzer;
-	public final Class<? extends Analyzer> queryAnalyzer;
-
-	SmartAnalyzerSet(Class<? extends Index> indexAnalyzer, Class<? extends Query> queryAnalyzer) {
-		this.indexAnalyzer = indexAnalyzer;
-		this.queryAnalyzer = queryAnalyzer;
-	}
-
-	public final static int MAX_TOKEN_LENGTH = 255;
-	public final static int POSITION_INCREMENT_GAP = 100;
-
-	public static abstract class Base extends Analyzer {
-
-		final public int getPositionIncrementGap(String fieldName) {
-			return POSITION_INCREMENT_GAP;
-		}
-
-		@Override
-		final protected TokenStreamComponents createComponents(final String fieldName) {
-
-			final UAX29URLEmailTokenizer src = new UAX29URLEmailTokenizer();
-			src.setMaxTokenLength(MAX_TOKEN_LENGTH);
-
-			return new TokenStreamComponents(src, filter(fieldName, src)) {
-				@Override
-				protected void setReader(final Reader reader) {
-					src.setMaxTokenLength(MAX_TOKEN_LENGTH);
-					super.setReader(reader);
-				}
-			};
-		}
-
-		protected TokenStream filter(String fieldName, TokenStream in) {
-			return normalize(fieldName, in);
-		}
-
-	}
-
-	static public TokenStream indexWordDelimiter(TokenStream src) {
-		return new WordDelimiterGraphFilter(src,
-				WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
-						WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE |
-						WordDelimiterGraphFilter.CATENATE_ALL | WordDelimiterGraphFilter.CATENATE_NUMBERS |
-						WordDelimiterGraphFilter.CATENATE_WORDS | WordDelimiterGraphFilter.PRESERVE_ORIGINAL,
-				CharArraySet.EMPTY_SET);
-	}
-
-	public static abstract class Index extends Base {
-		protected TokenStream filter(String fieldName, TokenStream in) {
-			return normalize(fieldName, indexWordDelimiter(in));
-		}
-	}
-
-	public static abstract class PayloadBoost extends Index {
-		protected TokenStream filter(String fieldName, TokenStream in) {
-			final FirstTokenPayloadFilter firstTokenPayloadFilter = new FirstTokenPayloadFilter(in);
-			return firstTokenPayloadFilter.newSetterFilter(
-					normalize(fieldName, indexWordDelimiter(firstTokenPayloadFilter)));
-		}
-	}
-
-	public static TokenStream queryWordDelimiter(TokenStream src) {
-		return new WordDelimiterGraphFilter(src,
-				WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
-						WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE,
-				CharArraySet.EMPTY_SET);
-	}
-
-	public static abstract class Query extends Base {
-		protected TokenStream filter(String fieldName, TokenStream in) {
-			return normalize(fieldName, queryWordDelimiter(in));
-		}
-	}
-
-	static public TokenStream lower(TokenStream in) {
-		return new LowerCaseFilter(in);
-	}
-
-	static public final class LowercaseIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return lower(in);
-		}
-	}
-
-	static public final class LowercaseQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return lower(in);
-		}
-	}
-
-	static public TokenStream ascii(TokenStream in) {
-		return new ASCIIFoldingFilter(new LowerCaseFilter(in));
-	}
-
-	static public final class AsciiIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return ascii(in);
-		}
-	}
-
-	static public final class AsciiQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return ascii(in);
-		}
-	}
-
-	static public TokenStream arabic(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new DecimalDigitFilter(result);
-		result = new ArabicNormalizationFilter(result);
-		return result;
-	}
-
-	static public final class ArabicIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return arabic(in);
-		}
-	}
-
-	static public final class ArabicQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return arabic(in);
-		}
-	}
-
-	static public TokenStream bulgarian(TokenStream result) {
-		result = new StandardFilter(result);
-		result = new LowerCaseFilter(result);
-		result = new BulgarianStemFilter(result);
-		return result;
-	}
-
-	static public final class BulgarianIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return bulgarian(in);
-		}
-	}
-
-	static public final class BulgarianQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return bulgarian(in);
-		}
-	}
-
-	static public TokenStream cjk(TokenStream result) {
-		result = new CJKWidthFilter(result);
-		result = new LowerCaseFilter(result);
-		result = new CJKBigramFilter(result);
-		return result;
-	}
-
-	static public final class CJKIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return cjk(in);
-		}
-	}
-
-	static public final class CJKQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return cjk(in);
-		}
-	}
-
-	static public TokenStream czech(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new CzechStemFilter(result);
-		return result;
-	}
-
-	static public final class CzechIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return czech(in);
-		}
-	}
-
-	static public final class CzechQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return czech(in);
-		}
-	}
-
-	static public TokenStream danish(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new SnowballFilter(result, new DanishStemmer());
-		return result;
-	}
-
-	static public final class DanishIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return danish(in);
-		}
-	}
-
-	static public final class DanishQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return danish(in);
-		}
-	}
-
-	static public TokenStream dutch(TokenStream result) {
-		result = new StandardFilter(result);
-		result = new LowerCaseFilter(result);
-		result = new SnowballFilter(result, new org.tartarus.snowball.ext.DutchStemmer());
-		return result;
-	}
-
-	static public final class DutchIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return dutch(in);
-		}
-	}
-
-	static public final class DutchQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return dutch(in);
-		}
-	}
-
-	static public TokenStream english(TokenStream result) {
-		result = new EnglishPossessiveFilter(result);
-		result = new LowerCaseFilter(result);
-		result = new PorterStemFilter(result);
-		return result;
-	}
-
-	static public final class EnglishIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return english(in);
-		}
-	}
-
-	static public final class EnglishQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return english(in);
-		}
-	}
-
-	static public TokenStream french(TokenStream result) {
-		result = new ElisionFilter(result, FrenchAnalyzer.DEFAULT_ARTICLES);
-		result = new LowerCaseFilter(result);
-		result = new FrenchLightStemFilter(result);
-		return result;
-	}
-
-	static public final class FrenchIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return french(in);
-		}
-	}
-
-	static public final class FrenchQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return french(in);
-		}
-	}
-
-	static public TokenStream finnish(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new SnowballFilter(result, new FinnishStemmer());
-		return result;
-	}
-
-	static public final class FinnishIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return finnish(in);
-		}
-	}
-
-	static public final class FinnishQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return finnish(in);
-		}
-	}
-
-	static public TokenStream german(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new GermanNormalizationFilter(result);
-		result = new GermanLightStemFilter(result);
-		return result;
-	}
-
-	static public final class GermanIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return german(in);
-		}
-	}
-
-	static public final class GermanQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return german(in);
-		}
-	}
-
-	static public TokenStream greek(TokenStream result) {
-		result = new GreekLowerCaseFilter(result);
-		result = new GreekStemFilter(result);
-		return result;
-	}
-
-	static public final class GreekIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return greek(in);
-		}
-	}
-
-	static public final class GreekQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return greek(in);
-		}
-	}
-
-	static public TokenStream hindi(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new DecimalDigitFilter(result);
-		result = new IndicNormalizationFilter(result);
-		result = new HindiNormalizationFilter(result);
-		result = new HindiStemFilter(result);
-		return result;
-	}
-
-	static public final class HindiIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return hindi(in);
-		}
-	}
-
-	static public final class HindiQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return hindi(in);
-		}
-	}
-
-	static public TokenStream hungarian(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new SnowballFilter(result, new HungarianStemmer());
-		return result;
-	}
-
-	static public final class HungarianIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return hungarian(in);
-		}
-	}
-
-	static public final class HungarianQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return hungarian(in);
-		}
-	}
-
-	static public final CharArraySet IRISH_DEFAULT_ARTICLES =
-			CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("d", "m", "b"), true));
-
-	static public final CharArraySet IRISH_HYPHENATIONS =
-			CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("h", "n", "t"), true));
-
-	static public TokenStream irish(TokenStream result) {
-		result = new StopFilter(result, IRISH_HYPHENATIONS);
-		result = new ElisionFilter(result, IRISH_DEFAULT_ARTICLES);
-		result = new IrishLowerCaseFilter(result);
-		result = new SnowballFilter(result, new IrishStemmer());
-		return result;
-	}
-
-	static public final class IrishIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return irish(in);
-		}
-	}
-
-	static public final class IrishQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return irish(in);
-		}
-	}
-
-	static public final CharArraySet ITALIAN_DEFAULT_ARTICLES = CharArraySet.unmodifiableSet(new CharArraySet(
-			Arrays.asList("c", "l", "all", "dall", "dell", "nell", "sull", "coll", "pell", "gl", "agl", "dagl", "degl",
-					"negl", "sugl", "un", "m", "t", "s", "v", "d"), true));
-
-	static public TokenStream italian(TokenStream result) {
-		result = new ElisionFilter(result, ITALIAN_DEFAULT_ARTICLES);
-		result = new LowerCaseFilter(result);
-		result = new ItalianLightStemFilter(result);
-		return result;
-	}
-
-	static public final class ItalianIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return italian(in);
-		}
-	}
-
-	static public final class ItalianQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return italian(in);
-		}
-	}
-
-	static public TokenStream lithuanian(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new SnowballFilter(result, new LithuanianStemmer());
-		return result;
-	}
-
-	static public final class LithuanianIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return lithuanian(in);
-		}
-	}
-
-	static public final class LithuanianQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return lithuanian(in);
-		}
-	}
-
-	static public TokenStream latvian(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new LatvianStemFilter(result);
-		return result;
-	}
-
-	static public final class LatvianIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return latvian(in);
-		}
-	}
-
-	static public final class LatvianQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return latvian(in);
-		}
-	}
-
-	static public TokenStream norwegian(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new SnowballFilter(result, new NorwegianStemmer());
-		return result;
-	}
-
-	static public final class NorwegianIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return norwegian(in);
-		}
-	}
-
-	static public final class NorwegianQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return norwegian(in);
-		}
-	}
-
-	static public TokenStream polish(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new StempelFilter(result, new StempelStemmer(PolishAnalyzer.getDefaultTable()));
-		return result;
-	}
-
-	static public final class PolishIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return polish(in);
-		}
-	}
-
-	static public final class PolishQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return polish(in);
-		}
-	}
-
-	static public TokenStream portuguese(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new PortugueseLightStemFilter(result);
-		return result;
-	}
-
-	static public final class PortugueseIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return portuguese(in);
-		}
-	}
-
-	static public final class PortugueseQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return portuguese(in);
-		}
-	}
-
-	static public TokenStream romanian(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new SnowballFilter(result, new RomanianStemmer());
-		return result;
-	}
-
-	static public final class RomanianIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return romanian(in);
-		}
-	}
-
-	static public final class RomanianQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return romanian(in);
-		}
-	}
-
-	static public TokenStream russian(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new SnowballFilter(result, new org.tartarus.snowball.ext.RussianStemmer());
-		return result;
-	}
-
-	static public final class RussianIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return russian(in);
-		}
-	}
-
-	static public final class RussianQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return russian(in);
-		}
-	}
-
-	static public TokenStream spanish(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new SpanishLightStemFilter(result);
-		return result;
-	}
-
-	static public final class SpanishIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return spanish(in);
-		}
-	}
-
-	static public final class SpanishQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return spanish(in);
-		}
-	}
-
-	static public TokenStream swedish(TokenStream result) {
-		result = new LowerCaseFilter(result);
-		result = new SnowballFilter(result, new SwedishStemmer());
-		return result;
-	}
-
-	static public final class SwedishIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return swedish(in);
-		}
-	}
-
-	static public final class SwedishQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return swedish(in);
-		}
-	}
-
-	static public TokenStream turkish(TokenStream result) {
-		result = new ApostropheFilter(result);
-		result = new TurkishLowerCaseFilter(result);
-		result = new SnowballFilter(result, new TurkishStemmer());
-		return result;
-	}
-
-	static public final class TurkishIndex extends Index {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return turkish(in);
-		}
-	}
-
-	static public final class TurkishQuery extends Query {
-		protected TokenStream normalize(String fieldName, TokenStream in) {
-			return turkish(in);
-		}
-	}
+    LOWERCASE(LowercaseIndex.class, LowercaseQuery.class),
+    ASCII(AsciiIndex.class, AsciiQuery.class),
+    ARABIC(ArabicIndex.class, ArabicQuery.class),
+    BULGARIAN(BulgarianIndex.class, BulgarianQuery.class),
+    CJK(CJKIndex.class, CJKQuery.class),
+    CZECH(CzechIndex.class, CzechQuery.class),
+    DANISH(DanishIndex.class, DanishQuery.class),
+    DUTCH(DutchIndex.class, DutchQuery.class),
+    FRENCH(FrenchIndex.class, FrenchQuery.class),
+    GERMAN(GermanIndex.class, GermanQuery.class),
+    GREEK(GreekIndex.class, GreekQuery.class),
+    ENGLISH(EnglishIndex.class, EnglishQuery.class),
+    FINNISH(FinnishIndex.class, FinnishQuery.class),
+    IRISH(IrishIndex.class, IrishQuery.class),
+    HINDI(HindiIndex.class, HindiQuery.class),
+    HUNGARIAN(HungarianIndex.class, HungarianQuery.class),
+    ITALIAN(ItalianIndex.class, ItalianQuery.class),
+    LITHUANIAN(LithuanianIndex.class, LithuanianQuery.class),
+    LATVIAN(LatvianIndex.class, LatvianQuery.class),
+    NORWEGIAN(NorwegianIndex.class, NorwegianQuery.class),
+    POLISH(PolishIndex.class, PolishQuery.class),
+    PORTUGUESE(PortugueseIndex.class, PortugueseQuery.class),
+    ROMANIAN(RomanianIndex.class, RomanianQuery.class),
+    RUSSIAN(RussianIndex.class, RussianQuery.class),
+    SPANISH(SpanishIndex.class, SpanishQuery.class),
+    SWEDISH(SwedishIndex.class, SwedishQuery.class),
+    TURKISH(TurkishIndex.class, TurkishQuery.class);
+
+    public final Class<? extends Analyzer> indexAnalyzer;
+    public final Class<? extends Analyzer> queryAnalyzer;
+
+    SmartAnalyzerSet(Class<? extends Index> indexAnalyzer, Class<? extends Query> queryAnalyzer) {
+        this.indexAnalyzer = indexAnalyzer;
+        this.queryAnalyzer = queryAnalyzer;
+    }
+
+    public final static int MAX_TOKEN_LENGTH = 255;
+    public final static int POSITION_INCREMENT_GAP = 100;
+
+    public static abstract class Base extends Analyzer {
+
+        final public int getPositionIncrementGap(String fieldName) {
+            return POSITION_INCREMENT_GAP;
+        }
+
+        @Override
+        final protected TokenStreamComponents createComponents(final String fieldName) {
+
+            final UAX29URLEmailTokenizer src = new UAX29URLEmailTokenizer();
+            src.setMaxTokenLength(MAX_TOKEN_LENGTH);
+
+            return new TokenStreamComponents(src, filter(fieldName, src)) {
+                @Override
+                protected void setReader(final Reader reader) {
+                    src.setMaxTokenLength(MAX_TOKEN_LENGTH);
+                    super.setReader(reader);
+                }
+            };
+        }
+
+        protected TokenStream filter(String fieldName, TokenStream in) {
+            return normalize(fieldName, in);
+        }
+
+    }
+
+    static public TokenStream indexWordDelimiter(TokenStream src) {
+        return new WordDelimiterGraphFilter(src,
+                WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
+                        WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE |
+                        WordDelimiterGraphFilter.CATENATE_ALL | WordDelimiterGraphFilter.CATENATE_NUMBERS |
+                        WordDelimiterGraphFilter.CATENATE_WORDS | WordDelimiterGraphFilter.PRESERVE_ORIGINAL,
+                CharArraySet.EMPTY_SET);
+    }
+
+    public static abstract class Index extends Base {
+        protected TokenStream filter(String fieldName, TokenStream in) {
+            return normalize(fieldName, indexWordDelimiter(in));
+        }
+    }
+
+    public static abstract class PayloadBoost extends Index {
+        protected TokenStream filter(String fieldName, TokenStream in) {
+            final FirstTokenPayloadFilter firstTokenPayloadFilter = new FirstTokenPayloadFilter(in);
+            return firstTokenPayloadFilter.newSetterFilter(
+                    normalize(fieldName, indexWordDelimiter(firstTokenPayloadFilter)));
+        }
+    }
+
+    public static TokenStream queryWordDelimiter(TokenStream src) {
+        return new WordDelimiterGraphFilter(src,
+                WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
+                        WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE,
+                CharArraySet.EMPTY_SET);
+    }
+
+    public static abstract class Query extends Base {
+        protected TokenStream filter(String fieldName, TokenStream in) {
+            return normalize(fieldName, queryWordDelimiter(in));
+        }
+    }
+
+    static public TokenStream lower(TokenStream in) {
+        return new LowerCaseFilter(in);
+    }
+
+    static public final class LowercaseIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return lower(in);
+        }
+    }
+
+    static public final class LowercaseQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return lower(in);
+        }
+    }
+
+    static public TokenStream ascii(TokenStream in) {
+        return new ASCIIFoldingFilter(new LowerCaseFilter(in));
+    }
+
+    static public final class AsciiIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return ascii(in);
+        }
+    }
+
+    static public final class AsciiQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return ascii(in);
+        }
+    }
+
+    static public TokenStream arabic(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new DecimalDigitFilter(result);
+        result = new ArabicNormalizationFilter(result);
+        return result;
+    }
+
+    static public final class ArabicIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return arabic(in);
+        }
+    }
+
+    static public final class ArabicQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return arabic(in);
+        }
+    }
+
+    static public TokenStream bulgarian(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new BulgarianStemFilter(result);
+        return result;
+    }
+
+    static public final class BulgarianIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return bulgarian(in);
+        }
+    }
+
+    static public final class BulgarianQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return bulgarian(in);
+        }
+    }
+
+    static public TokenStream cjk(TokenStream result) {
+        result = new CJKWidthFilter(result);
+        result = new LowerCaseFilter(result);
+        result = new CJKBigramFilter(result);
+        return result;
+    }
+
+    static public final class CJKIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return cjk(in);
+        }
+    }
+
+    static public final class CJKQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return cjk(in);
+        }
+    }
+
+    static public TokenStream czech(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new CzechStemFilter(result);
+        return result;
+    }
+
+    static public final class CzechIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return czech(in);
+        }
+    }
+
+    static public final class CzechQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return czech(in);
+        }
+    }
+
+    static public TokenStream danish(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new SnowballFilter(result, new DanishStemmer());
+        return result;
+    }
+
+    static public final class DanishIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return danish(in);
+        }
+    }
+
+    static public final class DanishQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return danish(in);
+        }
+    }
+
+    static public TokenStream dutch(TokenStream result) {
+        result = new StandardFilter(result);
+        result = new LowerCaseFilter(result);
+        result = new SnowballFilter(result, new org.tartarus.snowball.ext.DutchStemmer());
+        return result;
+    }
+
+    static public final class DutchIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return dutch(in);
+        }
+    }
+
+    static public final class DutchQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return dutch(in);
+        }
+    }
+
+    static public TokenStream english(TokenStream result) {
+        result = new EnglishPossessiveFilter(result);
+        result = new LowerCaseFilter(result);
+        result = new PorterStemFilter(result);
+        return result;
+    }
+
+    static public final class EnglishIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return english(in);
+        }
+    }
+
+    static public final class EnglishQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return english(in);
+        }
+    }
+
+    static public TokenStream french(TokenStream result) {
+        result = new ElisionFilter(result, FrenchAnalyzer.DEFAULT_ARTICLES);
+        result = new LowerCaseFilter(result);
+        result = new FrenchLightStemFilter(result);
+        return result;
+    }
+
+    static public final class FrenchIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return french(in);
+        }
+    }
+
+    static public final class FrenchQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return french(in);
+        }
+    }
+
+    static public TokenStream finnish(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new SnowballFilter(result, new FinnishStemmer());
+        return result;
+    }
+
+    static public final class FinnishIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return finnish(in);
+        }
+    }
+
+    static public final class FinnishQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return finnish(in);
+        }
+    }
+
+    static public TokenStream german(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new GermanNormalizationFilter(result);
+        result = new GermanLightStemFilter(result);
+        return result;
+    }
+
+    static public final class GermanIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return german(in);
+        }
+    }
+
+    static public final class GermanQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return german(in);
+        }
+    }
+
+    static public TokenStream greek(TokenStream result) {
+        result = new GreekLowerCaseFilter(result);
+        result = new GreekStemFilter(result);
+        return result;
+    }
+
+    static public final class GreekIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return greek(in);
+        }
+    }
+
+    static public final class GreekQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return greek(in);
+        }
+    }
+
+    static public TokenStream hindi(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new DecimalDigitFilter(result);
+        result = new IndicNormalizationFilter(result);
+        result = new HindiNormalizationFilter(result);
+        result = new HindiStemFilter(result);
+        return result;
+    }
+
+    static public final class HindiIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return hindi(in);
+        }
+    }
+
+    static public final class HindiQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return hindi(in);
+        }
+    }
+
+    static public TokenStream hungarian(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new SnowballFilter(result, new HungarianStemmer());
+        return result;
+    }
+
+    static public final class HungarianIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return hungarian(in);
+        }
+    }
+
+    static public final class HungarianQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return hungarian(in);
+        }
+    }
+
+    static public final CharArraySet IRISH_DEFAULT_ARTICLES =
+            CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("d", "m", "b"), true));
+
+    static public final CharArraySet IRISH_HYPHENATIONS =
+            CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("h", "n", "t"), true));
+
+    static public TokenStream irish(TokenStream result) {
+        result = new StopFilter(result, IRISH_HYPHENATIONS);
+        result = new ElisionFilter(result, IRISH_DEFAULT_ARTICLES);
+        result = new IrishLowerCaseFilter(result);
+        result = new SnowballFilter(result, new IrishStemmer());
+        return result;
+    }
+
+    static public final class IrishIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return irish(in);
+        }
+    }
+
+    static public final class IrishQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return irish(in);
+        }
+    }
+
+    static public final CharArraySet ITALIAN_DEFAULT_ARTICLES = CharArraySet.unmodifiableSet(new CharArraySet(
+            Arrays.asList("c", "l", "all", "dall", "dell", "nell", "sull", "coll", "pell", "gl", "agl", "dagl", "degl",
+                    "negl", "sugl", "un", "m", "t", "s", "v", "d"), true));
+
+    static public TokenStream italian(TokenStream result) {
+        result = new ElisionFilter(result, ITALIAN_DEFAULT_ARTICLES);
+        result = new LowerCaseFilter(result);
+        result = new ItalianLightStemFilter(result);
+        return result;
+    }
+
+    static public final class ItalianIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return italian(in);
+        }
+    }
+
+    static public final class ItalianQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return italian(in);
+        }
+    }
+
+    static public TokenStream lithuanian(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new SnowballFilter(result, new LithuanianStemmer());
+        return result;
+    }
+
+    static public final class LithuanianIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return lithuanian(in);
+        }
+    }
+
+    static public final class LithuanianQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return lithuanian(in);
+        }
+    }
+
+    static public TokenStream latvian(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new LatvianStemFilter(result);
+        return result;
+    }
+
+    static public final class LatvianIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return latvian(in);
+        }
+    }
+
+    static public final class LatvianQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return latvian(in);
+        }
+    }
+
+    static public TokenStream norwegian(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new SnowballFilter(result, new NorwegianStemmer());
+        return result;
+    }
+
+    static public final class NorwegianIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return norwegian(in);
+        }
+    }
+
+    static public final class NorwegianQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return norwegian(in);
+        }
+    }
+
+    static public TokenStream polish(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new StempelFilter(result, new StempelStemmer(PolishAnalyzer.getDefaultTable()));
+        return result;
+    }
+
+    static public final class PolishIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return polish(in);
+        }
+    }
+
+    static public final class PolishQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return polish(in);
+        }
+    }
+
+    static public TokenStream portuguese(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new PortugueseLightStemFilter(result);
+        return result;
+    }
+
+    static public final class PortugueseIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return portuguese(in);
+        }
+    }
+
+    static public final class PortugueseQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return portuguese(in);
+        }
+    }
+
+    static public TokenStream romanian(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new SnowballFilter(result, new RomanianStemmer());
+        return result;
+    }
+
+    static public final class RomanianIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return romanian(in);
+        }
+    }
+
+    static public final class RomanianQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return romanian(in);
+        }
+    }
+
+    static public TokenStream russian(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new SnowballFilter(result, new org.tartarus.snowball.ext.RussianStemmer());
+        return result;
+    }
+
+    static public final class RussianIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return russian(in);
+        }
+    }
+
+    static public final class RussianQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return russian(in);
+        }
+    }
+
+    static public TokenStream spanish(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new SpanishLightStemFilter(result);
+        return result;
+    }
+
+    static public final class SpanishIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return spanish(in);
+        }
+    }
+
+    static public final class SpanishQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return spanish(in);
+        }
+    }
+
+    static public TokenStream swedish(TokenStream result) {
+        result = new LowerCaseFilter(result);
+        result = new SnowballFilter(result, new SwedishStemmer());
+        return result;
+    }
+
+    static public final class SwedishIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return swedish(in);
+        }
+    }
+
+    static public final class SwedishQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return swedish(in);
+        }
+    }
+
+    static public TokenStream turkish(TokenStream result) {
+        result = new ApostropheFilter(result);
+        result = new TurkishLowerCaseFilter(result);
+        result = new SnowballFilter(result, new TurkishStemmer());
+        return result;
+    }
+
+    static public final class TurkishIndex extends Index {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return turkish(in);
+        }
+    }
+
+    static public final class TurkishQuery extends Query {
+        protected TokenStream normalize(String fieldName, TokenStream in) {
+            return turkish(in);
+        }
+    }
 }

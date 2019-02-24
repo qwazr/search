@@ -19,7 +19,6 @@ package com.qwazr.search.analyzer;
 import com.qwazr.search.analysis.FirstTokenPayloadFilter;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
@@ -27,8 +26,6 @@ import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.NumericUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -36,7 +33,8 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 public class FirstTokenPayloadFilterTest {
 
@@ -82,7 +80,7 @@ public class FirstTokenPayloadFilterTest {
         }
 
         public int payloadAsInt() {
-            return NumericUtils.sortableBytesToInt(payload.bytes, 0);
+            return payload.bytes[0];
         }
 
         public int positionIncrement() {
@@ -104,15 +102,13 @@ public class FirstTokenPayloadFilterTest {
         final PayloadAttribute payloadAttr = ts.addAttribute(PayloadAttribute.class);
 
         final List<Token> results = new ArrayList<>();
-        try {
+        try (ts) {
             ts.reset();
             while (ts.incrementToken()) {
                 results.add(new Token(termAttr.toString(), offsetAttr.startOffset(), offsetAttr.endOffset(),
                         posIncAttr.getPositionIncrement(), posLenAttr.getPositionLength(), payloadAttr.getPayload()));
             }
             ts.end();
-        } finally {
-            ts.close();
         }
         return results;
     }
@@ -124,8 +120,7 @@ public class FirstTokenPayloadFilterTest {
             final StandardTokenizer tok = new StandardTokenizer();
             tok.setMaxTokenLength(1024);
             final FirstTokenPayloadFilter firstTokenPayloadFilter = new FirstTokenPayloadFilter(tok);
-            TokenStream result = new StandardFilter(firstTokenPayloadFilter);
-            result = firstTokenPayloadFilter.newSetterFilter(result);
+            TokenStream result = firstTokenPayloadFilter.newSetterFilter(firstTokenPayloadFilter);
             return new TokenStreamComponents(tok, result);
         }
 
@@ -137,35 +132,16 @@ public class FirstTokenPayloadFilterTest {
         // 0 sony 4k
         // 0123456789
         List<Token> tokens = analyze("9 sony 4k", analyzer);
-        assertThat(tokens.size()).isEqualTo(2);
+        assertThat(tokens.size(), equalTo(2));
         Token token = tokens.get(0);
-        assertThat(token.term()).isEqualTo("sony");
-        assertThat(token.startOffset()).isEqualTo(2);
-        assertThat(token.payload().toString()).isEqualTo("[9]");
-        //assertThat(token.payloadAsInt()).isEqualTo(9);
+        assertThat(token.term(), equalTo("sony"));
+        assertThat(token.startOffset(), equalTo(2));
+        assertThat(token.payload().toString(), equalTo("[9]"));
+        assertThat(token.payloadAsInt(), equalTo(9));
         token = tokens.get(1);
-        assertThat(token.term()).isEqualTo("4k");
-        assertThat(token.startOffset()).isEqualTo(7);
-        assertThat(token.payload().toString()).isEqualTo("[9]");
-    }
-
-    @Test
-    @Ignore
-    public void testKo() throws IOException {
-        Analyzer analyzer = new MyAnalyzer();
-        // 0 sony 4k
-        // 0123456789
-        List<Token> tokens = analyze("42 sony 4k", analyzer);
-        assertThat(tokens.size()).isEqualTo(2);
-        Token token = tokens.get(0);
-        assertThat(token.term()).isEqualTo("sony");
-        assertThat(token.startOffset()).isEqualTo(2);
-        assertThat(token.payload().toString()).isEqualTo("[9]");
-        //assertThat(token.payloadAsInt()).isEqualTo(9);
-        token = tokens.get(1);
-        assertThat(token.term()).isEqualTo("4k");
-        assertThat(token.startOffset()).isEqualTo(7);
-        assertThat(token.payload().toString()).isEqualTo("[9]");
+        assertThat(token.term(), equalTo("4k"));
+        assertThat(token.startOffset(), equalTo(7));
+        assertThat(token.payload().toString(), equalTo("[9]"));
     }
 
 }
