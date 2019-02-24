@@ -2,11 +2,11 @@ language: java
 jdk:
   - openjdk11
 sudo: false
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
   directories:
-  - .autoconf
-  - $HOME/.m2
-
-install: mvn install -DskipTests=true -Dgpg.skip=true -Dmaven.javadoc.skip=true -B -V -U
-after_success:
-  - mvn clean test jacoco:report coveralls:report
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
