@@ -44,6 +44,10 @@ dependencies {
   compile 'it.unimi.dsi:fastutil:8.2.2'
 }
 
+tasks.withType(JavaCompile) {
+  options.encoding = "UTF-8"
+}
+
 task javadocJar(type: Jar) {
   archiveClassifier = 'javadoc'
   from javadoc
