@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,27 +18,28 @@ package com.qwazr.search.collector;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.LeafCollector;
+import org.apache.lucene.search.ScoreMode;
 
 import java.io.IOException;
 
 public abstract class BaseCollector<T> implements Collector {
 
-	public final String name;
+    public final String name;
 
-	protected BaseCollector(String name) {
-		this.name = name;
-	}
+    protected BaseCollector(String name) {
+        this.name = name;
+    }
 
-	public abstract T getResult();
+    public abstract T getResult();
 
-	@Override
-	public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
-		return DoNothingCollector.INSTANCE;
-	}
+    @Override
+    public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
+        return DoNothingCollector.INSTANCE;
+    }
 
-	@Override
-	public boolean needsScores() {
-		return false;
-	}
+    @Override
+    public ScoreMode scoreMode() {
+        return ScoreMode.COMPLETE_NO_SCORES;
+    }
 
 }

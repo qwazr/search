@@ -33,8 +33,6 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
     final public TimeTracker.Status timer;
     @JsonProperty("total_hits")
     final public long totalHits;
-    @JsonProperty("max_score")
-    final public float maxScore;
     final public List<T> documents;
     final public Map<String, Map<String, Number>> facets;
     final public String query;
@@ -46,7 +44,6 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
         this.documents = null;
         this.facets = null;
         this.collectors = null;
-        this.maxScore = 0f;
         this.query = null;
     }
 
@@ -54,7 +51,6 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
         this.query = builder.queryDebug;
         this.timer = builder.timeTrackerStatus;
         this.totalHits = builder.totalHits;
-        this.maxScore = builder.maxScore;
         this.documents = documents;
         this.facets = builder.facets;
         this.collectors = builder.collectors;
@@ -64,7 +60,6 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
         this.query = src.query;
         this.timer = src.timer;
         this.totalHits = src.totalHits;
-        this.maxScore = src.maxScore;
         this.documents = documents;
         this.facets = src.facets;
         this.collectors = src.collectors;
@@ -76,7 +71,6 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
         documents = Collections.emptyList();
         facets = null;
         collectors = null;
-        maxScore = 0f;
         this.timer = timeTracker != null ? timeTracker.getStatus() : null;
     }
 
@@ -86,18 +80,12 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
         documents = Collections.emptyList();
         facets = null;
         collectors = null;
-        maxScore = 0f;
         this.timer = null;
     }
 
     @JsonIgnore
     public long getTotalHits() {
         return totalHits;
-    }
-
-    @JsonIgnore
-    public float getMaxScore() {
-        return maxScore;
     }
 
     public List<T> getDocuments() {

@@ -7,7 +7,7 @@ plugins {
 
 group 'com.qwazr'
 archivesBaseName = "qwazr-search"
-version '1.5.0-SNAPSHOT'
+version '1.6.0-SNAPSHOT'
 
 sourceCompatibility = 1.11
 targetCompatibility = 1.11
@@ -33,18 +33,18 @@ dependencies {
   compile group: 'com.qwazr', name: 'qwazr-server', version: '1.5.0-SNAPSHOT'
   compile group: 'com.qwazr', name: 'qwazr-cluster', version: '1.5.0-SNAPSHOT'
   compile group: 'com.qwazr', name: 'qwazr-binder', version: '1.5.0-SNAPSHOT'
-  compile group: 'org.apache.lucene', name: 'lucene-core', version: '7.7.1'
-  compile group: 'org.apache.lucene', name: 'lucene-codecs', version: '7.7.1'
-  compile group: 'org.apache.lucene', name: 'lucene-spatial', version: '7.7.1'
-  compile group: 'org.apache.lucene', name: 'lucene-spatial3d', version: '7.7.1'
-  compile group: 'org.apache.lucene', name: 'lucene-backward-codecs', version: '7.7.1'
-  compile group: 'org.apache.lucene', name: 'lucene-analyzers-common', version: '7.7.1'
-  compile group: 'org.apache.lucene', name: 'lucene-analyzers-stempel', version: '7.7.1'
-  compile group: 'org.apache.lucene', name: 'lucene-queryparser', version: '7.7.1'
-  compile group: 'org.apache.lucene', name: 'lucene-facet', version: '7.7.1'
-  compile group: 'org.apache.lucene', name: 'lucene-highlighter', version: '7.7.1'
-  compile group: 'org.apache.lucene', name: 'lucene-join', version: '7.7.1'
-  compile group: 'org.apache.lucene', name: 'lucene-grouping', version: '7.7.1'
+  compile group: 'org.apache.lucene', name: 'lucene-core', version: '8.3.1'
+  compile group: 'org.apache.lucene', name: 'lucene-codecs', version: '8.3.1'
+  compile group: 'org.apache.lucene', name: 'lucene-spatial', version: '8.3.1'
+  compile group: 'org.apache.lucene', name: 'lucene-spatial3d', version: '8.3.1'
+  compile group: 'org.apache.lucene', name: 'lucene-backward-codecs', version: '8.3.1'
+  compile group: 'org.apache.lucene', name: 'lucene-analyzers-common', version: '8.3.1'
+  compile group: 'org.apache.lucene', name: 'lucene-analyzers-stempel', version: '8.3.1'
+  compile group: 'org.apache.lucene', name: 'lucene-queryparser', version: '8.3.1'
+  compile group: 'org.apache.lucene', name: 'lucene-facet', version: '8.3.1'
+  compile group: 'org.apache.lucene', name: 'lucene-highlighter', version: '8.3.1'
+  compile group: 'org.apache.lucene', name: 'lucene-join', version: '8.3.1'
+  compile group: 'org.apache.lucene', name: 'lucene-grouping', version: '8.3.1'
   compile 'it.unimi.dsi:fastutil:8.2.2'
 }
 
@@ -71,7 +71,7 @@ signing {
 }
 
 jacoco {
-  toolVersion = "0.8.2"
+  toolVersion = "0.8.5"
 }
 
 uploadArchives {

@@ -23,7 +23,8 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.LeafCollector;
-import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Scorable;
+import org.apache.lucene.search.ScoreMode;
 import org.apache.lucene.util.RoaringDocIdSet;
 
 import java.io.IOException;
@@ -33,69 +34,73 @@ import java.util.Map;
 import java.util.Objects;
 
 public class FilterCollector extends BaseCollector<FilterCollector.Query>
-		implements ConcurrentCollector<FilterCollector.Query> {
+        implements ConcurrentCollector<FilterCollector.Query> {
 
-	private final Map<LeafReaderContext, RoaringDocIdSet.Builder> docIdSetMapBuilders;
+    private final Map<LeafReaderContext, RoaringDocIdSet.Builder> docIdSetMapBuilders;
 
-	public FilterCollector(final String collectorName) {
-		super(collectorName);
-		this.docIdSetMapBuilders = new HashMap<>();
-	}
+    public FilterCollector(final String collectorName) {
+        super(collectorName);
+        this.docIdSetMapBuilders = new HashMap<>();
+    }
 
-	@Override
-	public FilterCollector.Query getResult() {
-		final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap = new HashMap<>();
-		docIdSetMapBuilders.forEach((ctx, builder) -> docIdSetMap.put(ctx, builder.build()));
-		return new FilterCollector.Query(new FilteredQuery(docIdSetMap));
-	}
+    @Override
+    public FilterCollector.Query getResult() {
+        final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap = new HashMap<>();
+        docIdSetMapBuilders.forEach((ctx, builder) -> docIdSetMap.put(ctx, builder.build()));
+        return new FilterCollector.Query(new FilteredQuery(docIdSetMap));
+    }
 
-	@Override
-	final public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
+    @Override
+    final public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
 
-		final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(context.reader().maxDoc());
-		docIdSetMapBuilders.put(context, builder);
+        final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(context.reader().maxDoc());
+        docIdSetMapBuilders.put(context, builder);
 
-		return new LeafCollector() {
+        return new LeafCollector() {
 
-			@Override
-			final public void setScorer(final Scorer scorer) throws IOException {
+            @Override
+            public void setScorer(final Scorable scorer) {
+            }
 
-			}
+            @Override
+            final public void collect(final int doc) {
+                builder.add(doc);
+            }
+        };
+    }
 
-			@Override
-			final public void collect(final int doc) throws IOException {
-				builder.add(doc);
-			}
-		};
-	}
+    @Override
+    public ScoreMode scoreMode() {
+        return ScoreMode.COMPLETE;
+    }
 
-	@Override
-	final public FilterCollector.Query getReducedResult(
-			final Collection<BaseCollector<FilterCollector.Query>> baseCollectors) {
-		final FilteredQuery filteredQuery = new FilteredQuery(new HashMap<>());
-		baseCollectors.forEach(collector -> filteredQuery.merge(collector.getResult().filteredQuery));
-		return new FilterCollector.Query(filteredQuery);
-	}
+    @Override
+    final public FilterCollector.Query getReducedResult(
+            final Collection<BaseCollector<FilterCollector.Query>> baseCollectors) {
+        final FilteredQuery filteredQuery = new FilteredQuery(new HashMap<>());
+        baseCollectors.forEach(collector -> filteredQuery.merge(collector.getResult().filteredQuery));
+        return new FilterCollector.Query(filteredQuery);
+    }
 
-	public static class Query extends AbstractQuery<Query> {
+    public static class Query extends AbstractQuery<Query> {
 
-		private final FilteredQuery filteredQuery;
+        private final FilteredQuery filteredQuery;
 
-		Query(FilteredQuery filteredQuery) {
-			super(Query.class);
-			this.filteredQuery = filteredQuery;
-		}
+        Query(FilteredQuery filteredQuery) {
+            super(Query.class);
+            this.filteredQuery = filteredQuery;
+        }
 
-		@Override
-		final public org.apache.lucene.search.Query getQuery(final QueryContext queryContext)
-				throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-			return filteredQuery;
-		}
+        @Override
+        final public org.apache.lucene.search.Query getQuery(final QueryContext queryContext)
+                throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+            return filteredQuery;
+        }
 
-		@JsonIgnore
-		@Override
-		protected boolean isEqual(Query q) {
-			return Objects.equals(filteredQuery, q.filteredQuery);
-		}
-	}
+        @JsonIgnore
+        @Override
+        protected boolean isEqual(Query q) {
+            return Objects.equals(filteredQuery, q.filteredQuery);
+        }
+    }
 }

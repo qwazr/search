@@ -1,17 +1,17 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Copyright 2015-2018 Emmanuel Keller / QWAZR
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 package com.qwazr.search.query.lucene;
 
@@ -22,6 +22,7 @@ import org.apache.lucene.search.ConstantScoreWeight;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.LeafCollector;
+import org.apache.lucene.search.ScoreMode;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.util.Bits;
@@ -44,7 +45,7 @@ public final class FilteredQuery extends org.apache.lucene.search.Query {
     }
 
     @Override
-    final public Weight createWeight(final IndexSearcher searcher, final boolean needsScores, final float boost) {
+    final public Weight createWeight(final IndexSearcher searcher, final ScoreMode scoreMode, final float boost) {
         return new ConstantScoreWeight(this, boost) {
             @Override
             public boolean isCacheable(LeafReaderContext ctx) {
@@ -60,24 +61,25 @@ public final class FilteredQuery extends org.apache.lucene.search.Query {
             final public Scorer scorer(final LeafReaderContext context) throws IOException {
                 final RoaringDocIdSet docIdSet = docIdSetMap.get(context);
                 final DocIdSetIterator docIdSetIterator = docIdSet == null ? null : docIdSet.iterator();
-                return new ConstantScoreScorer(this, score(),
+                return new ConstantScoreScorer(this, score(), scoreMode,
                         docIdSetIterator == null ? DocIdSetIterator.empty() : docIdSetIterator);
             }
 
             @Override
-            final public BulkScorer bulkScorer(final LeafReaderContext context) throws IOException {
+            final public BulkScorer bulkScorer(final LeafReaderContext context) {
 
                 final float score = score();
                 final int maxDoc = context.reader().maxDoc();
                 final RoaringDocIdSet docIdSet = docIdSetMap.get(context);
                 final int cost = docIdSet.cardinality();
+                final Weight weight = this;
 
                 return new BulkScorer() {
                     @Override
                     final public int score(final LeafCollector collector, final Bits acceptDocs, final int min, int max)
                             throws IOException {
                         max = Math.min(max, maxDoc);
-                        final FakeScorer scorer = new FakeScorer();
+                            final FakeScorer scorer = new FakeScorer(weight);
                         scorer.score = score;
                         collector.setScorer(scorer);
                         int doc;

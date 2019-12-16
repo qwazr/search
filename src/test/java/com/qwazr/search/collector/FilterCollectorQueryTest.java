@@ -55,7 +55,6 @@ public class FilterCollectorQueryTest extends AbstractIndexTest.WithIndexRecord.
         ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
         Assert.assertEquals(500, results.totalHits);
-        Assert.assertEquals(1.0F, results.maxScore, 0);
         Assert.assertEquals("(f)", results.getQuery());
     }
 

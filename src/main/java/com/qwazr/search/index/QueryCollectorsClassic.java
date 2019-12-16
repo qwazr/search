@@ -31,7 +31,6 @@ import org.apache.lucene.search.TopFieldCollector;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.search.TotalHitCountCollector;
 
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,12 +56,12 @@ class QueryCollectorsClassic extends QueryCollectors {
 
     final Collector finalCollector;
 
-    QueryCollectorsClassic(final QueryExecution<?> queryExecution) throws IOException, ReflectiveOperationException {
+    QueryCollectorsClassic(final QueryExecution<?> queryExecution) throws ReflectiveOperationException {
         super(queryExecution);
         collectors = new ArrayList<>();
         facetsCollector = queryExecution.useDrillSideways ? null : buildFacetsCollector(queryExecution.queryDef.facets);
         totalHitCountCollector = buildTotalHitsCollector(queryExecution.end);
-        topDocsCollector = buildTopDocCollector(queryExecution.sort, queryExecution.end, queryExecution.bNeedScore);
+        topDocsCollector = buildTopDocCollector(queryExecution.sort, queryExecution.end);
         if (queryExecution.collectorConstructors != null) {
             userCollectors = new ArrayList<>();
             for (Pair<Constructor, Object[]> item : queryExecution.collectorConstructors)
@@ -97,14 +96,14 @@ class QueryCollectorsClassic extends QueryCollectors {
         return null;
     }
 
-    private TopDocsCollector buildTopDocCollector(final Sort sort, final int numHits, final boolean bNeedScore) {
+    private TopDocsCollector<?> buildTopDocCollector(final Sort sort, final int numHits) {
         if (numHits == 0)
             return null;
-        final TopDocsCollector topDocsCollector;
+        final TopDocsCollector<?> topDocsCollector;
         if (sort != null)
-            topDocsCollector = TopFieldCollector.create(sort, numHits, true, bNeedScore, bNeedScore, true);
+            topDocsCollector = TopFieldCollector.create(sort, numHits, Integer.MAX_VALUE);
         else
-            topDocsCollector = TopScoreDocCollector.create(numHits);
+            topDocsCollector = TopScoreDocCollector.create(numHits, Integer.MAX_VALUE);
         return add(topDocsCollector);
     }
 
@@ -133,7 +132,8 @@ class QueryCollectorsClassic extends QueryCollectors {
 
             try {
                 queryExecution.queryContext.indexSearcher.search(queryExecution.query, finalCollector);
-            } catch (TimeLimitingCollector.TimeExceededException e) {
+            }
+            catch (TimeLimitingCollector.TimeExceededException e) {
                 LOGGER.log(Level.WARNING, e, e::getMessage);
             }
 

@@ -17,6 +17,7 @@ package com.qwazr.search.query.lucene;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queries.payloads.PayloadDecoder;
 import org.apache.lucene.queries.payloads.PayloadFunction;
 import org.apache.lucene.queries.payloads.PayloadScoreQuery;
 import org.apache.lucene.search.Query;
@@ -25,17 +26,17 @@ import org.apache.lucene.util.QueryBuilder;
 
 public class PayloadQueryBuilder extends QueryBuilder {
 
-	private final PayloadFunction payloadFunction;
-	private final boolean includeSpanScore;
+    private final PayloadFunction payloadFunction;
+    private final boolean includeSpanScore;
 
-	public PayloadQueryBuilder(Analyzer analyzer, PayloadFunction payloadFunction, boolean includeSpanScore) {
-		super(analyzer);
-		this.payloadFunction = payloadFunction;
-		this.includeSpanScore = includeSpanScore;
-	}
+    public PayloadQueryBuilder(Analyzer analyzer, PayloadFunction payloadFunction, boolean includeSpanScore) {
+        super(analyzer);
+        this.payloadFunction = payloadFunction;
+        this.includeSpanScore = includeSpanScore;
+    }
 
-	@Override
-	protected Query newTermQuery(Term term) {
-		return new PayloadScoreQuery(new SpanTermQuery(term), payloadFunction, includeSpanScore);
-	}
+    @Override
+    protected Query newTermQuery(final Term term) {
+        return new PayloadScoreQuery(new SpanTermQuery(term), payloadFunction, PayloadDecoder.FLOAT_DECODER, includeSpanScore);
+    }
 }

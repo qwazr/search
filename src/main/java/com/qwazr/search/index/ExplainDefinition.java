@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ public class ExplainDefinition {
 
 	final public String description;
 	final public ExplainDefinition[] details;
-	final public Float value;
+	final public Number value;
 	final public Boolean is_match;
 
 	public ExplainDefinition() {

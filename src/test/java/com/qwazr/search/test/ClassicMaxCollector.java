@@ -5,7 +5,7 @@ import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.search.LeafCollector;
-import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Scorable;
 
 import java.io.IOException;
 
@@ -39,7 +39,7 @@ public class ClassicMaxCollector extends BaseCollector<Long> {
         }
 
         @Override
-        final public void setScorer(final Scorer scorer) {
+        final public void setScorer(final Scorable scorer) {
 
         }
 

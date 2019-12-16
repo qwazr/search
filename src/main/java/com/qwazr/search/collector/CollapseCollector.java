@@ -31,8 +31,8 @@ import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.search.LeafCollector;
+import org.apache.lucene.search.Scorable;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.Scorer;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.RoaringDocIdSet;
 
@@ -106,7 +106,7 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
         private final Int2FloatMap scores;
         private final Int2IntMap count;
 
-        private Scorer scorer;
+        private Scorable scorer;
 
         CollapseLeafCollector(LeafReaderContext context) throws IOException {
             this.context = context;
@@ -121,7 +121,7 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
         }
 
         @Override
-        final public void setScorer(final Scorer scorer) throws IOException {
+        final public void setScorer(final Scorable scorer) {
             this.scorer = scorer;
         }
 
@@ -131,7 +131,8 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
                     groupQueue.offer(sdv.lookupOrd(ord), scores.get(ord), count.get(ord),
                             (bytesRef, score, collapsedCount) -> new GroupLeader(context, bytesRef, docIds.get(ord),
                                     score, collapsedCount));
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             });
@@ -160,7 +161,7 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
         int collapsedCount;
 
         GroupLeader(final LeafReaderContext context, final BytesRef bytesRef, final int doc, final float score,
-                final int collapsedCount) {
+                    final int collapsedCount) {
             super(doc, score);
             this.context = context;
             this.bytesRef = bytesRef;
@@ -186,7 +187,7 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
         }
 
         void offer(final BytesRef bytesRef, final float score, final int count,
-                final GroupLeaderProvider groupLeaderProvider) {
+                   final GroupLeaderProvider groupLeaderProvider) {
 
             // Do we already have a leader ? If the score is greater we can ignore the offered one
             final GroupLeader previousGroupLeader = groupLeaders.get(bytesRef);
@@ -232,7 +233,7 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
         final long collapsedCount;
 
         Query(final FilteredQuery filteredQuery, final Int2IntLinkedOpenHashMap collapsedMap,
-                final long collapsedCount) {
+              final long collapsedCount) {
             super(filteredQuery);
             this.collapsedMap = collapsedMap;
             this.collapsedCount = collapsedCount;

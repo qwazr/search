@@ -22,31 +22,24 @@ import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.synonym.SynonymGraphFilter;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 
-import java.io.Reader;
-
 public class SynonymsResourceAnalyzer extends Analyzer {
 
-	private final SynonymMap synonymMap;
+    private final SynonymMap synonymMap;
 
-	public SynonymsResourceAnalyzer() {
-		//TODO add support of synonyms loaded by resources
-		synonymMap = null;
-	}
+    public SynonymsResourceAnalyzer() {
+        //TODO add support of synonyms loaded by resources
+        synonymMap = null;
+    }
 
-	public SynonymsResourceAnalyzer(final SynonymMap synonymMap) {
-		this.synonymMap = synonymMap;
-	}
+    public SynonymsResourceAnalyzer(final SynonymMap synonymMap) {
+        this.synonymMap = synonymMap;
+    }
 
-	@Override
-	protected TokenStreamComponents createComponents(String fieldName) {
-		final Tokenizer tokenizer = new WhitespaceTokenizer();
-		final TokenFilter input = new SynonymGraphFilter(tokenizer, synonymMap, true);
+    @Override
+    protected TokenStreamComponents createComponents(String fieldName) {
+        final Tokenizer tokenizer = new WhitespaceTokenizer();
+        final TokenFilter input = new SynonymGraphFilter(tokenizer, synonymMap, true);
 
-		return new TokenStreamComponents(tokenizer, input) {
-			@Override
-			protected void setReader(final Reader reader) {
-				super.setReader(reader);
-			}
-		};
-	}
+        return new TokenStreamComponents(tokenizer, input);
+    }
 }

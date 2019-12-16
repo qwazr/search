@@ -18,7 +18,7 @@ package com.qwazr.search.collector;
 import com.qwazr.utils.concurrent.ThreadUtils;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.LeafCollector;
-import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Scorable;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -46,7 +46,7 @@ public class SlowDownCollector extends BaseCollector<Long> {
     private class SlowDownLeafCollector implements LeafCollector {
 
         @Override
-        final public void setScorer(final Scorer scorer) {
+        final public void setScorer(final Scorable scorer) {
         }
 
         @Override

@@ -18,6 +18,7 @@ package com.qwazr.search.collector;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.search.LeafCollector;
+import org.apache.lucene.search.ScoreMode;
 import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
@@ -35,8 +36,8 @@ public abstract class MinNumericCollector<R extends Comparable<R>> extends DocVa
     }
 
     @Override
-    public boolean needsScores() {
-        return false;
+    public ScoreMode scoreMode() {
+        return ScoreMode.COMPLETE_NO_SCORES;
     }
 
     public static class MinLong extends MinNumericCollector<Long> {

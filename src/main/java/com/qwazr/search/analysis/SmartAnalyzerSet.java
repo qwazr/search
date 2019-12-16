@@ -47,7 +47,6 @@ import org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter;
 import org.apache.lucene.analysis.pl.PolishAnalyzer;
 import org.apache.lucene.analysis.pt.PortugueseLightStemFilter;
 import org.apache.lucene.analysis.snowball.SnowballFilter;
-import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.UAX29URLEmailTokenizer;
 import org.apache.lucene.analysis.stempel.StempelFilter;
 import org.apache.lucene.analysis.stempel.StempelStemmer;
@@ -64,7 +63,6 @@ import org.tartarus.snowball.ext.RomanianStemmer;
 import org.tartarus.snowball.ext.SwedishStemmer;
 import org.tartarus.snowball.ext.TurkishStemmer;
 
-import java.io.Reader;
 import java.util.Arrays;
 
 /**
@@ -122,14 +120,7 @@ public enum SmartAnalyzerSet {
 
             final UAX29URLEmailTokenizer src = new UAX29URLEmailTokenizer();
             src.setMaxTokenLength(MAX_TOKEN_LENGTH);
-
-            return new TokenStreamComponents(src, filter(fieldName, src)) {
-                @Override
-                protected void setReader(final Reader reader) {
-                    src.setMaxTokenLength(MAX_TOKEN_LENGTH);
-                    super.setReader(reader);
-                }
-            };
+            return new TokenStreamComponents(src, filter(fieldName, src));
         }
 
         protected TokenStream filter(String fieldName, TokenStream in) {
@@ -299,7 +290,6 @@ public enum SmartAnalyzerSet {
     }
 
     static public TokenStream dutch(TokenStream result) {
-        result = new StandardFilter(result);
         result = new LowerCaseFilter(result);
         result = new SnowballFilter(result, new org.tartarus.snowball.ext.DutchStemmer());
         return result;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,17 @@
 package com.qwazr.search.collector;
 
 import org.apache.lucene.search.LeafCollector;
-import org.apache.lucene.search.Scorer;
-
-import java.io.IOException;
+import org.apache.lucene.search.Scorable;
 
 public class DoNothingCollector implements LeafCollector {
 
-	static final DoNothingCollector INSTANCE = new DoNothingCollector();
+    static final DoNothingCollector INSTANCE = new DoNothingCollector();
 
-	@Override
-	final public void setScorer(final Scorer scorer) throws IOException {
-	}
+    @Override
+    final public void setScorer(final Scorable scorables) {
+    }
 
-	@Override
-	final public void collect(final int doc) throws IOException {
-	}
+    @Override
+    final public void collect(final int doc) {
+    }
 }

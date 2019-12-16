@@ -22,20 +22,13 @@ import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.payloads.DelimitedPayloadTokenFilter;
 import org.apache.lucene.analysis.payloads.IntegerEncoder;
 
-import java.io.Reader;
-
 public class IntegerPayloadAnalyzer extends Analyzer {
 
-	@Override
-	protected TokenStreamComponents createComponents(String fieldName) {
-		final Tokenizer tokenizer = new WhitespaceTokenizer();
-		final TokenStream stream = new DelimitedPayloadTokenFilter(tokenizer, '|', new IntegerEncoder());
+    @Override
+    protected TokenStreamComponents createComponents(String fieldName) {
+        final Tokenizer tokenizer = new WhitespaceTokenizer();
+        final TokenStream stream = new DelimitedPayloadTokenFilter(tokenizer, '|', new IntegerEncoder());
 
-		return new TokenStreamComponents(tokenizer, stream) {
-			@Override
-			protected void setReader(final Reader reader) {
-				super.setReader(reader);
-			}
-		};
-	}
+        return new TokenStreamComponents(tokenizer, stream);
+    }
 }

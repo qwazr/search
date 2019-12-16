@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,57 +29,55 @@ import java.util.Map;
 
 class ResultDocumentsBuilder {
 
-	final Map<String, Object> collectors;
-	final LinkedHashMap<String, Map<String, Number>> facets;
-	final String queryDebug;
-	final TimeTracker.Status timeTrackerStatus;
-	final float maxScore;
-	final long totalHits;
+    final Map<String, Object> collectors;
+    final LinkedHashMap<String, Map<String, Number>> facets;
+    final String queryDebug;
+    final TimeTracker.Status timeTrackerStatus;
+    final long totalHits;
 
-	ResultDocumentsBuilder(final QueryDefinition queryDefinition, final TopDocs topDocs,
-			final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
-			final Map<String, Object> externalCollectorsResults, final TimeTracker timeTracker,
-			final FacetsBuilder facetsBuilder, long totalHits, @NotNull final ResultDocumentsInterface resultDocuments)
-			throws ReflectiveOperationException, IOException {
+    ResultDocumentsBuilder(final QueryDefinition queryDefinition, final TopDocs topDocs,
+                           final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
+                           final Map<String, Object> externalCollectorsResults, final TimeTracker timeTracker,
+                           final FacetsBuilder facetsBuilder, long totalHits, @NotNull final ResultDocumentsInterface resultDocuments)
+            throws IOException {
 
-		this.collectors = externalCollectorsResults;
+        this.collectors = externalCollectorsResults;
 
-		if (topDocs != null && topDocs.scoreDocs != null) {
+        if (topDocs != null && topDocs.scoreDocs != null) {
 
-			this.maxScore = topDocs.getMaxScore();
-			int pos = 0;
-			for (ScoreDoc scoreDoc : topDocs.scoreDocs)
-				resultDocuments.doc(indexSearcher, pos++, scoreDoc);
+            int pos = 0;
+            for (ScoreDoc scoreDoc : topDocs.scoreDocs)
+                resultDocuments.doc(indexSearcher, pos++, scoreDoc);
 
-			if (timeTracker != null)
-				timeTracker.next("documents");
+            if (timeTracker != null)
+                timeTracker.next("documents");
 
-			if (highlighters != null && topDocs.scoreDocs.length > 0) {
+            if (highlighters != null && topDocs.scoreDocs.length > 0) {
 
-				highlighters.forEach((name, highlighter) -> {
-					try {
-						final String[] snippetsByDoc = highlighter.highlights(luceneQuery, topDocs);
-						int pos2 = 0;
-						for (String snippet : snippetsByDoc)
-							resultDocuments.highlight(pos2++, name, snippet);
-					} catch (IOException e) {
-						throw new RuntimeException("Highlighting failure: " + name, e);
-					}
-				});
-				if (timeTracker != null)
-					timeTracker.next("highlighting");
-			}
-		} else
-			this.maxScore = 0;
+                highlighters.forEach((name, highlighter) -> {
+                    try {
+                        final String[] snippetsByDoc = highlighter.highlights(luceneQuery, topDocs);
+                        int pos2 = 0;
+                        for (String snippet : snippetsByDoc)
+                            resultDocuments.highlight(pos2++, name, snippet);
+                    }
+                    catch (IOException e) {
+                        throw new RuntimeException("Highlighting failure: " + name, e);
+                    }
+                });
+                if (timeTracker != null)
+                    timeTracker.next("highlighting");
+            }
+        }
 
-		this.totalHits = totalHits;
+        this.totalHits = totalHits;
 
-		this.facets = facetsBuilder == null ? null : facetsBuilder.results;
-		this.queryDebug = queryDefinition.query_debug != null && queryDefinition.query_debug && luceneQuery != null ?
-				luceneQuery.toString(StringUtils.EMPTY) :
-				null;
+        this.facets = facetsBuilder == null ? null : facetsBuilder.results;
+        this.queryDebug = queryDefinition.query_debug != null && queryDefinition.query_debug && luceneQuery != null ?
+                luceneQuery.toString(StringUtils.EMPTY) :
+                null;
 
-		this.timeTrackerStatus = timeTracker == null ? null : timeTracker.getStatus();
-	}
+        this.timeTrackerStatus = timeTracker == null ? null : timeTracker.getStatus();
+    }
 
 }

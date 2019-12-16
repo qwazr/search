@@ -29,14 +29,11 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({ @JsonSubTypes.Type(value = BlendedTermQuery.class),
+@JsonSubTypes({@JsonSubTypes.Type(value = BlendedTermQuery.class),
         @JsonSubTypes.Type(value = BooleanQuery.class),
-        @JsonSubTypes.Type(value = BoostedQuery.class),
-        @JsonSubTypes.Type(value = BoostingQuery.class),
         @JsonSubTypes.Type(value = BoostQuery.class),
         @JsonSubTypes.Type(value = CommonTermsQuery.class),
         @JsonSubTypes.Type(value = ConstantScoreQuery.class),
-        @JsonSubTypes.Type(value = CustomScoreQuery.class),
         @JsonSubTypes.Type(value = DisjunctionMaxQuery.class),
         @JsonSubTypes.Type(value = DocValuesFieldExistsQuery.class),
         @JsonSubTypes.Type(value = DoubleDocValuesExactQuery.class),
@@ -54,6 +51,7 @@ import java.io.IOException;
         @JsonSubTypes.Type(value = FloatRangeQuery.class),
         @JsonSubTypes.Type(value = FloatSetQuery.class),
         @JsonSubTypes.Type(value = FunctionQuery.class),
+        @JsonSubTypes.Type(value = FunctionScoreQuery.class),
         @JsonSubTypes.Type(value = FuzzyQuery.class),
         @JsonSubTypes.Type(value = Geo3DDistanceQuery.class),
         @JsonSubTypes.Type(value = Geo3DBoxQuery.class),
@@ -111,7 +109,7 @@ import java.io.IOException;
         @JsonSubTypes.Type(value = TermQuery.class),
         @JsonSubTypes.Type(value = TermRangeQuery.class),
         @JsonSubTypes.Type(value = TermsQuery.class),
-        @JsonSubTypes.Type(value = WildcardQuery.class) })
+        @JsonSubTypes.Type(value = WildcardQuery.class)})
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,

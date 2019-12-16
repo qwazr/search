@@ -38,7 +38,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.MultiFields;
+import org.apache.lucene.index.MultiTerms;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -173,7 +173,7 @@ final public class IndexInstance implements Closeable {
     FieldStats getFieldStats(String fieldName) throws IOException {
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
-                final Terms terms = MultiFields.getFields(indexSearcher.getIndexReader()).terms(fieldName);
+                final Terms terms = MultiTerms.getTerms(indexSearcher.getIndexReader(), fieldName);
                 return terms == null ? new FieldStats() : new FieldStats(terms, fieldMap.getFieldType(null, fieldName));
             });
         }
@@ -193,7 +193,8 @@ final public class IndexInstance implements Closeable {
                 setFields(fileSet.loadFieldMap());
                 refreshFieldsAnalyzers();
             }
-        } finally {
+        }
+        finally {
             fieldMapLock.unlock();
         }
     }
@@ -212,7 +213,8 @@ final public class IndexInstance implements Closeable {
             fileSet.writeFieldMap(fields);
             fieldMap = new FieldMap(fields, settings.sortedSetFacetField);
             refreshFieldsAnalyzers();
-        } finally {
+        }
+        finally {
             fieldMapLock.unlock();
         }
     }
@@ -317,7 +319,8 @@ final public class IndexInstance implements Closeable {
                     return JoinUtil.createJoinQuery(joinQuery.from_field, joinQuery.multiple_values_per_document,
                             joinQuery.to_field, fromQuery, indexSearcher,
                             joinQuery.score_mode == null ? ScoreMode.None : joinQuery.score_mode);
-                } catch (ParseException | QueryNodeException | ReflectiveOperationException e) {
+                }
+                catch (ParseException | QueryNodeException | ReflectiveOperationException e) {
                     throw ServerException.of(e);
                 }
 
@@ -329,7 +332,8 @@ final public class IndexInstance implements Closeable {
         commitLock.lock();
         try {
             writerAndSearcher.commit();
-        } finally {
+        }
+        finally {
             commitLock.unlock();
         }
     }
@@ -346,19 +350,22 @@ final public class IndexInstance implements Closeable {
                                 Thread.currentThread().getId());
             try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
                 return new ReplicationBackup(this, backupIndexDirectory, taxonomyDirectory != null).backup();
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 // If any error occurred, we delete the backup directory
                 if (Files.exists(backupIndexDirectory)) {
                     try {
                         FileUtils.deleteDirectory(backupIndexDirectory);
-                    } catch (IOException ioe) {
+                    }
+                    catch (IOException ioe) {
                         LOGGER.log(Level.WARNING, e,
                                 () -> "Cannot delete the backup directory: " + backupIndexDirectory);
                     }
                 }
                 throw e;
             }
-        } finally {
+        }
+        finally {
             backupLock.unlock();
         }
     }
@@ -370,7 +377,8 @@ final public class IndexInstance implements Closeable {
                 return false;
             FileUtils.deleteDirectory(backupIndexDirectory);
             return true;
-        } finally {
+        }
+        finally {
             backupLock.unlock();
         }
     }
@@ -428,7 +436,8 @@ final public class IndexInstance implements Closeable {
                     replicationSlave.setClientMasterUuid(remoteMasterUuid);
                     // Add fields and analyzers reload
                 }));
-            } finally {
+            }
+            finally {
                 replicationLock.unlock();
             }
         }
@@ -552,7 +561,8 @@ final public class IndexInstance implements Closeable {
                     nrtCommit();
                     docs -= indexWriter.getDocStats().numDocs;
                     return new ResultDefinition.WithMap(docs);
-                } catch (ParseException | ReflectiveOperationException | QueryNodeException e) {
+                }
+                catch (ParseException | ReflectiveOperationException | QueryNodeException e) {
                     throw ServerException.of(e);
                 }
             });
@@ -568,7 +578,7 @@ final public class IndexInstance implements Closeable {
                 if (fieldType == null)
                     throw new ServerException(Response.Status.NOT_FOUND,
                             "Field not found: " + fieldName + " - Index: " + indexName);
-                final Terms terms = MultiFields.getTerms(indexSearcher.getIndexReader(), fieldName);
+                final Terms terms = MultiTerms.getTerms(indexSearcher.getIndexReader(), fieldName);
                 if (terms == null)
                     return Collections.emptyList();
                 return TermEnumDefinition.buildTermList(fieldType, terms.iterator(), prefix, start == null ? 0 : start,
@@ -600,7 +610,8 @@ final public class IndexInstance implements Closeable {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader, null)) {
                     return new QueryExecution<>(context, queryDefinition).explain(docId);
-                } catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
+                }
+                catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
                     throw ServerException.of(e);
                 }
             });

@@ -25,35 +25,28 @@ import org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter;
 import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 
-import java.io.Reader;
-
 public class ComplexQueryAnalyzer extends Analyzer {
 
-	public ComplexQueryAnalyzer() {
-	}
+    public ComplexQueryAnalyzer() {
+    }
 
-	@Override
-	protected TokenStreamComponents createComponents(String fieldName) {
-		final StandardTokenizer tokenizer = new StandardTokenizer();
-		TokenStream result = new WordDelimiterGraphFilter(tokenizer,
-				WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
-						WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE |
-						WordDelimiterGraphFilter.CATENATE_ALL | WordDelimiterGraphFilter.CATENATE_NUMBERS |
-						WordDelimiterGraphFilter.CATENATE_WORDS | WordDelimiterGraphFilter.PRESERVE_ORIGINAL,
-				CharArraySet.EMPTY_SET);
-		result = new EnglishPossessiveFilter(result);
-		result = new LowerCaseFilter(result);
-		result = new PorterStemFilter(result);
-		final ShingleFilter shingleFilter = new ShingleFilter(result, 2, 3);
-		shingleFilter.setTokenSeparator("");
-		shingleFilter.setOutputUnigrams(true);
-		result = shingleFilter;
+    @Override
+    protected TokenStreamComponents createComponents(String fieldName) {
+        final StandardTokenizer tokenizer = new StandardTokenizer();
+        TokenStream result = new WordDelimiterGraphFilter(tokenizer,
+                WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
+                        WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE |
+                        WordDelimiterGraphFilter.CATENATE_ALL | WordDelimiterGraphFilter.CATENATE_NUMBERS |
+                        WordDelimiterGraphFilter.CATENATE_WORDS | WordDelimiterGraphFilter.PRESERVE_ORIGINAL,
+                CharArraySet.EMPTY_SET);
+        result = new EnglishPossessiveFilter(result);
+        result = new LowerCaseFilter(result);
+        result = new PorterStemFilter(result);
+        final ShingleFilter shingleFilter = new ShingleFilter(result, 2, 3);
+        shingleFilter.setTokenSeparator("");
+        shingleFilter.setOutputUnigrams(true);
+        result = shingleFilter;
 
-		return new TokenStreamComponents(tokenizer, result) {
-			@Override
-			protected void setReader(final Reader reader) {
-				super.setReader(reader);
-			}
-		};
-	}
+        return new TokenStreamComponents(tokenizer, result);
+    }
 }

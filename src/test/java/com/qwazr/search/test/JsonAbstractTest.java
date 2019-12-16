@@ -133,7 +133,7 @@ public abstract class JsonAbstractTest {
     }
 
     @Test
-    public void test020CheckErrorIndex() throws URISyntaxException, IOException {
+    public void test020CheckErrorIndex() throws URISyntaxException {
         IndexServiceInterface client = getClient();
         client.createUpdateSchema(SCHEMA_ERROR_NAME, null);
         Assert.assertNotNull(client.getIndex(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME));
@@ -181,13 +181,17 @@ public abstract class JsonAbstractTest {
         try {
             runnable.run();
             Assert.fail("WebApplicationException was not thrown");
-        } catch (WebApplicationException e) {
+        }
+        catch (WebApplicationException e) {
             Assert.assertEquals(expectedStatusCode, e.getResponse().getStatus());
-        } catch (ServerException e) {
+        }
+        catch (ServerException e) {
             Assert.assertEquals(expectedStatusCode, e.getStatusCode());
-        } catch (IllegalArgumentException e) {
+        }
+        catch (IllegalArgumentException e) {
             // Thats ok
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -195,7 +199,8 @@ public abstract class JsonAbstractTest {
     public static LinkedHashMap<String, FieldDefinition> getFieldMap(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return FieldDefinition.newFieldMap(IOUtils.toString(is, StandardCharsets.UTF_8));
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -203,7 +208,8 @@ public abstract class JsonAbstractTest {
     private static FieldDefinition getField(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return FieldDefinition.newField(IOUtils.toString(is, StandardCharsets.UTF_8));
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -211,7 +217,8 @@ public abstract class JsonAbstractTest {
     private static LinkedHashMap<String, AnalyzerDefinition> getAnalyzerMap(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return AnalyzerDefinition.newAnalyzerMap(IOUtils.toString(is, StandardCharsets.UTF_8));
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -219,7 +226,8 @@ public abstract class JsonAbstractTest {
     private static AnalyzerDefinition getAnalyzer(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return AnalyzerDefinition.newAnalyzer(IOUtils.toString(is, StandardCharsets.UTF_8));
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -227,7 +235,8 @@ public abstract class JsonAbstractTest {
     private static IndexSettingsDefinition getIndexSettings(String res) {
         try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return ObjectMappers.JSON.readValue(is, IndexSettingsDefinition.class);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -430,13 +439,14 @@ public abstract class JsonAbstractTest {
     public static QueryDefinition getQuery(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return QueryDefinition.newQuery(IOUtils.toString(is, StandardCharsets.UTF_8));
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, String index,
-            QueryDefinition queryDef, int expectedCount) {
+                                                     QueryDefinition queryDef, int expectedCount) {
         checkErrorStatusCode(() -> client.searchQuery(SCHEMA_NAME, INDEX_DUMMY_NAME, queryDef, null), 404);
         final ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, index, queryDef, null);
         Assert.assertNotNull(result);
@@ -446,12 +456,12 @@ public abstract class JsonAbstractTest {
     }
 
     private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, QueryDefinition queryDef,
-            int expectedCount) throws IOException {
+                                                     int expectedCount) throws IOException {
         return checkQueryIndex(client, INDEX_MASTER_NAME, queryDef, expectedCount);
     }
 
     private ResultDefinition.WithMap checkQuerySlaveIndex(IndexServiceInterface client, QueryDefinition queryDef,
-            int expectedCount) throws IOException {
+                                                          int expectedCount) throws IOException {
         return checkQueryIndex(client, INDEX_SLAVE_NAME, queryDef, expectedCount);
     }
 
@@ -471,7 +481,8 @@ public abstract class JsonAbstractTest {
     public static PostDefinition.Documents getDocs(String res) {
         try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return ObjectMappers.JSON.readValue(is, PostDefinition.Documents.class);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -479,7 +490,8 @@ public abstract class JsonAbstractTest {
     private static PostDefinition.Document getDoc(String res) {
         try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return ObjectMappers.JSON.readValue(is, PostDefinition.Document.class);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -536,7 +548,7 @@ public abstract class JsonAbstractTest {
     }
 
     private BackupStatus checkBackup(SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups,
-            String backupName) {
+                                     String backupName) {
         Assert.assertNotNull(backups);
         final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults = backups.get(SCHEMA_NAME);
         Assert.assertNotNull(schemaResults);
@@ -548,7 +560,7 @@ public abstract class JsonAbstractTest {
     }
 
     private BackupStatus getAndCheckBackup(IndexServiceInterface client, String backupName,
-            final boolean extractVersion) {
+                                           final boolean extractVersion) {
         return checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, backupName, extractVersion), backupName);
     }
 
@@ -706,7 +718,7 @@ public abstract class JsonAbstractTest {
     }
 
     private <T extends Comparable> void checkDescending(T startValue, String field,
-            Collection<ResultDocumentMap> documents) {
+                                                        Collection<ResultDocumentMap> documents) {
         T old = startValue;
         for (ResultDocumentMap document : documents) {
             Assert.assertNotNull(document.fields);
@@ -718,7 +730,7 @@ public abstract class JsonAbstractTest {
     }
 
     private <T extends Comparable> void checkAscending(T startValue, String field,
-            Collection<ResultDocumentMap> documents) {
+                                                       Collection<ResultDocumentMap> documents) {
         T old = startValue;
         for (ResultDocumentMap document : documents) {
             Assert.assertNotNull(document.fields);
@@ -781,7 +793,7 @@ public abstract class JsonAbstractTest {
     }
 
     private void checkSynonyms(final IndexServiceInterface client, final String queryString,
-            final String... multiWordsHighlights) throws IOException {
+                               final String... multiWordsHighlights) throws IOException {
         final QueryBuilder builder = QueryDefinition.of(QUERY_HIGHLIGHT);
         builder.query(QueryParser.of("description")
                 .setDefaultOperator(QueryParserOperator.AND)
@@ -926,7 +938,7 @@ public abstract class JsonAbstractTest {
 
     @Test
     public void test600FieldAnalyzer() throws URISyntaxException {
-        final String[] term_results = { "there", "are", "few", "parts", "of", "texts" };
+        final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(
                 () -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,60 +15,64 @@
  */
 package com.qwazr.search.collector;
 
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.BinaryDocValues;
+import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.SortedDocValues;
+import org.apache.lucene.index.SortedNumericDocValues;
+import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.search.LeafCollector;
-import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Scorable;
 
 import java.io.IOException;
 
 public abstract class DocValuesLeafCollector implements LeafCollector {
 
-	@Override
-	public void setScorer(Scorer scorer) throws IOException {
-	}
+    @Override
+    public void setScorer(Scorable scorable) {
+    }
 
-	public static abstract class Numeric extends DocValuesLeafCollector {
+    public static abstract class Numeric extends DocValuesLeafCollector {
 
-		protected final NumericDocValues docValues;
+        protected final NumericDocValues docValues;
 
-		protected Numeric(NumericDocValues docValues) throws IOException {
-			this.docValues = docValues;
-		}
-	}
+        protected Numeric(NumericDocValues docValues) {
+            this.docValues = docValues;
+        }
+    }
 
-	public static abstract class SortedNumeric extends DocValuesLeafCollector {
+    public static abstract class SortedNumeric extends DocValuesLeafCollector {
 
-		protected final SortedNumericDocValues docValues;
+        protected final SortedNumericDocValues docValues;
 
-		protected SortedNumeric(SortedNumericDocValues docValues) throws IOException {
-			this.docValues = docValues;
-		}
-	}
+        protected SortedNumeric(SortedNumericDocValues docValues) {
+            this.docValues = docValues;
+        }
+    }
 
-	public static abstract class Binary extends DocValuesLeafCollector {
+    public static abstract class Binary extends DocValuesLeafCollector {
 
-		protected final BinaryDocValues docValues;
+        protected final BinaryDocValues docValues;
 
-		protected Binary(BinaryDocValues docValues) throws IOException {
-			this.docValues = docValues;
-		}
-	}
+        protected Binary(BinaryDocValues docValues) throws IOException {
+            this.docValues = docValues;
+        }
+    }
 
-	public static abstract class Sorted extends DocValuesLeafCollector {
+    public static abstract class Sorted extends DocValuesLeafCollector {
 
-		protected final SortedDocValues docValues;
+        protected final SortedDocValues docValues;
 
-		protected Sorted(SortedDocValues docValues) throws IOException {
-			this.docValues = docValues;
-		}
-	}
+        protected Sorted(SortedDocValues docValues) throws IOException {
+            this.docValues = docValues;
+        }
+    }
 
-	public static abstract class SortedSet extends DocValuesLeafCollector {
+    public static abstract class SortedSet extends DocValuesLeafCollector {
 
-		protected final SortedSetDocValues docValues;
+        protected final SortedSetDocValues docValues;
 
-		protected SortedSet(SortedSetDocValues docValues) throws IOException {
-			this.docValues = docValues;
-		}
-	}
+        protected SortedSet(SortedSetDocValues docValues) throws IOException {
+            this.docValues = docValues;
+        }
+    }
 }

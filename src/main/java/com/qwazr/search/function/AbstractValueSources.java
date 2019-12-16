@@ -1,6 +1,6 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
- *
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
+ *s
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,38 +25,38 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class AbstractValueSources<T extends AbstractValueSources> extends AbstractValueSource<T> {
+public abstract class AbstractValueSources<T extends AbstractValueSources<T>> extends AbstractValueSource<T> {
 
-	public final AbstractValueSource[] sources;
+    public final AbstractValueSource<?>[] sources;
 
-	protected AbstractValueSources(final Class<T> ownClass, final AbstractValueSource... sources) {
-		super(ownClass);
-		this.sources = Objects.requireNonNull(sources, "The source are mising");
-	}
+    protected AbstractValueSources(final Class<T> ownClass, final AbstractValueSource<?>... sources) {
+        super(ownClass);
+        this.sources = Objects.requireNonNull(sources, "The source are mising");
+    }
 
-	protected ValueSource[] getValueSourceArray(final QueryContext queryContext)
-			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
-		final ValueSource[] valueSources = new ValueSource[sources.length];
-		int i = 0;
-		for (AbstractValueSource source : sources)
-			valueSources[i++] = source.getValueSource(queryContext);
-		return valueSources;
-	}
+    protected ValueSource[] getValueSourceArray(final QueryContext queryContext)
+            throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+        final ValueSource[] valueSources = new ValueSource[sources.length];
+        int i = 0;
+        for (AbstractValueSource<?> source : sources)
+            valueSources[i++] = source.getValueSource(queryContext);
+        return valueSources;
+    }
 
-	protected List<ValueSource> getValueSourceList(final QueryContext queryContext)
-			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
-		final List<ValueSource> valueSources = new ArrayList<>(sources.length);
-		for (AbstractValueSource source : sources)
-			valueSources.add(source.getValueSource(queryContext));
-		return valueSources;
-	}
+    protected List<ValueSource> getValueSourceList(final QueryContext queryContext)
+            throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+        final List<ValueSource> valueSources = new ArrayList<>(sources.length);
+        for (AbstractValueSource<?> source : sources)
+            valueSources.add(source.getValueSource(queryContext));
+        return valueSources;
+    }
 
-	@Override
-	public boolean isEqual(AbstractValueSources valueSources) {
-		int i = 0;
-		for (AbstractValueSource source : sources)
-			if (!Objects.equals(source, valueSources.sources[i++]))
-				return false;
-		return true;
-	}
+    @Override
+    public boolean isEqual(AbstractValueSources valueSources) {
+        int i = 0;
+        for (AbstractValueSource<?> source : sources)
+            if (!Objects.equals(source, valueSources.sources[i++]))
+                return false;
+        return true;
+    }
 }

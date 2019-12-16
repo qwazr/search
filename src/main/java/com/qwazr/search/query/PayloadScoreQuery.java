@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ClassLoaderUtils;
+import org.apache.lucene.analysis.payloads.PayloadHelper;
 import org.apache.lucene.queries.payloads.AveragePayloadFunction;
 import org.apache.lucene.queries.payloads.MaxPayloadFunction;
 import org.apache.lucene.queries.payloads.MinPayloadFunction;
@@ -121,6 +122,6 @@ public class PayloadScoreQuery extends AbstractQuery<PayloadScoreQuery> {
         }
         Objects.requireNonNull(payloadFunction, "The payload function is missing");
         return new org.apache.lucene.queries.payloads.PayloadScoreQuery(wrappedQuery.getQuery(queryContext),
-                payloadFunctionInstance, null, includeSpanScore);
+                payloadFunctionInstance, b -> PayloadHelper.decodeInt(b.bytes, b.offset), includeSpanScore);
     }
 }
