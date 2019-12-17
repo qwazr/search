@@ -2,6 +2,7 @@
   "query": {
     "type": "PayloadScoreQuery",
     "payload_function": "AveragePayloadFunction",
+    "payload_decoder": "IntegerPayloadDecoder",
     "wrapped_query": {
       "type": "SpanQueryWrapper",
       "wrapped_query": {

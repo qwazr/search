@@ -132,6 +132,8 @@ public class PayloadScoreQuery extends AbstractQuery<PayloadScoreQuery> {
 
     final static String[] payloadFunctionClassPrefixes = {"", "org.apache.lucene.queries.payloads."};
 
+    final static String[] payloadDecoderClassPrefixes = {"", "com.qwazr.search.analysis."};
+
     private static PayloadFunction getPayloadFunction(final String payloadFunction)
             throws ReflectiveOperationException {
         return (PayloadFunction) ClassLoaderUtils.findClass(payloadFunction, payloadFunctionClassPrefixes)
@@ -140,7 +142,7 @@ public class PayloadScoreQuery extends AbstractQuery<PayloadScoreQuery> {
 
     private static PayloadDecoder getPayloadDecoder(final String payloadDecoder)
             throws ReflectiveOperationException {
-        return (PayloadDecoder) ClassLoaderUtils.findClass(payloadDecoder)
+        return (PayloadDecoder) ClassLoaderUtils.findClass(payloadDecoder, payloadDecoderClassPrefixes)
                 .getDeclaredConstructor().newInstance();
     }
 
