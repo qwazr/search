@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,21 @@
 
 package com.qwazr.search.analysis;
 
-import org.apache.lucene.search.similarities.BM25Similarity;
+import org.apache.lucene.queries.payloads.PayloadDecoder;
 import org.apache.lucene.util.BytesRef;
 
-public class PayloadBoostBm25Similarity extends BM25Similarity {
+public class FloatArrayPayloadDecoder implements PayloadDecoder {
 
-	private final float[] boosts;
+    private final float[] boosts;
 
-	public PayloadBoostBm25Similarity(float... boosts) {
-		this.boosts = boosts;
-	}
+    public FloatArrayPayloadDecoder(float... boosts) {
+        this.boosts = boosts;
+    }
 
-	protected float scorePayload(int doc, int start, int end, BytesRef payload) {
-		if (payload == null)
-			return 1F;
-		final int pos = payload.bytes[payload.offset];
-		return boosts[pos];
-	}
+    public float computePayloadFactor(BytesRef payload) {
+        if (payload == null)
+            return 1F;
+        final int pos = payload.bytes[payload.offset];
+        return boosts[pos];
+    }
 }

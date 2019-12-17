@@ -28,7 +28,6 @@ public class IntegerPayloadAnalyzer extends Analyzer {
     protected TokenStreamComponents createComponents(String fieldName) {
         final Tokenizer tokenizer = new WhitespaceTokenizer();
         final TokenStream stream = new DelimitedPayloadTokenFilter(tokenizer, '|', new IntegerEncoder());
-
         return new TokenStreamComponents(tokenizer, stream);
     }
 }
