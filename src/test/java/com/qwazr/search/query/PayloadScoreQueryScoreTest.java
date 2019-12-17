@@ -60,7 +60,7 @@ public class PayloadScoreQueryScoreTest
     }
 
     @Test
-    public void test() {
+    public void test41() {
 
         ResultDefinition.WithObject<PayloadRecord> result = indexService.searchQuery(QueryDefinition.of(
                 new PayloadScoreQuery(
@@ -69,10 +69,32 @@ public class PayloadScoreQueryScoreTest
                         b -> PayloadHelper.decodeFloat(b.bytes, b.offset),
                         true))
                 .queryDebug(true)
+                .returnedField("*")
                 .build());
-        Assert.assertNotNull(result);
-        Assert.assertEquals(2L, result.getTotalHits(), 0);
+
+        checkResult(result, 2L);
+        checkRecord(result.getDocuments().get(0), "1",  0d);
+        checkRecord(result.getDocuments().get(1), "2",  0d);
         Assert.assertEquals("PayloadScoreQuery(payloads:41, function: MinPayloadFunction, includeSpanScore: true)",
+                result.query);
+    }
+
+    @Test
+    public void test42() {
+
+        ResultDefinition.WithObject<PayloadRecord> result = indexService.searchQuery(QueryDefinition.of(
+                new PayloadScoreQuery(
+                        new SpanTermQuery("payloads", "42"),
+                        new MinPayloadFunction(),
+                        b -> PayloadHelper.decodeFloat(b.bytes, b.offset),
+                        true))
+                .queryDebug(true)
+                .returnedField("*")
+                .build());
+        checkResult(result, 2L);
+        checkRecord(result.getDocuments().get(0), "1", 0d);
+        checkRecord(result.getDocuments().get(1), "2", 0d);
+        Assert.assertEquals("PayloadScoreQuery(payloads:42, function: MinPayloadFunction, includeSpanScore: true)",
                 result.query);
     }
 

@@ -20,6 +20,7 @@ import com.qwazr.search.index.ExplainDefinition;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
+import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.concurrent.ExecutorUtils;
@@ -50,7 +51,8 @@ public abstract class AbstractIndexTest {
             executor = withExecutorService ? Executors.newCachedThreadPool() : null;
             rootDirectory = Files.createTempDirectory("qwazr_index_test");
             return indexManager = new IndexManager(rootDirectory, executor);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -75,7 +77,7 @@ public abstract class AbstractIndexTest {
     }
 
     <T> ResultDefinition.WithObject<T> checkQuery(AnnotatedIndexService<T> indexService, QueryDefinition queryDef,
-            Long hitsExpected, String queryDebug) {
+                                                  Long hitsExpected, String queryDebug) {
         final ResultDefinition.WithObject<T> result = indexService.searchQuery(queryDef);
         Assert.assertNotNull(result);
         if (result.query != null)
@@ -94,6 +96,18 @@ public abstract class AbstractIndexTest {
 
     <T> ResultDefinition.WithObject<T> checkQuery(AnnotatedIndexService<T> indexService, QueryDefinition queryDef) {
         return checkQuery(indexService, queryDef, 1L, null);
+    }
+
+    protected <T> void checkResult(final ResultDefinition.WithObject<T> result, long totalHits) {
+        Assert.assertNotNull(result);
+        Assert.assertEquals(totalHits, result.getTotalHits(), 0);
+    }
+
+    protected <T extends IndexRecord<?>> void checkRecord(final ResultDocumentObject<T> record,
+                                                          final String id,
+                                                          final double score) {
+        Assert.assertEquals(record.getRecord().id, id);
+        Assert.assertEquals(score, record.getScore(), 0.0001);
     }
 
     @AfterClass
@@ -126,7 +140,8 @@ public abstract class AbstractIndexTest {
             if (service == null) {
                 try {
                     service = indexManager.getService(indexRecordClass);
-                } catch (URISyntaxException e) {
+                }
+                catch (URISyntaxException e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -134,7 +149,7 @@ public abstract class AbstractIndexTest {
         }
 
         public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef, Long hitsExpected,
-                String queryDebug) {
+                                                         String queryDebug) {
             return checkQuery(getIndexService(), queryDef, hitsExpected, queryDebug);
         }
 

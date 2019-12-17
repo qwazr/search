@@ -19,10 +19,8 @@ package com.qwazr.search.query;
 import com.qwazr.search.function.DoubleValuesSource;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -48,11 +46,6 @@ public class FunctionScoreQueryScoreTest extends AbstractIndexTest.WithIndexReco
                         .floatDocValue(100.0F));
     }
 
-    private void checkRecord(final ResultDocumentObject<IndexRecord.NoTaxonomy> record, final String id, final double score) {
-        Assert.assertEquals(record.getRecord().id, id);
-        Assert.assertEquals(record.getScore(), score, 0.0001);
-    }
-
     @Test
     public void testWithout() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy>
@@ -61,8 +54,7 @@ public class FunctionScoreQueryScoreTest extends AbstractIndexTest.WithIndexReco
                         new TermQuery("textField", "sir"))
                         .returnedField("*")
                         .build());
-        Assert.assertNotNull(result);
-        Assert.assertEquals(3, result.totalHits);
+        checkResult(result, 3L);
 
         checkRecord(result.getDocuments().get(0), "3", 0.09599176);
         checkRecord(result.getDocuments().get(1), "1", 0.07955062);
@@ -79,8 +71,7 @@ public class FunctionScoreQueryScoreTest extends AbstractIndexTest.WithIndexReco
                                 new DoubleValuesSource.FloatField("floatDocValue")))
                         .returnedField("*")
                         .build());
-        Assert.assertNotNull(result);
-        Assert.assertEquals(3, result.totalHits);
+        checkResult(result, 3L);
 
         checkRecord(result.getDocuments().get(0), "1", 79.55061);
         checkRecord(result.getDocuments().get(1), "3", 9.599176);
