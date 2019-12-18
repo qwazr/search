@@ -34,8 +34,9 @@ public class QueryDefinitionTest {
             final File smiFile = Files.createTempFile("querydef", ".smi").toFile();
             ObjectMappers.SMILE.writeValue(smiFile, query1);
             final QueryDefinition query2 = ObjectMappers.SMILE.readValue(smiFile, QueryDefinition.class);
-            Assert.assertEquals(query1, query2);
-        } catch (IOException e) {
+            Assert.assertEquals(path.toString(), query1, query2);
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

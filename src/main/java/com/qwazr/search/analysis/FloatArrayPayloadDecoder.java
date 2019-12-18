@@ -16,14 +16,16 @@
 
 package com.qwazr.search.analysis;
 
+import com.qwazr.utils.Equalizer;
 import org.apache.lucene.queries.payloads.PayloadDecoder;
 import org.apache.lucene.util.BytesRef;
 
-public class FloatArrayPayloadDecoder implements PayloadDecoder {
+public class FloatArrayPayloadDecoder extends Equalizer<FloatArrayPayloadDecoder> implements PayloadDecoder {
 
     private final float[] boosts;
 
     public FloatArrayPayloadDecoder(float... boosts) {
+        super(FloatArrayPayloadDecoder.class);
         this.boosts = boosts;
     }
 
@@ -32,5 +34,10 @@ public class FloatArrayPayloadDecoder implements PayloadDecoder {
             return 1F;
         final int pos = payload.bytes[payload.offset];
         return boosts[pos];
+    }
+
+    @Override
+    protected boolean isEqual(FloatArrayPayloadDecoder query) {
+        return true;
     }
 }

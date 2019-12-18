@@ -16,14 +16,24 @@
 
 package com.qwazr.search.analysis;
 
+import com.qwazr.utils.Equalizer;
 import org.apache.lucene.analysis.payloads.PayloadHelper;
 import org.apache.lucene.queries.payloads.PayloadDecoder;
 import org.apache.lucene.util.BytesRef;
 
-public class IntegerPayloadDecoder implements PayloadDecoder {
+public class IntegerPayloadDecoder extends Equalizer<IntegerPayloadDecoder> implements PayloadDecoder {
+
+    public IntegerPayloadDecoder() {
+        super(IntegerPayloadDecoder.class);
+    }
 
     @Override
     public float computePayloadFactor(BytesRef payload) {
         return PayloadHelper.decodeInt(payload.bytes, payload.offset);
+    }
+
+    @Override
+    protected boolean isEqual(final IntegerPayloadDecoder query) {
+        return true;
     }
 }

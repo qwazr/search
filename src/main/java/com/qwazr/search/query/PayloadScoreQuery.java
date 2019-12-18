@@ -38,7 +38,7 @@ import java.util.Objects;
 public class PayloadScoreQuery extends AbstractQuery<PayloadScoreQuery> {
 
     @JsonProperty("wrapped_query")
-    public final AbstractSpanQuery wrappedQuery;
+    public final AbstractSpanQuery<?> wrappedQuery;
 
     @JsonProperty("include_span_score")
     public final Boolean includeSpanScore;
