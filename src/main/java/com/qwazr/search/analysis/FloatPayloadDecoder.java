@@ -23,6 +23,8 @@ import org.apache.lucene.util.BytesRef;
 
 public class FloatPayloadDecoder extends Equalizer<FloatPayloadDecoder> implements PayloadDecoder {
 
+    public static final FloatPayloadDecoder INSTANCE = new FloatPayloadDecoder();
+
     public FloatPayloadDecoder() {
         super(FloatPayloadDecoder.class);
     }

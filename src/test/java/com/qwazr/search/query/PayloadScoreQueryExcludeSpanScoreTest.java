@@ -16,6 +16,7 @@
 
 package com.qwazr.search.query;
 
+import com.qwazr.search.analysis.IntegerPayloadDecoder;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
@@ -31,7 +32,6 @@ import org.apache.lucene.analysis.core.KeywordTokenizer;
 import org.apache.lucene.analysis.payloads.DelimitedPayloadTokenFilter;
 import org.apache.lucene.analysis.payloads.IntegerEncoder;
 import org.apache.lucene.analysis.payloads.PayloadEncoder;
-import org.apache.lucene.analysis.payloads.PayloadHelper;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.queries.payloads.MinPayloadFunction;
 import org.junit.Assert;
@@ -43,12 +43,12 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PayloadScoreQueryScoreTest
-        extends AbstractIndexTest.WithIndexRecord<PayloadScoreQueryScoreTest.PayloadRecord> {
+public class PayloadScoreQueryExcludeSpanScoreTest
+        extends AbstractIndexTest.WithIndexRecord<PayloadScoreQueryExcludeSpanScoreTest.PayloadRecord> {
 
     private static AnnotatedIndexService<PayloadRecord> indexService;
 
-    public PayloadScoreQueryScoreTest() {
+    public PayloadScoreQueryExcludeSpanScoreTest() {
         super(PayloadRecord.class);
     }
 
@@ -66,35 +66,34 @@ public class PayloadScoreQueryScoreTest
                 new PayloadScoreQuery(
                         new SpanTermQuery("payloads", "41"),
                         new MinPayloadFunction(),
-                        b -> PayloadHelper.decodeFloat(b.bytes, b.offset),
-                        true))
+                        IntegerPayloadDecoder.INSTANCE,
+                        false))
                 .queryDebug(true)
                 .returnedField("*")
                 .build());
 
         checkResult(result, 2L);
-        checkRecord(result.getDocuments().get(0), "1",  0d);
-        checkRecord(result.getDocuments().get(1), "2",  0d);
-        Assert.assertEquals("PayloadScoreQuery(payloads:41, function: MinPayloadFunction, includeSpanScore: true)",
+        checkRecord(result.getDocuments().get(0), "2", 2d);
+        checkRecord(result.getDocuments().get(1), "1", 1d);
+        Assert.assertEquals("PayloadScoreQuery(payloads:41, function: MinPayloadFunction, includeSpanScore: false)",
                 result.query);
     }
 
     @Test
     public void test42() {
-
         ResultDefinition.WithObject<PayloadRecord> result = indexService.searchQuery(QueryDefinition.of(
                 new PayloadScoreQuery(
                         new SpanTermQuery("payloads", "42"),
                         new MinPayloadFunction(),
-                        b -> PayloadHelper.decodeFloat(b.bytes, b.offset),
-                        true))
+                        IntegerPayloadDecoder.INSTANCE,
+                        false))
                 .queryDebug(true)
                 .returnedField("*")
                 .build());
         checkResult(result, 2L);
-        checkRecord(result.getDocuments().get(0), "1", 0d);
-        checkRecord(result.getDocuments().get(1), "2", 0d);
-        Assert.assertEquals("PayloadScoreQuery(payloads:42, function: MinPayloadFunction, includeSpanScore: true)",
+        checkRecord(result.getDocuments().get(0), "1", 2d);
+        checkRecord(result.getDocuments().get(1), "2", 1d);
+        Assert.assertEquals("PayloadScoreQuery(payloads:42, function: MinPayloadFunction, includeSpanScore: false)",
                 result.query);
     }
 

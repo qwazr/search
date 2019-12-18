@@ -23,6 +23,8 @@ import org.apache.lucene.util.BytesRef;
 
 public class IntegerPayloadDecoder extends Equalizer<IntegerPayloadDecoder> implements PayloadDecoder {
 
+    public static final IntegerPayloadDecoder INSTANCE = new IntegerPayloadDecoder();
+    
     public IntegerPayloadDecoder() {
         super(IntegerPayloadDecoder.class);
     }
