@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,66 +20,60 @@ import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.query.lucene.FilteredQuery;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.LeafCollector;
 import org.apache.lucene.search.Scorable;
 import org.apache.lucene.search.ScoreMode;
 import org.apache.lucene.util.RoaringDocIdSet;
 
-import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class FilterCollector extends BaseCollector<FilterCollector.Query>
-        implements ConcurrentCollector<FilterCollector.Query> {
-
-    private final Map<LeafReaderContext, RoaringDocIdSet.Builder> docIdSetMapBuilders;
+public class FilterCollector extends BaseCollector<FilterCollector.Query, FilterCollector.Leaf, FilterCollector> {
 
     public FilterCollector(final String collectorName) {
-        super(collectorName);
-        this.docIdSetMapBuilders = new HashMap<>();
+        super(collectorName, ScoreMode.COMPLETE);
     }
 
-    @Override
-    public FilterCollector.Query getResult() {
+    private Query reduceLeaf() {
         final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap = new HashMap<>();
-        docIdSetMapBuilders.forEach((ctx, builder) -> docIdSetMap.put(ctx, builder.build()));
+        getLeaves().forEach(leaf -> docIdSetMap.put(leaf.context, leaf.docIdsBuilder.build()));
         return new FilterCollector.Query(new FilteredQuery(docIdSetMap));
     }
 
-    @Override
-    final public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
-
-        final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(context.reader().maxDoc());
-        docIdSetMapBuilders.put(context, builder);
-
-        return new LeafCollector() {
-
-            @Override
-            public void setScorer(final Scorable scorer) {
-            }
-
-            @Override
-            final public void collect(final int doc) {
-                builder.add(doc);
-            }
-        };
-    }
 
     @Override
-    public ScoreMode scoreMode() {
-        return ScoreMode.COMPLETE;
-    }
-
-    @Override
-    final public FilterCollector.Query getReducedResult(
-            final Collection<BaseCollector<FilterCollector.Query>> baseCollectors) {
+    final public Query reduce(final List<FilterCollector> leafCollectors) {
         final FilteredQuery filteredQuery = new FilteredQuery(new HashMap<>());
-        baseCollectors.forEach(collector -> filteredQuery.merge(collector.getResult().filteredQuery));
+        leafCollectors.forEach(collector -> filteredQuery.merge(collector.reduceLeaf().filteredQuery));
         return new FilterCollector.Query(filteredQuery);
+    }
+
+
+    @Override
+    protected Leaf newLeafCollector(final LeafReaderContext context) {
+        return new Leaf(context);
+    }
+
+    static class Leaf implements LeafCollector {
+
+        private final LeafReaderContext context;
+        private final RoaringDocIdSet.Builder docIdsBuilder;
+
+        private Leaf(final LeafReaderContext context) {
+            this.context = context;
+            this.docIdsBuilder = new RoaringDocIdSet.Builder(context.reader().maxDoc());
+        }
+
+        @Override
+        public void setScorer(Scorable scorer) {
+        }
+
+        @Override
+        public void collect(int doc) {
+            docIdsBuilder.add(doc);
+        }
     }
 
     public static class Query extends AbstractQuery<Query> {
@@ -92,8 +86,7 @@ public class FilterCollector extends BaseCollector<FilterCollector.Query>
         }
 
         @Override
-        final public org.apache.lucene.search.Query getQuery(final QueryContext queryContext)
-                throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+        final public org.apache.lucene.search.Query getQuery(final QueryContext queryContext) {
             return filteredQuery;
         }
 

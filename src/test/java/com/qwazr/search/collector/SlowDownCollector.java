@@ -19,31 +19,33 @@ import com.qwazr.utils.concurrent.ThreadUtils;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.LeafCollector;
 import org.apache.lucene.search.Scorable;
+import org.apache.lucene.search.ScoreMode;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class SlowDownCollector extends BaseCollector<Long> {
+public class SlowDownCollector extends BaseCollector<Long, SlowDownCollector.Leaf, SlowDownCollector> {
 
     private final int perRecordMsPause;
 
     public SlowDownCollector(final String collectorName, final Integer perRecordMsPause) {
-        super(collectorName);
+        super(collectorName, ScoreMode.COMPLETE_NO_SCORES);
         this.perRecordMsPause = Objects.requireNonNull(perRecordMsPause);
     }
 
     @Override
-    public LeafCollector getLeafCollector(final LeafReaderContext context) {
-        return new SlowDownLeafCollector();
+    public Leaf newLeafCollector(final LeafReaderContext context) {
+        return new Leaf();
     }
 
     @Override
-    public Long getResult() {
+    public Long reduce(final List<SlowDownCollector> collectors) {
         return null;
     }
 
-    private class SlowDownLeafCollector implements LeafCollector {
+
+    class Leaf implements LeafCollector {
 
         @Override
         final public void setScorer(final Scorable scorer) {
@@ -55,15 +57,4 @@ public class SlowDownCollector extends BaseCollector<Long> {
         }
     }
 
-    public static class Concurrent extends SlowDownCollector implements ConcurrentCollector<Long> {
-
-        public Concurrent(final String collectorName, final Integer perRecordMsPause) {
-            super(collectorName, perRecordMsPause);
-        }
-
-        @Override
-        public Long getReducedResult(Collection<BaseCollector<Long>> baseCollectors) {
-            return null;
-        }
-    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.collector.BaseCollector;
-import com.qwazr.search.collector.ConcurrentCollector;
+import com.qwazr.search.collector.ParallelCollector;
 import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.LoggerUtils;
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.CollectorManager;
+import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TimeLimitingCollector;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopFieldCollector;
@@ -44,7 +44,7 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
     private final Collection<QueryCollectorsClassic> queryCollectorsList;
     private FacetsCollector facetsCollector;
 
-    QueryCollectorManager(final QueryExecution queryExecution) {
+    QueryCollectorManager(final QueryExecution<?> queryExecution) {
         super(queryExecution);
         this.queryCollectorsList = new ArrayList<>();
     }
@@ -67,7 +67,8 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 
             try {
                 queryExecution.queryContext.indexSearcher.search(queryExecution.query, this);
-            } catch (RuntimeException e) {
+            }
+            catch (RuntimeException e) {
                 if (ExceptionUtils.getRootCause(e) instanceof TimeLimitingCollector.TimeExceededException)
                     LOGGER.log(Level.WARNING, e, e::getMessage);
                 else
@@ -90,7 +91,8 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
         final QueryCollectorsClassic queryCollectors;
         try {
             queryCollectors = new QueryCollectorsClassic(queryExecution);
-        } catch (ReflectiveOperationException e) {
+        }
+        catch (ReflectiveOperationException e) {
             throw new IOException(e);
         }
         queryCollectorsList.add(queryCollectors);
@@ -127,7 +129,7 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
             if (queryCollectors.topDocsCollector != null)
                 topDocsList.add(queryCollectors.topDocsCollector.topDocs());
         return TopDocs.merge(queryExecution.start, queryExecution.rows,
-                topDocsList.toArray(new TopDocs[topDocsList.size()]), true);
+                topDocsList.toArray(new TopDocs[0]), true);
     }
 
     private TopDocs getTopFieldDocs() {
@@ -135,8 +137,9 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
         for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
             if (queryCollectors.topDocsCollector != null)
                 topFieldDocsList.add(((TopFieldCollector) queryCollectors.topDocsCollector).topDocs());
-        return TopFieldDocs.merge(queryExecution.sort, queryExecution.start, queryExecution.rows,
-                topFieldDocsList.toArray(new TopFieldDocs[topFieldDocsList.size()]), true);
+        return TopFieldDocs.merge(queryExecution.sort == null ? Sort.RELEVANCE : queryExecution.sort,
+                queryExecution.start, queryExecution.rows,
+                topFieldDocsList.toArray(new TopFieldDocs[0]), true);
     }
 
     private final static FacetsCollector EMPTY_FACETS_COLLECTOR = new FacetsCollector();
@@ -161,20 +164,18 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
     public final Map<String, Object> getExternalResults() {
         if (queryCollectorsList == null || queryCollectorsList.isEmpty())
             return null;
-        if (queryExecution.queryDef.collectors == null)
+        if (queryExecution.queryDef == null || queryExecution.queryDef.collectors == null)
             return null;
         final Map<String, Object> results = new HashMap<>();
-        int i = 0;
-        for (String name : queryExecution.queryDef.collectors.keySet()) {
-            final List<BaseCollector> externalCollectors = new ArrayList<>();
-            for (QueryCollectorsClassic queryCollectors : queryCollectorsList)
+        for (final String collectorName : queryExecution.queryDef.collectors.keySet()) {
+            final List<ParallelCollector<?, ?>> userCollectors = new ArrayList<>();
+            for (final QueryCollectorsClassic queryCollectors : queryCollectorsList)
                 if (queryCollectors.userCollectors != null)
-                    externalCollectors.add(queryCollectors.userCollectors.get(i));
-            if (!externalCollectors.isEmpty()) {
-                results.put(name,
-                        ((ConcurrentCollector) externalCollectors.get(0)).getReducedResult(externalCollectors));
+                    userCollectors.add(queryCollectors.userCollectors.get(collectorName));
+            if (!userCollectors.isEmpty()) {
+                final ParallelCollector parallelCollector = userCollectors.get(0);
+                results.put(collectorName, parallelCollector.reduce(userCollectors));
             }
-            i++;
         }
         return results;
     }

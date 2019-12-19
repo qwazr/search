@@ -17,46 +17,80 @@
 package com.qwazr.search.collector;
 
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.LeafCollector;
+import org.apache.lucene.search.Scorable;
+import org.apache.lucene.search.ScoreMode;
 import org.apache.lucene.search.TimeLimitingCollector;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
-public class TimeLimiterCollector extends BaseCollector<Boolean> {
+public class TimeLimiterCollector extends BaseCollector<Boolean, TimeLimiterCollector.Leaf, TimeLimiterCollector> {
 
     private final TimeLimitingCollector collector;
 
     public TimeLimiterCollector(final String collectorName, final Long ticksAllowed) {
-        super(collectorName);
-        collector = new TimeLimitingCollector(new BaseCollector<Long>(collectorName) {
+        super(collectorName, ScoreMode.COMPLETE_NO_SCORES);
+        collector = new TimeLimitingCollector(new Collector() {
             @Override
-            public Long getResult() {
-                return null;
+            public LeafCollector getLeafCollector(LeafReaderContext context) {
+                return new DoNothingCollector();
+            }
+
+            @Override
+            public ScoreMode scoreMode() {
+                return ScoreMode.COMPLETE_NO_SCORES;
             }
         }, TimeLimitingCollector.getGlobalCounter(), Objects.requireNonNull(ticksAllowed));
     }
 
     @Override
-    public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
-        return collector.getLeafCollector(context);
+    public Leaf newLeafCollector(final LeafReaderContext context) throws IOException {
+        return new Leaf(collector.getLeafCollector(context));
     }
 
     @Override
-    public Boolean getResult() {
-        return null;
+    public Boolean reduce(final List<TimeLimiterCollector> collectors) {
+        for (final TimeLimiterCollector collector : collectors)
+            if (!collector.reduceLeaf())
+                return false;
+        return true;
     }
 
-    public static class Concurrent extends TimeLimiterCollector implements ConcurrentCollector<Boolean> {
+    private Boolean reduceLeaf() {
+        for (final Leaf leaf : getLeaves())
+            if (!leaf.result)
+                return false;
+        return true;
+    }
 
-        public Concurrent(final String collectorName, final Long ticksAllowed) {
-            super(collectorName, ticksAllowed);
+    static class Leaf implements LeafCollector {
+
+        private final LeafCollector parent;
+
+        private boolean result;
+
+        private Leaf(final LeafCollector parent) {
+            this.parent = parent;
+            this.result = true;
         }
 
         @Override
-        public Boolean getReducedResult(Collection<BaseCollector<Boolean>> baseCollectors) {
-            return null;
+        public void setScorer(Scorable scorer) throws IOException {
+            parent.setScorer(scorer);
+        }
+
+        @Override
+        public void collect(int doc) throws IOException {
+            try {
+                parent.collect(doc);
+            }
+            catch (TimeLimitingCollector.TimeExceededException e) {
+                result = Boolean.FALSE;
+                throw e;
+            }
         }
     }
 }

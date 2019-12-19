@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,27 +28,27 @@ import java.util.Map;
 
 abstract class QueryCollectors {
 
-	final QueryExecution queryExecution;
+    final QueryExecution<?> queryExecution;
 
-	QueryCollectors(final QueryExecution queryExecution) {
-		this.queryExecution = queryExecution;
-	}
+    QueryCollectors(final QueryExecution<?> queryExecution) {
+        this.queryExecution = queryExecution;
+    }
 
-	abstract FacetsBuilder execute() throws Exception;
+    abstract FacetsBuilder execute() throws Exception;
 
-	abstract Integer getTotalHits();
+    abstract Integer getTotalHits();
 
-	abstract TopDocs getTopDocs() throws IOException;
+    abstract TopDocs getTopDocs() throws IOException;
 
-	abstract FacetsCollector getFacetsCollector() throws IOException;
+    abstract FacetsCollector getFacetsCollector() throws IOException;
 
-	abstract Map<String, Object> getExternalResults();
+    abstract Map<String, Object> getExternalResults();
 
-	static List<Pair<String, String[]>> getDimPathPairs(final DrillDownQuery drillDownQuery) {
-		final List<Pair<String, String[]>> dimPaths = new ArrayList<>();
-		drillDownQuery.dimPath.forEach(map -> map.forEach((dim, paths) -> {
-			dimPaths.add(Pair.of(dim, paths));
-		}));
-		return dimPaths;
-	}
+    static List<Pair<String, String[]>> getDimPathPairs(final DrillDownQuery drillDownQuery) {
+        final List<Pair<String, String[]>> dimPaths = new ArrayList<>();
+        drillDownQuery.dimPath.forEach(map -> map.forEach((dim, paths) -> {
+            dimPaths.add(Pair.of(dim, paths));
+        }));
+        return dimPaths;
+    }
 }

@@ -20,13 +20,12 @@ import org.apache.lucene.search.Scorable;
 
 public class DoNothingCollector implements LeafCollector {
 
-    static final DoNothingCollector INSTANCE = new DoNothingCollector();
-
     @Override
-    final public void setScorer(final Scorable scorables) {
+    final public void setScorer(final Scorable scorable) {
     }
 
     @Override
     final public void collect(final int doc) {
     }
+    
 }

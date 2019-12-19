@@ -15,13 +15,11 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.search.collector.ConcurrentCollector;
+import com.qwazr.search.collector.ParallelCollector;
 import com.qwazr.search.field.SortUtils;
 import com.qwazr.search.query.DrillDownQuery;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.TimeTracker;
-import com.qwazr.utils.concurrent.ConcurrentUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -34,11 +32,8 @@ import org.apache.lucene.search.TopDocs;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 final class QueryExecution<T extends ResultDocumentAbstract> {
 
@@ -53,7 +48,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
     final Sort sort;
     final boolean useDrillSideways;
     final Query query;
-    final List<Pair<Constructor, Object[]>> collectorConstructors;
+    final Map<String, CollectorConstructor> collectorConstructors;
 
     private final boolean isConcurrent;
 
@@ -82,7 +77,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
                 queryDef.query instanceof DrillDownQuery && ((DrillDownQuery) queryDef.query).useDrillSideways &&
                         queryDef.facets != null;
         if (queryDef.collectors != null && !queryDef.collectors.isEmpty()) {
-            collectorConstructors = new ArrayList<>();
+            collectorConstructors = new LinkedHashMap<>();
             isConcurrent = buildExternalCollectors(queryDef.collectors, collectorConstructors);
         } else {
             collectorConstructors = null;
@@ -90,41 +85,62 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
         }
     }
 
-    private static boolean buildExternalCollectors(final Map<String, QueryDefinition.CollectorDefinition> collectors,
-                                                   final List<Pair<Constructor, Object[]>> collectorConstructors) throws ReflectiveOperationException {
-        if (collectors == null || collectors.isEmpty())
-            return true; // By default we use concurrent
-        final AtomicInteger concurrentCollectors = new AtomicInteger(0);
-        final AtomicInteger classicCollectors = new AtomicInteger(0);
-        ConcurrentUtils.forEachEx(collectors, (name, collector) -> {
+    static class CollectorConstructor {
+
+        private final Constructor<?> constructor;
+        private final Object[] arguments;
+        private final boolean isParallel;
+
+        private CollectorConstructor(final String collectorName, final QueryDefinition.CollectorDefinition collector) throws ReflectiveOperationException {
             final Class<? extends Collector> collectorClass = ClassLoaderUtils.findClass(collector.classname);
-            Constructor<?>[] constructors = collectorClass.getConstructors();
+            isParallel = ParallelCollector.class.isAssignableFrom(collectorClass);
+            final Constructor<?>[] constructors = collectorClass.getConstructors();
             if (constructors.length == 0)
                 throw new ReflectiveOperationException("No constructor for class: " + collectorClass);
-            final Constructor<?> constructor;
-            final Object[] arguments;
             if (collector.arguments == null || collector.arguments.length == 0) {
                 constructor = collectorClass.getConstructor(String.class);
-                arguments = new Object[]{name};
+                arguments = new Object[]{collectorName};
             } else {
                 arguments = new Object[collector.arguments.length + 1];
-                arguments[0] = name;
+                arguments[0] = collectorName;
                 System.arraycopy(collector.arguments, 0, arguments, 1, collector.arguments.length);
-                Class[] classes = new Class[arguments.length];
+                final Class<?>[] classes = new Class[arguments.length];
                 int i = 0;
                 for (Object arg : arguments)
                     classes[i++] = arg.getClass();
                 constructor = collectorClass.getConstructor(classes);
             }
-            collectorConstructors.add(Pair.of(constructor, arguments));
-            if (ConcurrentCollector.class.isAssignableFrom(collectorClass))
-                concurrentCollectors.incrementAndGet();
+        }
+
+        boolean isParallel() {
+            return isParallel;
+        }
+
+        ParallelCollector<?, ?> newInstance() throws ReflectiveOperationException {
+            return (ParallelCollector<?, ?>) constructor.newInstance(arguments);
+        }
+    }
+
+    private static boolean buildExternalCollectors(final Map<String, QueryDefinition.CollectorDefinition> collectors,
+                                                   final Map<String, CollectorConstructor> collectorConstructors)
+            throws ReflectiveOperationException {
+        if (collectors == null || collectors.isEmpty())
+            return true; // By default we use concurrent
+        int concurrentCollectors = 0;
+        int classicCollectors = 0;
+        for (Map.Entry<String, QueryDefinition.CollectorDefinition> entry : collectors.entrySet()) {
+            final String collectorName = entry.getKey();
+            final QueryDefinition.CollectorDefinition collector = entry.getValue();
+            final CollectorConstructor collectorConstructor = new CollectorConstructor(collectorName, collector);
+            collectorConstructors.put(collectorName, collectorConstructor);
+            if (collectorConstructor.isParallel)
+                concurrentCollectors++;
             else
-                classicCollectors.incrementAndGet();
-        });
-        if (concurrentCollectors.get() > 0 && classicCollectors.get() > 0)
+                classicCollectors++;
+        }
+        if (concurrentCollectors > 0 && classicCollectors > 0)
             throw new IllegalArgumentException("Cannot mix concurrent collectors and classic collectors");
-        return concurrentCollectors.get() > 0 || classicCollectors.get() == 0;
+        return concurrentCollectors > 0 || classicCollectors == 0;
     }
 
     final ResultDefinition<T> execute(final ResultDocuments<T> resultDocuments) throws Exception {

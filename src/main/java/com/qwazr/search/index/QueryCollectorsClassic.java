@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package com.qwazr.search.index;
 
-import com.qwazr.search.collector.BaseCollector;
+import com.qwazr.search.collector.ParallelCollector;
 import com.qwazr.utils.LoggerUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.search.Collector;
@@ -31,8 +30,8 @@ import org.apache.lucene.search.TopFieldCollector;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.search.TotalHitCountCollector;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -48,11 +47,11 @@ class QueryCollectorsClassic extends QueryCollectors {
 
     final FacetsCollector facetsCollector;
 
-    final List<BaseCollector> userCollectors;
+    final Map<String, ParallelCollector<?, ?>> userCollectors;
 
     final TotalHitCountCollector totalHitCountCollector;
 
-    final TopDocsCollector topDocsCollector;
+    final TopDocsCollector<?> topDocsCollector;
 
     final Collector finalCollector;
 
@@ -63,9 +62,10 @@ class QueryCollectorsClassic extends QueryCollectors {
         totalHitCountCollector = buildTotalHitsCollector(queryExecution.end);
         topDocsCollector = buildTopDocCollector(queryExecution.sort, queryExecution.end);
         if (queryExecution.collectorConstructors != null) {
-            userCollectors = new ArrayList<>();
-            for (Pair<Constructor, Object[]> item : queryExecution.collectorConstructors)
-                userCollectors.add(add((BaseCollector) item.getLeft().newInstance(item.getRight())));
+            userCollectors = new LinkedHashMap<>();
+            for (final Map.Entry<String, QueryExecution.CollectorConstructor> entry : queryExecution.collectorConstructors.entrySet()) {
+                userCollectors.put(entry.getKey(), add(entry.getValue().newInstance()));
+            }
         } else
             userCollectors = null;
         finalCollector = getFinalCollector();
@@ -172,9 +172,10 @@ class QueryCollectorsClassic extends QueryCollectors {
         if (userCollectors == null)
             return null;
         final Map<String, Object> results = new HashMap<>();
-        int i = 0;
-        for (String name : queryExecution.queryDef.collectors.keySet())
-            results.put(name, userCollectors.get(i++).getResult());
+        for (final String name : queryExecution.queryDef.collectors.keySet()) {
+            final ParallelCollector parallelCollector = userCollectors.get(name);
+            results.put(name, parallelCollector.reduce(Collections.singletonList(parallelCollector)));
+        }
         return results;
     }
 }

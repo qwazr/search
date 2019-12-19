@@ -23,21 +23,24 @@ import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.search.LeafCollector;
 import org.apache.lucene.search.Scorable;
 
-import java.io.IOException;
-
 public abstract class DocValuesLeafCollector implements LeafCollector {
+
+    protected long count = 0;
 
     @Override
     public void setScorer(Scorable scorable) {
     }
 
-    public static abstract class Numeric extends DocValuesLeafCollector {
+    public static abstract class Numeric<CollectorResult extends Comparable<CollectorResult>> extends DocValuesLeafCollector {
 
         protected final NumericDocValues docValues;
 
         protected Numeric(NumericDocValues docValues) {
             this.docValues = docValues;
         }
+
+        protected abstract CollectorResult getResult();
+
     }
 
     public static abstract class SortedNumeric extends DocValuesLeafCollector {
@@ -53,7 +56,7 @@ public abstract class DocValuesLeafCollector implements LeafCollector {
 
         protected final BinaryDocValues docValues;
 
-        protected Binary(BinaryDocValues docValues) throws IOException {
+        protected Binary(BinaryDocValues docValues) {
             this.docValues = docValues;
         }
     }
@@ -62,7 +65,7 @@ public abstract class DocValuesLeafCollector implements LeafCollector {
 
         protected final SortedDocValues docValues;
 
-        protected Sorted(SortedDocValues docValues) throws IOException {
+        protected Sorted(SortedDocValues docValues) {
             this.docValues = docValues;
         }
     }
@@ -71,7 +74,7 @@ public abstract class DocValuesLeafCollector implements LeafCollector {
 
         protected final SortedSetDocValues docValues;
 
-        protected SortedSet(SortedSetDocValues docValues) throws IOException {
+        protected SortedSet(SortedSetDocValues docValues) {
             this.docValues = docValues;
         }
     }

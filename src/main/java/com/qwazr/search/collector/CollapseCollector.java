@@ -33,43 +33,41 @@ import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.search.LeafCollector;
 import org.apache.lucene.search.Scorable;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.ScoreMode;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.RoaringDocIdSet;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.IntConsumer;
 
-public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
+public class CollapseCollector extends BaseCollector<CollapseCollector.Query, CollapseCollector.Leaf, CollapseCollector> {
 
     private final String fieldName;
     private final int maxRows;
-    private final List<CollapseLeafCollector> leafCollectors;
 
-    public CollapseCollector(String collectorName, final String fieldName, final Integer maxRows) {
-        super(collectorName);
+    public CollapseCollector(final String collectorName, final String fieldName, final Integer maxRows) {
+        super(collectorName, ScoreMode.COMPLETE);
         this.fieldName = fieldName;
         this.maxRows = Objects.requireNonNull(maxRows, "The maxRows parameter is missing");
-        this.leafCollectors = new ArrayList<>();
     }
 
     @Override
-    public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
-        final CollapseLeafCollector leafCollector = new CollapseLeafCollector(context);
-        leafCollectors.add(leafCollector);
-        return leafCollector;
+    public Leaf newLeafCollector(final LeafReaderContext context) throws IOException {
+        return new Leaf(fieldName, context);
     }
 
     @Override
-    public CollapseCollector.Query getResult() {
+    public Query reduce(final List<CollapseCollector> collectors) {
 
-        // Fill the priority queue wich the results of each segments
+        // Fill the priority queue which the results of each segments
         final GroupQueue groupQueue = new GroupQueue(maxRows);
-        leafCollectors.forEach(leaf -> leaf.reduce(groupQueue));
+        for (final CollapseCollector collector : collectors) {
+            collector.getLeaves().forEach(leaf -> leaf.reduce(groupQueue));
+        }
 
         // Stores for each doc the number of collapsed documents
         final Int2IntLinkedOpenHashMap collapsedMap = new Int2IntLinkedOpenHashMap(groupQueue.groupLeaders.size());
@@ -92,23 +90,26 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
         });
 
         // Add empty bitset for unassigned leaf
-        leafCollectors.forEach(leaf -> docIdMaps.putIfAbsent(leaf.context,
-                new RoaringDocIdSet.Builder(leaf.context.reader().maxDoc()).build()));
+        for (final CollapseCollector collector : collectors) {
+            getLeaves().forEach(leaf -> docIdMaps.putIfAbsent(leaf.context,
+                    new RoaringDocIdSet.Builder(leaf.context.reader().maxDoc()).build()));
+        }
 
         return new Query(new FilteredQuery(docIdMaps), collapsedMap, collapsedCount);
     }
 
-    final class CollapseLeafCollector implements LeafCollector {
+    final static class Leaf implements LeafCollector {
 
         private final LeafReaderContext context;
         private final SortedDocValues sdv;
         private final Int2IntMap docIds;
         private final Int2FloatMap scores;
         private final Int2IntMap count;
+        private final int docBase;
 
         private Scorable scorer;
 
-        CollapseLeafCollector(LeafReaderContext context) throws IOException {
+        private Leaf(final String fieldName, final LeafReaderContext context) throws IOException {
             this.context = context;
             final LeafReader reader = context.reader();
             sdv = reader.getSortedDocValues(fieldName);
@@ -118,6 +119,7 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query> {
             scores.defaultReturnValue(-1);
             count = new Int2IntOpenHashMap(numDocs);
             count.defaultReturnValue(0);
+            docBase = context.docBase;
         }
 
         @Override

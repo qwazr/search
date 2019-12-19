@@ -63,8 +63,8 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
     @Test
     public void concurrentCollectorTest() {
         QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
-                .collector("timeLimiter", TimeLimiterCollector.Concurrent.class, 1000L)
-                .collector("slowDown", SlowDownCollector.Concurrent.class, 100)
+                .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
+                .collector("slowDown", SlowDownCollector.class, 100)
                 .build();
         ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);

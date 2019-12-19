@@ -31,84 +31,85 @@ import java.util.concurrent.ExecutorService;
 
 final class QueryContextImpl extends IndexContextImpl implements QueryContext, Closeable {
 
-	final IndexSearcher indexSearcher;
-	final IndexReader indexReader;
-	final TaxonomyReader taxonomyReader;
-	final SortedSetDocValuesReaderState docValueReaderState;
-	final FieldMapWrapper.Cache fieldMapWrappers;
-	final FieldMap fieldMap;
+    final IndexSearcher indexSearcher;
+    final IndexReader indexReader;
+    final TaxonomyReader taxonomyReader;
+    final SortedSetDocValuesReaderState docValueReaderState;
+    final FieldMapWrapper.Cache fieldMapWrappers;
+    final FieldMap fieldMap;
 
-	QueryContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
-			final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
-			final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap,
-			final FieldMapWrapper.Cache fieldMapWrappers, final IndexSearcher indexSearcher,
-			final TaxonomyReader taxonomyReader) {
-		super(indexProvider, resourceLoader, executorService, indexAnalyzers, queryAnalyzers, fieldMap);
-		this.docValueReaderState = ((MultiThreadSearcherFactory.StateIndexSearcher) indexSearcher).state;
-		this.fieldMap = fieldMap;
-		this.fieldMapWrappers = fieldMapWrappers;
-		this.indexSearcher = indexSearcher;
-		this.indexReader = indexSearcher.getIndexReader();
-		this.taxonomyReader = taxonomyReader;
-	}
+    QueryContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
+                     final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
+                     final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap,
+                     final FieldMapWrapper.Cache fieldMapWrappers, final IndexSearcher indexSearcher,
+                     final TaxonomyReader taxonomyReader) {
+        super(indexProvider, resourceLoader, executorService, indexAnalyzers, queryAnalyzers, fieldMap);
+        this.docValueReaderState = ((MultiThreadSearcherFactory.StateIndexSearcher) indexSearcher).state;
+        this.fieldMap = fieldMap;
+        this.fieldMapWrappers = fieldMapWrappers;
+        this.indexSearcher = indexSearcher;
+        this.indexReader = indexSearcher.getIndexReader();
+        this.taxonomyReader = taxonomyReader;
+    }
 
-	@Override
-	public IndexReader getIndexReader() {
-		return indexReader;
-	}
+    @Override
+    public IndexReader getIndexReader() {
+        return indexReader;
+    }
 
-	@Override
-	public IndexSearcher getIndexSearcher() {
-		return indexSearcher;
-	}
+    @Override
+    public IndexSearcher getIndexSearcher() {
+        return indexSearcher;
+    }
 
-	@Override
-	public FieldMap getFieldMap() {
-		return fieldMap;
-	}
+    @Override
+    public FieldMap getFieldMap() {
+        return fieldMap;
+    }
 
-	private <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDefinition,
-			final ResultDocuments<T> resultDocuments) throws IOException {
-		try {
-			return new QueryExecution<T>(this, queryDefinition).execute(resultDocuments);
-		} catch (Exception e) {
-			throw ServerException.of(e);
-		}
-	}
+    private <T extends ResultDocumentAbstract> ResultDefinition<T> search(final QueryDefinition queryDefinition,
+                                                                          final ResultDocuments<T> resultDocuments) {
+        try {
+            return new QueryExecution<T>(this, queryDefinition).execute(resultDocuments);
+        }
+        catch (Exception e) {
+            throw ServerException.of(e);
+        }
+    }
 
-	@Override
-	public ResultDefinition.WithMap searchMap(QueryDefinition queryDefinition) throws IOException {
-		final Set<String> returnedFields =
-				queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
-						fieldMap.getStaticFieldSet() :
-						queryDefinition.returned_fields;
-		final ResultDocumentsMap resultDocumentsMap = new ResultDocumentsMap(this, queryDefinition, returnedFields);
-		return (ResultDefinition.WithMap) search(queryDefinition, resultDocumentsMap);
-	}
+    @Override
+    public ResultDefinition.WithMap searchMap(QueryDefinition queryDefinition) throws IOException {
+        final Set<String> returnedFields =
+                queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
+                        fieldMap.getStaticFieldSet() :
+                        queryDefinition.returned_fields;
+        final ResultDocumentsMap resultDocumentsMap = new ResultDocumentsMap(this, queryDefinition, returnedFields);
+        return (ResultDefinition.WithMap) search(queryDefinition, resultDocumentsMap);
+    }
 
-	@Override
-	public <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, FieldMapWrapper<T> wrapper)
-			throws IOException {
-		final Set<String> returnedFields =
-				queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
-						wrapper.fieldMap.keySet() :
-						queryDefinition.returned_fields;
-		final ResultDocumentsObject<T> resultDocumentsObject =
-				new ResultDocumentsObject<>(this, queryDefinition, returnedFields, wrapper);
-		return (ResultDefinition.WithObject<T>) search(queryDefinition, resultDocumentsObject);
-	}
+    @Override
+    public <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, FieldMapWrapper<T> wrapper)
+            throws IOException {
+        final Set<String> returnedFields =
+                queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
+                        wrapper.fieldMap.keySet() :
+                        queryDefinition.returned_fields;
+        final ResultDocumentsObject<T> resultDocumentsObject =
+                new ResultDocumentsObject<>(this, queryDefinition, returnedFields, wrapper);
+        return (ResultDefinition.WithObject<T>) search(queryDefinition, resultDocumentsObject);
+    }
 
-	@Override
-	public <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, Class<T> objectClass)
-			throws IOException {
-		return searchObject(queryDefinition, fieldMapWrappers.get(objectClass));
-	}
+    @Override
+    public <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, Class<T> objectClass)
+            throws IOException {
+        return searchObject(queryDefinition, fieldMapWrappers.get(objectClass));
+    }
 
-	@Override
-	public ResultDefinition.Empty searchInterface(final QueryDefinition queryDefinition,
-			final ResultDocumentsInterface resultDocuments) throws IOException {
-		final ResultDocumentsEmpty resultDocumentEmpty = new ResultDocumentsEmpty(resultDocuments);
-		return (ResultDefinition.Empty) search(queryDefinition, resultDocumentEmpty);
-	}
+    @Override
+    public ResultDefinition.Empty searchInterface(final QueryDefinition queryDefinition,
+                                                  final ResultDocumentsInterface resultDocuments) throws IOException {
+        final ResultDocumentsEmpty resultDocumentEmpty = new ResultDocumentsEmpty(resultDocuments);
+        return (ResultDefinition.Empty) search(queryDefinition, resultDocumentEmpty);
+    }
 
 }

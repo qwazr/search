@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,53 +17,55 @@ package com.qwazr.search.collector;
 
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.NumericDocValues;
-import org.apache.lucene.search.LeafCollector;
-import org.apache.lucene.search.ScoreMode;
 import org.apache.lucene.util.NumericUtils;
 
 import java.io.IOException;
+import java.util.List;
 
-public abstract class MaxNumericCollector<R extends Comparable<R>> extends DocValuesCollector.Numeric<R>
-        implements NumericCollector<R> {
+public abstract class MaxNumericCollector<CollectorResult extends Comparable<CollectorResult>, LeafCollector extends DocValuesLeafCollector.Numeric<CollectorResult>>
+        extends DocValuesCollector.Numeric<CollectorResult, LeafCollector> {
 
     public MaxNumericCollector(final String collectorName, final String fieldName) {
         super(collectorName, fieldName);
     }
 
     @Override
-    public boolean keepNewValue(final R previousValue, final R newValue) {
-        return newValue.compareTo(previousValue) > 0;
+    public CollectorResult reduce(List<DocValuesCollector.Numeric<CollectorResult, LeafCollector>> collectors) {
+        CollectorResult currentResult = null;
+        for (final DocValuesCollector.Numeric<CollectorResult, LeafCollector> collector : collectors) {
+            for (final LeafCollector leaf : collector.getLeaves()) {
+                final CollectorResult newResult = leaf.getResult();
+                if (newResult != null) {
+                    if (currentResult != null) {
+                        if (newResult.compareTo(currentResult) > 0)
+                            currentResult = newResult;
+                    } else
+                        currentResult = newResult;
+                }
+            }
+        }
+        return currentResult;
     }
 
-    @Override
-    public ScoreMode scoreMode() {
-        return ScoreMode.COMPLETE_NO_SCORES;
-    }
 
-    public static class MaxLong extends MaxNumericCollector<Long> {
-
-        private long result;
+    public static class MaxLong extends MaxNumericCollector<Long, MaxLong.Leaf> {
 
         public MaxLong(final String collectorName, final String fieldName) {
             super(collectorName, fieldName);
-            result = Long.MIN_VALUE;
         }
 
         @Override
-        public Long getResult() {
-            return count == 0 ? null : result;
-        }
-
-        @Override
-        protected LeafCollector newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues)
-                throws IOException {
+        protected Leaf newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues) {
             return new Leaf(docValues);
         }
 
-        private class Leaf extends DocValuesLeafCollector.Numeric {
+        static class Leaf extends DocValuesLeafCollector.Numeric<Long> {
 
-            private Leaf(NumericDocValues docValues) throws IOException {
+            private long result;
+
+            private Leaf(NumericDocValues docValues) {
                 super(docValues);
+                result = Long.MIN_VALUE;
             }
 
             @Override
@@ -74,33 +76,32 @@ public abstract class MaxNumericCollector<R extends Comparable<R>> extends DocVa
                 if (value > result)
                     result = value;
             }
+
+            @Override
+            protected Long getResult() {
+                return count == 0 ? null : result;
+            }
         }
     }
 
-    public static class MaxInteger extends MaxNumericCollector<Integer> {
-
-        private int result;
+    public static class MaxInteger extends MaxNumericCollector<Integer, MaxInteger.Leaf> {
 
         public MaxInteger(final String collectorName, final String fieldName) {
             super(collectorName, fieldName);
-            result = Integer.MIN_VALUE;
         }
 
         @Override
-        public Integer getResult() {
-            return count == 0 ? null : result;
-        }
-
-        @Override
-        protected LeafCollector newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues)
-                throws IOException {
+        protected Leaf newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues) {
             return new Leaf(docValues);
         }
 
-        private class Leaf extends DocValuesLeafCollector.Numeric {
+        private static class Leaf extends DocValuesLeafCollector.Numeric<Integer> {
 
-            private Leaf(NumericDocValues docValues) throws IOException {
+            private int result;
+
+            private Leaf(final NumericDocValues docValues) {
                 super(docValues);
+                result = Integer.MIN_VALUE;
             }
 
             @Override
@@ -111,33 +112,33 @@ public abstract class MaxNumericCollector<R extends Comparable<R>> extends DocVa
                 if (value > result)
                     result = value;
             }
+
+            @Override
+            protected Integer getResult() {
+                return count == 0 ? null : result;
+            }
+
         }
     }
 
-    public static class MaxDouble extends MaxNumericCollector<Double> {
-
-        private double result;
+    public static class MaxDouble extends MaxNumericCollector<Double, MaxDouble.Leaf> {
 
         public MaxDouble(final String collectorName, final String fieldName) {
             super(collectorName, fieldName);
-            result = Double.MIN_VALUE;
         }
 
         @Override
-        public Double getResult() {
-            return count == 0 ? null : result;
-        }
-
-        @Override
-        protected LeafCollector newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues)
-                throws IOException {
+        protected Leaf newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues) {
             return new Leaf(docValues);
         }
 
-        private class Leaf extends DocValuesLeafCollector.Numeric {
+        private static class Leaf extends DocValuesLeafCollector.Numeric<Double> {
 
-            private Leaf(NumericDocValues docValues) throws IOException {
+            private double result;
+
+            private Leaf(NumericDocValues docValues) {
                 super(docValues);
+                result = Double.MIN_VALUE;
             }
 
             @Override
@@ -148,33 +149,32 @@ public abstract class MaxNumericCollector<R extends Comparable<R>> extends DocVa
                 if (value > result)
                     result = value;
             }
+
+            @Override
+            protected Double getResult() {
+                return count == 0 ? null : result;
+            }
         }
     }
 
-    public static class MaxFloat extends MaxNumericCollector<Float> {
-
-        private float result;
+    public static class MaxFloat extends MaxNumericCollector<Float, MaxFloat.Leaf> {
 
         public MaxFloat(final String collectorName, final String fieldName) {
             super(collectorName, fieldName);
-            result = Float.MIN_VALUE;
         }
 
         @Override
-        public Float getResult() {
-            return count == 0 ? null : result;
-        }
-
-        @Override
-        protected LeafCollector newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues)
-                throws IOException {
+        protected Leaf newLeafCollector(final LeafReader leafReader, final NumericDocValues docValues) {
             return new Leaf(docValues);
         }
 
-        private class Leaf extends DocValuesLeafCollector.Numeric {
+        private static class Leaf extends DocValuesLeafCollector.Numeric<Float> {
 
-            private Leaf(NumericDocValues docValues) throws IOException {
+            private float result;
+
+            private Leaf(NumericDocValues docValues) {
                 super(docValues);
+                result = Float.MIN_VALUE;
             }
 
             @Override
@@ -184,6 +184,11 @@ public abstract class MaxNumericCollector<R extends Comparable<R>> extends DocVa
                 final float value = NumericUtils.sortableIntToFloat((int) docValues.longValue());
                 if (value > result)
                     result = value;
+            }
+
+            @Override
+            protected Float getResult() {
+                return count == 0 ? null : result;
             }
         }
     }
