@@ -22,6 +22,7 @@ import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.Term;
@@ -191,6 +192,8 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
             fillArray(fieldName, (double[]) value, fieldConsumer);
         else if (value instanceof float[])
             fillArray(fieldName, (float[]) value, fieldConsumer);
+        else if (value instanceof Byte[])
+            fillValue(fieldName, ArrayUtils.toPrimitive((Byte[]) value), fieldConsumer);
         else if (value instanceof Object[])
             fillArray(fieldName, (Object[]) value, fieldConsumer);
         else if (value instanceof Collection)

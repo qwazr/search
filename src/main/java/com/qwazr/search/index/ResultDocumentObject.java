@@ -89,10 +89,22 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		final void setStoredFieldBytes(String fieldName, List<byte[]> values) {
 			final FieldSetter fieldSetter = checkFieldSetter(fieldName);
 			final Class<?> fieldType = fieldSetter.getType();
-			if (Serializable.class.isAssignableFrom(fieldType)) {
+			if (fieldType.isArray()) {
+                final Class<?> fieldComponentType = fieldType.getComponentType();
+                final byte[] data = values.get(0);
+			    if (fieldComponentType == byte.class) {
+                    fieldSetter.setValue(record, data);
+                } else if (fieldComponentType == Byte.class) {
+			        final Byte[] boxedData = new Byte[data.length];
+			        for (int i = 0 ; i != data.length ; ++i) {
+			            boxedData[i] = data[i];
+                    }
+                    fieldSetter.setValue(record, boxedData);
+                }
+            } else if (Serializable.class.isAssignableFrom(fieldType)) {
 				try {
-					fieldSetter.set(record, SerializationUtils.fromExternalizorBytes(values.get(0),
-							(Class<? extends Serializable>) fieldType));
+                    fieldSetter.set(record, SerializationUtils.fromExternalizorBytes(values.get(0),
+                            (Class<? extends Serializable>) fieldType));
 				} catch (IOException | ReflectiveOperationException e) {
 					throw ServerException.of("Deserialization failure " + fieldName + " for class " + record.getClass(),
 							e);
