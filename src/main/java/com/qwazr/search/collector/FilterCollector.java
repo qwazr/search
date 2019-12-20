@@ -36,7 +36,7 @@ public class FilterCollector extends BaseCollector<FilterCollector.Query, Filter
         super(collectorName, ScoreMode.COMPLETE);
     }
 
-    private Query reduceLeaf() {
+    private Query reduce() {
         final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap = new HashMap<>();
         getLeaves().forEach(leaf -> docIdSetMap.put(leaf.context, leaf.docIdsBuilder.build()));
         return new FilterCollector.Query(new FilteredQuery(docIdSetMap));
@@ -46,7 +46,7 @@ public class FilterCollector extends BaseCollector<FilterCollector.Query, Filter
     @Override
     final public Query reduce(final List<FilterCollector> leafCollectors) {
         final FilteredQuery filteredQuery = new FilteredQuery(new HashMap<>());
-        leafCollectors.forEach(collector -> filteredQuery.merge(collector.reduceLeaf().filteredQuery));
+        leafCollectors.forEach(collector -> filteredQuery.merge(collector.reduce().filteredQuery));
         return new FilterCollector.Query(filteredQuery);
     }
 

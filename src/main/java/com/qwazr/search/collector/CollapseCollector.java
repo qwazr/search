@@ -60,29 +60,22 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query, Co
         return new Leaf(fieldName, context);
     }
 
-    @Override
-    public Query reduce(final List<CollapseCollector> collectors) {
+    private void reduce(final GroupQueue groupQueue,
+                        final Map<LeafReaderContext, RoaringDocIdSet> docIdMaps,
+                        final Int2IntLinkedOpenHashMap collapsedMap) {
 
         // Fill the priority queue which the results of each segments
-        final GroupQueue groupQueue = new GroupQueue(maxRows);
-        for (final CollapseCollector collector : collectors) {
-            collector.getLeaves().forEach(leaf -> leaf.reduce(groupQueue));
-        }
+        getLeaves().forEach(leaf -> leaf.reduce(groupQueue));
 
-        // Stores for each doc the number of collapsed documents
-        final Int2IntLinkedOpenHashMap collapsedMap = new Int2IntLinkedOpenHashMap(groupQueue.groupLeaders.size());
 
         // The DocID must be sorted and grouped by segment
         final Map<LeafReaderContext, IntSortedSet> sortedInts = new HashMap<>();
-        long collapsedCount = 0;
         for (final GroupLeader groupLeader : groupQueue.groupLeaders.values()) {
             sortedInts.computeIfAbsent(groupLeader.context, ctx -> new IntAVLTreeSet()).add(groupLeader.doc);
             collapsedMap.addTo(groupLeader.context.docBase + groupLeader.doc, groupLeader.collapsedCount);
-            collapsedCount += groupLeader.collapsedCount;
         }
 
         // Now we can build the bitsets
-        final Map<LeafReaderContext, RoaringDocIdSet> docIdMaps = new HashMap<>();
         sortedInts.forEach((ctx, sortedInt) -> {
             final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(ctx.reader().maxDoc());
             sortedInt.forEach((IntConsumer) builder::add);
@@ -90,10 +83,23 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query, Co
         });
 
         // Add empty bitset for unassigned leaf
-        for (final CollapseCollector collector : collectors) {
-            getLeaves().forEach(leaf -> docIdMaps.putIfAbsent(leaf.context,
-                    new RoaringDocIdSet.Builder(leaf.context.reader().maxDoc()).build()));
-        }
+        getLeaves().forEach(leaf -> docIdMaps.putIfAbsent(leaf.context,
+                new RoaringDocIdSet.Builder(leaf.context.reader().maxDoc()).build()));
+    }
+
+    @Override
+    final public Query reduce(final List<CollapseCollector> leafCollectors) {
+
+        final Map<LeafReaderContext, RoaringDocIdSet> docIdMaps = new HashMap<>();
+        final GroupQueue groupQueue = new GroupQueue(maxRows);
+        // Stores for each doc the number of collapsed documents
+        final Int2IntLinkedOpenHashMap collapsedMap = new Int2IntLinkedOpenHashMap(groupQueue.groupLeaders.size());
+
+        leafCollectors.forEach(collector -> collector.reduce(groupQueue, docIdMaps, collapsedMap));
+
+        long collapsedCount = 0;
+        for (final GroupLeader groupLeader : groupQueue.groupLeaders.values())
+            collapsedCount += groupLeader.collapsedCount;
 
         return new Query(new FilteredQuery(docIdMaps), collapsedMap, collapsedCount);
     }
@@ -131,7 +137,7 @@ public class CollapseCollector extends BaseCollector<CollapseCollector.Query, Co
             docIds.keySet().forEach((IntConsumer) ord -> {
                 try {
                     groupQueue.offer(sdv.lookupOrd(ord), scores.get(ord), count.get(ord),
-                            (bytesRef, score, collapsedCount) -> new GroupLeader(context, bytesRef, docIds.get(ord),
+                            (bytesRef, score, collapsedCount) -> new GroupLeader(context, bytesRef, docIds.get(ord) + docBase,
                                     score, collapsedCount));
                 }
                 catch (IOException e) {
