@@ -90,9 +90,10 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 			final FieldSetter fieldSetter = checkFieldSetter(fieldName);
 			final Class<?> fieldType = fieldSetter.getType();
 			if (Serializable.class.isAssignableFrom(fieldType)) {
+                //fieldSetter.set(record, values.get(0));
 				try {
-					fieldSetter.set(record, SerializationUtils.fromExternalizorBytes(values.get(0),
-							(Class<? extends Serializable>) fieldType));
+                       SerializationUtils.fromExternalizorBytes(values.get(0),
+							(Class<? extends Serializable>) fieldType);
 				} catch (IOException | ReflectiveOperationException e) {
 					throw ServerException.of("Deserialization failure " + fieldName + " for class " + record.getClass(),
 							e);
