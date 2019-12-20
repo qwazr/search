@@ -26,6 +26,7 @@ import com.qwazr.utils.RandomUtils;
 import org.apache.lucene.util.BytesRef;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -33,6 +34,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+@Ignore
 public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
     @BeforeClass
