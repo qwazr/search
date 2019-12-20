@@ -50,7 +50,7 @@ public abstract class BaseCollector<CollectorResult, LeafCollector extends org.a
         final LeafCollector leafCollector = newLeafCollector(context);
         if (leafCollector != null)
             leafCollectors.add(leafCollector);
-        return leafCollector;
+        return leafCollector == null ? DoNothingCollector.INSTANCE : leafCollector;
     }
 
     @Override

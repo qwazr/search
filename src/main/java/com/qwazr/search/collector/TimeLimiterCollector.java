@@ -36,7 +36,7 @@ public class TimeLimiterCollector extends BaseCollector<Boolean, TimeLimiterColl
         collector = new TimeLimitingCollector(new Collector() {
             @Override
             public LeafCollector getLeafCollector(LeafReaderContext context) {
-                return new DoNothingCollector();
+                return DoNothingCollector.INSTANCE;
             }
 
             @Override
