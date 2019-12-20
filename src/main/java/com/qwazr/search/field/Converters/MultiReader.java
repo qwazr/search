@@ -66,8 +66,10 @@ public class MultiReader {
         final NumericDocValues docValues = leafReaders[pos].getNumericDocValues(field);
         if (docValues == null)
             return 0;
-        docValues.advance(docId - docBases[pos]);
-        return docValues.longValue();
+        synchronized (docValues) {
+            docValues.advance(docId - docBases[pos]);
+            return docValues.longValue();
+        }
     }
 
     BytesRef getSortedDocValues(final int docId, final String field) throws IOException {
@@ -77,8 +79,10 @@ public class MultiReader {
         final SortedDocValues docValues = leafReaders[pos].getSortedDocValues(field);
         if (docValues == null)
             return BytesRefUtils.EMPTY;
-        docValues.advance(docId - docBases[pos]);
-        return BytesRef.deepCopyOf(docValues.binaryValue());
+        synchronized (docValues) {
+            docValues.advance(docId - docBases[pos]);
+            return BytesRef.deepCopyOf(docValues.binaryValue());
+        }
     }
 
     BytesRef getBinaryDocValues(final int docId, final String field) throws IOException {
@@ -88,8 +92,10 @@ public class MultiReader {
         final BinaryDocValues docValues = leafReaders[pos].getBinaryDocValues(field);
         if (docValues == null)
             return BytesRefUtils.EMPTY;
-        docValues.advance(docId - docBases[pos]);
-        return docValues.binaryValue();
+        synchronized (docValues) {
+            docValues.advance(docId - docBases[pos]);
+            return docValues.binaryValue();
+        }
     }
 
     final static long[] empty = new long[0];
@@ -101,14 +107,16 @@ public class MultiReader {
         final SortedNumericDocValues docValues = leafReaders[pos].getSortedNumericDocValues(field);
         if (docValues == null)
             return empty;
-        docValues.advance(docId - docBases[pos]);
-        final int count = docValues.docValueCount();
-        if (count == 0)
-            return empty;
-        final long[] values = new long[count];
-        for (int i = 0; i < count; i++)
-            values[i] = docValues.nextValue();
-        return values;
+        synchronized (docValues) {
+            docValues.advance(docId - docBases[pos]);
+            final int count = docValues.docValueCount();
+            if (count == 0)
+                return empty;
+            final long[] values = new long[count];
+            for (int i = 0; i < count; i++)
+                values[i] = docValues.nextValue();
+            return values;
+        }
     }
 
     List<String> getSortedSetDocValues(final int docId, final String field) throws IOException {
@@ -118,12 +126,14 @@ public class MultiReader {
         final SortedSetDocValues docValues = leafReaders[pos].getSortedSetDocValues(field);
         if (docValues == null)
             return Collections.emptyList();
-        docValues.advance(docId - docBases[pos]);
-        final List<String> values = new ArrayList<>();
-        long ord;
-        while ((ord = docValues.nextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
-            values.add(docValues.lookupOrd(ord).utf8ToString());
-        return values;
+        synchronized (docValues) {
+            docValues.advance(docId - docBases[pos]);
+            final List<String> values = new ArrayList<>();
+            long ord;
+            while ((ord = docValues.nextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
+                values.add(docValues.lookupOrd(ord).utf8ToString());
+            return values;
+        }
     }
 
 }
