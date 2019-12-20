@@ -168,13 +168,14 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
             return null;
         final Map<String, Object> results = new HashMap<>();
         for (final String collectorName : queryExecution.queryDef.collectors.keySet()) {
-            final List<ParallelCollector<?, ?>> userCollectors = new ArrayList<>();
+            final List<Collector> userCollectors = new ArrayList<>();
             for (final QueryCollectorsClassic queryCollectors : queryCollectorsList)
                 if (queryCollectors.userCollectors != null)
                     userCollectors.add(queryCollectors.userCollectors.get(collectorName));
             if (!userCollectors.isEmpty()) {
-                final ParallelCollector parallelCollector = userCollectors.get(0);
-                results.put(collectorName, parallelCollector.reduce(userCollectors));
+                final Collector userCollector = userCollectors.get(0);
+                if (userCollector instanceof ParallelCollector)
+                    results.put(collectorName, ((ParallelCollector) userCollector).reduce(userCollectors));
             }
         }
         return results;

@@ -112,12 +112,8 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
             }
         }
 
-        boolean isParallel() {
-            return isParallel;
-        }
-
-        ParallelCollector<?, ?> newInstance() throws ReflectiveOperationException {
-            return (ParallelCollector<?, ?>) constructor.newInstance(arguments);
+        Collector newInstance() throws ReflectiveOperationException {
+            return (Collector) constructor.newInstance(arguments);
         }
     }
 

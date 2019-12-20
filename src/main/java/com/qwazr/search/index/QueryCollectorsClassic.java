@@ -47,7 +47,7 @@ class QueryCollectorsClassic extends QueryCollectors {
 
     final FacetsCollector facetsCollector;
 
-    final Map<String, ParallelCollector<?, ?>> userCollectors;
+    final Map<String, Collector> userCollectors;
 
     final TotalHitCountCollector totalHitCountCollector;
 
@@ -173,8 +173,11 @@ class QueryCollectorsClassic extends QueryCollectors {
             return null;
         final Map<String, Object> results = new HashMap<>();
         for (final String name : queryExecution.queryDef.collectors.keySet()) {
-            final ParallelCollector parallelCollector = userCollectors.get(name);
-            results.put(name, parallelCollector.reduce(Collections.singletonList(parallelCollector)));
+            final Collector collector = userCollectors.get(name);
+            if (collector instanceof ParallelCollector) {
+                final ParallelCollector parallelCollector = (ParallelCollector) collector;
+                results.put(name, parallelCollector.reduce(Collections.singletonList(parallelCollector)));
+            }
         }
         return results;
     }
