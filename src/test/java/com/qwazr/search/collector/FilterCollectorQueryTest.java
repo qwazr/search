@@ -46,13 +46,14 @@ public class FilterCollectorQueryTest extends AbstractIndexTest.WithIndexRecord.
 
     @Test
     public void test() {
-        QueryDefinition queryDef =
+        final QueryDefinition queryDef1 =
                 QueryDefinition.of(new IntExactQuery("intPoint", 0)).collector("filter", FilterCollector.class).build();
-        FilterCollector.Query filterQuery =
-                indexService.searchQuery(queryDef).getCollector("filter", FilterCollector.Query.class);
+        final FilterCollector.Query filterQuery =
+                indexService.searchQuery(queryDef1).getCollector("filter", FilterCollector.Query.class);
         Assert.assertNotNull(filterQuery);
-        queryDef = QueryDefinition.of(filterQuery).queryDebug(true).build();
-        ResultDefinition.WithObject<? extends IndexRecord<?>> results = indexService.searchQuery(queryDef);
+
+        final QueryDefinition queryDef2 = QueryDefinition.of(filterQuery).queryDebug(true).build();
+        final ResultDefinition.WithObject<? extends IndexRecord<?>> results = indexService.searchQuery(queryDef1);
         Assert.assertNotNull(results);
         Assert.assertEquals(500, results.totalHits);
         Assert.assertEquals("(f)", results.getQuery());
