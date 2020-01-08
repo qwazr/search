@@ -16,21 +16,25 @@
 
 package com.qwazr.search.analysis;
 
-import com.qwazr.utils.Equalizer;
 import org.apache.lucene.analysis.payloads.PayloadHelper;
-import org.apache.lucene.queries.payloads.PayloadDecoder;
 import org.apache.lucene.util.BytesRef;
 
-public class FloatPayloadDecoder extends Equalizer<FloatPayloadDecoder> implements PayloadDecoder {
+public class FloatPayloadDecoder extends BasePayloadDecoder<FloatPayloadDecoder> {
 
     public static final FloatPayloadDecoder INSTANCE = new FloatPayloadDecoder();
 
+    public FloatPayloadDecoder(final float defaultValue) {
+        super(defaultValue, FloatPayloadDecoder.class);
+    }
+
     public FloatPayloadDecoder() {
-        super(FloatPayloadDecoder.class);
+        this(1F);
     }
 
     @Override
-    public float computePayloadFactor(BytesRef payload) {
+    public float computePayloadFactor(final BytesRef payload) {
+        if (payload == null)
+            return defaultValue;
         return PayloadHelper.decodeFloat(payload.bytes, payload.offset);
     }
 

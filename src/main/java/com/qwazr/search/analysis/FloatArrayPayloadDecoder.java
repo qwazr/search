@@ -24,12 +24,12 @@ public class FloatArrayPayloadDecoder extends Equalizer<FloatArrayPayloadDecoder
 
     private final float[] boosts;
 
-    public FloatArrayPayloadDecoder(float... boosts) {
+    public FloatArrayPayloadDecoder(final float... boosts) {
         super(FloatArrayPayloadDecoder.class);
         this.boosts = boosts;
     }
 
-    public float computePayloadFactor(BytesRef payload) {
+    public float computePayloadFactor(final BytesRef payload) {
         if (payload == null)
             return 1F;
         final int pos = payload.bytes[payload.offset];
@@ -37,7 +37,7 @@ public class FloatArrayPayloadDecoder extends Equalizer<FloatArrayPayloadDecoder
     }
 
     @Override
-    protected boolean isEqual(FloatArrayPayloadDecoder query) {
+    protected boolean isEqual(final FloatArrayPayloadDecoder query) {
         return true;
     }
 }

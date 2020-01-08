@@ -16,26 +16,25 @@
 
 package com.qwazr.search.analysis;
 
-import org.apache.lucene.analysis.payloads.PayloadHelper;
-import org.apache.lucene.util.BytesRef;
+import com.qwazr.utils.Equalizer;
+import org.apache.lucene.queries.payloads.PayloadDecoder;
 
-public class IntegerPayloadDecoder extends BasePayloadDecoder<IntegerPayloadDecoder> {
+public abstract class BasePayloadDecoder<T extends BasePayloadDecoder<?>> extends Equalizer<T> implements PayloadDecoder {
 
-    public final static IntegerPayloadDecoder INSTANCE = new IntegerPayloadDecoder();
+    protected final float defaultValue;
 
-    public IntegerPayloadDecoder(final float defaultValue) {
-        super(defaultValue, IntegerPayloadDecoder.class);
-    }
-
-    public IntegerPayloadDecoder() {
-        this(1F);
+    public BasePayloadDecoder(float defaultValue, final Class<T> ownClass) {
+        super(ownClass);
+        this.defaultValue = defaultValue;
     }
 
     @Override
-    public float computePayloadFactor(final BytesRef payload) {
-        if (payload == null)
-            return defaultValue;
-        return PayloadHelper.decodeInt(payload.bytes, payload.offset);
+    public int hashCode() {
+        return Float.hashCode(defaultValue);
     }
 
+    @Override
+    protected boolean isEqual(final T query) {
+        return query.defaultValue == defaultValue;
+    }
 }

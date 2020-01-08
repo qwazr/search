@@ -139,17 +139,11 @@ public class MultiReader {
             if (docValues.advance(target) != target)
                 return Collections.emptyList();
             final List<String> values = new ArrayList<>();
-            long ord = -1;
-            try {
-                while ((ord = docValues.nextOrd()) != SortedSetDocValues.NO_MORE_ORDS) {
-                    values.add(docValues.lookupOrd(ord).utf8ToString());
-                    System.out.println("Value: " + ord + " - " + values.size());
-                }
-                return values;
+            long ord;
+            while ((ord = docValues.nextOrd()) != SortedSetDocValues.NO_MORE_ORDS) {
+                values.add(docValues.lookupOrd(ord).utf8ToString());
             }
-            catch (IndexOutOfBoundsException e) {
-                throw new IOException("Ord: " + ord, e);
-            }
+            return values;
         }
     }
 
