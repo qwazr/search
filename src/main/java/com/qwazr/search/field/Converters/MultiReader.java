@@ -67,7 +67,9 @@ public class MultiReader {
         if (docValues == null)
             return 0;
         synchronized (docValues) {
-            docValues.advance(docId - docBases[pos]);
+            final int target = docId - docBases[pos];
+            if (docValues.advance(target) != target)
+                return 0;
             return docValues.longValue();
         }
     }
@@ -80,7 +82,9 @@ public class MultiReader {
         if (docValues == null)
             return BytesRefUtils.EMPTY;
         synchronized (docValues) {
-            docValues.advance(docId - docBases[pos]);
+            final int target = docId - docBases[pos];
+            if (docValues.advance(target) != target)
+                return BytesRefUtils.EMPTY;
             return BytesRef.deepCopyOf(docValues.binaryValue());
         }
     }
@@ -93,7 +97,9 @@ public class MultiReader {
         if (docValues == null)
             return BytesRefUtils.EMPTY;
         synchronized (docValues) {
-            docValues.advance(docId - docBases[pos]);
+            final int target = docId - docBases[pos];
+            if (docValues.advance(target) != target)
+                return BytesRefUtils.EMPTY;
             return docValues.binaryValue();
         }
     }
@@ -108,7 +114,9 @@ public class MultiReader {
         if (docValues == null)
             return empty;
         synchronized (docValues) {
-            docValues.advance(docId - docBases[pos]);
+            final int target = docId - docBases[pos];
+            if (docValues.advance(target) != target)
+                return empty;
             final int count = docValues.docValueCount();
             if (count == 0)
                 return empty;
@@ -127,12 +135,21 @@ public class MultiReader {
         if (docValues == null)
             return Collections.emptyList();
         synchronized (docValues) {
-            docValues.advance(docId - docBases[pos]);
+            final int target = docId - docBases[pos];
+            if (docValues.advance(target) != target)
+                return Collections.emptyList();
             final List<String> values = new ArrayList<>();
-            long ord;
-            while ((ord = docValues.nextOrd()) != SortedSetDocValues.NO_MORE_ORDS)
-                values.add(docValues.lookupOrd(ord).utf8ToString());
-            return values;
+            long ord = -1;
+            try {
+                while ((ord = docValues.nextOrd()) != SortedSetDocValues.NO_MORE_ORDS) {
+                    values.add(docValues.lookupOrd(ord).utf8ToString());
+                    System.out.println("Value: " + ord + " - " + values.size());
+                }
+                return values;
+            }
+            catch (IndexOutOfBoundsException e) {
+                throw new IOException("Ord: " + ord, e);
+            }
         }
     }
 
