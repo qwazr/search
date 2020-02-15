@@ -121,22 +121,17 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
                                                    final Map<String, CollectorConstructor> collectorConstructors)
             throws ReflectiveOperationException {
         if (collectors == null || collectors.isEmpty())
-            return true; // By default we use concurrent
-        int concurrentCollectors = 0;
+            return true;
         int classicCollectors = 0;
         for (Map.Entry<String, QueryDefinition.CollectorDefinition> entry : collectors.entrySet()) {
             final String collectorName = entry.getKey();
             final QueryDefinition.CollectorDefinition collector = entry.getValue();
             final CollectorConstructor collectorConstructor = new CollectorConstructor(collectorName, collector);
             collectorConstructors.put(collectorName, collectorConstructor);
-            if (collectorConstructor.isParallel)
-                concurrentCollectors++;
-            else
+            if (!collectorConstructor.isParallel)
                 classicCollectors++;
         }
-        if (concurrentCollectors > 0 && classicCollectors > 0)
-            throw new IllegalArgumentException("Cannot mix concurrent collectors and classic collectors");
-        return concurrentCollectors > 0 || classicCollectors == 0;
+        return classicCollectors == 0;
     }
 
     final ResultDefinition<T> execute(final ResultDocuments<T> resultDocuments) throws Exception {

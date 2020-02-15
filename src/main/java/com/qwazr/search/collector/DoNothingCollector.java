@@ -15,19 +15,35 @@
  */
 package com.qwazr.search.collector;
 
+import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.LeafCollector;
 import org.apache.lucene.search.Scorable;
+import org.apache.lucene.search.ScoreMode;
 
-public class DoNothingCollector implements LeafCollector {
-
-    public static final DoNothingCollector INSTANCE = new DoNothingCollector();
+public class DoNothingCollector implements Collector {
 
     @Override
-    final public void setScorer(final Scorable scorable) {
+    public LeafCollector getLeafCollector(LeafReaderContext context) {
+        return Leaf.INSTANCE;
     }
 
     @Override
-    final public void collect(final int doc) {
+    public ScoreMode scoreMode() {
+        return ScoreMode.COMPLETE_NO_SCORES;
+    }
+
+    public static class Leaf implements LeafCollector {
+
+        public static final Leaf INSTANCE = new Leaf();
+
+        @Override
+        final public void setScorer(final Scorable scorable) {
+        }
+
+        @Override
+        final public void collect(final int doc) {
+        }
     }
 
 }

@@ -31,12 +31,13 @@ public class TimeLimiterCollector extends BaseCollector<Boolean, TimeLimiterColl
 
     private final TimeLimitingCollector collector;
 
+
     public TimeLimiterCollector(final String collectorName, final Long ticksAllowed) {
         super(collectorName, ScoreMode.COMPLETE_NO_SCORES);
         collector = new TimeLimitingCollector(new Collector() {
             @Override
             public LeafCollector getLeafCollector(LeafReaderContext context) {
-                return DoNothingCollector.INSTANCE;
+                return DoNothingCollector.Leaf.INSTANCE;
             }
 
             @Override
@@ -91,6 +92,19 @@ public class TimeLimiterCollector extends BaseCollector<Boolean, TimeLimiterColl
                 result = Boolean.FALSE;
                 throw e;
             }
+        }
+    }
+
+    public static class Classic extends TimeLimitingCollector {
+
+        /**
+         * Create a TimeLimitedCollector wrapper over another {@link Collector} with a specified timeout.
+         *
+         * @param ticksAllowed max time allowed for collecting
+         *                     hits after which {@link TimeExceededException} is thrown
+         */
+        public Classic(final String collectorName, Long ticksAllowed) {
+            super(new DoNothingCollector(), TimeLimitingCollector.getGlobalCounter(), Objects.requireNonNull(ticksAllowed));
         }
     }
 }

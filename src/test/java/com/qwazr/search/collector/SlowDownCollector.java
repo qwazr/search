@@ -17,6 +17,7 @@ package com.qwazr.search.collector;
 
 import com.qwazr.utils.concurrent.ThreadUtils;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.LeafCollector;
 import org.apache.lucene.search.Scorable;
 import org.apache.lucene.search.ScoreMode;
@@ -25,27 +26,36 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class SlowDownCollector extends BaseCollector<Long, SlowDownCollector.Leaf, SlowDownCollector> {
+public interface SlowDownCollector {
 
-    private final int perRecordMsPause;
+    class Concurrent extends BaseCollector<Long, SlowDownCollector.Leaf, SlowDownCollector> {
 
-    public SlowDownCollector(final String collectorName, final Integer perRecordMsPause) {
-        super(collectorName, ScoreMode.COMPLETE_NO_SCORES);
-        this.perRecordMsPause = Objects.requireNonNull(perRecordMsPause);
+        private final int perRecordMsPause;
+
+        public Concurrent(final String collectorName, final Integer perRecordMsPause) {
+            super(collectorName, ScoreMode.COMPLETE_NO_SCORES);
+            this.perRecordMsPause = Objects.requireNonNull(perRecordMsPause);
+        }
+
+        @Override
+        public Leaf newLeafCollector(final LeafReaderContext context) {
+            return new Leaf(perRecordMsPause);
+        }
+
+        @Override
+        public Long reduce(final List<SlowDownCollector> collectors) {
+            return null;
+        }
+
     }
-
-    @Override
-    public Leaf newLeafCollector(final LeafReaderContext context) {
-        return new Leaf();
-    }
-
-    @Override
-    public Long reduce(final List<SlowDownCollector> collectors) {
-        return null;
-    }
-
 
     class Leaf implements LeafCollector {
+
+        private final int perRecordMsPause;
+
+        private Leaf(final int perRecordMsPause) {
+            this.perRecordMsPause = perRecordMsPause;
+        }
 
         @Override
         final public void setScorer(final Scorable scorer) {
@@ -54,6 +64,25 @@ public class SlowDownCollector extends BaseCollector<Long, SlowDownCollector.Lea
         @Override
         final public void collect(final int doc) {
             ThreadUtils.sleep(perRecordMsPause, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    class Classic implements Collector {
+
+        private final int perRecordMsPause;
+
+        public Classic(final String collectorName, final Integer perRecordMsPause) {
+            this.perRecordMsPause = Objects.requireNonNull(perRecordMsPause);
+        }
+
+        @Override
+        public LeafCollector getLeafCollector(LeafReaderContext context) {
+            return new Leaf(perRecordMsPause);
+        }
+
+        @Override
+        public ScoreMode scoreMode() {
+            return ScoreMode.COMPLETE_NO_SCORES;
         }
     }
 
