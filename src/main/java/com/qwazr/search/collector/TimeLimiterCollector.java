@@ -100,8 +100,9 @@ public class TimeLimiterCollector extends BaseCollector<Boolean, TimeLimiterColl
         /**
          * Create a TimeLimitedCollector wrapper over another {@link Collector} with a specified timeout.
          *
-         * @param ticksAllowed max time allowed for collecting
-         *                     hits after which {@link TimeExceededException} is thrown
+         * @param collectorName The name of the collector
+         * @param ticksAllowed  max time allowed for collecting
+         *                      hits after which {@link TimeExceededException} is thrown
          */
         public Classic(final String collectorName, Long ticksAllowed) {
             super(new DoNothingCollector(), TimeLimitingCollector.getGlobalCounter(), Objects.requireNonNull(ticksAllowed));
