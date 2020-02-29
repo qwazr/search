@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.core.IsEqual.equalTo;
 
 public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
@@ -69,6 +70,7 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
         ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
         Assert.assertThat(results.totalHits, lessThan(20L));
+        Assert.assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
     }
 
     @Test
@@ -80,5 +82,6 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
         ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
         Assert.assertThat(results.totalHits, lessThan(20L));
+        Assert.assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
     }
 }

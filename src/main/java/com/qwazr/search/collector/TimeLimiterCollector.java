@@ -56,15 +56,15 @@ public class TimeLimiterCollector extends BaseCollector<Boolean, TimeLimiterColl
     public Boolean reduce(final List<TimeLimiterCollector> collectors) {
         for (final TimeLimiterCollector collector : collectors)
             if (!collector.reduceLeaf())
-                return false;
-        return true;
+                return Boolean.FALSE;
+        return Boolean.TRUE;
     }
 
     private Boolean reduceLeaf() {
         for (final Leaf leaf : getLeaves())
             if (!leaf.result)
-                return false;
-        return true;
+                return Boolean.FALSE;
+        return Boolean.TRUE;
     }
 
     static class Leaf implements LeafCollector {
