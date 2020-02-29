@@ -18,10 +18,8 @@ package com.qwazr.search.collector;
 
 import org.apache.lucene.search.Collector;
 
-import java.util.List;
+public interface ClassicCollector<CollectorResult> extends Collector {
 
-public interface ParallelCollector<CollectorResult, ParallelCollector> extends Collector {
-
-    CollectorResult reduce(List<ParallelCollector> parallelLeafCollectors);
+    CollectorResult reduce();
 
 }

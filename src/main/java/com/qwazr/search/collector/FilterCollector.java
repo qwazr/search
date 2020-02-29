@@ -30,10 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class FilterCollector extends BaseCollector<FilterCollector.Query, FilterCollector.Leaf, FilterCollector> {
+public class FilterCollector extends BaseCollector.Parallel<FilterCollector.Query, FilterCollector.Leaf, FilterCollector> {
 
-    public FilterCollector(final String collectorName) {
-        super(collectorName, ScoreMode.COMPLETE);
+    public FilterCollector() {
+        super(ScoreMode.COMPLETE);
     }
 
     private Query reduce() {

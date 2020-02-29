@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
@@ -51,14 +52,16 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
     }
 
     @Test
-    public void classicCollectorTest() {
+    public void mixingClassicAndLuceneCollectorTest() {
         QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
-                .collector("timeLimiter", TimeLimiterCollector.Classic.class, 1000L)
+                .collector("timeLimiter", TimeLimiterCollector.Lucene.class, 1000L)
                 .collector("slowDown", SlowDownCollector.Classic.class, 100)
                 .build();
         ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
         Assert.assertThat(results.totalHits, lessThan(20L));
+        Assert.assertThat(results.getCollector("timeLimiter"), nullValue());
+        Assert.assertThat(results.getCollector("slowDown"), equalTo(100));
     }
 
     @Test
@@ -71,10 +74,24 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
         Assert.assertNotNull(results);
         Assert.assertThat(results.totalHits, lessThan(20L));
         Assert.assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
+        Assert.assertThat(results.getCollector("slowDown"), equalTo(100));
     }
 
     @Test
-    public void mixingCollectorTest() {
+    public void mixingParallelAndLuceneCollectorTest() {
+        QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
+                .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
+                .collector("slowDown", SlowDownCollector.Lucene.class, 100)
+                .build();
+        ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
+        Assert.assertNotNull(results);
+        Assert.assertThat(results.totalHits, lessThan(20L));
+        Assert.assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
+        Assert.assertThat(results.getCollector("slowDown"), nullValue());
+    }
+
+    @Test
+    public void mixingClassicAndParallelCollectorTest() {
         QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
                 .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
                 .collector("slowDown", SlowDownCollector.Classic.class, 100)
@@ -83,5 +100,6 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
         Assert.assertNotNull(results);
         Assert.assertThat(results.totalHits, lessThan(20L));
         Assert.assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
+        Assert.assertThat(results.getCollector("slowDown"), equalTo(100));
     }
 }

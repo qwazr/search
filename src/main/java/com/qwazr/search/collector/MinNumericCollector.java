@@ -25,8 +25,8 @@ import java.util.List;
 public abstract class MinNumericCollector<CollectorResult extends Comparable<CollectorResult>, LeafCollector extends DocValuesLeafCollector.Numeric<CollectorResult>>
         extends DocValuesCollector.Numeric<CollectorResult, LeafCollector> {
 
-    public MinNumericCollector(final String collectorName, final String fieldName) {
-        super(collectorName, fieldName);
+    public MinNumericCollector(final String fieldName) {
+        super(fieldName);
     }
 
     @Override
@@ -49,8 +49,8 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
 
     public static class MinLong extends MinNumericCollector<Long, MinLong.Leaf> {
 
-        public MinLong(final String collectorName, final String fieldName) {
-            super(collectorName, fieldName);
+        public MinLong(final String fieldName) {
+            super(fieldName);
         }
 
         @Override
@@ -87,8 +87,8 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
 
         private int result;
 
-        public MinInteger(final String collectorName, final String fieldName) {
-            super(collectorName, fieldName);
+        public MinInteger(final String fieldName) {
+            super(fieldName);
             result = Integer.MAX_VALUE;
         }
 
@@ -122,8 +122,8 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
     public static class MinDouble extends MinNumericCollector<Double, MinDouble.Leaf> {
 
 
-        public MinDouble(final String collectorName, final String fieldName) {
-            super(collectorName, fieldName);
+        public MinDouble(final String fieldName) {
+            super(fieldName);
         }
 
         @Override
@@ -158,8 +158,8 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
 
     public static class MinFloat extends MinNumericCollector<Float, MinFloat.Leaf> {
 
-        public MinFloat(final String collectorName, final String fieldName) {
-            super(collectorName, fieldName);
+        public MinFloat(final String fieldName) {
+            super(fieldName);
         }
 
         @Override

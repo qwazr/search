@@ -29,12 +29,12 @@ import org.apache.lucene.search.ScoreMode;
 import java.io.IOException;
 
 public abstract class DocValuesCollector<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector, ThisCollector, DocValues>
-        extends BaseCollector<CollectorResult, LeafCollector, ThisCollector> {
+        extends BaseCollector.Parallel<CollectorResult, LeafCollector, ThisCollector> {
 
     protected final String fieldName;
 
-    private DocValuesCollector(final String collectorName, final String fieldName) {
-        super(collectorName, ScoreMode.COMPLETE_NO_SCORES);
+    private DocValuesCollector(final String fieldName) {
+        super(ScoreMode.COMPLETE_NO_SCORES);
         this.fieldName = fieldName;
     }
 
@@ -61,8 +61,8 @@ public abstract class DocValuesCollector<CollectorResult, LeafCollector extends 
     public static abstract class Binary<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector>
             extends DocValuesCollector<CollectorResult, LeafCollector, Binary<CollectorResult, LeafCollector>, BinaryDocValues> {
 
-        protected Binary(String collectorName, String fieldName) {
-            super(collectorName, fieldName);
+        protected Binary(final String fieldName) {
+            super(fieldName);
         }
 
         final protected BinaryDocValues getDocValues(final LeafReader leafReader) throws IOException {
@@ -73,8 +73,8 @@ public abstract class DocValuesCollector<CollectorResult, LeafCollector extends 
     public static abstract class Sorted<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector>
             extends DocValuesCollector<CollectorResult, LeafCollector, Sorted<CollectorResult, LeafCollector>, SortedDocValues> {
 
-        protected Sorted(String collectorName, String fieldName) {
-            super(collectorName, fieldName);
+        protected Sorted(final String fieldName) {
+            super(fieldName);
         }
 
         final protected SortedDocValues getDocValues(final LeafReader leafReader) throws IOException {
@@ -85,8 +85,8 @@ public abstract class DocValuesCollector<CollectorResult, LeafCollector extends 
     public static abstract class SortedSet<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector>
             extends DocValuesCollector<CollectorResult, LeafCollector, SortedSet<CollectorResult, LeafCollector>, SortedSetDocValues> {
 
-        protected SortedSet(String collectorName, String fieldName) {
-            super(collectorName, fieldName);
+        protected SortedSet(final String fieldName) {
+            super(fieldName);
         }
 
         final protected SortedSetDocValues getDocValues(final LeafReader leafReader) throws IOException {
@@ -97,8 +97,8 @@ public abstract class DocValuesCollector<CollectorResult, LeafCollector extends 
     public static abstract class Numeric<CollectorResult extends Comparable<CollectorResult>, LeafCollector extends org.apache.lucene.search.LeafCollector>
             extends DocValuesCollector<CollectorResult, LeafCollector, Numeric<CollectorResult, LeafCollector>, NumericDocValues> {
 
-        protected Numeric(final String collectorName, final String fieldName) {
-            super(collectorName, fieldName);
+        protected Numeric(final String fieldName) {
+            super(fieldName);
         }
 
         final protected NumericDocValues getDocValues(final LeafReader leafReader) throws IOException {
@@ -109,8 +109,8 @@ public abstract class DocValuesCollector<CollectorResult, LeafCollector extends 
     public static abstract class SortedNumeric<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector>
             extends DocValuesCollector<CollectorResult, LeafCollector, SortedNumeric<CollectorResult, LeafCollector>, SortedNumericDocValues> {
 
-        protected SortedNumeric(final String collectorName, final String fieldName) {
-            super(collectorName, fieldName);
+        protected SortedNumeric(final String fieldName) {
+            super(fieldName);
         }
 
         final protected SortedNumericDocValues getDocValues(final LeafReader leafReader) throws IOException {

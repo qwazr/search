@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,13 +27,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-public class TimeLimiterCollector extends BaseCollector<Boolean, TimeLimiterCollector.Leaf, TimeLimiterCollector> {
+public class TimeLimiterCollector extends BaseCollector.Parallel<Boolean, TimeLimiterCollector.Leaf, TimeLimiterCollector> {
 
     private final TimeLimitingCollector collector;
 
-
-    public TimeLimiterCollector(final String collectorName, final Long ticksAllowed) {
-        super(collectorName, ScoreMode.COMPLETE_NO_SCORES);
+    public TimeLimiterCollector(final Long ticksAllowed) {
+        super(ScoreMode.COMPLETE_NO_SCORES);
         collector = new TimeLimitingCollector(new Collector() {
             @Override
             public LeafCollector getLeafCollector(LeafReaderContext context) {
@@ -95,17 +94,17 @@ public class TimeLimiterCollector extends BaseCollector<Boolean, TimeLimiterColl
         }
     }
 
-    public static class Classic extends TimeLimitingCollector {
+    public static class Lucene extends TimeLimitingCollector {
 
         /**
          * Create a TimeLimitedCollector wrapper over another {@link Collector} with a specified timeout.
          *
-         * @param collectorName The name of the collector
-         * @param ticksAllowed  max time allowed for collecting
-         *                      hits after which {@link TimeExceededException} is thrown
+         * @param ticksAllowed max time allowed for collecting
+         *                     hits after which {@link TimeExceededException} is thrown
          */
-        public Classic(final String collectorName, Long ticksAllowed) {
+        public Lucene(final Long ticksAllowed) {
             super(new DoNothingCollector(), TimeLimitingCollector.getGlobalCounter(), Objects.requireNonNull(ticksAllowed));
         }
+
     }
 }

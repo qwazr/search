@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,13 +44,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.IntConsumer;
 
-public class CollapseCollector extends BaseCollector<CollapseCollector.Query, CollapseCollector.Leaf, CollapseCollector> {
+public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.Query, CollapseCollector.Leaf, CollapseCollector> {
 
     private final String fieldName;
     private final int maxRows;
 
-    public CollapseCollector(final String collectorName, final String fieldName, final Integer maxRows) {
-        super(collectorName, ScoreMode.COMPLETE);
+    public CollapseCollector(final String fieldName, final Integer maxRows) {
+        super(ScoreMode.COMPLETE);
         this.fieldName = fieldName;
         this.maxRows = Objects.requireNonNull(maxRows, "The maxRows parameter is missing");
     }

@@ -16,27 +16,22 @@
 package com.qwazr.search.collector;
 
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.ScoreMode;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class BaseCollector<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector, BaseCollector>
-        implements ParallelCollector<CollectorResult, BaseCollector> {
+public abstract class BaseCollector<LeafCollector extends org.apache.lucene.search.LeafCollector>
+        implements Collector {
 
-    private final String name;
     private final ScoreMode scoreMode;
     private final List<LeafCollector> leafCollectors;
 
-    protected BaseCollector(final String name, final ScoreMode scoreMode) {
-        this.name = name;
+    protected BaseCollector(final ScoreMode scoreMode) {
         this.leafCollectors = new ArrayList<>();
         this.scoreMode = scoreMode;
-    }
-
-    final public String getName() {
-        return name;
     }
 
     protected abstract LeafCollector newLeafCollector(final LeafReaderContext context) throws IOException;
@@ -58,4 +53,21 @@ public abstract class BaseCollector<CollectorResult, LeafCollector extends org.a
         return scoreMode;
     }
 
+    public static abstract class Classic<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector>
+            extends BaseCollector<LeafCollector>
+            implements ClassicCollector<CollectorResult> {
+
+        protected Classic(final ScoreMode scoreMode) {
+            super(scoreMode);
+        }
+    }
+
+    public static abstract class Parallel<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector, Collector>
+            extends BaseCollector<LeafCollector>
+            implements ParallelCollector<CollectorResult, Collector> {
+
+        protected Parallel(final ScoreMode scoreMode) {
+            super(scoreMode);
+        }
+    }
 }

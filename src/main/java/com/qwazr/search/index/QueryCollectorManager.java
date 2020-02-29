@@ -15,6 +15,7 @@
  **/
 package com.qwazr.search.index;
 
+import com.qwazr.search.collector.ClassicCollector;
 import com.qwazr.search.collector.ParallelCollector;
 import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.LoggerUtils;
@@ -176,6 +177,8 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
                 final Collector userCollector = userCollectors.get(0);
                 if (userCollector instanceof ParallelCollector)
                     results.put(collectorName, ((ParallelCollector) userCollector).reduce(userCollectors));
+                else if (userCollector instanceof ClassicCollector)
+                    results.put(collectorName, ((ClassicCollector) userCollector).reduce());
             }
         }
         return results;

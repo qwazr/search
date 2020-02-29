@@ -25,8 +25,8 @@ import java.util.List;
 public abstract class MaxNumericCollector<CollectorResult extends Comparable<CollectorResult>, LeafCollector extends DocValuesLeafCollector.Numeric<CollectorResult>>
         extends DocValuesCollector.Numeric<CollectorResult, LeafCollector> {
 
-    public MaxNumericCollector(final String collectorName, final String fieldName) {
-        super(collectorName, fieldName);
+    public MaxNumericCollector(final String fieldName) {
+        super(fieldName);
     }
 
     @Override
@@ -50,8 +50,8 @@ public abstract class MaxNumericCollector<CollectorResult extends Comparable<Col
 
     public static class MaxLong extends MaxNumericCollector<Long, MaxLong.Leaf> {
 
-        public MaxLong(final String collectorName, final String fieldName) {
-            super(collectorName, fieldName);
+        public MaxLong(final String fieldName) {
+            super(fieldName);
         }
 
         @Override
@@ -86,8 +86,8 @@ public abstract class MaxNumericCollector<CollectorResult extends Comparable<Col
 
     public static class MaxInteger extends MaxNumericCollector<Integer, MaxInteger.Leaf> {
 
-        public MaxInteger(final String collectorName, final String fieldName) {
-            super(collectorName, fieldName);
+        public MaxInteger(final String fieldName) {
+            super(fieldName);
         }
 
         @Override
@@ -123,8 +123,8 @@ public abstract class MaxNumericCollector<CollectorResult extends Comparable<Col
 
     public static class MaxDouble extends MaxNumericCollector<Double, MaxDouble.Leaf> {
 
-        public MaxDouble(final String collectorName, final String fieldName) {
-            super(collectorName, fieldName);
+        public MaxDouble(final String fieldName) {
+            super(fieldName);
         }
 
         @Override
@@ -159,8 +159,8 @@ public abstract class MaxNumericCollector<CollectorResult extends Comparable<Col
 
     public static class MaxFloat extends MaxNumericCollector<Float, MaxFloat.Leaf> {
 
-        public MaxFloat(final String collectorName, final String fieldName) {
-            super(collectorName, fieldName);
+        public MaxFloat(final String fieldName) {
+            super(fieldName);
         }
 
         @Override

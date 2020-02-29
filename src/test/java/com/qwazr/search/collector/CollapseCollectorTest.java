@@ -34,7 +34,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-@Ignore
 public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
     @BeforeClass
@@ -60,6 +59,7 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
     }
 
     @Test
+    @Ignore
     public void test() {
         final QueryDefinition queryDef1 = QueryDefinition.of(BooleanQuery.of()
                 .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text1"))

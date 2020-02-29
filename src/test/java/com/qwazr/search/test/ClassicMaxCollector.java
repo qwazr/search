@@ -26,10 +26,10 @@ import org.apache.lucene.search.ScoreMode;
 import java.io.IOException;
 import java.util.List;
 
-public class ClassicMaxCollector extends BaseCollector<Long, ClassicMaxCollector.RandomCollector, ClassicMaxCollector> {
+public class ClassicMaxCollector extends BaseCollector.Parallel<Long, ClassicMaxCollector.RandomCollector, ClassicMaxCollector> {
 
-    public ClassicMaxCollector(final String name) {
-        super(name, ScoreMode.COMPLETE_NO_SCORES);
+    public ClassicMaxCollector() {
+        super(ScoreMode.COMPLETE_NO_SCORES);
     }
 
     @Override

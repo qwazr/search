@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.collector.ClassicCollector;
 import com.qwazr.search.collector.ParallelCollector;
 import com.qwazr.search.field.SortUtils;
 import com.qwazr.search.query.DrillDownQuery;
@@ -30,6 +31,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TopDocs;
 
+import javax.ws.rs.InternalServerErrorException;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.LinkedHashMap;
@@ -85,35 +87,60 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
         }
     }
 
+    enum CollectorType {
+        LUCENE, CLASSIC, PARALLEL
+
+    }
+
+    private static Constructor<?> getConstructor(final Class<? extends Collector> collectorClass,
+                                                 final Object[] arguments)
+            throws NoSuchMethodException {
+        final Class<?>[] classes = new Class[arguments.length];
+        int i = 0;
+        for (Object arg : arguments)
+            classes[i++] = arg.getClass();
+        return collectorClass.getConstructor(classes);
+    }
+
     static class CollectorConstructor {
 
         private final Constructor<?> constructor;
         private final Object[] arguments;
-        private final boolean isParallel;
+        private final CollectorType collectorType;
 
-        private CollectorConstructor(final String collectorName, final QueryDefinition.CollectorDefinition collector) throws ReflectiveOperationException {
+        private CollectorConstructor(final QueryDefinition.CollectorDefinition collector) throws ReflectiveOperationException {
             final Class<? extends Collector> collectorClass = ClassLoaderUtils.findClass(collector.classname);
-            isParallel = ParallelCollector.class.isAssignableFrom(collectorClass);
+            if (ParallelCollector.class.isAssignableFrom(collectorClass)) {
+                collectorType = CollectorType.PARALLEL;
+            } else if (ClassicCollector.class.isAssignableFrom(collectorClass)) {
+                collectorType = CollectorType.CLASSIC;
+            } else if (Collector.class.isAssignableFrom(collectorClass)) {
+                collectorType = CollectorType.LUCENE;
+            } else {
+                throw new InternalServerErrorException("The type of the collector class is not valid: " + collectorClass);
+            }
             final Constructor<?>[] constructors = collectorClass.getConstructors();
             if (constructors.length == 0)
                 throw new ReflectiveOperationException("No constructor for class: " + collectorClass);
             if (collector.arguments == null || collector.arguments.length == 0) {
-                constructor = collectorClass.getConstructor(String.class);
-                arguments = new Object[]{collectorName};
+                constructor = collectorClass.getConstructor();
+                arguments = null;
             } else {
-                arguments = new Object[collector.arguments.length + 1];
-                arguments[0] = collectorName;
-                System.arraycopy(collector.arguments, 0, arguments, 1, collector.arguments.length);
-                final Class<?>[] classes = new Class[arguments.length];
-                int i = 0;
-                for (Object arg : arguments)
-                    classes[i++] = arg.getClass();
-                constructor = collectorClass.getConstructor(classes);
+                constructor = getConstructor(collectorClass, collector.arguments);
+                arguments = collector.arguments;
             }
         }
 
-        Collector newInstance() throws ReflectiveOperationException {
-            return (Collector) constructor.newInstance(arguments);
+        Collector newInstance() {
+            try {
+                if (arguments != null)
+                    return (Collector) constructor.newInstance(arguments);
+                else
+                    return (Collector) constructor.newInstance();
+            }
+            catch (ReflectiveOperationException e) {
+                throw new InternalServerErrorException("Cannot create the collector " + constructor, e);
+            }
         }
     }
 
@@ -126,9 +153,9 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
         for (Map.Entry<String, QueryDefinition.CollectorDefinition> entry : collectors.entrySet()) {
             final String collectorName = entry.getKey();
             final QueryDefinition.CollectorDefinition collector = entry.getValue();
-            final CollectorConstructor collectorConstructor = new CollectorConstructor(collectorName, collector);
+            final CollectorConstructor collectorConstructor = new CollectorConstructor(collector);
             collectorConstructors.put(collectorName, collectorConstructor);
-            if (!collectorConstructor.isParallel)
+            if (collectorConstructor.collectorType != CollectorType.PARALLEL)
                 classicCollectors++;
         }
         return classicCollectors == 0;

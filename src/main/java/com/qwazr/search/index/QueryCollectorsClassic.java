@@ -16,6 +16,7 @@
 
 package com.qwazr.search.index;
 
+import com.qwazr.search.collector.ClassicCollector;
 import com.qwazr.search.collector.ParallelCollector;
 import com.qwazr.utils.LoggerUtils;
 import org.apache.lucene.facet.DrillSideways;
@@ -177,6 +178,9 @@ class QueryCollectorsClassic extends QueryCollectors {
             if (collector instanceof ParallelCollector) {
                 final ParallelCollector parallelCollector = (ParallelCollector) collector;
                 results.put(name, parallelCollector.reduce(Collections.singletonList(parallelCollector)));
+            } else if (collector instanceof ClassicCollector) {
+                final ClassicCollector classicCollector = (ClassicCollector) collector;
+                results.put(name, classicCollector.reduce());
             }
         }
         return results;

@@ -28,12 +28,32 @@ import java.util.concurrent.TimeUnit;
 
 public interface SlowDownCollector {
 
-    class Concurrent extends BaseCollector<Long, SlowDownCollector.Leaf, SlowDownCollector> {
+    class Classic extends BaseCollector.Classic<Integer, SlowDownCollector.Leaf> {
 
         private final int perRecordMsPause;
 
-        public Concurrent(final String collectorName, final Integer perRecordMsPause) {
-            super(collectorName, ScoreMode.COMPLETE_NO_SCORES);
+        public Classic(final Integer perRecordMsPause) {
+            super(ScoreMode.COMPLETE_NO_SCORES);
+            this.perRecordMsPause = Objects.requireNonNull(perRecordMsPause);
+        }
+
+        @Override
+        protected Leaf newLeafCollector(LeafReaderContext context) {
+            return new Leaf(perRecordMsPause);
+        }
+
+        @Override
+        public Integer reduce() {
+            return perRecordMsPause;
+        }
+    }
+
+    class Concurrent extends BaseCollector.Parallel<Integer, SlowDownCollector.Leaf, SlowDownCollector> {
+
+        private final int perRecordMsPause;
+
+        public Concurrent(final Integer perRecordMsPause) {
+            super(ScoreMode.COMPLETE_NO_SCORES);
             this.perRecordMsPause = Objects.requireNonNull(perRecordMsPause);
         }
 
@@ -43,8 +63,8 @@ public interface SlowDownCollector {
         }
 
         @Override
-        public Long reduce(final List<SlowDownCollector> collectors) {
-            return null;
+        public Integer reduce(final List<SlowDownCollector> collectors) {
+            return perRecordMsPause;
         }
 
     }
@@ -67,11 +87,11 @@ public interface SlowDownCollector {
         }
     }
 
-    class Classic implements Collector {
+    class Lucene implements Collector {
 
         private final int perRecordMsPause;
 
-        public Classic(final String collectorName, final Integer perRecordMsPause) {
+        public Lucene(final Integer perRecordMsPause) {
             this.perRecordMsPause = Objects.requireNonNull(perRecordMsPause);
         }
 
