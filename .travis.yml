@@ -11,5 +11,4 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
 
-script:
-  - ./gradlew test  
+install:  ./gradlew assemble -x signArchives
