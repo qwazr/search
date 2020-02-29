@@ -12,4 +12,4 @@ cache:
     - $HOME/.gradle/wrapper/
 
 script:
-  - ./gradlew assemble -x signArchives
+  - ./gradlew test  
