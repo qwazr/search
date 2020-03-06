@@ -70,7 +70,8 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
             @Override
             final public void collect(final int doc) throws IOException {
                 count++;
-                docValues.advance(doc);
+                if (docValues.advance(doc) != doc)
+                    return;
                 final long value = docValues.longValue();
                 if (value < result)
                     result = value;
@@ -106,7 +107,8 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
             @Override
             final public void collect(final int doc) throws IOException {
                 count++;
-                docValues.advance(doc);
+                if (docValues.advance(doc) != doc)
+                    return;
                 final int value = (int) docValues.longValue();
                 if (value < result)
                     result = value;
@@ -143,7 +145,8 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
             @Override
             final public void collect(final int doc) throws IOException {
                 count++;
-                docValues.advance(doc);
+                if (docValues.advance(doc) != doc)
+                    return;
                 final double value = NumericUtils.sortableLongToDouble(docValues.longValue());
                 if (value < result)
                     result = value;
@@ -179,7 +182,8 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
             @Override
             final public void collect(final int doc) throws IOException {
                 count++;
-                docValues.advance(doc);
+                if (docValues.advance(doc) != doc)
+                    return;
                 final float value = NumericUtils.sortableIntToFloat((int) docValues.longValue());
                 if (value < result)
                     result = value;

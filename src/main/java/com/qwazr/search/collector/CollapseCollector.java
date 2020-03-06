@@ -148,7 +148,8 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
 
         @Override
         final public void collect(final int doc) throws IOException {
-            sdv.advance(doc);
+            if (sdv.advance(doc) != doc)
+                return;
             final int ord = sdv.ordValue();
             if (ord == -1)
                 return;
