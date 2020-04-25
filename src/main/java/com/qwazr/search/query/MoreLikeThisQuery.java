@@ -28,6 +28,7 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -256,8 +257,7 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
             if (this.stopWords == null)
                 this.stopWords = new LinkedHashSet<>();
             if (stopWords != null)
-                for (final String stopWord : stopWords)
-                    this.stopWords.add(stopWord);
+                Collections.addAll(this.stopWords, stopWords);
             return this;
         }
 

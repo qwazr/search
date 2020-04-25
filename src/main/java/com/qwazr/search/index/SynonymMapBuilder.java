@@ -27,64 +27,64 @@ import java.io.IOException;
 
 public class SynonymMapBuilder {
 
-	private final SynonymMap.Builder builder;
-	private final Analyzer analyzer;
-	private final Boolean bidirectional;
+    private final SynonymMap.Builder builder;
+    private final Analyzer analyzer;
+    private final Boolean bidirectional;
 
-	public SynonymMapBuilder(final Analyzer analyzer, final boolean bidirectional, final boolean dedup) {
-		this.analyzer = analyzer;
-		this.builder = new SynonymMap.Builder(dedup);
-		this.bidirectional = bidirectional;
-	}
+    public SynonymMapBuilder(final Analyzer analyzer, final boolean bidirectional, final boolean dedup) {
+        this.analyzer = analyzer;
+        this.builder = new SynonymMap.Builder(dedup);
+        this.bidirectional = bidirectional;
+    }
 
-	public void add(final boolean keepOrig, final String... synonyms) throws IOException {
-		if (synonyms == null || synonyms.length == 1)
-			return;
-		final CharsRef input = getCharsRef(synonyms[0]);
-		for (int i = 1; i < synonyms.length; i++) {
-			final CharsRef output = getCharsRef(synonyms[i]);
-			builder.add(input, output, keepOrig);
-			if (bidirectional)
-				builder.add(output, input, keepOrig);
-		}
-	}
+    public void add(final boolean keepOrig, final String... synonyms) throws IOException {
+        if (synonyms == null || synonyms.length == 1)
+            return;
+        final CharsRef input = getCharsRef(synonyms[0]);
+        for (int i = 1; i < synonyms.length; i++) {
+            final CharsRef output = getCharsRef(synonyms[i]);
+            builder.add(input, output, keepOrig);
+            if (bidirectional)
+                builder.add(output, input, keepOrig);
+        }
+    }
 
-	private CharsRef getCharsRef(final String text) throws IOException {
-		try (final TokenStream tokenStream = analyzer.tokenStream(StringUtils.EMPTY, text)) {
-			final CharsRefTokensBuilder tokensBuilder = new CharsRefTokensBuilder(tokenStream);
-			tokensBuilder.forEachToken();
-			return tokensBuilder.charsRefBuilder.get();
-		}
-	}
+    private CharsRef getCharsRef(final String text) throws IOException {
+        try (final TokenStream tokenStream = analyzer.tokenStream(StringUtils.EMPTY, text)) {
+            final CharsRefTokensBuilder tokensBuilder = new CharsRefTokensBuilder(tokenStream);
+            tokensBuilder.forEachToken();
+            return tokensBuilder.charsRefBuilder.get();
+        }
+    }
 
-	public SynonymMap build() throws IOException {
-		return builder.build();
-	}
+    public SynonymMap build() throws IOException {
+        return builder.build();
+    }
 
-	private class CharsRefTokensBuilder extends TermConsumer.WithChar {
+    private static class CharsRefTokensBuilder extends TermConsumer.WithChar {
 
-		private final CharsRefBuilder charsRefBuilder;
-		private int upto;
+        private final CharsRefBuilder charsRefBuilder;
+        private int upto;
 
-		CharsRefTokensBuilder(final TokenStream tokenStream) {
-			super(tokenStream);
-			charsRefBuilder = new CharsRefBuilder();
-			upto = 0;
-		}
+        CharsRefTokensBuilder(final TokenStream tokenStream) {
+            super(tokenStream);
+            charsRefBuilder = new CharsRefBuilder();
+            upto = 0;
+        }
 
-		@Override
-		final public boolean token() throws IOException {
-			final int termLength = charTermAttr.length();
-			final int needed = upto == 0 ? termLength : 1 + termLength;
-			final int nextto = upto + needed;
-			if (nextto > charsRefBuilder.length())
-				charsRefBuilder.grow(nextto);
-			if (upto > 0)
-				charsRefBuilder.append(SynonymMap.WORD_SEPARATOR);
-			charsRefBuilder.append(charTermAttr.buffer(), 0, termLength);
-			upto = nextto;
-			return true;
-		}
-	}
+        @Override
+        final public boolean token() {
+            final int termLength = charTermAttr.length();
+            final int needed = upto == 0 ? termLength : 1 + termLength;
+            final int nextto = upto + needed;
+            if (nextto > charsRefBuilder.length())
+                charsRefBuilder.grow(nextto);
+            if (upto > 0)
+                charsRefBuilder.append(SynonymMap.WORD_SEPARATOR);
+            charsRefBuilder.append(charTermAttr.buffer(), 0, termLength);
+            upto = nextto;
+            return true;
+        }
+    }
 
 }

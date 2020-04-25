@@ -15,7 +15,7 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.utils.concurrent.ConcurrentUtils;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.StoredFieldVisitor;

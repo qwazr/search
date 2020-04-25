@@ -17,7 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.binder.setter.FieldSetter;
-import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.SerializationUtils;
 import org.apache.lucene.search.ScoreDoc;

@@ -35,89 +35,89 @@ import java.util.Objects;
 
 public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
 
-	final public AbstractQuery baseQuery;
-	final public List<LinkedHashMap<String, String[]>> dimPath;
-	final public Map<String, String> genericFieldNames;
-	final public Boolean useDrillSideways;
+    final public AbstractQuery baseQuery;
+    final public List<LinkedHashMap<String, String[]>> dimPath;
+    final public Map<String, String> genericFieldNames;
+    final public Boolean useDrillSideways;
 
-	@JsonCreator
-	public DrillDownQuery(@JsonProperty("baseQuery") final AbstractQuery baseQuery,
-			@JsonProperty("useDrillSideways") final boolean useDrillSideways,
-			@JsonProperty("dimPath") final List<LinkedHashMap<String, String[]>> dimPath,
-			@JsonProperty("genericFieldNames") final Map<String, String> genericFieldNames) {
-		super(DrillDownQuery.class);
-		this.baseQuery = baseQuery;
-		this.useDrillSideways = useDrillSideways;
-		this.dimPath = dimPath == null ? new ArrayList<>() : dimPath;
-		this.genericFieldNames = genericFieldNames == null ? new LinkedHashMap<>() : genericFieldNames;
-	}
+    @JsonCreator
+    public DrillDownQuery(@JsonProperty("baseQuery") final AbstractQuery baseQuery,
+                          @JsonProperty("useDrillSideways") final boolean useDrillSideways,
+                          @JsonProperty("dimPath") final List<LinkedHashMap<String, String[]>> dimPath,
+                          @JsonProperty("genericFieldNames") final Map<String, String> genericFieldNames) {
+        super(DrillDownQuery.class);
+        this.baseQuery = baseQuery;
+        this.useDrillSideways = useDrillSideways;
+        this.dimPath = dimPath == null ? new ArrayList<>() : dimPath;
+        this.genericFieldNames = genericFieldNames == null ? new LinkedHashMap<>() : genericFieldNames;
+    }
 
-	public DrillDownQuery(final AbstractQuery baseQuery, final boolean useDrillSideways) {
-		this(baseQuery, useDrillSideways, null, null);
-	}
+    public DrillDownQuery(final AbstractQuery baseQuery, final boolean useDrillSideways) {
+        this(baseQuery, useDrillSideways, null, null);
+    }
 
-	public DrillDownQuery dynamicFilter(final String genericFieldName, final String dim, final String... path) {
-		final LinkedHashMap<String, String[]> map = new LinkedHashMap<>();
-		map.put(dim, path);
-		dimPath.add(map);
-		if (genericFieldName != null)
-			genericFieldNames.put(dim, genericFieldName);
-		return this;
-	}
+    public DrillDownQuery dynamicFilter(final String genericFieldName, final String dim, final String... path) {
+        final LinkedHashMap<String, String[]> map = new LinkedHashMap<>();
+        map.put(dim, path);
+        dimPath.add(map);
+        if (genericFieldName != null)
+            genericFieldNames.put(dim, genericFieldName);
+        return this;
+    }
 
-	public DrillDownQuery filter(final String dim, final String... path) {
-		return dynamicFilter(null, dim, path);
-	}
+    public DrillDownQuery filter(final String dim, final String... path) {
+        return dynamicFilter(null, dim, path);
+    }
 
-	@Override
-	final public org.apache.lucene.facet.DrillDownQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+    @Override
+    final public org.apache.lucene.facet.DrillDownQuery getQuery(final QueryContext queryContext)
+            throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 
-		final org.apache.lucene.facet.DrillDownQuery drillDownQuery;
-		final FieldMap fieldMap = queryContext.getFieldMap();
+        final org.apache.lucene.facet.DrillDownQuery drillDownQuery;
+        final FieldMap fieldMap = queryContext.getFieldMap();
 
-		final Map<String, String> dimensions = new HashMap<>();
-		final Map<String, String> resolvedDimensions = new HashMap<>();
-		dimPath.forEach(map -> map.keySet().forEach(concreteField -> {
-			final String genericField = genericFieldNames.getOrDefault(concreteField, concreteField);
-			dimensions.put(concreteField, genericField);
-			if (fieldMap != null)
-				resolvedDimensions.put(concreteField, fieldMap.resolveQueryFieldName(genericField, concreteField));
-		}));
+        final Map<String, String> resolvedDimensions = new HashMap<>();
+        dimPath.forEach(map -> map.keySet().forEach(concreteField -> {
+            final String genericField = genericFieldNames.getOrDefault(concreteField, concreteField);
+            if (fieldMap != null)
+                resolvedDimensions.put(concreteField, fieldMap.resolveQueryFieldName(genericField, concreteField));
+            else
+                resolvedDimensions.put(concreteField, genericField);
+        }));
 
-		final FacetsConfig facetsConfig = queryContext.getFacetsConfig(resolvedDimensions);
-		Objects.requireNonNull(facetsConfig, "FacetsConfig is null");
-		if (baseQuery == null)
-			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig);
-		else
-			drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig, baseQuery.getQuery(queryContext));
+        final FacetsConfig facetsConfig = queryContext.getFacetsConfig(resolvedDimensions);
+        Objects.requireNonNull(facetsConfig, "FacetsConfig is null");
+        if (baseQuery == null)
+            drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig);
+        else
+            drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig, baseQuery.getQuery(queryContext));
 
-		dimPath.forEach(dimPath -> dimPath.forEach(
-				(dim, path) -> drillDownQuery.add(resolvedDimensions.getOrDefault(dim, dim), path)));
+        dimPath.forEach(dimPath -> dimPath.forEach(
+                (dim, path) -> drillDownQuery.add(resolvedDimensions.getOrDefault(dim, dim), path)));
 
-		return drillDownQuery;
-	}
+        return drillDownQuery;
+    }
 
-	@Override
-	protected boolean isEqual(DrillDownQuery q) {
-		if (!Objects.equals(baseQuery, q.baseQuery) || !Objects.equals(genericFieldNames, q.genericFieldNames) ||
-				!Objects.equals(useDrillSideways, q.useDrillSideways))
-			return false;
-		if (dimPath == q.dimPath)
-			return true;
-		if (dimPath == null || q.dimPath == null)
-			return false;
-		if (dimPath.size() != q.dimPath.size())
-			return false;
-		final Iterator<LinkedHashMap<String, String[]>> mapIterator = q.dimPath.iterator();
-		for (LinkedHashMap<String, String[]> map1 : dimPath) {
-			final LinkedHashMap<String, String[]> map2 = mapIterator.next();
-			for (Map.Entry<String, String[]> entry1 : map1.entrySet()) {
-				if (!Arrays.equals(entry1.getValue(), map2.get(entry1.getKey())))
-					return false;
-			}
-		}
-		return true;
-	}
+    @Override
+    protected boolean isEqual(DrillDownQuery q) {
+        if (!Objects.equals(baseQuery, q.baseQuery) || !Objects.equals(genericFieldNames, q.genericFieldNames) ||
+                !Objects.equals(useDrillSideways, q.useDrillSideways))
+            return false;
+        if (dimPath == q.dimPath)
+            return true;
+        if (dimPath == null || q.dimPath == null)
+            return false;
+        if (dimPath.size() != q.dimPath.size())
+            return false;
+        final Iterator<LinkedHashMap<String, String[]>> mapIterator = q.dimPath.iterator();
+        for (LinkedHashMap<String, String[]> map1 : dimPath) {
+            final LinkedHashMap<String, String[]> map2 = mapIterator.next();
+            for (Map.Entry<String, String[]> entry1 : map1.entrySet()) {
+                if (!Arrays.equals(entry1.getValue(), map2.get(entry1.getKey())))
+                    return false;
+            }
+        }
+        return true;
+    }
 
 }

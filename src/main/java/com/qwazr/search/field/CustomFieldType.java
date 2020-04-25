@@ -15,10 +15,10 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.field.Converters.MultiDVConverter;
-import com.qwazr.search.field.Converters.MultiReader;
-import com.qwazr.search.field.Converters.SingleDVConverter;
-import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.field.converters.MultiDVConverter;
+import com.qwazr.search.field.converters.MultiReader;
+import com.qwazr.search.field.converters.SingleDVConverter;
+import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
@@ -34,7 +34,7 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
     private final List<Consumer<FieldType>> typeSetters;
 
     CustomFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-            final FieldDefinition definition) {
+                    final FieldDefinition definition) {
         super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
                 getConverter(definition))
                 .termProvider(FieldUtils::newStringTerm)
@@ -103,18 +103,18 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
         if (definition.docValuesType == null)
             return null;
         switch (definition.docValuesType) {
-        case NONE:
-            return null;
-        case NUMERIC:
-            return new SingleDVConverter.LongDVConverter(reader, field);
-        case SORTED_NUMERIC:
-            return new SingleDVConverter.LongDVConverter(reader, field);
-        case SORTED:
-            return new SingleDVConverter.SortedDVConverter(reader, field);
-        case SORTED_SET:
-            return new MultiDVConverter.SortedSetDVConverter(reader, field);
-        case BINARY:
-            return new SingleDVConverter.BinaryDVConverter(reader, field);
+            case NONE:
+                return null;
+            case NUMERIC:
+                return new SingleDVConverter.LongDVConverter(reader, field);
+            case SORTED_NUMERIC:
+                return new SingleDVConverter.LongDVConverter(reader, field);
+            case SORTED:
+                return new SingleDVConverter.SortedDVConverter(reader, field);
+            case SORTED_SET:
+                return new MultiDVConverter.SortedSetDVConverter(reader, field);
+            case BINARY:
+                return new SingleDVConverter.BinaryDVConverter(reader, field);
         }
         return null;
     }
@@ -126,18 +126,16 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
         if (customDef.docValuesType == null)
             return BytesRefUtils.Converter.STRING;
         switch (customDef.docValuesType) {
-        case NONE:
-            return null;
-        case NUMERIC:
-            return BytesRefUtils.Converter.LONG;
-        case SORTED_NUMERIC:
-            return BytesRefUtils.Converter.LONG;
-        case SORTED_SET:
-            return BytesRefUtils.Converter.STRING;
-        case BINARY:
-            return BytesRefUtils.Converter.BYTESREF;
-        default:
-            return BytesRefUtils.Converter.STRING;
+            case NONE:
+                return null;
+            case NUMERIC:
+            case SORTED_NUMERIC:
+                return BytesRefUtils.Converter.LONG;
+            case BINARY:
+                return BytesRefUtils.Converter.BYTESREF;
+            case SORTED_SET:
+            default:
+                return BytesRefUtils.Converter.STRING;
         }
     }
 

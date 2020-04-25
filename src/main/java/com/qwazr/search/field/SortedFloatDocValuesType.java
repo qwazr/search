@@ -15,9 +15,9 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.field.Converters.MultiDVConverter;
-import com.qwazr.search.field.Converters.MultiReader;
-import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.field.converters.MultiDVConverter;
+import com.qwazr.search.field.converters.MultiReader;
+import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;

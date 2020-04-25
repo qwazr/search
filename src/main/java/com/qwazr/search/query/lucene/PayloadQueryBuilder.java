@@ -35,8 +35,12 @@ public class PayloadQueryBuilder extends QueryBuilder {
         this.includeSpanScore = includeSpanScore;
     }
 
-    @Override
     protected Query newTermQuery(final Term term) {
+        return newTermQuery(term, 1.0f);
+    }
+
+    @Override
+    protected Query newTermQuery(final Term term, float boost) {
         return new PayloadScoreQuery(new SpanTermQuery(term), payloadFunction, PayloadDecoder.FLOAT_DECODER, includeSpanScore);
     }
 }

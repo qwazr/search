@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.qwazr.search.field.Converters;
+package com.qwazr.search.field.converters;
 
 import com.qwazr.search.index.BytesRefUtils;
 import org.apache.lucene.index.BinaryDocValues;

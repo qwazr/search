@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.Converters.MultiReader;
-import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.field.converters.MultiReader;
+import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.field.FieldTypeInterface;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;

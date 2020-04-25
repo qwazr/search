@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.field.Converters;
+package com.qwazr.search.field.converters;
 
 import com.qwazr.binder.setter.FieldSetter;
 import org.apache.lucene.util.NumericUtils;

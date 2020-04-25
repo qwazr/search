@@ -15,8 +15,8 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.field.Converters.MultiReader;
-import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.field.converters.MultiReader;
+import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,27 +20,50 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.spatial3d.Geo3DPoint;
-
-import java.io.IOException;
+import org.apache.lucene.spatial3d.geom.PlanetModel;
 
 public class Geo3DBoxQuery extends AbstractGeoBoxQuery<Geo3DBoxQuery> {
 
-	@JsonCreator
-	public Geo3DBoxQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("min_latitude") final double minLat,
-			@JsonProperty("max_latitude") final double maxLat, @JsonProperty("min_longitude") final double minLon,
-			@JsonProperty("max_longitude") final double maxLon) {
-		super(Geo3DBoxQuery.class, genericField, field, minLat, maxLat, minLon, maxLon);
-	}
+    public enum PlanetModelEnum {
 
-	public Geo3DBoxQuery(final String field, final double minLat, final double maxLat, final double minLon,
-			final double maxLon) {
-		this(null, field, minLat, maxLat, minLon, maxLon);
-	}
+        SPHERE(PlanetModel.SPHERE),
+        WGS84(PlanetModel.WGS84),
+        CLARKE_1866(PlanetModel.CLARKE_1866);
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
-		return Geo3DPoint.newBoxQuery(resolveField(queryContext.getFieldMap()), min_latitude, max_latitude,
-				min_longitude, max_longitude);
-	}
+        final PlanetModel planetModel;
+
+        PlanetModelEnum(PlanetModel planetModel) {
+            this.planetModel = planetModel;
+        }
+    }
+
+    @JsonProperty("planet_model")
+    final public PlanetModelEnum planetModel;
+
+    @JsonCreator
+    public Geo3DBoxQuery(@JsonProperty("generic_field") final String genericField,
+                         @JsonProperty("field") final String field,
+                         @JsonProperty("planet_model") final PlanetModelEnum planetModel,
+                         @JsonProperty("min_latitude") final double minLat,
+                         @JsonProperty("max_latitude") final double maxLat,
+                         @JsonProperty("min_longitude") final double minLon,
+                         @JsonProperty("max_longitude") final double maxLon) {
+        super(Geo3DBoxQuery.class, genericField, field, minLat, maxLat, minLon, maxLon);
+        this.planetModel = planetModel;
+    }
+
+    public Geo3DBoxQuery(final String field,
+                         final PlanetModelEnum planetModel,
+                         final double minLat,
+                         final double maxLat,
+                         final double minLon,
+                         final double maxLon) {
+        this(null, field, planetModel, minLat, maxLat, minLon, maxLon);
+    }
+
+    @Override
+    final public Query getQuery(final QueryContext queryContext) {
+        return Geo3DPoint.newBoxQuery(resolveField(queryContext.getFieldMap()),
+                planetModel.planetModel, min_latitude, max_latitude, min_longitude, max_longitude);
+    }
 }

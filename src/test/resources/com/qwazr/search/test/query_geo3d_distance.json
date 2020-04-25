@@ -2,6 +2,7 @@
   "query": {
     "type": "Geo3DDistanceQuery",
     "field": "geo3d",
+    "planet_model": "WGS84",
     "latitude": 48.8568,
     "longitude": 2.3509,
     "radius_meters": 1000

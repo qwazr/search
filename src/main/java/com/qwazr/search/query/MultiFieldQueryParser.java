@@ -21,44 +21,43 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class MultiFieldQueryParser extends AbstractClassicQueryParser<MultiFieldQueryParser> {
 
-	@JsonCreator
-	private MultiFieldQueryParser() {
-		super(MultiFieldQueryParser.class);
-	}
+    @JsonCreator
+    private MultiFieldQueryParser() {
+        super(MultiFieldQueryParser.class);
+    }
 
-	public MultiFieldQueryParser(Builder builder) {
-		super(MultiFieldQueryParser.class, builder);
-	}
+    public MultiFieldQueryParser(Builder builder) {
+        super(MultiFieldQueryParser.class, builder);
+    }
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext) throws IOException, ParseException {
-		final FieldMap fieldMap = queryContext.getFieldMap();
-		final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser =
-				new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(resolveFields(fieldMap),
-						resolveAnalyzer(queryContext), resolvedBoosts(fieldMap));
-		setParserParameters(parser);
-		return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
-	}
+    @Override
+    final public Query getQuery(final QueryContext queryContext) throws ParseException {
+        final FieldMap fieldMap = queryContext.getFieldMap();
+        final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser =
+                new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(resolveFields(fieldMap),
+                        resolveAnalyzer(queryContext), resolvedBoosts(fieldMap));
+        setParserParameters(parser);
+        return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
+    }
 
-	public static Builder of() {
-		return new Builder();
-	}
+    public static Builder of() {
+        return new Builder();
+    }
 
-	public static class Builder extends AbstractParserBuilder<Builder, MultiFieldQueryParser> {
+    public static class Builder extends AbstractParserBuilder<Builder, MultiFieldQueryParser> {
 
-		protected Builder() {
-			super(Builder.class);
-		}
+        protected Builder() {
+            super(Builder.class);
+        }
 
-		@Override
-		public MultiFieldQueryParser build() {
-			return new MultiFieldQueryParser(this);
-		}
+        @Override
+        public MultiFieldQueryParser build() {
+            return new MultiFieldQueryParser(this);
+        }
 
-	}
+    }
 }

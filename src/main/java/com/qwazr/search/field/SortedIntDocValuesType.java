@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.field.Converters.MultiDVConverter;
-import com.qwazr.search.field.Converters.MultiReader;
-import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.field.converters.MultiDVConverter;
+import com.qwazr.search.field.converters.MultiReader;
+import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
@@ -26,24 +26,24 @@ import org.apache.lucene.document.SortedNumericDocValuesField;
 
 final class SortedIntDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	SortedIntDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.INT).sortFieldProvider(SortUtils::integerSortField));
-	}
+    SortedIntDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                           final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+                BytesRefUtils.Converter.INT).sortFieldProvider(SortUtils::integerSortField));
+    }
 
-	@Override
-	final public void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
-		final Field field;
-		if (value instanceof Number)
-			field = new SortedNumericDocValuesField(fieldName, ((Number) value).intValue());
-		else
-			field = new SortedNumericDocValuesField(fieldName, Integer.parseInt(value.toString()));
-		consumer.accept(genericFieldName, fieldName, field);
-	}
+    @Override
+    final public void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
+        final Field field;
+        if (value instanceof Number)
+            field = new SortedNumericDocValuesField(fieldName, ((Number) value).intValue());
+        else
+            field = new SortedNumericDocValuesField(fieldName, Integer.parseInt(value.toString()));
+        consumer.accept(genericFieldName, fieldName, field);
+    }
 
-	@Override
-	final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
-		return new MultiDVConverter.IntegerSetDVConverter(reader, fieldName);
-	}
+    @Override
+    final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
+        return new MultiDVConverter.IntegerSetDVConverter(reader, fieldName);
+    }
 }

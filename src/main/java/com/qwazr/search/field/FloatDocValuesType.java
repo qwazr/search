@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.field.Converters.MultiReader;
-import com.qwazr.search.field.Converters.SingleDVConverter;
-import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.field.converters.MultiReader;
+import com.qwazr.search.field.converters.SingleDVConverter;
+import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.utils.WildcardMatcher;
@@ -25,25 +25,25 @@ import org.apache.lucene.document.FloatDocValuesField;
 
 final class FloatDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	FloatDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.FLOAT).sortFieldProvider(SortUtils::floatSortField));
-	}
+    FloatDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                       final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+                BytesRefUtils.Converter.FLOAT).sortFieldProvider(SortUtils::floatSortField));
+    }
 
-	@Override
-	void newField(String fieldName, Object value, FieldConsumer consumer) {
-		final FloatDocValuesField field;
-		if (value instanceof Number)
-			field = new FloatDocValuesField(fieldName, ((Number) value).floatValue());
-		else
-			field = new FloatDocValuesField(fieldName, Float.parseFloat(value.toString()));
-		consumer.accept(genericFieldName, fieldName, field);
-	}
+    @Override
+    void newField(String fieldName, Object value, FieldConsumer consumer) {
+        final FloatDocValuesField field;
+        if (value instanceof Number)
+            field = new FloatDocValuesField(fieldName, ((Number) value).floatValue());
+        else
+            field = new FloatDocValuesField(fieldName, Float.parseFloat(value.toString()));
+        consumer.accept(genericFieldName, fieldName, field);
+    }
 
-	@Override
-	final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
-		return new SingleDVConverter.FloatDVConverter(reader, fieldName);
-	}
+    @Override
+    final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
+        return new SingleDVConverter.FloatDVConverter(reader, fieldName);
+    }
 
 }

@@ -22,8 +22,6 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LatLonPoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class LatLonPointDistanceQuery extends AbstractFieldQuery<LatLonPointDistanceQuery> {
 
 	final public double center_latitude;

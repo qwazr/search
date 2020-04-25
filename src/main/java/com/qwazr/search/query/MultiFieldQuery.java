@@ -207,7 +207,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 				fieldQuery;
 	}
 
-	private class TermsWithFreq extends TermConsumer.WithChar {
+	private static class TermsWithFreq extends TermConsumer.WithChar {
 
 		private final IndexReader indexReader;
 		private final String field;
@@ -248,7 +248,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 		}
 
 		@Override
-		final protected Query newTermQuery(Term term) {
+		final protected Query newTermQuery(Term term, float boost) {
 			final Integer freq = termsFreq.get(term.text());
 			return getTermQuery(freq == null ? 0 : freq, term);
 		}

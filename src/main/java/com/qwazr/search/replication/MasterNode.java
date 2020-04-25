@@ -182,7 +182,7 @@ public interface MasterNode extends Closeable {
         @Override
         public InputStream getItem(final String sessionId, ReplicationProcess.Source source, final String itemName)
                 throws FileNotFoundException {
-            if (source == null || source != ReplicationProcess.Source.data)
+            if (source != ReplicationProcess.Source.data)
                 return super.getItem(sessionId, source, itemName);
             final SourceView.FromCommit sourceView;
             synchronized (indexSessions) {
@@ -241,7 +241,7 @@ public interface MasterNode extends Closeable {
         @Override
         public InputStream getItem(final String sessionId, final ReplicationProcess.Source source,
                                    final String itemName) throws FileNotFoundException {
-            if (source == null || source != ReplicationProcess.Source.taxonomy)
+            if (source != ReplicationProcess.Source.taxonomy)
                 return super.getItem(sessionId, source, itemName);
             final SourceView.FromCommit sourceView;
             synchronized (taxoSessions) {

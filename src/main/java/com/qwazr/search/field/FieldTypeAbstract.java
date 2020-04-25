@@ -15,8 +15,8 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.field.Converters.MultiReader;
-import com.qwazr.search.field.Converters.ValueConverter;
+import com.qwazr.search.field.converters.MultiReader;
+import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
@@ -57,10 +57,10 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         this.bytesRefConverter = builder.bytesRefConverter;
         this.facetConfig = builder.facetConfig == null || builder.facetConfig.isEmpty() ?
                 null :
-                builder.facetConfig.toArray(new FieldTypeInterface.Facet[builder.facetConfig.size()]);
+                builder.facetConfig.toArray(new Facet[0]);
         this.fieldProviders = builder.fieldProviders == null || builder.fieldProviders.isEmpty() ?
                 null :
-                builder.fieldProviders.toArray(new FieldTypeInterface.FieldProvider[builder.fieldProviders.size()]);
+                builder.fieldProviders.toArray(new FieldProvider[0]);
         this.termProvider = builder.termProvider;
         this.storedFieldNameProvider = builder.storedFieldNameProvider;
         this.queryFieldNameProvider = builder.queryFieldNameProvider;

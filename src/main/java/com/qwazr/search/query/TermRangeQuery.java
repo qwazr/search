@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.MultiTermQuery;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class TermRangeQuery extends AbstractFieldQuery<TermRangeQuery> {

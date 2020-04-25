@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,38 +24,48 @@ import org.apache.lucene.spatial3d.Geo3DPoint;
 
 public class Geo3DDistanceQuery extends AbstractFieldQuery<Geo3DDistanceQuery> {
 
-	public final double latitude;
+    @JsonProperty("planet_model")
+    public final Geo3DBoxQuery.PlanetModelEnum planetModel;
 
-	public final double longitude;
+    public final double latitude;
 
-	public final double radius_meters;
+    public final double longitude;
 
-	@JsonCreator
-	public Geo3DDistanceQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("latitude") final double latitude,
-			@JsonProperty("longitude") final double longitude,
-			@JsonProperty("radius_meters") final double radiusMeters) {
-		super(Geo3DDistanceQuery.class, genericField, field);
-		this.latitude = latitude;
-		this.longitude = longitude;
-		this.radius_meters = radiusMeters;
-	}
+    @JsonProperty("radius_meters")
+    public final double radiusMeters;
 
-	public Geo3DDistanceQuery(final String field, final double latitude, final double longitude,
-			final double radiusMeters) {
-		this(null, field, latitude, longitude, radiusMeters);
-	}
+    @JsonCreator
+    public Geo3DDistanceQuery(@JsonProperty("generic_field") final String genericField,
+                              @JsonProperty("field") final String field,
+                              @JsonProperty("planet_model") final Geo3DBoxQuery.PlanetModelEnum planetModel,
+                              @JsonProperty("latitude") final double latitude,
+                              @JsonProperty("longitude") final double longitude,
+                              @JsonProperty("radius_meters") final double radiusMeters) {
+        super(Geo3DDistanceQuery.class, genericField, field);
+        this.planetModel = planetModel;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.radiusMeters = radiusMeters;
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(final Geo3DDistanceQuery q) {
-		return super.isEqual(q) && latitude == q.latitude && longitude == q.longitude &&
-				radius_meters == q.radius_meters;
-	}
+    public Geo3DDistanceQuery(final String field,
+                              final Geo3DBoxQuery.PlanetModelEnum planetModel,
+                              final double latitude,
+                              final double longitude,
+                              final double radiusMeters) {
+        this(null, field, planetModel, latitude, longitude, radiusMeters);
+    }
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext) {
-		return Geo3DPoint.newDistanceQuery(resolveField(queryContext.getFieldMap()), latitude, longitude,
-				radius_meters);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(final Geo3DDistanceQuery q) {
+        return super.isEqual(q) && latitude == q.latitude && longitude == q.longitude &&
+                radiusMeters == q.radiusMeters;
+    }
+
+    @Override
+    final public Query getQuery(final QueryContext queryContext) {
+        return Geo3DPoint.newDistanceQuery(resolveField(queryContext.getFieldMap()),
+                planetModel.planetModel, latitude, longitude, radiusMeters);
+    }
 }
