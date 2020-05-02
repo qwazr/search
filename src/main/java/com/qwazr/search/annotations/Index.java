@@ -28,19 +28,19 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE })
+@Target({ElementType.TYPE})
 public @interface Index {
 
-    String name();
+    String name() default StringUtils.EMPTY;
 
-    String schema();
+    String schema() default StringUtils.EMPTY;
 
     String similarity() default StringUtils.EMPTY;
 
     Class<? extends Similarity> similarityClass() default BM25Similarity.class;
 
     String sort() default StringUtils.EMPTY;
-    
+
     String replicationMaster() default StringUtils.EMPTY;
 
     IndexSettingsDefinition.Type type() default IndexSettingsDefinition.Type.FSDirectory;
