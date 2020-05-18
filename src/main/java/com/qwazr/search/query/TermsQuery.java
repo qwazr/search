@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermInSetQuery;
 import org.apache.lucene.util.BytesRef;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -39,7 +38,7 @@ public class TermsQuery extends AbstractMultiTermQuery<TermsQuery> {
 
     @JsonCreator
     private TermsQuery(@JsonProperty("generic_field") final String genericField, @JsonProperty("field") final String field,
-            @JsonProperty("terms") final Collection<Object> terms) {
+                       @JsonProperty("terms") final Collection<Object> terms) {
         super(TermsQuery.class, genericField, field, null);
         this.terms = Objects.requireNonNull(terms, "The term list is null");
         this.bytesRefCollection = null;
@@ -58,7 +57,7 @@ public class TermsQuery extends AbstractMultiTermQuery<TermsQuery> {
     }
 
     @Override
-    final public Query getQuery(final QueryContext queryContext) throws IOException {
+    final public Query getQuery(final QueryContext queryContext) {
         final Collection<BytesRef> bytesRefs;
         if (bytesRefCollection == null) {
             bytesRefs = new ArrayList<>();

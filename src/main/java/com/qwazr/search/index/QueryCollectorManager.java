@@ -29,7 +29,6 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopFieldCollector;
 import org.apache.lucene.search.TopFieldDocs;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -58,11 +57,11 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
         if (queryExecution.useDrillSideways) {
 
             final DrillSideways.ConcurrentDrillSidewaysResult<QueryCollectors> drillSidewaysResult =
-                    new MixedDrillSideways(queryExecution).search(
-                            (org.apache.lucene.facet.DrillDownQuery) queryExecution.query, this);
+                new MixedDrillSideways(queryExecution).search(
+                    (org.apache.lucene.facet.DrillDownQuery) queryExecution.query, this);
             facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.facetsConfig,
-                    queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
-                    drillSidewaysResult).build();
+                queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+                drillSidewaysResult).build();
 
         } else {
 
@@ -78,24 +77,18 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 
             facetsCollector = getFacetsCollector();
             facetsBuilder = facetsCollector == null ?
-                    null :
-                    new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
-                            queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
-                            facetsCollector).build();
+                null :
+                new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
+                    queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+                    facetsCollector).build();
         }
 
         return facetsBuilder;
     }
 
     @Override
-    final public Collector newCollector() throws IOException {
-        final QueryCollectorsClassic queryCollectors;
-        try {
-            queryCollectors = new QueryCollectorsClassic(queryExecution);
-        }
-        catch (ReflectiveOperationException e) {
-            throw new IOException(e);
-        }
+    final public Collector newCollector() {
+        final QueryCollectorsClassic queryCollectors = new QueryCollectorsClassic(queryExecution);
         queryCollectorsList.add(queryCollectors);
         return queryCollectors.finalCollector;
     }
@@ -130,7 +123,7 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
             if (queryCollectors.topDocsCollector != null)
                 topDocsList.add(queryCollectors.topDocsCollector.topDocs());
         return TopDocs.merge(queryExecution.start, queryExecution.rows,
-                topDocsList.toArray(new TopDocs[0]), true);
+            topDocsList.toArray(new TopDocs[0]), true);
     }
 
     private TopDocs getTopFieldDocs() {
@@ -139,8 +132,8 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
             if (queryCollectors.topDocsCollector != null)
                 topFieldDocsList.add(((TopFieldCollector) queryCollectors.topDocsCollector).topDocs());
         return TopFieldDocs.merge(queryExecution.sort == null ? Sort.RELEVANCE : queryExecution.sort,
-                queryExecution.start, queryExecution.rows,
-                topFieldDocsList.toArray(new TopFieldDocs[0]), true);
+            queryExecution.start, queryExecution.rows,
+            topFieldDocsList.toArray(new TopFieldDocs[0]), true);
     }
 
     private final static FacetsCollector EMPTY_FACETS_COLLECTOR = new FacetsCollector();

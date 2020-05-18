@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,33 +22,33 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 public class FloatSetQuery extends AbstractFieldQuery<FloatSetQuery> {
 
-	public float[] values;
+    final public float[] values;
 
-	@JsonCreator
-	public FloatSetQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("values") final float... values) {
-		super(FloatSetQuery.class, genericField, field);
-		this.values = values;
-	}
+    @JsonCreator
+    public FloatSetQuery(@JsonProperty("generic_field") final String genericField,
+                         @JsonProperty("field") final String field,
+                         @JsonProperty("values") final float... values) {
+        super(FloatSetQuery.class, genericField, field);
+        this.values = values;
+    }
 
-	public FloatSetQuery(final String field, final float... values) {
-		this(null, field, values);
-	}
+    public FloatSetQuery(final String field, final float... values) {
+        this(null, field, values);
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(FloatSetQuery q) {
-		return super.isEqual(q) && Arrays.equals(values, q.values);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(FloatSetQuery q) {
+        return super.isEqual(q) && Arrays.equals(values, q.values);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return FloatPoint.newSetQuery(resolveField(queryContext.getFieldMap()), values);
-	}
-	
+    @Override
+    public Query getQuery(final QueryContext queryContext) {
+        return FloatPoint.newSetQuery(resolveField(queryContext.getFieldMap()), values);
+    }
+
 }

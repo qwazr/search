@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,15 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class SortedLongDocValuesRangeQuery extends AbstractRangeQuery<Long, SortedLongDocValuesRangeQuery> {
 
     @JsonCreator
     public SortedLongDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
-            @JsonProperty("upper_value") final Long upperValue) {
+                                         @JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
+                                         @JsonProperty("upper_value") final Long upperValue) {
         super(SortedLongDocValuesRangeQuery.class, genericField, field,
-                lowerValue == null ? LongDocValuesRangeQuery.MIN : lowerValue,
-                upperValue == null ? LongDocValuesRangeQuery.MAX : upperValue);
+            lowerValue == null ? LongDocValuesRangeQuery.MIN : lowerValue,
+            upperValue == null ? LongDocValuesRangeQuery.MAX : upperValue);
     }
 
     public SortedLongDocValuesRangeQuery(final String field, final Long lowerValue, final Long upperValue) {
@@ -39,8 +37,8 @@ public class SortedLongDocValuesRangeQuery extends AbstractRangeQuery<Long, Sort
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext) throws IOException {
+    public Query getQuery(final QueryContext queryContext) {
         return SortedNumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()), lower_value,
-                upper_value);
+            upper_value);
     }
 }

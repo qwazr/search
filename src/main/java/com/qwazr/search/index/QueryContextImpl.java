@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,36 +78,36 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext, C
     }
 
     @Override
-    public ResultDefinition.WithMap searchMap(QueryDefinition queryDefinition) throws IOException {
+    public ResultDefinition.WithMap searchMap(QueryDefinition queryDefinition) {
         final Set<String> returnedFields =
-                queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
-                        fieldMap.getStaticFieldSet() :
-                        queryDefinition.returned_fields;
+            queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
+                fieldMap.getStaticFieldSet() :
+                queryDefinition.returned_fields;
         final ResultDocumentsMap resultDocumentsMap = new ResultDocumentsMap(this, queryDefinition, returnedFields);
         return (ResultDefinition.WithMap) search(queryDefinition, resultDocumentsMap);
     }
 
     @Override
-    public <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, FieldMapWrapper<T> wrapper)
-            throws IOException {
+    public <T> ResultDefinition.WithObject<T> searchObject(final QueryDefinition queryDefinition,
+                                                           final FieldMapWrapper<T> wrapper) {
         final Set<String> returnedFields =
-                queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
-                        wrapper.fieldMap.keySet() :
-                        queryDefinition.returned_fields;
+            queryDefinition.returned_fields != null && queryDefinition.returned_fields.contains("*") ?
+                wrapper.fieldMap.keySet() :
+                queryDefinition.returned_fields;
         final ResultDocumentsObject<T> resultDocumentsObject =
-                new ResultDocumentsObject<>(this, queryDefinition, returnedFields, wrapper);
+            new ResultDocumentsObject<>(this, queryDefinition, returnedFields, wrapper);
         return (ResultDefinition.WithObject<T>) search(queryDefinition, resultDocumentsObject);
     }
 
     @Override
     public <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, Class<T> objectClass)
-            throws IOException {
+        throws IOException {
         return searchObject(queryDefinition, fieldMapWrappers.get(objectClass));
     }
 
     @Override
     public ResultDefinition.Empty searchInterface(final QueryDefinition queryDefinition,
-                                                  final ResultDocumentsInterface resultDocuments) throws IOException {
+                                                  final ResultDocumentsInterface resultDocuments) {
         final ResultDocumentsEmpty resultDocumentEmpty = new ResultDocumentsEmpty(resultDocuments);
         return (ResultDefinition.Empty) search(queryDefinition, resultDocumentEmpty);
     }

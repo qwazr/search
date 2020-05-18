@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,61 +23,61 @@ import java.util.Map;
 
 public abstract class ResultDocumentAbstract {
 
-	final public float score;
-	final public int pos;
-	final public int doc;
-	@JsonProperty("shard_index")
-	final public int shardIndex;
-	final public Map<String, String> highlights;
+    final public float score;
+    final public int pos;
+    final public int doc;
+    @JsonProperty("shard_index")
+    final public int shardIndex;
+    final public Map<String, String> highlights;
 
-	@JsonCreator
-	ResultDocumentAbstract(@JsonProperty("score") Float score, @JsonProperty("pos") Integer pos,
-			@JsonProperty("doc") Integer doc, @JsonProperty("shard_index") Integer shardIndex,
-			@JsonProperty("highlights") Map<String, String> highlights) {
-		this.score = score == null ? 1.0F : score;
-		this.pos = pos == null ? -1 : pos;
-		this.highlights = highlights;
-		this.doc = doc == null ? -1 : doc;
-		this.shardIndex = shardIndex == null ? -1 : shardIndex;
-	}
+    @JsonCreator
+    ResultDocumentAbstract(@JsonProperty("score") Float score, @JsonProperty("pos") Integer pos,
+                           @JsonProperty("doc") Integer doc, @JsonProperty("shard_index") Integer shardIndex,
+                           @JsonProperty("highlights") Map<String, String> highlights) {
+        this.score = score == null ? 1.0F : score;
+        this.pos = pos == null ? -1 : pos;
+        this.highlights = highlights;
+        this.doc = doc == null ? -1 : doc;
+        this.shardIndex = shardIndex == null ? -1 : shardIndex;
+    }
 
-	protected ResultDocumentAbstract(final ResultDocumentBuilder builder) {
-		this(builder.scoreDoc.score, builder.pos, builder.scoreDoc.doc, builder.scoreDoc.shardIndex,
-				builder.highlights);
-	}
+    protected ResultDocumentAbstract(final ResultDocumentBuilder<?> builder) {
+        this(builder.scoreDoc.score, builder.pos, builder.scoreDoc.doc, builder.scoreDoc.shardIndex,
+            builder.highlights);
+    }
 
-	protected ResultDocumentAbstract(final ResultDocumentAbstract src) {
-		this(src.score, src.pos, src.doc, src.shardIndex, src.highlights);
-	}
+    protected ResultDocumentAbstract(final ResultDocumentAbstract src) {
+        this(src.score, src.pos, src.doc, src.shardIndex, src.highlights);
+    }
 
-	final public float getScore() {
-		return score;
-	}
+    final public float getScore() {
+        return score;
+    }
 
-	final public int getDoc() {
-		return doc;
-	}
+    final public int getDoc() {
+        return doc;
+    }
 
-	final public int getPos() {
-		return pos;
-	}
+    final public int getPos() {
+        return pos;
+    }
 
-	final public int getShard_index() {
-		return shardIndex;
-	}
+    final public int getShard_index() {
+        return shardIndex;
+    }
 
-	@JsonIgnore
-	final public int getShardIndex() {
-		return shardIndex;
-	}
+    @JsonIgnore
+    final public int getShardIndex() {
+        return shardIndex;
+    }
 
-	final public Map<String, String> getHighlights() {
-		return highlights;
-	}
+    final public Map<String, String> getHighlights() {
+        return highlights;
+    }
 
-	@JsonIgnore
-	final public Map<String, String> getSnippets() {
-		return highlights;
-	}
+    @JsonIgnore
+    final public Map<String, String> getSnippets() {
+        return highlights;
+    }
 
 }

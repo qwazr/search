@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -293,15 +293,15 @@ public interface IndexServiceInterface extends ServiceInterface {
     @Path("/{schema_name}/{index_name}/backup/{backup_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     SortedMap<String, SortedMap<String, BackupStatus>> doBackup(
-            @PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-            @PathParam("backup_name") String backup_name);
+        @PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+        @PathParam("backup_name") String backup_name);
 
     @GET
     @Path("/{schema_name}/{index_name}/backup/{backup_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(
-            @PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-            @PathParam("backup_name") String backup_name, @QueryParam("extractVersion") Boolean extractVersion);
+        @PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+        @PathParam("backup_name") String backup_name, @QueryParam("extractVersion") Boolean extractVersion);
 
     @DELETE
     @Path("/{schema_name}/{index_name}/backup/{backup_name}")
@@ -388,45 +388,45 @@ public interface IndexServiceInterface extends ServiceInterface {
     String explainQueryDot(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
                            QueryDefinition query, @PathParam("doc") int docId, @QueryParam("wrap") final Integer descriptionWrapSize);
 
-    GenericType<Set<String>> setStringType = new GenericType<Set<String>>() {
+    GenericType<Set<String>> setStringType = new GenericType<>() {
     };
 
-    GenericType<Map<String, UUID>> mapStringUuidType = new GenericType<Map<String, UUID>>() {
+    GenericType<Map<String, UUID>> mapStringUuidType = new GenericType<>() {
     };
 
     GenericType<SortedMap<String, SortedMap<String, BackupStatus>>> mapStringMapStringBackupStatusType =
-            new GenericType<SortedMap<String, SortedMap<String, BackupStatus>>>() {
-            };
+        new GenericType<>() {
+        };
 
     GenericType<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>
-            mapStringMapStringMapStringBackupStatusType =
-            new GenericType<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>() {
-            };
+        mapStringMapStringMapStringBackupStatusType =
+        new GenericType<>() {
+        };
 
     GenericType<LinkedHashMap<String, IndexInstance.ResourceInfo>> mapStringResourceInfoType =
-            new GenericType<LinkedHashMap<String, IndexInstance.ResourceInfo>>() {
-            };
+        new GenericType<>() {
+        };
 
     GenericType<ArrayList<Map<String, Object>>> listMapStringObjectType =
-            new GenericType<ArrayList<Map<String, Object>>>() {
-            };
+        new GenericType<>() {
+        };
 
-    GenericType<LinkedHashMap<String, Object>> mapStringObjectType = new GenericType<LinkedHashMap<String, Object>>() {
+    GenericType<LinkedHashMap<String, Object>> mapStringObjectType = new GenericType<>() {
     };
 
     GenericType<LinkedHashMap<String, FieldDefinition>> mapStringFieldType =
-            new GenericType<LinkedHashMap<String, FieldDefinition>>() {
-            };
+        new GenericType<>() {
+        };
 
-    GenericType<List<TermDefinition>> listTermDefinitionType = new GenericType<List<TermDefinition>>() {
+    GenericType<List<TermDefinition>> listTermDefinitionType = new GenericType<>() {
     };
 
-    GenericType<List<TermEnumDefinition>> listTermEnumDefinitionType = new GenericType<List<TermEnumDefinition>>() {
+    GenericType<List<TermEnumDefinition>> listTermEnumDefinitionType = new GenericType<>() {
     };
 
     GenericType<LinkedHashMap<String, AnalyzerDefinition>> mapStringAnalyzerType =
-            new GenericType<LinkedHashMap<String, AnalyzerDefinition>>() {
-            };
+        new GenericType<>() {
+        };
 
     @FunctionalInterface
     interface QueryActions<T> extends FunctionEx<QueryContext, T, IOException> {
@@ -442,7 +442,7 @@ public interface IndexServiceInterface extends ServiceInterface {
     }
 
     default <T> T write(final String schemaName, final String indexName, final WriteActions<T> actions)
-            throws IOException {
+        throws IOException {
         throw new NotImplementedException("Method not available");
     }
 

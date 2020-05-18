@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,23 +21,21 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class IntExactQuery extends AbstractExactQuery<Integer, IntExactQuery> {
 
-	@JsonCreator
-	public IntExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final Integer value) {
-		super(IntExactQuery.class, genericField, field, value == null ? IntDocValuesExactQuery.ZERO : value);
-		this.value = value;
-	}
+    @JsonCreator
+    public IntExactQuery(@JsonProperty("generic_field") final String genericField,
+                         @JsonProperty("field") final String field, @JsonProperty("value") final Integer value) {
+        super(IntExactQuery.class, genericField, field, value == null ? IntDocValuesExactQuery.ZERO : value);
+        this.value = value;
+    }
 
-	public IntExactQuery(final String field, final int value) {
-		this(null, field, value);
-	}
+    public IntExactQuery(final String field, final int value) {
+        this(null, field, value);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return IntPoint.newExactQuery(resolveField(queryContext.getFieldMap()), value);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) {
+        return IntPoint.newExactQuery(resolveField(queryContext.getFieldMap()), value);
+    }
 }

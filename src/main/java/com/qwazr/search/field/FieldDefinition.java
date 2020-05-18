@@ -48,15 +48,15 @@ import java.util.function.Supplier;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        visible = true,
-        property = "type",
-        defaultImpl = CustomFieldDefinition.class)
+    include = JsonTypeInfo.As.EXISTING_PROPERTY,
+    visible = true,
+    property = "type",
+    defaultImpl = CustomFieldDefinition.class)
 @JsonSubTypes({@JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "TEXT"),
-        @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "INTEGER"),
-        @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "LONG"),
-        @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "FLOAT"),
-        @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "DOUBLE")})
+    @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "INTEGER"),
+    @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "LONG"),
+    @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "FLOAT"),
+    @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "DOUBLE")})
 //@JsonDeserialize(using = FieldDefinition.FieldDeserializer.class)
 public abstract class FieldDefinition {
 
@@ -148,8 +148,8 @@ public abstract class FieldDefinition {
         this.analyzer = builder.analyzer;
         this.queryAnalyzer = builder.queryAnalyzer;
         this.copyFrom = builder.copyFrom == null || builder.copyFrom.isEmpty() ?
-                null :
-                builder.copyFrom.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
+            null :
+            builder.copyFrom.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
     }
 
     @Override
@@ -165,12 +165,12 @@ public abstract class FieldDefinition {
             return true;
         final FieldDefinition f = (FieldDefinition) o;
         return Objects.equals(type, f.type) && Objects.equals(analyzer, f.analyzer) &&
-                Objects.equals(queryAnalyzer, f.queryAnalyzer);
+            Objects.equals(queryAnalyzer, f.queryAnalyzer);
     }
 
     public final static TypeReference<LinkedHashMap<String, FieldDefinition>> mapStringFieldTypeRef =
-            new TypeReference<LinkedHashMap<String, FieldDefinition>>() {
-            };
+        new TypeReference<>() {
+        };
 
     public static LinkedHashMap<String, FieldDefinition> newFieldMap(final String jsonString) throws IOException {
         if (StringUtils.isEmpty(jsonString))
@@ -199,7 +199,7 @@ public abstract class FieldDefinition {
     public final static String DOC_FIELD = "$doc";
 
     static public void saveMap(final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap, final File fieldMapFile)
-            throws IOException {
+        throws IOException {
         if (fieldDefinitionMap == null)
             Files.deleteIfExists(fieldMapFile.toPath());
         else
@@ -209,14 +209,14 @@ public abstract class FieldDefinition {
     static public LinkedHashMap<String, FieldDefinition> loadMap(final File fieldMapFile,
                                                                  final Supplier<LinkedHashMap<String, FieldDefinition>> defaultMap) throws IOException {
         return fieldMapFile != null && fieldMapFile.exists() && fieldMapFile.isFile() ?
-                ObjectMappers.JSON.readValue(fieldMapFile, FieldDefinition.mapStringFieldTypeRef) :
-                defaultMap == null ? null : defaultMap.get();
+            ObjectMappers.JSON.readValue(fieldMapFile, FieldDefinition.mapStringFieldTypeRef) :
+            defaultMap == null ? null : defaultMap.get();
     }
 
     protected static String from(String analyzerName, Class<? extends Analyzer> analyzerClass) {
         return analyzerClass != Analyzer.class ?
-                analyzerClass.getName() :
-                StringUtils.isEmpty(analyzerName) ? null : analyzerName;
+            analyzerClass.getName() :
+            StringUtils.isEmpty(analyzerName) ? null : analyzerName;
     }
 
     protected static String[] from(final String fieldName, final Map<String, Copy> copyMap) {

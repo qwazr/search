@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,38 +24,38 @@ import java.io.IOException;
 
 public interface QueryContext extends IndexContext {
 
-	default IndexReader getIndexReader() {
-		return null;
-	}
+    default IndexReader getIndexReader() {
+        return null;
+    }
 
-	default IndexSearcher getIndexSearcher() {
-		return null;
-	}
+    default IndexSearcher getIndexSearcher() {
+        return null;
+    }
 
-	default FieldMap getFieldMap() {
-		return null;
-	}
+    default FieldMap getFieldMap() {
+        return null;
+    }
 
-	default ResultDefinition.WithMap searchMap(QueryDefinition queryDefinition) throws IOException {
-		throw new NotImplementedException("Not available");
-	}
+    default ResultDefinition.WithMap searchMap(final QueryDefinition queryDefinition) {
+        throw new NotImplementedException("Not available");
+    }
 
-	default <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition,
-			final FieldMapWrapper<T> wrapper) throws IOException {
-		throw new NotImplementedException("Not available");
-	}
+    default <T> ResultDefinition.WithObject<T> searchObject(final QueryDefinition queryDefinition,
+                                                            final FieldMapWrapper<T> wrapper) {
+        throw new NotImplementedException("Not available");
+    }
 
-	default <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, Class<T> objectClass)
-			throws IOException {
-		throw new NotImplementedException("Not available");
-	}
+    default <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, Class<T> objectClass)
+        throws IOException {
+        throw new NotImplementedException("Not available");
+    }
 
-	default ResultDefinition.Empty searchInterface(final QueryDefinition queryDefinition,
-			final ResultDocumentsInterface resultDocuments) throws IOException {
-		throw new NotImplementedException("Not available");
-	}
+    default ResultDefinition.Empty searchInterface(final QueryDefinition queryDefinition,
+                                                   final ResultDocumentsInterface resultDocuments) {
+        throw new NotImplementedException("Not available");
+    }
 
-	QueryContext DEFAULT = () -> {
-	};
+    QueryContext DEFAULT = () -> {
+    };
 
 }

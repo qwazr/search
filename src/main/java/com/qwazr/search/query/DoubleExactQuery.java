@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,24 +21,22 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class DoubleExactQuery extends AbstractExactQuery<Double, DoubleExactQuery> {
 
-	final static Double ZERO = Double.valueOf(0);
+    final static Double ZERO = 0d;
 
-	@JsonCreator
-	public DoubleExactQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final Double value) {
-		super(DoubleExactQuery.class, genericField, field, value == null ? ZERO : value);
-	}
+    @JsonCreator
+    public DoubleExactQuery(@JsonProperty("generic_field") final String genericField,
+                            @JsonProperty("field") final String field, @JsonProperty("value") final Double value) {
+        super(DoubleExactQuery.class, genericField, field, value == null ? ZERO : value);
+    }
 
-	public DoubleExactQuery(final String field, final Double value) {
-		this(null, field, value);
-	}
+    public DoubleExactQuery(final String field, final Double value) {
+        this(null, field, value);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return DoublePoint.newExactQuery(resolveField(queryContext.getFieldMap()), value);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) {
+        return DoublePoint.newExactQuery(resolveField(queryContext.getFieldMap()), value);
+    }
 }

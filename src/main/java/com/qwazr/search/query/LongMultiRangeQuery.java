@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,49 +23,48 @@ import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
 public class LongMultiRangeQuery extends AbstractMultiRangeQuery<LongMultiRangeQuery> {
 
-	final public long[] lower_values;
-	final public long[] upper_values;
+    final public long[] lower_values;
+    final public long[] upper_values;
 
-	@JsonCreator
-	public LongMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("lower_values") final long[] lowerValues,
-			@JsonProperty("upper_values") final long[] upperValues) {
-		super(LongMultiRangeQuery.class, genericField, field);
-		this.lower_values = lowerValues;
-		this.upper_values = upperValues;
-	}
+    @JsonCreator
+    public LongMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
+                               @JsonProperty("field") final String field, @JsonProperty("lower_values") final long[] lowerValues,
+                               @JsonProperty("upper_values") final long[] upperValues) {
+        super(LongMultiRangeQuery.class, genericField, field);
+        this.lower_values = lowerValues;
+        this.upper_values = upperValues;
+    }
 
-	public LongMultiRangeQuery(final String field, final long lowerValue, final long upperValue) {
-		this(null, field, new long[] { lowerValue }, new long[] { upperValue });
-	}
+    public LongMultiRangeQuery(final String field, final long lowerValue, final long upperValue) {
+        this(null, field, new long[]{lowerValue}, new long[]{upperValue});
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(LongMultiRangeQuery q) {
-		return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
-				Arrays.equals(upper_values, q.upper_values);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(LongMultiRangeQuery q) {
+        return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
+            Arrays.equals(upper_values, q.upper_values);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		final String resolvedField = resolveField(queryContext.getFieldMap());
-		if (lower_values.length == 1)
-			return LongPoint.newRangeQuery(resolvedField, lower_values[0], upper_values[0]);
-		else
-			return LongPoint.newRangeQuery(resolvedField, lower_values, upper_values);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) {
+        final String resolvedField = resolveField(queryContext.getFieldMap());
+        if (lower_values.length == 1)
+            return LongPoint.newRangeQuery(resolvedField, lower_values[0], upper_values[0]);
+        else
+            return LongPoint.newRangeQuery(resolvedField, lower_values, upper_values);
+    }
 
-	public static class Builder extends AbstractBuilder<Long, Builder> {
+    public static class Builder extends AbstractBuilder<Long, Builder> {
 
-		public Builder(String genericField, String field) {
-			super(genericField, field);
-		}
+        public Builder(String genericField, String field) {
+            super(genericField, field);
+        }
 
         @Override
         protected Builder me() {
@@ -73,12 +72,12 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery<LongMultiRangeQ
         }
 
         @Override
-		protected LongMultiRangeQuery build(final String field, final Collection<Long> lowerValues,
-				final Collection<Long> upperValues) {
-			return new LongMultiRangeQuery(genericField, field, ArrayUtils.toPrimitiveLong(lowerValues),
-					ArrayUtils.toPrimitiveLong(upperValues));
-		}
+        protected LongMultiRangeQuery build(final String field, final Collection<Long> lowerValues,
+                                            final Collection<Long> upperValues) {
+            return new LongMultiRangeQuery(genericField, field, ArrayUtils.toPrimitiveLong(lowerValues),
+                ArrayUtils.toPrimitiveLong(upperValues));
+        }
 
-	}
+    }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public interface MasterNode extends Closeable {
     ReplicationSession newSession() throws IOException;
 
     InputStream getItem(String sessionId, ReplicationProcess.Source source, String itemName)
-            throws FileNotFoundException;
+        throws FileNotFoundException;
 
     void releaseSession(String sessionId) throws IOException;
 
@@ -75,7 +75,7 @@ public interface MasterNode extends Closeable {
                                    final Map<String, Map<String, ReplicationSession.Item>> sessionMap) throws IOException {
             synchronized (metadataSessions) {
                 final SourceView.FromPathFiles sourceView =
-                        new SourceView.FromPathFiles(metadataDirectory, metadataItems);
+                    new SourceView.FromPathFiles(metadataDirectory, metadataItems);
                 metadataSessions.put(sessionId, sourceView);
                 sessionMap.put(ReplicationProcess.Source.metadata.name(), sourceView.getItems());
             }
@@ -83,7 +83,7 @@ public interface MasterNode extends Closeable {
 
         @Override
         public InputStream getItem(final String sessionId, ReplicationProcess.Source source, final String itemName)
-                throws FileNotFoundException {
+            throws FileNotFoundException {
             if (source != null && source != ReplicationProcess.Source.metadata)
                 return null;
             final SourceView.FromPathFiles sourceView;
@@ -130,7 +130,7 @@ public interface MasterNode extends Closeable {
 
         @Override
         public InputStream getItem(final String sessionId, ReplicationProcess.Source source, final String itemName)
-                throws FileNotFoundException {
+            throws FileNotFoundException {
             if (source != null && source != ReplicationProcess.Source.resources)
                 return super.getItem(sessionId, source, itemName);
             final SourceView.FromPathDirectory sourceView;
@@ -148,10 +148,6 @@ public interface MasterNode extends Closeable {
             }
         }
 
-        @Override
-        public void close() throws IOException {
-            super.close();
-        }
     }
 
     class WithIndex extends WithResources {
@@ -181,7 +177,7 @@ public interface MasterNode extends Closeable {
 
         @Override
         public InputStream getItem(final String sessionId, ReplicationProcess.Source source, final String itemName)
-                throws FileNotFoundException {
+            throws FileNotFoundException {
             if (source != ReplicationProcess.Source.data)
                 return super.getItem(sessionId, source, itemName);
             final SourceView.FromCommit sourceView;
@@ -220,7 +216,7 @@ public interface MasterNode extends Closeable {
         public WithIndexAndTaxo(final String masterUuid, final Path resourcesPath, final Path indexDirectoryPath,
                                 final IndexWriter indexWriter, final Path taxoDirectoryPath,
                                 final SnapshotDirectoryTaxonomyWriter taxonomyWriter, final Path metadataDirectory,
-                                final String... metadataItems) throws IOException {
+                                final String... metadataItems) {
             super(masterUuid, resourcesPath, indexDirectoryPath, indexWriter, metadataDirectory, metadataItems);
             this.taxoDirectoryPath = taxoDirectoryPath;
             this.taxoSnapshots = taxonomyWriter.getDeletionPolicy();

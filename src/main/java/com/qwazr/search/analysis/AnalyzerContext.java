@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,9 +41,9 @@ public class AnalyzerContext {
     public final Map<String, Analyzer> queryAnalyzerMap;
 
     public AnalyzerContext(final ConstructorParametersImpl instanceFactory, final ResourceLoader resourceLoader,
-            final FieldMap fieldMap, final boolean failOnException,
-            final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap,
-            final Map<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap) throws ServerException {
+                           final FieldMap fieldMap, final boolean failOnException,
+                           final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap,
+                           final Map<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap) throws ServerException {
 
         if (fieldMap == null || fieldMap.isEmpty()) {
             this.indexAnalyzerMap = Collections.emptyMap();
@@ -55,8 +55,8 @@ public class AnalyzerContext {
         this.queryAnalyzerMap = new HashMap<>();
 
         final AnalyzerMapBuilder builder =
-                new AnalyzerMapBuilder(instanceFactory, resourceLoader, globalAnalyzerFactoryMap,
-                        localAnalyzerFactoryMap);
+            new AnalyzerMapBuilder(instanceFactory, resourceLoader, globalAnalyzerFactoryMap,
+                localAnalyzerFactoryMap);
 
         fieldMap.forEach((fieldName, fieldType) -> {
             try {
@@ -72,15 +72,16 @@ public class AnalyzerContext {
                 }
 
                 final String queryAnalyzerName = fieldDefinition.queryAnalyzer == null ?
-                        fieldDefinition.analyzer :
-                        fieldDefinition.queryAnalyzer;
+                    fieldDefinition.analyzer :
+                    fieldDefinition.queryAnalyzer;
                 if (queryAnalyzerName != null) {
                     final Analyzer queryAnalyzer = builder.findAnalyzer(queryAnalyzerName);
                     if (queryAnalyzer != null)
                         queryAnalyzerMap.put(queryFieldName, queryAnalyzer);
                 }
 
-            } catch (ReflectiveOperationException | IOException e) {
+            }
+            catch (ReflectiveOperationException | IOException e) {
                 final String msg = "Analyzer class not known for the field " + fieldName;
                 if (failOnException)
                     throw new ServerException(Response.Status.NOT_ACCEPTABLE, msg, e);
@@ -92,10 +93,10 @@ public class AnalyzerContext {
     @FunctionalInterface
     public interface Builder {
 
-        void add(String fieldName, String analyzerName) throws ReflectiveOperationException, IOException;
+        void add(String fieldName, String analyzerName);
     }
 
-    private final static String[] analyzerClassPrefixes = { StringUtils.EMPTY, "org.apache.lucene.analysis." };
+    private final static String[] analyzerClassPrefixes = {StringUtils.EMPTY, "org.apache.lucene.analysis."};
 
     public final static class AnalyzerMapBuilder {
 
@@ -106,8 +107,8 @@ public class AnalyzerContext {
         private final Map<String, Analyzer> analyzerSingletonMap;
 
         AnalyzerMapBuilder(final ConstructorParametersImpl instanceFactory, final ResourceLoader resourceLoader,
-                final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap,
-                final Map<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap) {
+                           final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap,
+                           final Map<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap) {
             this.instanceFactory = instanceFactory;
             this.resourceLoader = resourceLoader;
             this.globalAnalyzerFactoryMap = globalAnalyzerFactoryMap;
@@ -129,8 +130,8 @@ public class AnalyzerContext {
         }
 
         private Analyzer getFromFactory(final String analyzerName,
-                final Map<String, ? extends AnalyzerFactory> analyzerFactoryMap)
-                throws IOException, ReflectiveOperationException {
+                                        final Map<String, ? extends AnalyzerFactory> analyzerFactoryMap)
+            throws IOException, ReflectiveOperationException {
             if (analyzerFactoryMap == null)
                 return null;
             final AnalyzerFactory factory = analyzerFactoryMap.get(analyzerName);

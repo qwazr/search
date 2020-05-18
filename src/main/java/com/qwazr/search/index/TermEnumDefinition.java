@@ -67,6 +67,6 @@ public class TermEnumDefinition {
     }
 
     public final static TypeReference<List<TermEnumDefinition>> ListTermEnumDefinitionRef =
-            new TypeReference<List<TermEnumDefinition>>() {
-            };
+        new TypeReference<>() {
+        };
 }

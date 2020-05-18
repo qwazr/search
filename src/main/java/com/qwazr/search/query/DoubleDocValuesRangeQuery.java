@@ -22,8 +22,6 @@ import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.NumericUtils;
 
-import java.io.IOException;
-
 public class DoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, DoubleDocValuesRangeQuery> {
 
     final static Double MIN = Double.MIN_VALUE;
@@ -31,10 +29,10 @@ public class DoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, Double
 
     @JsonCreator
     public DoubleDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
-            @JsonProperty("upper_value") final Double upperValue) {
+                                     @JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
+                                     @JsonProperty("upper_value") final Double upperValue) {
         super(DoubleDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
-                upperValue == null ? MAX : upperValue);
+            upperValue == null ? MAX : upperValue);
     }
 
     public DoubleDocValuesRangeQuery(final String field, final Double lowerValue, final Double upperValue) {
@@ -42,8 +40,8 @@ public class DoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, Double
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext) throws IOException {
+    public Query getQuery(final QueryContext queryContext) {
         return NumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()),
-                NumericUtils.doubleToSortableLong(lower_value), NumericUtils.doubleToSortableLong(upper_value));
+            NumericUtils.doubleToSortableLong(lower_value), NumericUtils.doubleToSortableLong(upper_value));
     }
 }

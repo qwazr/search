@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,15 +22,13 @@ import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.NumericUtils;
 
-import java.io.IOException;
-
 public class SortedDoubleDocValuesExactQuery extends AbstractExactQuery<Double, SortedDoubleDocValuesExactQuery> {
 
     @JsonCreator
     public SortedDoubleDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("value") final Double value) {
+                                           @JsonProperty("field") final String field, @JsonProperty("value") final Double value) {
         super(SortedDoubleDocValuesExactQuery.class, genericField, field,
-                value == null ? DoubleExactQuery.ZERO : value);
+            value == null ? DoubleExactQuery.ZERO : value);
     }
 
     public SortedDoubleDocValuesExactQuery(final String field, final Double value) {
@@ -38,8 +36,8 @@ public class SortedDoubleDocValuesExactQuery extends AbstractExactQuery<Double, 
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext) throws IOException {
+    public Query getQuery(final QueryContext queryContext) {
         return SortedNumericDocValuesField.newSlowExactQuery(resolveField(queryContext.getFieldMap()),
-                NumericUtils.doubleToSortableLong(value));
+            NumericUtils.doubleToSortableLong(value));
     }
 }

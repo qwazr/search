@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.Equalizer;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -46,10 +43,10 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
     public final List<Term> terms;
 
     @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE,
-            setterVisibility = JsonAutoDetect.Visibility.NONE,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            creatorVisibility = JsonAutoDetect.Visibility.NONE,
-            fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+        setterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
     public static class Term extends Equalizer<Term> {
 
         public final String field;
@@ -79,9 +76,9 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
 
     @JsonCreator
     private CommonTermsQuery(@JsonProperty("high_freq_occur") final BooleanQuery.Occur highFreqOccur,
-            @JsonProperty("low_freq_occur") final BooleanQuery.Occur lowFreqOccur,
-            @JsonProperty("max_term_frequency") final Float maxTermFrequency,
-            @JsonProperty("terms") final List<Term> terms) {
+                             @JsonProperty("low_freq_occur") final BooleanQuery.Occur lowFreqOccur,
+                             @JsonProperty("max_term_frequency") final Float maxTermFrequency,
+                             @JsonProperty("terms") final List<Term> terms) {
         super(CommonTermsQuery.class);
         this.highFreqOccur = highFreqOccur;
         this.lowFreqOccur = lowFreqOccur;
@@ -92,7 +89,7 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
     @Override
     protected boolean isEqual(final CommonTermsQuery other) {
         return Objects.equals(highFreqOccur, other.highFreqOccur) && Objects.equals(lowFreqOccur, other.lowFreqOccur) &&
-                Objects.equals(maxTermFrequency, other.maxTermFrequency) && Objects.equals(terms, other.terms);
+            Objects.equals(maxTermFrequency, other.maxTermFrequency) && Objects.equals(terms, other.terms);
     }
 
     @Override
@@ -101,11 +98,10 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext)
-            throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+    public Query getQuery(final QueryContext queryContext) {
         final org.apache.lucene.queries.CommonTermsQuery commonTermsQuery =
-                new org.apache.lucene.queries.CommonTermsQuery(highFreqOccur.occur, lowFreqOccur.occur,
-                        maxTermFrequency == null ? 1f : maxTermFrequency);
+            new org.apache.lucene.queries.CommonTermsQuery(highFreqOccur.occur, lowFreqOccur.occur,
+                maxTermFrequency == null ? 1f : maxTermFrequency);
         if (terms != null)
             terms.forEach(term -> commonTermsQuery.add(term.toTerm()));
         return commonTermsQuery;

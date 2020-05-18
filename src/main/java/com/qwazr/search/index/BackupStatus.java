@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,10 +72,10 @@ public class BackupStatus {
         this.filesCount = filesCount;
 
         this.hashCode = new HashCodeBuilder().append(date)
-                .append(bytesSize)
-                .append(indexVersion)
-                .append(taxonomyVersion)
-                .build();
+            .append(bytesSize)
+            .append(indexVersion)
+            .append(taxonomyVersion)
+            .build();
     }
 
     static BackupStatus newBackupStatus(final Path backupDir, final boolean extractVersion) throws IOException {
@@ -101,11 +101,13 @@ public class BackupStatus {
                         try {
                             final FileTime nft = Files.getLastModifiedTime(path);
                             return ft != null && ft.compareTo(nft) >= 0 ? ft : nft;
-                        } catch (IOException e) {
+                        }
+                        catch (IOException e) {
                             throw ServerException.of(e);
                         }
                     });
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     throw ServerException.of(e);
                 }
                 count.incrementAndGet();
@@ -139,7 +141,7 @@ public class BackupStatus {
         if (indexPath == null || !Files.exists(indexPath) || !Files.isDirectory(indexPath))
             return null;
         try (final Stream<Path> stream = Files.list(indexPath)) {
-            if (!stream.findAny().isPresent())
+            if (stream.findAny().isEmpty())
                 return null;
         }
         try (final Directory indexDir = FSDirectory.open(indexPath, NoLockFactory.INSTANCE)) {
@@ -147,7 +149,8 @@ public class BackupStatus {
                 return null;
             try (final DirectoryReader indexReader = DirectoryReader.open(indexDir)) {
                 return indexReader.getVersion();
-            } catch (IndexNotFoundException e) {
+            }
+            catch (IndexNotFoundException e) {
                 LOGGER.log(Level.WARNING, e, e::getMessage);
                 return null;
             }
@@ -168,14 +171,14 @@ public class BackupStatus {
             return true;
         final BackupStatus s = (BackupStatus) o;
         return Objects.equals(indexVersion, s.indexVersion) && Objects.equals(taxonomyVersion, s.taxonomyVersion) &&
-                Objects.equals(date, s.date) && Objects.equals(bytesSize, s.bytesSize) &&
-                Objects.equals(filesCount, s.filesCount);
+            Objects.equals(date, s.date) && Objects.equals(bytesSize, s.bytesSize) &&
+            Objects.equals(filesCount, s.filesCount);
     }
 
     @Override
     public String toString() {
         return "Index version: " + indexVersion + " - Taxo version: " + taxonomyVersion + " - Date: " + date +
-                " - Size: " + bytesSize + " - Count:" + filesCount + " - Hash: " + hashCode;
+            " - Size: " + bytesSize + " - Count:" + filesCount + " - Hash: " + hashCode;
     }
 
 }

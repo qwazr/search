@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,32 +22,31 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 public class LongSetQuery extends AbstractFieldQuery<LongSetQuery> {
 
-	final public long[] values;
+    final public long[] values;
 
-	@JsonCreator
-	public LongSetQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("values") final long... values) {
-		super(LongSetQuery.class, genericField, field);
-		this.values = values;
-	}
+    @JsonCreator
+    public LongSetQuery(@JsonProperty("generic_field") final String genericField,
+                        @JsonProperty("field") final String field, @JsonProperty("values") final long... values) {
+        super(LongSetQuery.class, genericField, field);
+        this.values = values;
+    }
 
-	public LongSetQuery(final String field, final long... values) {
-		this(null, field, values);
-	}
+    public LongSetQuery(final String field, final long... values) {
+        this(null, field, values);
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(LongSetQuery q) {
-		return super.isEqual(q) && Arrays.equals(values, q.values);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(LongSetQuery q) {
+        return super.isEqual(q) && Arrays.equals(values, q.values);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return LongPoint.newSetQuery(resolveField(queryContext.getFieldMap()), values);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) {
+        return LongPoint.newSetQuery(resolveField(queryContext.getFieldMap()), values);
+    }
 }

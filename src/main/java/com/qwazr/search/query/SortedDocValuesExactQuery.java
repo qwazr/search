@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,11 @@ import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.BytesRef;
 
-import java.io.IOException;
-
 public class SortedDocValuesExactQuery extends AbstractExactQuery<String, SortedDocValuesExactQuery> {
 
     @JsonCreator
     public SortedDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("value") final String value) {
+                                     @JsonProperty("field") final String field, @JsonProperty("value") final String value) {
         super(SortedDocValuesExactQuery.class, genericField, field, value);
     }
 
@@ -37,7 +35,7 @@ public class SortedDocValuesExactQuery extends AbstractExactQuery<String, Sorted
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext) throws IOException {
+    public Query getQuery(final QueryContext queryContext) {
         return SortedDocValuesField.newSlowExactQuery(resolveField(queryContext.getFieldMap()), new BytesRef(value));
     }
 }

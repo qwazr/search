@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.BytesRef;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class SortedSetDocValuesRangeQuery extends AbstractRangeQuery<String, SortedSetDocValuesRangeQuery> {
@@ -35,25 +34,25 @@ public class SortedSetDocValuesRangeQuery extends AbstractRangeQuery<String, Sor
 
     @JsonCreator
     public SortedSetDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("lower_value") final String lowerValue,
-            @JsonProperty("upper_value") final String upperValue,
-            @JsonProperty("lower_inclusive") final Boolean lowerInclusive,
-            @JsonProperty("upper_inclusive") final Boolean upperInclusive) {
+                                        @JsonProperty("field") final String field, @JsonProperty("lower_value") final String lowerValue,
+                                        @JsonProperty("upper_value") final String upperValue,
+                                        @JsonProperty("lower_inclusive") final Boolean lowerInclusive,
+                                        @JsonProperty("upper_inclusive") final Boolean upperInclusive) {
         super(SortedSetDocValuesRangeQuery.class, genericField, field,
-                Objects.requireNonNull(lowerValue, "The lower value is null"),
-                Objects.requireNonNull(upperValue, "The upper value is null"));
+            Objects.requireNonNull(lowerValue, "The lower value is null"),
+            Objects.requireNonNull(upperValue, "The upper value is null"));
         this.lowerInclusive = lowerInclusive == null ? Boolean.TRUE : lowerInclusive;
         this.upperInclusive = upperInclusive == null ? Boolean.FALSE : upperInclusive;
     }
 
     public SortedSetDocValuesRangeQuery(final String field, final String lowerValue, final String upperValue,
-            final Boolean lowerInclusive, final Boolean upperInclusive) {
+                                        final Boolean lowerInclusive, final Boolean upperInclusive) {
         this(null, field, lowerValue, upperValue, lowerInclusive, upperInclusive);
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext) throws IOException {
+    public Query getQuery(final QueryContext queryContext) {
         return SortedSetDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()),
-                new BytesRef(lower_value), new BytesRef(upper_value), lowerInclusive, upperInclusive);
+            new BytesRef(lower_value), new BytesRef(upper_value), lowerInclusive, upperInclusive);
     }
 }

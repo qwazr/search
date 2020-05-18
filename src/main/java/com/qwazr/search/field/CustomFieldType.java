@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,9 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
     CustomFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
                     final FieldDefinition definition) {
         super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-                getConverter(definition))
-                .termProvider(FieldUtils::newStringTerm)
-                .sortFieldProvider(buildSortFieldProvider((CustomFieldDefinition) definition)));
+            getConverter(definition))
+            .termProvider(FieldUtils::newStringTerm)
+            .sortFieldProvider(buildSortFieldProvider((CustomFieldDefinition) definition)));
         final CustomFieldDefinition customFieldDefinition = (CustomFieldDefinition) definition;
         typeSetters = buildTypeSetters(customFieldDefinition);
     }
@@ -64,9 +64,9 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
         if (definition.docValuesType != null)
             ts.add(type -> type.setDocValuesType(definition.docValuesType));
         if (definition.indexDimensionCount != null && definition.dataDimensionCount != null &&
-                definition.dimensionNumBytes != null)
+            definition.dimensionNumBytes != null)
             ts.add(type -> type.setDimensions(definition.dataDimensionCount, definition.indexDimensionCount,
-                    definition.dimensionNumBytes));
+                definition.dimensionNumBytes));
         if (definition.attributes != null)
             ts.add(type -> definition.attributes.forEach(type::putAttribute));
         return ts;
@@ -79,7 +79,7 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
             if (FieldDefinition.SCORE_FIELD.equals(fieldName))
                 return new SortField(fieldName, SortField.Type.SCORE);
             final SortField sortField =
-                    new SortField(fieldName, SortField.Type.STRING, SortUtils.sortReverse(sortEnum));
+                new SortField(fieldName, SortField.Type.STRING, SortUtils.sortReverse(sortEnum));
             SortUtils.sortStringMissingValue(sortEnum, sortField);
             return sortField;
         };
@@ -106,7 +106,6 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
             case NONE:
                 return null;
             case NUMERIC:
-                return new SingleDVConverter.LongDVConverter(reader, field);
             case SORTED_NUMERIC:
                 return new SingleDVConverter.LongDVConverter(reader, field);
             case SORTED:

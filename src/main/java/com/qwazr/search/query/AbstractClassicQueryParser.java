@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
         splitOnWhitespace = null;
     }
 
-    protected AbstractClassicQueryParser(Class<T> queryClass, AbstractParserBuilder builder) {
+    protected AbstractClassicQueryParser(Class<T> queryClass, AbstractParserBuilder<?, ?> builder) {
         super(queryClass, builder);
         this.fields = builder.fields == null ? null : ArrayUtils.toArray(builder.fields);
         this.boosts = builder.boosts;
@@ -80,13 +80,13 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
     @Override
     protected boolean isEqual(T q) {
         return super.isEqual(q) && Arrays.equals(fields, q.fields) && CollectionsUtils.equals(boosts, q.boosts) &&
-                Objects.equals(allow_leading_wildcard, q.allow_leading_wildcard) &&
-                Objects.equals(default_operator, q.default_operator) && Objects.equals(phrase_slop, q.phrase_slop) &&
-                Objects.equals(auto_generate_phrase_query, q.auto_generate_phrase_query) &&
-                Objects.equals(fuzzy_min_sim, q.fuzzy_min_sim) &&
-                Objects.equals(fuzzy_prefix_length, q.fuzzy_prefix_length) &&
-                Objects.equals(max_determinized_states, q.max_determinized_states) &&
-                Objects.equals(splitOnWhitespace, q.splitOnWhitespace);
+            Objects.equals(allow_leading_wildcard, q.allow_leading_wildcard) &&
+            Objects.equals(default_operator, q.default_operator) && Objects.equals(phrase_slop, q.phrase_slop) &&
+            Objects.equals(auto_generate_phrase_query, q.auto_generate_phrase_query) &&
+            Objects.equals(fuzzy_min_sim, q.fuzzy_min_sim) &&
+            Objects.equals(fuzzy_prefix_length, q.fuzzy_prefix_length) &&
+            Objects.equals(max_determinized_states, q.max_determinized_states) &&
+            Objects.equals(splitOnWhitespace, q.splitOnWhitespace);
     }
 
     protected void setParserParameters(final org.apache.lucene.queryparser.classic.QueryParser parser) {
@@ -111,14 +111,14 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
 
     protected Map<String, Float> resolvedBoosts(final FieldMap fieldMap) {
         return boosts != null && fieldMap != null ?
-                FieldMap.resolveFieldNames(boosts, new HashMap<>(), fieldMap::resolveQueryFieldName) :
-                boosts;
+            FieldMap.resolveFieldNames(boosts, new HashMap<>(), fieldMap::resolveQueryFieldName) :
+            boosts;
     }
 
     protected String[] resolveFields(final FieldMap fieldMap) {
         return fields != null && fieldMap != null ?
-                FieldMap.resolveFieldNames(fields, fieldMap::resolveQueryFieldName) :
-                fields;
+            FieldMap.resolveFieldNames(fields, fieldMap::resolveQueryFieldName) :
+            fields;
     }
 
     protected Analyzer resolveAnalyzer(final QueryContext queryContext) {
@@ -126,7 +126,7 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
     }
 
     public static abstract class AbstractParserBuilder<B extends AbstractParserBuilder, T extends AbstractClassicQueryParser>
-            extends AbstractBuilder<B, T> {
+        extends AbstractBuilder<B, T> {
 
         private Set<String> fields;
         private LinkedHashMap<String, Float> boosts;

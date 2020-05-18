@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,11 +30,11 @@ import java.util.Map;
 import java.util.Set;
 
 abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
-        implements ResultDocuments<T>, ResultDocumentsInterface {
+    implements ResultDocuments<T>, ResultDocumentsInterface {
 
     private final List<ResultDocumentBuilder<T>> documentsBuilder;
     private final Map<String, String> storedFields;
-    private final Map<String, ValueConverter> returnedFieldsConverter;
+    private final Map<String, ValueConverter<?>> returnedFieldsConverter;
     protected final int start;
 
     ResultDocumentsList(final QueryContextImpl context, final QueryDefinition queryDefinition,
@@ -55,7 +55,7 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
                 final String storedFieldName = fieldType.getStoredFieldName(fieldName);
                 if (storedFieldName != null)
                     storedFields.put(storedFieldName, fieldName);
-                final ValueConverter converter = fieldType.getConverter(fieldName, multiReader);
+                final ValueConverter<?> converter = fieldType.getConverter(fieldName, multiReader);
                 if (converter != null)
                     returnedFieldsConverter.put(fieldName, converter);
             }
@@ -66,11 +66,11 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
         this.documentsBuilder = new ArrayList<>();
     }
 
-    protected abstract ResultDocumentBuilder<T> newResultDocumentBuilder(int absolutePos, ScoreDoc scoreDoc)
-            throws IOException;
+    protected abstract ResultDocumentBuilder<T> newResultDocumentBuilder(final int absolutePos,
+                                                                         final ScoreDoc scoreDoc);
 
-    protected abstract ResultDefinition<T> newResultDefinition(ResultDocumentsBuilder resultDocumentsBuilder,
-                                                               List<T> documents);
+    protected abstract ResultDefinition<T> newResultDefinition(final ResultDocumentsBuilder resultDocumentsBuilder,
+                                                               final List<T> documents);
 
     @Override
     final public void doc(IndexSearcher searcher, int pos, ScoreDoc scoreDoc) throws IOException {

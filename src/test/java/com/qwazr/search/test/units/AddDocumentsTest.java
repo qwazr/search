@@ -41,31 +41,31 @@ import java.util.concurrent.TimeUnit;
 
 public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-    final private static String[] ID_FIELDS = { "1", "2", "3" };
-    final private static String[] STORED_FIELDS = { "doc1", "doc2", "doc3" };
-    final private static String[] SDV_FIELDS = { "sdv1", "sdv2", "sdv3" };
-    final private static Double[] DDV_FIELDS = { 1.11d, 2.22d, 3.33d };
+    final private static String[] ID_FIELDS = {"1", "2", "3"};
+    final private static String[] STORED_FIELDS = {"doc1", "doc2", "doc3"};
+    final private static String[] SDV_FIELDS = {"sdv1", "sdv2", "sdv3"};
+    final private static Double[] DDV_FIELDS = {1.11d, 2.22d, 3.33d};
     final private static String[][] MULTI_STRING_STORED_FIELDS =
-            { { "s01", "s02", "s03" }, { "s11", "s12", "s13" }, { "s21", "s22", "s23" } };
-    final private static Integer[][] MULTI_INTEGER_STORED_FIELDS = { { 11, 12, 13 }, { 21, 22, 23 }, { 31, 32, 33 } };
+        {{"s01", "s02", "s03"}, {"s11", "s12", "s13"}, {"s21", "s22", "s23"}};
+    final private static Integer[][] MULTI_INTEGER_STORED_FIELDS = {{11, 12, 13}, {21, 22, 23}, {31, 32, 33}};
 
     @BeforeClass
     public static void setup() throws IOException, InterruptedException, URISyntaxException {
         initIndexService();
         for (int i = 0; i < ID_FIELDS.length; i++)
             indexService.postDocument(new IndexRecord.NoTaxonomy(ID_FIELDS[i]).storedField(STORED_FIELDS[i])
-                    .sortedDocValue(SDV_FIELDS[i])
-                    .doubleDocValue(DDV_FIELDS[i])
-                    .multivaluedStringStoredField(MULTI_STRING_STORED_FIELDS[i])
-                    .multivaluedIntegerStoredField(MULTI_INTEGER_STORED_FIELDS[i]));
+                .sortedDocValue(SDV_FIELDS[i])
+                .doubleDocValue(DDV_FIELDS[i])
+                .multivaluedStringStoredField(MULTI_STRING_STORED_FIELDS[i])
+                .multivaluedIntegerStoredField(MULTI_INTEGER_STORED_FIELDS[i]));
     }
 
     IndexRecord.NoTaxonomy getSingleDoc(int pos) {
         return new IndexRecord.NoTaxonomy(ID_FIELDS[pos]).storedField(STORED_FIELDS[pos])
-                .sortedDocValue(SDV_FIELDS[pos])
-                .doubleDocValue(DDV_FIELDS[pos])
-                .multivaluedStringStoredField(MULTI_STRING_STORED_FIELDS[pos])
-                .multivaluedIntegerStoredField(MULTI_INTEGER_STORED_FIELDS[pos]);
+            .sortedDocValue(SDV_FIELDS[pos])
+            .doubleDocValue(DDV_FIELDS[pos])
+            .multivaluedStringStoredField(MULTI_STRING_STORED_FIELDS[pos])
+            .multivaluedIntegerStoredField(MULTI_INTEGER_STORED_FIELDS[pos]);
     }
 
     Collection<IndexRecord.NoTaxonomy> getDocCollection() {
@@ -76,9 +76,9 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
     }
 
     private ResultDefinition.WithObject<IndexRecord.NoTaxonomy> withRecord(QueryBuilder queryBuilder,
-            int expectedSize) {
+                                                                           int expectedSize) {
         final ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result =
-                indexService.searchQuery(queryBuilder.build());
+            indexService.searchQuery(queryBuilder.build());
         Assert.assertEquals(expectedSize, result.totalHits);
         return result;
     }
@@ -173,7 +173,8 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
                 try {
                     while (System.currentTimeMillis() < endTime)
                         indexService.addDocument(getRandomDoc(), null);
-                } catch (IOException | InterruptedException e) {
+                }
+                catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }));
@@ -181,7 +182,8 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
                 try {
                     while (System.currentTimeMillis() < endTime)
                         indexService.addDocuments(getRandomDocs(10), null);
-                } catch (IOException | InterruptedException e) {
+                }
+                catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }));

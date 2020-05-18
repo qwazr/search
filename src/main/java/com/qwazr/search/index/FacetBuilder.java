@@ -19,7 +19,6 @@ import com.qwazr.utils.StringUtils;
 import org.apache.lucene.facet.LabelAndValue;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,35 +26,33 @@ import java.util.Map;
 
 final class FacetBuilder {
 
-	private final FacetDefinition.Sort sort;
-	private final String prefix;
-	private final List<LabelAndValue> facetResult;
+    private final FacetDefinition.Sort sort;
+    private final String prefix;
+    private final List<LabelAndValue> facetResult;
 
-	FacetBuilder(final FacetDefinition facetDefinition) {
-		prefix = StringUtils.isEmpty(facetDefinition.prefix) ? null : facetDefinition.prefix;
-		sort = facetDefinition.sort;
-		facetResult = new ArrayList<>();
-	}
+    FacetBuilder(final FacetDefinition facetDefinition) {
+        prefix = StringUtils.isEmpty(facetDefinition.prefix) ? null : facetDefinition.prefix;
+        sort = facetDefinition.sort;
+        facetResult = new ArrayList<>();
+    }
 
-	void put(final LabelAndValue labelAndValue) {
-		if (prefix != null)
-			if (!labelAndValue.label.startsWith(prefix))
-				return;
-		facetResult.add(labelAndValue);
-	}
+    void put(final LabelAndValue labelAndValue) {
+        if (prefix != null)
+            if (!labelAndValue.label.startsWith(prefix))
+                return;
+        facetResult.add(labelAndValue);
+    }
 
-	Map<String, Number> build() {
-		final Map<String, Number> result = new LinkedHashMap<>();
-		if (sort != null && facetResult.size() > 1)
-			Collections.sort(facetResult, sort);
-		facetResult.forEach((labelAndValue) -> result.put(labelAndValue.label, labelAndValue.value));
-		return result;
-	}
+    Map<String, Number> build() {
+        final Map<String, Number> result = new LinkedHashMap<>();
+        if (sort != null && facetResult.size() > 1)
+            facetResult.sort(sort);
+        facetResult.forEach((labelAndValue) -> result.put(labelAndValue.label, labelAndValue.value));
+        return result;
+    }
 
-	final static Comparator<LabelAndValue> LABEL_ASCENDING = (o1, o2) -> o1.label.compareTo(o2.label);
-	final static Comparator<LabelAndValue> LABEL_DESCENDING = (o1, o2) -> o2.label.compareTo(o1.label);
-	final static Comparator<LabelAndValue> VALUE_ASCENDING =
-			(o1, o2) -> Long.compare(o1.value.longValue(), o2.value.longValue());
-	final static Comparator<LabelAndValue> VALUE_DESCENDING =
-			(o1, o2) -> Long.compare(o2.value.longValue(), o1.value.longValue());
+    final static Comparator<LabelAndValue> LABEL_ASCENDING = Comparator.comparing(o -> o.label);
+    final static Comparator<LabelAndValue> LABEL_DESCENDING = (o1, o2) -> o2.label.compareTo(o1.label);
+    final static Comparator<LabelAndValue> VALUE_ASCENDING = Comparator.comparingLong(o -> o.value.longValue());
+    final static Comparator<LabelAndValue> VALUE_DESCENDING = (o1, o2) -> Long.compare(o2.value.longValue(), o1.value.longValue());
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,6 @@ import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyFacetSumFloatAssociations;
 import org.apache.lucene.facet.taxonomy.TaxonomyFacetSumIntAssociations;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
@@ -56,14 +54,16 @@ abstract class FacetsBuilder {
 
     final LinkedHashMap<String, Map<String, Number>> results = new LinkedHashMap<>();
 
-    private FacetsBuilder(final QueryContextImpl queryContext, final LinkedHashMap<String, FacetDefinition> facetsDef,
-                          final Query searchQuery, final TimeTracker timeTracker) {
+    private FacetsBuilder(final QueryContextImpl queryContext,
+                          final LinkedHashMap<String, FacetDefinition> facetsDef,
+                          final Query searchQuery,
+                          final TimeTracker timeTracker) {
         this.facetsDef = facetsDef;
         this.queryContext = queryContext;
         this.sortedSetFacetField = queryContext.fieldMap.getSortedSetFacetField();
         this.resolvedDimensions = new HashMap<>();
         getFields(facetsDef).forEach((concrete, generic) -> resolvedDimensions.put(concrete,
-                queryContext.fieldMap.resolveQueryFieldName(generic, concrete)));
+            queryContext.fieldMap.resolveQueryFieldName(generic, concrete)));
         this.searchQuery = searchQuery;
         this.timeTracker = timeTracker;
     }
@@ -89,7 +89,7 @@ abstract class FacetsBuilder {
         return this;
     }
 
-    protected abstract Facets getFacets(final String dim) throws IOException;
+    protected abstract Facets getFacets(final String dim);
 
     private void buildFacetState(final String resolvedDimension, final Integer top, final Set<String[]> specificValues,
                                  final FacetBuilder facetBuilder) throws IOException {
@@ -106,13 +106,13 @@ abstract class FacetsBuilder {
             for (String[] path : specificValues) {
                 final Number count = facets.getSpecificValue(resolvedDimension, path);
                 facetBuilder.put(new LabelAndValue(StringUtils.join(path, '/'),
-                        count == null || count.longValue() <= 0 ? 0 : count));
+                    count == null || count.longValue() <= 0 ? 0 : count));
             }
         }
     }
 
     private void buildFacetQueries(final LinkedHashMap<String, AbstractQuery> queries, final FacetBuilder facetBuilder)
-            throws Exception {
+        throws Exception {
         final BiConsumerEx<String, AbstractQuery, Exception> consumer = (name, facetQuery) -> {
             final BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(searchQuery, BooleanClause.Occur.FILTER);
@@ -145,32 +145,32 @@ abstract class FacetsBuilder {
         WithCollectors(final QueryContextImpl queryContext, final FacetsConfig facetsConfig,
                        final LinkedHashMap<String, FacetDefinition> facetsDef, final Query searchQuery,
                        final TimeTracker timeTracker, final FacetsCollector facetsCollector)
-                throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+            throws IOException {
             super(queryContext, facetsDef, searchQuery, timeTracker);
             this.facetsConfig = facetsConfig;
             int facetFlag = checkFacetTypeFlags(facetsConfig, facetsDef);
             this.sortedSetCounts = queryContext.docValueReaderState == null ?
-                    null :
-                    (facetFlag & FACET_IS_SORTED) == FACET_IS_SORTED ?
-                            new SortedSetDocValuesFacetCounts(queryContext.docValueReaderState, facetsCollector) :
-                            null;
+                null :
+                (facetFlag & FACET_IS_SORTED) == FACET_IS_SORTED ?
+                    new SortedSetDocValuesFacetCounts(queryContext.docValueReaderState, facetsCollector) :
+                    null;
             this.taxonomyCounts = (facetFlag & FACET_IS_TAXO) == FACET_IS_TAXO ?
-                    new FastTaxonomyFacetCounts(queryContext.taxonomyReader, facetsConfig, facetsCollector) :
-                    null;
+                new FastTaxonomyFacetCounts(queryContext.taxonomyReader, facetsConfig, facetsCollector) :
+                null;
             this.floatTaxonomyCounts = (facetFlag & FACET_IS_TAXO_FLOAT) == FACET_IS_TAXO_FLOAT ?
-                    new TaxonomyFacetSumFloatAssociations(FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD,
-                            queryContext.taxonomyReader, facetsConfig, facetsCollector) :
-                    null;
+                new TaxonomyFacetSumFloatAssociations(FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD,
+                    queryContext.taxonomyReader, facetsConfig, facetsCollector) :
+                null;
             this.intTaxonomyCounts = (facetFlag & FACET_IS_TAXO_INT) == FACET_IS_TAXO_INT ?
-                    new TaxonomyFacetSumIntAssociations(FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD,
-                            queryContext.taxonomyReader, facetsConfig, facetsCollector) :
-                    null;
+                new TaxonomyFacetSumIntAssociations(FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD,
+                    queryContext.taxonomyReader, facetsConfig, facetsCollector) :
+                null;
         }
 
-        private static int FACET_IS_SORTED = 1;
-        private static int FACET_IS_TAXO = 2;
-        private static int FACET_IS_TAXO_INT = 4;
-        private static int FACET_IS_TAXO_FLOAT = 8;
+        final private static int FACET_IS_SORTED = 1;
+        final private static int FACET_IS_TAXO = 2;
+        final private static int FACET_IS_TAXO_INT = 4;
+        final private static int FACET_IS_TAXO_FLOAT = 8;
 
         private int checkFacetTypeFlags(final FacetsConfig facetsConfig,
                                         final LinkedHashMap<String, FacetDefinition> facetsDef) {
@@ -204,7 +204,7 @@ abstract class FacetsBuilder {
         }
 
         @Override
-        final protected Facets getFacets(final String dimension) throws IOException {
+        final protected Facets getFacets(final String dimension) {
             final String indexFieldName = facetsConfig.getDimConfig(dimension).indexFieldName;
             if (indexFieldName == null)
                 return null;
@@ -235,15 +235,14 @@ abstract class FacetsBuilder {
 
         WithSideways(final QueryContextImpl queryContext, final FacetsConfig facetsConfig,
                      final LinkedHashMap<String, FacetDefinition> facetsDef, final Query searchQuery,
-                     final TimeTracker timeTracker, final DrillSideways.DrillSidewaysResult results)
-                throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+                     final TimeTracker timeTracker, final DrillSideways.DrillSidewaysResult results) {
             super(queryContext, facetsDef, searchQuery, timeTracker);
             this.facetsConfig = facetsConfig;
             this.results = results;
         }
 
         @Override
-        final protected Facets getFacets(final String dimension) throws IOException {
+        final protected Facets getFacets(final String dimension) {
             if (sortedSetFacetField.equals(facetsConfig.getDimConfig(dimension).indexFieldName)) {
                 if (queryContext.docValueReaderState == null)
                     return null;

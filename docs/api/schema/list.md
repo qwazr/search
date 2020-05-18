@@ -12,7 +12,7 @@ curl -XGET "http://localhost:9091/indexes"
 ## Response
 
 ```json
-[my_schema]
+["my_schema"]
 ```
 
 If no schema exists, an empty array is returned:

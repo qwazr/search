@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,32 +22,32 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 public class DoubleSetQuery extends AbstractFieldQuery<DoubleSetQuery> {
 
-	public double[] values;
+    final public double[] values;
 
-	@JsonCreator
-	public DoubleSetQuery(@JsonProperty("generic_field") String genericField, @JsonProperty("field") final String field,
-			@JsonProperty("values") final double... values) {
-		super(DoubleSetQuery.class, genericField, field);
-		this.values = values;
-	}
+    @JsonCreator
+    public DoubleSetQuery(@JsonProperty("generic_field") final String genericField,
+                          @JsonProperty("field") final String field,
+                          @JsonProperty("values") final double... values) {
+        super(DoubleSetQuery.class, genericField, field);
+        this.values = values;
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(DoubleSetQuery q) {
-		return super.isEqual(q) && Arrays.equals(values, q.values);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(DoubleSetQuery q) {
+        return super.isEqual(q) && Arrays.equals(values, q.values);
+    }
 
-	public DoubleSetQuery(final String field, final double... values) {
-		this(null, field, values);
-	}
+    public DoubleSetQuery(final String field, final double... values) {
+        this(null, field, values);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return DoublePoint.newSetQuery(resolveField(queryContext.getFieldMap()), values);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) {
+        return DoublePoint.newSetQuery(resolveField(queryContext.getFieldMap()), values);
+    }
 }

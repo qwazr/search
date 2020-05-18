@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class IntDocValuesRangeQuery extends AbstractRangeQuery<Integer, IntDocValuesRangeQuery> {
 
     final static Integer MIN = Integer.MIN_VALUE;
@@ -30,10 +28,10 @@ public class IntDocValuesRangeQuery extends AbstractRangeQuery<Integer, IntDocVa
 
     @JsonCreator
     public IntDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
-            @JsonProperty("upper_value") final Integer upperValue) {
+                                  @JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
+                                  @JsonProperty("upper_value") final Integer upperValue) {
         super(IntDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
-                upperValue == null ? MAX : upperValue);
+            upperValue == null ? MAX : upperValue);
     }
 
     public IntDocValuesRangeQuery(final String field, final Integer lowerValue, final Integer upperValue) {
@@ -41,8 +39,8 @@ public class IntDocValuesRangeQuery extends AbstractRangeQuery<Integer, IntDocVa
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext) throws IOException {
+    public Query getQuery(final QueryContext queryContext) {
         return NumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()), lower_value,
-                upper_value);
+            upper_value);
     }
 }

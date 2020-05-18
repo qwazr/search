@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015-2018 Emmanuel Keller / QWAZR
+ *  Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -32,12 +32,12 @@ import java.util.Objects;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "from")
 @JsonSubTypes({@JsonSubTypes.Type(value = DoubleValuesSource.Constant.class),
-        @JsonSubTypes.Type(value = DoubleValuesSource.FloatField.class),
-        @JsonSubTypes.Type(value = DoubleValuesSource.DoubleField.class),
-        @JsonSubTypes.Type(value = DoubleValuesSource.IntField.class),
-        @JsonSubTypes.Type(value = DoubleValuesSource.LongField.class),
-        @JsonSubTypes.Type(value = DoubleValuesSource.Query.class),
-        @JsonSubTypes.Type(value = DoubleValuesSource.Score.class)
+    @JsonSubTypes.Type(value = DoubleValuesSource.FloatField.class),
+    @JsonSubTypes.Type(value = DoubleValuesSource.DoubleField.class),
+    @JsonSubTypes.Type(value = DoubleValuesSource.IntField.class),
+    @JsonSubTypes.Type(value = DoubleValuesSource.LongField.class),
+    @JsonSubTypes.Type(value = DoubleValuesSource.Query.class),
+    @JsonSubTypes.Type(value = DoubleValuesSource.Score.class)
 
 })
 public abstract class DoubleValuesSource<T extends DoubleValuesSource<?>> extends Equalizer<T> {
@@ -172,7 +172,7 @@ public abstract class DoubleValuesSource<T extends DoubleValuesSource<?>> extend
         }
 
         @Override
-        public org.apache.lucene.search.DoubleValuesSource getValueSource(final QueryContext context) throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
+        public org.apache.lucene.search.DoubleValuesSource getValueSource(final QueryContext context) {
             return org.apache.lucene.search.DoubleValuesSource.SCORES;
         }
 

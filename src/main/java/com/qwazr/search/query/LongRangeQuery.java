@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,24 +21,22 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class LongRangeQuery extends AbstractRangeQuery<Long, LongRangeQuery> {
 
-	@JsonCreator
-	public LongRangeQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
-			@JsonProperty("upper_value") final Long upperValue) {
-		super(LongRangeQuery.class, genericField, field, lowerValue == null ? LongDocValuesRangeQuery.MIN : lowerValue,
-				upperValue == null ? LongDocValuesRangeQuery.MAX : upperValue);
-	}
+    @JsonCreator
+    public LongRangeQuery(@JsonProperty("generic_field") final String genericField,
+                          @JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
+                          @JsonProperty("upper_value") final Long upperValue) {
+        super(LongRangeQuery.class, genericField, field, lowerValue == null ? LongDocValuesRangeQuery.MIN : lowerValue,
+            upperValue == null ? LongDocValuesRangeQuery.MAX : upperValue);
+    }
 
-	public LongRangeQuery(final String field, final Long lowerValue, final Long upperValue) {
-		this(null, field, lowerValue, upperValue);
-	}
+    public LongRangeQuery(final String field, final Long lowerValue, final Long upperValue) {
+        this(null, field, lowerValue, upperValue);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return LongPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value, upper_value);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) {
+        return LongPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value, upper_value);
+    }
 }

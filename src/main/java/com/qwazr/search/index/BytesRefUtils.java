@@ -175,7 +175,7 @@ public class BytesRefUtils {
         }
     }
 
-    static private final Map<Class, Converter> CONVERTER_MAP = new HashMap<>();
+    static private final Map<Class<?>, Converter<?>> CONVERTER_MAP = new HashMap<>();
 
     static {
         CONVERTER_MAP.put(BytesRef.class, Converter.BYTESREF);

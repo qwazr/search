@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -57,7 +56,7 @@ public class FloatMultiRangeQuery extends AbstractMultiRangeQuery<FloatMultiRang
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext) throws IOException {
+    public Query getQuery(final QueryContext queryContext)  {
         return FloatPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_values, upper_values);
     }
 

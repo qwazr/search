@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,109 +29,111 @@ import java.util.Map;
 
 public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 
-	final public T record;
+    final public T record;
 
-	private ResultDocumentObject(final Builder<T> builder) {
-		super(builder);
-		this.record = builder.record;
-	}
+    private ResultDocumentObject(final Builder<T> builder) {
+        super(builder);
+        this.record = builder.record;
+    }
 
-	public ResultDocumentObject(final ResultDocumentAbstract resultDocument, final T record) {
-		super(resultDocument);
-		this.record = record;
-	}
+    public ResultDocumentObject(final ResultDocumentAbstract resultDocument, final T record) {
+        super(resultDocument);
+        this.record = record;
+    }
 
-	public T getRecord() {
-		return record;
-	}
+    public T getRecord() {
+        return record;
+    }
 
-	static class Builder<T> extends ResultDocumentBuilder<ResultDocumentObject<T>> {
+    static class Builder<T> extends ResultDocumentBuilder<ResultDocumentObject<T>> {
 
-		private final T record;
-		private final Map<String, FieldSetter> fieldMap;
+        private final T record;
+        private final Map<String, FieldSetter> fieldMap;
 
-		Builder(final int pos, final ScoreDoc scoreDoc, final FieldMapWrapper<T> wrapper) {
-			super(pos, scoreDoc);
-			try {
-				this.record = wrapper.constructor.newInstance();
-			} catch (ReflectiveOperationException e) {
-				throw ServerException.of(e);
-			}
-			this.fieldMap = wrapper.fieldMap;
-		}
+        Builder(final int pos, final ScoreDoc scoreDoc, final FieldMapWrapper<T> wrapper) {
+            super(pos, scoreDoc);
+            try {
+                this.record = wrapper.constructor.newInstance();
+            }
+            catch (ReflectiveOperationException e) {
+                throw ServerException.of(e);
+            }
+            this.fieldMap = wrapper.fieldMap;
+        }
 
-		@Override
-		final ResultDocumentObject<T> build() {
-			return new ResultDocumentObject<>(this);
-		}
+        @Override
+        final ResultDocumentObject<T> build() {
+            return new ResultDocumentObject<>(this);
+        }
 
-		@Override
-		void setDocValuesField(final String fieldName, final ValueConverter converter) throws IOException {
-			final FieldSetter fieldSetter = fieldMap.get(fieldName);
-			if (fieldSetter == null)
-				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
-			converter.fill(record, fieldSetter, scoreDoc.doc);
-		}
+        @Override
+        void setDocValuesField(final String fieldName, final ValueConverter<?> converter) throws IOException {
+            final FieldSetter fieldSetter = fieldMap.get(fieldName);
+            if (fieldSetter == null)
+                throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
+            converter.fill(record, fieldSetter, scoreDoc.doc);
+        }
 
-		private FieldSetter checkFieldSetter(final String fieldName) {
-			final FieldSetter fieldSetter = fieldMap.get(fieldName);
-			if (fieldSetter == null)
-				throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
-			return fieldSetter;
-		}
+        private FieldSetter checkFieldSetter(final String fieldName) {
+            final FieldSetter fieldSetter = fieldMap.get(fieldName);
+            if (fieldSetter == null)
+                throw new ServerException("Unknown field " + fieldName + " for class " + record.getClass());
+            return fieldSetter;
+        }
 
-		@Override
-		final void setStoredFieldString(String fieldName, List<String> values) {
-			checkFieldSetter(fieldName).fromCollection(String.class, values, record);
-		}
+        @Override
+        final void setStoredFieldString(String fieldName, List<String> values) {
+            checkFieldSetter(fieldName).fromCollection(String.class, values, record);
+        }
 
-		@Override
-		final void setStoredFieldBytes(String fieldName, List<byte[]> values) {
-			final FieldSetter fieldSetter = checkFieldSetter(fieldName);
-			final Class<?> fieldType = fieldSetter.getType();
-			if (fieldType.isArray()) {
+        @Override
+        final void setStoredFieldBytes(String fieldName, List<byte[]> values) {
+            final FieldSetter fieldSetter = checkFieldSetter(fieldName);
+            final Class<?> fieldType = fieldSetter.getType();
+            if (fieldType.isArray()) {
                 final Class<?> fieldComponentType = fieldType.getComponentType();
                 final byte[] data = values.get(0);
-			    if (fieldComponentType == byte.class) {
+                if (fieldComponentType == byte.class) {
                     fieldSetter.setValue(record, data);
                 } else if (fieldComponentType == Byte.class) {
-			        final Byte[] boxedData = new Byte[data.length];
-			        for (int i = 0 ; i != data.length ; ++i) {
-			            boxedData[i] = data[i];
+                    final Byte[] boxedData = new Byte[data.length];
+                    for (int i = 0; i != data.length; ++i) {
+                        boxedData[i] = data[i];
                     }
                     fieldSetter.setValue(record, boxedData);
                 }
             } else if (Serializable.class.isAssignableFrom(fieldType)) {
-				try {
+                try {
                     fieldSetter.set(record, SerializationUtils.fromExternalizorBytes(values.get(0),
-                            (Class<? extends Serializable>) fieldType));
-				} catch (IOException | ReflectiveOperationException e) {
-					throw ServerException.of("Deserialization failure " + fieldName + " for class " + record.getClass(),
-							e);
-				}
-			} else
-				fieldSetter.setValue(record, values);
-		}
+                        (Class<? extends Serializable>) fieldType));
+                }
+                catch (IOException | ReflectiveOperationException e) {
+                    throw ServerException.of("Deserialization failure " + fieldName + " for class " + record.getClass(),
+                        e);
+                }
+            } else
+                fieldSetter.setValue(record, values);
+        }
 
-		@Override
-		final void setStoredFieldInteger(String fieldName, int[] values) {
-			checkFieldSetter(fieldName).fromInteger(values, record);
-		}
+        @Override
+        final void setStoredFieldInteger(String fieldName, int[] values) {
+            checkFieldSetter(fieldName).fromInteger(values, record);
+        }
 
-		@Override
-		final void setStoredFieldLong(String fieldName, long[] values) {
-			checkFieldSetter(fieldName).fromLong(values, record);
-		}
+        @Override
+        final void setStoredFieldLong(String fieldName, long[] values) {
+            checkFieldSetter(fieldName).fromLong(values, record);
+        }
 
-		@Override
-		final void setStoredFieldFloat(String fieldName, float[] values) {
-			checkFieldSetter(fieldName).fromFloat(values, record);
-		}
+        @Override
+        final void setStoredFieldFloat(String fieldName, float[] values) {
+            checkFieldSetter(fieldName).fromFloat(values, record);
+        }
 
-		@Override
-		final void setStoredFieldDouble(String fieldName, double[] values) {
-			checkFieldSetter(fieldName).fromDouble(values, record);
-		}
+        @Override
+        final void setStoredFieldDouble(String fieldName, double[] values) {
+            checkFieldSetter(fieldName).fromDouble(values, record);
+        }
 
-	}
+    }
 }

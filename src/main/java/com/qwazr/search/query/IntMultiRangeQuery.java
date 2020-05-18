@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -34,8 +33,8 @@ public class IntMultiRangeQuery extends AbstractMultiRangeQuery<IntMultiRangeQue
 
     @JsonCreator
     public IntMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("lower_values") final int[] lowerValues,
-            @JsonProperty("upper_values") final int[] upperValues) {
+                              @JsonProperty("field") final String field, @JsonProperty("lower_values") final int[] lowerValues,
+                              @JsonProperty("upper_values") final int[] upperValues) {
         super(IntMultiRangeQuery.class, genericField, field);
         this.lower_values = lowerValues;
         this.upper_values = upperValues;
@@ -46,18 +45,18 @@ public class IntMultiRangeQuery extends AbstractMultiRangeQuery<IntMultiRangeQue
     }
 
     public IntMultiRangeQuery(final String field, final int lowerValue, final int upperValue) {
-        this(field, new int[] { lowerValue }, new int[] { upperValue });
+        this(field, new int[]{lowerValue}, new int[]{upperValue});
     }
 
     @Override
     @JsonIgnore
     protected boolean isEqual(IntMultiRangeQuery q) {
         return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
-                Arrays.equals(upper_values, q.upper_values);
+            Arrays.equals(upper_values, q.upper_values);
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext) throws IOException {
+    public Query getQuery(final QueryContext queryContext) {
         return IntPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_values, upper_values);
     }
 
@@ -74,9 +73,9 @@ public class IntMultiRangeQuery extends AbstractMultiRangeQuery<IntMultiRangeQue
 
         @Override
         protected IntMultiRangeQuery build(final String field, final Collection<Integer> lowerValues,
-                final Collection<Integer> upperValues) {
+                                           final Collection<Integer> upperValues) {
             return new IntMultiRangeQuery(field, ArrayUtils.toPrimitiveInt(lowerValues),
-                    ArrayUtils.toPrimitiveInt(upperValues));
+                ArrayUtils.toPrimitiveInt(upperValues));
         }
     }
 

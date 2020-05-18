@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,84 +27,86 @@ import java.io.Serializable;
 
 interface TypeUtils {
 
-	static int getIntNumber(final String fieldName, final Object value) {
-		if (value == null)
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot extract an integer from a null value for the field " + fieldName);
-		return value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
-	}
+    static int getIntNumber(final String fieldName, final Object value) {
+        if (value == null)
+            throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+                "Cannot extract an integer from a null value for the field " + fieldName);
+        return value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
+    }
 
-	static long getLongNumber(final String fieldName, final Object value) {
-		if (value == null)
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot extract an long from a null value for the field " + fieldName);
-		return value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString());
-	}
+    static long getLongNumber(final String fieldName, final Object value) {
+        if (value == null)
+            throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+                "Cannot extract an long from a null value for the field " + fieldName);
+        return value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString());
+    }
 
-	static float getFloatNumber(final String fieldName, final Object value) {
-		if (value == null)
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot extract an float from a null value for the field " + fieldName);
-		return value instanceof Number ? ((Number) value).floatValue() : Float.valueOf(value.toString());
-	}
+    static float getFloatNumber(final String fieldName, final Object value) {
+        if (value == null)
+            throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+                "Cannot extract an float from a null value for the field " + fieldName);
+        return value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(value.toString());
+    }
 
-	static double getDoubleNumber(final String fieldName, final Object value) {
-		if (value == null)
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot extract an double from a null value for the field " + fieldName);
-		return value instanceof Number ? ((Number) value).doubleValue() : Double.valueOf(value.toString());
-	}
+    static double getDoubleNumber(final String fieldName, final Object value) {
+        if (value == null)
+            throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+                "Cannot extract an double from a null value for the field " + fieldName);
+        return value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString());
+    }
 
-	static String[] getStringArray(String fieldName, Object[] values, int start) {
-		if (values == null)
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot extract an array from a null value for the field " + fieldName);
-		if (start > values.length)
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Not enough value in the array for the field " + fieldName);
-		final String[] array = new String[values.length - start];
-		int j = 0;
-		for (int i = start; i < values.length; i++)
-			array[j++] = values[i].toString();
-		return array;
-	}
+    static String[] getStringArray(String fieldName, Object[] values, int start) {
+        if (values == null)
+            throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+                "Cannot extract an array from a null value for the field " + fieldName);
+        if (start > values.length)
+            throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+                "Not enough value in the array for the field " + fieldName);
+        final String[] array = new String[values.length - start];
+        int j = 0;
+        for (int i = start; i < values.length; i++)
+            array[j++] = values[i].toString();
+        return array;
+    }
 
-	static byte[] toBytes(final String fieldName, final Serializable value) {
-		try {
-			return SerializationUtils.toExternalizorBytes(value);
-		} catch (IOException | ReflectiveOperationException e) {
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot serialize the value of the field " + fieldName, e);
-		}
-	}
+    static byte[] toBytes(final String fieldName, final Serializable value) {
+        try {
+            return SerializationUtils.toExternalizorBytes(value);
+        }
+        catch (IOException | ReflectiveOperationException e) {
+            throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+                "Cannot serialize the value of the field " + fieldName, e);
+        }
+    }
 
-	static byte[] toBytes(final String fieldName, final Externalizable value) {
-		try {
-			return SerializationUtils.toExternalizorBytes(value);
-		} catch (IOException | ReflectiveOperationException e) {
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Cannot serialize the value of the field " + fieldName, e);
-		}
-	}
+    static byte[] toBytes(final String fieldName, final Externalizable value) {
+        try {
+            return SerializationUtils.toExternalizorBytes(value);
+        }
+        catch (IOException | ReflectiveOperationException e) {
+            throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+                "Cannot serialize the value of the field " + fieldName, e);
+        }
+    }
 
-	static <T> T notNull(final T value, final String fieldName, final String msg) {
-		if (value != null)
-			return value;
-		throw new RuntimeException("Error on field: " + fieldName + " - " + (msg == null ? StringUtils.EMPTY : msg));
-	}
+    static <T> T notNull(final T value, final String fieldName, final String msg) {
+        if (value != null)
+            return value;
+        throw new RuntimeException("Error on field: " + fieldName + " - " + (msg == null ? StringUtils.EMPTY : msg));
+    }
 
-	static byte[] toPrimitiveByteArray(final Object value) {
-		if (value == null)
-			return null;
-		final Class<?> valueClass = value.getClass();
-		if (!valueClass.isArray())
-			return null;
-		final Class<?> componentType = valueClass.getComponentType();
-		if (componentType != byte.class)
-			return null;
-		if (componentType.isPrimitive())
-			return (byte[]) value;
-		return ArrayUtils.toPrimitive((Byte[]) value);
-	}
+    static byte[] toPrimitiveByteArray(final Object value) {
+        if (value == null)
+            return null;
+        final Class<?> valueClass = value.getClass();
+        if (!valueClass.isArray())
+            return null;
+        final Class<?> componentType = valueClass.getComponentType();
+        if (componentType != byte.class)
+            return null;
+        if (componentType.isPrimitive())
+            return (byte[]) value;
+        return ArrayUtils.toPrimitive((Byte[]) value);
+    }
 
 }

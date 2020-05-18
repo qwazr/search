@@ -74,6 +74,8 @@ public class SynonymMapBuilder {
 
         @Override
         final public boolean token() {
+            if (charTermAttr == null)
+                return false;
             final int termLength = charTermAttr.length();
             final int needed = upto == 0 ? termLength : 1 + termLength;
             final int nextto = upto + needed;

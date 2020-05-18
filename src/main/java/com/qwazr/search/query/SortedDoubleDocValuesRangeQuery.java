@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,15 @@ import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.NumericUtils;
 
-import java.io.IOException;
-
 public class SortedDoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, SortedDoubleDocValuesRangeQuery> {
 
     @JsonCreator
     public SortedDoubleDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
-            @JsonProperty("upper_value") final Double upperValue) {
+                                           @JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
+                                           @JsonProperty("upper_value") final Double upperValue) {
         super(SortedDoubleDocValuesRangeQuery.class, genericField, field,
-                lowerValue == null ? DoubleDocValuesRangeQuery.MIN : lowerValue,
-                upperValue == null ? DoubleDocValuesRangeQuery.MAX : upperValue);
+            lowerValue == null ? DoubleDocValuesRangeQuery.MIN : lowerValue,
+            upperValue == null ? DoubleDocValuesRangeQuery.MAX : upperValue);
     }
 
     public SortedDoubleDocValuesRangeQuery(final String field, final Double lowerValue, final Double upperValue) {
@@ -40,8 +38,8 @@ public class SortedDoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, 
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext) throws IOException {
+    public Query getQuery(final QueryContext queryContext) {
         return SortedNumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()),
-                NumericUtils.doubleToSortableLong(lower_value), NumericUtils.doubleToSortableLong(upper_value));
+            NumericUtils.doubleToSortableLong(lower_value), NumericUtils.doubleToSortableLong(upper_value));
     }
 }

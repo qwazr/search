@@ -75,7 +75,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         this.rootDirectory = indexesDirectory.toFile();
         this.executorService = executorService;
 
-        service = new IndexServiceImpl(executorService, this);
+        service = new IndexServiceImpl(this);
         schemaMap = new ConcurrentHashMap<>();
         shemaLock = new ReentrantLock(true);
         similarityFactoryMap = new ConcurrentHashMap<>();
@@ -88,8 +88,8 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         for (File schemaDirectory : directories) {
             try {
                 schemaMap.put(schemaDirectory.getName(),
-                        new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, sortMap, service,
-                                schemaDirectory, executorService));
+                    new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, sortMap, service,
+                        schemaDirectory, executorService));
             }
             catch (ServerException | IOException e) {
                 LOGGER.log(Level.SEVERE, e, e::getMessage);
@@ -137,7 +137,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
                                                          final String schemaName,
                                                          final String indexName,
                                                          final IndexSettingsDefinition settings)
-            throws URISyntaxException {
+        throws URISyntaxException {
         return new AnnotatedIndexService<>(service, indexClass, schemaName, indexName, settings);
     }
 
@@ -153,12 +153,12 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     }
 
     SchemaSettingsDefinition createUpdate(final String schemaName, final SchemaSettingsDefinition settings)
-            throws IOException {
+        throws IOException {
         shemaLock.lock();
         try {
             final SchemaInstance schemaInstance = schemaMap.computeIfAbsent(schemaName, sc -> ExceptionUtils.bypass(
-                    () -> new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, sortMap, service,
-                            new File(rootDirectory, schemaName), executorService)));
+                () -> new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, sortMap, service,
+                    new File(rootDirectory, schemaName), executorService)));
             if (settings != null)
                 schemaInstance.setSettings(settings);
             return schemaInstance.getSettings();
@@ -241,7 +241,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         schemaIterator(schemaName, (schName, schemaInstance) -> {
             synchronized (results) {
                 final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults =
-                        schemaInstance.getBackups(indexName, backupName, extractVersion);
+                    schemaInstance.getBackups(indexName, backupName, extractVersion);
                 if (schemaResults != null && !schemaResults.isEmpty())
                     results.put(schName, schemaResults);
             }
@@ -252,7 +252,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     int deleteBackups(final String schemaName, final String indexName, final String backupName) throws IOException {
         final AtomicInteger counter = new AtomicInteger();
         schemaIterator(schemaName,
-                (schName, schemaInstance) -> counter.addAndGet(schemaInstance.deleteBackups(indexName, backupName)));
+            (schName, schemaInstance) -> counter.addAndGet(schemaInstance.deleteBackups(indexName, backupName)));
         return counter.get();
     }
 

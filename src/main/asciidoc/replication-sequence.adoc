@@ -15,7 +15,7 @@ Master->Slave : returns the file list and the index UUID
 ==== choosing a replication strategy ====
 Slave->Slave : Chooses the replication strategy
 note left
-  If the master index UUID did not changed
+  If the master index UUID did not change
   the incremental strategy is choosen,
   if not the full copy strategy is choosen.
 end note

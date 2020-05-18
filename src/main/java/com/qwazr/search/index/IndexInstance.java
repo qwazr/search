@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -160,10 +160,10 @@ final public class IndexInstance implements Closeable {
 
     private IndexStatus getIndexStatus() throws IOException {
         return writerAndSearcher.search((indexSearcher, taxonomyReader) -> new IndexStatus(indexUuid,
-                replicationSlave == null ? null : replicationSlave.getClientMasterUuid(), dataDirectory, indexSearcher,
-                writerAndSearcher.getIndexWriter(), settings, localAnalyzerFactoryMap.keySet(),
-                fieldMap.getFieldDefinitionMap().keySet(), indexAnalyzers.getActiveAnalyzers(),
-                queryAnalyzers.getActiveAnalyzers()));
+            replicationSlave == null ? null : replicationSlave.getClientMasterUuid(), dataDirectory, indexSearcher,
+            writerAndSearcher.getIndexWriter(), settings, localAnalyzerFactoryMap.keySet(),
+            fieldMap.getFieldDefinitionMap().keySet(), indexAnalyzers.getActiveAnalyzers(),
+            queryAnalyzers.getActiveAnalyzers()));
     }
 
     LinkedHashMap<String, FieldDefinition> getFields() {
@@ -201,8 +201,8 @@ final public class IndexInstance implements Closeable {
 
     private void refreshFieldsAnalyzers() {
         final AnalyzerContext analyzerContext =
-                new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, true, globalAnalyzerFactoryMap,
-                        localAnalyzerFactoryMap);
+            new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, true, globalAnalyzerFactoryMap,
+                localAnalyzerFactoryMap);
         indexAnalyzers.update(analyzerContext.indexAnalyzerMap);
         queryAnalyzers.update(analyzerContext.queryAnalyzerMap);
     }
@@ -229,7 +229,7 @@ final public class IndexInstance implements Closeable {
         final LinkedHashMap<String, FieldDefinition> fields = new LinkedHashMap<>(fieldMap.getFieldDefinitionMap());
         if (fields.remove(field_name) == null)
             throw new ServerException(Response.Status.NOT_FOUND,
-                    "Field not found: " + field_name + " - Index: " + indexName);
+                "Field not found: " + field_name + " - Index: " + indexName);
         setFields(fields);
     }
 
@@ -271,13 +271,13 @@ final public class IndexInstance implements Closeable {
         synchronized (localAnalyzerFactoryMap) {
             if (localAnalyzerFactoryMap.remove(analyzerName) == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
-                        "Analyzer not found: " + analyzerName + " - Index: " + indexName);
+                    "Analyzer not found: " + analyzerName + " - Index: " + indexName);
             updateLocalAnalyzers(true);
         }
     }
 
     List<TermDefinition> testAnalyzer(final String analyzerName, final String inputText)
-            throws ServerException, ReflectiveOperationException, IOException {
+        throws ServerException, ReflectiveOperationException, IOException {
         AnalyzerFactory factory;
         synchronized (localAnalyzerFactoryMap) {
             factory = localAnalyzerFactoryMap.get(analyzerName);
@@ -286,7 +286,7 @@ final public class IndexInstance implements Closeable {
             factory = globalAnalyzerFactoryMap.get(analyzerName);
         if (factory == null)
             throw new ServerException(Response.Status.NOT_FOUND,
-                    "Analyzer not found: " + analyzerName + " - Index: " + indexName);
+                "Analyzer not found: " + analyzerName + " - Index: " + indexName);
         try (final Analyzer analyzer = factory.createAnalyzer(fileResourceLoader)) {
             return TermDefinition.buildTermList(analyzer, StringUtils.EMPTY, inputText);
         }
@@ -300,12 +300,12 @@ final public class IndexInstance implements Closeable {
     }
 
     <T> T useQueryAnalyzer(final String field, final FunctionEx<Analyzer, T, IOException> analyzerFunction)
-            throws IOException {
+        throws IOException {
         return useAnalyzer(queryAnalyzers, field, analyzerFunction);
     }
 
     <T> T useIndexAnalyzer(final String field, final FunctionEx<Analyzer, T, IOException> analyzerFunction)
-            throws IOException {
+        throws IOException {
         return useAnalyzer(indexAnalyzers, field, analyzerFunction);
     }
 
@@ -314,11 +314,11 @@ final public class IndexInstance implements Closeable {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContext queryContext = buildQueryContext(indexSearcher, taxonomyReader, null)) {
                     final Query fromQuery = joinQuery.from_query == null ?
-                            new MatchAllDocsQuery() :
-                            joinQuery.from_query.getQuery(queryContext);
+                        new MatchAllDocsQuery() :
+                        joinQuery.from_query.getQuery(queryContext);
                     return JoinUtil.createJoinQuery(joinQuery.from_field, joinQuery.multiple_values_per_document,
-                            joinQuery.to_field, fromQuery, indexSearcher,
-                            joinQuery.score_mode == null ? ScoreMode.None : joinQuery.score_mode);
+                        joinQuery.to_field, fromQuery, indexSearcher,
+                        joinQuery.score_mode == null ? ScoreMode.None : joinQuery.score_mode);
                 }
                 catch (ParseException | QueryNodeException | ReflectiveOperationException e) {
                     throw ServerException.of(e);
@@ -346,8 +346,8 @@ final public class IndexInstance implements Closeable {
                 Files.createDirectory(backupIndexDirectory);
             if (!Files.isDirectory(backupIndexDirectory))
                 throw new IOException(
-                        "The backup path is not a directory: " + backupIndexDirectory.toAbsolutePath() + " " +
-                                Thread.currentThread().getId());
+                    "The backup path is not a directory: " + backupIndexDirectory.toAbsolutePath() + " " +
+                        Thread.currentThread().getId());
             try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
                 return new ReplicationBackup(this, backupIndexDirectory, taxonomyDirectory != null).backup();
             }
@@ -359,7 +359,7 @@ final public class IndexInstance implements Closeable {
                     }
                     catch (IOException ioe) {
                         LOGGER.log(Level.WARNING, e,
-                                () -> "Cannot delete the backup directory: " + backupIndexDirectory);
+                            () -> "Cannot delete the backup directory: " + backupIndexDirectory);
                     }
                 }
                 throw e;
@@ -393,10 +393,10 @@ final public class IndexInstance implements Closeable {
     final ReplicationMaster checkIsMaster() {
         if (writerAndSearcher.getIndexWriter() == null)
             throw new UnsupportedOperationException(
-                    "Writing in a read only index (slave) is not allowed: " + indexName);
+                "Writing in a read only index (slave) is not allowed: " + indexName);
         if (replicationMaster == null)
             throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-                    "This node is not a master - Index: " + indexName);
+                "This node is not a master - Index: " + indexName);
         return replicationMaster;
     }
 
@@ -414,14 +414,14 @@ final public class IndexInstance implements Closeable {
     }
 
     InputStream replicationObtain(String sessionID, ReplicationProcess.Source source, String fileName)
-            throws FileNotFoundException {
+        throws FileNotFoundException {
         return checkIsMaster().getItem(sessionID, source, fileName);
     }
 
     ReplicationStatus replicationCheck() throws IOException {
         if (replicationSlave == null)
             throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-                    "No replication master has been setup - Index: " + indexName);
+                "No replication master has been setup - Index: " + indexName);
 
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
             // We only want one replication at a time
@@ -457,7 +457,7 @@ final public class IndexInstance implements Closeable {
     }
 
     final IndexStatus merge(final IndexInstance mergedIndex, final Map<String, String> commitUserData)
-            throws IOException {
+        throws IOException {
         checkIsMaster();
         try (final ReadWriteSemaphores.Lock writeLock = readWriteSemaphores.acquireWriteSemaphore()) {
             writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
@@ -475,7 +475,7 @@ final public class IndexInstance implements Closeable {
 
     private WriteContextImpl buildWriteContext(final IndexWriter indexWriter, final TaxonomyWriter taxonomyWriter) {
         return new WriteContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzers, queryAnalyzers,
-                fieldMap, indexWriter, taxonomyWriter);
+            fieldMap, indexWriter, taxonomyWriter);
     }
 
     final <T> T write(final IndexServiceInterface.WriteActions<T> writeActions) throws IOException {
@@ -502,14 +502,14 @@ final public class IndexInstance implements Closeable {
                                final Map<String, String> commitUserData, boolean update) throws IOException {
         checkIsMaster();
         return write(
-                context -> checkCommit(context.postDocument(fields, document, commitUserData, update), commitUserData));
+            context -> checkCommit(context.postDocument(fields, document, commitUserData, update), commitUserData));
     }
 
     final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents,
                                 final Map<String, String> commitUserData, final boolean update) throws IOException {
         checkIsMaster();
         return write(context -> checkCommit(context.postDocuments(fields, documents, commitUserData, update),
-                commitUserData));
+            commitUserData));
     }
 
     final int postMappedDocument(final PostDefinition.Document post) throws IOException {
@@ -532,7 +532,7 @@ final public class IndexInstance implements Closeable {
                                    final Map<String, String> commitUserData) throws IOException {
         checkIsMaster();
         return write(
-                context -> checkCommit(context.updateDocsValues(fields, documents, commitUserData), commitUserData));
+            context -> checkCommit(context.updateDocsValues(fields, documents, commitUserData), commitUserData));
     }
 
     final int updateMappedDocValues(final PostDefinition.Document post) throws IOException {
@@ -570,27 +570,27 @@ final public class IndexInstance implements Closeable {
     }
 
     final List<TermEnumDefinition> getTermsEnum(final String fieldName, final String prefix, final Integer start,
-                                                final Integer rows) throws InterruptedException, IOException {
+                                                final Integer rows) throws IOException {
         Objects.requireNonNull(fieldName, "The field name is missing - Index: " + indexName);
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
                 if (fieldType == null)
                     throw new ServerException(Response.Status.NOT_FOUND,
-                            "Field not found: " + fieldName + " - Index: " + indexName);
+                        "Field not found: " + fieldName + " - Index: " + indexName);
                 final Terms terms = MultiTerms.getTerms(indexSearcher.getIndexReader(), fieldName);
                 if (terms == null)
                     return Collections.emptyList();
                 return TermEnumDefinition.buildTermList(fieldType, terms.iterator(), prefix, start == null ? 0 : start,
-                        rows == null ? 20 : rows);
+                    rows == null ? 20 : rows);
             });
         }
     }
 
     private QueryContextImpl buildQueryContext(final IndexSearcher indexSearcher, final TaxonomyReader taxonomyReader,
-                                               final FieldMapWrapper.Cache fieldMapWrappers) throws IOException {
+                                               final FieldMapWrapper.Cache fieldMapWrappers) {
         return new QueryContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzers, queryAnalyzers,
-                fieldMap, fieldMapWrappers, indexSearcher, taxonomyReader);
+            fieldMap, fieldMapWrappers, indexSearcher, taxonomyReader);
     }
 
     final <T> T query(final FieldMapWrapper.Cache fieldMapWrappers,
@@ -598,7 +598,7 @@ final public class IndexInstance implements Closeable {
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader,
-                        fieldMapWrappers)) {
+                    fieldMapWrappers)) {
                     return queryActions.apply(context);
                 }
             });
@@ -672,7 +672,7 @@ final public class IndexInstance implements Closeable {
     }
 
     final void postResource(final String resourceName, final Long lastModified, final InputStream inputStream)
-            throws IOException {
+        throws IOException {
         if (!Files.exists(fileSet.resourcesDirectoryPath))
             Files.createDirectory(fileSet.resourcesDirectoryPath);
         final Path resourceFile = fileResourceLoader.checkResourceName(resourceName);
@@ -688,7 +688,7 @@ final public class IndexInstance implements Closeable {
         final LinkedHashMap<String, ResourceInfo> map = new LinkedHashMap<>();
         try (final Stream<Path> stream = Files.list(fileSet.resourcesDirectoryPath)) {
             stream.filter(p -> Files.isRegularFile(p))
-                    .forEach(p -> map.put(p.getFileName().toString(), new ResourceInfo(p.toFile())));
+                .forEach(p -> map.put(p.getFileName().toString(), new ResourceInfo(p.toFile())));
             return map;
         }
     }
@@ -696,18 +696,18 @@ final public class IndexInstance implements Closeable {
     final InputStream getResource(final String resourceName) throws IOException {
         if (!Files.exists(fileSet.resourcesDirectoryPath))
             throw new ServerException(Response.Status.NOT_FOUND,
-                    "Resource not found : " + resourceName + " - Index: " + indexName);
+                "Resource not found : " + resourceName + " - Index: " + indexName);
         return fileResourceLoader.openResource(resourceName);
     }
 
     final void deleteResource(final String resourceName) throws IOException {
         if (!Files.exists(fileSet.resourcesDirectoryPath))
             throw new ServerException(Response.Status.NOT_FOUND,
-                    "Resource not found : " + resourceName + " - Index: " + indexName);
+                "Resource not found : " + resourceName + " - Index: " + indexName);
         final Path resourceFile = fileResourceLoader.checkResourceName(resourceName);
         if (!Files.exists(resourceFile))
             throw new ServerException(Response.Status.NOT_FOUND,
-                    "Resource not found : " + resourceName + " - Index: " + indexName);
+                "Resource not found : " + resourceName + " - Index: " + indexName);
         Files.delete(resourceFile);
     }
 

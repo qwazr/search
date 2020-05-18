@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,25 +21,23 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class DoubleRangeQuery extends AbstractRangeQuery<Double, DoubleRangeQuery> {
 
-	@JsonCreator
-	public DoubleRangeQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
-			@JsonProperty("upper_value") final Double upperValue) {
-		super(DoubleRangeQuery.class, genericField, field,
-				lowerValue == null ? DoubleDocValuesRangeQuery.MIN : lowerValue,
-				upperValue == null ? DoubleDocValuesRangeQuery.MAX : upperValue);
-	}
+    @JsonCreator
+    public DoubleRangeQuery(@JsonProperty("generic_field") final String genericField,
+                            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
+                            @JsonProperty("upper_value") final Double upperValue) {
+        super(DoubleRangeQuery.class, genericField, field,
+            lowerValue == null ? DoubleDocValuesRangeQuery.MIN : lowerValue,
+            upperValue == null ? DoubleDocValuesRangeQuery.MAX : upperValue);
+    }
 
-	public DoubleRangeQuery(final String field, final Double lowerValue, final Double upperValue) {
-		this(null, field, lowerValue, upperValue);
-	}
+    public DoubleRangeQuery(final String field, final Double lowerValue, final Double upperValue) {
+        this(null, field, lowerValue, upperValue);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return DoublePoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value, upper_value);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) {
+        return DoublePoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value, upper_value);
+    }
 }

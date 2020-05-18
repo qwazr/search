@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,15 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class SortedIntDocValuesRangeQuery extends AbstractRangeQuery<Integer, SortedIntDocValuesRangeQuery> {
 
     @JsonCreator
     public SortedIntDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
-            @JsonProperty("upper_value") final Integer upperValue) {
+                                        @JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
+                                        @JsonProperty("upper_value") final Integer upperValue) {
         super(SortedIntDocValuesRangeQuery.class, genericField, field,
-                lowerValue == null ? IntDocValuesRangeQuery.MIN : lowerValue,
-                upperValue == null ? IntDocValuesRangeQuery.MAX : upperValue);
+            lowerValue == null ? IntDocValuesRangeQuery.MIN : lowerValue,
+            upperValue == null ? IntDocValuesRangeQuery.MAX : upperValue);
     }
 
     public SortedIntDocValuesRangeQuery(final String field, final Integer lowerValue, final Integer upperValue) {
@@ -39,8 +37,8 @@ public class SortedIntDocValuesRangeQuery extends AbstractRangeQuery<Integer, So
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext) throws IOException {
+    public Query getQuery(final QueryContext queryContext) {
         return SortedNumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()), lower_value,
-                upper_value);
+            upper_value);
     }
 }

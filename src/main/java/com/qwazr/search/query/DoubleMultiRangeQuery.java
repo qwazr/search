@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -34,8 +33,8 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<DoubleMultiRa
 
     @JsonCreator
     public DoubleMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("lower_values") final double[] lowerValues,
-            @JsonProperty("upper_values") final double[] upperValues) {
+                                 @JsonProperty("field") final String field, @JsonProperty("lower_values") final double[] lowerValues,
+                                 @JsonProperty("upper_values") final double[] upperValues) {
         super(DoubleMultiRangeQuery.class, genericField, field);
         this.lower_values = lowerValues;
         this.upper_values = upperValues;
@@ -46,18 +45,18 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<DoubleMultiRa
     }
 
     public DoubleMultiRangeQuery(final String field, final double lowerValue, final double upperValue) {
-        this(field, new double[] { lowerValue }, new double[] { upperValue });
+        this(field, new double[]{lowerValue}, new double[]{upperValue});
     }
 
     @Override
     @JsonIgnore
     protected boolean isEqual(DoubleMultiRangeQuery q) {
         return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
-                Arrays.equals(upper_values, q.upper_values);
+            Arrays.equals(upper_values, q.upper_values);
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext) throws IOException {
+    public Query getQuery(final QueryContext queryContext) {
         return DoublePoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_values, upper_values);
     }
 
@@ -74,9 +73,9 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<DoubleMultiRa
 
         @Override
         protected DoubleMultiRangeQuery build(final String field, final Collection<Double> lowerValues,
-                final Collection<Double> upperValues) {
+                                              final Collection<Double> upperValues) {
             return new DoubleMultiRangeQuery(field, ArrayUtils.toPrimitiveDouble(lowerValues),
-                    ArrayUtils.toPrimitiveDouble(upperValues));
+                ArrayUtils.toPrimitiveDouble(upperValues));
         }
     }
 

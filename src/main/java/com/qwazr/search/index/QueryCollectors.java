@@ -21,7 +21,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.search.TopDocs;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +37,9 @@ abstract class QueryCollectors {
 
     abstract Integer getTotalHits();
 
-    abstract TopDocs getTopDocs() throws IOException;
+    abstract TopDocs getTopDocs();
 
-    abstract FacetsCollector getFacetsCollector() throws IOException;
+    abstract FacetsCollector getFacetsCollector();
 
     abstract Map<String, Object> getExternalResults();
 

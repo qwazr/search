@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,24 +21,22 @@ import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.search.Query;
 
-import java.io.IOException;
-
 public class IntRangeQuery extends AbstractRangeQuery<Integer, IntRangeQuery> {
 
-	@JsonCreator
-	public IntRangeQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
-			@JsonProperty("upper_value") final Integer upperValue) {
-		super(IntRangeQuery.class, genericField, field, lowerValue == null ? IntDocValuesRangeQuery.MIN : lowerValue,
-				upperValue == null ? IntDocValuesRangeQuery.MAX : upperValue);
-	}
+    @JsonCreator
+    public IntRangeQuery(@JsonProperty("generic_field") final String genericField,
+                         @JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
+                         @JsonProperty("upper_value") final Integer upperValue) {
+        super(IntRangeQuery.class, genericField, field, lowerValue == null ? IntDocValuesRangeQuery.MIN : lowerValue,
+            upperValue == null ? IntDocValuesRangeQuery.MAX : upperValue);
+    }
 
-	public IntRangeQuery(final String field, final Integer lowerValue, final Integer upperValue) {
-		this(null, field, lowerValue, upperValue);
-	}
+    public IntRangeQuery(final String field, final Integer lowerValue, final Integer upperValue) {
+        this(null, field, lowerValue, upperValue);
+    }
 
-	@Override
-	public Query getQuery(final QueryContext queryContext) throws IOException {
-		return IntPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value, upper_value);
-	}
+    @Override
+    public Query getQuery(final QueryContext queryContext) {
+        return IntPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value, upper_value);
+    }
 }

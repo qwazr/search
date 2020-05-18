@@ -29,7 +29,7 @@ import org.apache.lucene.search.ScoreMode;
 import java.io.IOException;
 
 public abstract class DocValuesCollector<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector, ThisCollector, DocValues>
-        extends BaseCollector.Parallel<CollectorResult, LeafCollector, ThisCollector> {
+    extends BaseCollector.Parallel<CollectorResult, LeafCollector, ThisCollector> {
 
     protected final String fieldName;
 
@@ -38,8 +38,7 @@ public abstract class DocValuesCollector<CollectorResult, LeafCollector extends 
         this.fieldName = fieldName;
     }
 
-    protected abstract LeafCollector newLeafCollector(final LeafReader leafReader, final DocValues docValues)
-            throws IOException;
+    protected abstract LeafCollector newLeafCollector(final LeafReader leafReader, final DocValues docValues);
 
     protected abstract DocValues getDocValues(final LeafReader leafReader) throws IOException;
 
@@ -59,7 +58,7 @@ public abstract class DocValuesCollector<CollectorResult, LeafCollector extends 
     }
 
     public static abstract class Binary<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector>
-            extends DocValuesCollector<CollectorResult, LeafCollector, Binary<CollectorResult, LeafCollector>, BinaryDocValues> {
+        extends DocValuesCollector<CollectorResult, LeafCollector, Binary<CollectorResult, LeafCollector>, BinaryDocValues> {
 
         protected Binary(final String fieldName) {
             super(fieldName);
@@ -71,7 +70,7 @@ public abstract class DocValuesCollector<CollectorResult, LeafCollector extends 
     }
 
     public static abstract class Sorted<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector>
-            extends DocValuesCollector<CollectorResult, LeafCollector, Sorted<CollectorResult, LeafCollector>, SortedDocValues> {
+        extends DocValuesCollector<CollectorResult, LeafCollector, Sorted<CollectorResult, LeafCollector>, SortedDocValues> {
 
         protected Sorted(final String fieldName) {
             super(fieldName);
@@ -83,7 +82,7 @@ public abstract class DocValuesCollector<CollectorResult, LeafCollector extends 
     }
 
     public static abstract class SortedSet<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector>
-            extends DocValuesCollector<CollectorResult, LeafCollector, SortedSet<CollectorResult, LeafCollector>, SortedSetDocValues> {
+        extends DocValuesCollector<CollectorResult, LeafCollector, SortedSet<CollectorResult, LeafCollector>, SortedSetDocValues> {
 
         protected SortedSet(final String fieldName) {
             super(fieldName);
@@ -95,7 +94,7 @@ public abstract class DocValuesCollector<CollectorResult, LeafCollector extends 
     }
 
     public static abstract class Numeric<CollectorResult extends Comparable<CollectorResult>, LeafCollector extends org.apache.lucene.search.LeafCollector>
-            extends DocValuesCollector<CollectorResult, LeafCollector, Numeric<CollectorResult, LeafCollector>, NumericDocValues> {
+        extends DocValuesCollector<CollectorResult, LeafCollector, Numeric<CollectorResult, LeafCollector>, NumericDocValues> {
 
         protected Numeric(final String fieldName) {
             super(fieldName);
@@ -107,7 +106,7 @@ public abstract class DocValuesCollector<CollectorResult, LeafCollector extends 
     }
 
     public static abstract class SortedNumeric<CollectorResult, LeafCollector extends org.apache.lucene.search.LeafCollector>
-            extends DocValuesCollector<CollectorResult, LeafCollector, SortedNumeric<CollectorResult, LeafCollector>, SortedNumericDocValues> {
+        extends DocValuesCollector<CollectorResult, LeafCollector, SortedNumeric<CollectorResult, LeafCollector>, SortedNumericDocValues> {
 
         protected SortedNumeric(final String fieldName) {
             super(fieldName);
