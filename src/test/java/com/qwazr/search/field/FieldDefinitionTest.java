@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,77 +24,80 @@ import java.util.Map;
 
 public class FieldDefinitionTest {
 
-	@Test
-	public void readCustomFieldDefinitionTest() throws IOException {
-		Map<String, FieldDefinition> fields =
-				ObjectMappers.JSON.readValue(com.qwazr.search.test.JavaTest.class.getResourceAsStream("fields.json"),
-						FieldDefinition.mapStringFieldTypeRef);
-		Assert.assertNotNull(fields);
-		fields.forEach((name, field) -> Assert.assertTrue(field instanceof CustomFieldDefinition));
-	}
+    @Test
+    public void readCustomFieldDefinitionTest() throws IOException {
+        Map<String, FieldDefinition> fields =
+            ObjectMappers.JSON.readValue(com.qwazr.search.test.JavaTest.class.getResourceAsStream("fields.json"),
+                FieldDefinition.mapStringFieldTypeRef);
+        Assert.assertNotNull(fields);
+        fields.forEach((name, field) -> Assert.assertTrue(field instanceof CustomFieldDefinition));
+    }
 
-	@Test
-	public void readSmartFieldDefinitionTest() throws IOException {
-		Map<String, FieldDefinition> fields =
-				ObjectMappers.JSON.readValue(FieldDefinitionTest.class.getResourceAsStream("smart_fields.json"),
-						FieldDefinition.mapStringFieldTypeRef);
-		Assert.assertNotNull(fields);
-		fields.forEach((name, field) -> {
-			Assert.assertTrue(field instanceof SmartFieldDefinition);
-			Assert.assertNotNull(((SmartFieldDefinition) field).type);
-		});
+    @Test
+    public void readSmartFieldDefinitionTest() throws IOException {
+        Map<String, FieldDefinition> fields =
+            ObjectMappers.JSON.readValue(FieldDefinitionTest.class.getResourceAsStream("smart_fields.json"),
+                FieldDefinition.mapStringFieldTypeRef);
+        Assert.assertNotNull(fields);
+        fields.forEach((name, field) -> {
+            Assert.assertTrue(field instanceof SmartFieldDefinition);
+            Assert.assertNotNull(((SmartFieldDefinition) field).type);
+        });
 
-		String json = ObjectMappers.JSON.writeValueAsString(fields);
-		fields = ObjectMappers.JSON.readValue(json, FieldDefinition.mapStringFieldTypeRef);
-		fields.forEach((name, field) -> Assert.assertTrue(field instanceof SmartFieldDefinition));
-	}
+        String json = ObjectMappers.JSON.writeValueAsString(fields);
+        fields = ObjectMappers.JSON.readValue(json, FieldDefinition.mapStringFieldTypeRef);
+        fields.forEach((name, field) -> Assert.assertTrue(field instanceof SmartFieldDefinition));
+    }
 
-	void checkFieldDef(SmartFieldDefinition.SmartBuilder builder, SmartFieldDefinition.Type type, Boolean facet,
-			Boolean index, Boolean sort, Boolean stored, final String analyzer, final String queryAnalyzer,
-			final String[] copyFrom) {
-		final SmartFieldDefinition fieldDef = builder.build();
-		Assert.assertNotNull(fieldDef);
-		Assert.assertEquals(type, fieldDef.type);
-		Assert.assertEquals(facet, fieldDef.facet);
-		Assert.assertEquals(index, fieldDef.index);
-		Assert.assertEquals(sort, fieldDef.sort);
-		Assert.assertEquals(stored, fieldDef.stored);
-		Assert.assertEquals(analyzer, fieldDef.analyzer);
-		Assert.assertEquals(queryAnalyzer, fieldDef.queryAnalyzer);
-		Assert.assertArrayEquals(copyFrom, fieldDef.copyFrom);
-	}
+    void checkFieldDef(SmartFieldDefinition.SmartBuilder builder, SmartFieldDefinition.Type type,
+                       Boolean facet, Boolean index, Boolean sort, Boolean stored,
+                       final String analyzer, final String indexAnalyzer, final String queryAnalyzer,
+                       final String[] copyFrom) {
+        final SmartFieldDefinition fieldDef = builder.build();
+        Assert.assertNotNull(fieldDef);
+        Assert.assertEquals(type, fieldDef.type);
+        Assert.assertEquals(facet, fieldDef.facet);
+        Assert.assertEquals(index, fieldDef.index);
+        Assert.assertEquals(sort, fieldDef.sort);
+        Assert.assertEquals(stored, fieldDef.stored);
+        Assert.assertEquals(analyzer, fieldDef.analyzer);
+        Assert.assertEquals(indexAnalyzer, fieldDef.indexAnalyzer);
+        Assert.assertEquals(queryAnalyzer, fieldDef.queryAnalyzer);
+        Assert.assertArrayEquals(copyFrom, fieldDef.copyFrom);
+    }
 
-	@Test
-	public void smartFieldBuilderTest() {
-		final SmartFieldDefinition.SmartBuilder builder = SmartFieldDefinition.of();
+    @Test
+    public void smartFieldBuilderTest() {
+        final SmartFieldDefinition.SmartBuilder builder = SmartFieldDefinition.of();
 
-		checkFieldDef(builder, null, null, null, null, null, null, null, null);
+        checkFieldDef(builder, null, null, null, null, null, null, null, null, null);
 
-		builder.type(SmartFieldDefinition.Type.DOUBLE);
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, null, null, null, null, null, null, null);
+        builder.type(SmartFieldDefinition.Type.DOUBLE);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, null, null, null, null, null, null, null, null);
 
-		builder.facet(true);
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, null, null, null, null, null, null);
+        builder.facet(true);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, null, null, null, null, null, null, null);
 
-		builder.index(true);
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, null, null, null, null, null);
+        builder.index(true);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, null, null, null, null, null, null);
 
-		builder.sort(true);
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, null, null, null, null);
+        builder.sort(true);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, null, null, null, null, null);
 
-		builder.stored(true);
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, null, null, null);
+        builder.stored(true);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, null, null, null, null);
 
-		builder.analyzer("analyzer");
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", null, null);
+        builder.analyzer("analyzer");
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", null, null, null);
 
-		builder.queryAnalyzer("queryAnalyzer");
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "queryAnalyzer",
-				null);
+        builder.indexAnalyzer("indexAnalyzer");
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "indexAnalyzer", null, null);
 
-		builder.copyFrom("field");
-		checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "queryAnalyzer",
-				new String[] { "field" });
+        builder.queryAnalyzer("queryAnalyzer");
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "indexAnalyzer", "queryAnalyzer", null);
 
-	}
+        builder.copyFrom("field");
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "indexAnalyzer", "queryAnalyzer", new String[]{"field"});
+
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.annotations;
 
+import com.qwazr.search.analysis.SmartAnalyzerSet;
 import com.qwazr.search.field.SmartFieldDefinition;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -25,27 +26,31 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
+@Target({ElementType.FIELD})
 public @interface SmartField {
 
-	String name() default StringUtils.EMPTY;
+    String name() default StringUtils.EMPTY;
 
-	SmartFieldDefinition.Type type() default SmartFieldDefinition.Type.TEXT;
+    SmartFieldDefinition.Type type() default SmartFieldDefinition.Type.TEXT;
 
-	boolean facet() default false;
+    boolean facet() default false;
 
-	boolean index() default false;
+    boolean index() default false;
 
-	String analyzer() default StringUtils.EMPTY;
+    SmartAnalyzerSet analyzer() default SmartAnalyzerSet.keyword;
 
-	String queryAnalyzer() default StringUtils.EMPTY;
+    String indexAnalyzer() default StringUtils.EMPTY;
 
-	Class<? extends Analyzer> analyzerClass() default Analyzer.class;
+    String queryAnalyzer() default StringUtils.EMPTY;
 
-	Class<? extends Analyzer> queryAnalyzerClass() default Analyzer.class;
+    Class<? extends Analyzer> analyzerClass() default Analyzer.class;
 
-	boolean sort() default false;
+    Class<? extends Analyzer> indexAnalyzerClass() default Analyzer.class;
 
-	boolean stored() default false;
+    Class<? extends Analyzer> queryAnalyzerClass() default Analyzer.class;
+
+    boolean sort() default false;
+
+    boolean stored() default false;
 
 }

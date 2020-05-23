@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.apache.lucene.analysis.bg.BulgarianStemFilter;
 import org.apache.lucene.analysis.cjk.CJKBigramFilter;
 import org.apache.lucene.analysis.cjk.CJKWidthFilter;
 import org.apache.lucene.analysis.core.DecimalDigitFilter;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.cz.CzechStemFilter;
 import org.apache.lucene.analysis.de.GermanLightStemFilter;
 import org.apache.lucene.analysis.de.GermanNormalizationFilter;
@@ -47,6 +48,7 @@ import org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter;
 import org.apache.lucene.analysis.pl.PolishAnalyzer;
 import org.apache.lucene.analysis.pt.PortugueseLightStemFilter;
 import org.apache.lucene.analysis.snowball.SnowballFilter;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.standard.UAX29URLEmailTokenizer;
 import org.apache.lucene.analysis.stempel.StempelFilter;
 import org.apache.lucene.analysis.stempel.StempelStemmer;
@@ -70,44 +72,71 @@ import java.util.Arrays;
  */
 public enum SmartAnalyzerSet {
 
-    LOWERCASE(LowercaseIndex.class, LowercaseQuery.class),
-    ASCII(AsciiIndex.class, AsciiQuery.class),
-    ARABIC(ArabicIndex.class, ArabicQuery.class),
-    BULGARIAN(BulgarianIndex.class, BulgarianQuery.class),
-    CJK(CJKIndex.class, CJKQuery.class),
-    CZECH(CzechIndex.class, CzechQuery.class),
-    DANISH(DanishIndex.class, DanishQuery.class),
-    DUTCH(DutchIndex.class, DutchQuery.class),
-    FRENCH(FrenchIndex.class, FrenchQuery.class),
-    GERMAN(GermanIndex.class, GermanQuery.class),
-    GREEK(GreekIndex.class, GreekQuery.class),
-    ENGLISH(EnglishIndex.class, EnglishQuery.class),
-    FINNISH(FinnishIndex.class, FinnishQuery.class),
-    IRISH(IrishIndex.class, IrishQuery.class),
-    HINDI(HindiIndex.class, HindiQuery.class),
-    HUNGARIAN(HungarianIndex.class, HungarianQuery.class),
-    ITALIAN(ItalianIndex.class, ItalianQuery.class),
-    LITHUANIAN(LithuanianIndex.class, LithuanianQuery.class),
-    LATVIAN(LatvianIndex.class, LatvianQuery.class),
-    NORWEGIAN(NorwegianIndex.class, NorwegianQuery.class),
-    POLISH(PolishIndex.class, PolishQuery.class),
-    PORTUGUESE(PortugueseIndex.class, PortugueseQuery.class),
-    ROMANIAN(RomanianIndex.class, RomanianQuery.class),
-    RUSSIAN(RussianIndex.class, RussianQuery.class),
-    SPANISH(SpanishIndex.class, SpanishQuery.class),
-    SWEDISH(SwedishIndex.class, SwedishQuery.class),
-    TURKISH(TurkishIndex.class, TurkishQuery.class);
+    keyword(KeywordAnalyzer.class),
+    standard(StandardAnalyzer.class),
+    lowercase(LowercaseIndex.class, LowercaseQuery.class),
+    ascii(AsciiIndex.class, AsciiQuery.class),
+    arabic(ArabicIndex.class, ArabicQuery.class),
+    bulgarian(BulgarianIndex.class, BulgarianQuery.class),
+    cjk(CJKIndex.class, CJKQuery.class),
+    czech(CzechIndex.class, CzechQuery.class),
+    danish(DanishIndex.class, DanishQuery.class),
+    dutch(DutchIndex.class, DutchQuery.class),
+    english(EnglishIndex.class, EnglishQuery.class),
+    french(FrenchIndex.class, FrenchQuery.class),
+    german(GermanIndex.class, GermanQuery.class),
+    greek(GreekIndex.class, GreekQuery.class),
+    finnish(FinnishIndex.class, FinnishQuery.class),
+    hindi(HindiIndex.class, HindiQuery.class),
+    hungarian(HungarianIndex.class, HungarianQuery.class),
+    irish(IrishIndex.class, IrishQuery.class),
+    italian(ItalianIndex.class, ItalianQuery.class),
+    lithuanian(LithuanianIndex.class, LithuanianQuery.class),
+    latvian(LatvianIndex.class, LatvianQuery.class),
+    norwegian(NorwegianIndex.class, NorwegianQuery.class),
+    polish(PolishIndex.class, PolishQuery.class),
+    portuguese(PortugueseIndex.class, PortugueseQuery.class),
+    romanian(RomanianIndex.class, RomanianQuery.class),
+    russian(RussianIndex.class, RussianQuery.class),
+    spanish(SpanishIndex.class, SpanishQuery.class),
+    swedish(SwedishIndex.class, SwedishQuery.class),
+    turkish(TurkishIndex.class, TurkishQuery.class);
 
+    public final Class<? extends Analyzer> commonAnalyzer;
     public final Class<? extends Analyzer> indexAnalyzer;
     public final Class<? extends Analyzer> queryAnalyzer;
 
-    SmartAnalyzerSet(Class<? extends Index> indexAnalyzer, Class<? extends Query> queryAnalyzer) {
+    SmartAnalyzerSet(Class<? extends Analyzer> commonAnalyzer) {
+        this.commonAnalyzer = commonAnalyzer;
+        this.indexAnalyzer = null;
+        this.queryAnalyzer = null;
+    }
+
+    SmartAnalyzerSet(Class<? extends Analyzer> indexAnalyzer, Class<? extends Analyzer> queryAnalyzer) {
+        this.commonAnalyzer = null;
         this.indexAnalyzer = indexAnalyzer;
         this.queryAnalyzer = queryAnalyzer;
     }
 
+    public Class<? extends Analyzer> forQuery() {
+        return queryAnalyzer != null ? queryAnalyzer : commonAnalyzer;
+    }
+
+    public Class<? extends Analyzer> forIndex() {
+        return indexAnalyzer != null ? indexAnalyzer : commonAnalyzer;
+    }
+
     public final static int MAX_TOKEN_LENGTH = 255;
     public final static int POSITION_INCREMENT_GAP = 100;
+
+    public static SmartAnalyzerSet of(final String analyzerName) {
+        try {
+            return SmartAnalyzerSet.valueOf(analyzerName);
+        }
+        catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 
     public static abstract class Base extends Analyzer {
 
@@ -131,11 +160,11 @@ public enum SmartAnalyzerSet {
 
     static public TokenStream indexWordDelimiter(TokenStream src) {
         return new WordDelimiterGraphFilter(src,
-                WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
-                        WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE |
-                        WordDelimiterGraphFilter.CATENATE_ALL | WordDelimiterGraphFilter.CATENATE_NUMBERS |
-                        WordDelimiterGraphFilter.CATENATE_WORDS | WordDelimiterGraphFilter.PRESERVE_ORIGINAL,
-                CharArraySet.EMPTY_SET);
+            WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
+                WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE |
+                WordDelimiterGraphFilter.CATENATE_ALL | WordDelimiterGraphFilter.CATENATE_NUMBERS |
+                WordDelimiterGraphFilter.CATENATE_WORDS | WordDelimiterGraphFilter.PRESERVE_ORIGINAL,
+            CharArraySet.EMPTY_SET);
     }
 
     public static abstract class Index extends Base {
@@ -148,15 +177,15 @@ public enum SmartAnalyzerSet {
         protected TokenStream filter(String fieldName, TokenStream in) {
             final FirstTokenPayloadFilter firstTokenPayloadFilter = new FirstTokenPayloadFilter(in);
             return firstTokenPayloadFilter.newSetterFilter(
-                    normalize(fieldName, indexWordDelimiter(firstTokenPayloadFilter)));
+                normalize(fieldName, indexWordDelimiter(firstTokenPayloadFilter)));
         }
     }
 
     public static TokenStream queryWordDelimiter(TokenStream src) {
         return new WordDelimiterGraphFilter(src,
-                WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
-                        WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE,
-                CharArraySet.EMPTY_SET);
+            WordDelimiterGraphFilter.GENERATE_WORD_PARTS | WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS |
+                WordDelimiterGraphFilter.SPLIT_ON_NUMERICS | WordDelimiterGraphFilter.SPLIT_ON_CASE_CHANGE,
+            CharArraySet.EMPTY_SET);
     }
 
     public static abstract class Query extends Base {
@@ -169,13 +198,13 @@ public enum SmartAnalyzerSet {
         return new LowerCaseFilter(in);
     }
 
-    static public final class LowercaseIndex extends Index {
+    static public final class LowercaseQuery extends Query {
         protected TokenStream normalize(String fieldName, TokenStream in) {
             return lower(in);
         }
     }
 
-    static public final class LowercaseQuery extends Query {
+    static public final class LowercaseIndex extends Index {
         protected TokenStream normalize(String fieldName, TokenStream in) {
             return lower(in);
         }
@@ -440,10 +469,10 @@ public enum SmartAnalyzerSet {
     }
 
     static public final CharArraySet IRISH_DEFAULT_ARTICLES =
-            CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("d", "m", "b"), true));
+        CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("d", "m", "b"), true));
 
     static public final CharArraySet IRISH_HYPHENATIONS =
-            CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("h", "n", "t"), true));
+        CharArraySet.unmodifiableSet(new CharArraySet(Arrays.asList("h", "n", "t"), true));
 
     static public TokenStream irish(TokenStream result) {
         result = new StopFilter(result, IRISH_HYPHENATIONS);
@@ -466,8 +495,8 @@ public enum SmartAnalyzerSet {
     }
 
     static public final CharArraySet ITALIAN_DEFAULT_ARTICLES = CharArraySet.unmodifiableSet(new CharArraySet(
-            Arrays.asList("c", "l", "all", "dall", "dell", "nell", "sull", "coll", "pell", "gl", "agl", "dagl", "degl",
-                    "negl", "sugl", "un", "m", "t", "s", "v", "d"), true));
+        Arrays.asList("c", "l", "all", "dall", "dell", "nell", "sull", "coll", "pell", "gl", "agl", "dagl", "degl",
+            "negl", "sugl", "un", "m", "t", "s", "v", "d"), true));
 
     static public TokenStream italian(TokenStream result) {
         result = new ElisionFilter(result, ITALIAN_DEFAULT_ARTICLES);

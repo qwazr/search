@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.analysis.SmartAnalyzerSet;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.SmartField;
 import com.qwazr.utils.WildcardMatcher;
+import org.apache.lucene.analysis.Analyzer;
 
 import java.util.Map;
 import java.util.Objects;
@@ -39,18 +41,27 @@ public class SmartFieldDefinition extends FieldDefinition {
     }
 
     @JsonCreator
-    SmartFieldDefinition(@JsonProperty("type") Type type, @JsonProperty("facet") Boolean facet,
-                         @JsonProperty("index") Boolean index, @JsonProperty("analyzer") final String analyzer,
-                         @JsonProperty("query_analyzer") final String queryAnalyzer, @JsonProperty("sort") Boolean sort,
-                         @JsonProperty("stored") Boolean stored, @JsonProperty("copy_from") String[] copyFrom) {
-        super(type, analyzer, queryAnalyzer, copyFrom);
+    SmartFieldDefinition(@JsonProperty("type") final Type type,
+                         @JsonProperty("facet") final Boolean facet,
+                         @JsonProperty("index") final Boolean index,
+                         @JsonProperty("analyzer") final SmartAnalyzerSet analyzer,
+                         @JsonProperty("index_analyzer") final String indexAnalyzer,
+                         @JsonProperty("query_analyzer") final String queryAnalyzer,
+                         @JsonProperty("sort") final Boolean sort,
+                         @JsonProperty("stored") final Boolean stored,
+                         @JsonProperty("copy_from") final String[] copyFrom) {
+        super(type,
+            analyzer != null && analyzer != SmartAnalyzerSet.keyword ? analyzer.name() : null,
+            indexAnalyzer,
+            queryAnalyzer,
+            copyFrom);
         this.facet = facet;
         this.index = index;
         this.sort = sort;
         this.stored = stored;
     }
 
-    private SmartFieldDefinition(SmartBuilder builder) {
+    private SmartFieldDefinition(final SmartBuilder builder) {
         super(builder);
         facet = builder.facet;
         index = builder.index;
@@ -58,13 +69,18 @@ public class SmartFieldDefinition extends FieldDefinition {
         stored = builder.stored;
     }
 
-    public SmartFieldDefinition(final String fieldName, final SmartField smartField, final Map<String, Copy> copyMap) {
-        super(smartField.type(), from(smartField.analyzer(), smartField.analyzerClass()),
-                from(smartField.queryAnalyzer(), smartField.queryAnalyzerClass()), from(fieldName, copyMap));
-        facet = smartField.facet();
-        index = smartField.index();
-        sort = smartField.sort();
-        stored = smartField.stored();
+    public SmartFieldDefinition(final String fieldName,
+                                final SmartField smartField,
+                                final Map<String, Copy> copyMap) {
+        super(smartField.type(),
+            smartField.analyzerClass() != Analyzer.class ? smartField.analyzerClass().getName() : smartField.analyzer().name(),
+            from(smartField.indexAnalyzer(), smartField.indexAnalyzerClass()),
+            from(smartField.queryAnalyzer(), smartField.queryAnalyzerClass()),
+            from(fieldName, copyMap));
+        this.facet = smartField.facet();
+        this.index = smartField.index();
+        this.sort = smartField.sort();
+        this.stored = smartField.stored();
     }
 
     @Override
@@ -82,7 +98,7 @@ public class SmartFieldDefinition extends FieldDefinition {
             return false;
         final SmartFieldDefinition f = (SmartFieldDefinition) o;
         return Objects.equals(facet, f.facet) && Objects.equals(index, f.index) && Objects.equals(sort, f.sort) &&
-                Objects.equals(stored, f.stored);
+            Objects.equals(stored, f.stored);
     }
 
     @Override

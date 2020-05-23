@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,6 @@ import java.util.function.Supplier;
     @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "LONG"),
     @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "FLOAT"),
     @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "DOUBLE")})
-//@JsonDeserialize(using = FieldDefinition.FieldDeserializer.class)
 public abstract class FieldDefinition {
 
     /* Used by CustomFieldDefinition */
@@ -109,7 +108,7 @@ public abstract class FieldDefinition {
         }
 
         @Override
-        final public ValueConverter getConverter(final MultiReader reader, final String field) {
+        final public ValueConverter<?> getConverter(final MultiReader reader, final String field) {
             return valueConverterSupplier.getConverter(reader, field);
         }
 
@@ -120,12 +119,16 @@ public abstract class FieldDefinition {
         }
     }
 
-    public final String analyzer;
-
     /**
      * This property is present for polymorphism
      */
     public final SmartFieldDefinition.Type type;
+
+    @JsonProperty("analyzer")
+    public final String analyzer;
+
+    @JsonProperty("index_analyzer")
+    public final String indexAnalyzer;
 
     @JsonProperty("query_analyzer")
     public final String queryAnalyzer;
@@ -134,18 +137,22 @@ public abstract class FieldDefinition {
     public final String[] copyFrom;
 
     @JsonCreator
-    FieldDefinition(@JsonProperty("type") SmartFieldDefinition.Type type,
-                    @JsonProperty("analyzer") final String analyzer, @JsonProperty("query_analyzer") final String queryAnalyzer,
-                    @JsonProperty("copy_from") final String[] copyFrom) {
+    protected FieldDefinition(@JsonProperty("type") final SmartFieldDefinition.Type type,
+                              @JsonProperty("analyzer") final String analyzer,
+                              @JsonProperty("index_analyzer") final String indexAnalyzer,
+                              @JsonProperty("query_analyzer") final String queryAnalyzer,
+                              @JsonProperty("copy_from") final String[] copyFrom) {
         this.type = type;
         this.analyzer = analyzer;
+        this.indexAnalyzer = indexAnalyzer;
         this.queryAnalyzer = queryAnalyzer;
         this.copyFrom = copyFrom;
     }
 
-    FieldDefinition(final AbstractBuilder<? extends AbstractBuilder> builder) {
+    protected FieldDefinition(final AbstractBuilder<? extends AbstractBuilder<?>> builder) {
         this.type = builder.type;
         this.analyzer = builder.analyzer;
+        this.indexAnalyzer = builder.indexAnalyzer;
         this.queryAnalyzer = builder.queryAnalyzer;
         this.copyFrom = builder.copyFrom == null || builder.copyFrom.isEmpty() ?
             null :
@@ -164,8 +171,10 @@ public abstract class FieldDefinition {
         if (o == this)
             return true;
         final FieldDefinition f = (FieldDefinition) o;
-        return Objects.equals(type, f.type) && Objects.equals(analyzer, f.analyzer) &&
-            Objects.equals(queryAnalyzer, f.queryAnalyzer);
+        return Objects.equals(type, f.type)
+            && Objects.equals(analyzer, f.analyzer)
+            && Objects.equals(indexAnalyzer, f.indexAnalyzer)
+            && Objects.equals(queryAnalyzer, f.queryAnalyzer);
     }
 
     public final static TypeReference<LinkedHashMap<String, FieldDefinition>> mapStringFieldTypeRef =
@@ -237,10 +246,11 @@ public abstract class FieldDefinition {
     public abstract FieldTypeInterface newFieldType(final String genericFieldName,
                                                     final WildcardMatcher wildcardMatcher);
 
-    public static abstract class AbstractBuilder<B extends AbstractBuilder> {
+    public static abstract class AbstractBuilder<B extends AbstractBuilder<B>> {
 
         SmartFieldDefinition.Type type;
         String analyzer;
+        String indexAnalyzer;
         String queryAnalyzer;
         LinkedHashSet<String> copyFrom;
 
@@ -253,6 +263,11 @@ public abstract class FieldDefinition {
 
         final public B analyzer(String analyzer) {
             this.analyzer = analyzer;
+            return me();
+        }
+
+        final public B indexAnalyzer(String indexAnalyzer) {
+            this.indexAnalyzer = indexAnalyzer;
             return me();
         }
 

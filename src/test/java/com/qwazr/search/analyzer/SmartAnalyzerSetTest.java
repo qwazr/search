@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,13 @@ import java.io.IOException;
 public class SmartAnalyzerSetTest {
 
     private void checkAnalyzer(Class<? extends Analyzer> analyzerClass)
-            throws IOException, ReflectiveOperationException {
-        Assert.assertNotNull(analyzerClass);
-        Analyzer analyzer = analyzerClass.getDeclaredConstructor().newInstance();
+        throws IOException, ReflectiveOperationException {
+        if (analyzerClass == null)
+            return;
+        final Analyzer analyzer = analyzerClass.getDeclaredConstructor().newInstance();
         Assert.assertNotNull(analyzer);
-        Assert.assertEquals(100, analyzer.getPositionIncrementGap(""), 0);
+        if (analyzer instanceof SmartAnalyzerSet.Base)
+            Assert.assertEquals(100, analyzer.getPositionIncrementGap(""), 0);
         try (final TokenStream tokenStream = analyzer.tokenStream("", RandomUtils.alphanumeric(10))) {
             tokenStream.reset();
             while (tokenStream.incrementToken()) {
@@ -43,6 +45,7 @@ public class SmartAnalyzerSetTest {
     @Test
     public void testAll() throws ReflectiveOperationException, IOException {
         for (SmartAnalyzerSet smartAnalyzer : SmartAnalyzerSet.values()) {
+            checkAnalyzer(smartAnalyzer.commonAnalyzer);
             checkAnalyzer(smartAnalyzer.indexAnalyzer);
             checkAnalyzer(smartAnalyzer.queryAnalyzer);
         }

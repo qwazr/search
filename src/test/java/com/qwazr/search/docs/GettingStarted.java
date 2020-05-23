@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,96 +42,95 @@ import java.util.concurrent.Executors;
 
 public class GettingStarted {
 
-	// This class defines both an index, and a record for this index
-	@Index(schema = "my_schema", name = "my_index")
-	public static class MyIndexRecord {
+    // This class defines both an index, and a record for this index
+    @Index(schema = "my_schema", name = "my_index")
+    public static class MyIndexRecord {
 
-		@SmartField(name = FieldDefinition.ID_FIELD, index = true, stored = true)
-		String id;
+        @SmartField(name = FieldDefinition.ID_FIELD, index = true, stored = true)
+        String id;
 
-		@SmartField(index = true,
-				sort = true,
-				stored = true,
-				analyzerClass = SmartAnalyzerSet.EnglishIndex.class,
-				queryAnalyzerClass = SmartAnalyzerSet.EnglishQuery.class)
-		String title;
+        @SmartField(index = true,
+            sort = true,
+            stored = true,
+            analyzer = SmartAnalyzerSet.english)
+        String title;
 
-		@SmartField(index = true,
-				stored = true,
-				analyzerClass = SmartAnalyzerSet.EnglishIndex.class,
-				queryAnalyzerClass = SmartAnalyzerSet.EnglishQuery.class)
-		String content;
+        @SmartField(index = true,
+            stored = true,
+            indexAnalyzerClass = SmartAnalyzerSet.EnglishIndex.class,
+            queryAnalyzerClass = SmartAnalyzerSet.EnglishQuery.class)
+        String content;
 
-		@SmartField(index = true, facet = true)
-		String[] tags;
+        @SmartField(index = true, facet = true)
+        String[] tags;
 
-		// Public no argument constructor is mandatory
-		public MyIndexRecord() {
-		}
+        // Public no argument constructor is mandatory
+        public MyIndexRecord() {
+        }
 
-		MyIndexRecord(String id, String title, String content, String... tags) {
-			this.id = id;
-			this.title = title;
-			this.content = content;
-			this.tags = tags;
-		}
-	}
+        MyIndexRecord(String id, String title, String content, String... tags) {
+            this.id = id;
+            this.title = title;
+            this.content = content;
+            this.tags = tags;
+        }
+    }
 
-	@Test
-	public void test() throws IOException, URISyntaxException, InterruptedException {
+    @Test
+    public void test() throws IOException, URISyntaxException, InterruptedException {
 
-		/* INDEX MANAGER SETUP */
+        /* INDEX MANAGER SETUP */
 
-		ExecutorService executorService = Executors.newCachedThreadPool(); // we need a pool of thread
-		Path indexesDirectory = Files.createTempDirectory("my_indexes"); // The directory where the indexes are stored
-		IndexManager indexManager =
-				new IndexManager(indexesDirectory, executorService); // Let's build our index manager
+        ExecutorService executorService = Executors.newCachedThreadPool(); // we need a pool of thread
+        Path indexesDirectory = Files.createTempDirectory("my_indexes"); // The directory where the indexes are stored
+        IndexManager indexManager =
+            new IndexManager(indexesDirectory, executorService); // Let's build our index manager
 
-		/* INDEX SETUP */
+        /* INDEX SETUP */
 
-		AnnotatedIndexService<MyIndexRecord> myIndexService =
-				indexManager.getService(MyIndexRecord.class); // Get the service related to our index class (MyIndex)
-		myIndexService.createUpdateSchema(); // We create the schema (nothing is done if the schema already exists)
-		myIndexService.createUpdateIndex(); // We create the index (nothing is done if the index already exists)
-		myIndexService.createUpdateFields(); // We create the fields (nothing is done if the fields already exist)
+        AnnotatedIndexService<MyIndexRecord> myIndexService =
+            indexManager.getService(MyIndexRecord.class); // Get the service related to our index class (MyIndex)
+        myIndexService.createUpdateSchema(); // We create the schema (nothing is done if the schema already exists)
+        myIndexService.createUpdateIndex(); // We create the index (nothing is done if the index already exists)
+        myIndexService.createUpdateFields(); // We create the fields (nothing is done if the fields already exist)
 
-		/* INDEXING RECORD */
+        /* INDEXING RECORD */
 
-		MyIndexRecord indexRecord1 = new MyIndexRecord("1", "First news", "My first article", "news", "infos");
-		MyIndexRecord indexRecord2 = new MyIndexRecord("2", "Second news", "My second article", "news", "infos");
-		myIndexService.postDocuments(Arrays.asList(indexRecord1, indexRecord2)); // Let's index them
+        MyIndexRecord indexRecord1 = new MyIndexRecord("1", "First news", "My first article", "news", "infos");
+        MyIndexRecord indexRecord2 = new MyIndexRecord("2", "Second news", "My second article", "news", "infos");
+        myIndexService.postDocuments(Arrays.asList(indexRecord1, indexRecord2)); // Let's index them
 
-		/* SEARCH THE INDEX */
+        /* SEARCH THE INDEX */
 
-		// We create a user query
-		MultiFieldQuery multiFieldQuery =
-				MultiFieldQuery.of().defaultOperator(QueryParserOperator.AND) // The operator will be AND
-						.fieldBoost("title", 3.0f) // The title field has a boost of 3
-						.fieldBoost("content", 1.0f) // The content field has a boost of 1
-						.queryString("first article") // We look for the terms "my article"
-						.build();
+        // We create a user query
+        MultiFieldQuery multiFieldQuery =
+            MultiFieldQuery.of().defaultOperator(QueryParserOperator.AND) // The operator will be AND
+                .fieldBoost("title", 3.0f) // The title field has a boost of 3
+                .fieldBoost("content", 1.0f) // The content field has a boost of 1
+                .queryString("first article") // We look for the terms "my article"
+                .build();
 
-		// We also would love to have a facet
-		FacetDefinition facet = FacetDefinition.of(10).sort(FacetDefinition.Sort.value_descending).build();
+        // We also would love to have a facet
+        FacetDefinition facet = FacetDefinition.of(10).sort(FacetDefinition.Sort.value_descending).build();
 
-		// We can build our final request
-		QueryDefinition queryDefinition =
-				QueryDefinition.of(multiFieldQuery).start(0).rows(10).facet("tags", facet).returnedField("*").build();
+        // We can build our final request
+        QueryDefinition queryDefinition =
+            QueryDefinition.of(multiFieldQuery).start(0).rows(10).facet("tags", facet).returnedField("*").build();
 
-		// We can now do the search
-		ResultDefinition.WithObject<MyIndexRecord> result = myIndexService.searchQuery(queryDefinition);
+        // We can now do the search
+        ResultDefinition.WithObject<MyIndexRecord> result = myIndexService.searchQuery(queryDefinition);
 
-		// And here is our search result
-		assert result.getTotalHits() == 1L; // The number of results
-		List<ResultDocumentObject<MyIndexRecord>> records = result.getDocuments(); // Retrieve our found records
-		assert indexRecord1.id.equals(
-				records.get(0).getRecord().id); // Check we found the right record by checking the ID
-		Map<String, Number> facets = result.getFacet("tags"); // Retrieve our facet resuls
-		assert facets.get("infos").intValue() == 1; // Check we have our facet result for the tag "infos"
-		assert facets.get("news").intValue() == 1; // Same for the tag "news"
+        // And here is our search result
+        assert result.getTotalHits() == 1L; // The number of results
+        List<ResultDocumentObject<MyIndexRecord>> records = result.getDocuments(); // Retrieve our found records
+        assert indexRecord1.id.equals(
+            records.get(0).getRecord().id); // Check we found the right record by checking the ID
+        Map<String, Number> facets = result.getFacet("tags"); // Retrieve our facet resuls
+        assert facets.get("infos").intValue() == 1; // Check we have our facet result for the tag "infos"
+        assert facets.get("news").intValue() == 1; // Same for the tag "news"
 
-		/* FREE RESOURCES */
-		indexManager.close(); // IndexManager is closeable (close it only if you will not use the service anymore)
-	}
+        /* FREE RESOURCES */
+        indexManager.close(); // IndexManager is closeable (close it only if you will not use the service anymore)
+    }
 
 }

@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,19 +66,20 @@ public class AnalyzerContext {
                     return;
                 final FieldDefinition fieldDefinition = fieldType.getDefinition();
 
-                if (fieldDefinition.analyzer != null) {
-                    final Analyzer indexAnalyzer = builder.findAnalyzer(fieldDefinition.analyzer);
-                    if (indexAnalyzer != null)
-                        indexAnalyzerMap.put(queryFieldName, indexAnalyzer);
+                // Load the index analyzer if any specific
+                final String indexAnalyzer = StringUtils.isEmpty(fieldDefinition.indexAnalyzer) ? fieldDefinition.analyzer : fieldDefinition.indexAnalyzer;
+                if (!StringUtils.isEmpty(indexAnalyzer)) {
+                    final Analyzer analyzer = builder.findAnalyzer(indexAnalyzer, SmartAnalyzerSet::forIndex);
+                    if (analyzer != null)
+                        indexAnalyzerMap.put(queryFieldName, analyzer);
                 }
 
-                final String queryAnalyzerName = fieldDefinition.queryAnalyzer == null ?
-                    fieldDefinition.analyzer :
-                    fieldDefinition.queryAnalyzer;
-                if (queryAnalyzerName != null) {
-                    final Analyzer queryAnalyzer = builder.findAnalyzer(queryAnalyzerName);
-                    if (queryAnalyzer != null)
-                        queryAnalyzerMap.put(queryFieldName, queryAnalyzer);
+                // Load the query analyzer if any specific
+                final String queryAnalyzer = StringUtils.isEmpty(fieldDefinition.queryAnalyzer) ? fieldDefinition.analyzer : fieldDefinition.queryAnalyzer;
+                if (!StringUtils.isEmpty(queryAnalyzer)) {
+                    final Analyzer analyzer = builder.findAnalyzer(queryAnalyzer, SmartAnalyzerSet::forQuery);
+                    if (analyzer != null)
+                        queryAnalyzerMap.put(queryFieldName, analyzer);
                 }
 
             }
@@ -116,13 +118,22 @@ public class AnalyzerContext {
             this.analyzerSingletonMap = new HashMap<>();
         }
 
-        public Analyzer findAnalyzer(final String analyzerName) throws ReflectiveOperationException, IOException {
+        public Analyzer findAnalyzer(final String analyzerName,
+                                     final Function<SmartAnalyzerSet, Class<? extends Analyzer>> smartProvider) throws ReflectiveOperationException, IOException {
+            // Get from existing definition
             Analyzer analyzer = analyzerSingletonMap.get(analyzerName);
             if (analyzer != null)
                 return analyzer;
+            // Get from user
             analyzer = getFromFactory(analyzerName);
+            // Get from class
             if (analyzer == null) {
-                final Class<Analyzer> analyzerClass = ClassLoaderUtils.findClass(analyzerName, analyzerClassPrefixes);
+                final SmartAnalyzerSet smartAnalyzerSet = SmartAnalyzerSet.of(analyzerName);
+                final Class<? extends Analyzer> analyzerClass;
+                if (smartAnalyzerSet != null)
+                    analyzerClass = smartProvider.apply(smartAnalyzerSet);
+                else
+                    analyzerClass = ClassLoaderUtils.findClass(analyzerName, analyzerClassPrefixes);
                 analyzer = instanceFactory.findBestMatchingConstructor(analyzerClass).newInstance();
             }
             analyzerSingletonMap.put(analyzerName, analyzer);

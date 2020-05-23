@@ -1,5 +1,5 @@
-/**
- * Copyright 2016-2019 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2016-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
+@Target({ElementType.FIELD})
 public @interface IndexField {
 
     String name() default StringUtils.EMPTY;
@@ -36,9 +36,13 @@ public @interface IndexField {
 
     String analyzer() default StringUtils.EMPTY;
 
+    String indexAnalyzer() default StringUtils.EMPTY;
+
     String queryAnalyzer() default StringUtils.EMPTY;
 
     Class<? extends Analyzer> analyzerClass() default Analyzer.class;
+
+    Class<? extends Analyzer> indexAnalyzerClass() default Analyzer.class;
 
     Class<? extends Analyzer> queryAnalyzerClass() default Analyzer.class;
 

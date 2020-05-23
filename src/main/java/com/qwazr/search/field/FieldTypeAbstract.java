@@ -85,7 +85,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     }
 
     @Override
-    public ValueConverter getConverter(String fieldName, MultiReader reader) {
+    public ValueConverter<?> getConverter(String fieldName, MultiReader reader) {
         return null;
     }
 

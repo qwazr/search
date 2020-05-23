@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,24 +67,27 @@ public class CustomFieldDefinition extends FieldDefinition {
 
     @JsonCreator
     public CustomFieldDefinition(@JsonProperty("template") final Template template,
-            @JsonProperty("analyzer") final String analyzer, @JsonProperty("query_analyzer") final String queryAnalyzer,
-            @JsonProperty("tokenized") final Boolean tokenized, @JsonProperty("stored") final Boolean stored,
-            @JsonProperty("store_termvectors") final Boolean storeTermVectors,
-            @JsonProperty("store_termvector_offsets") final Boolean storeTermVectorOffsets,
-            @JsonProperty("store_termvector_positions") final Boolean storeTermVectorPositions,
-            @JsonProperty("store_termvector_payloads") final Boolean storeTermVectorPayloads,
-            @JsonProperty("omit_norms") final Boolean omitNorms,
-            @JsonProperty("facet_multivalued") final Boolean facetMultivalued,
-            @JsonProperty("facet_hierarchical") final Boolean facetHierarchical,
-            @JsonProperty("facet_require_dim_count") final Boolean facetRequireDimCount,
-            @JsonProperty("index_options") final IndexOptions indexOptions,
-            @JsonProperty("docvalues_type") final DocValuesType docValuesType,
-            @JsonProperty("index_dimension_count") final Integer indexDimensionCount,
-            @JsonProperty("data_dimension_count") final Integer dataDimensionCount,
-            @JsonProperty("dimension_num_bytes") final Integer dimensionNumBytes,
-            @JsonProperty("attributes") final Map<String, String> attributes,
-            @JsonProperty("copy_from") String[] copyFrom) {
-        super(null, analyzer, queryAnalyzer, copyFrom);
+                                 @JsonProperty("analyzer") final String analyzer,
+                                 @JsonProperty("index_analyzer") final String indexAnalyzer,
+                                 @JsonProperty("query_analyzer") final String queryAnalyzer,
+                                 @JsonProperty("tokenized") final Boolean tokenized,
+                                 @JsonProperty("stored") final Boolean stored,
+                                 @JsonProperty("store_termvectors") final Boolean storeTermVectors,
+                                 @JsonProperty("store_termvector_offsets") final Boolean storeTermVectorOffsets,
+                                 @JsonProperty("store_termvector_positions") final Boolean storeTermVectorPositions,
+                                 @JsonProperty("store_termvector_payloads") final Boolean storeTermVectorPayloads,
+                                 @JsonProperty("omit_norms") final Boolean omitNorms,
+                                 @JsonProperty("facet_multivalued") final Boolean facetMultivalued,
+                                 @JsonProperty("facet_hierarchical") final Boolean facetHierarchical,
+                                 @JsonProperty("facet_require_dim_count") final Boolean facetRequireDimCount,
+                                 @JsonProperty("index_options") final IndexOptions indexOptions,
+                                 @JsonProperty("docvalues_type") final DocValuesType docValuesType,
+                                 @JsonProperty("index_dimension_count") final Integer indexDimensionCount,
+                                 @JsonProperty("data_dimension_count") final Integer dataDimensionCount,
+                                 @JsonProperty("dimension_num_bytes") final Integer dimensionNumBytes,
+                                 @JsonProperty("attributes") final Map<String, String> attributes,
+                                 @JsonProperty("copy_from") String[] copyFrom) {
+        super(null, analyzer, indexAnalyzer, queryAnalyzer, copyFrom);
         this.template = template;
         this.tokenized = tokenized;
         this.stored = stored;
@@ -122,14 +125,17 @@ public class CustomFieldDefinition extends FieldDefinition {
         this.indexDimensionCount = builder.indexDimensionCount;
         this.dataDimensionCount = builder.dataDimensionCount;
         this.attributes = builder.attributes == null || builder.attributes.isEmpty() ?
-                null :
-                Collections.unmodifiableMap(new LinkedHashMap<>(builder.attributes));
+            null :
+            Collections.unmodifiableMap(new LinkedHashMap<>(builder.attributes));
         this.dimensionNumBytes = builder.dimensionNumBytes;
     }
 
     public CustomFieldDefinition(final String fieldName, final IndexField indexField, final Map<String, Copy> copyMap) {
-        super(null, from(indexField.analyzer(), indexField.analyzerClass()),
-                from(indexField.queryAnalyzer(), indexField.queryAnalyzerClass()), from(fieldName, copyMap));
+        super(null,
+            from(indexField.analyzer(), indexField.analyzerClass()),
+            from(indexField.indexAnalyzer(), indexField.indexAnalyzerClass()),
+            from(indexField.queryAnalyzer(), indexField.queryAnalyzerClass()),
+            from(fieldName, copyMap));
         template = indexField.template();
         tokenized = indexField.tokenized();
         stored = indexField.stored();
@@ -164,25 +170,25 @@ public class CustomFieldDefinition extends FieldDefinition {
             return false;
         final CustomFieldDefinition f = (CustomFieldDefinition) o;
         return Objects.equals(template, f.template) && Objects.equals(tokenized, f.tokenized) &&
-                Objects.equals(stored, f.stored) && Objects.equals(storeTermVectors, f.storeTermVectors) &&
-                Objects.equals(storeTermVectorOffsets, f.storeTermVectorOffsets) &&
-                Objects.equals(storeTermVectorPositions, f.storeTermVectorPositions) &&
-                Objects.equals(storeTermVectorPayloads, f.storeTermVectorPayloads) &&
-                Objects.equals(omitNorms, f.omitNorms) && Objects.equals(indexOptions, f.indexOptions) &&
-                Objects.equals(docValuesType, f.docValuesType) &&
-                Objects.equals(indexDimensionCount, f.indexDimensionCount) &&
-                Objects.equals(dataDimensionCount, f.dataDimensionCount) &&
-                Objects.equals(dimensionNumBytes, f.dimensionNumBytes) && Objects.equals(attributes, f.attributes) &&
-                Objects.equals(facetMultivalued, f.facetMultivalued) &&
-                Objects.equals(facetHierarchical, f.facetHierarchical) &&
-                Objects.equals(facetRequireDimCount, f.facetRequireDimCount);
+            Objects.equals(stored, f.stored) && Objects.equals(storeTermVectors, f.storeTermVectors) &&
+            Objects.equals(storeTermVectorOffsets, f.storeTermVectorOffsets) &&
+            Objects.equals(storeTermVectorPositions, f.storeTermVectorPositions) &&
+            Objects.equals(storeTermVectorPayloads, f.storeTermVectorPayloads) &&
+            Objects.equals(omitNorms, f.omitNorms) && Objects.equals(indexOptions, f.indexOptions) &&
+            Objects.equals(docValuesType, f.docValuesType) &&
+            Objects.equals(indexDimensionCount, f.indexDimensionCount) &&
+            Objects.equals(dataDimensionCount, f.dataDimensionCount) &&
+            Objects.equals(dimensionNumBytes, f.dimensionNumBytes) && Objects.equals(attributes, f.attributes) &&
+            Objects.equals(facetMultivalued, f.facetMultivalued) &&
+            Objects.equals(facetHierarchical, f.facetHierarchical) &&
+            Objects.equals(facetRequireDimCount, f.facetRequireDimCount);
     }
 
     @Override
     public FieldTypeInterface newFieldType(String genericFieldName, WildcardMatcher wildcardMatcher) {
         return template == null ?
-                new CustomFieldType(genericFieldName, wildcardMatcher, this) :
-                template.newFieldType(genericFieldName, wildcardMatcher, this);
+            new CustomFieldType(genericFieldName, wildcardMatcher, this) :
+            template.newFieldType(genericFieldName, wildcardMatcher, this);
     }
 
     public static CustomBuilder of() {

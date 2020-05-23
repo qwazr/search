@@ -7,13 +7,13 @@
     "type": "TEXT",
     "index": true,
     "sort": true,
-    "analyzer": "StandardAnalyzer"
+    "analyzer": "standard"
   },
   "description": {
     "type": "TEXT",
     "index": true,
     "stored": true,
-    "analyzer": "StandardAnalyzer"
+    "analyzer": "standard"
   },
   "category": {
     "type": "TEXT",
@@ -37,7 +37,7 @@
   "full": {
     "type": "TEXT",
     "index": true,
-    "analyzer": "StandardAnalyzer",
+    "analyzer": "standard",
     "copy_from": [
       "name",
       "description",

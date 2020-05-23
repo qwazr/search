@@ -159,7 +159,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test072CreateUpdateFields() throws URISyntaxException, IOException {
-        final AnnotatedIndexService service = getMaster();
+        final AnnotatedIndexService<?> service = getMaster();
         LinkedHashMap<String, FieldDefinition> fields = service.createUpdateFields();
         Assert.assertNotNull(fields);
         CustomFieldDefinition field;
