@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import com.qwazr.search.field.converters.MultiDVConverter;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedNumericDocValuesField;
@@ -27,27 +27,27 @@ import org.apache.lucene.util.NumericUtils;
 
 final class SortedFloatDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	SortedFloatDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.FLOAT).sortFieldProvider(SortUtils::floatSortField));
-	}
+    SortedFloatDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                             final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+            BytesRefUtils.Converter.FLOAT).sortFieldProvider(SortUtils::floatSortField));
+    }
 
-	@Override
-	final void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
-		final Field field;
-		if (value instanceof Number)
-			field = new SortedNumericDocValuesField(fieldName,
-					NumericUtils.floatToSortableInt(((Number) value).floatValue()));
-		else
-			field = new SortedNumericDocValuesField(fieldName,
-					NumericUtils.floatToSortableInt(Float.parseFloat(value.toString())));
-		consumer.accept(genericFieldName, fieldName, field);
-	}
+    @Override
+    final void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+        final Field field;
+        if (value instanceof Number)
+            field = new SortedNumericDocValuesField(fieldName,
+                NumericUtils.floatToSortableInt(((Number) value).floatValue()));
+        else
+            field = new SortedNumericDocValuesField(fieldName,
+                NumericUtils.floatToSortableInt(Float.parseFloat(value.toString())));
+        documentBuilder.accept(genericFieldName, fieldName, field);
+    }
 
-	@Override
-	final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
-		return new MultiDVConverter.FloatSetDVConverter(reader, fieldName);
-	}
+    @Override
+    final public ValueConverter<?> getConverter(final String fieldName, final MultiReader reader) {
+        return new MultiDVConverter.FloatSetDVConverter(reader, fieldName);
+    }
 
 }

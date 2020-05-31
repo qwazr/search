@@ -316,7 +316,7 @@ public class AnnotatedIndexService<T> {
             annotatedService.addDocument(schemaName, indexName, fieldMap, row, commitUserData);
         else
             indexService.postMappedDocument(schemaName, indexName,
-                PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData, false));
+                PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData));
     }
 
     /**
@@ -345,7 +345,7 @@ public class AnnotatedIndexService<T> {
             annotatedService.addDocuments(schemaName, indexName, fieldMap, row, commitUserData);
         else
             indexService.postMappedDocuments(schemaName, indexName,
-                PostDefinition.of(schemaFieldMapWrapper.newMapCollection(row), commitUserData, false));
+                PostDefinition.of(schemaFieldMapWrapper.newMapCollection(row), commitUserData));
     }
 
     public void addDocuments(final Collection<T> documents) throws IOException, InterruptedException {

@@ -18,27 +18,27 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.BinaryDocValuesField;
 import org.apache.lucene.util.BytesRef;
 
 final class BinaryDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	BinaryDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition));
-	}
+    BinaryDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                        final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition));
+    }
 
-	@Override
-	final protected void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
-		consumer.accept(genericFieldName, fieldName,
-				new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
-	}
+    @Override
+    final protected void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+        documentBuilder.accept(genericFieldName, fieldName,
+            new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
+    }
 
-	@Override
-	public final ValueConverter getConverter(final String fieldName, final MultiReader reader) {
-		return new SingleDVConverter.BinaryDVConverter(reader, fieldName);
-	}
+    @Override
+    public final ValueConverter<?> getConverter(final String fieldName, final MultiReader reader) {
+        return new SingleDVConverter.BinaryDVConverter(reader, fieldName);
+    }
 
 }

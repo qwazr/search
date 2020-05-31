@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.jaxrs.smile.SmileMediaTypes;
 import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
@@ -266,6 +267,13 @@ public interface IndexServiceInterface extends ServiceInterface {
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     Integer postMappedDocument(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
                                PostDefinition.Document document);
+
+    @POST
+    @Path("/{schema_name}/{index_name}/json")
+    @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
+    Integer postJson(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+                     JsonNode jsonNode);
+
 
     @POST
     @Path("/{schema_name}/{index_name}/docs")

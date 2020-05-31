@@ -19,7 +19,7 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.FloatDocValuesField;
 
@@ -32,7 +32,7 @@ final class FloatDocValuesType extends CustomFieldTypeAbstract.OneField {
     }
 
     @Override
-    void newField(String fieldName, Object value, FieldConsumer consumer) {
+    void newField(String fieldName, Object value, DocumentBuilder consumer) {
         final FloatDocValuesField field;
         if (value instanceof Number)
             field = new FloatDocValuesField(fieldName, ((Number) value).floatValue());

@@ -19,7 +19,7 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericDocValuesField;
@@ -33,7 +33,7 @@ final class IntDocValuesType extends CustomFieldTypeAbstract.OneField {
 	}
 
 	@Override
-	final public void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
+	final public void newField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 		final Field field;
 		if (value instanceof Number)
 			field = new NumericDocValuesField(fieldName, ((Number) value).intValue());

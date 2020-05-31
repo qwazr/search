@@ -16,7 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.StoredField;
@@ -30,12 +30,12 @@ final class FloatPointType extends StorableFieldType {
 	}
 
 	@Override
-	void newFieldNoStore(final String fieldName, final Object value, final FieldConsumer consumer) {
+	void newFieldNoStore(final String fieldName, final Object value, final DocumentBuilder consumer) {
 		consumer.accept(genericFieldName, fieldName, new FloatPoint(fieldName, FieldUtils.getFloatValue(value)));
 	}
 
 	@Override
-	void newFieldWithStore(final String fieldName, final Object value, final FieldConsumer consumer) {
+	void newFieldWithStore(final String fieldName, final Object value, final DocumentBuilder consumer) {
 		final float floatValue = FieldUtils.getFloatValue(value);
 		consumer.accept(genericFieldName, fieldName, new FloatPoint(fieldName, floatValue));
 		consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, floatValue));

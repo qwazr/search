@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexStatus;
@@ -30,6 +31,7 @@ import java.util.LinkedHashMap;
 
 import static com.qwazr.search.test.JsonAbstractTest.getDocs;
 import static com.qwazr.search.test.JsonAbstractTest.getFieldMap;
+import static com.qwazr.search.test.JsonAbstractTest.getJsonNode;
 import static com.qwazr.search.test.JsonAbstractTest.getQuery;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -38,6 +40,8 @@ public class GettingStartedTest {
     private final static String MY_SCHEMA = "my_schema";
     private final static String MY_INDEX = "my_index";
     public static final LinkedHashMap<String, FieldDefinition> MY_FIELDS_JSON = getFieldMap("my_fields.json");
+    public static final JsonNode MY_RECORD_JSON = getJsonNode("my_record.json");
+    public static final JsonNode MY_RECORDS_JSON = getJsonNode("my_records.json");
     public static final PostDefinition.Documents MY_DOCS_JSON = getDocs("my_docs.json");
     public static final QueryDefinition MY_SEARCH_JSON = getQuery("my_search.json");
 
@@ -67,7 +71,23 @@ public class GettingStartedTest {
     }
 
     @Test
-    public void test200UpdateDocs() {
+    public void test200UpdateOneRecord() {
+        IndexServiceInterface client = TestServer.remote;
+        final Integer result = client.postJson(MY_SCHEMA, MY_INDEX, MY_RECORD_JSON);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(Integer.valueOf(1), result);
+    }
+
+    @Test
+    public void test210UpdateRecords() {
+        IndexServiceInterface client = TestServer.remote;
+        final Integer result = client.postJson(MY_SCHEMA, MY_INDEX, MY_RECORDS_JSON);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(Integer.valueOf(MY_RECORDS_JSON.size()), result);
+    }
+
+    @Test
+    public void test220UpdateDocs() {
         IndexServiceInterface client = TestServer.remote;
         final Integer result = client.postMappedDocuments(MY_SCHEMA, MY_INDEX, MY_DOCS_JSON);
         Assert.assertNotNull(result);

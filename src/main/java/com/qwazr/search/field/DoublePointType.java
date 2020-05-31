@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,29 +16,29 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.StoredField;
 
 final class DoublePointType extends StorableFieldType {
 
-	DoublePointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.DOUBLE_POINT));
-	}
+    DoublePointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                    final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+            BytesRefUtils.Converter.DOUBLE_POINT));
+    }
 
-	@Override
-	void newFieldNoStore(final String fieldName, final Object value, final FieldConsumer consumer) {
-		consumer.accept(genericFieldName, fieldName, new DoublePoint(fieldName, FieldUtils.getDoubleValue(value)));
-	}
+    @Override
+    void newFieldNoStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+        documentBuilder.accept(genericFieldName, fieldName, new DoublePoint(fieldName, FieldUtils.getDoubleValue(value)));
+    }
 
-	@Override
-	void newFieldWithStore(final String fieldName, final Object value, final FieldConsumer consumer) {
-		final double doubleValue = FieldUtils.getDoubleValue(value);
-		consumer.accept(genericFieldName, fieldName, new DoublePoint(fieldName, doubleValue));
-		consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, doubleValue));
-	}
+    @Override
+    void newFieldWithStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+        final double doubleValue = FieldUtils.getDoubleValue(value);
+        documentBuilder.accept(genericFieldName, fieldName, new DoublePoint(fieldName, doubleValue));
+        documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, doubleValue));
+    }
 
 }

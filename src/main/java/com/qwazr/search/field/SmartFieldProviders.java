@@ -16,7 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedDocValuesField;
@@ -92,26 +92,26 @@ class SmartFieldProviders {
 			super(FieldPrefix.storedField, genericFieldName);
 		}
 
-		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void textField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName, new StoredField(getTextName(fieldName), value.toString()));
 		}
 
-		void longField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void longField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new StoredField(getLongName(fieldName), FieldUtils.getLongValue(value)));
 		}
 
-		void integerField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void integerField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new StoredField(getIntegerName(fieldName), FieldUtils.getIntValue(value)));
 		}
 
-		void doubleField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void doubleField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new StoredField(getDoubleName(fieldName), FieldUtils.getDoubleValue(value)));
 		}
 
-		void floatField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void floatField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new StoredField(getFloatName(fieldName), FieldUtils.getFloatValue(value)));
 		}
@@ -123,7 +123,7 @@ class SmartFieldProviders {
 			super(FieldPrefix.stringField, genericFieldName);
 		}
 
-		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void textField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new StringField(getTextName(fieldName), value.toString(), Field.Store.NO));
 		}
@@ -136,7 +136,7 @@ class SmartFieldProviders {
 			return BytesRefUtils.fromLong(FieldUtils.getLongValue(value));
 		}
 
-		void longField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void longField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new StringField(getLongName(fieldName), getLongValue(value), Field.Store.NO));
 		}
@@ -149,7 +149,7 @@ class SmartFieldProviders {
 			return BytesRefUtils.fromInteger(FieldUtils.getIntValue(value));
 		}
 
-		void integerField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void integerField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new StringField(getIntegerName(fieldName), getIntValue(value), Field.Store.NO));
 		}
@@ -162,7 +162,7 @@ class SmartFieldProviders {
 			return BytesRefUtils.fromDouble(FieldUtils.getDoubleValue(value));
 		}
 
-		void doubleField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void doubleField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new StringField(getDoubleName(fieldName), getDoubleValue(value), Field.Store.NO));
 		}
@@ -175,7 +175,7 @@ class SmartFieldProviders {
 			return BytesRefUtils.fromFloat(FieldUtils.getFloatValue(value));
 		}
 
-		void floatField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void floatField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new StringField(getFloatName(fieldName), getFloatValue(value), Field.Store.NO));
 		}
@@ -191,7 +191,7 @@ class SmartFieldProviders {
 			super(FieldPrefix.docValues, genericFieldName);
 		}
 
-		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void textField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new SortedDocValuesField(getTextName(fieldName), new BytesRef(value.toString())));
 		}
@@ -200,7 +200,7 @@ class SmartFieldProviders {
 			return SortUtils.stringSortField(getTextName(fieldName), sortEnum);
 		}
 
-		void longField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void longField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new SortedNumericDocValuesField(getLongName(fieldName), FieldUtils.getLongValue(value)));
 		}
@@ -209,7 +209,7 @@ class SmartFieldProviders {
 			return SortUtils.longSortField(getLongName(fieldName), sortEnum);
 		}
 
-		void integerField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void integerField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new SortedNumericDocValuesField(getIntegerName(fieldName), FieldUtils.getIntValue(value)));
 		}
@@ -218,7 +218,7 @@ class SmartFieldProviders {
 			return SortUtils.integerSortField(getIntegerName(fieldName), sortEnum);
 		}
 
-		void doubleField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void doubleField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName, new SortedNumericDocValuesField(getDoubleName(fieldName),
 					NumericUtils.doubleToSortableLong(FieldUtils.getDoubleValue(value))));
 		}
@@ -227,7 +227,7 @@ class SmartFieldProviders {
 			return SortUtils.doubleSortField(getDoubleName(fieldName), sortEnum);
 		}
 
-		void floatField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void floatField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName, new SortedNumericDocValuesField(getFloatName(fieldName),
 					NumericUtils.floatToSortableInt(FieldUtils.getFloatValue(value))));
 		}
@@ -243,7 +243,7 @@ class SmartFieldProviders {
 			super(FieldPrefix.facetField, genericFieldName);
 		}
 
-		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void textField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new SortedSetDocValuesFacetField(getTextName(fieldName), value.toString()));
 		}
@@ -255,7 +255,7 @@ class SmartFieldProviders {
 			super(FieldPrefix.textField, genericFieldName);
 		}
 
-		void textField(final String fieldName, final Object value, final FieldConsumer consumer) {
+		void textField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 			consumer.accept(genericFieldName, fieldName,
 					new TextField(getTextName(fieldName), value.toString(), Field.Store.NO));
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 
@@ -25,34 +26,40 @@ import java.util.Map;
 
 public interface WriteContext extends IndexContext {
 
-	IndexWriter getIndexWriter();
+    IndexWriter getIndexWriter();
 
-	TaxonomyWriter getTaxonomyWriter();
+    TaxonomyWriter getTaxonomyWriter();
 
-	void setLiveCommitData(Map<String, String> commitUserData, boolean doIncrementVersion);
+    void setLiveCommitData(Map<String, String> commitUserData, boolean doIncrementVersion);
 
-	<T> int postDocument(final Map<String, Field> fields, final T document, final Map<String, String> commitUserData,
-			boolean update) throws IOException;
+    <T> int postDocument(final Map<String, Field> fields,
+                         final T document,
+                         final Map<String, String> commitUserData) throws IOException;
 
-	<T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents,
-			final Map<String, String> commitUserData, final boolean update) throws IOException;
+    <T> int postDocuments(final Map<String, Field> fields,
+                          final Collection<T> documents,
+                          final Map<String, String> commitUserData) throws IOException;
 
-	int postMappedDoc(final RecordsPoster.MapDocument poster, final PostDefinition.Document post) throws IOException;
+    int postMappedDoc(final RecordsPoster.MapDocument poster,
+                      final PostDefinition.Document post) throws IOException;
 
-	int postMappedDocs(final RecordsPoster.MapDocument poster, final PostDefinition.Documents post) throws IOException;
+    int postMappedDocs(final RecordsPoster.MapDocument poster,
+                       final PostDefinition.Documents post) throws IOException;
 
-	int postMappedDocument(final PostDefinition.Document post) throws IOException;
+    int postMappedDocument(final PostDefinition.Document post) throws IOException;
 
-	int postMappedDocuments(final PostDefinition.Documents post) throws IOException;
+    int postMappedDocuments(final PostDefinition.Documents post) throws IOException;
 
-	<T> int updateDocValues(final Map<String, Field> fields, final T document, final Map<String, String> commitUserData)
-			throws IOException;
+    int postJsonNode(final JsonNode jsonNode) throws IOException;
 
-	<T> int updateDocsValues(final Map<String, Field> fields, final Collection<T> documents,
-			final Map<String, String> commitUserData) throws IOException;
+    <T> int updateDocValues(final Map<String, Field> fields, final T document, final Map<String, String> commitUserData)
+        throws IOException;
 
-	int updateMappedDocValues(final PostDefinition.Document post) throws IOException;
+    <T> int updateDocsValues(final Map<String, Field> fields, final Collection<T> documents,
+                             final Map<String, String> commitUserData) throws IOException;
 
-	int updateMappedDocsValues(final PostDefinition.Documents post) throws IOException;
+    int updateMappedDocValues(final PostDefinition.Document post) throws IOException;
+
+    int updateMappedDocsValues(final PostDefinition.Documents post) throws IOException;
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,69 +15,104 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import org.apache.lucene.index.Term;
 
-import java.util.function.BiConsumer;
+import java.lang.reflect.Field;
 
 abstract class RecordBuilder {
 
-	private final FieldConsumer fieldConsumer;
-	private final FieldMap fieldMap;
+    private final DocumentBuilder documentBuilder;
+    private final FieldMap fieldMap;
 
-	volatile Term termId;
+    volatile Term termId;
 
-	RecordBuilder(final FieldMap fieldMap, final FieldConsumer fieldConsumer) {
-		this.fieldMap = fieldMap;
-		this.fieldConsumer = fieldConsumer;
-		this.termId = null;
-	}
+    RecordBuilder(final FieldMap fieldMap, final DocumentBuilder documentBuilder) {
+        this.fieldMap = fieldMap;
+        this.documentBuilder = documentBuilder;
+        this.termId = null;
+    }
 
-	final void addFieldValue(final String fieldName, final Object fieldValue) {
-		if (fieldValue == null)
-			return;
+    final void reset() {
+        termId = null;
+    }
 
-		final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
-		if (fieldType == null)
-			throw new IllegalArgumentException("Unknown field: " + fieldName);
-		fieldType.dispatch(fieldName, fieldValue, fieldConsumer);
+    // TODO type aware !
+    final void addFieldValue(final String fieldName, final Object fieldValue) {
+        if (fieldValue == null)
+            return;
 
-		if (FieldDefinition.ID_FIELD.equals(fieldName))
-			termId = fieldType.term(fieldName, fieldValue);
-	}
+        final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
+        if (fieldType == null)
+            throw new IllegalArgumentException("Unknown field: " + fieldName);
+        fieldType.dispatch(fieldName, fieldValue, documentBuilder);
 
-	final static class ForMap extends RecordBuilder implements BiConsumer<String, Object> {
+        // TODO: should be provided by the configuration (no more fixed value)
+        if (FieldDefinition.ID_FIELD.equals(fieldName))
+            termId = fieldType.term(fieldName, fieldValue);
+    }
 
-		ForMap(final FieldMap fieldMap, final FieldConsumer fieldConsumer) {
-			super(fieldMap, fieldConsumer);
-		}
+    final static class ForMap extends RecordBuilder {
 
-		@Override
-		final public void accept(final String fieldName, final Object fieldValue) {
-			addFieldValue(fieldName, fieldValue);
-		}
+        ForMap(final FieldMap fieldMap, final DocumentBuilder documentBuilder) {
+            super(fieldMap, documentBuilder);
+        }
 
-	}
+        final public void accept(final String fieldName, final Object fieldValue) {
+            addFieldValue(fieldName, fieldValue);
+        }
 
-	final static class ForObject extends RecordBuilder implements BiConsumer<String, java.lang.reflect.Field> {
+    }
 
-		private final Object record;
+    final static class ForObject extends RecordBuilder {
 
-		ForObject(final FieldMap fieldMap, final FieldConsumer fieldConsumer, final Object record) {
-			super(fieldMap, fieldConsumer);
-			this.record = record;
-		}
+        ForObject(final FieldMap fieldMap,
+                  final DocumentBuilder documentBuilder) {
+            super(fieldMap, documentBuilder);
+        }
 
-		@Override
-		final public void accept(final String fieldName, final java.lang.reflect.Field field) {
-			try {
-				addFieldValue(fieldName, field.get(record));
-			} catch (IllegalAccessException e) {
-				throw new RuntimeException(e);
-			}
-		}
+        final public void accept(final String fieldName,
+                                 final Field field,
+                                 final Object record) {
+            try {
+                addFieldValue(fieldName, field.get(record));
+            }
+            catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
-	}
+    }
+
+    final static class ForJson extends RecordBuilder {
+
+        ForJson(final FieldMap fieldMap, final DocumentBuilder documentBuilder) {
+            super(fieldMap, documentBuilder);
+        }
+
+        final public void accept(final String fieldName, final JsonNode jsonValue) {
+            switch (jsonValue.getNodeType()) {
+                case STRING:
+                    addFieldValue(fieldName, jsonValue.textValue());
+                    break;
+                case NUMBER:
+                    addFieldValue(fieldName, jsonValue.numberValue());
+                    break;
+                case BOOLEAN:
+                    addFieldValue(fieldName, jsonValue.booleanValue());
+                    break;
+                case ARRAY:
+                    for (JsonNode element : jsonValue)
+                        accept(fieldName, element);
+                default:
+                    // Ignored
+                    break;
+            }
+
+        }
+
+    }
 
 }

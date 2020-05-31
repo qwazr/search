@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ArrayUtils;
@@ -40,7 +40,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     final protected String genericFieldName;
     final private WildcardMatcher wildcardMatcher;
     final protected T definition;
-    final protected BytesRefUtils.Converter bytesRefConverter;
+    final protected BytesRefUtils.Converter<?> bytesRefConverter;
     final private FieldTypeInterface.Facet[] facetConfig;
     final private FieldTypeInterface.FieldProvider[] fieldProviders;
     final private TermProvider termProvider;
@@ -56,11 +56,11 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         setup(builder);
         this.bytesRefConverter = builder.bytesRefConverter;
         this.facetConfig = builder.facetConfig == null || builder.facetConfig.isEmpty() ?
-                null :
-                builder.facetConfig.toArray(new Facet[0]);
+            null :
+            builder.facetConfig.toArray(new Facet[0]);
         this.fieldProviders = builder.fieldProviders == null || builder.fieldProviders.isEmpty() ?
-                null :
-                builder.fieldProviders.toArray(new FieldProvider[0]);
+            null :
+            builder.fieldProviders.toArray(new FieldProvider[0]);
         this.termProvider = builder.termProvider;
         this.storedFieldNameProvider = builder.storedFieldNameProvider;
         this.queryFieldNameProvider = builder.queryFieldNameProvider;
@@ -123,106 +123,115 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         return definition;
     }
 
-    protected void fillArray(final String fieldName, final int[] values, final FieldConsumer consumer) {
+    protected void fillArray(final String fieldName, final int[] values, final DocumentBuilder documentBuilder) {
         for (int value : values)
-            fill(fieldName, value, consumer);
+            fill(fieldName, value, documentBuilder);
     }
 
-    protected void fillArray(final String fieldName, final long[] values, final FieldConsumer consumer) {
+    protected void fillArray(final String fieldName, final long[] values, final DocumentBuilder documentBuilder) {
         for (long value : values)
-            fill(fieldName, value, consumer);
+            fill(fieldName, value, documentBuilder);
     }
 
-    protected void fillArray(final String fieldName, final double[] values, final FieldConsumer consumer) {
+    protected void fillArray(final String fieldName, final double[] values, final DocumentBuilder documentBuilder) {
         for (double value : values)
-            fill(fieldName, value, consumer);
+            fill(fieldName, value, documentBuilder);
     }
 
-    protected void fillArray(final String fieldName, final float[] values, final FieldConsumer consumer) {
+    protected void fillArray(final String fieldName, final float[] values, final DocumentBuilder documentBuilder) {
         for (float value : values)
-            fill(fieldName, value, consumer);
+            fill(fieldName, value, documentBuilder);
     }
 
-    protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
+    protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder documentBuilder) {
         for (Object value : values)
-            fill(fieldName, value, consumer);
+            fill(fieldName, value, documentBuilder);
     }
 
-    protected void fillArray(final String fieldName, final String[] values, final FieldConsumer consumer) {
+    protected void fillArray(final String fieldName, final String[] values, final DocumentBuilder documentBuilder) {
         for (String value : values)
-            fill(fieldName, value, consumer);
+            fill(fieldName, value, documentBuilder);
     }
 
-    protected void fillCollection(final String fieldName, final Collection<Object> values,
-                                  final FieldConsumer consumer) {
+    protected void fillCollection(final String fieldName,
+                                  final Collection<Object> values,
+                                  final DocumentBuilder documentBuilder) {
         values.forEach(value -> {
             if (value != null)
-                fill(fieldName, value, consumer);
+                fill(fieldName, value, documentBuilder);
         });
     }
 
-    protected void fillMap(final String fieldName, final Map<Object, Object> values, final FieldConsumer consumer) {
+    protected void fillMap(final String fieldName,
+                           final Map<Object, Object> values,
+                           final DocumentBuilder documentBuilder) {
         throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-                "Map is not asupported type for the field: " + fieldName);
+            "Map is not asupported type for the field: " + fieldName);
     }
 
     protected void fillWildcardMatcher(final String wildcardName, final Object value,
-                                       final FieldConsumer fieldConsumer) {
+                                       final DocumentBuilder documentBuilder) {
         if (value instanceof Map) {
             ((Map<String, Object>) value).forEach((fieldName, valueObject) -> {
                 if (!wildcardMatcher.match(fieldName))
                     throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-                            "The field name does not match the field pattern: " + wildcardName);
-                fill(fieldName, valueObject, fieldConsumer);
+                        "The field name does not match the field pattern: " + wildcardName);
+                fill(fieldName, valueObject, documentBuilder);
             });
         } else
-            fill(wildcardName, value, fieldConsumer);
+            fill(wildcardName, value, documentBuilder);
     }
 
-    protected void fill(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
+    protected void fill(final String fieldName,
+                        final Object value,
+                        final DocumentBuilder documentBuilder) {
         if (value == null)
             return;
         if (value instanceof String[])
-            fillArray(fieldName, (String[]) value, fieldConsumer);
+            fillArray(fieldName, (String[]) value, documentBuilder);
         else if (value instanceof int[])
-            fillArray(fieldName, (int[]) value, fieldConsumer);
+            fillArray(fieldName, (int[]) value, documentBuilder);
         else if (value instanceof long[])
-            fillArray(fieldName, (long[]) value, fieldConsumer);
+            fillArray(fieldName, (long[]) value, documentBuilder);
         else if (value instanceof double[])
-            fillArray(fieldName, (double[]) value, fieldConsumer);
+            fillArray(fieldName, (double[]) value, documentBuilder);
         else if (value instanceof float[])
-            fillArray(fieldName, (float[]) value, fieldConsumer);
+            fillArray(fieldName, (float[]) value, documentBuilder);
         else if (value instanceof Byte[])
-            fillValue(fieldName, ArrayUtils.toPrimitive((Byte[]) value), fieldConsumer);
+            fillValue(fieldName, ArrayUtils.toPrimitive((Byte[]) value), documentBuilder);
         else if (value instanceof Object[])
-            fillArray(fieldName, (Object[]) value, fieldConsumer);
+            fillArray(fieldName, (Object[]) value, documentBuilder);
         else if (value instanceof Collection)
-            fillCollection(fieldName, (Collection) value, fieldConsumer);
+            fillCollection(fieldName, (Collection) value, documentBuilder);
         else if (value instanceof Map)
-            fillMap(fieldName, (Map) value, fieldConsumer);
+            fillMap(fieldName, (Map) value, documentBuilder);
         else
-            fillValue(fieldName, value, fieldConsumer);
+            fillValue(fieldName, value, documentBuilder);
     }
 
-    final protected void fillValue(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
+    final protected void fillValue(final String fieldName,
+                                   final Object value,
+                                   final DocumentBuilder documentBuilder) {
         if (fieldProviders != null) {
             for (FieldProvider fieldProvider : fieldProviders)
-                fieldProvider.fillValue(fieldName, value, fieldConsumer);
+                fieldProvider.fillValue(fieldName, value, documentBuilder);
         } else
             throw new ServerException("Unsupported value type for field \"" + fieldName + "\" : " + value.getClass());
     }
 
     @Override
-    final public void dispatch(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
+    final public void dispatch(final String fieldName,
+                               final Object value,
+                               final DocumentBuilder documentBuilder) {
         if (value == null)
             return;
         if (wildcardMatcher != null)
-            fillWildcardMatcher(fieldName, value, fieldConsumer);
+            fillWildcardMatcher(fieldName, value, documentBuilder);
         else {
-            fill(fieldName, value, fieldConsumer);
+            fill(fieldName, value, documentBuilder);
             if (!copyToFields.isEmpty())
                 copyToFields.forEach(
-                        (fieldType, copyFieldName) -> fieldType.dispatch(copyFieldName, value, fieldConsumer));
+                    (fieldType, copyFieldName) -> fieldType.dispatch(copyFieldName, value, documentBuilder));
         }
     }
 
@@ -241,7 +250,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         final T definition;
         private final String genericFieldName;
         private final WildcardMatcher wildcardMatcher;
-        private BytesRefUtils.Converter bytesRefConverter;
+        private BytesRefUtils.Converter<?> bytesRefConverter;
         private LinkedHashSet<Facet> facetConfig;
         private LinkedHashSet<FieldProvider> fieldProviders;
         private TermProvider termProvider;
@@ -255,7 +264,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
             this.definition = definition;
         }
 
-        Builder<T> bytesRefConverter(BytesRefUtils.Converter bytesRefConverter) {
+        Builder<T> bytesRefConverter(BytesRefUtils.Converter<?> bytesRefConverter) {
             this.bytesRefConverter = bytesRefConverter;
             return this;
         }

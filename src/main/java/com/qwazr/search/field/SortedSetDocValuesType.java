@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import com.qwazr.search.field.converters.MultiDVConverter;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedSetDocValuesField;
@@ -27,24 +27,24 @@ import org.apache.lucene.util.BytesRef;
 
 final class SortedSetDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	SortedSetDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.STRING));
-	}
+    SortedSetDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                           final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+            BytesRefUtils.Converter.STRING));
+    }
 
-	@Override
-	final void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
-		final Field field;
-		if (value instanceof BytesRef)
-			field = new SortedSetDocValuesField(fieldName, (BytesRef) value);
-		else
-			field = new SortedSetDocValuesField(fieldName, new BytesRef(value.toString()));
-		consumer.accept(genericFieldName, fieldName, field);
-	}
+    @Override
+    final void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+        final Field field;
+        if (value instanceof BytesRef)
+            field = new SortedSetDocValuesField(fieldName, (BytesRef) value);
+        else
+            field = new SortedSetDocValuesField(fieldName, new BytesRef(value.toString()));
+        documentBuilder.accept(genericFieldName, fieldName, field);
+    }
 
-	@Override
-	public ValueConverter getConverter(String fieldName, MultiReader reader) {
-		return new MultiDVConverter.SortedSetDVConverter(reader, fieldName);
-	}
+    @Override
+    public ValueConverter<?> getConverter(String fieldName, MultiReader reader) {
+        return new MultiDVConverter.SortedSetDVConverter(reader, fieldName);
+    }
 }

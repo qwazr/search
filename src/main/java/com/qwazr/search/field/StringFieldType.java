@@ -16,7 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -32,12 +32,12 @@ final class StringFieldType extends StorableFieldType {
 	}
 
 	@Override
-	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
+	void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
 		consumer.accept(genericFieldName, fieldName, new StringField(fieldName, value.toString(), Field.Store.YES));
 	}
 
 	@Override
-	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
+	void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
 		consumer.accept(genericFieldName, fieldName, new StringField(fieldName, value.toString(), Field.Store.NO));
 	}
 

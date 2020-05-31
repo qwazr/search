@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,32 +15,32 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 
 abstract class StorableFieldType extends CustomFieldTypeAbstract {
 
-	final boolean store;
+    final boolean store;
 
-	StorableFieldType(final Builder<CustomFieldDefinition> builder) {
-		super(builder);
-		store = getStore(builder.definition);
-	}
+    StorableFieldType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
+        store = getStore(builder.definition);
+    }
 
-	private static boolean getStore(CustomFieldDefinition definition) {
-		return definition != null && definition.stored != null ? definition.stored : false;
-	}
+    private static boolean getStore(CustomFieldDefinition definition) {
+        return definition != null && definition.stored != null ? definition.stored : false;
+    }
 
-	@Override
-	final void setupFields(Builder<CustomFieldDefinition> builder) {
-		if (getStore(builder.definition)) {
-			builder.fieldProvider(this::newFieldWithStore);
-			builder.storedFieldNameProvider(f -> f);
-		} else
-			builder.fieldProvider(this::newFieldNoStore);
-	}
+    @Override
+    final void setupFields(Builder<CustomFieldDefinition> builder) {
+        if (getStore(builder.definition)) {
+            builder.fieldProvider(this::newFieldWithStore);
+            builder.storedFieldNameProvider(f -> f);
+        } else
+            builder.fieldProvider(this::newFieldNoStore);
+    }
 
-	abstract void newFieldWithStore(final String fieldName, final Object value, final FieldConsumer consumer);
+    abstract void newFieldWithStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder);
 
-	abstract void newFieldNoStore(final String fieldName, final Object value, final FieldConsumer consumer);
+    abstract void newFieldNoStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder);
 
 }

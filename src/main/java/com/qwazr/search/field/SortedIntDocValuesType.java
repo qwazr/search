@@ -19,7 +19,7 @@ import com.qwazr.search.field.converters.MultiDVConverter;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedNumericDocValuesField;
@@ -33,7 +33,7 @@ final class SortedIntDocValuesType extends CustomFieldTypeAbstract.OneField {
     }
 
     @Override
-    final public void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
+    final public void newField(final String fieldName, final Object value, final DocumentBuilder consumer) {
         final Field field;
         if (value instanceof Number)
             field = new SortedNumericDocValuesField(fieldName, ((Number) value).intValue());
@@ -43,7 +43,7 @@ final class SortedIntDocValuesType extends CustomFieldTypeAbstract.OneField {
     }
 
     @Override
-    final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
+    final public ValueConverter<?> getConverter(final String fieldName, final MultiReader reader) {
         return new MultiDVConverter.IntegerSetDVConverter(reader, fieldName);
     }
 }

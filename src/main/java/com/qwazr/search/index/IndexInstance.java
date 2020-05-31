@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
@@ -499,16 +500,16 @@ final public class IndexInstance implements Closeable {
     }
 
     final <T> int postDocument(final Map<String, Field> fields, final T document,
-                               final Map<String, String> commitUserData, boolean update) throws IOException {
+                               final Map<String, String> commitUserData) throws IOException {
         checkIsMaster();
         return write(
-            context -> checkCommit(context.postDocument(fields, document, commitUserData, update), commitUserData));
+            context -> checkCommit(context.postDocument(fields, document, commitUserData), commitUserData));
     }
 
     final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents,
-                                final Map<String, String> commitUserData, final boolean update) throws IOException {
+                                final Map<String, String> commitUserData) throws IOException {
         checkIsMaster();
-        return write(context -> checkCommit(context.postDocuments(fields, documents, commitUserData, update),
+        return write(context -> checkCommit(context.postDocuments(fields, documents, commitUserData),
             commitUserData));
     }
 
@@ -520,6 +521,11 @@ final public class IndexInstance implements Closeable {
     final int postMappedDocuments(final PostDefinition.Documents post) throws IOException {
         checkIsMaster();
         return write(context -> checkCommit(context.postMappedDocuments(post), post));
+    }
+
+    public int postJsonNode(final JsonNode jsonNode) throws IOException {
+        checkIsMaster();
+        return write(context -> context.postJsonNode(jsonNode));
     }
 
     final <T> int updateDocValues(final Map<String, Field> fields, final T document,

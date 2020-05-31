@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,59 +25,44 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public abstract class PostDefinition {
 
-	@JsonProperty("commit_user_data")
-	final public Map<String, String> commitUserData;
+    @JsonProperty("commit_user_data")
+    final public Map<String, String> commitUserData;
 
-	final public Boolean update;
+    PostDefinition(final Map<String, String> commitUserData) {
+        this.commitUserData = commitUserData;
+    }
 
-	PostDefinition(Map<String, String> commitUserData, Boolean update) {
-		this.commitUserData = commitUserData;
-		this.update = update;
-	}
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public static class Document extends PostDefinition {
 
-	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	public static class Document extends PostDefinition {
+        final public Map<String, Object> document;
 
-		final public Map<String, Object> document;
+        @JsonCreator
+        Document(@JsonProperty("document") final Map<String, Object> document,
+                 @JsonProperty("commit_user_data") final Map<String, String> commitUserData) {
+            super(commitUserData);
+            this.document = document;
+        }
+    }
 
-		@JsonCreator
-		Document(@JsonProperty("document") final Map<String, Object> document,
-				@JsonProperty("commit_user_data") final Map<String, String> commitUserData,
-				@JsonProperty("update") final Boolean update) {
-			super(commitUserData, update);
-			this.document = document;
-		}
-	}
+    public static Document of(final Map<String, Object> document, final Map<String, String> commitUserData) {
+        return new PostDefinition.Document(document, commitUserData);
+    }
 
-	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	public static class Documents extends PostDefinition {
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public static class Documents extends PostDefinition {
 
-		final public List<Map<String, Object>> documents;
+        final public List<Map<String, Object>> documents;
 
-		@JsonCreator
-		Documents(@JsonProperty("documents") final List<Map<String, Object>> documents,
-				@JsonProperty("commit_user_data") final Map<String, String> commitUserData,
-				@JsonProperty("update") final Boolean update) {
-			super(commitUserData, update);
-			this.documents = documents;
-		}
-	}
+        @JsonCreator
+        Documents(@JsonProperty("documents") final List<Map<String, Object>> documents,
+                  @JsonProperty("commit_user_data") final Map<String, String> commitUserData) {
+            super(commitUserData);
+            this.documents = documents;
+        }
+    }
 
-	public static Document of(final Map<String, Object> document, final Map<String, String> commitUserData,
-			final Boolean update) {
-		return new PostDefinition.Document(document, commitUserData, update);
-	}
-
-	public static Document of(final Map<String, Object> document, final Map<String, String> commitUserData) {
-		return of(document, commitUserData, null);
-	}
-
-	public static Documents of(final List<Map<String, Object>> documents, final Map<String, String> commitUserData,
-			final Boolean update) {
-		return new PostDefinition.Documents(documents, commitUserData, update);
-	}
-
-	public static Documents of(final List<Map<String, Object>> documents, final Map<String, String> commitUserData) {
-		return of(documents, commitUserData, null);
-	}
+    public static Documents of(final List<Map<String, Object>> documents, final Map<String, String> commitUserData) {
+        return new PostDefinition.Documents(documents, commitUserData);
+    }
 }

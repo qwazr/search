@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.server.ServerException;
 import org.apache.lucene.analysis.util.ResourceLoader;
@@ -30,142 +31,164 @@ import java.util.concurrent.ExecutorService;
 
 final class WriteContextImpl extends IndexContextImpl implements WriteContext {
 
-	final IndexWriter indexWriter;
-	final TaxonomyWriter taxonomyWriter;
+    final IndexWriter indexWriter;
+    final TaxonomyWriter taxonomyWriter;
 
-	WriteContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
-			final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
-			final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap, final IndexWriter indexWriter,
-			final TaxonomyWriter taxonomyWriter) {
-		super(indexProvider, resourceLoader, executorService, indexAnalyzers, queryAnalyzers, fieldMap);
-		this.indexWriter = indexWriter;
-		this.taxonomyWriter = taxonomyWriter;
-	}
+    WriteContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
+                     final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
+                     final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap, final IndexWriter indexWriter,
+                     final TaxonomyWriter taxonomyWriter) {
+        super(indexProvider, resourceLoader, executorService, indexAnalyzers, queryAnalyzers, fieldMap);
+        this.indexWriter = indexWriter;
+        this.taxonomyWriter = taxonomyWriter;
+    }
 
-	@Override
-	public IndexWriter getIndexWriter() {
-		return indexWriter;
-	}
+    @Override
+    public IndexWriter getIndexWriter() {
+        return indexWriter;
+    }
 
-	@Override
-	public TaxonomyWriter getTaxonomyWriter() {
-		return taxonomyWriter;
-	}
+    @Override
+    public TaxonomyWriter getTaxonomyWriter() {
+        return taxonomyWriter;
+    }
 
-	private <T> int postObjectDoc(final RecordsPoster.ObjectDocument poster, final T document,
-			final Map<String, String> commitUserData) throws IOException {
-		poster.accept(document);
-		if (commitUserData != null)
-			setLiveCommitData(commitUserData, true);
-		return poster.getCount();
-	}
+    private <T> int postObjectDoc(final RecordsPoster.ObjectDocument poster,
+                                  final T document,
+                                  final Map<String, String> commitUserData) throws IOException {
+        poster.accept(document);
+        if (commitUserData != null)
+            setLiveCommitData(commitUserData, true);
+        return poster.getCount();
+    }
 
-	private <T> int postObjectDocs(final RecordsPoster.ObjectDocument poster, final Collection<T> documents,
-			final Map<String, String> commitUserData) throws IOException {
-		for (final Object document : documents)
-			poster.accept(document);
-		if (commitUserData != null)
-			setLiveCommitData(commitUserData, true);
-		return poster.getCount();
-	}
+    private <T> int postObjectDocs(final RecordsPoster.ObjectDocument poster,
+                                   final Collection<T> documents,
+                                   final Map<String, String> commitUserData) throws IOException {
+        for (final Object document : documents)
+            poster.accept(document);
+        if (commitUserData != null)
+            setLiveCommitData(commitUserData, true);
+        return poster.getCount();
+    }
 
-	public final void setLiveCommitData(Map<String, String> commitUserData, boolean doIncrementVersion) {
-		indexWriter.setLiveCommitData(Objects.requireNonNull(commitUserData, "commitUserData is null").entrySet(),
-				doIncrementVersion);
-	}
+    public final void setLiveCommitData(Map<String, String> commitUserData, boolean doIncrementVersion) {
+        indexWriter.setLiveCommitData(Objects.requireNonNull(commitUserData, "commitUserData is null").entrySet(),
+            doIncrementVersion);
+    }
 
-	@Override
-	public final <T> int postDocument(final Map<String, Field> fields, final T document,
-			final Map<String, String> commitUserData, boolean update) throws IOException {
-		if (document == null)
-			return 0;
-		final RecordsPoster.ObjectDocument poster =
-				RecordsPoster.create(fields, fieldMap, indexWriter, taxonomyWriter, update);
-		return postObjectDoc(poster, document, commitUserData);
-	}
+    @Override
+    public final <T> int postDocument(final Map<String, Field> fields,
+                                      final T document,
+                                      final Map<String, String> commitUserData) throws IOException {
+        if (document == null)
+            return 0;
+        final RecordsPoster.ObjectDocument poster = RecordsPoster.ObjectDocument.of(
+            fields, fieldMap, indexWriter, taxonomyWriter);
+        return postObjectDoc(poster, document, commitUserData);
+    }
 
-	@Override
-	public final <T> int postDocuments(final Map<String, Field> fields, final Collection<T> documents,
-			final Map<String, String> commitUserData, final boolean update) throws IOException {
-		if (documents == null || documents.isEmpty())
-			return 0;
-		final RecordsPoster.ObjectDocument poster =
-				RecordsPoster.create(fields, fieldMap, indexWriter, taxonomyWriter, update);
-		return postObjectDocs(poster, documents, commitUserData);
-	}
+    @Override
+    public final <T> int postDocuments(final Map<String, Field> fields,
+                                       final Collection<T> documents,
+                                       final Map<String, String> commitUserData) throws IOException {
+        if (documents == null || documents.isEmpty())
+            return 0;
+        final RecordsPoster.ObjectDocument poster =
+            RecordsPoster.ObjectDocument.of(fields, fieldMap, indexWriter, taxonomyWriter);
+        return postObjectDocs(poster, documents, commitUserData);
+    }
 
-	@Override
-	public int postMappedDoc(final RecordsPoster.MapDocument poster, final PostDefinition.Document post)
-			throws IOException {
-		poster.accept(post.document);
-		if (post.commitUserData != null)
-			setLiveCommitData(post.commitUserData, true);
-		return poster.getCount();
-	}
+    @Override
+    public int postMappedDoc(final RecordsPoster.MapDocument poster, final PostDefinition.Document post)
+        throws IOException {
+        poster.accept(post.document);
+        if (post.commitUserData != null)
+            setLiveCommitData(post.commitUserData, true);
+        return poster.getCount();
+    }
 
-	@Override
-	public int postMappedDocs(final RecordsPoster.MapDocument poster, final PostDefinition.Documents post)
-			throws IOException {
-		for (final Map<String, ?> doc : post.documents)
-			poster.accept(doc);
-		if (post.commitUserData != null)
-			setLiveCommitData(post.commitUserData, true);
-		return poster.getCount();
-	}
+    @Override
+    public int postMappedDocs(final RecordsPoster.MapDocument poster, final PostDefinition.Documents post)
+        throws IOException {
+        for (final Map<String, ?> doc : post.documents)
+            poster.accept(doc);
+        if (post.commitUserData != null)
+            setLiveCommitData(post.commitUserData, true);
+        return poster.getCount();
+    }
 
-	@Override
-	public final int postMappedDocument(final PostDefinition.Document post) throws IOException {
-		if (post == null || post.document == null || post.document.isEmpty())
-			return 0;
-		final RecordsPoster.MapDocument poster =
-				RecordsPoster.create(fieldMap, indexWriter, taxonomyWriter, post.update == null ? true : post.update);
-		return postMappedDoc(poster, post);
-	}
+    @Override
+    public final int postMappedDocument(final PostDefinition.Document post) throws IOException {
+        if (post == null || post.document == null || post.document.isEmpty())
+            return 0;
+        final RecordsPoster.MapDocument poster =
+            RecordsPoster.MapDocument.of(fieldMap, indexWriter, taxonomyWriter);
+        return postMappedDoc(poster, post);
+    }
 
-	@Override
-	public final int postMappedDocuments(final PostDefinition.Documents post) throws IOException {
-		if (post == null || post.documents == null || post.documents.isEmpty())
-			return 0;
-		final RecordsPoster.MapDocument poster =
-				RecordsPoster.create(fieldMap, indexWriter, taxonomyWriter, post.update == null ? true : post.update);
-		return postMappedDocs(poster, post);
-	}
+    @Override
+    public final int postMappedDocuments(final PostDefinition.Documents post) throws IOException {
+        if (post == null || post.documents == null || post.documents.isEmpty())
+            return 0;
+        final RecordsPoster.MapDocument poster =
+            RecordsPoster.MapDocument.of(fieldMap, indexWriter, taxonomyWriter);
+        return postMappedDocs(poster, post);
+    }
 
-	@Override
-	public final <T> int updateDocValues(final Map<String, Field> fields, final T document,
-			final Map<String, String> commitUserData) throws IOException {
-		if (document == null)
-			return 0;
-		final RecordsPoster.UpdateObjectDocValues poster =
-				new RecordsPoster.UpdateObjectDocValues(fields, fieldMap, indexWriter, taxonomyWriter);
-		return postObjectDoc(poster, document, commitUserData);
-	}
+    @Override
+    public int postJsonNode(final JsonNode jsonNode) throws IOException {
+        if (jsonNode == null)
+            return 0;
+        final RecordsPoster.JsonNodeDocument poster =
+            RecordsPoster.JsonNodeDocument.of(fieldMap, indexWriter, taxonomyWriter);
+        if (jsonNode.isArray()) {
+            for (final JsonNode element : jsonNode)
+                poster.accept(element);
+        } else if (jsonNode.isObject())
+            poster.accept(jsonNode);
+        else
+            throw new ServerException("The json should be either an array or an object.");
+        return poster.getCount();
+    }
 
-	@Override
-	public final <T> int updateDocsValues(final Map<String, Field> fields, final Collection<T> documents,
-			final Map<String, String> commitUserData) throws IOException {
-		if (documents == null || documents.isEmpty())
-			return 0;
-		final RecordsPoster.UpdateObjectDocValues poster =
-				new RecordsPoster.UpdateObjectDocValues(fields, fieldMap, indexWriter, taxonomyWriter);
-		return postObjectDocs(poster, documents, commitUserData);
-	}
+    @Override
+    public final <T> int updateDocValues(final Map<String, Field> fields,
+                                         final T document,
+                                         final Map<String, String> commitUserData) throws IOException {
+        if (document == null)
+            return 0;
+        final RecordsPoster.ObjectDocument poster =
+            RecordsPoster.ObjectDocument.forDocValueUpdate(fields, fieldMap, indexWriter, taxonomyWriter);
+        return postObjectDoc(poster, document, commitUserData);
+    }
 
-	@Override
-	public final int updateMappedDocValues(final PostDefinition.Document post) throws IOException {
-		if (post == null || post.document == null || post.document.isEmpty())
-			return 0;
-		final RecordsPoster.MapDocument poster =
-				new RecordsPoster.UpdateMapDocValues(fieldMap, indexWriter, taxonomyWriter);
-		return postMappedDoc(poster, post);
-	}
+    @Override
+    public final <T> int updateDocsValues(final Map<String, Field> fields,
+                                          final Collection<T> documents,
+                                          final Map<String, String> commitUserData) throws IOException {
+        if (documents == null || documents.isEmpty())
+            return 0;
+        final RecordsPoster.ObjectDocument poster =
+            RecordsPoster.ObjectDocument.forDocValueUpdate(fields, fieldMap, indexWriter, taxonomyWriter);
+        return postObjectDocs(poster, documents, commitUserData);
+    }
 
-	@Override
-	public final int updateMappedDocsValues(final PostDefinition.Documents post) throws IOException, ServerException {
-		if (post == null || post.documents == null || post.documents.isEmpty())
-			return 0;
-		final RecordsPoster.MapDocument poster =
-				new RecordsPoster.UpdateMapDocValues(fieldMap, indexWriter, taxonomyWriter);
-		return postMappedDocs(poster, post);
-	}
+    @Override
+    public final int updateMappedDocValues(final PostDefinition.Document post) throws IOException {
+        if (post == null || post.document == null || post.document.isEmpty())
+            return 0;
+        final RecordsPoster.MapDocument poster =
+            RecordsPoster.MapDocument.forDocValueUpdate(fieldMap, indexWriter, taxonomyWriter);
+        return postMappedDoc(poster, post);
+    }
+
+    @Override
+    public final int updateMappedDocsValues(final PostDefinition.Documents post) throws IOException, ServerException {
+        if (post == null || post.documents == null || post.documents.isEmpty())
+            return 0;
+        final RecordsPoster.MapDocument poster =
+            RecordsPoster.MapDocument.forDocValueUpdate(fieldMap, indexWriter, taxonomyWriter);
+        return postMappedDocs(poster, post);
+    }
 }

@@ -20,7 +20,7 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.search.SortField;
@@ -86,16 +86,18 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
     }
 
     @Override
-    final protected void newField(final String fieldName, final Object value, final FieldConsumer fieldConsumer) {
+    final protected void newField(final String fieldName,
+                                  final Object value,
+                                  final DocumentBuilder documentBuilder) {
         final FieldType type = new FieldType();
         if (typeSetters != null)
             for (Consumer<FieldType> ts : typeSetters)
                 ts.accept(type);
-        fieldConsumer.accept(genericFieldName, fieldName, new CustomField(fieldName, type, value));
+        documentBuilder.accept(genericFieldName, fieldName, new CustomField(fieldName, type, value));
     }
 
     @Override
-    public ValueConverter getConverter(final String field, final MultiReader reader) {
+    public ValueConverter<?> getConverter(final String field, final MultiReader reader) {
         if (definition == null)
             return null;
         if (definition.template != null)
@@ -118,7 +120,7 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
         return null;
     }
 
-    private static BytesRefUtils.Converter getConverter(final FieldDefinition definition) {
+    private static BytesRefUtils.Converter<?> getConverter(final FieldDefinition definition) {
         if (!(definition instanceof CustomFieldDefinition))
             return null;
         final CustomFieldDefinition customDef = (CustomFieldDefinition) definition;

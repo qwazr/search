@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
@@ -479,6 +480,17 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
+    public Integer postJson(final String schemaName, final String indexName, final JsonNode jsonNode) {
+        try {
+            checkRight(schemaName);
+            return indexManager.get(schemaName).get(indexName, true).postJsonNode(jsonNode);
+        }
+        catch (Exception e) {
+            throw ServerException.getJsonException(LOGGER, e);
+        }
+    }
+
+    @Override
     final public Integer postMappedDocuments(final String schemaName, final String indexName,
                                              final PostDefinition.Documents post) {
         try {
@@ -494,21 +506,21 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     final public <T> int postDocument(final String schemaName, final String indexName, final Map<String, Field> fields,
                                       final T document, final Map<String, String> commitUserData) throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData, true);
+        return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData);
     }
 
     @Override
     final public <T> int postDocuments(final String schemaName, final String indexName, final Map<String, Field> fields,
                                        final Collection<T> documents, final Map<String, String> commitUserData) throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents, commitUserData, true);
+        return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents, commitUserData);
     }
 
     @Override
     final public <T> int addDocument(final String schemaName, final String indexName, final Map<String, Field> fields,
                                      final T document, final Map<String, String> commitUserData) throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData, false);
+        return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData);
     }
 
     @Override
@@ -517,7 +529,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
         checkRight(schemaName);
         return indexManager.get(schemaName)
             .get(indexName, true)
-            .postDocuments(fields, documents, commitUserData, false);
+            .postDocuments(fields, documents, commitUserData);
     }
 
     @Override

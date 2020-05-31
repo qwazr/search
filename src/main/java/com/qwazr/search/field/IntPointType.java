@@ -16,7 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
@@ -30,14 +30,14 @@ final class IntPointType extends StorableFieldType {
 	}
 
 	@Override
-	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
+	void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
 		final int intValue = FieldUtils.getIntValue(value);
 		consumer.accept(genericFieldName, fieldName, new IntPoint(fieldName, intValue));
 		consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, intValue));
 	}
 
 	@Override
-	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
+	void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
 		consumer.accept(genericFieldName, fieldName, new IntPoint(fieldName, FieldUtils.getIntValue(value)));
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
-import com.qwazr.search.index.FieldConsumer;
 import com.qwazr.search.index.FieldMap;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.facet.FacetsConfig;
@@ -28,55 +28,62 @@ import org.apache.lucene.util.BytesRef;
 
 public interface FieldTypeInterface {
 
-	void dispatch(final String fieldName, final Object value, final FieldConsumer fieldConsumer);
+    void dispatch(final String fieldName, final Object value, final DocumentBuilder luceneDocumentBuilder);
 
-	SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
+    SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
 
-	ValueConverter getConverter(final String fieldName, final MultiReader reader);
+    ValueConverter<?> getConverter(final String fieldName, final MultiReader reader);
 
-	Object toTerm(final BytesRef bytesRef);
+    Object toTerm(final BytesRef bytesRef);
 
-	String getQueryFieldName(String fieldName);
+    String getQueryFieldName(String fieldName);
 
-	String getStoredFieldName(String fieldName);
+    String getStoredFieldName(String fieldName);
 
-	FieldDefinition getDefinition();
+    FieldDefinition getDefinition();
 
-	void copyTo(final String fieldName, final FieldTypeInterface fieldType);
+    void copyTo(final String fieldName, final FieldTypeInterface fieldType);
 
-	void setFacetsConfig(final String fieldName, final FieldMap fieldMap, final FacetsConfig facetsConfig);
+    void setFacetsConfig(final String fieldName, final FieldMap fieldMap, final FacetsConfig facetsConfig);
 
-	Term term(String fieldName, Object value);
+    Term term(String fieldName, Object value);
 
-	@FunctionalInterface
-	interface Facet {
-		void config(String fieldName, FieldMap fieldMap, FacetsConfig facetsConfig);
-	}
+    @FunctionalInterface
+    interface Facet {
+        void config(final String fieldName,
+                    final FieldMap fieldMap,
+                    final FacetsConfig facetsConfig);
+    }
 
-	@FunctionalInterface
-	interface FieldProvider {
-		void fillValue(final String fieldName, final Object value, final FieldConsumer consumer);
-	}
+    @FunctionalInterface
+    interface FieldProvider {
+        void fillValue(final String fieldName,
+                       final Object value,
+                       final DocumentBuilder documentBuilder);
+    }
 
-	@FunctionalInterface
-	interface TermProvider {
-		Term term(final String fieldName, final Object value);
-	}
+    @FunctionalInterface
+    interface TermProvider {
+        Term term(final String fieldName,
+                  final Object value);
+    }
 
-	@FunctionalInterface
-	interface FieldNameProvider {
-		String fieldName(final String fieldName);
-	}
+    @FunctionalInterface
+    interface FieldNameProvider {
+        String fieldName(final String fieldName);
+    }
 
-	@FunctionalInterface
-	interface SortFieldProvider {
-		SortField sortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
-	}
+    @FunctionalInterface
+    interface SortFieldProvider {
+        SortField sortField(final String fieldName,
+                            final QueryDefinition.SortEnum sortEnum);
+    }
 
-	@FunctionalInterface
-	interface Supplier {
-		FieldTypeInterface newFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-				final FieldDefinition definition);
-	}
+    @FunctionalInterface
+    interface Supplier {
+        FieldTypeInterface newFieldType(final String genericFieldName,
+                                        final WildcardMatcher wildcardMatcher,
+                                        final FieldDefinition definition);
+    }
 
 }

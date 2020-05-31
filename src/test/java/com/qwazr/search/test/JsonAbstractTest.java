@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
@@ -148,7 +149,7 @@ public abstract class JsonAbstractTest {
         IndexServiceInterface client = getClient();
         final File schemaBackupDir = Files.createTempDirectory("backup_dir").toFile();
         final SchemaSettingsDefinition settings1 =
-                SchemaSettingsDefinition.of().backupDirectoryPath(schemaBackupDir.getAbsolutePath()).build();
+            SchemaSettingsDefinition.of().backupDirectoryPath(schemaBackupDir.getAbsolutePath()).build();
         SchemaSettingsDefinition settings2 = client.createUpdateSchema(SCHEMA_NAME, settings1);
         Assert.assertNotNull(settings2);
         Assert.assertEquals(settings1, settings2);
@@ -300,7 +301,7 @@ public abstract class JsonAbstractTest {
         Assert.assertEquals(0, resources.size());
         try (final InputStream input = JsonAbstractTest.class.getResourceAsStream(SYNONYMS_TXT)) {
             Assert.assertTrue(
-                    client.postResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS_TXT, SYNONYM_LAST_MODIFIED, input));
+                client.postResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS_TXT, SYNONYM_LAST_MODIFIED, input));
         }
         try (final InputStream input = client.getResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS_TXT)) {
             Assert.assertNotNull(input);
@@ -313,7 +314,7 @@ public abstract class JsonAbstractTest {
         IndexServiceInterface client = getClient();
         try (final InputStream input = JsonAbstractTest.class.getResourceAsStream(SYNONYMS_TXT)) {
             Assert.assertTrue(
-                    client.postResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS2_TXT, SYNONYM_LAST_MODIFIED, input));
+                client.postResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS2_TXT, SYNONYM_LAST_MODIFIED, input));
         }
         Map<String, IndexInstance.ResourceInfo> resources = client.getResources(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(resources);
@@ -329,7 +330,7 @@ public abstract class JsonAbstractTest {
         IndexServiceInterface client = getClient();
         checkErrorStatusCode(() -> client.setAnalyzers(SCHEMA_NAME, INDEX_DUMMY_NAME, ANALYZERS_JSON), 404);
         LinkedHashMap<String, AnalyzerDefinition> analyzers =
-                client.setAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME, ANALYZERS_JSON);
+            client.setAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME, ANALYZERS_JSON);
         Assert.assertEquals(analyzers.size(), ANALYZERS_JSON.size());
         IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(indexStatus.analyzers);
@@ -371,9 +372,9 @@ public abstract class JsonAbstractTest {
     public void test126TestFrenchAnalyzer() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(
-                () -> client.testAnalyzer(SCHEMA_NAME, INDEX_DUMMY_NAME, "FrenchAnalyzer", "Bonjour le monde!"), 404);
+            () -> client.testAnalyzer(SCHEMA_NAME, INDEX_DUMMY_NAME, "FrenchAnalyzer", "Bonjour le monde!"), 404);
         final List<TermDefinition> termDefinitions =
-                client.testAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, "FrenchAnalyzer", "Bonjour le monde!");
+            client.testAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, "FrenchAnalyzer", "Bonjour le monde!");
         Assert.assertNotNull(termDefinitions);
         Assert.assertEquals(3, termDefinitions.size());
         Assert.assertEquals("bonjou", termDefinitions.get(0).char_term);
@@ -383,7 +384,7 @@ public abstract class JsonAbstractTest {
     public void test128TestAnalyzerDot() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
         final String dot = client.testAnalyzerDot(SCHEMA_NAME, INDEX_MASTER_NAME, "EnglishSynonymAnalyzer",
-                "The United States is wealthy!");
+            "The United States is wealthy!");
         Assert.assertNotNull(dot);
         Assert.assertTrue(dot.contains("united"));
         Assert.assertTrue(dot.contains("states"));
@@ -395,7 +396,7 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(() -> client.setFields(SCHEMA_NAME, INDEX_DUMMY_NAME, null), 404);
         final LinkedHashMap<String, FieldDefinition> fields =
-                client.setFields(SCHEMA_NAME, INDEX_MASTER_NAME, FIELDS_JSON);
+            client.setFields(SCHEMA_NAME, INDEX_MASTER_NAME, FIELDS_JSON);
         Assert.assertEquals(fields.size(), FIELDS_JSON.size());
         final IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(indexStatus.fields);
@@ -409,7 +410,7 @@ public abstract class JsonAbstractTest {
         checkErrorStatusCode(() -> client.getField(SCHEMA_NAME, INDEX_MASTER_NAME, DUMMY_FIELD_NAME), 404);
         FIELDS_JSON.forEach((fieldName, fieldDefinition) -> {
             CustomFieldDefinition fieldDef =
-                    (CustomFieldDefinition) client.getField(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName);
+                (CustomFieldDefinition) client.getField(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName);
             Assert.assertEquals(fieldDef.template, ((CustomFieldDefinition) fieldDefinition).template);
             Assert.assertEquals(fieldDef.analyzer, ((CustomFieldDefinition) fieldDefinition).analyzer);
         });
@@ -478,6 +479,15 @@ public abstract class JsonAbstractTest {
         checkIndexSize(client, expectedSize);
     }
 
+    public static JsonNode getJsonNode(String res) {
+        try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
+            return ObjectMappers.JSON.readTree(is);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static PostDefinition.Documents getDocs(String res) {
         try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return ObjectMappers.JSON.readValue(is, PostDefinition.Documents.class);
@@ -533,7 +543,7 @@ public abstract class JsonAbstractTest {
     private BackupStatus doBackup(IndexServiceInterface client, String backupName) {
         checkErrorStatusCode(() -> client.doBackup(SCHEMA_NAME, INDEX_DUMMY_NAME, backupName), 404);
         SortedMap<String, SortedMap<String, BackupStatus>> statusMap =
-                client.doBackup(SCHEMA_NAME, INDEX_MASTER_NAME, backupName);
+            client.doBackup(SCHEMA_NAME, INDEX_MASTER_NAME, backupName);
         Assert.assertNotNull(statusMap);
         SortedMap<String, BackupStatus> indexMap = statusMap.get(SCHEMA_NAME);
         Assert.assertNotNull(indexMap);
@@ -569,7 +579,7 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         Assert.assertTrue(client.getBackups(SCHEMA_NAME, INDEX_DUMMY_NAME, INDEX_BACKUP_NAME1, true).isEmpty());
         final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> results =
-                client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1, true);
+            client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1, true);
         Assert.assertNotNull(results);
         Assert.assertTrue(results.isEmpty());
         BackupStatus status1 = doBackup(client, INDEX_BACKUP_NAME1);
@@ -584,7 +594,7 @@ public abstract class JsonAbstractTest {
             checkErrorStatusCode(() -> client.postMappedDocument(SCHEMA_NAME, INDEX_DUMMY_NAME, UPDATE_DOC), 404);
             Assert.assertEquals(Integer.valueOf(0), client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, null));
             Assert.assertEquals(Integer.valueOf(1),
-                    client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC));
+                client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC));
             checkAllSizes(client, 5);
         }
     }
@@ -606,12 +616,12 @@ public abstract class JsonAbstractTest {
         checkErrorStatusCode(() -> client.updateMappedDocValues(SCHEMA_NAME, INDEX_DUMMY_NAME, UPDATE_DOC_VALUE), 404);
         Assert.assertEquals(Integer.valueOf(0), client.updateMappedDocValues(SCHEMA_NAME, INDEX_MASTER_NAME, null));
         Assert.assertEquals(Integer.valueOf(1),
-                client.updateMappedDocValues(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_VALUE));
+            client.updateMappedDocValues(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_VALUE));
         checkAllSizes(client, 5);
 
         // Update a list of documents values
         checkErrorStatusCode(() -> client.updateMappedDocsValues(SCHEMA_NAME, INDEX_DUMMY_NAME, UPDATE_DOCS_VALUES),
-                404);
+            404);
         Assert.assertEquals(Integer.valueOf(0), client.updateMappedDocsValues(SCHEMA_NAME, INDEX_MASTER_NAME, null));
         final Integer count = client.updateMappedDocsValues(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOCS_VALUES);
         Assert.assertNotNull(count);
@@ -695,9 +705,9 @@ public abstract class JsonAbstractTest {
         Assert.assertEquals("Fourth name", result.documents.get(0).fields.get("name"));
         Assert.assertEquals("Fifth name", result.documents.get(1).fields.get("name"));
         checkReturnedFields(result.documents.get(0).fields, "dynamic_multi_facet_cat", "dyn_cat1", "dyn_cat2",
-                "dyn_cat3", "dyn_cat4");
+            "dyn_cat3", "dyn_cat4");
         checkReturnedFields(result.documents.get(1).fields, "dynamic_multi_facet_cat", "dyn_cat1", "dyn_cat2",
-                "dyn_cat3", "dyn_cat4", "dyn_cat5");
+            "dyn_cat3", "dyn_cat4", "dyn_cat5");
         Assert.assertNotNull(result.facets);
         checkFacetSize(result, "category", 5);
         checkFacetSize(result, "dynamic_multi_facet_cat", 5);
@@ -796,9 +806,9 @@ public abstract class JsonAbstractTest {
                                final String... multiWordsHighlights) throws IOException {
         final QueryBuilder builder = QueryDefinition.of(QUERY_HIGHLIGHT);
         builder.query(QueryParser.of("description")
-                .setDefaultOperator(QueryParserOperator.AND)
-                .setQueryString(queryString)
-                .build());
+            .setDefaultOperator(QueryParserOperator.AND)
+            .setQueryString(queryString)
+            .build());
         final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, builder.build(), 2);
         boolean foundMultiWord1 = false;
         boolean foundMultiWord2 = false;
@@ -807,9 +817,9 @@ public abstract class JsonAbstractTest {
         for (ResultDocumentMap document : result.getDocuments()) {
             for (String multiWordHighlight : multiWordsHighlights) {
                 foundMultiWord1 = foundMultiWord1 ||
-                        checkSnippets(document, "my_custom_snippet", "<strong>" + multiWordHighlight + "</strong>");
+                    checkSnippets(document, "my_custom_snippet", "<strong>" + multiWordHighlight + "</strong>");
                 foundMultiWord2 = foundMultiWord2 ||
-                        checkSnippets(document, "my_default_snippet", "<b>" + multiWordHighlight + "</b>");
+                    checkSnippets(document, "my_default_snippet", "<b>" + multiWordHighlight + "</b>");
             }
             foundSimpleWord1 = foundSimpleWord1 || checkSnippets(document, "my_custom_snippet", "<strong>USA</strong>");
             foundSimpleWord2 = foundSimpleWord2 || checkSnippets(document, "my_default_snippet", "<b>USA</b>");
@@ -840,7 +850,7 @@ public abstract class JsonAbstractTest {
         final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_STANDARDQUERYPARSER, 1);
         final ResultDocumentMap document = result.getDocuments().get(0);
         Assert.assertTrue(
-                ((List<String>) document.getFields().get("description")).get(0).startsWith("A web search engine"));
+            ((List<String>) document.getFields().get("description")).get(0).startsWith("A web search engine"));
         Assert.assertEquals(0, document.getPos());
     }
 
@@ -919,13 +929,13 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         BackupStatus status = doBackup(client, INDEX_BACKUP_NAME2);
         Assert.assertEquals(status,
-                checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME2, false),
-                        INDEX_BACKUP_NAME2));
+            checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME2, false),
+                INDEX_BACKUP_NAME2));
         // Same backup again
         status = doBackup(client, INDEX_BACKUP_NAME2);
         Assert.assertEquals(status,
-                checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME2, false),
-                        INDEX_BACKUP_NAME2));
+            checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME2, false),
+                INDEX_BACKUP_NAME2));
     }
 
     private void checkAnalyzerResult(String[] term_results, List<TermDefinition> termList) {
@@ -941,13 +951,13 @@ public abstract class JsonAbstractTest {
         final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(
-                () -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),
-                404);
+            () -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),
+            404);
         checkAnalyzerResult(term_results,
-                client.doAnalyzeIndex(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "There are few parts of texts"));
+            client.doAnalyzeIndex(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "There are few parts of texts"));
 
         checkAnalyzerResult(term_results,
-                client.doAnalyzeQuery(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "There are few parts of texts"));
+            client.doAnalyzeQuery(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "There are few parts of texts"));
     }
 
     @Test
@@ -956,9 +966,9 @@ public abstract class JsonAbstractTest {
         checkErrorStatusCode(() -> client.doExtractTerms(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", null, null, null), 404);
         Assert.assertNotNull(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, null));
         final int firstSize = JavaAbstractTest.checkTermList(
-                client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, 10000)).size();
+            client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, 10000)).size();
         final int secondSize = JavaAbstractTest.checkTermList(
-                client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, 2, 10000)).size();
+            client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, 2, 10000)).size();
         Assert.assertEquals(firstSize, secondSize + 2);
         JavaAbstractTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "a", null, null));
     }
@@ -967,9 +977,9 @@ public abstract class JsonAbstractTest {
     public void test620getFieldStats() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
         client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME)
-                .keySet()
-                .forEach(fieldName -> JavaAbstractTest.checkFieldStats(fieldName,
-                        client.getFieldStats(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName)));
+            .keySet()
+            .forEach(fieldName -> JavaAbstractTest.checkFieldStats(fieldName,
+                client.getFieldStats(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName)));
     }
 
     @Test
@@ -986,7 +996,7 @@ public abstract class JsonAbstractTest {
         for (int i = 0; i < result.totalHits; i++) {
             builder.start(i);
             ResultDefinition.WithMap result2 =
-                    client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, builder.build(), false);
+                client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, builder.build(), false);
             idSet.add(result2.getDocuments().get(0).getDoc());
         }
         Assert.assertEquals(result.totalHits, idSet.size());
@@ -997,12 +1007,12 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         final BackupStatus status = doBackup(client, INDEX_BACKUP_NAME3);
         Assert.assertEquals(status,
-                checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME3, false),
-                        INDEX_BACKUP_NAME3));
+            checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME3, false),
+                INDEX_BACKUP_NAME3));
         client.doBackup("*", "*", INDEX_BACKUP_NAME3);
         Assert.assertEquals(status, getAndCheckBackup(client, INDEX_BACKUP_NAME3, false));
         final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups =
-                client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, "*", true);
+            client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, "*", true);
         Assert.assertNotNull(backups);
         checkBackup(backups, INDEX_BACKUP_NAME1);
         checkBackup(backups, INDEX_BACKUP_NAME2);
@@ -1013,7 +1023,7 @@ public abstract class JsonAbstractTest {
     public void test810DeleteBackup() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
         Assert.assertEquals(Integer.valueOf(1),
-                client.deleteBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1));
+            client.deleteBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1));
         Assert.assertEquals(Integer.valueOf(3), client.deleteBackups(SCHEMA_NAME, "*", "*"));
     }
 
@@ -1027,7 +1037,7 @@ public abstract class JsonAbstractTest {
         // Get the fields and analyzers of the master
         final LinkedHashMap<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
         final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers =
-                client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
+            client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(masterFields);
         Assert.assertNotNull(masterAnalyzers);
 
@@ -1041,7 +1051,7 @@ public abstract class JsonAbstractTest {
         // Get the fields and analyzers of the slave
         final LinkedHashMap<String, FieldDefinition> slaveFields = client.getFields(SCHEMA_NAME, INDEX_SLAVE_NAME);
         final LinkedHashMap<String, AnalyzerDefinition> slaveAnalyzers =
-                client.getAnalyzers(SCHEMA_NAME, INDEX_SLAVE_NAME);
+            client.getAnalyzers(SCHEMA_NAME, INDEX_SLAVE_NAME);
         Assert.assertNotNull(slaveFields);
         Assert.assertNotNull(slaveAnalyzers);
 
@@ -1065,7 +1075,7 @@ public abstract class JsonAbstractTest {
 
         final LinkedHashMap<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
         final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers =
-                client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
+            client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(masterFields);
         Assert.assertNotNull(masterAnalyzers);
 

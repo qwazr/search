@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,40 +16,44 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 
 final class SortedSetDocValuesFacetType extends StorableFieldType {
 
-	SortedSetDocValuesFacetType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.STRING));
-	}
+    SortedSetDocValuesFacetType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                                final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+            BytesRefUtils.Converter.STRING));
+    }
 
-	private String getStringValue(Object value) {
-		if (value == null)
-			return null;
-		final String stringValue = value.toString();
-		return stringValue == null || stringValue.isEmpty() ? null : stringValue;
-	}
+    private String getStringValue(Object value) {
+        if (value == null)
+            return null;
+        final String stringValue = value.toString();
+        return stringValue == null || stringValue.isEmpty() ? null : stringValue;
+    }
 
-	@Override
-	void newFieldWithStore(String fieldName, Object value, FieldConsumer consumer) {
-		final String stringValue = getStringValue(value);
-		if (stringValue == null)
-			return;
-		consumer.accept(genericFieldName, fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
-		consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, stringValue));
-	}
+    @Override
+    void newFieldWithStore(final String fieldName,
+                           final Object value,
+                           final DocumentBuilder documentBuilder) {
+        final String stringValue = getStringValue(value);
+        if (stringValue == null)
+            return;
+        documentBuilder.accept(genericFieldName, fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
+        documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, stringValue));
+    }
 
-	@Override
-	void newFieldNoStore(String fieldName, Object value, FieldConsumer consumer) {
-		final String stringValue = getStringValue(value);
-		if (stringValue != null)
-			consumer.accept(genericFieldName, fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
-	}
+    @Override
+    void newFieldNoStore(final String fieldName,
+                         final Object value,
+                         final DocumentBuilder documentBuilder) {
+        final String stringValue = getStringValue(value);
+        if (stringValue != null)
+            documentBuilder.accept(genericFieldName, fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
+    }
 
 }

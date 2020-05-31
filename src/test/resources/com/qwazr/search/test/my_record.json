@@ -1,0 +1,9 @@
+{
+  "$id$": "1",
+  "name": "First article",
+  "description": "This is the description of the first article.",
+  "category": [
+    "news",
+    "economy"
+  ]
+}

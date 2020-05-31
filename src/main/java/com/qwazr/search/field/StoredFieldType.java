@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
@@ -26,33 +26,33 @@ import java.io.Serializable;
 
 final class StoredFieldType extends CustomFieldTypeAbstract.OneField {
 
-	StoredFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.STRING).storedFieldNameProvider(f -> f));
-	}
+    StoredFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                    final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+            BytesRefUtils.Converter.STRING).storedFieldNameProvider(f -> f));
+    }
 
-	@Override
-	final void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
-		final Field field;
-		final byte[] bytes;
-		if (value instanceof String)
-			field = new StoredField(fieldName, (String) value);
-		else if (value instanceof Integer)
-			field = new StoredField(fieldName, (int) value);
-		else if (value instanceof Long)
-			field = new StoredField(fieldName, (long) value);
-		else if (value instanceof Float)
-			field = new StoredField(fieldName, (float) value);
-		else if ((bytes = TypeUtils.toPrimitiveByteArray(value)) != null)
-			field = new StoredField(fieldName, bytes);
-		else if (value instanceof Externalizable)
-			field = new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Externalizable) value));
-		else if (value instanceof Serializable)
-			field = new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Serializable) value));
-		else // Last change, convert to string
-			field = new StoredField(fieldName, value.toString());
-		consumer.accept(genericFieldName, fieldName, field);
-	}
+    @Override
+    final void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+        final Field field;
+        final byte[] bytes;
+        if (value instanceof String)
+            field = new StoredField(fieldName, (String) value);
+        else if (value instanceof Integer)
+            field = new StoredField(fieldName, (int) value);
+        else if (value instanceof Long)
+            field = new StoredField(fieldName, (long) value);
+        else if (value instanceof Float)
+            field = new StoredField(fieldName, (float) value);
+        else if ((bytes = TypeUtils.toPrimitiveByteArray(value)) != null)
+            field = new StoredField(fieldName, bytes);
+        else if (value instanceof Externalizable)
+            field = new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Externalizable) value));
+        else if (value instanceof Serializable)
+            field = new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Serializable) value));
+        else // Last change, convert to string
+            field = new StoredField(fieldName, value.toString());
+        documentBuilder.accept(genericFieldName, fieldName, field);
+    }
 
 }

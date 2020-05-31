@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,63 +15,65 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 
 abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefinition> {
 
-	protected CustomFieldTypeAbstract(final Builder<CustomFieldDefinition> builder) {
-		super(builder);
-	}
+    protected CustomFieldTypeAbstract(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
+    }
 
-	@Override
-	final Builder<CustomFieldDefinition> setup(Builder<CustomFieldDefinition> builder) {
+    @Override
+    final Builder<CustomFieldDefinition> setup(Builder<CustomFieldDefinition> builder) {
 
-		// Setup facets
-		if (builder.definition.facetMultivalued != null)
-			builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setMultiValued(fieldName,
-					builder.definition.facetMultivalued)));
-		if (builder.definition.facetHierarchical != null)
-			builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setHierarchical(fieldName,
-					builder.definition.facetHierarchical)));
-		if (builder.definition.facetRequireDimCount != null)
-			builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setRequireDimCount(fieldName,
-					builder.definition.facetRequireDimCount)));
+        // Setup facets
+        if (builder.definition.facetMultivalued != null)
+            builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setMultiValued(fieldName,
+                builder.definition.facetMultivalued)));
+        if (builder.definition.facetHierarchical != null)
+            builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setHierarchical(fieldName,
+                builder.definition.facetHierarchical)));
+        if (builder.definition.facetRequireDimCount != null)
+            builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setRequireDimCount(fieldName,
+                builder.definition.facetRequireDimCount)));
 
-		setupFields(builder);
-		if (builder.definition.stored != null && builder.definition.stored)
-			builder.storedFieldNameProvider(f -> f);
+        setupFields(builder);
+        if (builder.definition.stored != null && builder.definition.stored)
+            builder.storedFieldNameProvider(f -> f);
 
-		builder.queryFieldNameProvider(f -> f);
+        builder.queryFieldNameProvider(f -> f);
 
-		return builder;
-	}
+        return builder;
+    }
 
-	abstract void setupFields(Builder<CustomFieldDefinition> builder);
+    abstract void setupFields(Builder<CustomFieldDefinition> builder);
 
-	static abstract class OneField extends CustomFieldTypeAbstract {
+    static abstract class OneField extends CustomFieldTypeAbstract {
 
-		protected OneField(Builder<CustomFieldDefinition> builder) {
-			super(builder);
-		}
+        protected OneField(Builder<CustomFieldDefinition> builder) {
+            super(builder);
+        }
 
-		@Override
-		final void setupFields(Builder<CustomFieldDefinition> builder) {
-			builder.fieldProvider(this::newField);
-		}
+        @Override
+        final void setupFields(Builder<CustomFieldDefinition> builder) {
+            builder.fieldProvider(this::newField);
+        }
 
-		abstract void newField(final String fieldName, final Object value, final FieldConsumer consumer);
-	}
+        abstract void newField(final String fieldName,
+                               final Object value,
+                               final DocumentBuilder documentBuilder);
+    }
 
-	static abstract class NoField extends CustomFieldTypeAbstract {
+    static abstract class NoField extends CustomFieldTypeAbstract {
 
-		protected NoField(Builder<CustomFieldDefinition> builder) {
-			super(builder);
-		}
+        protected NoField(Builder<CustomFieldDefinition> builder) {
+            super(builder);
+        }
 
-		@Override
-		final void setupFields(Builder<CustomFieldDefinition> builder) {
-		}
+        @Override
+        final void setupFields(Builder<CustomFieldDefinition> builder) {
+        }
 
-	}
+    }
 
 }

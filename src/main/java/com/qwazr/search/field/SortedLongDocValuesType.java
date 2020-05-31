@@ -19,7 +19,7 @@ import com.qwazr.search.field.converters.MultiDVConverter;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.SortedNumericDocValuesField;
 
@@ -32,7 +32,7 @@ final class SortedLongDocValuesType extends CustomFieldTypeAbstract.OneField {
 	}
 
 	@Override
-	final void newField(final String fieldName, final Object value, final FieldConsumer consumer) {
+	final void newField(final String fieldName, final Object value, final DocumentBuilder consumer) {
 		if (value instanceof Number)
 			consumer.accept(genericFieldName, fieldName,
 					new SortedNumericDocValuesField(fieldName, ((Number) value).longValue()));
@@ -42,7 +42,7 @@ final class SortedLongDocValuesType extends CustomFieldTypeAbstract.OneField {
 	}
 
 	@Override
-	final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
+	final public ValueConverter<?> getConverter(final String fieldName, final MultiReader reader) {
 		return new MultiDVConverter.LongSetDVConverter(reader, fieldName);
 	}
 

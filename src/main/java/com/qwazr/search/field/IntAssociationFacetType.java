@@ -16,7 +16,7 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldConsumer;
+import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.facet.taxonomy.IntAssociationFacetField;
@@ -33,7 +33,7 @@ class IntAssociationFacetType extends CustomFieldTypeAbstract.NoField {
 	}
 
 	@Override
-	protected void fillArray(final String fieldName, final Object[] values, final FieldConsumer consumer) {
+	protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder consumer) {
 		Objects.requireNonNull(values, "The value array is empty");
 		if (values.length < 2)
 			throw new ServerException(Response.Status.NOT_ACCEPTABLE,

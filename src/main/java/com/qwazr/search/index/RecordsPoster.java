@@ -15,9 +15,9 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.concurrent.ConsumerEx;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
@@ -33,17 +33,25 @@ interface RecordsPoster {
 
     int getCount();
 
-    abstract class CommonPoster implements RecordsPoster {
+    abstract class CommonPoster
+        <RECORDBUILDER extends RecordBuilder,
+            DOCUMENTBUILDER extends DocumentBuilder>
+        implements RecordsPoster {
 
-        protected final Map<String, Field> fields;
+        protected final DOCUMENTBUILDER documentBuilder;
+        protected final RECORDBUILDER recordBuilder;
         protected final FieldMap fieldMap;
-        final IndexWriter indexWriter;
-        final TaxonomyWriter taxonomyWriter;
+        protected final IndexWriter indexWriter;
+        protected final TaxonomyWriter taxonomyWriter;
         protected int count;
 
-        CommonPoster(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter,
+        CommonPoster(final DOCUMENTBUILDER documentBuilder,
+                     final RECORDBUILDER recordBuilder,
+                     final FieldMap fieldMap,
+                     final IndexWriter indexWriter,
                      final TaxonomyWriter taxonomyWriter) {
-            this.fields = fields;
+            this.documentBuilder = documentBuilder;
+            this.recordBuilder = recordBuilder;
             this.fieldMap = fieldMap;
             this.indexWriter = indexWriter;
             this.taxonomyWriter = taxonomyWriter;
@@ -57,14 +65,15 @@ interface RecordsPoster {
 
     }
 
-    abstract class Documents extends CommonPoster {
+    abstract class Documents<RECORDBUILDER extends RecordBuilder>
+        extends CommonPoster<RECORDBUILDER, DocumentBuilder.ForLuceneDocument> {
 
-        final FieldConsumer.ForDocument documentBuilder;
-
-        private Documents(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter,
+        private Documents(final DocumentBuilder.ForLuceneDocument documentBuilder,
+                          final RECORDBUILDER recordBuilder,
+                          final FieldMap fieldMap,
+                          final IndexWriter indexWriter,
                           final TaxonomyWriter taxonomyWriter) {
-            super(fields, fieldMap, indexWriter, taxonomyWriter);
-            documentBuilder = new FieldConsumer.ForDocument();
+            super(documentBuilder, recordBuilder, fieldMap, indexWriter, taxonomyWriter);
         }
 
         private Document getFacetedDoc() throws IOException {
@@ -72,160 +81,192 @@ interface RecordsPoster {
             return facetsConfig.build(taxonomyWriter, documentBuilder.document);
         }
 
-        void updateDocument(Term termId) throws IOException {
-            if (termId == null)
-                throw new ServerException(Response.Status.BAD_REQUEST,
-                    "The field " + FieldDefinition.ID_FIELD + " is missing - Index: " + indexWriter.getDirectory());
+        private void updateDocument(final Term termId) throws IOException {
             indexWriter.updateDocument(termId, getFacetedDoc());
             count++;
             documentBuilder.reset();
         }
 
-        void addDocument() throws IOException {
+        private void addDocument() throws IOException {
             indexWriter.addDocument(getFacetedDoc());
             count++;
             documentBuilder.reset();
         }
 
-    }
-
-    abstract class DocValues extends CommonPoster {
-
-        final FieldConsumer.ForDocValues documentBuilder;
-
-        protected DocValues(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter,
-                            final TaxonomyWriter taxonomyWriter) {
-            super(fields, fieldMap, indexWriter, taxonomyWriter);
-            documentBuilder = new FieldConsumer.ForDocValues();
+        void index() throws IOException {
+            if (recordBuilder.termId != null)
+                updateDocument(recordBuilder.termId);
+            else
+                addDocument();
+            recordBuilder.reset();
         }
 
-        final void updateDocValues(final Term termId) throws IOException {
-            if (termId == null)
+    }
+
+    abstract class DocValues<RECORDBUILDER extends RecordBuilder>
+        extends CommonPoster<RECORDBUILDER, DocumentBuilder.ForLuceneDocValues> {
+
+        protected DocValues(final DocumentBuilder.ForLuceneDocValues documentBuilder,
+                            final RECORDBUILDER recordBuilder,
+                            final FieldMap fieldMap,
+                            final IndexWriter indexWriter,
+                            final TaxonomyWriter taxonomyWriter) {
+            super(documentBuilder, recordBuilder, fieldMap, indexWriter, taxonomyWriter);
+        }
+
+        final void updateDocValues() throws IOException {
+            if (recordBuilder.termId == null)
                 throw new ServerException(Response.Status.BAD_REQUEST,
                     "The field " + FieldDefinition.ID_FIELD + " is missing - Index: " + indexWriter);
-            indexWriter.updateDocValues(termId, documentBuilder.fieldList.toArray(
+            indexWriter.updateDocValues(recordBuilder.termId, documentBuilder.fieldList.toArray(
                 new org.apache.lucene.document.Field[0]));
             count++;
             documentBuilder.reset();
+            recordBuilder.reset();
         }
 
     }
 
-    interface MapDocument extends RecordsPoster, ConsumerEx<Map<String, ?>, IOException> {
-    }
+    interface MapDocument extends RecordsPoster {
 
-    final class UpdateMapDocument extends Documents implements MapDocument {
+        void accept(final Map<String, ?> document) throws IOException;
 
-        private UpdateMapDocument(final FieldMap fieldMap, final IndexWriter indexWriter,
-                                  final TaxonomyWriter taxonomyWriter) {
-            super(null, fieldMap, indexWriter, taxonomyWriter);
+        static MapDocument of(final FieldMap fieldMap,
+                              final IndexWriter indexWriter,
+                              final TaxonomyWriter taxonomyWriter) {
+            final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
+            return new IndexMapDocument(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
         }
 
-        @Override
-        final public void accept(final Map<String, ?> document) throws IOException {
-            final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(fieldMap, documentBuilder);
-            document.forEach(recordBuilder);
-            updateDocument(recordBuilder.termId);
-        }
-
-    }
-
-    final class AddMapDocument extends Documents implements MapDocument {
-
-        private AddMapDocument(final FieldMap fieldMap, final IndexWriter indexWriter,
-                               final TaxonomyWriter taxonomyWriter) {
-            super(null, fieldMap, indexWriter, taxonomyWriter);
-        }
-
-        @Override
-        final public void accept(final Map<String, ?> document) throws IOException {
-            final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(fieldMap, documentBuilder);
-            document.forEach(recordBuilder);
-            addDocument();
+        static MapDocument forDocValueUpdate(final FieldMap fieldMap,
+                                             final IndexWriter indexWriter,
+                                             final TaxonomyWriter taxonomyWriter) {
+            final DocumentBuilder.ForLuceneDocValues documentBuilder = new DocumentBuilder.ForLuceneDocValues();
+            return new UpdateMapDocValues(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
         }
     }
 
-    static MapDocument create(final FieldMap fieldMap, final IndexWriter indexWriter,
-                              final TaxonomyWriter taxonomyWriter, final boolean update) {
-        return update ?
-            new UpdateMapDocument(fieldMap, indexWriter, taxonomyWriter) :
-            new AddMapDocument(fieldMap, indexWriter, taxonomyWriter);
-    }
+    final class IndexMapDocument extends Documents<RecordBuilder.ForMap> implements MapDocument {
 
-    interface ObjectDocument extends RecordsPoster, ConsumerEx<Object, IOException> {
-
-    }
-
-    final class UpdateObjectDocument extends Documents implements ObjectDocument {
-
-        private UpdateObjectDocument(final Map<String, java.lang.reflect.Field> fields, final FieldMap fieldMap,
-                                     final IndexWriter indexWriter, final TaxonomyWriter taxonomyWriter) {
-            super(fields, fieldMap, indexWriter, taxonomyWriter);
-        }
-
-        @Override
-        final public void accept(final Object record) throws IOException {
-            final RecordBuilder.ForObject recordBuilder =
-                new RecordBuilder.ForObject(fieldMap, documentBuilder, record);
-            fields.forEach(recordBuilder);
-            updateDocument(recordBuilder.termId);
-        }
-    }
-
-    final class AddObjectDocument extends Documents implements ObjectDocument {
-
-        private AddObjectDocument(final Map<String, java.lang.reflect.Field> fields, final FieldMap fieldMap,
-                                  final IndexWriter indexWriter, final TaxonomyWriter taxonomyWriter) {
-            super(fields, fieldMap, indexWriter, taxonomyWriter);
-        }
-
-        @Override
-        final public void accept(final Object record) throws IOException {
-            final RecordBuilder.ForObject recordBuilder =
-                new RecordBuilder.ForObject(fieldMap, documentBuilder, record);
-            fields.forEach(recordBuilder);
-            addDocument();
-        }
-    }
-
-    static ObjectDocument create(final Map<String, Field> fields,
+        private IndexMapDocument(final DocumentBuilder.ForLuceneDocument documentBuilder,
                                  final FieldMap fieldMap,
                                  final IndexWriter indexWriter,
-                                 final TaxonomyWriter taxonomyWriter,
-                                 final boolean update) {
-        return update ?
-            new UpdateObjectDocument(fields, fieldMap, indexWriter, taxonomyWriter) :
-            new AddObjectDocument(fields, fieldMap, indexWriter, taxonomyWriter);
-    }
-
-    final class UpdateMapDocValues extends DocValues implements MapDocument {
-
-        UpdateMapDocValues(final FieldMap fieldMap, final IndexWriter indexWriter,
-                           final TaxonomyWriter taxonomyWriter) {
-            super(null, fieldMap, indexWriter, taxonomyWriter);
+                                 final TaxonomyWriter taxonomyWriter) {
+            super(documentBuilder, new RecordBuilder.ForMap(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
         }
 
         @Override
         final public void accept(final Map<String, ?> document) throws IOException {
-            final RecordBuilder.ForMap recordBuilder = new RecordBuilder.ForMap(fieldMap, documentBuilder);
-            document.forEach(recordBuilder);
-            updateDocValues(recordBuilder.termId);
+            document.forEach(recordBuilder::accept);
+            index();
+        }
+
+    }
+
+
+    interface ObjectDocument extends RecordsPoster {
+
+        void accept(Object object) throws IOException;
+
+        static ObjectDocument of(final Map<String, Field> fields,
+                                 final FieldMap fieldMap,
+                                 final IndexWriter indexWriter,
+                                 final TaxonomyWriter taxonomyWriter) {
+            final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
+            return new IndexObjectDocument(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
+        }
+
+        static ObjectDocument forDocValueUpdate(final Map<String, Field> fields,
+                                                final FieldMap fieldMap,
+                                                final IndexWriter indexWriter,
+                                                final TaxonomyWriter taxonomyWriter) {
+            final DocumentBuilder.ForLuceneDocValues documentBuilder = new DocumentBuilder.ForLuceneDocValues();
+            return new UpdateObjectDocValues(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
         }
     }
 
-    final class UpdateObjectDocValues extends DocValues implements ObjectDocument {
+    final class IndexObjectDocument extends Documents<RecordBuilder.ForObject> implements ObjectDocument {
 
-        UpdateObjectDocValues(final Map<String, Field> fields, final FieldMap fieldMap, final IndexWriter indexWriter,
-                              final TaxonomyWriter taxonomyWriter) {
-            super(fields, fieldMap, indexWriter, taxonomyWriter);
+        private final Map<String, Field> fields;
+
+        private IndexObjectDocument(final DocumentBuilder.ForLuceneDocument documentBuilder,
+                                    final FieldMap fieldMap,
+                                    final IndexWriter indexWriter,
+                                    final TaxonomyWriter taxonomyWriter,
+                                    final Map<String, Field> fields) {
+            super(documentBuilder, new RecordBuilder.ForObject(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
+            this.fields = fields;
         }
 
         @Override
-        final public void accept(final Object record) throws IOException {
-            final RecordBuilder.ForObject recordBuilder =
-                new RecordBuilder.ForObject(fieldMap, documentBuilder, record);
-            fields.forEach(recordBuilder);
-            updateDocValues(recordBuilder.termId);
+        final public void accept(final Object object) throws IOException {
+            fields.forEach((name, field) -> recordBuilder.accept(name, field, object));
+            index();
+        }
+    }
+
+    interface JsonNodeDocument extends RecordsPoster {
+
+        void accept(final JsonNode jsonNode) throws IOException;
+
+        static JsonNodeDocument of(final FieldMap fieldMap,
+                                   final IndexWriter indexWriter,
+                                   final TaxonomyWriter taxonomyWriter) {
+            final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
+            return new IndexJsonNodeObject(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
+        }
+
+    }
+
+    final class IndexJsonNodeObject extends Documents<RecordBuilder.ForJson> implements JsonNodeDocument {
+
+        private IndexJsonNodeObject(final DocumentBuilder.ForLuceneDocument documentBuilder,
+                                    final FieldMap fieldMap,
+                                    final IndexWriter indexWriter,
+                                    final TaxonomyWriter taxonomyWriter) {
+            super(documentBuilder, new RecordBuilder.ForJson(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
+        }
+
+        @Override
+        final public void accept(final JsonNode jsonNode) throws IOException {
+            jsonNode.fields().forEachRemaining(entry -> recordBuilder.accept(entry.getKey(), entry.getValue()));
+            index();
+        }
+    }
+
+    final class UpdateMapDocValues extends DocValues<RecordBuilder.ForMap> implements MapDocument {
+
+        private UpdateMapDocValues(final DocumentBuilder.ForLuceneDocValues documentBuilder,
+                                   final FieldMap fieldMap,
+                                   final IndexWriter indexWriter,
+                                   final TaxonomyWriter taxonomyWriter) {
+            super(documentBuilder, new RecordBuilder.ForMap(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
+        }
+
+        @Override
+        final public void accept(final Map<String, ?> document) throws IOException {
+            document.forEach(recordBuilder::accept);
+            updateDocValues();
+        }
+    }
+
+    final class UpdateObjectDocValues extends DocValues<RecordBuilder.ForObject> implements ObjectDocument {
+
+        private final Map<String, Field> fields;
+
+        private UpdateObjectDocValues(final DocumentBuilder.ForLuceneDocValues documentBuilder,
+                                      final FieldMap fieldMap,
+                                      final IndexWriter indexWriter,
+                                      final TaxonomyWriter taxonomyWriter,
+                                      final Map<String, Field> fields) {
+            super(documentBuilder, new RecordBuilder.ForObject(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
+            this.fields = fields;
+        }
+
+        @Override
+        final public void accept(final Object object) throws IOException {
+            fields.forEach((name, field) -> recordBuilder.accept(name, field, object));
+            updateDocValues();
         }
     }
 }

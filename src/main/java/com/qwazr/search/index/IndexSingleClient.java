@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.jaxrs.smile.SmileMediaTypes;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
@@ -64,9 +65,10 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                                        final SchemaSettingsDefinition settings) {
         try {
             return indexTarget.path(schemaName)
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(settings, preferedSerializedMediaType), SchemaSettingsDefinition.class);
-        } catch (WebApplicationException e) {
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(settings, preferedSerializedMediaType), SchemaSettingsDefinition.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -75,7 +77,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public Set<String> getSchemas() {
         try {
             return indexTarget.request(preferedSerializedMediaType).get(setStringType);
-        } catch (WebApplicationException e) {
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -84,7 +87,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public boolean deleteSchema(final String schemaName) {
         try {
             return indexTarget.path(schemaName).request(MediaType.TEXT_PLAIN).delete(boolean.class);
-        } catch (WebApplicationException e) {
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -96,7 +100,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
             if (response.getStatus() != 200)
                 throw new WebApplicationException(response);
             return response;
-        } catch (WebApplicationException e) {
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -105,7 +110,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public Map<String, UUID> getIndexes(final String schemaName) {
         try {
             return indexTarget.path(schemaName).request(preferedSerializedMediaType).get(mapStringUuidType);
-        } catch (WebApplicationException e) {
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -120,10 +126,11 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                          final IndexSettingsDefinition settings) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(settings, preferedSerializedMediaType), IndexStatus.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(settings, preferedSerializedMediaType), IndexStatus.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -132,11 +139,12 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public LinkedHashMap<String, FieldDefinition> getFields(final String schemaName, final String indexName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("fields")
-                    .request(preferedSerializedMediaType)
-                    .get(mapStringFieldType);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("fields")
+                .request(preferedSerializedMediaType)
+                .get(mapStringFieldType);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -146,11 +154,12 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                                             final LinkedHashMap<String, FieldDefinition> fields) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("fields")
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(fields, preferedSerializedMediaType), mapStringFieldType);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("fields")
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(fields, preferedSerializedMediaType), mapStringFieldType);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -160,14 +169,15 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                                final String text) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("fields")
-                    .path(fieldName)
-                    .path("analyzer/query")
-                    .queryParam("text", text == null ? StringUtils.EMPTY : text)
-                    .request(preferedSerializedMediaType)
-                    .get(listTermDefinitionType);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("fields")
+                .path(fieldName)
+                .path("analyzer/query")
+                .queryParam("text", text == null ? StringUtils.EMPTY : text)
+                .request(preferedSerializedMediaType)
+                .get(listTermDefinitionType);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -177,14 +187,15 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                                final String text) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("fields")
-                    .path(fieldName)
-                    .path("analyzer/index")
-                    .queryParam("text", text == null ? StringUtils.EMPTY : text)
-                    .request(preferedSerializedMediaType)
-                    .get(listTermDefinitionType);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("fields")
+                .path(fieldName)
+                .path("analyzer/index")
+                .queryParam("text", text == null ? StringUtils.EMPTY : text)
+                .request(preferedSerializedMediaType)
+                .get(listTermDefinitionType);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -193,13 +204,14 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public FieldStats getFieldStats(final String schemaName, final String indexName, final String fieldName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("fields")
-                    .path(fieldName)
-                    .path("stats")
-                    .request(preferedSerializedMediaType)
-                    .get(FieldStats.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("fields")
+                .path(fieldName)
+                .path("stats")
+                .request(preferedSerializedMediaType)
+                .get(FieldStats.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -215,7 +227,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                                    final String fieldName, final String prefix, final Integer start, final Integer rows) {
         try {
             WebTarget target =
-                    indexTarget.path(schemaName).path(indexName).path("fields").path(fieldName).path("terms");
+                indexTarget.path(schemaName).path(indexName).path("fields").path(fieldName).path("terms");
             if (prefix != null)
                 target = target.path(prefix);
             if (start != null)
@@ -223,7 +235,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
             if (rows != null)
                 target = target.queryParam("rows", rows);
             return target.request(preferedSerializedMediaType).get(listTermEnumDefinitionType);
-        } catch (WebApplicationException e) {
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -231,11 +244,11 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     @Override
     public FieldDefinition getField(final String schemaName, final String indexName, final String fieldName) {
         return indexTarget.path(schemaName)
-                .path(indexName)
-                .path("fields")
-                .path(fieldName == null ? StringUtils.EMPTY : fieldName)
-                .request(preferedSerializedMediaType)
-                .get(FieldDefinition.class);
+            .path(indexName)
+            .path("fields")
+            .path(fieldName == null ? StringUtils.EMPTY : fieldName)
+            .request(preferedSerializedMediaType)
+            .get(FieldDefinition.class);
     }
 
     @Override
@@ -243,12 +256,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                     final FieldDefinition field) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("fields")
-                    .path(fieldName == null ? StringUtils.EMPTY : fieldName)
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(field, preferedSerializedMediaType), FieldDefinition.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("fields")
+                .path(fieldName == null ? StringUtils.EMPTY : fieldName)
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(field, preferedSerializedMediaType), FieldDefinition.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -257,12 +271,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public boolean deleteField(final String schemaName, final String indexName, final String fieldName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("fields")
-                    .path(fieldName == null ? StringUtils.EMPTY : fieldName)
-                    .request()
-                    .delete(Boolean.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("fields")
+                .path(fieldName == null ? StringUtils.EMPTY : fieldName)
+                .request()
+                .delete(Boolean.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -271,11 +286,12 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(final String schemaName, final String indexName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("analyzers")
-                    .request(preferedSerializedMediaType)
-                    .get(mapStringAnalyzerType);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("analyzers")
+                .request(preferedSerializedMediaType)
+                .get(mapStringAnalyzerType);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -284,12 +300,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public AnalyzerDefinition getAnalyzer(final String schemaName, final String indexName, final String analyzerName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("analyzers")
-                    .path(analyzerName)
-                    .request(preferedSerializedMediaType)
-                    .get(AnalyzerDefinition.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("analyzers")
+                .path(analyzerName)
+                .request(preferedSerializedMediaType)
+                .get(AnalyzerDefinition.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -298,14 +315,15 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public void refreshAnalyzers(String schemaName, String indexName) {
         try {
             final Response.StatusType statusType = indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("analyzers")
-                    .request()
-                    .method("PATCH")
-                    .getStatusInfo();
+                .path(indexName)
+                .path("analyzers")
+                .request()
+                .method("PATCH")
+                .getStatusInfo();
             if (statusType.getFamily() != Response.Status.Family.SUCCESSFUL)
                 throw new ServerException("Analyzer refresh failed: " + statusType.getReasonPhrase());
-        } catch (WebApplicationException e) {
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -315,12 +333,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                           final AnalyzerDefinition analyzer) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("analyzers")
-                    .path(analyzerName)
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(analyzer, preferedSerializedMediaType), AnalyzerDefinition.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("analyzers")
+                .path(analyzerName)
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(analyzer, preferedSerializedMediaType), AnalyzerDefinition.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -330,11 +349,12 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                                                   final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("analyzers")
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(analyzers, preferedSerializedMediaType), mapStringAnalyzerType);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("analyzers")
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(analyzers, preferedSerializedMediaType), mapStringAnalyzerType);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -343,12 +363,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public boolean deleteAnalyzer(final String schemaName, final String indexName, final String analyzerName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("analyzers")
-                    .path(analyzerName)
-                    .request()
-                    .delete(Boolean.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("analyzers")
+                .path(analyzerName)
+                .request()
+                .delete(Boolean.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -358,12 +379,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                              final String text) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("analyzers")
-                    .path(analyzerName)
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.text(text == null ? StringUtils.EMPTY : text), listTermDefinitionType);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("analyzers")
+                .path(analyzerName)
+                .request(preferedSerializedMediaType)
+                .post(Entity.text(text == null ? StringUtils.EMPTY : text), listTermDefinitionType);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -373,14 +395,15 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                   final String text) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("analyzers")
-                    .path(analyzerName)
-                    .path("dot")
-                    .queryParam("text", text == null ? StringUtils.EMPTY : text)
-                    .request(MediaType.TEXT_PLAIN)
-                    .get(String.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("analyzers")
+                .path(analyzerName)
+                .path("dot")
+                .queryParam("text", text == null ? StringUtils.EMPTY : text)
+                .request(MediaType.TEXT_PLAIN)
+                .get(String.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -389,10 +412,11 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public IndexStatus getIndex(final String schemaName, final String indexName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .request(preferedSerializedMediaType)
-                    .get(IndexStatus.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .request(preferedSerializedMediaType)
+                .get(IndexStatus.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -402,12 +426,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                   final Map<String, String> commitUserData) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("merge")
-                    .path(mergedIndex)
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(commitUserData, preferedSerializedMediaType), IndexStatus.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("merge")
+                .path(mergedIndex)
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(commitUserData, preferedSerializedMediaType), IndexStatus.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -416,11 +441,12 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public IndexCheckStatus checkIndex(final String schemaName, final String indexName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("check")
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(null, preferedSerializedMediaType), IndexCheckStatus.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("check")
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(null, preferedSerializedMediaType), IndexCheckStatus.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -429,7 +455,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public boolean deleteIndex(final String schemaName, final String indexName) {
         try {
             return indexTarget.path(schemaName).path(indexName).request(MediaType.TEXT_PLAIN).delete(boolean.class);
-        } catch (WebApplicationException e) {
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -439,14 +466,15 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                                                        final String indexName, final String backupName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("backup")
-                    .path(backupName)
-                    .request(preferedSerializedMediaType)
-                    .async()
-                    .post(Entity.entity(null, MediaType.TEXT_PLAIN_TYPE), mapStringMapStringBackupStatusType)
-                    .get();
-        } catch (InterruptedException | ExecutionException e) {
+                .path(indexName)
+                .path("backup")
+                .path(backupName)
+                .request(preferedSerializedMediaType)
+                .async()
+                .post(Entity.entity(null, MediaType.TEXT_PLAIN_TYPE), mapStringMapStringBackupStatusType)
+                .get();
+        }
+        catch (InterruptedException | ExecutionException e) {
             throw ServerException.of(e);
         }
     }
@@ -455,24 +483,25 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
                                                                                             final String indexName, final String backupName, final Boolean extractVersion) {
         return indexTarget.path(schemaName)
-                .path(indexName)
-                .path("backup")
-                .path(backupName)
-                .queryParam("extractVersion", extractVersion == null ? Boolean.FALSE : extractVersion)
-                .request(preferedSerializedMediaType)
-                .get(mapStringMapStringMapStringBackupStatusType);
+            .path(indexName)
+            .path("backup")
+            .path(backupName)
+            .queryParam("extractVersion", extractVersion == null ? Boolean.FALSE : extractVersion)
+            .request(preferedSerializedMediaType)
+            .get(mapStringMapStringMapStringBackupStatusType);
     }
 
     @Override
     public Integer deleteBackups(final String schemaName, final String indexName, final String backupName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("backup")
-                    .path(backupName)
-                    .request(preferedSerializedMediaType)
-                    .delete(Integer.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("backup")
+                .path(backupName)
+                .request(preferedSerializedMediaType)
+                .delete(Integer.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -482,14 +511,15 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                          final String source, final String fileName) {
         try {
             return new AutoCloseInputStream(indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("replication")
-                    .path(sessionID)
-                    .path(source)
-                    .path(fileName)
-                    .request(MediaType.APPLICATION_OCTET_STREAM)
-                    .get(InputStream.class));
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("replication")
+                .path(sessionID)
+                .path(source)
+                .path(fileName)
+                .request(MediaType.APPLICATION_OCTET_STREAM)
+                .get(InputStream.class));
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -498,12 +528,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public boolean replicationRelease(final String schemaName, final String indexName, final String sessionID) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("replication")
-                    .path(sessionID)
-                    .request(MediaType.TEXT_PLAIN)
-                    .delete(boolean.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("replication")
+                .path(sessionID)
+                .request(MediaType.TEXT_PLAIN)
+                .delete(boolean.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -513,12 +544,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                                 final String currentVersion) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("replication")
-                    .queryParam("current_version", currentVersion)
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(currentVersion, preferedSerializedMediaType), ReplicationSession.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("replication")
+                .queryParam("current_version", currentVersion)
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(currentVersion, preferedSerializedMediaType), ReplicationSession.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -527,14 +559,16 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public ReplicationStatus replicationCheck(final String schemaName, final String indexName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("replication")
-                    .request(preferedSerializedMediaType)
-                    .async()
-                    .get(ReplicationStatus.class).get();
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("replication")
+                .request(preferedSerializedMediaType)
+                .async()
+                .get(ReplicationStatus.class).get();
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
-        } catch (InterruptedException | ExecutionException e) {
+        }
+        catch (InterruptedException | ExecutionException e) {
             throw ServerException.of(e);
         }
     }
@@ -544,11 +578,12 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                                                           final String indexName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("resources")
-                    .request(preferedSerializedMediaType)
-                    .get(mapStringResourceInfoType);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("resources")
+                .request(preferedSerializedMediaType)
+                .get(mapStringResourceInfoType);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -557,12 +592,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public InputStream getResource(final String schemaName, final String indexName, final String resourceName) {
         try {
             return new AutoCloseInputStream(indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("resources")
-                    .path(resourceName)
-                    .request(MediaType.APPLICATION_OCTET_STREAM)
-                    .get(InputStream.class));
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("resources")
+                .path(resourceName)
+                .request(MediaType.APPLICATION_OCTET_STREAM)
+                .get(InputStream.class));
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -575,7 +611,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
             if (lastModified != null)
                 target = target.queryParam("lastModified", lastModified);
             return target.request(MediaType.TEXT_PLAIN).post(Entity.text(inputStream), boolean.class);
-        } catch (WebApplicationException e) {
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -584,12 +621,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public boolean deleteResource(final String schemaName, final String indexName, final String resourceName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("resources")
-                    .path(resourceName)
-                    .request(MediaType.TEXT_PLAIN)
-                    .delete(boolean.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("resources")
+                .path(resourceName)
+                .request(MediaType.TEXT_PLAIN)
+                .delete(boolean.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -599,11 +637,26 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                       final PostDefinition.Document post) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("doc")
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(post, preferedSerializedMediaType), Integer.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("doc")
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(post, preferedSerializedMediaType), Integer.class);
+        }
+        catch (WebApplicationException e) {
+            throw ServerException.from(e);
+        }
+    }
+
+    @Override
+    public Integer postJson(final String schemaName, final String indexName, final JsonNode jsonNode) {
+        try {
+            return indexTarget.path(schemaName)
+                .path(indexName)
+                .path("json")
+                .request()
+                .post(Entity.entity(jsonNode, preferedSerializedMediaType), Integer.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -613,11 +666,12 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                        final PostDefinition.Documents post) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("docs")
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(post, preferedSerializedMediaType), Integer.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("docs")
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(post, preferedSerializedMediaType), Integer.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -627,12 +681,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                          final PostDefinition.Document post) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("doc")
-                    .path("values")
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(post, preferedSerializedMediaType), Integer.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("doc")
+                .path("values")
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(post, preferedSerializedMediaType), Integer.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -642,12 +697,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                           final PostDefinition.Documents post) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("docs")
-                    .path("values")
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(post, preferedSerializedMediaType), Integer.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("docs")
+                .path("values")
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(post, preferedSerializedMediaType), Integer.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -656,11 +712,12 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public boolean deleteAll(final String schemaName, final String indexName) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("docs")
-                    .request(MediaType.TEXT_PLAIN)
-                    .delete(boolean.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("docs")
+                .request(MediaType.TEXT_PLAIN)
+                .delete(boolean.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -670,12 +727,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                                      final String docId) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("doc")
-                    .path(docId)
-                    .request(preferedSerializedMediaType)
-                    .get(mapStringObjectType);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("doc")
+                .path(docId)
+                .request(preferedSerializedMediaType)
+                .get(mapStringObjectType);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -690,7 +748,8 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
             if (rows != null)
                 target = target.queryParam("rows", rows);
             return target.request(preferedSerializedMediaType).get(listMapStringObjectType);
-        } catch (WebApplicationException e) {
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -703,8 +762,9 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
             if (delete != null)
                 target = target.queryParam("delete", delete);
             return target.request(preferedSerializedMediaType)
-                    .post(Entity.entity(query, preferedSerializedMediaType), ResultDefinition.WithMap.class);
-        } catch (WebApplicationException e) {
+                .post(Entity.entity(query, preferedSerializedMediaType), ResultDefinition.WithMap.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -714,13 +774,14 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                           int docId) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("search")
-                    .path("explain")
-                    .path(Integer.toString(docId))
-                    .request(preferedSerializedMediaType)
-                    .post(Entity.entity(query, preferedSerializedMediaType), ExplainDefinition.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("search")
+                .path("explain")
+                .path(Integer.toString(docId))
+                .request(preferedSerializedMediaType)
+                .post(Entity.entity(query, preferedSerializedMediaType), ExplainDefinition.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -729,13 +790,14 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     public String explainQueryText(String schemaName, String indexName, QueryDefinition query, int docId) {
         try {
             return indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("search")
-                    .path("explain")
-                    .path(Integer.toString(docId))
-                    .request(MediaType.TEXT_PLAIN)
-                    .post(Entity.entity(query, preferedSerializedMediaType), String.class);
-        } catch (WebApplicationException e) {
+                .path(indexName)
+                .path("search")
+                .path("explain")
+                .path(Integer.toString(docId))
+                .request(MediaType.TEXT_PLAIN)
+                .post(Entity.entity(query, preferedSerializedMediaType), String.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
@@ -745,15 +807,16 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                                   Integer descriptionWrapSize) {
         try {
             WebTarget target = indexTarget.path(schemaName)
-                    .path(indexName)
-                    .path("search")
-                    .path("explain")
-                    .path(Integer.toString(docId));
+                .path(indexName)
+                .path("search")
+                .path("explain")
+                .path(Integer.toString(docId));
             if (descriptionWrapSize != null)
                 target = target.queryParam("wrap", descriptionWrapSize);
             return target.request(MEDIATYPE_TEXT_GRAPHVIZ)
-                    .post(Entity.entity(query, preferedSerializedMediaType), String.class);
-        } catch (WebApplicationException e) {
+                .post(Entity.entity(query, preferedSerializedMediaType), String.class);
+        }
+        catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
