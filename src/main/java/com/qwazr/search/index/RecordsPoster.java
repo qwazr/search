@@ -117,7 +117,7 @@ interface RecordsPoster {
         final void updateDocValues() throws IOException {
             if (recordBuilder.termId == null)
                 throw new ServerException(Response.Status.BAD_REQUEST,
-                    "The field " + FieldDefinition.ID_FIELD + " is missing - Index: " + indexWriter);
+                    "The primary key " + FieldDefinition.ID_FIELD + " is missing - Index: " + indexWriter);
             indexWriter.updateDocValues(recordBuilder.termId, documentBuilder.fieldList.toArray(
                 new org.apache.lucene.document.Field[0]));
             count++;

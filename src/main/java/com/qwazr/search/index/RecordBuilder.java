@@ -16,7 +16,6 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import org.apache.lucene.index.Term;
 
@@ -24,12 +23,14 @@ import java.lang.reflect.Field;
 
 abstract class RecordBuilder {
 
+    private final String primaryKey;
     private final DocumentBuilder documentBuilder;
     private final FieldMap fieldMap;
 
     volatile Term termId;
 
     RecordBuilder(final FieldMap fieldMap, final DocumentBuilder documentBuilder) {
+        this.primaryKey = fieldMap.getPrimaryKey();
         this.fieldMap = fieldMap;
         this.documentBuilder = documentBuilder;
         this.termId = null;
@@ -49,8 +50,7 @@ abstract class RecordBuilder {
             throw new IllegalArgumentException("Unknown field: " + fieldName);
         fieldType.dispatch(fieldName, fieldValue, documentBuilder);
 
-        // TODO: should be provided by the configuration (no more fixed value)
-        if (FieldDefinition.ID_FIELD.equals(fieldName))
+        if (fieldName.equals(primaryKey))
             termId = fieldType.term(fieldName, fieldValue);
     }
 
@@ -88,7 +88,8 @@ abstract class RecordBuilder {
 
     final static class ForJson extends RecordBuilder {
 
-        ForJson(final FieldMap fieldMap, final DocumentBuilder documentBuilder) {
+        ForJson(final FieldMap fieldMap,
+                final DocumentBuilder documentBuilder) {
             super(fieldMap, documentBuilder);
         }
 

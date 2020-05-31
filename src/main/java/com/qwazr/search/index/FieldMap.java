@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,16 +35,21 @@ import java.util.function.Function;
 
 public class FieldMap {
 
+    private final String primaryKey;
     private final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap;
     private final HashMap<String, FieldTypeInterface> nameDefMap;
     private final Collection<Pair<WildcardMatcher, FieldTypeInterface>> wildcardMap;
     private final FacetsConfig facetsConfig;
     public final String sortedSetFacetField;
 
-    FieldMap(final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap, final String sortedSetFacetField) {
+    FieldMap(final String primaryKey,
+             final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap,
+             final String sortedSetFacetField) {
+
+        this.primaryKey = primaryKey == null || primaryKey.isBlank() ? FieldDefinition.ID_FIELD : primaryKey;
 
         this.sortedSetFacetField =
-                sortedSetFacetField == null ? FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD : sortedSetFacetField;
+            sortedSetFacetField == null ? FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD : sortedSetFacetField;
 
         nameDefMap = new HashMap<>();
         wildcardMap = new ArrayList<>();
@@ -113,11 +118,15 @@ public class FieldMap {
             if (entry.getLeft().match(searchField))
                 return entry.getRight();
         throw new IllegalArgumentException(
-                "The field has not been found: " + genericFieldName + " / " + concreteFieldName);
+            "The field has not been found: " + genericFieldName + " / " + concreteFieldName);
     }
 
     final LinkedHashMap<String, FieldDefinition> getFieldDefinitionMap() {
         return fieldDefinitionMap;
+    }
+
+    final String getPrimaryKey() {
+        return primaryKey;
     }
 
     private void checkFacetConfig(final String genericFieldName, final String concreteFieldName) {
@@ -133,7 +142,7 @@ public class FieldMap {
         if (definition instanceof CustomFieldDefinition) {
             final CustomFieldDefinition customDef = (CustomFieldDefinition) definition;
             final FieldDefinition.Template template =
-                    customDef.template == null ? FieldDefinition.Template.NONE : customDef.template;
+                customDef.template == null ? FieldDefinition.Template.NONE : customDef.template;
             switch (template) {
                 case SortedSetDocValuesFacetField:
                     facetsConfig.setIndexFieldName(concreteFieldName, sortedSetFacetField);
@@ -194,7 +203,7 @@ public class FieldMap {
      */
     final public FacetsConfig getFacetsConfig(final Map<String, String> fieldNames) {
         fieldNames.forEach(
-                (concreteFieldName, genericFieldName) -> checkFacetConfig(genericFieldName, concreteFieldName));
+            (concreteFieldName, genericFieldName) -> checkFacetConfig(genericFieldName, concreteFieldName));
         return facetsConfig;
     }
 

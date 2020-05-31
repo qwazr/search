@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ import java.util.concurrent.ExecutorService;
 class IndexInstanceBuilder {
 
     private final static String[] similarityClassPrefixes =
-            { "", "com.qwazr.search.similarity.", "org.apache.lucene.search.similarities." };
+        {"", "com.qwazr.search.similarity.", "org.apache.lucene.search.similarities."};
 
     final IndexFileSet fileSet;
     final ExecutorService executorService;
@@ -98,11 +98,11 @@ class IndexInstanceBuilder {
     private SearcherFactory searcherFactory;
 
     IndexInstanceBuilder(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
-            final Map<String, SimilarityFactory> similarityFactoryMap,
-            final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap, final Map<String, Sort> sortMap,
-            final ReadWriteSemaphores readWriteSemaphores, final ExecutorService executorService,
-            final IndexServiceInterface indexService, final IndexFileSet fileSet,
-            final IndexSettingsDefinition settings, final UUID indexUuid, final String indexName) {
+                         final Map<String, SimilarityFactory> similarityFactoryMap,
+                         final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap, final Map<String, Sort> sortMap,
+                         final ReadWriteSemaphores readWriteSemaphores, final ExecutorService executorService,
+                         final IndexServiceInterface indexService, final IndexFileSet fileSet,
+                         final IndexSettingsDefinition settings, final UUID indexUuid, final String indexName) {
         this.fileSet = fileSet;
         this.executorService = executorService;
         this.readWriteSemaphores = readWriteSemaphores;
@@ -124,29 +124,29 @@ class IndexInstanceBuilder {
         sort = findSort(settings.sort, settings.sortClass);
 
         searcherFactory = MultiThreadSearcherFactory.of(executorService,
-                settings.indexReaderWarmer == null ? true : settings.indexReaderWarmer, similarity,
-                settings.sortedSetFacetField);
+            settings.indexReaderWarmer == null ? true : settings.indexReaderWarmer, similarity,
+            settings.sortedSetFacetField);
 
         localAnalyzerFactoryMap = fileSet.loadAnalyzerDefinitionMap();
         final LinkedHashMap<String, FieldDefinition> fieldMapDefinition = fileSet.loadFieldMap();
 
-        fieldMap = fieldMapDefinition == null ? null : new FieldMap(fieldMapDefinition, settings.sortedSetFacetField);
+        fieldMap = fieldMapDefinition == null ? null : new FieldMap(settings.primaryKey, fieldMapDefinition, settings.sortedSetFacetField);
 
         final AnalyzerContext context =
-                new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, false, globalAnalyzerFactoryMap,
-                        localAnalyzerFactoryMap);
+            new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, false, globalAnalyzerFactoryMap,
+                localAnalyzerFactoryMap);
         indexAnalyzers = new UpdatableAnalyzers(context.indexAnalyzerMap);
         queryAnalyzers = new UpdatableAnalyzers(context.queryAnalyzerMap);
 
         // Open and lock the index directories
         dataDirectory = getDirectory(settings, fileSet.dataDirectory);
         taxonomyDirectory = IndexSettingsDefinition.useTaxonomyIndex(settings) ?
-                getDirectory(settings, fileSet.taxonomyDirectory) :
-                null;
+            getDirectory(settings, fileSet.taxonomyDirectory) :
+            null;
     }
 
     private Similarity findSimilarity(final String similarityName, final String similarityClassName,
-            final ResourceLoader resourceLoader) throws IOException, ReflectiveOperationException {
+                                      final ResourceLoader resourceLoader) throws IOException, ReflectiveOperationException {
         if (similarityName != null && !similarityName.isEmpty()) {
             final Similarity similarity = getFromFactory(resourceLoader, similarityName, similarityFactoryMap);
             if (similarity != null)
@@ -155,7 +155,7 @@ class IndexInstanceBuilder {
         if (similarityClassName == null)
             return null;
         final Class<Similarity> similarityClass =
-                ClassLoaderUtils.findClass(similarityClassName, similarityClassPrefixes);
+            ClassLoaderUtils.findClass(similarityClassName, similarityClassPrefixes);
         return instanceFactory.findBestMatchingConstructor(similarityClass).newInstance();
     }
 
@@ -172,8 +172,8 @@ class IndexInstanceBuilder {
     }
 
     private Similarity getFromFactory(final ResourceLoader resourceLoader, final String similarityName,
-            final Map<String, ? extends SimilarityFactory> similarityFactoryMap)
-            throws IOException, ReflectiveOperationException {
+                                      final Map<String, ? extends SimilarityFactory> similarityFactoryMap)
+        throws IOException, ReflectiveOperationException {
         if (similarityFactoryMap == null)
             return null;
         final SimilarityFactory factory = similarityFactoryMap.get(similarityName);
@@ -182,22 +182,22 @@ class IndexInstanceBuilder {
 
     static Directory getDirectory(IndexSettingsDefinition settings, Path dataDirectory) throws IOException {
         final Directory directory = settings == null || settings.directoryType == null ||
-                settings.directoryType == IndexSettingsDefinition.Type.FSDirectory ?
-                FSDirectory.open(dataDirectory) :
-                new RAMDirectory();
+            settings.directoryType == IndexSettingsDefinition.Type.FSDirectory ?
+            FSDirectory.open(dataDirectory) :
+            new RAMDirectory();
         final double maxMergeSizeMB = settings == null || settings.nrtCachingDirectoryMaxMergeSizeMB == null ?
-                IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB :
-                settings.nrtCachingDirectoryMaxMergeSizeMB;
+            IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB :
+            settings.nrtCachingDirectoryMaxMergeSizeMB;
         final double maxCacheMB = settings == null || settings.nrtCachingDirectoryMaxCachedMB == null ?
-                IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB :
-                settings.nrtCachingDirectoryMaxCachedMB;
+            IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB :
+            settings.nrtCachingDirectoryMaxCachedMB;
         if (maxMergeSizeMB == 0 || maxCacheMB == 0)
             return directory;
         return new NRTCachingDirectory(directory, maxMergeSizeMB, maxCacheMB);
     }
 
     private final static int MERGE_SCHEDULER_SSD_THREADS =
-            Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() / 2));
+        Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() / 2));
 
     private void openOrCreateDataIndex(boolean closeAfter) throws IOException {
 
@@ -230,25 +230,25 @@ class IndexInstanceBuilder {
             final MergeScheduler mergeScheduler;
             if (settings.mergeScheduler != null) {
                 switch (settings.mergeScheduler) {
-                case NO:
-                    mergeScheduler = NoMergeScheduler.INSTANCE;
-                    break;
-                case CONCURRENT:
-                    mergeScheduler = new ConcurrentMergeScheduler();
-                    ((ConcurrentMergeScheduler) mergeScheduler).setMaxMergesAndThreads(MERGE_SCHEDULER_SSD_THREADS,
+                    case NO:
+                        mergeScheduler = NoMergeScheduler.INSTANCE;
+                        break;
+                    case CONCURRENT:
+                        mergeScheduler = new ConcurrentMergeScheduler();
+                        ((ConcurrentMergeScheduler) mergeScheduler).setMaxMergesAndThreads(MERGE_SCHEDULER_SSD_THREADS,
                             MERGE_SCHEDULER_SSD_THREADS);
-                    break;
-                default:
-                case SERIAL:
-                    mergeScheduler = new SerialMergeScheduler();
-                    break;
+                        break;
+                    default:
+                    case SERIAL:
+                        mergeScheduler = new SerialMergeScheduler();
+                        break;
                 }
                 indexWriterConfig.setMergeScheduler(mergeScheduler);
             }
         }
 
         final SnapshotDeletionPolicy snapshotDeletionPolicy =
-                new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
+            new SnapshotDeletionPolicy(indexWriterConfig.getIndexDeletionPolicy());
         indexWriterConfig.setIndexDeletionPolicy(snapshotDeletionPolicy);
 
         indexWriter = checkCommit(new IndexWriter(dataDirectory, indexWriterConfig));
@@ -280,13 +280,13 @@ class IndexInstanceBuilder {
         if (IndexSettingsDefinition.useTaxonomyIndex(settings)) {
             openOrCreateTaxonomyIndex(true);
             replicationSlave = ReplicationSlave.withIndexAndTaxo(fileSet, indexService, settings.master, dataDirectory,
-                    taxonomyDirectory);
+                taxonomyDirectory);
             writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(null, null,
-                    () -> new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory));
+                () -> new SearcherTaxonomyManager(dataDirectory, taxonomyDirectory, searcherFactory));
         } else {
             replicationSlave = ReplicationSlave.withIndex(fileSet, indexService, settings.master, dataDirectory);
             writerAndSearcher =
-                    new WriterAndSearcher.WithIndex(null, () -> new SearcherManager(dataDirectory, searcherFactory));
+                new WriterAndSearcher.WithIndex(null, () -> new SearcherManager(dataDirectory, searcherFactory));
         }
 
     }
@@ -298,13 +298,13 @@ class IndexInstanceBuilder {
         if (IndexSettingsDefinition.useTaxonomyIndex(settings)) {
             openOrCreateTaxonomyIndex(false);
             replicationMaster =
-                    new ReplicationMaster.WithIndexAndTaxo(indexUuid.toString(), fileSet, indexWriter, taxonomyWriter);
+                new ReplicationMaster.WithIndexAndTaxo(indexUuid.toString(), fileSet, indexWriter, taxonomyWriter);
             writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(indexWriter, taxonomyWriter,
-                    () -> new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter));
+                () -> new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter));
         } else {
             replicationMaster = new ReplicationMaster.WithIndex(indexUuid.toString(), fileSet, indexWriter);
             writerAndSearcher = new WriterAndSearcher.WithIndex(indexWriter,
-                    () -> new SearcherManager(indexWriter, searcherFactory));
+                () -> new SearcherManager(indexWriter, searcherFactory));
         }
     }
 
@@ -340,10 +340,12 @@ class IndexInstanceBuilder {
             else
                 buildMaster();
             return new IndexInstance(this);
-        } catch (IOException | ReflectiveOperationException e) {
+        }
+        catch (IOException | ReflectiveOperationException e) {
             abort();
             throw e;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             abort();
             throw ServerException.of(e);
         }

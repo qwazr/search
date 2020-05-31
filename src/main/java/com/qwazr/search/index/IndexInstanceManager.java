@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,10 +55,10 @@ class IndexInstanceManager implements Closeable {
     private IndexInstance indexInstance;
 
     IndexInstanceManager(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
-            final Map<String, SimilarityFactory> similarityFactoryMap,
-            final Map<String, AnalyzerFactory> analyzerFactoryMap, final Map<String, Sort> sortMap,
-            final ReadWriteSemaphores readWriteSemaphores, final ExecutorService executorService,
-            final IndexServiceInterface indexServiceInterface, final Path indexDirectory) {
+                         final Map<String, SimilarityFactory> similarityFactoryMap,
+                         final Map<String, AnalyzerFactory> analyzerFactoryMap, final Map<String, Sort> sortMap,
+                         final ReadWriteSemaphores readWriteSemaphores, final ExecutorService executorService,
+                         final IndexServiceInterface indexServiceInterface, final Path indexDirectory) {
 
         try {
             rwl = ReadWriteLock.stamped();
@@ -76,7 +76,8 @@ class IndexInstanceManager implements Closeable {
             this.indexUuid = fileSet.checkUuid();
             this.settings = fileSet.loadSettings();
 
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw ServerException.of(e);
         }
     }
@@ -84,9 +85,9 @@ class IndexInstanceManager implements Closeable {
     private IndexInstance ensureOpen() throws ReflectiveOperationException, IOException {
         if (indexInstance == null)
             indexInstance =
-                    new IndexInstanceBuilder(indexProvider, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
-                            sortMap, readWriteSemaphores, executorService, indexServiceInterface, fileSet, settings,
-                            indexUuid, indexName).build();
+                new IndexInstanceBuilder(indexProvider, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
+                    sortMap, readWriteSemaphores, executorService, indexServiceInterface, fileSet, settings,
+                    indexUuid, indexName).build();
         return indexInstance;
     }
 
@@ -115,7 +116,8 @@ class IndexInstanceManager implements Closeable {
                 try (final CheckIndex checkIndex = new CheckIndex(directory)) {
                     return checkIndex.checkIndex();
                 }
-            } finally {
+            }
+            finally {
                 ensureOpen();
             }
         });
@@ -152,7 +154,8 @@ class IndexInstanceManager implements Closeable {
             if (Files.exists(fileSet.mainDirectory)) {
                 try {
                     FileUtils.deleteDirectory(fileSet.mainDirectory);
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     throw ServerException.of(e);
                 }
             }

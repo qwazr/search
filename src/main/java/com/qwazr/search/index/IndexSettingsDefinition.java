@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,10 +34,10 @@ import java.util.function.Supplier;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonAutoDetect(creatorVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        fieldVisibility = JsonAutoDetect.Visibility.NONE)
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    fieldVisibility = JsonAutoDetect.Visibility.NONE)
 public class IndexSettingsDefinition {
 
     public enum Type {
@@ -53,6 +53,9 @@ public class IndexSettingsDefinition {
     public static final double DEFAULT_MAX_MERGED_SEGMENT_MB = 5 * 1024 * 1024;
     public static final double DEFAULT_NRT_CACHING_DIRECTORY_MERGE_SIZE_MB = 5;
     public static final double DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB = 60;
+
+    @JsonProperty("primary_key")
+    final public String primaryKey;
 
     @JsonProperty("similarity")
     final public String similarity;
@@ -112,23 +115,28 @@ public class IndexSettingsDefinition {
     final public Double nrtCachingDirectoryMaxCachedMB;
 
     @JsonCreator
-    private IndexSettingsDefinition(@JsonProperty("similarity") final String similarity,
-            @JsonProperty("similarity_class") final String similarityClass, @JsonProperty("sort") final String sort,
-            @JsonProperty("sort_class") final String sortClass, @JsonProperty("master") final RemoteIndex master,
-            @JsonProperty("directory_type") final Type directoryType,
-            @JsonProperty("merge_scheduler") final MergeScheduler mergeScheduler,
-            @JsonProperty("ram_buffer_size") final Double ramBufferSize,
-            @JsonProperty("use_compound_file") final Boolean useCompoundFile,
-            @JsonProperty("use_simple_text_codec") final Boolean useSimpleTextCodec,
-            @JsonProperty("max_merge_at_once") final Integer maxMergeAtOnce,
-            @JsonProperty("max_merged_segment_mb") final Double maxMergedSegmentMB,
-            @JsonProperty("segments_per_tier") final Double segmentsPerTier,
-            @JsonProperty("enable_taxonomy_index") final Boolean enableTaxonomyIndex,
-            @JsonProperty("sorted_set_facet_field") final String sortedSetFacetField,
-            @JsonProperty("index_reader_warmer") final Boolean indexReaderWarmer,
-            @JsonProperty("merged_segment_warmer") final Boolean mergedSegmentWarmer,
-            @JsonProperty("nrt_caching_directory_max_merge_size_mb") final Double nrtCachingDirectoryMaxMergeSizeMB,
-            @JsonProperty("nrt_caching_directory_max_cached_mb") final Double nrtCachingDirectoryMaxCachedMB) {
+    private IndexSettingsDefinition(
+        @JsonProperty("primary_key") final String primaryKey,
+        @JsonProperty("similarity") final String similarity,
+        @JsonProperty("similarity_class") final String similarityClass,
+        @JsonProperty("sort") final String sort,
+        @JsonProperty("sort_class") final String sortClass,
+        @JsonProperty("master") final RemoteIndex master,
+        @JsonProperty("directory_type") final Type directoryType,
+        @JsonProperty("merge_scheduler") final MergeScheduler mergeScheduler,
+        @JsonProperty("ram_buffer_size") final Double ramBufferSize,
+        @JsonProperty("use_compound_file") final Boolean useCompoundFile,
+        @JsonProperty("use_simple_text_codec") final Boolean useSimpleTextCodec,
+        @JsonProperty("max_merge_at_once") final Integer maxMergeAtOnce,
+        @JsonProperty("max_merged_segment_mb") final Double maxMergedSegmentMB,
+        @JsonProperty("segments_per_tier") final Double segmentsPerTier,
+        @JsonProperty("enable_taxonomy_index") final Boolean enableTaxonomyIndex,
+        @JsonProperty("sorted_set_facet_field") final String sortedSetFacetField,
+        @JsonProperty("index_reader_warmer") final Boolean indexReaderWarmer,
+        @JsonProperty("merged_segment_warmer") final Boolean mergedSegmentWarmer,
+        @JsonProperty("nrt_caching_directory_max_merge_size_mb") final Double nrtCachingDirectoryMaxMergeSizeMB,
+        @JsonProperty("nrt_caching_directory_max_cached_mb") final Double nrtCachingDirectoryMaxCachedMB) {
+        this.primaryKey = primaryKey;
         this.directoryType = directoryType;
         this.mergeScheduler = mergeScheduler;
         this.similarity = similarity;
@@ -151,6 +159,7 @@ public class IndexSettingsDefinition {
     }
 
     private IndexSettingsDefinition(final Builder builder) {
+        this.primaryKey = builder.primaryKey;
         this.directoryType = builder.directoryType;
         this.mergeScheduler = builder.mergeScheduler;
         this.similarity = builder.similarity;
@@ -186,7 +195,7 @@ public class IndexSettingsDefinition {
 
     @Override
     public int hashCode() {
-        return Objects.hash(directoryType, ramBufferSize, useCompoundFile);
+        return Objects.hash(primaryKey, directoryType, ramBufferSize, useCompoundFile);
     }
 
     @Override
@@ -194,6 +203,8 @@ public class IndexSettingsDefinition {
         if (!(o instanceof IndexSettingsDefinition))
             return false;
         final IndexSettingsDefinition s = (IndexSettingsDefinition) o;
+        if (!Objects.equals(primaryKey, s.primaryKey))
+            return false;
         if (!Objects.equals(directoryType, s.directoryType))
             return false;
         if (!Objects.equals(mergeScheduler, s.mergeScheduler))
@@ -249,6 +260,7 @@ public class IndexSettingsDefinition {
 
     public static class Builder {
 
+        private String primaryKey;
         private Type directoryType;
         private MergeScheduler mergeScheduler;
         private String similarity;
@@ -273,6 +285,7 @@ public class IndexSettingsDefinition {
         }
 
         private Builder(final Index annotatedIndex) throws URISyntaxException {
+            primaryKey = annotatedIndex.primaryKey();
             directoryType = annotatedIndex.type();
             mergeScheduler = annotatedIndex.mergeScheduler();
             similarity(annotatedIndex.similarity());
@@ -294,6 +307,7 @@ public class IndexSettingsDefinition {
         }
 
         private Builder(final IndexSettingsDefinition settings) {
+            this.primaryKey = settings.primaryKey;
             this.directoryType = settings.directoryType;
             this.mergeScheduler = settings.mergeScheduler;
             this.similarity = settings.similarity;
@@ -313,6 +327,11 @@ public class IndexSettingsDefinition {
             this.mergedSegmentWarmer = settings.mergedSegmentWarmer;
             this.nrtCachingDirectoryMaxMergeSizeMB = settings.nrtCachingDirectoryMaxMergeSizeMB;
             this.nrtCachingDirectoryMaxCachedMB = settings.nrtCachingDirectoryMaxCachedMB;
+        }
+
+        public Builder primaryKey(final String primaryKey) {
+            this.primaryKey = primaryKey;
+            return this;
         }
 
         public Builder type(final Type directoryType) {
@@ -429,10 +448,10 @@ public class IndexSettingsDefinition {
     }
 
     static IndexSettingsDefinition load(final File settingsFile,
-            final Supplier<IndexSettingsDefinition> defaultSettings) throws IOException {
+                                        final Supplier<IndexSettingsDefinition> defaultSettings) throws IOException {
         return settingsFile != null && settingsFile.exists() && settingsFile.isFile() && settingsFile.length() > 0 ?
-                ObjectMappers.JSON.readValue(settingsFile, IndexSettingsDefinition.class) :
-                defaultSettings == null ? null : defaultSettings.get();
+            ObjectMappers.JSON.readValue(settingsFile, IndexSettingsDefinition.class) :
+            defaultSettings == null ? null : defaultSettings.get();
     }
 
     static void save(final IndexSettingsDefinition settings, final File settingsFile) throws IOException {

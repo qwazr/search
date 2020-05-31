@@ -212,7 +212,7 @@ final public class IndexInstance implements Closeable {
         fieldMapLock.lock();
         try {
             fileSet.writeFieldMap(fields);
-            fieldMap = new FieldMap(fields, settings.sortedSetFacetField);
+            fieldMap = new FieldMap(settings.primaryKey, fields, settings.sortedSetFacetField);
             refreshFieldsAnalyzers();
         }
         finally {
