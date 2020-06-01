@@ -489,6 +489,12 @@ final public class IndexInstance implements Closeable {
         }
     }
 
+    private int checkCommit(final int results) throws IOException {
+        if (results > 0)
+            nrtCommit();
+        return results;
+    }
+
     private int checkCommit(final int results, final Map<String, String> commitUserData) throws IOException {
         if (results > 0 || (commitUserData != null && !commitUserData.isEmpty()))
             nrtCommit();
@@ -525,7 +531,7 @@ final public class IndexInstance implements Closeable {
 
     public int postJsonNode(final JsonNode jsonNode) throws IOException {
         checkIsMaster();
-        return write(context -> context.postJsonNode(jsonNode));
+        return write(context -> checkCommit(context.postJsonNode(jsonNode)));
     }
 
     final <T> int updateDocValues(final Map<String, Field> fields, final T document,
