@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.jaxrs.smile.SmileMediaTypes;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServerException;
@@ -422,7 +423,24 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
-    public IndexStatus mergeIndex(final String schemaName, final String indexName, String mergedIndex,
+    public IndexSettingsDefinition getIndexSettings(final String schemaName,
+                                                    final String indexName) {
+        try {
+            return indexTarget.path(schemaName)
+                .path(indexName)
+                .path("settings")
+                .request(preferedSerializedMediaType)
+                .get(IndexSettingsDefinition.class);
+        }
+        catch (WebApplicationException e) {
+            throw ServerException.from(e);
+        }
+    }
+
+    @Override
+    public IndexStatus mergeIndex(final String schemaName,
+                                  final String indexName,
+                                  final String mergedIndex,
                                   final Map<String, String> commitUserData) {
         try {
             return indexTarget.path(schemaName)
@@ -662,6 +680,38 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
+    public List<Map<String, Object>> getJsonSamples(final String schemaName,
+                                                    final String indexName,
+                                                    final Integer count) {
+        try {
+            WebTarget target = indexTarget.path(schemaName)
+                .path(indexName)
+                .path("json")
+                .path("samples")
+                .queryParam("count", count);
+            return target.request(preferedSerializedMediaType).get(listMapStringObjectType);
+        }
+        catch (WebApplicationException e) {
+            throw ServerException.from(e);
+        }
+    }
+
+    @Override
+    public Map<String, Object> getJsonSample(final String schemaName,
+                                             final String indexName) {
+        try {
+            WebTarget target = indexTarget.path(schemaName)
+                .path(indexName)
+                .path("json")
+                .path("sample");
+            return target.request(preferedSerializedMediaType).get(mapStringObjectType);
+        }
+        catch (WebApplicationException e) {
+            throw ServerException.from(e);
+        }
+    }
+
+    @Override
     public Integer postMappedDocuments(final String schemaName, final String indexName,
                                        final PostDefinition.Documents post) {
         try {
@@ -815,6 +865,37 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
                 target = target.queryParam("wrap", descriptionWrapSize);
             return target.request(MEDIATYPE_TEXT_GRAPHVIZ)
                 .post(Entity.entity(query, preferedSerializedMediaType), String.class);
+        }
+        catch (WebApplicationException e) {
+            throw ServerException.from(e);
+        }
+    }
+
+    @Override
+    public Set<String> getQueryTypes(String schemaName, String indexName) {
+        try {
+            WebTarget target = indexTarget.path(schemaName)
+                .path(indexName)
+                .path("queries")
+                .path("types");
+            return target.request(preferedSerializedMediaType).get(setStringType);
+        }
+        catch (WebApplicationException e) {
+            throw ServerException.from(e);
+        }
+    }
+
+    @Override
+    public AbstractQuery<?> getQuerySample(final String schemaName,
+                                           final String indexName,
+                                           final String queryType) {
+        try {
+            WebTarget target = indexTarget.path(schemaName)
+                .path(indexName)
+                .path("queries")
+                .path("types")
+                .path(queryType);
+            return target.request(preferedSerializedMediaType).get(AbstractQuery.class);
         }
         catch (WebApplicationException e) {
             throw ServerException.from(e);

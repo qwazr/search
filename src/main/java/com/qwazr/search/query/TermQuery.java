@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,35 +18,51 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 
+import java.net.URI;
+import java.util.Map;
 import java.util.Objects;
 
 public class TermQuery extends AbstractFieldQuery<TermQuery> {
 
-	final public Object term;
+    final public Object term;
 
-	@JsonCreator
-	public TermQuery(@JsonProperty("generic_field") final String genericField, @JsonProperty("field") String field,
-			@JsonProperty("term") Object term) {
-		super(TermQuery.class, genericField, field);
-		this.term = term;
-	}
+    @JsonCreator
+    public TermQuery(@JsonProperty("generic_field") final String genericField,
+                     @JsonProperty("field") final String field,
+                     @JsonProperty("term") final Object term) {
+        super(TermQuery.class, genericField, field);
+        this.term = term;
+    }
 
-	public TermQuery(final String field, final Object term) {
-		this(null, field, term);
-	}
+    public TermQuery(final String field, final Object term) {
+        this(null, field, term);
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(final TermQuery q) {
-		return super.isEqual(q) && Objects.equals(term, q.term);
-	}
+    private final static URI DOC = URI.create("core/org/apache/lucene/search/TermQuery.html");
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext) {
-		return new org.apache.lucene.search.TermQuery(getResolvedTerm(queryContext.getFieldMap(), term));
-	}
+    public TermQuery(final IndexSettingsDefinition settings,
+                     final Map<String, AnalyzerDefinition> analyzers,
+                     final Map<String, FieldDefinition> fields) {
+        super(TermQuery.class, DOC,
+            null, getFullTextField(fields, () -> getTextField(fields, () -> "text")));
+        this.term = "Hello";
+    }
+
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(final TermQuery q) {
+        return super.isEqual(q) && Objects.equals(term, q.term);
+    }
+
+    @Override
+    final public Query getQuery(final QueryContext queryContext) {
+        return new org.apache.lucene.search.TermQuery(getResolvedTerm(queryContext.getFieldMap(), term));
+    }
 
 }

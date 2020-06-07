@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,22 +22,34 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldMap;
 import org.apache.lucene.index.Term;
 
+import java.net.URI;
 import java.util.Objects;
 
-public abstract class AbstractFieldQuery<T extends AbstractFieldQuery> extends AbstractQuery<T> {
+public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extends AbstractQuery<T> {
 
     @JsonProperty("generic_field")
     final public String genericField;
 
     final public String field;
 
-    protected AbstractFieldQuery(final Class<T> queryClass, final String genericField, final String field) {
+    protected AbstractFieldQuery(final Class<T> queryClass,
+                                 final String genericField,
+                                 final String field) {
         super(queryClass);
         this.genericField = genericField;
         this.field = Objects.requireNonNull(field, "The field is null");
     }
 
-    protected AbstractFieldQuery(final Class<T> queryClass, final AbstractFieldBuilder builder) {
+    protected AbstractFieldQuery(final Class<T> queryClass,
+                                 final URI docUri,
+                                 final String genericField,
+                                 final String field) {
+        super(queryClass, docUri);
+        this.genericField = genericField;
+        this.field = Objects.requireNonNull(field, "The field is null");
+    }
+
+    protected AbstractFieldQuery(final Class<T> queryClass, final AbstractFieldBuilder<?> builder) {
         this(queryClass, builder.genericField, builder.field);
     }
 
@@ -50,11 +62,11 @@ public abstract class AbstractFieldQuery<T extends AbstractFieldQuery> extends A
     }
 
     static Term getResolvedTerm(final FieldMap fieldMap, final String genericFieldName, final String concreteFieldName,
-            final Object value) {
+                                final Object value) {
         return fieldMap == null ?
-                new Term(concreteFieldName, BytesRefUtils.fromAny(value)) :
-                Objects.requireNonNull(fieldMap.getFieldType(genericFieldName, concreteFieldName),
-                        "Unknown field: " + concreteFieldName).term(concreteFieldName, value);
+            new Term(concreteFieldName, BytesRefUtils.fromAny(value)) :
+            Objects.requireNonNull(fieldMap.getFieldType(genericFieldName, concreteFieldName),
+                "Unknown field: " + concreteFieldName).term(concreteFieldName, value);
     }
 
     final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {
@@ -67,7 +79,7 @@ public abstract class AbstractFieldQuery<T extends AbstractFieldQuery> extends A
         return Objects.equals(genericField, q.genericField) && Objects.equals(field, q.field);
     }
 
-    public static abstract class AbstractFieldBuilder<Builder extends AbstractFieldBuilder> {
+    public static abstract class AbstractFieldBuilder<Builder extends AbstractFieldBuilder<Builder>> {
 
         final public String genericField;
         final public String field;

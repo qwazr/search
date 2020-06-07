@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,37 @@
  */
 package com.qwazr.search.query;
 
+import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 
+import java.net.URI;
+import java.util.Map;
+
 public class MatchNoDocsQuery extends AbstractQuery<MatchNoDocsQuery> {
 
-	public MatchNoDocsQuery() {
-		super(MatchNoDocsQuery.class);
-	}
+    public MatchNoDocsQuery() {
+        super(MatchNoDocsQuery.class);
+    }
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext) {
-		return new org.apache.lucene.search.MatchNoDocsQuery();
-	}
+    private final static URI DOC = URI.create("core/org/apache/lucene/search/MatchNoDocsQuery.html");
 
-	@Override
-	protected boolean isEqual(MatchNoDocsQuery query) {
-		return query != null;
-	}
+
+    public MatchNoDocsQuery(final IndexSettingsDefinition settings,
+                            final Map<String, AnalyzerDefinition> analyzers,
+                            final Map<String, FieldDefinition> fields) {
+        super(MatchNoDocsQuery.class, DOC);
+    }
+
+    @Override
+    final public Query getQuery(final QueryContext queryContext) {
+        return new org.apache.lucene.search.MatchNoDocsQuery();
+    }
+
+    @Override
+    protected boolean isEqual(MatchNoDocsQuery query) {
+        return query != null;
+    }
 }

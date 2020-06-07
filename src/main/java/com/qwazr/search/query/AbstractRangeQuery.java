@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,25 +17,41 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.net.URI;
 import java.util.Objects;
 
-public abstract class AbstractRangeQuery<V, T extends AbstractRangeQuery> extends AbstractFieldQuery<T> {
+public abstract class AbstractRangeQuery<V, T extends AbstractRangeQuery<V, T>> extends AbstractFieldQuery<T> {
 
-	final public V lower_value;
-	final public V upper_value;
+    final public V lower_value;
+    final public V upper_value;
 
-	protected AbstractRangeQuery(final Class<T> queryClass, final String genericField, final String field,
-			final V lowerValue, final V upperValue) {
-		super(queryClass, genericField, field);
-		this.lower_value = lowerValue;
-		this.upper_value = upperValue;
-	}
+    protected AbstractRangeQuery(final Class<T> queryClass,
+                                 final String genericField,
+                                 final String field,
+                                 final V lowerValue,
+                                 final V upperValue) {
+        super(queryClass, genericField, field);
+        this.lower_value = lowerValue;
+        this.upper_value = upperValue;
+    }
 
-	@JsonIgnore
-	@Override
-	final protected boolean isEqual(T q) {
-		return super.isEqual(q) && Objects.equals(lower_value, q.lower_value) &&
-				Objects.equals(upper_value, q.upper_value);
-	}
+    protected AbstractRangeQuery(final Class<T> queryClass,
+                                 final URI docUri,
+                                 final String genericField,
+                                 final String field,
+                                 final V lowerValue,
+                                 final V upperValue) {
+        super(queryClass, docUri, genericField, field);
+        this.lower_value = lowerValue;
+        this.upper_value = upperValue;
+    }
+
+
+    @JsonIgnore
+    @Override
+    final protected boolean isEqual(T q) {
+        return super.isEqual(q) && Objects.equals(lower_value, q.lower_value) &&
+            Objects.equals(upper_value, q.upper_value);
+    }
 
 }

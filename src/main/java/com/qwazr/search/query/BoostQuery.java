@@ -17,34 +17,52 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.net.URI;
+import java.util.Map;
 import java.util.Objects;
 
 public class BoostQuery extends AbstractQuery<BoostQuery> {
 
-	final public AbstractQuery query;
-	final public Float boost;
+    final public AbstractQuery<?> query;
+    final public Float boost;
 
-	@JsonCreator
-	public BoostQuery(@JsonProperty("query") final AbstractQuery query, @JsonProperty("boost") final Float boost) {
-		super(BoostQuery.class);
-		this.query = Objects.requireNonNull(query, "The query property is missing");
-		this.boost = Objects.requireNonNull(boost, "The boost property is missing");
-	}
+    @JsonCreator
+    public BoostQuery(@JsonProperty("query") final AbstractQuery<?> query, @JsonProperty("boost") final Float boost) {
+        super(BoostQuery.class);
+        this.query = Objects.requireNonNull(query, "The query property is missing");
+        this.boost = Objects.requireNonNull(boost, "The boost property is missing");
+    }
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		return new org.apache.lucene.search.BoostQuery(query.getQuery(queryContext), boost);
-	}
+    private final static URI DOC = URI.create("core/org/apache/lucene/search/BoostQuery.html");
 
-	@Override
-	protected boolean isEqual(BoostQuery q) {
-		return Objects.equals(query, q.query) && Objects.equals(boost, q.boost);
-	}
+    public BoostQuery(final IndexSettingsDefinition settings,
+                      final Map<String, AnalyzerDefinition> analyzers,
+                      final Map<String, FieldDefinition> fields) {
+        super(BoostQuery.class, DOC);
+        final String field = getFullTextField(fields,
+            () -> getTextField(fields,
+                () -> "text"));
+        this.query = new TermQuery(field, "hot");
+        this.boost = 5.0f;
+    }
+
+    @Override
+    final public Query getQuery(final QueryContext queryContext)
+        throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+        return new org.apache.lucene.search.BoostQuery(query.getQuery(queryContext), boost);
+    }
+
+    @Override
+    protected boolean isEqual(final BoostQuery q) {
+        return Objects.equals(query, q.query) && Objects.equals(boost, q.boost);
+    }
 }

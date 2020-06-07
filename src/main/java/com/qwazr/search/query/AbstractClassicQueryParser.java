@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryParser> extends AbstractQueryParser<T> {
+public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryParser<T>> extends AbstractQueryParser<T> {
 
     final public String[] fields;
     final public LinkedHashMap<String, Float> boosts;

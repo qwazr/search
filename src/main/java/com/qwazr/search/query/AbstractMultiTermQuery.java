@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class AbstractMultiTermQuery<T extends AbstractMultiTermQuery> extends AbstractFieldQuery<T> {
+public abstract class AbstractMultiTermQuery<T extends AbstractMultiTermQuery<T>> extends AbstractFieldQuery<T> {
 
     final protected MultiTermQuery.RewriteMethod rewriteMethod;
 
     protected AbstractMultiTermQuery(final Class<T> queryClass, final String genericField, final String field,
-            final MultiTermQuery.RewriteMethod rewriteMethod) {
+                                     final MultiTermQuery.RewriteMethod rewriteMethod) {
         super(queryClass, genericField, field);
         this.rewriteMethod = rewriteMethod;
     }
@@ -51,8 +51,8 @@ public abstract class AbstractMultiTermQuery<T extends AbstractMultiTermQuery> e
         return super.isEqual(q) && Objects.equals(rewriteMethod, q.rewriteMethod);
     }
 
-    abstract static public class MultiTermBuilder<Query extends AbstractMultiTermQuery, Builder extends MultiTermBuilder<Query, Builder>>
-            extends AbstractFieldBuilder<Builder> {
+    abstract static public class MultiTermBuilder<Query extends AbstractMultiTermQuery<Query>, Builder extends MultiTermBuilder<Query, Builder>>
+        extends AbstractFieldBuilder<Builder> {
 
         MultiTermQuery.RewriteMethod rewriteMethod;
         final List<BytesRef> bytesRefs = new ArrayList<>();

@@ -24,6 +24,7 @@ import com.qwazr.search.analysis.CustomAnalyzer;
 import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
+import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.query.JoinQuery;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
@@ -51,6 +52,8 @@ import org.apache.lucene.search.join.JoinUtil;
 import org.apache.lucene.search.join.ScoreMode;
 import org.apache.lucene.store.Directory;
 
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
 import java.io.File;
@@ -61,6 +64,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -725,6 +729,68 @@ final public class IndexInstance implements Closeable {
 
     final FileResourceLoader newResourceLoader(final FileResourceLoader resourceLoader) {
         return new FileResourceLoader(resourceLoader, fileSet.resourcesDirectoryPath);
+    }
+
+    final AbstractQuery<?> getQuerySample(final String queryType) {
+        final Class<AbstractQuery<?>> queryClass = AbstractQuery.TYPES.get(queryType);
+        if (queryClass == null)
+            throw new NotFoundException("The type does not exist: " + queryType);
+        try {
+            return AbstractQuery.getSample(queryClass, settings, getAnalyzers(), getFields());
+        }
+        catch (NoSuchMethodException e) {
+            throw new NotFoundException("This query has no sample: " + queryType);
+        }
+        catch (ReflectiveOperationException e) {
+            throw new InternalServerErrorException(e);
+        }
+    }
+
+    private Map<String, Object> getJsonSample(final Object primaryKeyValue) {
+        final Map<String, Object> sample = new LinkedHashMap<>();
+        getFields().forEach((name, def) -> {
+            final Object value;
+            if (primaryKeyValue != null && name.equals(settings.primaryKey))
+                value = "id" + primaryKeyValue.toString();
+            else {
+                if (def.type != null) {
+                    switch (def.type) {
+                        case TEXT:
+                            value = "Hello world";
+                            break;
+                        case INTEGER:
+                            value = 123;
+                            break;
+                        case LONG:
+                            value = System.currentTimeMillis();
+                            break;
+                        case FLOAT:
+                            value = 3.14f;
+                            break;
+                        case DOUBLE:
+                            value = 3.141592654d;
+                            break;
+                        default:
+                            value = "value";
+                            break;
+                    }
+                } else
+                    value = "value";
+            }
+            sample.put(name, value);
+        });
+        return sample;
+    }
+
+    final List<Map<String, Object>> getJsonSamples(final int count) {
+        final List<Map<String, Object>> list = new ArrayList<>(count);
+        for (int i = 0; i < count; i++)
+            list.add(getJsonSample(i));
+        return list;
+    }
+
+    final Map<String, Object> getJsonSample() {
+        return getJsonSample(null);
     }
 
 }

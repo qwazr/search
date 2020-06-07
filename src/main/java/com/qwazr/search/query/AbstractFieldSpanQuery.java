@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.apache.lucene.index.Term;
 
 import java.util.Objects;
 
-public abstract class AbstractFieldSpanQuery<T extends AbstractFieldSpanQuery> extends AbstractSpanQuery<T> {
+public abstract class AbstractFieldSpanQuery<T extends AbstractFieldSpanQuery<T>> extends AbstractSpanQuery<T> {
 
 	final public String genericField;
 	final public String field;

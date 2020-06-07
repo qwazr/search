@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-abstract class AbstractMultiRangeQuery<T extends AbstractMultiRangeQuery> extends AbstractFieldQuery<T> {
+abstract class AbstractMultiRangeQuery<T extends AbstractMultiRangeQuery<T>> extends AbstractFieldQuery<T> {
 
     protected AbstractMultiRangeQuery(Class<T> queryClass, final String genericField, final String field) {
         super(queryClass, genericField, field);
     }
 
-    public abstract static class AbstractBuilder<T, Builder extends AbstractBuilder>
-            extends AbstractFieldBuilder<Builder> {
+    public abstract static class AbstractBuilder<T, Builder extends AbstractBuilder<T, Builder>>
+        extends AbstractFieldBuilder<Builder> {
 
         private final List<T> lowerValues;
         private final List<T> upperValues;
@@ -44,7 +44,7 @@ abstract class AbstractMultiRangeQuery<T extends AbstractMultiRangeQuery> extend
         }
 
         protected abstract AbstractMultiRangeQuery build(String field, Collection<T> lowerValues,
-                Collection<T> upperValues);
+                                                         Collection<T> upperValues);
 
         public AbstractMultiRangeQuery build() {
             return build(field, lowerValues, upperValues);

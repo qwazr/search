@@ -38,7 +38,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         initIndexManager();
     }
 
-    <T extends Record> void indexDocument(T record, Class<T> recordClass) throws Exception {
+    <T extends Record<?>> void indexDocument(T record, Class<T> recordClass) throws Exception {
         final AnnotatedIndexService<T> indexService = initIndexService(recordClass);
 
         // We insert the document
@@ -58,7 +58,8 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         try {
             indexService.searchQuery(QueryDefinition.of(new TermQuery("storedId", record.getId())).build());
             Assert.fail("Exception not thrown");
-        } catch (WebApplicationException e) {
+        }
+        catch (WebApplicationException e) {
             Assert.assertTrue(ExceptionUtils.getRootCause(e).getMessage().contains("storedId"));
         }
 

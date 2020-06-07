@@ -17,9 +17,15 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
+
+import java.net.URI;
+import java.util.Map;
 
 public class DoubleExactQuery extends AbstractExactQuery<Double, DoubleExactQuery> {
 
@@ -33,6 +39,14 @@ public class DoubleExactQuery extends AbstractExactQuery<Double, DoubleExactQuer
 
     public DoubleExactQuery(final String field, final Double value) {
         this(null, field, value);
+    }
+
+    private final static URI DOC = URI.create("core/org/apache/lucene/document/DoublePoint.html#newExactQuery-java.lang.String-double-s");
+
+    public DoubleExactQuery(final IndexSettingsDefinition settings,
+                            final Map<String, AnalyzerDefinition> analyzers,
+                            final Map<String, FieldDefinition> fields) {
+        super(DoubleExactQuery.class, DOC, null, getDoubleField(fields, () -> "doubleField"), 3.14d);
     }
 
     @Override

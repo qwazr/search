@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +18,34 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.net.URI;
 import java.util.Objects;
 
-public abstract class AbstractExactQuery<V, T extends AbstractExactQuery> extends AbstractFieldQuery<T> {
+public abstract class AbstractExactQuery<V, T extends AbstractExactQuery<V, T>> extends AbstractFieldQuery<T> {
 
-	public V value;
+    public V value;
 
-	protected AbstractExactQuery(final Class<T> queryClass, final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final V value) {
-		super(queryClass, genericField, field);
-		this.value = value;
-	}
+    protected AbstractExactQuery(final Class<T> queryClass,
+                                 final String genericField,
+                                 @JsonProperty("field") final String field,
+                                 @JsonProperty("value") final V value) {
+        super(queryClass, genericField, field);
+        this.value = value;
+    }
 
-	@Override
-	@JsonIgnore
-	final protected boolean isEqual(T q) {
-		return super.isEqual(q) && Objects.equals(value, q.value);
-	}
+    protected AbstractExactQuery(final Class<T> queryClass,
+                                 final URI docUri,
+                                 final String genericField,
+                                 @JsonProperty("field") final String field,
+                                 @JsonProperty("value") final V value) {
+        super(queryClass, docUri, genericField, field);
+        this.value = value;
+    }
+
+    @Override
+    @JsonIgnore
+    final protected boolean isEqual(T q) {
+        return super.isEqual(q) && Objects.equals(value, q.value);
+    }
 }
 

@@ -19,13 +19,18 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.BytesRefUtils;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.Equalizer;
 import org.apache.lucene.search.Query;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
@@ -84,6 +89,21 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
         this.lowFreqOccur = lowFreqOccur;
         this.maxTermFrequency = maxTermFrequency;
         this.terms = terms;
+    }
+
+    private final static URI DOC = URI.create("queries/org/apache/lucene/queries/CommonTermsQuery.html");
+
+    public CommonTermsQuery(final IndexSettingsDefinition settings,
+                            final Map<String, AnalyzerDefinition> analyzers,
+                            final Map<String, FieldDefinition> fields) {
+        super(CommonTermsQuery.class, DOC);
+        final String field = getFullTextField(fields,
+            () -> getTextField(fields,
+                () -> "text"));
+        highFreqOccur = BooleanQuery.Occur.must;
+        lowFreqOccur = BooleanQuery.Occur.should;
+        maxTermFrequency = 0.5f;
+        terms = List.of(new Term(field, "a"), new Term(field, "of"));
     }
 
     @Override

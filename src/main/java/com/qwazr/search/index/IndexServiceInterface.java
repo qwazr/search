@@ -20,6 +20,7 @@ import com.fasterxml.jackson.jaxrs.smile.SmileMediaTypes;
 import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.PATCH;
 import com.qwazr.server.ServiceInterface;
@@ -225,6 +226,13 @@ public interface IndexServiceInterface extends ServiceInterface {
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     IndexStatus getIndex(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
 
+    @GET
+    @Path("/{schema_name}/{index_name}/settings")
+    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
+    IndexSettingsDefinition getIndexSettings(@PathParam("schema_name") String schemaName,
+                                             @PathParam("index_name") String indexName);
+
+
     @POST
     @Path("/{schema_name}/{index_name}/merge/{merged_index}")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
@@ -271,9 +279,22 @@ public interface IndexServiceInterface extends ServiceInterface {
     @POST
     @Path("/{schema_name}/{index_name}/json")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Integer postJson(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+    Integer postJson(@PathParam("schema_name") String schema_name,
+                     @PathParam("index_name") String index_name,
                      JsonNode jsonNode);
 
+    @GET
+    @Path("/{schema_name}/{index_name}/json/samples")
+    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
+    List<Map<String, Object>> getJsonSamples(@PathParam("schema_name") String schemaName,
+                                             @PathParam("index_name") String indexName,
+                                             @QueryParam("counnt") Integer count);
+
+    @GET
+    @Path("/{schema_name}/{index_name}/json/sample")
+    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
+    Map<String, Object> getJsonSample(@PathParam("schema_name") String schemaName,
+                                      @PathParam("index_name") String indexName);
 
     @POST
     @Path("/{schema_name}/{index_name}/docs")
@@ -440,7 +461,9 @@ public interface IndexServiceInterface extends ServiceInterface {
     interface QueryActions<T> extends FunctionEx<QueryContext, T, IOException> {
     }
 
-    default <T> T query(final String schemaName, final String indexName, final FieldMapWrapper.Cache fieldMapWrappers,
+    default <T> T query(final String schemaName,
+                        final String indexName,
+                        final FieldMapWrapper.Cache fieldMapWrappers,
                         final QueryActions<T> actions) throws IOException {
         throw new NotImplementedException("Method not available");
     }
@@ -449,9 +472,23 @@ public interface IndexServiceInterface extends ServiceInterface {
     interface WriteActions<T> extends FunctionEx<WriteContext, T, IOException> {
     }
 
-    default <T> T write(final String schemaName, final String indexName, final WriteActions<T> actions)
+    default <T> T write(final String schemaName,
+                        final String indexName,
+                        final WriteActions<T> actions)
         throws IOException {
         throw new NotImplementedException("Method not available");
     }
 
+    @GET
+    @Path("/{schema_name}/{index_name}/search/queries/types")
+    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
+    Set<String> getQueryTypes(@PathParam("schema_name") String schemaName,
+                              @PathParam("index_name") String indexName);
+
+    @GET
+    @Path("/{schema_name}/{index_name}/search/queries/types/{query_type}")
+    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
+    AbstractQuery<?> getQuerySample(@PathParam("schema_name") String schemaName,
+                                    @PathParam("index_name") String indexName,
+                                    @PathParam("query_type") String queryType);
 }

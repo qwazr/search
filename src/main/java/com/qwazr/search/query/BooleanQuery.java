@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.Equalizer;
@@ -27,10 +30,12 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class BooleanQuery extends AbstractQuery<BooleanQuery> {
@@ -56,18 +61,18 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
     }
 
     @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE,
-            setterVisibility = JsonAutoDetect.Visibility.NONE,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            creatorVisibility = JsonAutoDetect.Visibility.NONE,
-            fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+        setterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
     public static class BooleanClause extends Equalizer<BooleanClause> {
 
         public final Occur occur;
-        public final AbstractQuery query;
+        public final AbstractQuery<?> query;
 
         @JsonCreator
         public BooleanClause(@JsonProperty("occur") final Occur occur,
-                @JsonProperty("query") final AbstractQuery query) {
+                             @JsonProperty("query") final AbstractQuery<?> query) {
             super(BooleanClause.class);
             this.occur = occur;
             this.query = query;
@@ -75,7 +80,7 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 
         @JsonIgnore
         private org.apache.lucene.search.BooleanClause getNewClause(final QueryContext queryContext)
-                throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+            throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
             Objects.requireNonNull(occur, "Occur must not be null");
             return new org.apache.lucene.search.BooleanClause(query.getQuery(queryContext), occur.occur);
         }
@@ -93,10 +98,28 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 
     @JsonCreator
     public BooleanQuery(@JsonProperty("minimum_number_should_match") final Integer minimumNumberShouldMatch,
-            @JsonProperty("clauses") final List<BooleanClause> clauses) {
+                        @JsonProperty("clauses") final List<BooleanClause> clauses) {
         super(BooleanQuery.class);
         this.minimumNumberShouldMatch = minimumNumberShouldMatch;
         this.clauses = clauses;
+    }
+
+    private final static URI DOC = URI.create("core/org/apache/lucene/search/BooleanQuery.html");
+
+    public BooleanQuery(final IndexSettingsDefinition settings,
+                        final Map<String, AnalyzerDefinition> analyzers,
+                        final Map<String, FieldDefinition> fields) {
+        super(BooleanQuery.class, DOC);
+        minimumNumberShouldMatch = 2;
+        final String field = getFullTextField(fields,
+            () -> getTextField(fields,
+                () -> "text"));
+        this.clauses = List.of(
+            new BooleanClause(Occur.must, new TermQuery(field, "Hello")),
+            new BooleanClause(Occur.should, new TermQuery(field, "World")),
+            new BooleanClause(Occur.filter, new TermQuery(field, "code")),
+            new BooleanClause(Occur.must_not, new TermQuery(field, "unwanted"))
+        );
     }
 
     public BooleanQuery(final List<BooleanClause> clauses) {
@@ -125,9 +148,9 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 
     @Override
     final public Query getQuery(final QueryContext queryContext)
-            throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+        throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
         final org.apache.lucene.search.BooleanQuery.Builder builder =
-                new org.apache.lucene.search.BooleanQuery.Builder();
+            new org.apache.lucene.search.BooleanQuery.Builder();
         if (minimumNumberShouldMatch != null)
             builder.setMinimumNumberShouldMatch(minimumNumberShouldMatch);
         if (clauses != null)
@@ -139,7 +162,7 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
     @Override
     protected boolean isEqual(final BooleanQuery query) {
         return CollectionsUtils.equals(clauses, query.clauses) &&
-                Objects.equals(minimumNumberShouldMatch, query.minimumNumberShouldMatch);
+            Objects.equals(minimumNumberShouldMatch, query.minimumNumberShouldMatch);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,14 @@ import org.apache.lucene.search.spans.SpanQuery;
 
 import java.io.IOException;
 
-public abstract class AbstractSpanQuery<T extends AbstractSpanQuery> extends AbstractQuery<T> {
+public abstract class AbstractSpanQuery<T extends AbstractSpanQuery<T>> extends AbstractQuery<T> {
 
-	protected AbstractSpanQuery(Class<T> queryClass) {
-		super(queryClass);
-	}
+    protected AbstractSpanQuery(Class<T> queryClass) {
+        super(queryClass);
+    }
 
-	@JsonIgnore
-	public abstract SpanQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException;
+    @JsonIgnore
+    public abstract SpanQuery getQuery(final QueryContext queryContext)
+        throws IOException, ParseException, QueryNodeException, ReflectiveOperationException;
 
 }

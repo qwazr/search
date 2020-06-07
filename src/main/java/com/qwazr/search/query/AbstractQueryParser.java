@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.apache.lucene.util.QueryBuilder;
 
 import java.util.Objects;
 
-public abstract class AbstractQueryParser<T extends AbstractQueryParser> extends AbstractQuery<T> {
+public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> extends AbstractQuery<T> {
 
 	@JsonProperty("enable_position_increments")
 	final public Boolean enablePositionIncrements;

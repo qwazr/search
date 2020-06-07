@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import java.util.ArrayList;
 public class BlendedTermQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexService();
         indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World"));
         indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?"));
@@ -38,9 +38,9 @@ public class BlendedTermQueryTest extends AbstractIndexTest.WithIndexRecord.NoTa
 
     @Test
     public void test() {
-        ResultDefinition result = indexService.searchQuery(QueryDefinition.of(
-                new BlendedTermQuery(new ArrayList<>()).term("textField", "hello", 2.0F).term("textField", "world"))
-                .build());
+        ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(
+            new BlendedTermQuery(new ArrayList<>()).term("textField", "hello", 2.0F).term("textField", "world"))
+            .build());
         Assert.assertNotNull(result);
         Assert.assertEquals(1, result.totalHits);
     }

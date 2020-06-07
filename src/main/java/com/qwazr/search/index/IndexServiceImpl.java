@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
@@ -433,6 +434,12 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
+    public IndexSettingsDefinition getIndexSettings(String schemaName, String indexName) {
+        checkRight(schemaName);
+        return indexManager.get(schemaName).get(indexName, false).getSettings();
+    }
+
+    @Override
     final public IndexStatus mergeIndex(final String schemaName, final String indexName, final String mergedIndexName,
                                         final Map<String, String> commitUserData) {
         try {
@@ -484,6 +491,30 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).get(indexName, true).postJsonNode(jsonNode);
+        }
+        catch (Exception e) {
+            throw ServerException.getJsonException(LOGGER, e);
+        }
+    }
+
+    @Override
+    public List<Map<String, Object>> getJsonSamples(final String schemaName,
+                                                    final String indexName,
+                                                    final Integer count) {
+        try {
+            checkRight(schemaName);
+            return indexManager.get(schemaName).get(indexName, true).getJsonSamples(count == null ? 2 : count);
+        }
+        catch (Exception e) {
+            throw ServerException.getJsonException(LOGGER, e);
+        }
+    }
+
+    @Override
+    public Map<String, Object> getJsonSample(final String schemaName, final String indexName) {
+        try {
+            checkRight(schemaName);
+            return indexManager.get(schemaName).get(indexName, true).getJsonSample();
         }
         catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -931,6 +962,24 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
         checkRight(schemaName);
         final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
         return index.write(actions);
+    }
+
+    @Override
+    public Set<String> getQueryTypes(final String schemaName, final String indexName) {
+        return AbstractQuery.TYPES.keySet();
+    }
+
+    @Override
+    public AbstractQuery<?> getQuerySample(final String schemaName,
+                                           final String indexName,
+                                           final String queryType) {
+        try {
+            checkRight(schemaName);
+            return indexManager.get(schemaName).getIndex(indexName).getQuerySample(queryType);
+        }
+        catch (Exception e) {
+            throw ServerException.getJsonException(LOGGER, e);
+        }
     }
 
 }

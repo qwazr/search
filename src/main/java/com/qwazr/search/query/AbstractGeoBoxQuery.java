@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,30 +17,30 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public abstract class AbstractGeoBoxQuery<T extends AbstractGeoBoxQuery> extends AbstractFieldQuery<T> {
+public abstract class AbstractGeoBoxQuery<T extends AbstractGeoBoxQuery<T>> extends AbstractFieldQuery<T> {
 
-	final public double min_latitude;
+    final public double min_latitude;
 
-	final public double max_latitude;
+    final public double max_latitude;
 
-	final public double min_longitude;
+    final public double min_longitude;
 
-	final public double max_longitude;
+    final public double max_longitude;
 
-	public AbstractGeoBoxQuery(Class<T> queryClass, final String genericField, final String field,
-			final double minLatitude, final double maxLatitude, final double minLongitude, final double maxLongitude) {
-		super(queryClass, genericField, field);
-		this.min_latitude = minLatitude;
-		this.max_latitude = maxLatitude;
-		this.min_longitude = minLongitude;
-		this.max_longitude = maxLongitude;
-	}
+    public AbstractGeoBoxQuery(Class<T> queryClass, final String genericField, final String field,
+                               final double minLatitude, final double maxLatitude, final double minLongitude, final double maxLongitude) {
+        super(queryClass, genericField, field);
+        this.min_latitude = minLatitude;
+        this.max_latitude = maxLatitude;
+        this.min_longitude = minLongitude;
+        this.max_longitude = maxLongitude;
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(T q) {
-		return super.isEqual(q) && min_latitude == q.min_latitude && max_latitude == q.max_latitude &&
-				min_longitude == q.min_longitude && max_longitude == q.max_longitude;
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(T q) {
+        return super.isEqual(q) && min_latitude == q.min_latitude && max_latitude == q.max_latitude &&
+            min_longitude == q.min_longitude && max_longitude == q.max_longitude;
+    }
 
 }
