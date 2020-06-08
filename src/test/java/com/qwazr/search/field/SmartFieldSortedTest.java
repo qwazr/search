@@ -41,7 +41,7 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
     private static AnnotatedIndexService<Record> indexService;
 
     @BeforeClass
-    public static void setup() throws IOException, URISyntaxException, InterruptedException {
+    public static void setup() throws IOException, URISyntaxException {
         indexService = initIndexService(Record.class);
         List<Record> records = new ArrayList<>();
         for (int i = 0; i < RandomUtils.nextInt(10, 50); i++)
