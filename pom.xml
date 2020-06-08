@@ -108,85 +108,85 @@
     </dependency>
   </dependencies>
 
-    <profiles>
-        <profile>
-            <id>shade</id>
-            <build>
-                <plugins>
+  <profiles>
+    <profile>
+      <id>shade</id>
+      <build>
+        <plugins>
 
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-shade-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>shade</goal>
-                                </goals>
-                                <configuration>
-                                    <shadedArtifactAttached>true</shadedArtifactAttached>
-                                    <shadedClassifierName>exec</shadedClassifierName>
-                                    <transformers>
-                                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                            <manifestEntries>
-                                                <Main-Class>com.qwazr.search.SearchServer</Main-Class>
-                                                <Implementation-Version>${project.version}-${buildNumber}
-                                                </Implementation-Version>
-                                                <Specification-Version>${project.version}-${buildNumber}
-                                                </Specification-Version>
-                                            </manifestEntries>
-                                        </transformer>
-                                        <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                            <resource>META-INF/services/org.apache.lucene.codecs.PostingsFormat
-                                            </resource>
-                                        </transformer>
-                                        <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                            <resource>META-INF/services/org.apache.lucene.codecs.Codec</resource>
-                                        </transformer>
-                                        <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                            <resource>META-INF/services/org.apache.lucene.codecs.DocValuesFormat
-                                            </resource>
-                                        </transformer>
-                                    </transformers>
-                                    <filters>
-                                        <filter>
-                                            <excludes>
-                                                <exclude>META-INF/*.SF</exclude>
-                                                <exclude>META-INF/*.DSA</exclude>
-                                                <exclude>META-INF/*.RSA</exclude>
-                                            </excludes>
-                                        </filter>
-                                    </filters>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>shade</goal>
+                </goals>
+                <configuration>
+                  <shadedArtifactAttached>true</shadedArtifactAttached>
+                  <shadedClassifierName>exec</shadedClassifierName>
+                  <transformers>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                      <manifestEntries>
+                        <Main-Class>com.qwazr.search.SearchServer</Main-Class>
+                        <Implementation-Version>${project.version}-${buildNumber}
+                        </Implementation-Version>
+                        <Specification-Version>${project.version}-${buildNumber}
+                        </Specification-Version>
+                      </manifestEntries>
+                    </transformer>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                      <resource>META-INF/services/org.apache.lucene.codecs.PostingsFormat
+                      </resource>
+                    </transformer>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                      <resource>META-INF/services/org.apache.lucene.codecs.Codec</resource>
+                    </transformer>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                      <resource>META-INF/services/org.apache.lucene.codecs.DocValuesFormat
+                      </resource>
+                    </transformer>
+                  </transformers>
+                  <filters>
+                    <filter>
+                      <excludes>
+                        <exclude>META-INF/*.SF</exclude>
+                        <exclude>META-INF/*.DSA</exclude>
+                        <exclude>META-INF/*.RSA</exclude>
+                      </excludes>
+                    </filter>
+                  </filters>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
 
-                </plugins>
-            </build>
-        </profile>
+        </plugins>
+      </build>
+    </profile>
 
-        <profile>
-            <id>javadoc</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <configuration>
-                            <additionalOptions>
-                                --allow-script-in-comments
-                            </additionalOptions>
-                            <useStandardDocletOptions>true</useStandardDocletOptions>
-                            <show>public</show>
-                            <reportOutputDirectory>${project.basedir}/docs</reportOutputDirectory>
-                            <header>
-                                <![CDATA[
+    <profile>
+      <id>javadoc</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <additionalOptions>
+                --allow-script-in-comments
+              </additionalOptions>
+              <useStandardDocletOptions>true</useStandardDocletOptions>
+              <show>public</show>
+              <reportOutputDirectory>${project.basedir}/docs</reportOutputDirectory>
+              <header>
+                <![CDATA[
                                 <a href="http://www.qwazr.com/search" target="_top">QWAZR Search</a>
                                  ]]>
-                            </header>
-                            <footer>
-                                <![CDATA[
+              </header>
+              <footer>
+                <![CDATA[
                                 <script type="text/javascript">
                                 (function (i, s, o, g, r, a, m) {
                                 i['GoogleAnalyticsObject'] = r;
@@ -203,12 +203,12 @@
                                 ga('send', 'pageview');
                                 </script>
                                 ]]>
-                            </footer>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
+              </footer>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>
