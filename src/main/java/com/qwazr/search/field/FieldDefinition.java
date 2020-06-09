@@ -193,6 +193,8 @@ public abstract class FieldDefinition {
 
     public final static String ID_FIELD = "$id$";
 
+    public final static String SOURCE_FIELD = "$source$";
+
     public final static String TAXONOMY_FACET_FIELD = FacetsConfig.DEFAULT_INDEX_FIELD_NAME;
 
     public final static String TAXONOMY_INT_ASSOC_FACET_FIELD = FacetsConfig.DEFAULT_INDEX_FIELD_NAME + "$int";

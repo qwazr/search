@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.search.field.FieldTypeInterface;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.Term;
 
 import java.lang.reflect.Field;
@@ -38,6 +39,10 @@ abstract class RecordBuilder {
 
     final void reset() {
         termId = null;
+    }
+
+    final void addSource(final byte[] sourceBytes) {
+        documentBuilder.accept(null, fieldMap.sourceField, new StoredField(fieldMap.sourceField, sourceBytes));
     }
 
     // TODO type aware !
@@ -78,8 +83,7 @@ abstract class RecordBuilder {
                                  final Object record) {
             try {
                 addFieldValue(fieldName, field.get(record));
-            }
-            catch (IllegalAccessException e) {
+            } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
         }

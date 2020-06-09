@@ -198,8 +198,7 @@ final public class IndexInstance implements Closeable {
                 setFields(fileSet.loadFieldMap());
                 refreshFieldsAnalyzers();
             }
-        }
-        finally {
+        } finally {
             fieldMapLock.unlock();
         }
     }
@@ -216,10 +215,9 @@ final public class IndexInstance implements Closeable {
         fieldMapLock.lock();
         try {
             fileSet.writeFieldMap(fields);
-            fieldMap = new FieldMap(settings.primaryKey, fields, settings.sortedSetFacetField);
+            fieldMap = new FieldMap(settings.primaryKey, fields, settings.sortedSetFacetField, settings.sourceField);
             refreshFieldsAnalyzers();
-        }
-        finally {
+        } finally {
             fieldMapLock.unlock();
         }
     }
@@ -324,8 +322,7 @@ final public class IndexInstance implements Closeable {
                     return JoinUtil.createJoinQuery(joinQuery.from_field, joinQuery.multiple_values_per_document,
                         joinQuery.to_field, fromQuery, indexSearcher,
                         joinQuery.score_mode == null ? ScoreMode.None : joinQuery.score_mode);
-                }
-                catch (ParseException | QueryNodeException | ReflectiveOperationException e) {
+                } catch (ParseException | QueryNodeException | ReflectiveOperationException e) {
                     throw ServerException.of(e);
                 }
 
@@ -337,8 +334,7 @@ final public class IndexInstance implements Closeable {
         commitLock.lock();
         try {
             writerAndSearcher.commit();
-        }
-        finally {
+        } finally {
             commitLock.unlock();
         }
     }
@@ -355,22 +351,19 @@ final public class IndexInstance implements Closeable {
                         Thread.currentThread().getId());
             try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
                 return new ReplicationBackup(this, backupIndexDirectory, taxonomyDirectory != null).backup();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 // If any error occurred, we delete the backup directory
                 if (Files.exists(backupIndexDirectory)) {
                     try {
                         FileUtils.deleteDirectory(backupIndexDirectory);
-                    }
-                    catch (IOException ioe) {
+                    } catch (IOException ioe) {
                         LOGGER.log(Level.WARNING, e,
                             () -> "Cannot delete the backup directory: " + backupIndexDirectory);
                     }
                 }
                 throw e;
             }
-        }
-        finally {
+        } finally {
             backupLock.unlock();
         }
     }
@@ -382,8 +375,7 @@ final public class IndexInstance implements Closeable {
                 return false;
             FileUtils.deleteDirectory(backupIndexDirectory);
             return true;
-        }
-        finally {
+        } finally {
             backupLock.unlock();
         }
     }
@@ -441,8 +433,7 @@ final public class IndexInstance implements Closeable {
                     replicationSlave.setClientMasterUuid(remoteMasterUuid);
                     // Add fields and analyzers reload
                 }));
-            }
-            finally {
+            } finally {
                 replicationLock.unlock();
             }
         }
@@ -577,8 +568,7 @@ final public class IndexInstance implements Closeable {
                     nrtCommit();
                     docs -= indexWriter.getDocStats().numDocs;
                     return new ResultDefinition.WithMap(docs);
-                }
-                catch (ParseException | ReflectiveOperationException | QueryNodeException e) {
+                } catch (ParseException | ReflectiveOperationException | QueryNodeException e) {
                     throw ServerException.of(e);
                 }
             });
@@ -626,8 +616,7 @@ final public class IndexInstance implements Closeable {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader, null)) {
                     return new QueryExecution<>(context, queryDefinition).explain(docId);
-                }
-                catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
+                } catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
                     throw ServerException.of(e);
                 }
             });
@@ -737,11 +726,9 @@ final public class IndexInstance implements Closeable {
             throw new NotFoundException("The type does not exist: " + queryType);
         try {
             return AbstractQuery.getSample(queryClass, settings, getAnalyzers(), getFields());
-        }
-        catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             throw new NotFoundException("This query has no sample: " + queryType);
-        }
-        catch (ReflectiveOperationException e) {
+        } catch (ReflectiveOperationException e) {
             throw new InternalServerErrorException(e);
         }
     }

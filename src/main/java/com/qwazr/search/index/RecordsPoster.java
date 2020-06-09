@@ -18,6 +18,9 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.ObjectMappers;
+import com.qwazr.utils.SerializationUtils;
+import com.qwazr.utils.StringUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
@@ -26,6 +29,7 @@ import org.apache.lucene.index.Term;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Map;
 
@@ -135,7 +139,10 @@ interface RecordsPoster {
                               final IndexWriter indexWriter,
                               final TaxonomyWriter taxonomyWriter) {
             final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
-            return new IndexMapDocument(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
+            if (!StringUtils.isEmpty(fieldMap.sourceField))
+                return new IndexMapDocumentWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
+            else
+                return new IndexMapDocument(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
         }
 
         static MapDocument forDocValueUpdate(final FieldMap fieldMap,
@@ -146,7 +153,7 @@ interface RecordsPoster {
         }
     }
 
-    final class IndexMapDocument extends Documents<RecordBuilder.ForMap> implements MapDocument {
+    class IndexMapDocument extends Documents<RecordBuilder.ForMap> implements MapDocument {
 
         private IndexMapDocument(final DocumentBuilder.ForLuceneDocument documentBuilder,
                                  final FieldMap fieldMap,
@@ -156,11 +163,24 @@ interface RecordsPoster {
         }
 
         @Override
-        final public void accept(final Map<String, ?> document) throws IOException {
+        public void accept(final Map<String, ?> document) throws IOException {
             document.forEach(recordBuilder::accept);
             index();
         }
 
+    }
+
+    final class IndexMapDocumentWithSource extends IndexMapDocument {
+
+        private IndexMapDocumentWithSource(DocumentBuilder.ForLuceneDocument documentBuilder, FieldMap fieldMap, IndexWriter indexWriter, TaxonomyWriter taxonomyWriter) {
+            super(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
+        }
+
+        @Override
+        final public void accept(Map<String, ?> document) throws IOException {
+            recordBuilder.addSource(ObjectMappers.SMILE.writeValueAsBytes(document));
+            super.accept(document);
+        }
     }
 
 
@@ -173,7 +193,10 @@ interface RecordsPoster {
                                  final IndexWriter indexWriter,
                                  final TaxonomyWriter taxonomyWriter) {
             final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
-            return new IndexObjectDocument(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
+            if (!StringUtils.isEmpty(fieldMap.sourceField))
+                return new IndexObjectDocumentWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
+            else
+                return new IndexObjectDocument(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
         }
 
         static ObjectDocument forDocValueUpdate(final Map<String, Field> fields,
@@ -185,7 +208,7 @@ interface RecordsPoster {
         }
     }
 
-    final class IndexObjectDocument extends Documents<RecordBuilder.ForObject> implements ObjectDocument {
+    class IndexObjectDocument extends Documents<RecordBuilder.ForObject> implements ObjectDocument {
 
         private final Map<String, Field> fields;
 
@@ -199,9 +222,28 @@ interface RecordsPoster {
         }
 
         @Override
-        final public void accept(final Object object) throws IOException {
+        public void accept(final Object object) throws IOException {
             fields.forEach((name, field) -> recordBuilder.accept(name, field, object));
             index();
+        }
+    }
+
+    final class IndexObjectDocumentWithSource extends IndexObjectDocument {
+
+        private IndexObjectDocumentWithSource(DocumentBuilder.ForLuceneDocument documentBuilder, FieldMap fieldMap, IndexWriter indexWriter, TaxonomyWriter taxonomyWriter, Map<String, Field> fields) {
+            super(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
+        }
+
+        @Override
+        final public void accept(final Object object) throws IOException {
+            final byte[] objectBytes;
+            try {
+                objectBytes = SerializationUtils.toExternalizorBytes((Serializable) object);
+            } catch (ReflectiveOperationException e) {
+                throw new IOException("Error while serializing the objet " + object.getClass().getName(), e);
+            }
+            recordBuilder.addSource(objectBytes);
+            super.accept(object);
         }
     }
 
@@ -213,12 +255,15 @@ interface RecordsPoster {
                                    final IndexWriter indexWriter,
                                    final TaxonomyWriter taxonomyWriter) {
             final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
-            return new IndexJsonNodeObject(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
+            if (!StringUtils.isEmpty(fieldMap.sourceField))
+                return new IndexJsonNodeObjectWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
+            else
+                return new IndexJsonNodeObject(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
         }
 
     }
 
-    final class IndexJsonNodeObject extends Documents<RecordBuilder.ForJson> implements JsonNodeDocument {
+    class IndexJsonNodeObject extends Documents<RecordBuilder.ForJson> implements JsonNodeDocument {
 
         private IndexJsonNodeObject(final DocumentBuilder.ForLuceneDocument documentBuilder,
                                     final FieldMap fieldMap,
@@ -228,9 +273,22 @@ interface RecordsPoster {
         }
 
         @Override
-        final public void accept(final JsonNode jsonNode) throws IOException {
+        public void accept(final JsonNode jsonNode) throws IOException {
             jsonNode.fields().forEachRemaining(entry -> recordBuilder.accept(entry.getKey(), entry.getValue()));
             index();
+        }
+    }
+
+    final class IndexJsonNodeObjectWithSource extends IndexJsonNodeObject {
+
+        private IndexJsonNodeObjectWithSource(DocumentBuilder.ForLuceneDocument documentBuilder, FieldMap fieldMap, IndexWriter indexWriter, TaxonomyWriter taxonomyWriter) {
+            super(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
+        }
+
+        @Override
+        final public void accept(final JsonNode jsonNode) throws IOException {
+            recordBuilder.addSource(ObjectMappers.SMILE.writeValueAsBytes(jsonNode));
+            super.accept(jsonNode);
         }
     }
 

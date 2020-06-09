@@ -130,7 +130,8 @@ class IndexInstanceBuilder {
         localAnalyzerFactoryMap = fileSet.loadAnalyzerDefinitionMap();
         final LinkedHashMap<String, FieldDefinition> fieldMapDefinition = fileSet.loadFieldMap();
 
-        fieldMap = fieldMapDefinition == null ? null : new FieldMap(settings.primaryKey, fieldMapDefinition, settings.sortedSetFacetField);
+        fieldMap = fieldMapDefinition == null ? null : new FieldMap(settings.primaryKey, fieldMapDefinition,
+            settings.sortedSetFacetField, settings.sourceField);
 
         final AnalyzerContext context =
             new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, false, globalAnalyzerFactoryMap,
@@ -340,12 +341,10 @@ class IndexInstanceBuilder {
             else
                 buildMaster();
             return new IndexInstance(this);
-        }
-        catch (IOException | ReflectiveOperationException e) {
+        } catch (IOException | ReflectiveOperationException e) {
             abort();
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             abort();
             throw ServerException.of(e);
         }

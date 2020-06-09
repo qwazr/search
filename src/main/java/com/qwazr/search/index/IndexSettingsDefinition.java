@@ -33,7 +33,8 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonAutoDetect(creatorVisibility = JsonAutoDetect.Visibility.NONE,
+@JsonAutoDetect(
+    creatorVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     isGetterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -102,6 +103,9 @@ public class IndexSettingsDefinition {
     @JsonProperty("sorted_set_facet_field")
     final public String sortedSetFacetField;
 
+    @JsonProperty("source_field")
+    final public String sourceField;
+
     @JsonProperty("index_reader_warmer")
     final public Boolean indexReaderWarmer;
 
@@ -132,6 +136,7 @@ public class IndexSettingsDefinition {
         @JsonProperty("segments_per_tier") final Double segmentsPerTier,
         @JsonProperty("enable_taxonomy_index") final Boolean enableTaxonomyIndex,
         @JsonProperty("sorted_set_facet_field") final String sortedSetFacetField,
+        @JsonProperty("source_field") final String sourceField,
         @JsonProperty("index_reader_warmer") final Boolean indexReaderWarmer,
         @JsonProperty("merged_segment_warmer") final Boolean mergedSegmentWarmer,
         @JsonProperty("nrt_caching_directory_max_merge_size_mb") final Double nrtCachingDirectoryMaxMergeSizeMB,
@@ -152,6 +157,7 @@ public class IndexSettingsDefinition {
         this.segmentsPerTier = segmentsPerTier;
         this.enableTaxonomyIndex = enableTaxonomyIndex;
         this.sortedSetFacetField = sortedSetFacetField;
+        this.sourceField = sourceField;
         this.indexReaderWarmer = indexReaderWarmer;
         this.mergedSegmentWarmer = mergedSegmentWarmer;
         this.nrtCachingDirectoryMaxMergeSizeMB = nrtCachingDirectoryMaxMergeSizeMB;
@@ -175,6 +181,7 @@ public class IndexSettingsDefinition {
         this.segmentsPerTier = builder.segmentsPerTier;
         this.enableTaxonomyIndex = builder.enableTaxonomyIndex;
         this.sortedSetFacetField = builder.sortedSetFacetField;
+        this.sourceField = builder.sourceField;
         this.indexReaderWarmer = builder.indexReaderWarmer;
         this.mergedSegmentWarmer = builder.mergedSegmentWarmer;
         this.nrtCachingDirectoryMaxMergeSizeMB = builder.nrtCachingDirectoryMaxMergeSizeMB;
@@ -195,7 +202,7 @@ public class IndexSettingsDefinition {
 
     @Override
     public int hashCode() {
-        return Objects.hash(primaryKey, directoryType, ramBufferSize, useCompoundFile);
+        return Objects.hash(primaryKey, directoryType, ramBufferSize, useCompoundFile, similarityClass, sortedSetFacetField, sourceField);
     }
 
     @Override
@@ -234,6 +241,8 @@ public class IndexSettingsDefinition {
         if (!Objects.equals(enableTaxonomyIndex, s.enableTaxonomyIndex))
             return false;
         if (!Objects.equals(sortedSetFacetField, s.sortedSetFacetField))
+            return false;
+        if (!Objects.equals(sourceField, s.sourceField))
             return false;
         if (!Objects.equals(indexReaderWarmer, s.indexReaderWarmer))
             return false;
@@ -276,6 +285,7 @@ public class IndexSettingsDefinition {
         private Double segmentsPerTier;
         private Boolean enableTaxonomyIndex;
         private String sortedSetFacetField;
+        private String sourceField;
         private Boolean indexReaderWarmer;
         private Boolean mergedSegmentWarmer;
         private Double nrtCachingDirectoryMaxMergeSizeMB;
@@ -285,9 +295,9 @@ public class IndexSettingsDefinition {
         }
 
         private Builder(final Index annotatedIndex) throws URISyntaxException {
-            primaryKey = annotatedIndex.primaryKey();
-            directoryType = annotatedIndex.type();
-            mergeScheduler = annotatedIndex.mergeScheduler();
+            primaryKey(annotatedIndex.primaryKey());
+            type(annotatedIndex.type());
+            mergeScheduler(annotatedIndex.mergeScheduler());
             similarity(annotatedIndex.similarity());
             similarityClass(annotatedIndex.similarityClass());
             sort(annotatedIndex.sort());
@@ -298,12 +308,13 @@ public class IndexSettingsDefinition {
             maxMergeAtOnce(annotatedIndex.maxMergeAtOnce());
             maxMergedSegmentMB(annotatedIndex.maxMergedSegmentMB());
             segmentsPerTier(annotatedIndex.segmentsPerTier());
-            enableTaxonomyIndex = annotatedIndex.enableTaxonomyIndex();
-            sortedSetFacetField = annotatedIndex.sortedSetFacetField();
-            indexReaderWarmer = annotatedIndex.indexReaderWarmer();
-            mergedSegmentWarmer = annotatedIndex.mergedSegmentWarmer();
-            nrtCachingDirectoryMaxMergeSizeMB = annotatedIndex.nrtCachingDirectoryMaxMergeSizeMB();
-            nrtCachingDirectoryMaxCachedMB = annotatedIndex.nrtCachingDirectoryMaxCachedMB();
+            enableTaxonomyIndex(annotatedIndex.enableTaxonomyIndex());
+            sortedSetFacetField(annotatedIndex.sortedSetFacetField());
+            sourceField(annotatedIndex.sourceField());
+            indexReaderWarmer(annotatedIndex.indexReaderWarmer());
+            mergedSegmentWarmer(annotatedIndex.mergedSegmentWarmer());
+            nrtCachingDirectoryMaxMergeSizeMB(annotatedIndex.nrtCachingDirectoryMaxMergeSizeMB());
+            nrtCachingDirectoryMaxCachedMB(annotatedIndex.nrtCachingDirectoryMaxCachedMB());
         }
 
         private Builder(final IndexSettingsDefinition settings) {
@@ -323,6 +334,7 @@ public class IndexSettingsDefinition {
             this.segmentsPerTier = settings.segmentsPerTier;
             this.enableTaxonomyIndex = settings.enableTaxonomyIndex;
             this.sortedSetFacetField = settings.sortedSetFacetField;
+            this.sourceField = settings.sourceField;
             this.indexReaderWarmer = settings.indexReaderWarmer;
             this.mergedSegmentWarmer = settings.mergedSegmentWarmer;
             this.nrtCachingDirectoryMaxMergeSizeMB = settings.nrtCachingDirectoryMaxMergeSizeMB;
@@ -419,6 +431,11 @@ public class IndexSettingsDefinition {
 
         public Builder sortedSetFacetField(final String sortedSetFacetField) {
             this.sortedSetFacetField = sortedSetFacetField;
+            return this;
+        }
+
+        public Builder sourceField(final String sourceField) {
+            this.sourceField = sourceField;
             return this;
         }
 

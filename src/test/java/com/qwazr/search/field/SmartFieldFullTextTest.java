@@ -47,7 +47,7 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
     private static AnnotatedIndexService<Record> indexService;
 
     @BeforeClass
-    public static void setup() throws IOException, URISyntaxException, InterruptedException {
+    public static void setup() throws IOException, URISyntaxException {
         indexService = initIndexService(Record.class);
         indexService.postDocument(new Record(1, "First news", new String[]{"First sentence", "Second sentence"},
             new String[]{"tag1", "tag1and2"}));
