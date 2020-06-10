@@ -20,8 +20,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 
-import java.io.IOException;
-
 public interface QueryContext extends IndexContext {
 
     default IndexReader getIndexReader() {
@@ -42,11 +40,6 @@ public interface QueryContext extends IndexContext {
 
     default <T> ResultDefinition.WithObject<T> searchObject(final QueryDefinition queryDefinition,
                                                             final FieldMapWrapper<T> wrapper) {
-        throw new NotImplementedException("Not available");
-    }
-
-    default <T> ResultDefinition.WithObject<T> searchObject(QueryDefinition queryDefinition, Class<T> objectClass)
-        throws IOException {
         throw new NotImplementedException("Not available");
     }
 

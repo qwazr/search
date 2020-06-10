@@ -18,10 +18,14 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.field.converters.ValueConverter;
+import com.qwazr.server.ServerException;
+import com.qwazr.utils.ObjectMappers;
 import org.apache.lucene.search.ScoreDoc;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,91 +33,146 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ResultDocumentMap extends ResultDocumentAbstract {
 
-    final public LinkedHashMap<String, Object> fields;
+    final public Map<String, Object> fields;
 
     @JsonCreator
     public ResultDocumentMap(@JsonProperty("score") Float score, @JsonProperty("pos") Integer pos,
                              @JsonProperty("doc") Integer doc, @JsonProperty("shard_index") Integer shardIndex,
                              @JsonProperty("highlights") Map<String, String> highlights,
-                             @JsonProperty("fields") LinkedHashMap<String, Object> fields) {
+                             @JsonProperty("fields") Map<String, Object> fields) {
         super(score, pos, doc, shardIndex, highlights);
         this.fields = fields;
     }
 
-    ResultDocumentMap(Builder builder) {
+    private ResultDocumentMap(final ResultDocumentBuilder.Base<ResultDocumentMap> builder,
+                              final Map<String, Object> fields) {
         super(builder);
-        fields = builder.fields;
+        this.fields = fields;
     }
 
-    public LinkedHashMap<String, Object> getFields() {
+    public Map<String, Object> getFields() {
         return fields;
     }
 
-    final static class Builder extends ResultDocumentBuilder<ResultDocumentMap> {
+    final static class ForFields extends ResultDocumentBuilder.Base<ResultDocumentMap> {
 
-        private final LinkedHashMap<String, Object> fields;
+        private final Map<String, Object> fields;
 
-        Builder(final int pos, final ScoreDoc scoreDoc) {
+        ForFields(final int pos, final ScoreDoc scoreDoc) {
             super(pos, scoreDoc);
             this.fields = new LinkedHashMap<>();
         }
 
         @Override
-        final ResultDocumentMap build() {
-            return new ResultDocumentMap(this);
+        public final ResultDocumentMap build() {
+            return new ResultDocumentMap(this, Collections.unmodifiableMap(fields));
         }
 
         @Override
-        final void setDocValuesField(final String fieldName, final ValueConverter<?> converter) throws IOException {
-            fields.put(fieldName, converter.convert(scoreDoc.doc));
+        public final void setDocValuesField(final String fieldName, final ValueConverter<?> converter) {
+            try {
+                fields.put(fieldName, converter.convert(scoreDoc.doc));
+            } catch (IOException e) {
+                throw ServerException.of("Conversion failure on field '" + fieldName + "' : " + e.getMessage(), e);
+            }
         }
 
         @Override
-        void setStoredFieldString(String fieldName, List<String> values) {
-            if (values.size() == 1)
-                fields.put(fieldName, values.get(0));
-            else
-                fields.put(fieldName, values);
+        public void setStoredFieldString(final String fieldName, final String value) {
+            fields.put(fieldName, value);
         }
 
         @Override
-        void setStoredFieldBytes(String fieldName, List<byte[]> values) {
-            if (values.size() == 1)
-                fields.put(fieldName, values.get(0));
-            else
-                fields.put(fieldName, values);
+        public void setStoredFieldString(final String fieldName, final List<String> values) {
+            fields.put(fieldName, values);
         }
 
         @Override
-        void setStoredFieldInteger(String fieldName, int[] values) {
-            if (values.length == 1)
-                fields.put(fieldName, values[0]);
-            else
-                fields.put(fieldName, values);
+        public void setStoredFieldBytes(final String fieldName, final byte[] value) {
+            fields.put(fieldName, value);
         }
 
         @Override
-        void setStoredFieldLong(String fieldName, long[] values) {
-            if (values.length == 1)
-                fields.put(fieldName, values[0]);
-            else
-                fields.put(fieldName, values);
+        public void setStoredFieldBytes(final String fieldName, final List<byte[]> values) {
+            fields.put(fieldName, values);
         }
 
         @Override
-        void setStoredFieldFloat(String fieldName, float[] values) {
-            if (values.length == 1)
-                fields.put(fieldName, values[0]);
-            else
-                fields.put(fieldName, values);
+        public void setStoredFieldInteger(final String fieldName, final int value) {
+            fields.put(fieldName, value);
         }
 
         @Override
-        void setStoredFieldDouble(String fieldName, double[] values) {
-            if (values.length == 1)
-                fields.put(fieldName, values[0]);
-            else
-                fields.put(fieldName, values);
+        public void setStoredFieldInteger(final String fieldName, final int[] values) {
+            fields.put(fieldName, values);
+        }
+
+        @Override
+        public void setStoredFieldLong(final String fieldName, final long value) {
+            fields.put(fieldName, value);
+        }
+
+        @Override
+        public void setStoredFieldLong(final String fieldName, final long[] values) {
+            fields.put(fieldName, values);
+        }
+
+        @Override
+        public void setStoredFieldFloat(final String fieldName, final float value) {
+            fields.put(fieldName, value);
+        }
+
+        @Override
+        public void setStoredFieldFloat(final String fieldName, final float[] values) {
+            fields.put(fieldName, values);
+        }
+
+        @Override
+        public void setStoredFieldDouble(final String fieldName, final double value) {
+            fields.put(fieldName, value);
+        }
+
+        @Override
+        public void setStoredFieldDouble(final String fieldName, final double[] values) {
+            fields.put(fieldName, values);
+        }
+    }
+
+    private final static TypeReference<Map<String, Object>> MapStringObjectType = new TypeReference<>() {
+    };
+
+    final static class ForRecord extends ResultDocumentBuilder.Base<ResultDocumentMap> {
+
+        private Map<String, Object> fields;
+
+        ForRecord(final int pos, final ScoreDoc scoreDoc) {
+            super(pos, scoreDoc);
+        }
+
+        @Override
+        public final ResultDocumentMap build() {
+            return new ResultDocumentMap(this, fields);
+        }
+
+        @Override
+        public void setStoredFieldBytes(final String fieldName, final byte[] value) {
+            try {
+                fields = Collections.unmodifiableMap(ObjectMappers.SMILE.readValue(value, MapStringObjectType));
+            } catch (IOException e) {
+                throw ServerException.of("Conversion failure on field " + fieldName + " : " + e.getMessage(), e);
+            }
+        }
+    }
+
+    final static class ForNone extends ResultDocumentBuilder.Base<ResultDocumentMap> {
+
+        ForNone(final int pos, final ScoreDoc scoreDoc) {
+            super(pos, scoreDoc);
+        }
+
+        @Override
+        public final ResultDocumentMap build() {
+            return new ResultDocumentMap(this, null);
         }
 
     }

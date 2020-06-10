@@ -17,7 +17,6 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.jaxrs.smile.SmileMediaTypes;
-import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.AbstractQuery;
@@ -29,15 +28,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.glassfish.jersey.server.ManagedAsync;
 
 import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -463,7 +454,6 @@ public interface IndexServiceInterface extends ServiceInterface {
 
     default <T> T query(final String schemaName,
                         final String indexName,
-                        final FieldMapWrapper.Cache fieldMapWrappers,
                         final QueryActions<T> actions) throws IOException {
         throw new NotImplementedException("Method not available");
     }

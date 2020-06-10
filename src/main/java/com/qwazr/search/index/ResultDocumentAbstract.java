@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.lucene.search.ScoreDoc;
 
 import java.util.Map;
 
@@ -42,8 +43,12 @@ public abstract class ResultDocumentAbstract {
     }
 
     protected ResultDocumentAbstract(final ResultDocumentBuilder<?> builder) {
-        this(builder.scoreDoc.score, builder.pos, builder.scoreDoc.doc, builder.scoreDoc.shardIndex,
-            builder.highlights);
+        final ScoreDoc scoreDoc = builder.scoreDoc();
+        this.score = scoreDoc.score;
+        this.pos = builder.pos();
+        this.doc = scoreDoc.doc;
+        this.shardIndex = scoreDoc.shardIndex;
+        this.highlights = builder.highlights();
     }
 
     protected ResultDocumentAbstract(final ResultDocumentAbstract src) {

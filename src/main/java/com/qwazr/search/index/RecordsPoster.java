@@ -139,7 +139,7 @@ interface RecordsPoster {
                               final IndexWriter indexWriter,
                               final TaxonomyWriter taxonomyWriter) {
             final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
-            if (!StringUtils.isEmpty(fieldMap.sourceField))
+            if (!StringUtils.isEmpty(fieldMap.recordField))
                 return new IndexMapDocumentWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
             else
                 return new IndexMapDocument(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
@@ -177,8 +177,8 @@ interface RecordsPoster {
         }
 
         @Override
-        final public void accept(Map<String, ?> document) throws IOException {
-            recordBuilder.addSource(ObjectMappers.SMILE.writeValueAsBytes(document));
+        final public void accept(final Map<String, ?> document) throws IOException {
+            recordBuilder.addRecord(ObjectMappers.SMILE.writeValueAsBytes(document));
             super.accept(document);
         }
     }
@@ -193,7 +193,7 @@ interface RecordsPoster {
                                  final IndexWriter indexWriter,
                                  final TaxonomyWriter taxonomyWriter) {
             final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
-            if (!StringUtils.isEmpty(fieldMap.sourceField))
+            if (!StringUtils.isEmpty(fieldMap.recordField))
                 return new IndexObjectDocumentWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
             else
                 return new IndexObjectDocument(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
@@ -242,7 +242,7 @@ interface RecordsPoster {
             } catch (ReflectiveOperationException e) {
                 throw new IOException("Error while serializing the objet " + object.getClass().getName(), e);
             }
-            recordBuilder.addSource(objectBytes);
+            recordBuilder.addRecord(objectBytes);
             super.accept(object);
         }
     }
@@ -255,7 +255,7 @@ interface RecordsPoster {
                                    final IndexWriter indexWriter,
                                    final TaxonomyWriter taxonomyWriter) {
             final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
-            if (!StringUtils.isEmpty(fieldMap.sourceField))
+            if (!StringUtils.isEmpty(fieldMap.recordField))
                 return new IndexJsonNodeObjectWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
             else
                 return new IndexJsonNodeObject(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
@@ -287,7 +287,7 @@ interface RecordsPoster {
 
         @Override
         final public void accept(final JsonNode jsonNode) throws IOException {
-            recordBuilder.addSource(ObjectMappers.SMILE.writeValueAsBytes(jsonNode));
+            recordBuilder.addRecord(ObjectMappers.SMILE.writeValueAsBytes(jsonNode));
             super.accept(jsonNode);
         }
     }

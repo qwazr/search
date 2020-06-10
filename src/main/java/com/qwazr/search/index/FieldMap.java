@@ -41,19 +41,19 @@ public class FieldMap {
     private final Collection<Pair<WildcardMatcher, FieldTypeInterface>> wildcardMap;
     private final FacetsConfig facetsConfig;
     public final String sortedSetFacetField;
-    public final String sourceField;
+    public final String recordField;
 
     FieldMap(final String primaryKey,
              final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap,
              final String sortedSetFacetField,
-             final String sourceField) {
+             final String recordField) {
 
         this.primaryKey = primaryKey == null || primaryKey.isBlank() ? FieldDefinition.ID_FIELD : primaryKey;
 
         this.sortedSetFacetField =
             sortedSetFacetField == null ? FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD : sortedSetFacetField;
 
-        this.sourceField = sourceField;
+        this.recordField = recordField;
 
         nameDefMap = new HashMap<>();
         wildcardMap = new ArrayList<>();
@@ -116,7 +116,7 @@ public class FieldMap {
             if (fieldType != null)
                 return fieldType;
         }
-        if (sourceField != null && sourceField.equals(concreteFieldName))
+        if (recordField != null && recordField.equals(concreteFieldName))
             return null;
         //Second chance, using the wildcard collection
         final String searchField = concreteFieldName != null ? concreteFieldName : genericFieldName;

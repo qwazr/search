@@ -35,18 +35,23 @@ class ResultDocumentsBuilder {
     final TimeTracker.Status timeTrackerStatus;
     final long totalHits;
 
-    ResultDocumentsBuilder(final QueryDefinition queryDefinition, final TopDocs topDocs,
-                           final IndexSearcher indexSearcher, final Query luceneQuery, final Map<String, HighlighterImpl> highlighters,
-                           final Map<String, Object> externalCollectorsResults, final TimeTracker timeTracker,
-                           final FacetsBuilder facetsBuilder, long totalHits, @NotNull final ResultDocumentsInterface resultDocuments)
-            throws IOException {
+    ResultDocumentsBuilder(final QueryDefinition queryDefinition,
+                           final TopDocs topDocs,
+                           final IndexSearcher indexSearcher,
+                           final Query luceneQuery,
+                           final Map<String, HighlighterImpl> highlighters,
+                           final Map<String, Object> externalCollectorsResults,
+                           final TimeTracker timeTracker,
+                           final FacetsBuilder facetsBuilder,
+                           final long totalHits,
+                           @NotNull final ResultDocumentsInterface resultDocuments) throws IOException {
 
         this.collectors = externalCollectorsResults;
 
         if (topDocs != null && topDocs.scoreDocs != null) {
 
             int pos = 0;
-            for (ScoreDoc scoreDoc : topDocs.scoreDocs)
+            for (final ScoreDoc scoreDoc : topDocs.scoreDocs)
                 resultDocuments.doc(indexSearcher, pos++, scoreDoc);
 
             if (timeTracker != null)
@@ -60,8 +65,7 @@ class ResultDocumentsBuilder {
                         int pos2 = 0;
                         for (String snippet : snippetsByDoc)
                             resultDocuments.highlight(pos2++, name, snippet);
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         throw new RuntimeException("Highlighting failure: " + name, e);
                     }
                 });
@@ -73,9 +77,9 @@ class ResultDocumentsBuilder {
         this.totalHits = totalHits;
 
         this.facets = facetsBuilder == null ? null : facetsBuilder.results;
-        this.queryDebug = queryDefinition.query_debug != null && queryDefinition.query_debug && luceneQuery != null ?
-                luceneQuery.toString(StringUtils.EMPTY) :
-                null;
+        this.queryDebug = queryDefinition.queryDebug != null && queryDefinition.queryDebug && luceneQuery != null ?
+            luceneQuery.toString(StringUtils.EMPTY) :
+            null;
 
         this.timeTrackerStatus = timeTracker == null ? null : timeTracker.getStatus();
     }

@@ -140,7 +140,7 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
         public WithMap() {
         }
 
-        WithMap(ResultDocumentsBuilder builder, List<ResultDocumentMap> documents) {
+        WithMap(final ResultDocumentsBuilder builder, final List<ResultDocumentMap> documents) {
             super(builder, documents);
         }
 

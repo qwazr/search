@@ -28,23 +28,23 @@ import java.net.URISyntaxException;
 
 public class ReturnedFieldsTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-    final private static String[] ID_FIELDS = { "1", "2", "3" };
-    final private static String[] STORED_FIELDS = { "doc1", "doc2", "doc3" };
-    final private static String[] SDV_FIELDS = { "sdv1", "sdv2", "sdv3" };
-    final private static Double[] DDV_FIELDS = { 1.11d, 2.22d, 3.33d };
+    final private static String[] ID_FIELDS = {"1", "2", "3"};
+    final private static String[] STORED_FIELDS = {"doc1", "doc2", "doc3"};
+    final private static String[] SDV_FIELDS = {"sdv1", "sdv2", "sdv3"};
+    final private static Double[] DDV_FIELDS = {1.11d, 2.22d, 3.33d};
     final private static String[][] MULTI_STRING_STORED_FIELDS =
-            { { "s01", "s02", "s03" }, { "s11", "s12", "s13" }, { "s21", "s22", "s23" } };
-    final private static Integer[][] MULTI_INTEGER_STORED_FIELDS = { { 11, 12, 13 }, { 21, 22, 23 }, { 31, 32, 33 } };
+        {{"s01", "s02", "s03"}, {"s11", "s12", "s13"}, {"s21", "s22", "s23"}};
+    final private static Integer[][] MULTI_INTEGER_STORED_FIELDS = {{11, 12, 13}, {21, 22, 23}, {31, 32, 33}};
 
     @BeforeClass
     public static void setup() throws IOException, InterruptedException, URISyntaxException {
         initIndexService();
         for (int i = 0; i < ID_FIELDS.length; i++)
             indexService.postDocument(new IndexRecord.NoTaxonomy(ID_FIELDS[i]).storedField(STORED_FIELDS[i])
-                    .sortedDocValue(SDV_FIELDS[i])
-                    .doubleDocValue(DDV_FIELDS[i])
-                    .multivaluedStringStoredField(MULTI_STRING_STORED_FIELDS[i])
-                    .multivaluedIntegerStoredField(MULTI_INTEGER_STORED_FIELDS[i]));
+                .sortedDocValue(SDV_FIELDS[i])
+                .doubleDocValue(DDV_FIELDS[i])
+                .multivaluedStringStoredField(MULTI_STRING_STORED_FIELDS[i])
+                .multivaluedIntegerStoredField(MULTI_INTEGER_STORED_FIELDS[i]));
     }
 
     private QueryBuilder builder() {
@@ -53,7 +53,7 @@ public class ReturnedFieldsTest extends AbstractIndexTest.WithIndexRecord.NoTaxo
 
     private ResultDefinition.WithObject<? extends IndexRecord> withRecord(QueryBuilder queryBuilder) {
         final ResultDefinition.WithObject<? extends IndexRecord> result =
-                indexService.searchQuery(queryBuilder.build());
+            indexService.searchQuery(queryBuilder.build());
         Assert.assertEquals(ID_FIELDS.length, result.totalHits, 0);
         return result;
     }
@@ -88,17 +88,11 @@ public class ReturnedFieldsTest extends AbstractIndexTest.WithIndexRecord.NoTaxo
         QueryBuilder builder = builder();
 
         withRecord(builder()).forEach(doc -> {
-            Assert.assertNull(doc.record.id);
-            Assert.assertNull(doc.record.storedField);
-            Assert.assertNull(doc.record.sortedDocValue);
-            Assert.assertNull(doc.record.doubleDocValue);
+            Assert.assertNull(doc.record);
         });
 
         withMap(builder).forEach(doc -> {
-            Assert.assertNull(doc.fields.get("$id$"));
-            Assert.assertNull(doc.fields.get("storedField"));
-            Assert.assertNull(doc.fields.get("sortedDocValue"));
-            Assert.assertNull(doc.fields.get("doubleDocValue"));
+            Assert.assertNull(doc.fields);
         });
     }
 
@@ -143,15 +137,17 @@ public class ReturnedFieldsTest extends AbstractIndexTest.WithIndexRecord.NoTaxo
     @Test
     public void checkMultiStringStoredField() {
         QueryBuilder builder = builder().returnedField("multivaluedStringStoredField");
-        withRecord(builder).forEach(doc -> Assert.assertArrayEquals(MULTI_STRING_STORED_FIELDS[doc.pos],
-                doc.record.multivaluedStringStoredField.toArray()));
+        withRecord(builder).forEach(doc -> Assert.assertArrayEquals(
+            MULTI_STRING_STORED_FIELDS[doc.pos],
+            doc.record.multivaluedStringStoredField.toArray()));
     }
 
     @Test
     public void checkMultiIntegerStoredField() {
         QueryBuilder builder = builder().returnedField("multivaluedIntegerStoredField");
-        withRecord(builder).forEach(doc -> Assert.assertArrayEquals(MULTI_INTEGER_STORED_FIELDS[doc.pos],
-                doc.record.multivaluedIntegerStoredField.toArray()));
+        withRecord(builder).forEach(doc -> Assert.assertArrayEquals(
+            MULTI_INTEGER_STORED_FIELDS[doc.pos],
+            doc.record.multivaluedIntegerStoredField.toArray()));
     }
 
     @Test

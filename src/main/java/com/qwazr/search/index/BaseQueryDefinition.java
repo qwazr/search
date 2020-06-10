@@ -26,41 +26,45 @@ import java.util.LinkedHashSet;
 @JsonInclude(Include.NON_EMPTY)
 public class BaseQueryDefinition {
 
-	final public Integer start;
-	final public Integer rows;
-	final public LinkedHashSet<String> returned_fields;
-	final public Boolean query_debug;
+    final public Integer start;
+    final public Integer rows;
 
-	@JsonCreator
-	BaseQueryDefinition(@JsonProperty("start") Integer start, @JsonProperty("rows") Integer rows,
-			@JsonProperty("returned_fields") LinkedHashSet<String> returnedFields,
-			@JsonProperty("query_debug") Boolean queryDebug) {
-		this.start = start;
-		this.rows = rows;
-		this.returned_fields = returnedFields;
-		this.query_debug = queryDebug;
-	}
+    @JsonProperty("returned_fields")
+    final public LinkedHashSet<String> returnedFields;
 
-	public BaseQueryDefinition(final QueryBuilder builder) {
-		start = builder.start;
-		rows = builder.rows;
-		returned_fields = builder.returnedFields;
-		query_debug = builder.queryDebug;
-	}
+    @JsonProperty("query_debug")
+    final public Boolean queryDebug;
 
-	@JsonIgnore
-	final public int getStartValue() {
-		return start == null ? 0 : start;
-	}
+    @JsonCreator
+    BaseQueryDefinition(@JsonProperty("start") Integer start, @JsonProperty("rows") Integer rows,
+                        @JsonProperty("returned_fields") LinkedHashSet<String> returnedFields,
+                        @JsonProperty("query_debug") Boolean queryDebug) {
+        this.start = start;
+        this.rows = rows;
+        this.returnedFields = returnedFields;
+        this.queryDebug = queryDebug;
+    }
 
-	@JsonIgnore
-	final public int getRowsValue() {
-		return rows == null ? 10 : rows;
-	}
+    public BaseQueryDefinition(final QueryBuilder builder) {
+        start = builder.start;
+        rows = builder.rows;
+        returnedFields = builder.returnedFields;
+        queryDebug = builder.queryDebug;
+    }
 
-	@JsonIgnore
-	final public int getEndValue() {
-		return getStartValue() + getRowsValue();
-	}
+    @JsonIgnore
+    final public int getStartValue() {
+        return start == null ? 0 : start;
+    }
+
+    @JsonIgnore
+    final public int getRowsValue() {
+        return rows == null ? 10 : rows;
+    }
+
+    @JsonIgnore
+    final public int getEndValue() {
+        return getStartValue() + getRowsValue();
+    }
 
 }

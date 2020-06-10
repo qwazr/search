@@ -16,188 +16,96 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.converters.ValueConverter;
-import com.qwazr.utils.concurrent.ConcurrentUtils;
-import org.apache.lucene.index.FieldInfo;
-import org.apache.lucene.index.StoredFieldVisitor;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 
-import javax.validation.constraints.NotNull;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-abstract class ResultDocumentBuilder<T extends ResultDocumentAbstract> {
+interface ResultDocumentBuilder<T extends ResultDocumentAbstract> {
 
-    final int pos;
-    final ScoreDoc scoreDoc;
+    int pos();
 
-    Map<String, String> highlights;
+    ScoreDoc scoreDoc();
 
-    ResultDocumentBuilder(final int pos, final ScoreDoc scoreDoc) {
-        this.pos = pos;
-        this.scoreDoc = scoreDoc;
+    Map<String, String> highlights();
+
+    default void setDocValuesField(final String fieldName, final ValueConverter<?> converter) {
     }
 
-    final void setHighlight(final String name, final String snippet) {
-        if (name == null || snippet == null)
-            return;
-        if (highlights == null)
-            highlights = new LinkedHashMap<>();
-        highlights.put(name, snippet);
+    default void setStoredFieldString(final String fieldName, final String value) {
     }
 
-    abstract T build();
-
-    abstract void setDocValuesField(final String fieldName, final ValueConverter<?> converter) throws IOException;
-
-    abstract void setStoredFieldString(final String fieldName, final List<String> values);
-
-    abstract void setStoredFieldBytes(final String fieldName, final List<byte[]> values);
-
-    abstract void setStoredFieldInteger(final String fieldName, final int[] values);
-
-    abstract void setStoredFieldLong(final String fieldName, final long[] values);
-
-    abstract void setStoredFieldFloat(final String fieldName, final float[] values);
-
-    abstract void setStoredFieldDouble(final String fieldName, final double[] values);
-
-    final void extractDocValuesReturnedFields(@NotNull final Map<String, ValueConverter<?>> returnedFields)
-        throws IOException {
-        ConcurrentUtils.forEachEx(returnedFields, this::setDocValuesField);
+    default void setStoredFieldString(final String fieldName, final List<String> values) {
     }
 
-    final void extractStoredReturnedFields(@NotNull final IndexSearcher searcher,
-                                           @NotNull final Map<String, String> storedFields) throws IOException {
-        final Visitor visitor = new Visitor(storedFields);
-        searcher.doc(scoreDoc.doc, visitor);
-        visitor.extract();
+    default void setStoredFieldBytes(final String fieldName, final byte[] value) {
     }
 
-    private class Visitor extends StoredFieldVisitor {
+    default void setStoredFieldBytes(final String fieldName, final List<byte[]> values) {
+    }
 
-        private final Map<String, String> storedFields;
-        private Map<String, List<String>> stringFields;
-        private Map<String, List<byte[]>> bytesFields;
-        private Map<String, long[]> longFields;
-        private Map<String, int[]> intFields;
-        private Map<String, float[]> floatFields;
-        private Map<String, double[]> doubleFields;
+    default void setStoredFieldInteger(final String fieldName, final int value) {
+    }
 
-        private Visitor(Map<String, String> storedFields) {
-            this.storedFields = storedFields;
+    default void setStoredFieldInteger(final String fieldName, final int[] values) {
+    }
+
+    default void setStoredFieldLong(final String fieldName, final long value) {
+    }
+
+    default void setStoredFieldLong(final String fieldName, final long[] values) {
+    }
+
+    default void setStoredFieldFloat(final String fieldName, final float value) {
+    }
+
+    default void setStoredFieldFloat(final String fieldName, final float[] values) {
+    }
+
+    default void setStoredFieldDouble(final String fieldName, final double value) {
+    }
+
+    default void setStoredFieldDouble(final String fieldName, final double[] values) {
+    }
+
+    void setHighlight(final String name, final String snippet);
+
+    T build();
+
+    abstract class Base<T extends ResultDocumentAbstract> implements ResultDocumentBuilder<T> {
+
+        protected final int pos;
+        protected final ScoreDoc scoreDoc;
+        protected Map<String, String> highlights;
+
+        Base(final int pos, final ScoreDoc scoreDoc) {
+            this.pos = pos;
+            this.scoreDoc = scoreDoc;
         }
 
         @Override
-        public Status needsField(FieldInfo fieldInfo) {
-            return storedFields.containsKey(fieldInfo.name) ? Status.YES : Status.NO;
-        }
-
-        private String getReturnedField(String fieldInfoName) {
-            return storedFields.get(fieldInfoName);
+        public final int pos() {
+            return pos;
         }
 
         @Override
-        public void binaryField(FieldInfo fieldInfo, byte[] value) {
-            if (bytesFields == null)
-                bytesFields = new HashMap<>();
-            bytesFields.computeIfAbsent(getReturnedField(fieldInfo.name), name -> new ArrayList<>()).add(value);
+        public final ScoreDoc scoreDoc() {
+            return scoreDoc;
         }
 
         @Override
-        public void stringField(FieldInfo fieldInfo, byte[] value) {
-            if (stringFields == null)
-                stringFields = new HashMap<>();
-            stringFields.computeIfAbsent(getReturnedField(fieldInfo.name), name -> new ArrayList<>())
-                .add(new String(value, StandardCharsets.UTF_8));
+        public final Map<String, String> highlights() {
+            return highlights;
         }
 
         @Override
-        public void intField(FieldInfo fieldInfo, int value) {
-            final String fieldName = getReturnedField(fieldInfo.name);
-            if (intFields == null)
-                intFields = new HashMap<>();
-            int[] array = intFields.get(fieldName);
-            if (array == null) {
-                array = new int[1];
-            } else {
-                final int[] newArray = new int[array.length + 1];
-                System.arraycopy(array, 0, newArray, 0, array.length);
-                array = newArray;
-            }
-            array[array.length - 1] = value;
-            intFields.put(fieldName, array);
-        }
-
-        @Override
-        public void longField(FieldInfo fieldInfo, long value) {
-            final String fieldName = getReturnedField(fieldInfo.name);
-            if (longFields == null)
-                longFields = new HashMap<>();
-            long[] array = longFields.get(fieldName);
-            if (array == null) {
-                array = new long[1];
-            } else {
-                final long[] newArray = new long[array.length + 1];
-                System.arraycopy(array, 0, newArray, 0, array.length);
-                array = newArray;
-            }
-            array[array.length - 1] = value;
-            longFields.put(fieldName, array);
-        }
-
-        @Override
-        public void floatField(FieldInfo fieldInfo, float value) {
-            final String fieldName = getReturnedField(fieldInfo.name);
-            if (floatFields == null)
-                floatFields = new HashMap<>();
-            float[] array = floatFields.get(fieldName);
-            if (array == null) {
-                array = new float[1];
-            } else {
-                final float[] newArray = new float[array.length + 1];
-                System.arraycopy(array, 0, newArray, 0, array.length);
-                array = newArray;
-            }
-            array[array.length - 1] = value;
-            floatFields.put(fieldName, array);
-        }
-
-        @Override
-        public void doubleField(FieldInfo fieldInfo, double value) {
-            final String fieldName = getReturnedField(fieldInfo.name);
-            if (doubleFields == null)
-                doubleFields = new HashMap<>();
-            double[] array = doubleFields.get(fieldName);
-            if (array == null) {
-                array = new double[1];
-            } else {
-                final double[] newArray = new double[array.length + 1];
-                System.arraycopy(array, 0, newArray, 0, array.length);
-                array = newArray;
-            }
-            array[array.length - 1] = value;
-            doubleFields.put(fieldName, array);
-        }
-
-        void extract() {
-            if (stringFields != null)
-                stringFields.forEach(ResultDocumentBuilder.this::setStoredFieldString);
-            if (bytesFields != null)
-                bytesFields.forEach(ResultDocumentBuilder.this::setStoredFieldBytes);
-            if (longFields != null)
-                longFields.forEach(ResultDocumentBuilder.this::setStoredFieldLong);
-            if (intFields != null)
-                intFields.forEach(ResultDocumentBuilder.this::setStoredFieldInteger);
-            if (floatFields != null)
-                floatFields.forEach(ResultDocumentBuilder.this::setStoredFieldFloat);
-            if (doubleFields != null)
-                doubleFields.forEach(ResultDocumentBuilder.this::setStoredFieldDouble);
+        public final void setHighlight(final String name, final String snippet) {
+            if (name == null || snippet == null)
+                return;
+            if (highlights == null)
+                highlights = new LinkedHashMap<>();
+            highlights.put(name, snippet);
         }
     }
 

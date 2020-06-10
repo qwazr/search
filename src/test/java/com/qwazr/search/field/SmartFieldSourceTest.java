@@ -28,11 +28,11 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URISyntaxException;
-import java.util.Map;
 import java.util.Objects;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class SmartFieldSourceTest extends AbstractIndexTest {
 
@@ -57,7 +57,7 @@ public class SmartFieldSourceTest extends AbstractIndexTest {
     }
 
     @Index(name = "SmartFieldSorted", schema = "TestQueries", primaryKey = "id",
-        sourceField = FieldDefinition.SOURCE_FIELD)
+        recordField = FieldDefinition.RECORD_FIELD)
     static public class Record implements Serializable {
 
         @SmartField(type = SmartFieldDefinition.Type.TEXT, index = true)

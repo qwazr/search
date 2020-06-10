@@ -41,8 +41,8 @@ abstract class RecordBuilder {
         termId = null;
     }
 
-    final void addSource(final byte[] sourceBytes) {
-        documentBuilder.accept(null, fieldMap.sourceField, new StoredField(fieldMap.sourceField, sourceBytes));
+    final void addRecord(final byte[] sourceBytes) {
+        documentBuilder.accept(null, fieldMap.recordField, new StoredField(fieldMap.recordField, sourceBytes));
     }
 
     // TODO type aware !

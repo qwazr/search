@@ -182,17 +182,13 @@ public abstract class JsonAbstractTest {
         try {
             runnable.run();
             Assert.fail("WebApplicationException was not thrown");
-        }
-        catch (WebApplicationException e) {
+        } catch (WebApplicationException e) {
             Assert.assertEquals(expectedStatusCode, e.getResponse().getStatus());
-        }
-        catch (ServerException e) {
+        } catch (ServerException e) {
             Assert.assertEquals(expectedStatusCode, e.getStatusCode());
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             // Thats ok
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -200,8 +196,7 @@ public abstract class JsonAbstractTest {
     public static LinkedHashMap<String, FieldDefinition> getFieldMap(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return FieldDefinition.newFieldMap(IOUtils.toString(is, StandardCharsets.UTF_8));
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -209,8 +204,7 @@ public abstract class JsonAbstractTest {
     private static FieldDefinition getField(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return FieldDefinition.newField(IOUtils.toString(is, StandardCharsets.UTF_8));
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -218,8 +212,7 @@ public abstract class JsonAbstractTest {
     private static LinkedHashMap<String, AnalyzerDefinition> getAnalyzerMap(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return AnalyzerDefinition.newAnalyzerMap(IOUtils.toString(is, StandardCharsets.UTF_8));
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -227,8 +220,7 @@ public abstract class JsonAbstractTest {
     private static AnalyzerDefinition getAnalyzer(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return AnalyzerDefinition.newAnalyzer(IOUtils.toString(is, StandardCharsets.UTF_8));
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -236,8 +228,7 @@ public abstract class JsonAbstractTest {
     private static IndexSettingsDefinition getIndexSettings(String res) {
         try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return ObjectMappers.JSON.readValue(is, IndexSettingsDefinition.class);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -440,8 +431,7 @@ public abstract class JsonAbstractTest {
     public static QueryDefinition getQuery(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return QueryDefinition.newQuery(IOUtils.toString(is, StandardCharsets.UTF_8));
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -482,8 +472,7 @@ public abstract class JsonAbstractTest {
     public static JsonNode getJsonNode(String res) {
         try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return ObjectMappers.JSON.readTree(is);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -491,8 +480,7 @@ public abstract class JsonAbstractTest {
     public static PostDefinition.Documents getDocs(String res) {
         try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return ObjectMappers.JSON.readValue(is, PostDefinition.Documents.class);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -500,8 +488,7 @@ public abstract class JsonAbstractTest {
     private static PostDefinition.Document getDoc(String res) {
         try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return ObjectMappers.JSON.readValue(is, PostDefinition.Document.class);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -688,7 +675,7 @@ public abstract class JsonAbstractTest {
         Assert.assertEquals(5L, docs.size());
     }
 
-    private void checkReturnedFields(LinkedHashMap<String, Object> fields, String fieldName, Object... values) {
+    private void checkReturnedFields(Map<String, Object> fields, String fieldName, Object... values) {
         Assert.assertNotNull(fields);
         Object object = fields.get(fieldName);
         Assert.assertNotNull(object);

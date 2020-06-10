@@ -131,7 +131,7 @@ class IndexInstanceBuilder {
         final LinkedHashMap<String, FieldDefinition> fieldMapDefinition = fileSet.loadFieldMap();
 
         fieldMap = fieldMapDefinition == null ? null : new FieldMap(settings.primaryKey, fieldMapDefinition,
-            settings.sortedSetFacetField, settings.sourceField);
+            settings.sortedSetFacetField, settings.recordField);
 
         final AnalyzerContext context =
             new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, false, globalAnalyzerFactoryMap,

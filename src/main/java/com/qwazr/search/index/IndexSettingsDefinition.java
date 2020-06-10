@@ -103,8 +103,8 @@ public class IndexSettingsDefinition {
     @JsonProperty("sorted_set_facet_field")
     final public String sortedSetFacetField;
 
-    @JsonProperty("source_field")
-    final public String sourceField;
+    @JsonProperty("record_field")
+    final public String recordField;
 
     @JsonProperty("index_reader_warmer")
     final public Boolean indexReaderWarmer;
@@ -136,7 +136,7 @@ public class IndexSettingsDefinition {
         @JsonProperty("segments_per_tier") final Double segmentsPerTier,
         @JsonProperty("enable_taxonomy_index") final Boolean enableTaxonomyIndex,
         @JsonProperty("sorted_set_facet_field") final String sortedSetFacetField,
-        @JsonProperty("source_field") final String sourceField,
+        @JsonProperty("record_field") final String recordField,
         @JsonProperty("index_reader_warmer") final Boolean indexReaderWarmer,
         @JsonProperty("merged_segment_warmer") final Boolean mergedSegmentWarmer,
         @JsonProperty("nrt_caching_directory_max_merge_size_mb") final Double nrtCachingDirectoryMaxMergeSizeMB,
@@ -157,7 +157,7 @@ public class IndexSettingsDefinition {
         this.segmentsPerTier = segmentsPerTier;
         this.enableTaxonomyIndex = enableTaxonomyIndex;
         this.sortedSetFacetField = sortedSetFacetField;
-        this.sourceField = sourceField;
+        this.recordField = recordField;
         this.indexReaderWarmer = indexReaderWarmer;
         this.mergedSegmentWarmer = mergedSegmentWarmer;
         this.nrtCachingDirectoryMaxMergeSizeMB = nrtCachingDirectoryMaxMergeSizeMB;
@@ -181,7 +181,7 @@ public class IndexSettingsDefinition {
         this.segmentsPerTier = builder.segmentsPerTier;
         this.enableTaxonomyIndex = builder.enableTaxonomyIndex;
         this.sortedSetFacetField = builder.sortedSetFacetField;
-        this.sourceField = builder.sourceField;
+        this.recordField = builder.recordField;
         this.indexReaderWarmer = builder.indexReaderWarmer;
         this.mergedSegmentWarmer = builder.mergedSegmentWarmer;
         this.nrtCachingDirectoryMaxMergeSizeMB = builder.nrtCachingDirectoryMaxMergeSizeMB;
@@ -202,7 +202,7 @@ public class IndexSettingsDefinition {
 
     @Override
     public int hashCode() {
-        return Objects.hash(primaryKey, directoryType, ramBufferSize, useCompoundFile, similarityClass, sortedSetFacetField, sourceField);
+        return Objects.hash(primaryKey, directoryType, ramBufferSize, useCompoundFile, similarityClass, sortedSetFacetField, recordField);
     }
 
     @Override
@@ -242,7 +242,7 @@ public class IndexSettingsDefinition {
             return false;
         if (!Objects.equals(sortedSetFacetField, s.sortedSetFacetField))
             return false;
-        if (!Objects.equals(sourceField, s.sourceField))
+        if (!Objects.equals(recordField, s.recordField))
             return false;
         if (!Objects.equals(indexReaderWarmer, s.indexReaderWarmer))
             return false;
@@ -285,7 +285,7 @@ public class IndexSettingsDefinition {
         private Double segmentsPerTier;
         private Boolean enableTaxonomyIndex;
         private String sortedSetFacetField;
-        private String sourceField;
+        private String recordField;
         private Boolean indexReaderWarmer;
         private Boolean mergedSegmentWarmer;
         private Double nrtCachingDirectoryMaxMergeSizeMB;
@@ -310,7 +310,7 @@ public class IndexSettingsDefinition {
             segmentsPerTier(annotatedIndex.segmentsPerTier());
             enableTaxonomyIndex(annotatedIndex.enableTaxonomyIndex());
             sortedSetFacetField(annotatedIndex.sortedSetFacetField());
-            sourceField(annotatedIndex.sourceField());
+            recordField(annotatedIndex.recordField());
             indexReaderWarmer(annotatedIndex.indexReaderWarmer());
             mergedSegmentWarmer(annotatedIndex.mergedSegmentWarmer());
             nrtCachingDirectoryMaxMergeSizeMB(annotatedIndex.nrtCachingDirectoryMaxMergeSizeMB());
@@ -334,7 +334,7 @@ public class IndexSettingsDefinition {
             this.segmentsPerTier = settings.segmentsPerTier;
             this.enableTaxonomyIndex = settings.enableTaxonomyIndex;
             this.sortedSetFacetField = settings.sortedSetFacetField;
-            this.sourceField = settings.sourceField;
+            this.recordField = settings.recordField;
             this.indexReaderWarmer = settings.indexReaderWarmer;
             this.mergedSegmentWarmer = settings.mergedSegmentWarmer;
             this.nrtCachingDirectoryMaxMergeSizeMB = settings.nrtCachingDirectoryMaxMergeSizeMB;
@@ -434,8 +434,8 @@ public class IndexSettingsDefinition {
             return this;
         }
 
-        public Builder sourceField(final String sourceField) {
-            this.sourceField = sourceField;
+        public Builder recordField(final String recordField) {
+            this.recordField = recordField;
             return this;
         }
 

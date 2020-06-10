@@ -15,54 +15,23 @@
  **/
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.converters.MultiReader;
-import com.qwazr.search.field.converters.ValueConverter;
-import com.qwazr.search.field.FieldTypeInterface;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
     implements ResultDocuments<T>, ResultDocumentsInterface {
 
     private final List<ResultDocumentBuilder<T>> documentsBuilder;
-    private final Map<String, String> storedFields;
-    private final Map<String, ValueConverter<?>> returnedFieldsConverter;
+    private final ReturnedFieldStrategy returnedFieldStrategy;
     protected final int start;
 
-    ResultDocumentsList(final QueryContextImpl context, final QueryDefinition queryDefinition,
-                        Set<String> returnedFields) {
-        this.start = queryDefinition.getStartValue();
-
-        if (returnedFields == null)
-            if (queryDefinition.returned_fields != null && !queryDefinition.returned_fields.isEmpty())
-                returnedFields = queryDefinition.returned_fields;
-        if (returnedFields != null) {
-            this.storedFields = new HashMap<>();
-            this.returnedFieldsConverter = new LinkedHashMap<>();
-            final MultiReader multiReader = new MultiReader(context.indexReader);
-            for (final String fieldName : returnedFields) {
-                final FieldTypeInterface fieldType = context.fieldMap.getFieldType(null, fieldName);
-                if (fieldType == null)
-                    continue;
-                final String storedFieldName = fieldType.getStoredFieldName(fieldName);
-                if (storedFieldName != null)
-                    storedFields.put(storedFieldName, fieldName);
-                final ValueConverter<?> converter = fieldType.getConverter(fieldName, multiReader);
-                if (converter != null)
-                    returnedFieldsConverter.put(fieldName, converter);
-            }
-        } else {
-            this.storedFields = null;
-            this.returnedFieldsConverter = null;
-        }
+    ResultDocumentsList(final int start, final ReturnedFieldStrategy returnedFieldStrategy) {
+        this.start = start;
+        this.returnedFieldStrategy = returnedFieldStrategy;
         this.documentsBuilder = new ArrayList<>();
     }
 
@@ -73,14 +42,11 @@ abstract class ResultDocumentsList<T extends ResultDocumentAbstract>
                                                                final List<T> documents);
 
     @Override
-    final public void doc(IndexSearcher searcher, int pos, ScoreDoc scoreDoc) throws IOException {
+    final public void doc(final IndexSearcher searcher, final int pos, final ScoreDoc scoreDoc) throws IOException {
         final ResultDocumentBuilder<T> builder = newResultDocumentBuilder(start + pos, scoreDoc);
         if (builder == null)
             return;
-        if (storedFields != null && !storedFields.isEmpty())
-            builder.extractStoredReturnedFields(searcher, storedFields);
-        if (returnedFieldsConverter != null && !returnedFieldsConverter.isEmpty())
-            builder.extractDocValuesReturnedFields(returnedFieldsConverter);
+        returnedFieldStrategy.extract(searcher, builder);
         documentsBuilder.add(builder);
     }
 

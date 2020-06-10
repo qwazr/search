@@ -76,6 +76,8 @@ public class AnnotatedIndexService<T> {
 
     private final FieldMapWrappers fieldMapWrappers;
 
+    private final Class<T> indexDefinitionClass;
+
     private final FieldMapWrapper<T> schemaFieldMapWrapper;
 
     private final LinkedHashMap<String, Field> fieldMap;
@@ -149,6 +151,7 @@ public class AnnotatedIndexService<T> {
             new CustomFieldDefinition(name, propertyField, copyMap)));
 
         this.fieldMapWrappers = new FieldMapWrappers(fieldMap.keySet());
+        this.indexDefinitionClass = indexDefinitionClass;
         this.schemaFieldMapWrapper = fieldMapWrappers.get(indexDefinitionClass);
     }
 
@@ -470,7 +473,7 @@ public class AnnotatedIndexService<T> {
      * @throws IOException          if any I/O error occurs
      * @throws InterruptedException if the process is interrupted
      */
-    public void updateDocumentsValues(final Collection<T> rows) throws IOException, InterruptedException {
+    public void updateDocumentsValues(final Collection<T> rows) throws IOException {
         updateDocumentsValues(rows, null);
     }
 
@@ -614,12 +617,12 @@ public class AnnotatedIndexService<T> {
      * Execute a search query
      *
      * @param query       the query to execute
-     * @param objectClass the type of the objects to return
+     * @param recordClass the type of the objects to return
      * @param <C>         the type of the objects
      * @return the results
      */
-    public <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query, final Class<C> objectClass) {
-        return searchQuery(query, fieldMapWrappers.get(objectClass));
+    public <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query, final Class<C> recordClass) {
+        return searchQuery(query, fieldMapWrappers.get(recordClass));
     }
 
     /**
@@ -710,6 +713,10 @@ public class AnnotatedIndexService<T> {
         fieldMapWrappers.newFieldMapWrapper(objectClass);
     }
 
+    public <C> FieldMapWrapper<C> getWrapper(final Class<C> recordClass) {
+        return fieldMapWrappers.get(recordClass);
+    }
+
     public ReplicationStatus replicationCheck() {
         return indexService.replicationCheck(schemaName, indexName);
     }
@@ -726,8 +733,7 @@ public class AnnotatedIndexService<T> {
             if (resultWithMap.documents != null)
                 for (ResultDocumentMap resultDocMap : resultWithMap.documents)
                     documents.add(new ResultDocumentObject<>(resultDocMap, wrapper.toRecord(resultDocMap.fields)));
-        }
-        catch (ReflectiveOperationException | IOException e) {
+        } catch (ReflectiveOperationException | IOException e) {
             throw new RuntimeException(e);
         }
         return new ResultDefinition.WithObject<>(resultWithMap, documents);
@@ -738,7 +744,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public <R> R query(final IndexServiceInterface.QueryActions<R> actions) throws IOException {
-        return indexService.query(schemaName, indexName, fieldMapWrappers, actions);
+        return indexService.query(schemaName, indexName, actions);
     }
 
     public void deleteAll() {
