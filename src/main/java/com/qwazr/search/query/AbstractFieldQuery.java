@@ -65,7 +65,7 @@ public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extend
                                 final Object value) {
         return fieldMap == null ?
             new Term(concreteFieldName, BytesRefUtils.fromAny(value)) :
-            Objects.requireNonNull(fieldMap.getFieldType(genericFieldName, concreteFieldName),
+            Objects.requireNonNull(fieldMap.getFieldType(genericFieldName, concreteFieldName, null),
                 "Unknown field: " + concreteFieldName).term(concreteFieldName, value);
     }
 

@@ -19,6 +19,7 @@ import com.qwazr.search.field.CopyToFieldType;
 import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
+import com.qwazr.search.field.SmartDynamicTypes;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.FacetsConfig;
@@ -35,6 +36,7 @@ import java.util.function.Function;
 
 public class FieldMap {
 
+    private final SmartDynamicTypes smartDynamicTypes;
     private final String primaryKey;
     private final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap;
     private final HashMap<String, FieldTypeInterface> nameDefMap;
@@ -49,6 +51,8 @@ public class FieldMap {
              final String recordField) {
 
         this.primaryKey = primaryKey == null || primaryKey.isBlank() ? FieldDefinition.ID_FIELD : primaryKey;
+
+        this.smartDynamicTypes = new SmartDynamicTypes(primaryKey);
 
         this.sortedSetFacetField =
             sortedSetFacetField == null ? FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD : sortedSetFacetField;
@@ -102,7 +106,9 @@ public class FieldMap {
     }
 
     @NotNull
-    final public FieldTypeInterface getFieldType(final String genericFieldName, final String concreteFieldName) {
+    final public FieldTypeInterface getFieldType(final String genericFieldName,
+                                                 final String concreteFieldName,
+                                                 final Object contentValue) {
         if (genericFieldName == null && concreteFieldName == null)
             throw new IllegalArgumentException("The field name is missing");
         // Annotated can find wildcarded fields directly using genericFieldName
@@ -116,13 +122,24 @@ public class FieldMap {
             if (fieldType != null)
                 return fieldType;
         }
+
+        // Check record and primary key fields
         if (recordField != null && recordField.equals(concreteFieldName))
-            return null;
+            return smartDynamicTypes.getDoNothingType();
+        if (primaryKey != null && primaryKey.equals(concreteFieldName))
+            return smartDynamicTypes.getPrimaryKeyType();
+
         //Second chance, using the wildcard collection
         final String searchField = concreteFieldName != null ? concreteFieldName : genericFieldName;
         for (Pair<WildcardMatcher, FieldTypeInterface> entry : wildcardMap)
             if (entry.getLeft().match(searchField))
                 return entry.getRight();
+
+        // Guess field type from value
+        final FieldTypeInterface fieldType = smartDynamicTypes.getTypeFromValue(contentValue);
+        if (fieldType != null)
+            return fieldType;
+
         throw new IllegalArgumentException(
             "The field has not been found: " + genericFieldName + " / " + concreteFieldName);
     }
@@ -138,7 +155,7 @@ public class FieldMap {
     private void checkFacetConfig(final String genericFieldName, final String concreteFieldName) {
         if (facetsConfig.getDimConfigs().containsKey(concreteFieldName))
             return;
-        final FieldTypeInterface fieldType = getFieldType(genericFieldName, concreteFieldName);
+        final FieldTypeInterface fieldType = getFieldType(genericFieldName, concreteFieldName, null);
         if (fieldType == null)
             return;
         fieldType.setFacetsConfig(concreteFieldName, this, facetsConfig);
@@ -169,15 +186,15 @@ public class FieldMap {
     }
 
     final public String resolveStoredFieldName(final String fieldName) {
-        return getFieldType(fieldName, fieldName).getStoredFieldName(fieldName);
+        return getFieldType(fieldName, fieldName, null).getStoredFieldName(fieldName);
     }
 
     final public String resolveQueryFieldName(final String fieldName) {
-        return getFieldType(fieldName, fieldName).getQueryFieldName(fieldName);
+        return getFieldType(fieldName, fieldName, null).getQueryFieldName(fieldName);
     }
 
     final public String resolveQueryFieldName(final String genericFieldName, final String fieldName) {
-        return getFieldType(genericFieldName, fieldName).getQueryFieldName(fieldName);
+        return getFieldType(genericFieldName, fieldName, null).getQueryFieldName(fieldName);
     }
 
     static public String[] resolveFieldNames(final String[] fields, final Function<String, String> resolver) {

@@ -143,7 +143,7 @@ public interface ReturnedFieldStrategy {
             this.returnedFieldsConverter = new LinkedHashMap<>();
             final MultiReader multiReader = new MultiReader(context.indexReader);
             for (final String fieldName : returnedFields) {
-                final FieldTypeInterface fieldType = context.fieldMap.getFieldType(null, fieldName);
+                final FieldTypeInterface fieldType = context.fieldMap.getFieldType(null, fieldName, null);
                 if (fieldType == null)
                     continue;
                 final String storedFieldName = fieldType.getStoredFieldName(fieldName);

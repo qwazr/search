@@ -50,9 +50,10 @@ abstract class RecordBuilder {
         if (fieldValue == null)
             return;
 
-        final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
-        if (fieldType == null)
+        final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName, fieldValue);
+        if (fieldType == null) {
             throw new IllegalArgumentException("Unknown field: " + fieldName);
+        }
         fieldType.dispatch(fieldName, fieldValue, documentBuilder);
 
         if (fieldName.equals(primaryKey))
@@ -109,8 +110,12 @@ abstract class RecordBuilder {
                     addFieldValue(fieldName, jsonValue.booleanValue());
                     break;
                 case ARRAY:
-                    for (JsonNode element : jsonValue)
+                    for (final JsonNode element : jsonValue)
                         accept(fieldName, element);
+                case OBJECT:
+                    jsonValue.fields().forEachRemaining(
+                        entry -> accept(fieldName + '.' + entry.getKey(), entry.getValue()));
+                    break;
                 default:
                     // Ignored
                     break;

@@ -34,7 +34,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
-public class SmartFieldSourceTest extends AbstractIndexTest {
+public class SmartFieldRecordTest extends AbstractIndexTest {
 
     private static AnnotatedIndexService<Record> indexService;
 
@@ -50,7 +50,7 @@ public class SmartFieldSourceTest extends AbstractIndexTest {
     }
 
     @Test
-    public void getSource() throws IOException, ReflectiveOperationException {
+    public void getRecord() throws IOException, ReflectiveOperationException {
         final Record doc = indexService.getDocument(sample.id);
         assertThat(doc, notNullValue());
         assertThat(doc, equalTo(sample));

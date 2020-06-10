@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,22 +23,22 @@ import org.apache.lucene.document.StringField;
 
 final class StringFieldType extends StorableFieldType {
 
-	StringFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.STRING)
-				.termProvider(FieldUtils::newStringTerm)
-				.sortFieldProvider(SortUtils::stringSortField));
-	}
+    StringFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                    final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+            BytesRefUtils.Converter.STRING)
+            .termProvider(FieldUtils::newStringTerm)
+            .sortFieldProvider(SortUtils::stringSortField));
+    }
 
-	@Override
-	void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
-		consumer.accept(genericFieldName, fieldName, new StringField(fieldName, value.toString(), Field.Store.YES));
-	}
+    @Override
+    void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
+        consumer.accept(genericFieldName, fieldName, new StringField(fieldName, value.toString(), Field.Store.YES));
+    }
 
-	@Override
-	void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
-		consumer.accept(genericFieldName, fieldName, new StringField(fieldName, value.toString(), Field.Store.NO));
-	}
+    @Override
+    void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
+        consumer.accept(genericFieldName, fieldName, new StringField(fieldName, value.toString(), Field.Store.NO));
+    }
 
 }

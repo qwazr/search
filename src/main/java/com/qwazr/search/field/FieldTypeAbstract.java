@@ -212,11 +212,9 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     final protected void fillValue(final String fieldName,
                                    final Object value,
                                    final DocumentBuilder documentBuilder) {
-        if (fieldProviders != null) {
+        if (fieldProviders != null)
             for (FieldProvider fieldProvider : fieldProviders)
                 fieldProvider.fillValue(fieldName, value, documentBuilder);
-        } else
-            throw new ServerException("Unsupported value type for field \"" + fieldName + "\" : " + value.getClass());
     }
 
     @Override

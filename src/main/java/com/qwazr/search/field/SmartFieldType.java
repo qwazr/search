@@ -23,7 +23,8 @@ import java.util.Objects;
 
 final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 
-    SmartFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+    SmartFieldType(final String genericFieldName,
+                   final WildcardMatcher wildcardMatcher,
                    final FieldDefinition definition) {
         super(of(genericFieldName, wildcardMatcher, (SmartFieldDefinition) definition));
     }
