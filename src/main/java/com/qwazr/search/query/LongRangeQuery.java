@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.search.Query;
@@ -25,7 +26,8 @@ public class LongRangeQuery extends AbstractRangeQuery<Long, LongRangeQuery> {
 
     @JsonCreator
     public LongRangeQuery(@JsonProperty("generic_field") final String genericField,
-                          @JsonProperty("field") final String field, @JsonProperty("lower_value") final Long lowerValue,
+                          @JsonProperty("field") final String field,
+                          @JsonProperty("lower_value") final Long lowerValue,
                           @JsonProperty("upper_value") final Long upperValue) {
         super(LongRangeQuery.class, genericField, field, lowerValue == null ? LongDocValuesRangeQuery.MIN : lowerValue,
             upperValue == null ? LongDocValuesRangeQuery.MAX : upperValue);
@@ -37,6 +39,8 @@ public class LongRangeQuery extends AbstractRangeQuery<Long, LongRangeQuery> {
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        return LongPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value, upper_value);
+        return LongPoint.newRangeQuery(
+            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point),
+            lowerValue, upperValue);
     }
 }

@@ -17,6 +17,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import org.apache.lucene.index.Term;
 
@@ -24,26 +25,26 @@ import java.util.Objects;
 
 public abstract class AbstractFieldSpanQuery<T extends AbstractFieldSpanQuery<T>> extends AbstractSpanQuery<T> {
 
-	final public String genericField;
-	final public String field;
+    final public String genericField;
+    final public String field;
 
-	protected AbstractFieldSpanQuery(final Class<T> queryClass, final String genericField, final String field) {
-		super(queryClass);
-		this.field = Objects.requireNonNull(field, "The field is null");
-		this.genericField = genericField;
-	}
+    protected AbstractFieldSpanQuery(final Class<T> queryClass, final String genericField, final String field) {
+        super(queryClass);
+        this.field = Objects.requireNonNull(field, "The field is null");
+        this.genericField = genericField;
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(T q) {
-		return Objects.equals(genericField, q.genericField) && Objects.equals(field, q.field);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(T q) {
+        return Objects.equals(genericField, q.genericField) && Objects.equals(field, q.field);
+    }
 
-	final protected String resolveField(final FieldMap fieldMap) {
-		return AbstractFieldQuery.resolveField(fieldMap, genericField, field);
-	}
+    final protected String resolveField(final FieldMap fieldMap, final FieldTypeInterface.LuceneFieldType luceneFieldType) {
+        return AbstractFieldQuery.resolveField(fieldMap, luceneFieldType, genericField, field);
+    }
 
-	final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {
-		return AbstractFieldQuery.getResolvedTerm(fieldMap, genericField, field, value);
-	}
+    final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {
+        return AbstractFieldQuery.getResolvedTerm(fieldMap, genericField, field, value);
+    }
 }

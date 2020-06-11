@@ -21,26 +21,28 @@ import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.document.FieldType;
-import org.apache.lucene.search.SortField;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import org.apache.lucene.document.FieldType;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.SortField;
 
 final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
 
     private final List<Consumer<FieldType>> typeSetters;
+    private final BiFunction<String, QueryDefinition.SortEnum, SortField> sortFieldProvider;
 
     CustomFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
                     final FieldDefinition definition) {
         super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            getConverter(definition))
-            .termProvider(FieldUtils::newStringTerm)
-            .sortFieldProvider(buildSortFieldProvider((CustomFieldDefinition) definition)));
+            getConverter(definition)));
         final CustomFieldDefinition customFieldDefinition = (CustomFieldDefinition) definition;
         typeSetters = buildTypeSetters(customFieldDefinition);
+        sortFieldProvider = buildSortFieldProvider(customFieldDefinition);
     }
 
     private static List<Consumer<FieldType>> buildTypeSetters(CustomFieldDefinition definition) {
@@ -72,7 +74,7 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
         return ts;
     }
 
-    private static SortFieldProvider buildSortFieldProvider(CustomFieldDefinition definition) {
+    private static BiFunction<String, QueryDefinition.SortEnum, SortField> buildSortFieldProvider(CustomFieldDefinition definition) {
         if (definition.indexOptions == null)
             return null;
         return (fieldName, sortEnum) -> {
@@ -83,6 +85,15 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
             SortUtils.sortStringMissingValue(sortEnum, sortField);
             return sortField;
         };
+    }
+
+    @Override
+    final public Term term(String fieldName, Object value) {
+        return FieldUtils.newStringTerm(fieldName, value);
+    }
+
+    final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+        return sortFieldProvider.apply(fieldName, sortEnum);
     }
 
     @Override

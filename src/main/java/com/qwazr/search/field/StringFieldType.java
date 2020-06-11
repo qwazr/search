@@ -17,27 +17,38 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.SortField;
 
 final class StringFieldType extends StorableFieldType {
 
     StringFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
                     final FieldDefinition definition) {
         super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.STRING)
-            .termProvider(FieldUtils::newStringTerm)
-            .sortFieldProvider(SortUtils::stringSortField));
+            BytesRefUtils.Converter.STRING));
     }
 
     @Override
-    void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
+    public Term term(String fieldName, Object value) {
+        return FieldUtils.newStringTerm(fieldName, value);
+    }
+
+    @Override
+    public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+        return SortUtils.stringSortField(fieldName, sortEnum);
+    }
+
+    @Override
+    protected void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
         consumer.accept(genericFieldName, fieldName, new StringField(fieldName, value.toString(), Field.Store.YES));
     }
 
     @Override
-    void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
+    protected void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
         consumer.accept(genericFieldName, fieldName, new StringField(fieldName, value.toString(), Field.Store.NO));
     }
 

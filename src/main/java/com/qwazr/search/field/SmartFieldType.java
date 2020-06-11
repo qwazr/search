@@ -16,138 +16,148 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.analysis.SmartAnalyzerSet;
+import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.WildcardMatcher;
-
 import java.util.Objects;
+import java.util.function.Function;
+import javax.validation.constraints.NotNull;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.SortField;
 
 final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 
+    private final Function<String, SmartFieldProvider> storeProvider;
+    private final Function<String, SmartFieldProvider> indexProvider;
+    private final Function<String, SmartFieldProvider> fullTextProvider;
+    private final Function<String, SmartFieldProvider> sortProvider;
+
     SmartFieldType(final String genericFieldName,
                    final WildcardMatcher wildcardMatcher,
-                   final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (SmartFieldDefinition) definition));
+                   final SmartFieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, definition));
+        final boolean stored = definition.stored != null && definition.stored;
+        final SmartFieldDefinition.Type type = getType(definition);
+        if (stored) {
+            switch (type) {
+                case TEXT:
+                    storeProvider = SmartFieldProvider.StoredText::new;
+                    break;
+                case LONG:
+                    storeProvider = SmartFieldProvider.StoredLong::new;
+                    break;
+                case DOUBLE:
+                    storeProvider = SmartFieldProvider.StoredDouble::new;
+                    break;
+                case INTEGER:
+                    storeProvider = SmartFieldProvider.StoredInteger::new;
+                    break;
+                case FLOAT:
+                    storeProvider = SmartFieldProvider.StoredFloat::new;
+                    break;
+                default:
+                    storeProvider = null;
+                    break;
+            }
+        } else {
+            storeProvider = null;
+        }
+        final boolean index = definition.index != null && definition.index;
+        if (index) {
+            final int maxKeywordLength = getMaxKeywordLength(definition);
+            switch (type) {
+                case TEXT:
+                    indexProvider = f -> new SmartFieldProvider.StringText(f, maxKeywordLength);
+                    break;
+                case LONG:
+                    indexProvider = SmartFieldProvider.StringLong::new;
+                    break;
+                case INTEGER:
+                    indexProvider = SmartFieldProvider.StringInteger::new;
+                    break;
+                case DOUBLE:
+                    indexProvider = SmartFieldProvider.StringDouble::new;
+                    break;
+                case FLOAT:
+                    indexProvider = SmartFieldProvider.StringFloat::new;
+                    break;
+                default:
+                    indexProvider = null;
+                    break;
+            }
+            if (isFullTextIndexAnalyzer(definition)) {
+                fullTextProvider = SmartFieldProvider.FullText::new;
+            } else
+                fullTextProvider = null;
+        } else {
+            indexProvider = null;
+            fullTextProvider = null;
+        }
+        final boolean sorted = definition.sort != null && definition.sort;
+        if (sorted) {
+            switch (type) {
+                case TEXT:
+                    sortProvider = SmartFieldProvider.SortedDocValuesText::new;
+                    break;
+                case LONG:
+                    sortProvider = SmartFieldProvider.SortedDocValuesLong::new;
+                    break;
+                case INTEGER:
+                    sortProvider = SmartFieldProvider.SortedDocValuesInteger::new;
+                    break;
+                case DOUBLE:
+                    sortProvider = SmartFieldProvider.SortedDocValuesDouble::new;
+                    break;
+                case FLOAT:
+                    sortProvider = SmartFieldProvider.SortedDocValuesFloat::new;
+                    break;
+                default:
+                    sortProvider = null;
+                    break;
+            }
+        } else {
+            sortProvider = null;
+        }
+    }
+
+    private static boolean isFullTextIndexAnalyzer(final SmartFieldDefinition definition) {
+        final String keywordName = SmartAnalyzerSet.keyword.name();
+        if (StringUtils.isNotEmpty(definition.indexAnalyzer)
+            && !Objects.equals(definition.indexAnalyzer, keywordName))
+            return true;
+        if (StringUtils.isNotEmpty(definition.analyzer)
+            && !Objects.equals(definition.analyzer, keywordName))
+            return true;
+        return false;
     }
 
     @Override
-    Builder<SmartFieldDefinition> setup(Builder<SmartFieldDefinition> builder) {
-        if (builder.definition.stored != null && builder.definition.stored)
-            storeProvider(genericFieldName, builder);
-        if (builder.definition.index != null && builder.definition.index) {
-            if ((StringUtils.isEmpty(builder.definition.analyzer)
-                || Objects.equals(builder.definition.analyzer, SmartAnalyzerSet.keyword.name()))
-                && StringUtils.isEmpty(builder.definition.queryAnalyzer)
-                && StringUtils.isEmpty(builder.definition.indexAnalyzer))
-                indexProvider(genericFieldName, builder);
-            else
-                fullTextProvider(genericFieldName, builder);
-        }
-        if (builder.definition.sort != null && builder.definition.sort)
-            sortProvider(genericFieldName, builder);
-        if (builder.definition.facet != null && builder.definition.facet)
-            facetProvider(genericFieldName, builder);
-        return builder;
+    protected void prepareFacet(Builder<SmartFieldDefinition> builder) {
+
     }
 
-    private static SmartFieldDefinition.Type getType(final Builder<SmartFieldDefinition> builder) {
-        return builder.definition.type == null ? SmartFieldDefinition.Type.TEXT : builder.definition.type;
+    @Override
+    final protected void newField(final String fieldName, final Object value, final DocumentBuilder builder) {
+        if (storeProvider != null)
+            storeProvider.apply(fieldName).apply(value, builder);
+        if (indexProvider != null)
+            indexProvider.apply(fieldName).apply(value, builder);
+        if (fullTextProvider != null)
+            fullTextProvider.apply(fieldName).apply(value, builder);
     }
 
-    static void storeProvider(final String genericFieldName, final Builder<SmartFieldDefinition> builder) {
-        final SmartFieldProviders.StoreFieldProvider provider =
-            new SmartFieldProviders.StoreFieldProvider(genericFieldName);
-        switch (getType(builder)) {
-            case TEXT:
-                builder.fieldProvider(provider::textField);
-                builder.storedFieldNameProvider(provider::getTextName);
-                break;
-            case LONG:
-                builder.fieldProvider(provider::longField);
-                builder.storedFieldNameProvider(provider::getLongName);
-                break;
-            case INTEGER:
-                builder.fieldProvider(provider::integerField);
-                builder.storedFieldNameProvider(provider::getIntegerName);
-                break;
-            case DOUBLE:
-                builder.fieldProvider(provider::doubleField);
-                builder.storedFieldNameProvider(provider::getDoubleName);
-                break;
-            case FLOAT:
-                builder.fieldProvider(provider::floatField);
-                builder.storedFieldNameProvider(provider::getFloatName);
-                break;
-            default:
-                break;
-        }
+    private static SmartFieldDefinition.Type getType(final SmartFieldDefinition definition) {
+        return definition.type == null ? SmartFieldDefinition.Type.TEXT : definition.type;
     }
 
-    static void indexProvider(final String genericFieldName,
-                              final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
-        final SmartFieldProviders.StringFieldProvider provider =
-            new SmartFieldProviders.StringFieldProvider(genericFieldName);
-        switch (getType(builder)) {
-            case TEXT:
-                builder.fieldProvider(provider::textField);
-                builder.termProvider(provider::textTerm);
-                builder.queryFieldNameProvider(provider::getTextName);
-                break;
-            case LONG:
-                builder.fieldProvider(provider::longField);
-                builder.queryFieldNameProvider(provider::getLongName);
-                builder.termProvider(provider::longTerm);
-                break;
-            case INTEGER:
-                builder.fieldProvider(provider::integerField);
-                builder.termProvider(provider::integerTerm);
-                builder.queryFieldNameProvider(provider::getIntegerName);
-                break;
-            case DOUBLE:
-                builder.fieldProvider(provider::doubleField);
-                builder.termProvider(provider::doubleTerm);
-                builder.queryFieldNameProvider(provider::getDoubleName);
-                break;
-            case FLOAT:
-                builder.fieldProvider(provider::floatField);
-                builder.termProvider(provider::floatTerm);
-                builder.queryFieldNameProvider(provider::getFloatName);
-                break;
-            default:
-                break;
-        }
+    private static int getMaxKeywordLength(final SmartFieldDefinition definition) {
+        return definition.maxKeywordLength == null
+            ? SmartFieldDefinition.DEFAULT_MAX_KEYWORD_LENGTH : definition.maxKeywordLength;
     }
 
-    static void sortProvider(final String genericFieldName,
-                             final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
-        final SmartFieldProviders.SortedDocValuesFieldProvider provider =
-            new SmartFieldProviders.SortedDocValuesFieldProvider(genericFieldName);
-        switch (getType(builder)) {
-            case TEXT:
-                builder.fieldProvider(provider::textField);
-                builder.sortFieldProvider(provider::sortTextField);
-                break;
-            case LONG:
-                builder.fieldProvider(provider::longField);
-                builder.sortFieldProvider(provider::sortLongField);
-                break;
-            case INTEGER:
-                builder.fieldProvider(provider::integerField);
-                builder.sortFieldProvider(provider::sortIntegerField);
-                break;
-            case DOUBLE:
-                builder.fieldProvider(provider::doubleField);
-                builder.sortFieldProvider(provider::sortDoubleField);
-                break;
-            case FLOAT:
-                builder.fieldProvider(provider::floatField);
-                builder.sortFieldProvider(provider::sortFloatField);
-                break;
-            default:
-                break;
-        }
-    }
-
-    static void facetProvider(final String genericFieldName,
+    /*
+    static Function<String, SmartFieldProvider> facetProvider(final String genericFieldName,
                               final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
         final SmartFieldProviders.FacetFieldProvider provider =
             new SmartFieldProviders.FacetFieldProvider(genericFieldName);
@@ -157,15 +167,27 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             facetsConfig.setIndexFieldName(resolvedFieldName, fieldMap.sortedSetFacetField);
         }));
         builder.fieldProvider(provider::textField);
-        builder.queryFieldNameProvider(provider::getTextName);
+        builder.queryFieldNameProvider(LuceneFieldType.facet, provider::getTextName);
+    }
+     */
+
+    @Override
+    public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+        return sortProvider == null ? null : sortProvider.apply(fieldName).getSort(sortEnum);
     }
 
-    static void fullTextProvider(final String genericFieldName,
-                                 final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
-        final SmartFieldProviders.TextFieldProvider provider =
-            new SmartFieldProviders.TextFieldProvider(genericFieldName);
-        builder.fieldProvider(provider::textField);
-        builder.queryFieldNameProvider(provider::getTextName);
+    @Override
+    public String getQueryFieldName(@NotNull LuceneFieldType luceneFieldType, @NotNull String fieldName) {
+        return null;
     }
 
+    @Override
+    public String getStoredFieldName(String fieldName) {
+        return null;
+    }
+
+    @Override
+    public Term term(final String fieldName, final Object value) {
+        return indexProvider == null ? null : indexProvider.apply(fieldName).getTerm(value);
+    }
 }

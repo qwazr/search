@@ -51,9 +51,6 @@ abstract class RecordBuilder {
             return;
 
         final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName, fieldValue);
-        if (fieldType == null) {
-            throw new IllegalArgumentException("Unknown field: " + fieldName);
-        }
         fieldType.dispatch(fieldName, fieldValue, documentBuilder);
 
         if (fieldName.equals(primaryKey))

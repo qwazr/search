@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.document.DoublePoint;
@@ -28,16 +29,19 @@ import java.util.Collection;
 
 public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<DoubleMultiRangeQuery> {
 
-    final public double[] lower_values;
-    final public double[] upper_values;
+    @JsonProperty("lower_values")
+    final public double[] lowerValues;
+    @JsonProperty("upper_values")
+    final public double[] upperValues;
 
     @JsonCreator
     public DoubleMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
-                                 @JsonProperty("field") final String field, @JsonProperty("lower_values") final double[] lowerValues,
+                                 @JsonProperty("field") final String field,
+                                 @JsonProperty("lower_values") final double[] lowerValues,
                                  @JsonProperty("upper_values") final double[] upperValues) {
         super(DoubleMultiRangeQuery.class, genericField, field);
-        this.lower_values = lowerValues;
-        this.upper_values = upperValues;
+        this.lowerValues = lowerValues;
+        this.upperValues = upperValues;
     }
 
     public DoubleMultiRangeQuery(final String field, final double[] lowerValues, final double[] upperValues) {
@@ -51,13 +55,15 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<DoubleMultiRa
     @Override
     @JsonIgnore
     protected boolean isEqual(DoubleMultiRangeQuery q) {
-        return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
-            Arrays.equals(upper_values, q.upper_values);
+        return super.isEqual(q) && Arrays.equals(lowerValues, q.lowerValues) &&
+            Arrays.equals(upperValues, q.upperValues);
     }
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        return DoublePoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_values, upper_values);
+        return DoublePoint.newRangeQuery(
+            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point),
+            lowerValues, upperValues);
     }
 
     public static class Builder extends AbstractBuilder<Double, Builder> {

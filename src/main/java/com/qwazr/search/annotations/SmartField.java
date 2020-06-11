@@ -37,6 +37,8 @@ public @interface SmartField {
 
     boolean index() default false;
 
+    int maxKeywordLength() default SmartFieldDefinition.DEFAULT_MAX_KEYWORD_LENGTH;
+
     SmartAnalyzerSet analyzer() default SmartAnalyzerSet.keyword;
 
     String indexAnalyzer() default StringUtils.EMPTY;

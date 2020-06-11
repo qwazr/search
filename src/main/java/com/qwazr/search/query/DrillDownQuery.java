@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.facet.FacetsConfig;
@@ -35,13 +36,13 @@ import java.util.Objects;
 
 public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
 
-    final public AbstractQuery baseQuery;
+    final public AbstractQuery<?> baseQuery;
     final public List<LinkedHashMap<String, String[]>> dimPath;
     final public Map<String, String> genericFieldNames;
     final public Boolean useDrillSideways;
 
     @JsonCreator
-    public DrillDownQuery(@JsonProperty("baseQuery") final AbstractQuery baseQuery,
+    public DrillDownQuery(@JsonProperty("baseQuery") final AbstractQuery<?> baseQuery,
                           @JsonProperty("useDrillSideways") final boolean useDrillSideways,
                           @JsonProperty("dimPath") final List<LinkedHashMap<String, String[]>> dimPath,
                           @JsonProperty("genericFieldNames") final Map<String, String> genericFieldNames) {
@@ -71,7 +72,7 @@ public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
 
     @Override
     final public org.apache.lucene.facet.DrillDownQuery getQuery(final QueryContext queryContext)
-            throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+        throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 
         final org.apache.lucene.facet.DrillDownQuery drillDownQuery;
         final FieldMap fieldMap = queryContext.getFieldMap();
@@ -80,7 +81,7 @@ public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
         dimPath.forEach(map -> map.keySet().forEach(concreteField -> {
             final String genericField = genericFieldNames.getOrDefault(concreteField, concreteField);
             if (fieldMap != null)
-                resolvedDimensions.put(concreteField, fieldMap.resolveQueryFieldName(genericField, concreteField));
+                resolvedDimensions.put(concreteField, fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.facet, genericField, concreteField));
             else
                 resolvedDimensions.put(concreteField, genericField);
         }));
@@ -93,7 +94,7 @@ public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
             drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig, baseQuery.getQuery(queryContext));
 
         dimPath.forEach(dimPath -> dimPath.forEach(
-                (dim, path) -> drillDownQuery.add(resolvedDimensions.getOrDefault(dim, dim), path)));
+            (dim, path) -> drillDownQuery.add(resolvedDimensions.getOrDefault(dim, dim), path)));
 
         return drillDownQuery;
     }
@@ -101,7 +102,7 @@ public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
     @Override
     protected boolean isEqual(DrillDownQuery q) {
         if (!Objects.equals(baseQuery, q.baseQuery) || !Objects.equals(genericFieldNames, q.genericFieldNames) ||
-                !Objects.equals(useDrillSideways, q.useDrillSideways))
+            !Objects.equals(useDrillSideways, q.useDrillSideways))
             return false;
         if (dimPath == q.dimPath)
             return true;

@@ -31,16 +31,20 @@ abstract class StorableFieldType extends CustomFieldTypeAbstract {
     }
 
     @Override
-    final void setupFields(Builder<CustomFieldDefinition> builder) {
-        if (getStore(builder.definition)) {
-            builder.fieldProvider(this::newFieldWithStore);
-            builder.storedFieldNameProvider(f -> f);
-        } else
-            builder.fieldProvider(this::newFieldNoStore);
+    final public String getStoredFieldName(String fieldName) {
+        return store ? fieldName : null;
     }
 
-    abstract void newFieldWithStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder);
+    @Override
+    protected final void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+        if (store)
+            newFieldWithStore(fieldName, value, documentBuilder);
+        else
+            newFieldNoStore(fieldName, value, documentBuilder);
+    }
 
-    abstract void newFieldNoStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder);
+    protected abstract void newFieldWithStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder);
+
+    protected abstract void newFieldNoStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder);
 
 }

@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.search.Query;
@@ -25,7 +26,8 @@ public class FloatRangeQuery extends AbstractRangeQuery<Float, FloatRangeQuery> 
 
     @JsonCreator
     public FloatRangeQuery(@JsonProperty("generic_field") final String genericField,
-                           @JsonProperty("field") final String field, @JsonProperty("lower_value") final Float lowerValue,
+                           @JsonProperty("field") final String field,
+                           @JsonProperty("lower_value") final Float lowerValue,
                            @JsonProperty("upper_value") final Float upperValue) {
         super(FloatRangeQuery.class, genericField, field,
             lowerValue == null ? FloatDocValuesRangeQuery.MIN : lowerValue,
@@ -38,6 +40,8 @@ public class FloatRangeQuery extends AbstractRangeQuery<Float, FloatRangeQuery> 
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        return FloatPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value, upper_value);
+        return FloatPoint.newRangeQuery(
+            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point),
+            lowerValue, upperValue);
     }
 }

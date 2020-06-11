@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.search.Query;
@@ -25,7 +26,8 @@ public class IntRangeQuery extends AbstractRangeQuery<Integer, IntRangeQuery> {
 
     @JsonCreator
     public IntRangeQuery(@JsonProperty("generic_field") final String genericField,
-                         @JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
+                         @JsonProperty("field") final String field,
+                         @JsonProperty("lower_value") final Integer lowerValue,
                          @JsonProperty("upper_value") final Integer upperValue) {
         super(IntRangeQuery.class, genericField, field, lowerValue == null ? IntDocValuesRangeQuery.MIN : lowerValue,
             upperValue == null ? IntDocValuesRangeQuery.MAX : upperValue);
@@ -37,6 +39,8 @@ public class IntRangeQuery extends AbstractRangeQuery<Integer, IntRangeQuery> {
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        return IntPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_value, upper_value);
+        return IntPoint.newRangeQuery(
+            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point),
+            lowerValue, upperValue);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,21 +23,21 @@ import org.apache.lucene.document.StoredField;
 
 final class IntPointType extends StorableFieldType {
 
-	IntPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.INT_POINT));
-	}
+    IntPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                 final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+            BytesRefUtils.Converter.INT_POINT));
+    }
 
-	@Override
-	void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
-		final int intValue = FieldUtils.getIntValue(value);
-		consumer.accept(genericFieldName, fieldName, new IntPoint(fieldName, intValue));
-		consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, intValue));
-	}
+    @Override
+    protected void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
+        final int intValue = FieldUtils.getIntValue(value);
+        consumer.accept(genericFieldName, fieldName, new IntPoint(fieldName, intValue));
+        consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, intValue));
+    }
 
-	@Override
-	void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
-		consumer.accept(genericFieldName, fieldName, new IntPoint(fieldName, FieldUtils.getIntValue(value)));
-	}
+    @Override
+    protected void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
+        consumer.accept(genericFieldName, fieldName, new IntPoint(fieldName, FieldUtils.getIntValue(value)));
+    }
 }

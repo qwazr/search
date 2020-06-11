@@ -23,6 +23,7 @@ import org.apache.lucene.facet.taxonomy.FloatAssociationFacetField;
 
 import javax.ws.rs.core.Response;
 import java.util.Objects;
+import org.apache.lucene.index.Term;
 
 final class FloatAssociationFacetType extends CustomFieldTypeAbstract.NoField {
 
@@ -42,5 +43,4 @@ final class FloatAssociationFacetType extends CustomFieldTypeAbstract.NoField {
         final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
         documentBuilder.accept(genericFieldName, fieldName, new FloatAssociationFacetField(assoc, fieldName, path));
     }
-
 }

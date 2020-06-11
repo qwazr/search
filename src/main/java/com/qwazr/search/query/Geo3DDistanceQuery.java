@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.spatial3d.Geo3DPoint;
@@ -60,12 +61,13 @@ public class Geo3DDistanceQuery extends AbstractFieldQuery<Geo3DDistanceQuery> {
     @JsonIgnore
     protected boolean isEqual(final Geo3DDistanceQuery q) {
         return super.isEqual(q) && latitude == q.latitude && longitude == q.longitude &&
-                radiusMeters == q.radiusMeters;
+            radiusMeters == q.radiusMeters;
     }
 
     @Override
     final public Query getQuery(final QueryContext queryContext) {
-        return Geo3DPoint.newDistanceQuery(resolveField(queryContext.getFieldMap()),
-                planetModel.planetModel, latitude, longitude, radiusMeters);
+        return Geo3DPoint.newDistanceQuery(
+            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point),
+            planetModel.planetModel, latitude, longitude, radiusMeters);
     }
 }

@@ -16,31 +16,41 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public abstract class AbstractGeoBoxQuery<T extends AbstractGeoBoxQuery<T>> extends AbstractFieldQuery<T> {
 
-    final public double min_latitude;
+    @JsonProperty("min_latitude")
+    final public double minLatitude;
 
-    final public double max_latitude;
+    @JsonProperty("max_latitude")
+    final public double maxLatitude;
 
-    final public double min_longitude;
+    @JsonProperty("min_longitude")
+    final public double minLongitude;
 
-    final public double max_longitude;
+    @JsonProperty("max_longitude")
+    final public double maxLongitude;
 
-    public AbstractGeoBoxQuery(Class<T> queryClass, final String genericField, final String field,
-                               final double minLatitude, final double maxLatitude, final double minLongitude, final double maxLongitude) {
+    public AbstractGeoBoxQuery(final Class<T> queryClass,
+                               final String genericField,
+                               final String field,
+                               final double minLatitude,
+                               final double maxLatitude,
+                               final double minLongitude,
+                               final double maxLongitude) {
         super(queryClass, genericField, field);
-        this.min_latitude = minLatitude;
-        this.max_latitude = maxLatitude;
-        this.min_longitude = minLongitude;
-        this.max_longitude = maxLongitude;
+        this.minLatitude = minLatitude;
+        this.maxLatitude = maxLatitude;
+        this.minLongitude = minLongitude;
+        this.maxLongitude = maxLongitude;
     }
 
     @Override
     @JsonIgnore
     protected boolean isEqual(T q) {
-        return super.isEqual(q) && min_latitude == q.min_latitude && max_latitude == q.max_latitude &&
-            min_longitude == q.min_longitude && max_longitude == q.max_longitude;
+        return super.isEqual(q) && minLatitude == q.minLatitude && maxLatitude == q.maxLatitude &&
+            minLongitude == q.minLongitude && maxLongitude == q.maxLongitude;
     }
 
 }

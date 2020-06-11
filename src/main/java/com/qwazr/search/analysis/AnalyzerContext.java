@@ -16,6 +16,7 @@
 package com.qwazr.search.analysis;
 
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ClassLoaderUtils;
@@ -61,7 +62,7 @@ public class AnalyzerContext {
 
         fieldMap.forEach((fieldName, fieldType) -> {
             try {
-                final String queryFieldName = fieldType.getQueryFieldName(fieldName);
+                final String queryFieldName = fieldType.getQueryFieldName(FieldTypeInterface.LuceneFieldType.text, fieldName);
                 if (queryFieldName == null)
                     return;
                 final FieldDefinition fieldDefinition = fieldType.getDefinition();
@@ -82,8 +83,7 @@ public class AnalyzerContext {
                         queryAnalyzerMap.put(queryFieldName, analyzer);
                 }
 
-            }
-            catch (ReflectiveOperationException | IOException e) {
+            } catch (ReflectiveOperationException | IOException e) {
                 final String msg = "Analyzer class not known for the field " + fieldName;
                 if (failOnException)
                     throw new ServerException(Response.Status.NOT_ACCEPTABLE, msg, e);

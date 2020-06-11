@@ -30,15 +30,15 @@ final class DoublePointType extends StorableFieldType {
     }
 
     @Override
-    void newFieldNoStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+    protected void newFieldNoStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
         documentBuilder.accept(genericFieldName, fieldName, new DoublePoint(fieldName, FieldUtils.getDoubleValue(value)));
     }
 
     @Override
-    void newFieldWithStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+    protected void newFieldWithStore(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
         final double doubleValue = FieldUtils.getDoubleValue(value);
         documentBuilder.accept(genericFieldName, fieldName, new DoublePoint(fieldName, doubleValue));
         documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, doubleValue));
     }
-
+    
 }

@@ -26,7 +26,13 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
+import javax.validation.constraints.NotNull;
+
 public interface FieldTypeInterface {
+
+    enum LuceneFieldType {
+        text, point, facet, docValue;
+    }
 
     void dispatch(final String fieldName, final Object value, final DocumentBuilder luceneDocumentBuilder);
 
@@ -36,7 +42,8 @@ public interface FieldTypeInterface {
 
     Object toTerm(final BytesRef bytesRef);
 
-    String getQueryFieldName(String fieldName);
+    String getQueryFieldName(@NotNull final LuceneFieldType luceneFieldType,
+                             @NotNull final String fieldName);
 
     String getStoredFieldName(String fieldName);
 
@@ -53,30 +60,6 @@ public interface FieldTypeInterface {
         void config(final String fieldName,
                     final FieldMap fieldMap,
                     final FacetsConfig facetsConfig);
-    }
-
-    @FunctionalInterface
-    interface FieldProvider {
-        void fillValue(final String fieldName,
-                       final Object value,
-                       final DocumentBuilder documentBuilder);
-    }
-
-    @FunctionalInterface
-    interface TermProvider {
-        Term term(final String fieldName,
-                  final Object value);
-    }
-
-    @FunctionalInterface
-    interface FieldNameProvider {
-        String fieldName(final String fieldName);
-    }
-
-    @FunctionalInterface
-    interface SortFieldProvider {
-        SortField sortField(final String fieldName,
-                            final QueryDefinition.SortEnum sortEnum);
     }
 
     @FunctionalInterface

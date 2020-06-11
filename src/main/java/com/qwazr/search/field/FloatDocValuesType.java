@@ -20,19 +20,25 @@ import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.FloatDocValuesField;
+import org.apache.lucene.search.SortField;
 
 final class FloatDocValuesType extends CustomFieldTypeAbstract.OneField {
 
     FloatDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
                        final FieldDefinition definition) {
         super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-                BytesRefUtils.Converter.FLOAT).sortFieldProvider(SortUtils::floatSortField));
+            BytesRefUtils.Converter.FLOAT));
+    }
+
+    final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+        return SortUtils.floatSortField(fieldName, sortEnum);
     }
 
     @Override
-    void newField(String fieldName, Object value, DocumentBuilder consumer) {
+    final protected void newField(String fieldName, Object value, DocumentBuilder consumer) {
         final FloatDocValuesField field;
         if (value instanceof Number)
             field = new FloatDocValuesField(fieldName, ((Number) value).floatValue());
@@ -42,7 +48,7 @@ final class FloatDocValuesType extends CustomFieldTypeAbstract.OneField {
     }
 
     @Override
-    final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
+    final public ValueConverter<?> getConverter(final String fieldName, final MultiReader reader) {
         return new SingleDVConverter.FloatDVConverter(reader, fieldName);
     }
 

@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
@@ -111,13 +112,15 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
 
     protected Map<String, Float> resolvedBoosts(final FieldMap fieldMap) {
         return boosts != null && fieldMap != null ?
-            FieldMap.resolveFieldNames(boosts, new HashMap<>(), fieldMap::resolveQueryFieldName) :
+            FieldMap.resolveFieldNames(boosts, new HashMap<>(),
+                f -> fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, f)) :
             boosts;
     }
 
     protected String[] resolveFields(final FieldMap fieldMap) {
         return fields != null && fieldMap != null ?
-            FieldMap.resolveFieldNames(fields, fieldMap::resolveQueryFieldName) :
+            FieldMap.resolveFieldNames(fields,
+                f -> fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, f)) :
             fields;
     }
 
@@ -125,7 +128,7 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
         return analyzer == null ? queryContext.getQueryAnalyzer() : analyzer;
     }
 
-    public static abstract class AbstractParserBuilder<B extends AbstractParserBuilder, T extends AbstractClassicQueryParser>
+    public static abstract class AbstractParserBuilder<B extends AbstractParserBuilder<B, T>, T extends AbstractClassicQueryParser<T>>
         extends AbstractBuilder<B, T> {
 
         private Set<String> fields;

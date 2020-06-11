@@ -31,10 +31,13 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class SmartFieldDefinition extends FieldDefinition {
 
+    public final static int DEFAULT_MAX_KEYWORD_LENGTH = 2048;
+
     final public Boolean index;
     final public Boolean facet;
     final public Boolean sort;
     final public Boolean stored;
+    final public Integer maxKeywordLength;
 
     public enum Type {
         TEXT, LONG, INTEGER, DOUBLE, FLOAT
@@ -44,6 +47,7 @@ public class SmartFieldDefinition extends FieldDefinition {
     SmartFieldDefinition(@JsonProperty("type") final Type type,
                          @JsonProperty("facet") final Boolean facet,
                          @JsonProperty("index") final Boolean index,
+                         @JsonProperty("max+keyword_length") final Integer maxKeywordLength,
                          @JsonProperty("analyzer") final SmartAnalyzerSet analyzer,
                          @JsonProperty("index_analyzer") final String indexAnalyzer,
                          @JsonProperty("query_analyzer") final String queryAnalyzer,
@@ -59,6 +63,7 @@ public class SmartFieldDefinition extends FieldDefinition {
         this.index = index;
         this.sort = sort;
         this.stored = stored;
+        this.maxKeywordLength = maxKeywordLength;
     }
 
     private SmartFieldDefinition(final SmartBuilder builder) {
@@ -67,6 +72,7 @@ public class SmartFieldDefinition extends FieldDefinition {
         index = builder.index;
         sort = builder.sort;
         stored = builder.stored;
+        maxKeywordLength = builder.maxKeywordLength;
     }
 
     public SmartFieldDefinition(final String fieldName,
@@ -81,6 +87,7 @@ public class SmartFieldDefinition extends FieldDefinition {
         this.index = smartField.index();
         this.sort = smartField.sort();
         this.stored = smartField.stored();
+        this.maxKeywordLength = smartField.maxKeywordLength();
     }
 
     @Override
@@ -117,6 +124,7 @@ public class SmartFieldDefinition extends FieldDefinition {
         public Boolean index;
         public Boolean sort;
         public Boolean stored;
+        public Integer maxKeywordLength;
 
         public SmartBuilder facet(Boolean facet) {
             this.facet = facet;
@@ -135,6 +143,11 @@ public class SmartFieldDefinition extends FieldDefinition {
 
         public SmartBuilder stored(Boolean stored) {
             this.stored = stored;
+            return this;
+        }
+
+        public SmartBuilder maxKeywordLength(Integer maxKeywordLength) {
+            this.maxKeywordLength = maxKeywordLength;
             return this;
         }
 

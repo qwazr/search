@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.document.FloatPoint;
@@ -28,16 +29,19 @@ import java.util.Collection;
 
 public class FloatMultiRangeQuery extends AbstractMultiRangeQuery<FloatMultiRangeQuery> {
 
-    final public float[] lower_values;
-    final public float[] upper_values;
+    @JsonProperty("lower_values")
+    final public float[] lowerValues;
+    @JsonProperty("upper_values")
+    final public float[] upperValues;
 
     @JsonCreator
     public FloatMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("lower_values") final float[] lowerValues,
-            @JsonProperty("upper_values") final float[] upperValues) {
+                                @JsonProperty("field") final String field,
+                                @JsonProperty("lower_values") final float[] lowerValues,
+                                @JsonProperty("upper_values") final float[] upperValues) {
         super(FloatMultiRangeQuery.class, genericField, field);
-        this.lower_values = lowerValues;
-        this.upper_values = upperValues;
+        this.lowerValues = lowerValues;
+        this.upperValues = upperValues;
     }
 
     public FloatMultiRangeQuery(final String field, final float[] lowerValues, final float[] upperValues) {
@@ -45,19 +49,21 @@ public class FloatMultiRangeQuery extends AbstractMultiRangeQuery<FloatMultiRang
     }
 
     public FloatMultiRangeQuery(final String field, final float lowerValue, final float upperValue) {
-        this(field, new float[] { lowerValue }, new float[] { upperValue });
+        this(field, new float[]{lowerValue}, new float[]{upperValue});
     }
 
     @Override
     @JsonIgnore
     protected boolean isEqual(FloatMultiRangeQuery q) {
-        return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
-                Arrays.equals(upper_values, q.upper_values);
+        return super.isEqual(q) && Arrays.equals(lowerValues, q.lowerValues) &&
+            Arrays.equals(upperValues, q.upperValues);
     }
 
     @Override
-    public Query getQuery(final QueryContext queryContext)  {
-        return FloatPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_values, upper_values);
+    public Query getQuery(final QueryContext queryContext) {
+        return FloatPoint.newRangeQuery(
+            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point),
+            lowerValues, upperValues);
     }
 
     public static class Builder extends AbstractBuilder<Float, Builder> {
@@ -73,9 +79,9 @@ public class FloatMultiRangeQuery extends AbstractMultiRangeQuery<FloatMultiRang
 
         @Override
         protected FloatMultiRangeQuery build(final String field, final Collection<Float> lowerValues,
-                final Collection<Float> upperValues) {
+                                             final Collection<Float> upperValues) {
             return new FloatMultiRangeQuery(genericField, field, ArrayUtils.toPrimitiveFloat(lowerValues),
-                    ArrayUtils.toPrimitiveFloat(upperValues));
+                ArrayUtils.toPrimitiveFloat(upperValues));
         }
     }
 

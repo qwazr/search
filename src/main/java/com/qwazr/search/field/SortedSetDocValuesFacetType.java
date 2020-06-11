@@ -37,9 +37,9 @@ final class SortedSetDocValuesFacetType extends StorableFieldType {
     }
 
     @Override
-    void newFieldWithStore(final String fieldName,
-                           final Object value,
-                           final DocumentBuilder documentBuilder) {
+    protected void newFieldWithStore(final String fieldName,
+                                     final Object value,
+                                     final DocumentBuilder documentBuilder) {
         final String stringValue = getStringValue(value);
         if (stringValue == null)
             return;
@@ -48,9 +48,9 @@ final class SortedSetDocValuesFacetType extends StorableFieldType {
     }
 
     @Override
-    void newFieldNoStore(final String fieldName,
-                         final Object value,
-                         final DocumentBuilder documentBuilder) {
+    protected void newFieldNoStore(final String fieldName,
+                                   final Object value,
+                                   final DocumentBuilder documentBuilder) {
         final String stringValue = getStringValue(value);
         if (stringValue != null)
             documentBuilder.accept(genericFieldName, fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));

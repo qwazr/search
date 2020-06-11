@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.search.Query;
@@ -34,7 +35,8 @@ public class SortedSetDocValuesRangeQuery extends AbstractRangeQuery<String, Sor
 
     @JsonCreator
     public SortedSetDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-                                        @JsonProperty("field") final String field, @JsonProperty("lower_value") final String lowerValue,
+                                        @JsonProperty("field") final String field,
+                                        @JsonProperty("lower_value") final String lowerValue,
                                         @JsonProperty("upper_value") final String upperValue,
                                         @JsonProperty("lower_inclusive") final Boolean lowerInclusive,
                                         @JsonProperty("upper_inclusive") final Boolean upperInclusive) {
@@ -52,7 +54,8 @@ public class SortedSetDocValuesRangeQuery extends AbstractRangeQuery<String, Sor
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        return SortedSetDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()),
-            new BytesRef(lower_value), new BytesRef(upper_value), lowerInclusive, upperInclusive);
+        return SortedSetDocValuesField.newSlowRangeQuery(
+            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.docValue),
+            new BytesRef(lowerValue), new BytesRef(upperValue), lowerInclusive, upperInclusive);
     }
 }

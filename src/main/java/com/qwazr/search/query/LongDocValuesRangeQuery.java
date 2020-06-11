@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.search.Query;
@@ -40,7 +41,8 @@ public class LongDocValuesRangeQuery extends AbstractRangeQuery<Long, LongDocVal
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        return NumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()), lower_value,
-            upper_value);
+        return NumericDocValuesField.newSlowRangeQuery(
+            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.docValue),
+            lowerValue, upperValue);
     }
 }

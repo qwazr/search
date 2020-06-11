@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
@@ -63,7 +64,7 @@ abstract class FacetsBuilder {
         this.sortedSetFacetField = queryContext.fieldMap.getSortedSetFacetField();
         this.resolvedDimensions = new HashMap<>();
         getFields(facetsDef).forEach((concrete, generic) -> resolvedDimensions.put(concrete,
-            queryContext.fieldMap.resolveQueryFieldName(generic, concrete)));
+            queryContext.fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.facet, generic, concrete)));
         this.searchQuery = searchQuery;
         this.timeTracker = timeTracker;
     }

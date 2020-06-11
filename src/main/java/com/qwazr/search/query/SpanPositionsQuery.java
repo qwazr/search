@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -35,57 +36,57 @@ import java.util.Objects;
 
 public class SpanPositionsQuery extends AbstractFieldQuery<SpanPositionsQuery> {
 
-	final public Integer distance;
-	final public String query_string;
+    final public Integer distance;
+    final public String query_string;
 
-	@JsonCreator
-	public SpanPositionsQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("distance") final Integer distance,
-			@JsonProperty("query_string") final String queryString) {
-		super(SpanPositionsQuery.class, genericField, field);
-		this.distance = distance;
-		this.query_string = queryString;
-	}
+    @JsonCreator
+    public SpanPositionsQuery(@JsonProperty("generic_field") final String genericField,
+                              @JsonProperty("field") final String field, @JsonProperty("distance") final Integer distance,
+                              @JsonProperty("query_string") final String queryString) {
+        super(SpanPositionsQuery.class, genericField, field);
+        this.distance = distance;
+        this.query_string = queryString;
+    }
 
-	public SpanPositionsQuery(final String field, final Integer distance, final String queryString) {
-		this(null, field, distance, queryString);
-	}
+    public SpanPositionsQuery(final String field, final Integer distance, final String queryString) {
+        this(null, field, distance, queryString);
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(final SpanPositionsQuery q) {
-		return super.isEqual(q) && Objects.equals(distance, q.distance) && Objects.equals(query_string, q.query_string);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(final SpanPositionsQuery q) {
+        return super.isEqual(q) && Objects.equals(distance, q.distance) && Objects.equals(query_string, q.query_string);
+    }
 
-	@Override
-	@JsonIgnore
-	final public Query getQuery(final QueryContext queryContext) throws IOException {
+    @Override
+    @JsonIgnore
+    final public Query getQuery(final QueryContext queryContext) throws IOException {
 
-		final BooleanQuery.Builder builder = new BooleanQuery.Builder();
-		final String resolvedField = resolveField(queryContext.getFieldMap());
-		try (final TokenStream tokenStream = queryContext.getQueryAnalyzer().tokenStream(resolvedField, query_string)) {
-			final CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
-			final PositionIncrementAttribute pocincrAttribute =
-					tokenStream.getAttribute(PositionIncrementAttribute.class);
-			tokenStream.reset();
-			int pos = 0;
-			while (tokenStream.incrementToken()) {
-				final String charTerm = charTermAttribute.toString();
-				int start = pos - distance;
-				if (start < 0)
-					start = 0;
-				final int end = pos + distance + 1;
-				for (int i = start; i < end; i++) {
-					final float dist = Math.abs(i - pos) + 1;
-					final float boost = 1 / dist;
-					final SpanTermQuery spanTermQuery = new SpanTermQuery(new Term(resolvedField, charTerm));
-					Query query = new BoostQuery(new SpanPositionRangeQuery(spanTermQuery, i, i + 1), boost);
-					builder.add(new BooleanClause(query, BooleanClause.Occur.SHOULD));
-				}
-				pos += pocincrAttribute.getPositionIncrement();
-			}
-			return builder.build();
-		}
-	}
+        final BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        final String resolvedField = resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.text);
+        try (final TokenStream tokenStream = queryContext.getQueryAnalyzer().tokenStream(resolvedField, query_string)) {
+            final CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
+            final PositionIncrementAttribute pocincrAttribute =
+                tokenStream.getAttribute(PositionIncrementAttribute.class);
+            tokenStream.reset();
+            int pos = 0;
+            while (tokenStream.incrementToken()) {
+                final String charTerm = charTermAttribute.toString();
+                int start = pos - distance;
+                if (start < 0)
+                    start = 0;
+                final int end = pos + distance + 1;
+                for (int i = start; i < end; i++) {
+                    final float dist = Math.abs(i - pos) + 1;
+                    final float boost = 1 / dist;
+                    final SpanTermQuery spanTermQuery = new SpanTermQuery(new Term(resolvedField, charTerm));
+                    Query query = new BoostQuery(new SpanPositionRangeQuery(spanTermQuery, i, i + 1), boost);
+                    builder.add(new BooleanClause(query, BooleanClause.Occur.SHOULD));
+                }
+                pos += pocincrAttribute.getPositionIncrement();
+            }
+            return builder.build();
+        }
+    }
 
 }

@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.search.Query;
@@ -29,7 +30,8 @@ public class FloatDocValuesRangeQuery extends AbstractRangeQuery<Float, FloatDoc
 
     @JsonCreator
     public FloatDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-                                    @JsonProperty("field") final String field, @JsonProperty("lower_value") final Float lowerValue,
+                                    @JsonProperty("field") final String field,
+                                    @JsonProperty("lower_value") final Float lowerValue,
                                     @JsonProperty("upper_value") final Float upperValue) {
         super(FloatDocValuesRangeQuery.class, genericField, field, lowerValue == null ? MIN : lowerValue,
             upperValue == null ? MAX : upperValue);
@@ -41,7 +43,8 @@ public class FloatDocValuesRangeQuery extends AbstractRangeQuery<Float, FloatDoc
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        return NumericDocValuesField.newSlowRangeQuery(resolveField(queryContext.getFieldMap()),
-            NumericUtils.floatToSortableInt(lower_value), NumericUtils.floatToSortableInt(upper_value));
+        return NumericDocValuesField.newSlowRangeQuery(
+            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.docValue),
+            NumericUtils.floatToSortableInt(lowerValue), NumericUtils.floatToSortableInt(upperValue));
     }
 }

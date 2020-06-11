@@ -34,7 +34,7 @@ final class SortedSetDocValuesType extends CustomFieldTypeAbstract.OneField {
     }
 
     @Override
-    final void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+    final public void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
         final Field field;
         if (value instanceof BytesRef)
             field = new SortedSetDocValuesField(fieldName, (BytesRef) value);

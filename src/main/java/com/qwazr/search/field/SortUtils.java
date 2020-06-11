@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -182,7 +182,7 @@ public class SortUtils {
             return new SortField(null, SortField.Type.DOC, sortReverse(sortEnum));
 
         // Let's check if the field exists and supports sorting
-        final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName, null);
+        final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
         if (fieldType == null)
             throw new IllegalArgumentException("Unknown sort field: " + fieldName);
         final SortField sortField = fieldType.getSortField(fieldName, sortEnum);

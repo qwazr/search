@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.document.IntPoint;
@@ -28,16 +29,19 @@ import java.util.Collection;
 
 public class IntMultiRangeQuery extends AbstractMultiRangeQuery<IntMultiRangeQuery> {
 
-    final public int[] lower_values;
-    final public int[] upper_values;
+    @JsonProperty("lower_values")
+    final public int[] lowerValues;
+    @JsonProperty("upper_values")
+    final public int[] upperValues;
 
     @JsonCreator
     public IntMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
-                              @JsonProperty("field") final String field, @JsonProperty("lower_values") final int[] lowerValues,
+                              @JsonProperty("field") final String field,
+                              @JsonProperty("lower_values") final int[] lowerValues,
                               @JsonProperty("upper_values") final int[] upperValues) {
         super(IntMultiRangeQuery.class, genericField, field);
-        this.lower_values = lowerValues;
-        this.upper_values = upperValues;
+        this.lowerValues = lowerValues;
+        this.upperValues = upperValues;
     }
 
     public IntMultiRangeQuery(final String field, final int[] lowerValues, final int[] upperValues) {
@@ -51,13 +55,15 @@ public class IntMultiRangeQuery extends AbstractMultiRangeQuery<IntMultiRangeQue
     @Override
     @JsonIgnore
     protected boolean isEqual(IntMultiRangeQuery q) {
-        return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
-            Arrays.equals(upper_values, q.upper_values);
+        return super.isEqual(q) && Arrays.equals(lowerValues, q.lowerValues) &&
+            Arrays.equals(upperValues, q.upperValues);
     }
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        return IntPoint.newRangeQuery(resolveField(queryContext.getFieldMap()), lower_values, upper_values);
+        return IntPoint.newRangeQuery(
+            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point),
+            lowerValues, upperValues);
     }
 
     public static class Builder extends AbstractBuilder<Integer, Builder> {

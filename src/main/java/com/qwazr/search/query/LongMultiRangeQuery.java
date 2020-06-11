@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import org.apache.lucene.document.LongPoint;
@@ -28,16 +29,19 @@ import java.util.Collection;
 
 public class LongMultiRangeQuery extends AbstractMultiRangeQuery<LongMultiRangeQuery> {
 
-    final public long[] lower_values;
-    final public long[] upper_values;
+    @JsonProperty("lower_values")
+    final public long[] lowerValues;
+    @JsonProperty("upper_values")
+    final public long[] upperValues;
 
     @JsonCreator
     public LongMultiRangeQuery(@JsonProperty("generic_field") final String genericField,
-                               @JsonProperty("field") final String field, @JsonProperty("lower_values") final long[] lowerValues,
+                               @JsonProperty("field") final String field,
+                               @JsonProperty("lower_values") final long[] lowerValues,
                                @JsonProperty("upper_values") final long[] upperValues) {
         super(LongMultiRangeQuery.class, genericField, field);
-        this.lower_values = lowerValues;
-        this.upper_values = upperValues;
+        this.lowerValues = lowerValues;
+        this.upperValues = upperValues;
     }
 
     public LongMultiRangeQuery(final String field, final long lowerValue, final long upperValue) {
@@ -47,17 +51,17 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery<LongMultiRangeQ
     @Override
     @JsonIgnore
     protected boolean isEqual(LongMultiRangeQuery q) {
-        return super.isEqual(q) && Arrays.equals(lower_values, q.lower_values) &&
-            Arrays.equals(upper_values, q.upper_values);
+        return super.isEqual(q) && Arrays.equals(lowerValues, q.lowerValues) &&
+            Arrays.equals(upperValues, q.upperValues);
     }
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        final String resolvedField = resolveField(queryContext.getFieldMap());
-        if (lower_values.length == 1)
-            return LongPoint.newRangeQuery(resolvedField, lower_values[0], upper_values[0]);
+        final String resolvedField = resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point);
+        if (lowerValues.length == 1)
+            return LongPoint.newRangeQuery(resolvedField, lowerValues[0], upperValues[0]);
         else
-            return LongPoint.newRangeQuery(resolvedField, lower_values, upper_values);
+            return LongPoint.newRangeQuery(resolvedField, lowerValues, upperValues);
     }
 
     public static class Builder extends AbstractBuilder<Long, Builder> {

@@ -17,23 +17,47 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
+import javax.validation.constraints.NotNull;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
 
 import java.io.Externalizable;
 import java.io.Serializable;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.SortField;
 
 final class StoredFieldType extends CustomFieldTypeAbstract.OneField {
 
     StoredFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
                     final FieldDefinition definition) {
         super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.STRING).storedFieldNameProvider(f -> f));
+            BytesRefUtils.Converter.STRING));
+    }
+
+    final public String getStoredFieldName(String fieldName) {
+        return fieldName;
     }
 
     @Override
-    final void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+    public Term term(String fieldName, Object value) {
+        return null;
+    }
+
+    @Override
+    public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+        return null;
+    }
+
+    @Override
+    final public String getQueryFieldName(@NotNull final LuceneFieldType luceneFieldType,
+                                          @NotNull final String fieldName) {
+        return null;
+    }
+
+    @Override
+    final public void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
         final Field field;
         final byte[] bytes;
         if (value instanceof String)

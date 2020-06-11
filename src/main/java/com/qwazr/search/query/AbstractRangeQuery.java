@@ -16,14 +16,17 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.net.URI;
 import java.util.Objects;
 
 public abstract class AbstractRangeQuery<V, T extends AbstractRangeQuery<V, T>> extends AbstractFieldQuery<T> {
 
-    final public V lower_value;
-    final public V upper_value;
+    @JsonProperty("lower_value")
+    final public V lowerValue;
+    @JsonProperty("upper_value")
+    final public V upperValue;
 
     protected AbstractRangeQuery(final Class<T> queryClass,
                                  final String genericField,
@@ -31,8 +34,8 @@ public abstract class AbstractRangeQuery<V, T extends AbstractRangeQuery<V, T>> 
                                  final V lowerValue,
                                  final V upperValue) {
         super(queryClass, genericField, field);
-        this.lower_value = lowerValue;
-        this.upper_value = upperValue;
+        this.lowerValue = lowerValue;
+        this.upperValue = upperValue;
     }
 
     protected AbstractRangeQuery(final Class<T> queryClass,
@@ -42,16 +45,16 @@ public abstract class AbstractRangeQuery<V, T extends AbstractRangeQuery<V, T>> 
                                  final V lowerValue,
                                  final V upperValue) {
         super(queryClass, docUri, genericField, field);
-        this.lower_value = lowerValue;
-        this.upper_value = upperValue;
+        this.lowerValue = lowerValue;
+        this.upperValue = upperValue;
     }
 
 
     @JsonIgnore
     @Override
     final protected boolean isEqual(T q) {
-        return super.isEqual(q) && Objects.equals(lower_value, q.lower_value) &&
-            Objects.equals(upper_value, q.upper_value);
+        return super.isEqual(q) && Objects.equals(lowerValue, q.lowerValue) &&
+            Objects.equals(upperValue, q.upperValue);
     }
 
 }

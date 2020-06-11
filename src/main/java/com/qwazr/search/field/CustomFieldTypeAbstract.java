@@ -16,6 +16,10 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.QueryDefinition;
+import javax.validation.constraints.NotNull;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.SortField;
 
 abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefinition> {
 
@@ -24,9 +28,32 @@ abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefi
     }
 
     @Override
-    final Builder<CustomFieldDefinition> setup(Builder<CustomFieldDefinition> builder) {
+    public String getQueryFieldName(@NotNull final LuceneFieldType luceneFieldType,
+                                    @NotNull final String fieldName) {
+        return fieldName;
+    }
 
-        // Setup facets
+    public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+        return null;
+    }
+
+    @Override
+    protected void newField(String fieldName, Object value, DocumentBuilder documentBuilder) {
+
+    }
+
+    @Override
+    public String getStoredFieldName(String fieldName) {
+        return null;
+    }
+
+    @Override
+    public Term term(String fieldName, Object value) {
+        return null;
+    }
+
+    @Override
+    final protected void prepareFacet(final Builder<CustomFieldDefinition> builder) {
         if (builder.definition.facetMultivalued != null)
             builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setMultiValued(fieldName,
                 builder.definition.facetMultivalued)));
@@ -36,17 +63,7 @@ abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefi
         if (builder.definition.facetRequireDimCount != null)
             builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setRequireDimCount(fieldName,
                 builder.definition.facetRequireDimCount)));
-
-        setupFields(builder);
-        if (builder.definition.stored != null && builder.definition.stored)
-            builder.storedFieldNameProvider(f -> f);
-
-        builder.queryFieldNameProvider(f -> f);
-
-        return builder;
     }
-
-    abstract void setupFields(Builder<CustomFieldDefinition> builder);
 
     static abstract class OneField extends CustomFieldTypeAbstract {
 
@@ -54,24 +71,15 @@ abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefi
             super(builder);
         }
 
-        @Override
-        final void setupFields(Builder<CustomFieldDefinition> builder) {
-            builder.fieldProvider(this::newField);
-        }
-
-        abstract void newField(final String fieldName,
-                               final Object value,
-                               final DocumentBuilder documentBuilder);
+        protected abstract void newField(final String fieldName,
+                                         final Object value,
+                                         final DocumentBuilder documentBuilder);
     }
 
     static abstract class NoField extends CustomFieldTypeAbstract {
 
         protected NoField(Builder<CustomFieldDefinition> builder) {
             super(builder);
-        }
-
-        @Override
-        final void setupFields(Builder<CustomFieldDefinition> builder) {
         }
 
     }

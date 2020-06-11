@@ -20,31 +20,37 @@ import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.DoubleDocValuesField;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.search.SortField;
 
 final class DoubleDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	DoubleDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.DOUBLE).sortFieldProvider(SortUtils::doubleSortField));
-	}
+    DoubleDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                        final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+            BytesRefUtils.Converter.DOUBLE));
+    }
 
-	@Override
-	final protected void newField(final String fieldName, final Object value, final DocumentBuilder consumer) {
-		final Field field;
-		if (value instanceof Number)
-			field = new DoubleDocValuesField(fieldName, ((Number) value).doubleValue());
-		else
-			field = new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString()));
-		consumer.accept(genericFieldName, fieldName, field);
-	}
+    final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+        return SortUtils.doubleSortField(fieldName, sortEnum);
+    }
 
-	@Override
-	final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
-		return new SingleDVConverter.DoubleDVConverter(reader, fieldName);
-	}
+    @Override
+    final protected void newField(final String fieldName, final Object value, final DocumentBuilder consumer) {
+        final Field field;
+        if (value instanceof Number)
+            field = new DoubleDocValuesField(fieldName, ((Number) value).doubleValue());
+        else
+            field = new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString()));
+        consumer.accept(genericFieldName, fieldName, field);
+    }
+
+    @Override
+    final public ValueConverter<?> getConverter(final String fieldName, final MultiReader reader) {
+        return new SingleDVConverter.DoubleDVConverter(reader, fieldName);
+    }
 
 }

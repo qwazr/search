@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,22 +23,22 @@ import org.apache.lucene.document.StoredField;
 
 final class FloatPointType extends StorableFieldType {
 
-	FloatPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.FLOAT_POINT));
-	}
+    FloatPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                   final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+            BytesRefUtils.Converter.FLOAT_POINT));
+    }
 
-	@Override
-	void newFieldNoStore(final String fieldName, final Object value, final DocumentBuilder consumer) {
-		consumer.accept(genericFieldName, fieldName, new FloatPoint(fieldName, FieldUtils.getFloatValue(value)));
-	}
+    @Override
+    final protected void newFieldNoStore(final String fieldName, final Object value, final DocumentBuilder consumer) {
+        consumer.accept(genericFieldName, fieldName, new FloatPoint(fieldName, FieldUtils.getFloatValue(value)));
+    }
 
-	@Override
-	void newFieldWithStore(final String fieldName, final Object value, final DocumentBuilder consumer) {
-		final float floatValue = FieldUtils.getFloatValue(value);
-		consumer.accept(genericFieldName, fieldName, new FloatPoint(fieldName, floatValue));
-		consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, floatValue));
-	}
+    @Override
+    final protected void newFieldWithStore(final String fieldName, final Object value, final DocumentBuilder consumer) {
+        final float floatValue = FieldUtils.getFloatValue(value);
+        consumer.accept(genericFieldName, fieldName, new FloatPoint(fieldName, floatValue));
+        consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, floatValue));
+    }
 
 }

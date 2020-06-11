@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
@@ -121,7 +122,8 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
         final FieldMap fieldMap = queryContext.getFieldMap();
 
         final Map<String, Float> resolvedBoosts = fieldMap == null || weights == null ? weights
-            : FieldMap.resolveFieldNames(weights, new HashMap<>(), fieldMap::resolveQueryFieldName);
+            : FieldMap.resolveFieldNames(weights, new HashMap<>(),
+            f -> fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, f));
 
         final int fl = flags == -2 ? computeTag() : flags;
 

@@ -18,15 +18,12 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
 import javax.ws.rs.core.Response;
@@ -42,33 +39,21 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     final protected T definition;
     final protected BytesRefUtils.Converter<?> bytesRefConverter;
     final private FieldTypeInterface.Facet[] facetConfig;
-    final private FieldTypeInterface.FieldProvider[] fieldProviders;
-    final private TermProvider termProvider;
-    final private FieldNameProvider storedFieldNameProvider;
-    final private FieldNameProvider queryFieldNameProvider;
-    final private SortFieldProvider sortFieldProvider;
     final private Map<FieldTypeInterface, String> copyToFields;
 
     protected FieldTypeAbstract(final Builder<T> builder) {
         this.genericFieldName = builder.genericFieldName;
         this.wildcardMatcher = builder.wildcardMatcher;
         this.definition = builder.definition;
-        setup(builder);
         this.bytesRefConverter = builder.bytesRefConverter;
+        prepareFacet(builder);
         this.facetConfig = builder.facetConfig == null || builder.facetConfig.isEmpty() ?
             null :
             builder.facetConfig.toArray(new Facet[0]);
-        this.fieldProviders = builder.fieldProviders == null || builder.fieldProviders.isEmpty() ?
-            null :
-            builder.fieldProviders.toArray(new FieldProvider[0]);
-        this.termProvider = builder.termProvider;
-        this.storedFieldNameProvider = builder.storedFieldNameProvider;
-        this.queryFieldNameProvider = builder.queryFieldNameProvider;
-        this.sortFieldProvider = builder.sortFieldProvider;
         this.copyToFields = new LinkedHashMap<>();
     }
 
-    abstract Builder<T> setup(Builder<T> builder);
+    protected abstract void prepareFacet(final Builder<T> builder);
 
     public final void setFacetsConfig(final String fieldName, final FieldMap fieldMap,
                                       final FacetsConfig facetsConfig) {
@@ -77,40 +62,9 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
                 config.config(fieldName, fieldMap, facetsConfig);
     }
 
-    public final Term term(String fieldName, Object value) {
-        if (termProvider != null)
-            return termProvider.term(fieldName, value);
-        else
-            throw new ServerException("Term not supported by the field: " + fieldName);
-    }
-
     @Override
     public ValueConverter<?> getConverter(String fieldName, MultiReader reader) {
         return null;
-    }
-
-    @Override
-    public final String getStoredFieldName(final String fieldName) {
-        if (storedFieldNameProvider != null)
-            return storedFieldNameProvider.fieldName(fieldName);
-        else
-            return null;
-    }
-
-    @Override
-    public final String getQueryFieldName(final String fieldName) {
-        if (queryFieldNameProvider != null)
-            return queryFieldNameProvider.fieldName(fieldName);
-        else
-            return null;
-    }
-
-    @Override
-    public final SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-        if (sortFieldProvider != null)
-            return sortFieldProvider.sortField(fieldName, sortEnum);
-        else
-            return null;
     }
 
     @Override
@@ -198,7 +152,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         else if (value instanceof float[])
             fillArray(fieldName, (float[]) value, documentBuilder);
         else if (value instanceof Byte[])
-            fillValue(fieldName, ArrayUtils.toPrimitive((Byte[]) value), documentBuilder);
+            newField(fieldName, ArrayUtils.toPrimitive((Byte[]) value), documentBuilder);
         else if (value instanceof Object[])
             fillArray(fieldName, (Object[]) value, documentBuilder);
         else if (value instanceof Collection)
@@ -206,16 +160,12 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         else if (value instanceof Map)
             fillMap(fieldName, (Map) value, documentBuilder);
         else
-            fillValue(fieldName, value, documentBuilder);
+            newField(fieldName, value, documentBuilder);
     }
 
-    final protected void fillValue(final String fieldName,
-                                   final Object value,
-                                   final DocumentBuilder documentBuilder) {
-        if (fieldProviders != null)
-            for (FieldProvider fieldProvider : fieldProviders)
-                fieldProvider.fillValue(fieldName, value, documentBuilder);
-    }
+    abstract protected void newField(final String fieldName,
+                                     final Object value,
+                                     final DocumentBuilder documentBuilder);
 
     @Override
     final public void dispatch(final String fieldName,
@@ -250,11 +200,6 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         private final WildcardMatcher wildcardMatcher;
         private BytesRefUtils.Converter<?> bytesRefConverter;
         private LinkedHashSet<Facet> facetConfig;
-        private LinkedHashSet<FieldProvider> fieldProviders;
-        private TermProvider termProvider;
-        private FieldNameProvider storedFieldNameProvider;
-        private FieldNameProvider queryFieldNameProvider;
-        private SortFieldProvider sortFieldProvider;
 
         Builder(String genericFieldName, WildcardMatcher wildcardMatcher, T definition) {
             this.genericFieldName = genericFieldName;
@@ -271,33 +216,6 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
             if (this.facetConfig == null)
                 this.facetConfig = new LinkedHashSet<>();
             this.facetConfig.add(facetConfig);
-            return this;
-        }
-
-        Builder<T> fieldProvider(FieldTypeInterface.FieldProvider fieldProvider) {
-            if (this.fieldProviders == null)
-                this.fieldProviders = new LinkedHashSet<>();
-            this.fieldProviders.add(fieldProvider);
-            return this;
-        }
-
-        Builder<T> termProvider(FieldTypeInterface.TermProvider termProvider) {
-            this.termProvider = termProvider;
-            return this;
-        }
-
-        Builder<T> storedFieldNameProvider(FieldTypeInterface.FieldNameProvider fieldNameProvider) {
-            this.storedFieldNameProvider = fieldNameProvider;
-            return this;
-        }
-
-        Builder<T> queryFieldNameProvider(FieldTypeInterface.FieldNameProvider fieldNameProvider) {
-            this.queryFieldNameProvider = fieldNameProvider;
-            return this;
-        }
-
-        Builder<T> sortFieldProvider(FieldTypeInterface.SortFieldProvider sortFieldProvider) {
-            this.sortFieldProvider = sortFieldProvider;
             return this;
         }
 

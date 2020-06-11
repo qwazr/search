@@ -180,7 +180,7 @@ final public class IndexInstance implements Closeable {
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 final Terms terms = MultiTerms.getTerms(indexSearcher.getIndexReader(), fieldName);
-                return terms == null ? new FieldStats() : new FieldStats(terms, fieldMap.getFieldType(null, fieldName, null));
+                return terms == null ? new FieldStats() : new FieldStats(terms, fieldMap.getFieldType(null, fieldName));
             });
         }
     }
@@ -581,7 +581,7 @@ final public class IndexInstance implements Closeable {
         Objects.requireNonNull(fieldName, "The field name is missing - Index: " + indexName);
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
-                final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName, null);
+                final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
                 if (fieldType == null)
                     throw new ServerException(Response.Status.NOT_FOUND,
                         "Field not found: " + fieldName + " - Index: " + indexName);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -27,58 +28,58 @@ import java.util.Objects;
 
 public class QueryParser extends AbstractClassicQueryParser<QueryParser> {
 
-	@JsonProperty("default_field")
-	public final String defaulField;
+    @JsonProperty("default_field")
+    public final String defaulField;
 
-	@JsonCreator
-	private QueryParser(@JsonProperty("default_field") String defaulField) {
-		super(QueryParser.class);
-		this.defaulField = defaulField;
-	}
+    @JsonCreator
+    private QueryParser(@JsonProperty("default_field") String defaulField) {
+        super(QueryParser.class);
+        this.defaulField = defaulField;
+    }
 
-	private QueryParser(Builder builder) {
-		super(QueryParser.class, builder);
-		this.defaulField = builder.defaulField;
-	}
+    private QueryParser(Builder builder) {
+        super(QueryParser.class, builder);
+        this.defaulField = builder.defaulField;
+    }
 
-	@JsonIgnore
-	@Override
-	protected boolean isEqual(QueryParser q) {
-		return super.isEqual(q) && Objects.equals(defaulField, q.defaulField);
-	}
+    @JsonIgnore
+    @Override
+    protected boolean isEqual(QueryParser q) {
+        return super.isEqual(q) && Objects.equals(defaulField, q.defaulField);
+    }
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext) throws ParseException {
-		final FieldMap fieldMap = queryContext.getFieldMap();
-		final org.apache.lucene.queryparser.classic.QueryParser parser =
-				new org.apache.lucene.queryparser.classic.QueryParser(
-						AbstractFieldQuery.resolveField(fieldMap, defaulField, defaulField),
-						resolveAnalyzer(queryContext));
-		setParserParameters(parser);
-		return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
-	}
+    @Override
+    final public Query getQuery(final QueryContext queryContext) throws ParseException {
+        final FieldMap fieldMap = queryContext.getFieldMap();
+        final org.apache.lucene.queryparser.classic.QueryParser parser =
+            new org.apache.lucene.queryparser.classic.QueryParser(
+                AbstractFieldQuery.resolveField(fieldMap, FieldTypeInterface.LuceneFieldType.text, defaulField, defaulField),
+                resolveAnalyzer(queryContext));
+        setParserParameters(parser);
+        return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
+    }
 
-	public static Builder of(String defaulField) {
-		return new Builder().setDefaultField(defaulField);
-	}
+    public static Builder of(String defaulField) {
+        return new Builder().setDefaultField(defaulField);
+    }
 
-	public static class Builder extends AbstractParserBuilder<Builder, QueryParser> {
+    public static class Builder extends AbstractParserBuilder<Builder, QueryParser> {
 
-		private String defaulField;
+        private String defaulField;
 
-		protected Builder() {
-			super(Builder.class);
-		}
+        protected Builder() {
+            super(Builder.class);
+        }
 
-		@Override
-		public QueryParser build() {
-			return new QueryParser(this);
-		}
+        @Override
+        public QueryParser build() {
+            return new QueryParser(this);
+        }
 
-		public Builder setDefaultField(String defaulField) {
-			this.defaulField = defaulField;
-			return this;
-		}
+        public Builder setDefaultField(String defaulField) {
+            this.defaulField = defaulField;
+            return this;
+        }
 
-	}
+    }
 }

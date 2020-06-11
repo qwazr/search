@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Emmanuel Keller / QWAZR
+ * Copyright 2016-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.Query;
@@ -40,7 +41,7 @@ final class HighlighterImpl extends UnifiedHighlighter {
     private final String[] storedFields;
 
     HighlighterImpl(final String highlightName, final HighlighterDefinition definition,
-            final QueryContextImpl queryContext) {
+                    final QueryContextImpl queryContext) {
         super(queryContext.indexSearcher, queryContext.queryAnalyzers);
         if (definition.maxLength != null)
             setMaxLength(definition.maxLength);
@@ -51,8 +52,8 @@ final class HighlighterImpl extends UnifiedHighlighter {
         this.definition = definition;
         final String field = definition.field == null ? highlightName : definition.field;
         final String storedField = definition.storedField == null ? field : definition.storedField;
-        this.indexFields = new String[] { queryContext.fieldMap.resolveQueryFieldName(field, field) };
-        this.storedFields = new String[] { queryContext.fieldMap.resolveStoredFieldName(storedField) };
+        this.indexFields = new String[]{queryContext.fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, field, field)};
+        this.storedFields = new String[]{queryContext.fieldMap.resolveStoredFieldName(storedField)};
         if (definition.breakIterator != null && definition.breakIterator.language != null)
             locale = Locale.forLanguageTag(definition.breakIterator.language);
         else
@@ -60,16 +61,16 @@ final class HighlighterImpl extends UnifiedHighlighter {
     }
 
     protected List<CharSequence[]> loadFieldValues(String[] fields, DocIdSetIterator docIter, int cacheCharsThreshold)
-            throws IOException {
+        throws IOException {
         return super.loadFieldValues(storedFields, docIter, cacheCharsThreshold);
     }
 
     @Override
     protected PassageFormatter getFormatter(String field) {
         return new DefaultPassageFormatter(definition.preTag == null ? "<b>" : definition.preTag,
-                definition.postTag == null ? "</b>" : definition.postTag,
-                definition.ellipsis == null ? "… " : definition.ellipsis,
-                definition.escape == null ? false : definition.escape);
+            definition.postTag == null ? "</b>" : definition.postTag,
+            definition.ellipsis == null ? "… " : definition.ellipsis,
+            definition.escape == null ? false : definition.escape);
     }
 
     @Override
@@ -77,22 +78,22 @@ final class HighlighterImpl extends UnifiedHighlighter {
         if (definition.breakIterator == null)
             return new WholeBreakIterator();
         switch (definition.breakIterator.type) {
-        case character:
-            return BreakIterator.getCharacterInstance(locale);
-        case word:
-            return BreakIterator.getWordInstance(locale);
-        case line:
-            return BreakIterator.getLineInstance(locale);
-        default:
-        case sentence:
-            return BreakIterator.getSentenceInstance(locale);
+            case character:
+                return BreakIterator.getCharacterInstance(locale);
+            case word:
+                return BreakIterator.getWordInstance(locale);
+            case line:
+                return BreakIterator.getLineInstance(locale);
+            default:
+            case sentence:
+                return BreakIterator.getSentenceInstance(locale);
         }
     }
 
     final String[] highlights(final Query query, final TopDocs topDocs) throws IOException {
         final String[] highlights = highlightFields(indexFields, query, topDocs,
-                definition.maxPassages == null ? new int[] { 1 } : new int[] { definition.maxPassages }).get(
-                indexFields[0]);
+            definition.maxPassages == null ? new int[]{1} : new int[]{definition.maxPassages}).get(
+            indexFields[0]);
         int i = 0;
         for (final String highlight : highlights) {
             final String[] parts = StringUtils.split(highlight, MULTIVAL_SEP_CHAR);

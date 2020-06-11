@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,43 @@
  */
 package com.qwazr.search.field;
 
-final public class CopyToFieldType extends FieldTypeAbstract {
+import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.QueryDefinition;
+import javax.validation.constraints.NotNull;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.SortField;
 
-	public CopyToFieldType() {
-		super(of(null, null, null));
-	}
+final public class CopyToFieldType extends FieldTypeAbstract<FieldDefinition> {
 
-	@Override
-	final Builder setup(Builder builder) {
-		return builder.fieldProvider((f, v, c) -> {
-		});
-	}
+    public CopyToFieldType() {
+        super(of(null, null, null));
+    }
 
+    @Override
+    protected void prepareFacet(Builder<FieldDefinition> builder) {
+    }
+
+    @Override
+    protected void newField(String fieldName, Object value, DocumentBuilder documentBuilder) {
+    }
+
+    @Override
+    public SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
+        return null;
+    }
+
+    @Override
+    public String getQueryFieldName(@NotNull LuceneFieldType luceneFieldType, @NotNull String fieldName) {
+        return null;
+    }
+
+    @Override
+    public String getStoredFieldName(String fieldName) {
+        return null;
+    }
+
+    @Override
+    public Term term(String fieldName, Object value) {
+        return null;
+    }
 }

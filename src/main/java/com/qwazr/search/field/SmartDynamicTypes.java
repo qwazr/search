@@ -15,15 +15,37 @@
  */
 package com.qwazr.search.field;
 
+import com.qwazr.search.analysis.SmartAnalyzerSet;
 import com.qwazr.utils.StringUtils;
 
 public class SmartDynamicTypes {
 
+    final static SmartFieldType doNothingType = new SmartFieldType(null, null,
+        SmartFieldDefinition.of().build());
+
+    final static SmartFieldDefinition defaultNumericDefinition =
+        SmartFieldDefinition.of()
+            .type(SmartFieldDefinition.Type.DOUBLE)
+            .index(true)
+            .sort(true)
+            .build();
+
+    final static SmartFieldDefinition defaultTextDefinition =
+        SmartFieldDefinition.of()
+            .type(SmartFieldDefinition.Type.TEXT)
+            .index(true)
+            .analyzer(SmartAnalyzerSet.ascii.name())
+            .build();
+
+    final static SmartFieldDefinition defaultBooleanDefinition =
+        SmartFieldDefinition.of()
+            .type(SmartFieldDefinition.Type.TEXT)
+            .index(true)
+            .build();
+
     final private SmartFieldType primaryKeyType;
-    final private SmartFieldType doNothingType;
 
     public SmartDynamicTypes(final String primaryKey) {
-        doNothingType = new SmartFieldType(null, null, SmartFieldDefinition.of().build());
         primaryKeyType = StringUtils.isEmpty(primaryKey) ? null
             : new SmartFieldType(primaryKey, null,
             SmartFieldDefinition.of()
@@ -40,8 +62,17 @@ public class SmartDynamicTypes {
         return primaryKeyType;
     }
 
-    public SmartFieldType getTypeFromValue(final Object value) {
-        return doNothingType;
+    public SmartFieldType getTypeFromValue(final String fieldName, final Object value) {
+        if (value == null)
+            return doNothingType;
+        else if (value instanceof Number)
+            return new SmartFieldType(fieldName, null, defaultNumericDefinition);
+        else if (value instanceof String)
+            return new SmartFieldType(fieldName, null, defaultTextDefinition);
+        else if (value instanceof Boolean)
+            return new SmartFieldType(fieldName, null, defaultBooleanDefinition);
+        else
+            return doNothingType;
     }
 
 

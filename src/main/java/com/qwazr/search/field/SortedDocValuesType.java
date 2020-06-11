@@ -20,16 +20,20 @@ import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.SortedDocValuesField;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
 final class SortedDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-    SortedDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+    SortedDocValuesType(final String genericFieldName,
+                        final WildcardMatcher wildcardMatcher,
                         final FieldDefinition definition) {
         super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.STRING).sortFieldProvider(SortUtils::stringSortField));
+            BytesRefUtils.Converter.STRING));
     }
 
     @Override
@@ -39,8 +43,23 @@ final class SortedDocValuesType extends CustomFieldTypeAbstract.OneField {
     }
 
     @Override
+    public SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
+        return SortUtils.stringSortField(fieldName, sortEnum);
+    }
+
+    @Override
     final public ValueConverter<?> getConverter(final String fieldName, final MultiReader reader) {
         return new SingleDVConverter.SortedDVConverter(reader, fieldName);
+    }
+
+    @Override
+    public String getStoredFieldName(String fieldName) {
+        return fieldName;
+    }
+
+    @Override
+    public Term term(String fieldName, Object value) {
+        return new Term(fieldName, value.toString());
     }
 
 }

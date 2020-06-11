@@ -20,34 +20,40 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedNumericDocValuesField;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.NumericUtils;
 
 final class SortedDoubleDocValuesType extends CustomFieldTypeAbstract.OneField {
 
-	SortedDoubleDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.DOUBLE).sortFieldProvider(SortUtils::doubleSortField));
-	}
+    SortedDoubleDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                              final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+            BytesRefUtils.Converter.DOUBLE));
+    }
 
-	@Override
-	final void newField(final String fieldName, final Object value, final DocumentBuilder consumer) {
-		final Field field;
-		if (value instanceof Number)
-			field = new SortedNumericDocValuesField(fieldName,
-					NumericUtils.doubleToSortableLong(((Number) value).doubleValue()));
-		else
-			field = new SortedNumericDocValuesField(fieldName,
-					NumericUtils.doubleToSortableLong(Double.parseDouble(value.toString())));
-		consumer.accept(genericFieldName, fieldName, field);
-	}
+    final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+        return SortUtils.doubleSortField(fieldName, sortEnum);
+    }
 
-	@Override
-	final public ValueConverter getConverter(final String fieldName, final MultiReader reader) {
-		return new MultiDVConverter.DoubleSetDVConverter(reader, fieldName);
-	}
+    @Override
+    final protected void newField(final String fieldName, final Object value, final DocumentBuilder consumer) {
+        final Field field;
+        if (value instanceof Number)
+            field = new SortedNumericDocValuesField(fieldName,
+                NumericUtils.doubleToSortableLong(((Number) value).doubleValue()));
+        else
+            field = new SortedNumericDocValuesField(fieldName,
+                NumericUtils.doubleToSortableLong(Double.parseDouble(value.toString())));
+        consumer.accept(genericFieldName, fieldName, field);
+    }
+
+    @Override
+    final public ValueConverter<?> getConverter(final String fieldName, final MultiReader reader) {
+        return new MultiDVConverter.DoubleSetDVConverter(reader, fieldName);
+    }
 
 }

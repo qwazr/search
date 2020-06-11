@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,28 @@ import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.Term;
 
 final class TextFieldType extends StorableFieldType {
 
-	TextFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.STRING).termProvider(FieldUtils::newStringTerm));
-	}
+    TextFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
+                  final FieldDefinition definition) {
+        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
+            BytesRefUtils.Converter.STRING));
+    }
 
-	@Override
-	void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
-		consumer.accept(genericFieldName, fieldName, new TextField(fieldName, value.toString(), Field.Store.YES));
-	}
+    @Override
+    public Term term(String fieldName, Object value) {
+        return FieldUtils.newStringTerm(fieldName, value);
+    }
 
-	@Override
-	void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
-		consumer.accept(genericFieldName, fieldName, new TextField(fieldName, value.toString(), Field.Store.NO));
-	}
+    @Override
+    protected void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
+        consumer.accept(genericFieldName, fieldName, new TextField(fieldName, value.toString(), Field.Store.YES));
+    }
+
+    @Override
+    protected void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
+        consumer.accept(genericFieldName, fieldName, new TextField(fieldName, value.toString(), Field.Store.NO));
+    }
 }

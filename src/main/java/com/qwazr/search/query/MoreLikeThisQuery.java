@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
@@ -98,14 +99,14 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
     @Override
     protected boolean isEqual(MoreLikeThisQuery q) {
         return Objects.equals(like_text, q.like_text) && Objects.equals(fieldname, q.fieldname) &&
-                Objects.equals(percent_terms_to_match, q.percent_terms_to_match) &&
-                Objects.equals(doc_num, q.doc_num) && Objects.equals(is_boost, q.is_boost) &&
-                Objects.equals(boost_factor, q.boost_factor) && Arrays.equals(fieldnames, q.fieldnames) &&
-                Objects.equals(max_doc_freq, q.max_doc_freq) && Objects.equals(max_doc_freq_pct, q.max_doc_freq_pct) &&
-                Objects.equals(max_num_tokens_parsed, q.max_num_tokens_parsed) &&
-                Objects.equals(max_query_terms, q.max_query_terms) && Objects.equals(max_word_len, q.max_word_len) &&
-                Objects.equals(min_doc_freq, q.min_doc_freq) && Objects.equals(min_term_freq, q.min_term_freq) &&
-                Objects.equals(min_word_len, q.min_word_len) && CollectionsUtils.equals(stop_words, q.stop_words);
+            Objects.equals(percent_terms_to_match, q.percent_terms_to_match) &&
+            Objects.equals(doc_num, q.doc_num) && Objects.equals(is_boost, q.is_boost) &&
+            Objects.equals(boost_factor, q.boost_factor) && Arrays.equals(fieldnames, q.fieldnames) &&
+            Objects.equals(max_doc_freq, q.max_doc_freq) && Objects.equals(max_doc_freq_pct, q.max_doc_freq_pct) &&
+            Objects.equals(max_num_tokens_parsed, q.max_num_tokens_parsed) &&
+            Objects.equals(max_query_terms, q.max_query_terms) && Objects.equals(max_word_len, q.max_word_len) &&
+            Objects.equals(min_doc_freq, q.min_doc_freq) && Objects.equals(min_term_freq, q.min_term_freq) &&
+            Objects.equals(min_word_len, q.min_word_len) && CollectionsUtils.equals(stop_words, q.stop_words);
     }
 
     @Override
@@ -121,8 +122,9 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
 
         if (fieldnames != null)
             mlt.setFieldNames(fieldMap == null ?
-                    fieldnames :
-                    FieldMap.resolveFieldNames(fieldnames, fieldMap::resolveQueryFieldName));
+                fieldnames :
+                FieldMap.resolveFieldNames(fieldnames,
+                    f -> fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, f)));
         if (max_doc_freq != null)
             mlt.setMaxDocFreq(max_doc_freq);
         if (max_doc_freq_pct != null)
@@ -149,7 +151,7 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
             throw new ParseException("Either doc_num or like_text/fieldname are missing");
 
         final org.apache.lucene.search.BooleanQuery bq = (org.apache.lucene.search.BooleanQuery) mlt.like(
-                AbstractFieldQuery.resolveField(fieldMap, fieldname, fieldname), new StringReader(like_text));
+            AbstractFieldQuery.resolveField(fieldMap, FieldTypeInterface.LuceneFieldType.text, fieldname, fieldname, StringUtils.EMPTY), new StringReader(like_text));
         final org.apache.lucene.search.BooleanQuery.Builder newBq = new org.apache.lucene.search.BooleanQuery.Builder();
         for (BooleanClause clause : bq)
             newBq.add(clause);

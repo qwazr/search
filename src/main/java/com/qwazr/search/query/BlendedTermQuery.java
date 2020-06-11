@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.IndexSettingsDefinition;
@@ -54,7 +55,8 @@ public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
         private void add(final FieldMap fieldMap,
                          final org.apache.lucene.search.BlendedTermQuery.Builder builder) {
             final org.apache.lucene.index.Term term =
-                BytesRefUtils.toTerm(fieldMap == null ? field : fieldMap.resolveQueryFieldName(genericField, field),
+                BytesRefUtils.toTerm(fieldMap == null ? field
+                        : fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, genericField, field, value),
                     value);
             if (boost == null)
                 builder.add(term);

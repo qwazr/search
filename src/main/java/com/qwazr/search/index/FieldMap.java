@@ -94,7 +94,6 @@ public class FieldMap {
         this.fieldDefinitionMap = fieldDefinitionMap;
 
         facetsConfig = new FacetsConfig();
-
     }
 
     public final boolean isEmpty() {
@@ -105,10 +104,9 @@ public class FieldMap {
         nameDefMap.forEach(consumer);
     }
 
-    @NotNull
-    final public FieldTypeInterface getFieldType(final String genericFieldName,
-                                                 final String concreteFieldName,
-                                                 final Object contentValue) {
+    private FieldTypeInterface findFieldType(final String genericFieldName,
+                                             final String concreteFieldName) {
+
         if (genericFieldName == null && concreteFieldName == null)
             throw new IllegalArgumentException("The field name is missing");
         // Annotated can find wildcarded fields directly using genericFieldName
@@ -135,11 +133,33 @@ public class FieldMap {
             if (entry.getLeft().match(searchField))
                 return entry.getRight();
 
-        // Guess field type from value
-        final FieldTypeInterface fieldType = smartDynamicTypes.getTypeFromValue(contentValue);
+        return null;
+    }
+
+    @NotNull
+    final public FieldTypeInterface getFieldType(final String genericFieldName,
+                                                 final String concreteFieldName,
+                                                 final Object contentValue) {
+
+        final FieldTypeInterface fieldType = findFieldType(genericFieldName, concreteFieldName);
         if (fieldType != null)
             return fieldType;
 
+        // Guess field type from value
+        final FieldTypeInterface smartFieldType = smartDynamicTypes.getTypeFromValue(concreteFieldName, contentValue);
+        if (smartFieldType != null)
+            return smartFieldType;
+
+        throw new IllegalArgumentException(
+            "The field has not been found: " + genericFieldName + " / " + concreteFieldName);
+    }
+
+    @NotNull
+    final public FieldTypeInterface getFieldType(final String genericFieldName,
+                                                 final String concreteFieldName) {
+        final FieldTypeInterface fieldType = findFieldType(genericFieldName, concreteFieldName);
+        if (fieldType != null)
+            return fieldType;
         throw new IllegalArgumentException(
             "The field has not been found: " + genericFieldName + " / " + concreteFieldName);
     }
@@ -155,7 +175,7 @@ public class FieldMap {
     private void checkFacetConfig(final String genericFieldName, final String concreteFieldName) {
         if (facetsConfig.getDimConfigs().containsKey(concreteFieldName))
             return;
-        final FieldTypeInterface fieldType = getFieldType(genericFieldName, concreteFieldName, null);
+        final FieldTypeInterface fieldType = findFieldType(genericFieldName, concreteFieldName);
         if (fieldType == null)
             return;
         fieldType.setFacetsConfig(concreteFieldName, this, facetsConfig);
@@ -186,15 +206,25 @@ public class FieldMap {
     }
 
     final public String resolveStoredFieldName(final String fieldName) {
-        return getFieldType(fieldName, fieldName, null).getStoredFieldName(fieldName);
+        return getFieldType(fieldName, fieldName).getStoredFieldName(fieldName);
     }
 
-    final public String resolveQueryFieldName(final String fieldName) {
-        return getFieldType(fieldName, fieldName, null).getQueryFieldName(fieldName);
+    final public String resolveQueryFieldName(@NotNull final FieldTypeInterface.LuceneFieldType luceneFieldType,
+                                              @NotNull final String fieldName) {
+        return getFieldType(fieldName, fieldName).getQueryFieldName(luceneFieldType, fieldName);
     }
 
-    final public String resolveQueryFieldName(final String genericFieldName, final String fieldName) {
-        return getFieldType(genericFieldName, fieldName, null).getQueryFieldName(fieldName);
+    final public String resolveQueryFieldName(@NotNull final FieldTypeInterface.LuceneFieldType luceneFieldType,
+                                              final String genericFieldName,
+                                              @NotNull final String fieldName) {
+        return getFieldType(genericFieldName, fieldName).getQueryFieldName(luceneFieldType, fieldName);
+    }
+
+    final public String resolveQueryFieldName(@NotNull final FieldTypeInterface.LuceneFieldType luceneFieldType,
+                                              final String genericFieldName,
+                                              @NotNull final String fieldName,
+                                              @NotNull final Object value) {
+        return getFieldType(genericFieldName, fieldName, value).getQueryFieldName(luceneFieldType, fieldName);
     }
 
     static public String[] resolveFieldNames(final String[] fields, final Function<String, String> resolver) {
@@ -214,7 +244,8 @@ public class FieldMap {
      * @param <T>            the expected type of field
      * @return the map provided with the parameter resolvedFields
      */
-    static public <T> Map<String, T> resolveFieldNames(final Map<String, T> fields, final Map<String, T> resolvedFields,
+    static public <T> Map<String, T> resolveFieldNames(final Map<String, T> fields,
+                                                       final Map<String, T> resolvedFields,
                                                        final Function<String, String> resolver) {
         fields.forEach((f, t) -> resolvedFields.put(resolver.apply(f), t));
         return resolvedFields;

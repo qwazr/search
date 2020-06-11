@@ -20,9 +20,11 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedNumericDocValuesField;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.NumericUtils;
 
 final class SortedFloatDocValuesType extends CustomFieldTypeAbstract.OneField {
@@ -30,11 +32,15 @@ final class SortedFloatDocValuesType extends CustomFieldTypeAbstract.OneField {
     SortedFloatDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
                              final FieldDefinition definition) {
         super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.FLOAT).sortFieldProvider(SortUtils::floatSortField));
+            BytesRefUtils.Converter.FLOAT));
+    }
+
+    final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
+        return SortUtils.floatSortField(fieldName, sortEnum);
     }
 
     @Override
-    final void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
+    final protected void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
         final Field field;
         if (value instanceof Number)
             field = new SortedNumericDocValuesField(fieldName,
