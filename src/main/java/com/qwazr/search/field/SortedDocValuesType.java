@@ -19,32 +19,27 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
-final class SortedDocValuesType extends CustomFieldTypeAbstract.OneField {
+final class SortedDocValuesType extends CustomFieldTypeAbstract {
 
     SortedDocValuesType(final String genericFieldName,
                         final WildcardMatcher wildcardMatcher,
-                        final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.STRING));
+                        final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.STRING,
+            buildFieldSupplier(genericFieldName),
+            SortUtils::stringSortField,
+            definition);
     }
 
-    @Override
-    protected void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
-        documentBuilder.accept(genericFieldName, fieldName,
-            new SortedDocValuesField(fieldName, new BytesRef(value.toString())));
-    }
-
-    @Override
-    public SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
-        return SortUtils.stringSortField(fieldName, sortEnum);
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+        return (fieldName, value, documentBuilder) ->
+            documentBuilder.accept(genericFieldName, fieldName,
+                new SortedDocValuesField(fieldName, new BytesRef(value.toString())));
     }
 
     @Override

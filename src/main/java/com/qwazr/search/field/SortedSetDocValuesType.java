@@ -19,28 +19,32 @@ import com.qwazr.search.field.converters.MultiDVConverter;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.util.BytesRef;
 
-final class SortedSetDocValuesType extends CustomFieldTypeAbstract.OneField {
+final class SortedSetDocValuesType extends CustomFieldTypeAbstract {
 
-    SortedSetDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                           final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.STRING));
+    SortedSetDocValuesType(final String genericFieldName,
+                           final WildcardMatcher wildcardMatcher,
+                           final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.STRING,
+            buildFieldSupplier(genericFieldName),
+            null,
+            definition);
     }
 
-    @Override
-    final public void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
-        final Field field;
-        if (value instanceof BytesRef)
-            field = new SortedSetDocValuesField(fieldName, (BytesRef) value);
-        else
-            field = new SortedSetDocValuesField(fieldName, new BytesRef(value.toString()));
-        documentBuilder.accept(genericFieldName, fieldName, field);
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+        return (fieldName, value, documentBuilder) -> {
+            final Field field;
+            if (value instanceof BytesRef)
+                field = new SortedSetDocValuesField(fieldName, (BytesRef) value);
+            else
+                field = new SortedSetDocValuesField(fieldName, new BytesRef(value.toString()));
+            documentBuilder.accept(genericFieldName, fieldName, field);
+        };
     }
 
     @Override

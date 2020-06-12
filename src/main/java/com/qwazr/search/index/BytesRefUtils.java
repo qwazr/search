@@ -47,6 +47,7 @@ public class BytesRefUtils {
 
         T to(BytesRef bytesRef);
 
+        NopeConverter NOPE = new NopeConverter();
         BytesRefConverter BYTESREF = new BytesRefConverter();
         StringConverter STRING = new StringConverter();
         IntegerConverter INT = new IntegerConverter();
@@ -59,6 +60,19 @@ public class BytesRefUtils {
         LongPointConverter LONG_POINT = new LongPointConverter();
         IntFacetConverter INT_FACET = new IntFacetConverter();
         FloatFacetConverter FLOAT_FACET = new FloatFacetConverter();
+    }
+
+    final static public class NopeConverter implements Converter<Void> {
+
+        @Override
+        final public BytesRef from(final Void value) {
+            return null;
+        }
+
+        @Override
+        final public Void to(final BytesRef bytesRef) {
+            return null;
+        }
     }
 
     final static public class BytesRefConverter implements Converter<BytesRef> {

@@ -16,18 +16,21 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.Term;
 
-final class TextFieldType extends StorableFieldType {
+final class TextFieldType extends CustomFieldTypeAbstract {
 
-    TextFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                  final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.STRING));
+    TextFieldType(final String genericFieldName,
+                  final WildcardMatcher wildcardMatcher,
+                  final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.STRING,
+            buildFieldSupplier(genericFieldName, definition),
+            null,
+            definition);
     }
 
     @Override
@@ -35,13 +38,12 @@ final class TextFieldType extends StorableFieldType {
         return FieldUtils.newStringTerm(fieldName, value);
     }
 
-    @Override
-    protected void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
-        consumer.accept(genericFieldName, fieldName, new TextField(fieldName, value.toString(), Field.Store.YES));
+    private static FieldSupplier buildFieldSupplier(final String genericFieldName,
+                                                    final CustomFieldDefinition definition) {
+        final Field.Store fieldStore = isStored(definition) ? Field.Store.YES : Field.Store.NO;
+        return (fieldName, value, documentBuilder) ->
+            documentBuilder.accept(genericFieldName, fieldName,
+                new TextField(fieldName, value.toString(), fieldStore));
     }
-
-    @Override
-    protected void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
-        consumer.accept(genericFieldName, fieldName, new TextField(fieldName, value.toString(), Field.Store.NO));
-    }
+    
 }

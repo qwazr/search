@@ -16,29 +16,35 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
 
-final class LongPointType extends StorableFieldType {
+final class LongPointType extends CustomFieldTypeAbstract {
 
-    LongPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                  final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.LONG_POINT));
+    LongPointType(final String genericFieldName,
+                  final WildcardMatcher wildcardMatcher,
+                  final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.LONG_POINT,
+            buildFieldSupplier(genericFieldName, definition),
+            null,
+            definition);
     }
 
-    @Override
-    final protected void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
-        final long longValue = FieldUtils.getLongValue(value);
-        consumer.accept(genericFieldName, fieldName, new LongPoint(fieldName, longValue));
-        consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, longValue));
-    }
-
-    @Override
-    final protected void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
-        consumer.accept(genericFieldName, fieldName, new LongPoint(fieldName, FieldUtils.getLongValue(value)));
+    private static FieldSupplier buildFieldSupplier(final String genericFieldName,
+                                                    final CustomFieldDefinition definition) {
+        if (isStored(definition))
+            return (fieldName, value, documentBuilder) -> {
+                final long longValue = FieldUtils.getLongValue(value);
+                documentBuilder.accept(genericFieldName, fieldName, new LongPoint(fieldName, longValue));
+                documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, longValue));
+            };
+        else
+            return (fieldName, value, documentBuilder) -> {
+                documentBuilder.accept(genericFieldName, fieldName,
+                    new LongPoint(fieldName, FieldUtils.getLongValue(value)));
+            };
     }
 
 }

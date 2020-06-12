@@ -19,32 +19,31 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.FloatDocValuesField;
-import org.apache.lucene.search.SortField;
 
-final class FloatDocValuesType extends CustomFieldTypeAbstract.OneField {
+final class FloatDocValuesType extends CustomFieldTypeAbstract {
 
-    FloatDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                       final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.FLOAT));
+    FloatDocValuesType(final String genericFieldName,
+                       final WildcardMatcher wildcardMatcher,
+                       final CustomFieldDefinition definition) {
+        super(genericFieldName,
+            wildcardMatcher,
+            BytesRefUtils.Converter.FLOAT,
+            buildFieldSupplier(genericFieldName),
+            SortUtils::floatSortField,
+            definition);
     }
-
-    final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-        return SortUtils.floatSortField(fieldName, sortEnum);
-    }
-
-    @Override
-    final protected void newField(String fieldName, Object value, DocumentBuilder consumer) {
-        final FloatDocValuesField field;
-        if (value instanceof Number)
-            field = new FloatDocValuesField(fieldName, ((Number) value).floatValue());
-        else
-            field = new FloatDocValuesField(fieldName, Float.parseFloat(value.toString()));
-        consumer.accept(genericFieldName, fieldName, field);
+    
+    private static FieldSupplier buildFieldSupplier(final String genericFieldName) {
+        return (fieldName, value, documentBuilder) -> {
+            final FloatDocValuesField field;
+            if (value instanceof Number)
+                field = new FloatDocValuesField(fieldName, ((Number) value).floatValue());
+            else
+                field = new FloatDocValuesField(fieldName, Float.parseFloat(value.toString()));
+            documentBuilder.accept(genericFieldName, fieldName, field);
+        };
     }
 
     @Override

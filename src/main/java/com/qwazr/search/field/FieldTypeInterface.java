@@ -17,16 +17,14 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
-import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
+import javax.validation.constraints.NotNull;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
-
-import javax.validation.constraints.NotNull;
 
 public interface FieldTypeInterface {
 
@@ -51,22 +49,34 @@ public interface FieldTypeInterface {
 
     void copyTo(final String fieldName, final FieldTypeInterface fieldType);
 
-    void setFacetsConfig(final String fieldName, final FieldMap fieldMap, final FacetsConfig facetsConfig);
+    void applyFacetsConfig(final String fieldName, final FacetsConfig facetsConfig);
 
     Term term(String fieldName, Object value);
 
     @FunctionalInterface
-    interface Facet {
-        void config(final String fieldName,
-                    final FieldMap fieldMap,
-                    final FacetsConfig facetsConfig);
+    interface Supplier<T extends FieldDefinition> {
+        FieldTypeInterface newFieldType(final String genericFieldName,
+                                        final WildcardMatcher wildcardMatcher,
+                                        final T definition);
+    }
+    
+    @FunctionalInterface
+    interface FacetSupplier {
+        void setConfig(final String fieldName,
+                       final FacetsConfig facetsConfig);
     }
 
     @FunctionalInterface
-    interface Supplier {
-        FieldTypeInterface newFieldType(final String genericFieldName,
-                                        final WildcardMatcher wildcardMatcher,
-                                        final FieldDefinition definition);
+    interface FieldSupplier {
+        void addFields(final String fieldName,
+                       final Object value,
+                       final DocumentBuilder documentBuilder);
+    }
+
+    @FunctionalInterface
+    interface SortFieldSupplier {
+        SortField newSortField(final String fieldname,
+                               final QueryDefinition.SortEnum sortEnum);
     }
 
 }

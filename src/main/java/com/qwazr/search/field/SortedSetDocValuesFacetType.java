@@ -16,44 +16,43 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 
-final class SortedSetDocValuesFacetType extends StorableFieldType {
+final class SortedSetDocValuesFacetType extends CustomFieldTypeAbstract {
 
-    SortedSetDocValuesFacetType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                                final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.STRING));
+    SortedSetDocValuesFacetType(final String genericFieldName,
+                                final WildcardMatcher wildcardMatcher,
+                                final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.STRING,
+            buildFieldSupplier(genericFieldName, definition),
+            null,
+            definition);
     }
 
-    private String getStringValue(Object value) {
-        if (value == null)
-            return null;
-        final String stringValue = value.toString();
-        return stringValue == null || stringValue.isEmpty() ? null : stringValue;
-    }
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName,
+                                                                       final CustomFieldDefinition definition) {
+        if (isStored(definition)) {
+            return (fieldName, value, documentBuilder) -> {
+                final String stringValue = FieldUtils.getStringValue(value);
+                if (stringValue == null)
+                    return;
+                documentBuilder.accept(genericFieldName, fieldName,
+                    new SortedSetDocValuesFacetField(fieldName, stringValue));
+                documentBuilder.accept(genericFieldName, fieldName,
+                    new StoredField(fieldName, stringValue));
+            };
+        } else {
+            return (fieldName, value, documentBuilder) -> {
+                final String stringValue = FieldUtils.getStringValue(value);
+                if (stringValue != null)
+                    documentBuilder.accept(genericFieldName, fieldName,
+                        new SortedSetDocValuesFacetField(fieldName, stringValue));
 
-    @Override
-    protected void newFieldWithStore(final String fieldName,
-                                     final Object value,
-                                     final DocumentBuilder documentBuilder) {
-        final String stringValue = getStringValue(value);
-        if (stringValue == null)
-            return;
-        documentBuilder.accept(genericFieldName, fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
-        documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, stringValue));
-    }
-
-    @Override
-    protected void newFieldNoStore(final String fieldName,
-                                   final Object value,
-                                   final DocumentBuilder documentBuilder) {
-        final String stringValue = getStringValue(value);
-        if (stringValue != null)
-            documentBuilder.accept(genericFieldName, fieldName, new SortedSetDocValuesFacetField(fieldName, stringValue));
+            };
+        }
     }
 
 }

@@ -30,10 +30,6 @@ import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.WildcardMatcher;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.facet.FacetsConfig;
-
-import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,6 +41,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Supplier;
+import javax.validation.constraints.NotNull;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.facet.FacetsConfig;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
@@ -60,7 +59,7 @@ import java.util.function.Supplier;
 public abstract class FieldDefinition {
 
     /* Used by CustomFieldDefinition */
-    public enum Template implements ValueConverter.Supplier, FieldTypeInterface.Supplier {
+    public enum Template implements ValueConverter.Supplier, FieldTypeInterface.Supplier<CustomFieldDefinition> {
         NONE(CustomFieldType::new),
         DoublePoint(DoublePointType::new),
         FloatPoint(FloatPointType::new),
@@ -92,29 +91,30 @@ public abstract class FieldDefinition {
         SortedSetDocValuesFacetField(SortedSetDocValuesFacetType::new);
 
         @NotNull
-        private final FieldTypeInterface.Supplier fieldTypeSupplier;
+        private final FieldTypeInterface.Supplier<CustomFieldDefinition> fieldTypeSupplier;
 
         @NotNull
         private final ValueConverter.Supplier valueConverterSupplier;
 
-        Template(final FieldTypeInterface.Supplier fieldTypeSupplier) {
+        Template(final FieldTypeInterface.Supplier<CustomFieldDefinition> fieldTypeSupplier) {
             this(fieldTypeSupplier, (reader, field) -> null);
         }
 
-        Template(final FieldTypeInterface.Supplier fieldTypeSupplier,
+        Template(final FieldTypeInterface.Supplier<CustomFieldDefinition> fieldTypeSupplier,
                  final ValueConverter.Supplier valueConverterSupplier) {
             this.fieldTypeSupplier = fieldTypeSupplier;
             this.valueConverterSupplier = valueConverterSupplier;
         }
 
         @Override
-        final public ValueConverter<?> getConverter(final MultiReader reader, final String field) {
+        final public ValueConverter getConverter(final MultiReader reader, final String field) {
             return valueConverterSupplier.getConverter(reader, field);
         }
 
         @Override
         final public FieldTypeInterface newFieldType(final String genericFieldName,
-                                                     final WildcardMatcher wildcardMatcher, final FieldDefinition definition) {
+                                                     final WildcardMatcher wildcardMatcher,
+                                                     final CustomFieldDefinition definition) {
             return fieldTypeSupplier.newFieldType(genericFieldName, wildcardMatcher, definition);
         }
     }

@@ -16,29 +16,36 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.StoredField;
 
-final class FloatPointType extends StorableFieldType {
+final class FloatPointType extends CustomFieldTypeAbstract {
 
-    FloatPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                   final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.FLOAT_POINT));
+    FloatPointType(final String genericFieldName,
+                   final WildcardMatcher wildcardMatcher,
+                   final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.FLOAT_POINT,
+            buildFieldSupplier(genericFieldName, definition),
+            null,
+            definition);
     }
 
-    @Override
-    final protected void newFieldNoStore(final String fieldName, final Object value, final DocumentBuilder consumer) {
-        consumer.accept(genericFieldName, fieldName, new FloatPoint(fieldName, FieldUtils.getFloatValue(value)));
-    }
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName,
+                                                                       final CustomFieldDefinition definition) {
+        if (isStored(definition))
+            return (fieldName, value, documentBuilder) -> {
+                final float floatValue = FieldUtils.getFloatValue(value);
+                documentBuilder.accept(genericFieldName, fieldName, new FloatPoint(fieldName, floatValue));
+                documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, floatValue));
+            };
+        else
+            return (fieldName, value, documentBuilder) -> {
+                documentBuilder.accept(genericFieldName, fieldName,
+                    new FloatPoint(fieldName, FieldUtils.getFloatValue(value)));
 
-    @Override
-    final protected void newFieldWithStore(final String fieldName, final Object value, final DocumentBuilder consumer) {
-        final float floatValue = FieldUtils.getFloatValue(value);
-        consumer.accept(genericFieldName, fieldName, new FloatPoint(fieldName, floatValue));
-        consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, floatValue));
+            };
     }
 
 }

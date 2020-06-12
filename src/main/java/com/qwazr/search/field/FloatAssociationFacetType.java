@@ -19,18 +19,16 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.WildcardMatcher;
+import java.util.Objects;
+import javax.ws.rs.core.Response;
 import org.apache.lucene.facet.taxonomy.FloatAssociationFacetField;
 
-import javax.ws.rs.core.Response;
-import java.util.Objects;
-import org.apache.lucene.index.Term;
+final class FloatAssociationFacetType extends CustomFieldTypeAbstract {
 
-final class FloatAssociationFacetType extends CustomFieldTypeAbstract.NoField {
-
-    FloatAssociationFacetType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                              final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.FLOAT_FACET));
+    FloatAssociationFacetType(final String genericFieldName,
+                              final WildcardMatcher wildcardMatcher,
+                              final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher, BytesRefUtils.Converter.FLOAT_FACET, null, null, definition);
     }
 
     @Override

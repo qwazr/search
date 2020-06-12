@@ -21,11 +21,12 @@ import org.apache.lucene.document.LatLonPoint;
 
 import java.util.Map;
 
-final class LatLonPointType extends CustomFieldTypeAbstract.NoField {
+final class LatLonPointType extends CustomFieldTypeAbstract {
 
-    LatLonPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                    final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition));
+    LatLonPointType(final String genericFieldName,
+                    final WildcardMatcher wildcardMatcher,
+                    final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher, null, null, null, definition);
     }
 
     @Override

@@ -185,7 +185,7 @@ public class CustomFieldDefinition extends FieldDefinition {
     }
 
     @Override
-    public FieldTypeInterface newFieldType(String genericFieldName, WildcardMatcher wildcardMatcher) {
+    public FieldTypeInterface newFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher) {
         return template == null ?
             new CustomFieldType(genericFieldName, wildcardMatcher, this) :
             template.newFieldType(genericFieldName, wildcardMatcher, this);

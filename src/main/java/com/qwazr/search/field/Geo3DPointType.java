@@ -21,11 +21,12 @@ import org.apache.lucene.spatial3d.Geo3DPoint;
 
 import java.util.Map;
 
-final class Geo3DPointType extends CustomFieldTypeAbstract.NoField {
+final class Geo3DPointType extends CustomFieldTypeAbstract {
 
-    Geo3DPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                   final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition));
+    Geo3DPointType(final String genericFieldName,
+                   final WildcardMatcher wildcardMatcher,
+                   final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher, null, null, null, definition);
     }
 
     @Override

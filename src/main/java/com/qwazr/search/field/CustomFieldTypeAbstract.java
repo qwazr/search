@@ -15,31 +15,53 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.index.BytesRefUtils;
+import com.qwazr.utils.WildcardMatcher;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import javax.validation.constraints.NotNull;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.SortField;
 
 abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefinition> {
 
-    protected CustomFieldTypeAbstract(final Builder<CustomFieldDefinition> builder) {
-        super(builder);
+    protected CustomFieldTypeAbstract(final String genericFieldName,
+                                      final WildcardMatcher wildcardMatcher,
+                                      final BytesRefUtils.Converter<?> bytesRefConverter,
+                                      final FieldSupplier fieldSupplier,
+                                      final SortFieldSupplier sortFieldSupplier,
+                                      final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher, bytesRefConverter, fieldSupplier,
+            buildFacetConfig(definition), sortFieldSupplier, definition);
+    }
+
+    private static FacetSupplier buildFacetConfig(final CustomFieldDefinition definition) {
+        final Collection<FacetSupplier> facetSuppliers = new LinkedHashSet<>();
+        if (definition.facetMultivalued != null)
+            facetSuppliers.add(
+                (fieldName, facetsConfig)
+                    -> facetsConfig.setMultiValued(fieldName, definition.facetMultivalued));
+        if (definition.facetHierarchical != null)
+            facetSuppliers.add(
+                (fieldName, facetsConfig)
+                    -> facetsConfig.setHierarchical(fieldName, definition.facetHierarchical));
+        if (definition.facetRequireDimCount != null)
+            facetSuppliers.add((fieldName, facetsConfig)
+                -> facetsConfig.setRequireDimCount(fieldName, definition.facetRequireDimCount));
+        if (facetSuppliers.isEmpty())
+            return null;
+        if (facetSuppliers.size() == 1)
+            return facetSuppliers.iterator().next();
+        final FacetSupplier[] facetSupplierArray = facetSuppliers.toArray(new FacetSupplier[0]);
+        return (fieldName, facetsConfig) -> {
+            for (final FacetSupplier facetSupplier : facetSupplierArray)
+                facetSupplier.setConfig(fieldName, facetsConfig);
+        };
     }
 
     @Override
     public String getQueryFieldName(@NotNull final LuceneFieldType luceneFieldType,
                                     @NotNull final String fieldName) {
         return fieldName;
-    }
-
-    public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-        return null;
-    }
-
-    @Override
-    protected void newField(String fieldName, Object value, DocumentBuilder documentBuilder) {
-
     }
 
     @Override
@@ -50,38 +72,6 @@ abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefi
     @Override
     public Term term(String fieldName, Object value) {
         return null;
-    }
-
-    @Override
-    final protected void prepareFacet(final Builder<CustomFieldDefinition> builder) {
-        if (builder.definition.facetMultivalued != null)
-            builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setMultiValued(fieldName,
-                builder.definition.facetMultivalued)));
-        if (builder.definition.facetHierarchical != null)
-            builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setHierarchical(fieldName,
-                builder.definition.facetHierarchical)));
-        if (builder.definition.facetRequireDimCount != null)
-            builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> facetsConfig.setRequireDimCount(fieldName,
-                builder.definition.facetRequireDimCount)));
-    }
-
-    static abstract class OneField extends CustomFieldTypeAbstract {
-
-        protected OneField(Builder<CustomFieldDefinition> builder) {
-            super(builder);
-        }
-
-        protected abstract void newField(final String fieldName,
-                                         final Object value,
-                                         final DocumentBuilder documentBuilder);
-    }
-
-    static abstract class NoField extends CustomFieldTypeAbstract {
-
-        protected NoField(Builder<CustomFieldDefinition> builder) {
-            super(builder);
-        }
-
     }
 
 }

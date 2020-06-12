@@ -15,29 +15,13 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.QueryDefinition;
 import javax.validation.constraints.NotNull;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.SortField;
 
 final public class CopyToFieldType extends FieldTypeAbstract<FieldDefinition> {
 
     public CopyToFieldType() {
-        super(of(null, null, null));
-    }
-
-    @Override
-    protected void prepareFacet(Builder<FieldDefinition> builder) {
-    }
-
-    @Override
-    protected void newField(String fieldName, Object value, DocumentBuilder documentBuilder) {
-    }
-
-    @Override
-    public SortField getSortField(String fieldName, QueryDefinition.SortEnum sortEnum) {
-        return null;
+        super(null, null, null, null, null, null, null);
     }
 
     @Override

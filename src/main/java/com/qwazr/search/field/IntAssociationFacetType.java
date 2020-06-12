@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,23 +24,23 @@ import org.apache.lucene.facet.taxonomy.IntAssociationFacetField;
 import javax.ws.rs.core.Response;
 import java.util.Objects;
 
-class IntAssociationFacetType extends CustomFieldTypeAbstract.NoField {
+final class IntAssociationFacetType extends CustomFieldTypeAbstract {
 
-	IntAssociationFacetType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-			final FieldDefinition definition) {
-		super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-				BytesRefUtils.Converter.INT_FACET));
-	}
+    IntAssociationFacetType(final String genericFieldName,
+                            final WildcardMatcher wildcardMatcher,
+                            final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher, BytesRefUtils.Converter.INT_FACET, null, null, definition);
+    }
 
-	@Override
-	protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder consumer) {
-		Objects.requireNonNull(values, "The value array is empty");
-		if (values.length < 2)
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-					"Expected at least 2 values - Field: " + fieldName);
-		final int assoc = TypeUtils.getIntNumber(fieldName, values[0]);
-		final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
-		consumer.accept(genericFieldName, fieldName, new IntAssociationFacetField(assoc, fieldName, path));
-	}
+    @Override
+    protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder consumer) {
+        Objects.requireNonNull(values, "The value array is empty");
+        if (values.length < 2)
+            throw new ServerException(Response.Status.NOT_ACCEPTABLE,
+                "Expected at least 2 values - Field: " + fieldName);
+        final int assoc = TypeUtils.getIntNumber(fieldName, values[0]);
+        final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
+        consumer.accept(genericFieldName, fieldName, new IntAssociationFacetField(assoc, fieldName, path));
+    }
 
 }

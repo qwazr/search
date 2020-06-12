@@ -17,49 +17,34 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.analysis.SmartAnalyzerSet;
 import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.WildcardMatcher;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import javax.validation.constraints.NotNull;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.SortField;
 
 final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
-
-    private final Function<String, SmartFieldProvider> storeProvider;
-    private final Function<String, SmartFieldProvider> indexProvider;
-    private final Function<String, SmartFieldProvider> fullTextProvider;
-    private final Function<String, SmartFieldProvider> sortProvider;
 
     SmartFieldType(final String genericFieldName,
                    final WildcardMatcher wildcardMatcher,
                    final SmartFieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, definition));
+        super(genericFieldName, wildcardMatcher,
+            null,
+            buildFacetSupplier(genericFieldName, definition),
+            buildFieldSupplier(genericFieldName, definition),
+            buildSortFieldSupplier(genericFieldName, definition),
+            definition);
+    }
+
         final boolean stored = definition.stored != null && definition.stored;
         final SmartFieldDefinition.Type type = getType(definition);
         if (stored) {
-            switch (type) {
-                case TEXT:
-                    storeProvider = SmartFieldProvider.StoredText::new;
-                    break;
-                case LONG:
-                    storeProvider = SmartFieldProvider.StoredLong::new;
-                    break;
-                case DOUBLE:
-                    storeProvider = SmartFieldProvider.StoredDouble::new;
-                    break;
-                case INTEGER:
-                    storeProvider = SmartFieldProvider.StoredInteger::new;
-                    break;
-                case FLOAT:
-                    storeProvider = SmartFieldProvider.StoredFloat::new;
-                    break;
-                default:
-                    storeProvider = null;
-                    break;
-            }
+
         } else {
             storeProvider = null;
         }
@@ -121,6 +106,17 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
         }
     }
 
+    private static FacetSupplier buildFacetSupplier(final String genericFieldName,
+                                                    final SmartFieldDefinition definition) {
+        if (definition.facet == null || !definition.facet)
+            return null;
+        final SmartFieldProvider.Facet facetProvider = new SmartFieldProvider.Facet(genericFieldName);
+        return Collections.singleton(((fieldName, fieldMap, facetsConfig) -> {
+            facetsConfig.setMultiValued(facetProvider.concreteFieldName, true);
+            facetsConfig.setIndexFieldName(facetProvider.concreteFieldName, fieldMap.sortedSetFacetField);
+        }));
+    }
+
     private static boolean isFullTextIndexAnalyzer(final SmartFieldDefinition definition) {
         final String keywordName = SmartAnalyzerSet.keyword.name();
         if (StringUtils.isNotEmpty(definition.indexAnalyzer)
@@ -132,10 +128,32 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
         return false;
     }
 
-    @Override
-    protected void prepareFacet(Builder<SmartFieldDefinition> builder) {
+
+    private static FieldSupplier getStoredFieldSupplier(final String genericFieldName,
+                                               final WildcardMatcher wildcardMatcher,
+                                               final SmartFieldDefinition definition) {
+        switch (definition.type) {
+            case TEXT:
+                final Function<String, String> fieldnameSupplier = SmartFieldProvider.buildNameProvider(genericFieldName, wildcardMatcher, SmartFieldProvider.FieldPrefix.storedField, SmartFieldProvider.TypePrefix.textType);
+               return 
+        }
 
     }
+
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName,
+                                                                       final WildcardMatcher wildcardMatcher,
+                                                                       final SmartFieldDefinition definition) {
+        final List<FieldSupplier> fieldSupplierList = new ArrayList<>();
+        final boolean stored = definition.stored != null && definition.stored;
+        if (stored)
+            Optional.ofNullable(getStoredFieldSupplier(genericFieldName, wildcardMatcher, definition))
+                .ifPresent(fieldSupplierList::add);
+
+        return null;
+
+    }
+
+
 
     @Override
     final protected void newField(final String fieldName, final Object value, final DocumentBuilder builder) {
@@ -156,38 +174,46 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             ? SmartFieldDefinition.DEFAULT_MAX_KEYWORD_LENGTH : definition.maxKeywordLength;
     }
 
-    /*
-    static Function<String, SmartFieldProvider> facetProvider(final String genericFieldName,
-                              final FieldTypeAbstract.Builder<SmartFieldDefinition> builder) {
-        final SmartFieldProviders.FacetFieldProvider provider =
-            new SmartFieldProviders.FacetFieldProvider(genericFieldName);
-        builder.facetConfig(((fieldName, fieldMap, facetsConfig) -> {
-            final String resolvedFieldName = provider.getTextName(fieldName);
-            facetsConfig.setMultiValued(resolvedFieldName, true);
-            facetsConfig.setIndexFieldName(resolvedFieldName, fieldMap.sortedSetFacetField);
-        }));
-        builder.fieldProvider(provider::textField);
-        builder.queryFieldNameProvider(LuceneFieldType.facet, provider::getTextName);
-    }
-     */
+    private static SortFieldSupplier buildSortFieldSupplier(final  SmartFieldDefinition definition) {
+       final Supplier<String> fieldNameProvider =
+        if (definition.sort == null || !definition.sort)
+            return null;
+            switch (definition.type) {
+                case TEXT:
+                    return SmartFieldProvider.SortedDocValuesText::new;
+                    break;
+                case LONG:
+                    sortProvider = SmartFieldProvider.SortedDocValuesLong::new;
+                    break;
+                case INTEGER:
+                    sortProvider = SmartFieldProvider.SortedDocValuesInteger::new;
+                    break;
+                case DOUBLE:
+                    sortProvider = SmartFieldProvider.SortedDocValuesDouble::new;
+                    break;
+                case FLOAT:
+                    sortProvider = SmartFieldProvider.SortedDocValuesFloat::new;
+                    break;
+                default:
+                    sortProvider = null;
+                    break;
+            }
 
-    @Override
-    public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-        return sortProvider == null ? null : sortProvider.apply(fieldName).getSort(sortEnum);
-    }
 
-    @Override
-    public String getQueryFieldName(@NotNull LuceneFieldType luceneFieldType, @NotNull String fieldName) {
-        return null;
-    }
+        }
 
-    @Override
-    public String getStoredFieldName(String fieldName) {
-        return null;
-    }
+        @Override
+        public String getQueryFieldName (@NotNull LuceneFieldType luceneFieldType, @NotNull String fieldName){
+            return null;
+        }
 
-    @Override
-    public Term term(final String fieldName, final Object value) {
-        return indexProvider == null ? null : indexProvider.apply(fieldName).getTerm(value);
+        @Override
+        public String getStoredFieldName (String fieldName){
+            return null;
+        }
+
+        @Override
+        public Term term ( final String fieldName, final Object value){
+            return indexProvider == null ? null : indexProvider.apply(fieldName).getTerm(value);
+        }
     }
-}

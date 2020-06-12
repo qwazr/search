@@ -18,21 +18,20 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
-import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.BinaryDocValuesField;
 import org.apache.lucene.util.BytesRef;
 
-final class BinaryDocValuesType extends CustomFieldTypeAbstract.OneField {
+final class BinaryDocValuesType extends CustomFieldTypeAbstract {
 
-    BinaryDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                        final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition));
+    BinaryDocValuesType(final String genericFieldName,
+                        final WildcardMatcher wildcardMatcher,
+                        final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher, null, buildFieldSupplier(genericFieldName), null, definition);
     }
 
-    @Override
-    final protected void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
-        documentBuilder.accept(genericFieldName, fieldName,
+    private static FieldSupplier buildFieldSupplier(final String genericFieldName) {
+        return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
             new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
     }
 

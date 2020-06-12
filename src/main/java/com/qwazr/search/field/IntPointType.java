@@ -16,28 +16,35 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
 
-final class IntPointType extends StorableFieldType {
+final class IntPointType extends CustomFieldTypeAbstract {
 
-    IntPointType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                 final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.INT_POINT));
+    IntPointType(final String genericFieldName,
+                 final WildcardMatcher wildcardMatcher,
+                 final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.INT_POINT,
+            buildFieldSupplier(genericFieldName, definition),
+            null,
+            definition);
     }
 
-    @Override
-    protected void newFieldWithStore(String fieldName, Object value, DocumentBuilder consumer) {
-        final int intValue = FieldUtils.getIntValue(value);
-        consumer.accept(genericFieldName, fieldName, new IntPoint(fieldName, intValue));
-        consumer.accept(genericFieldName, fieldName, new StoredField(fieldName, intValue));
+    private static FieldSupplier buildFieldSupplier(final String genericFieldName,
+                                                    final CustomFieldDefinition definition) {
+        if (isStored(definition))
+            return (fieldName, value, documentBuilder) -> {
+                final int intValue = FieldUtils.getIntValue(value);
+                documentBuilder.accept(genericFieldName, fieldName, new IntPoint(fieldName, intValue));
+                documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, intValue));
+            };
+        else
+            return (fieldName, value, documentBuilder) -> {
+                documentBuilder.accept(genericFieldName, fieldName,
+                    new IntPoint(fieldName, FieldUtils.getIntValue(value)));
+            };
     }
 
-    @Override
-    protected void newFieldNoStore(String fieldName, Object value, DocumentBuilder consumer) {
-        consumer.accept(genericFieldName, fieldName, new IntPoint(fieldName, FieldUtils.getIntValue(value)));
-    }
 }

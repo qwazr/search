@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.*;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 import org.apache.lucene.index.Term;
@@ -26,7 +27,7 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.NotAcceptableException;
+import java.util.function.Function;
 
 interface SmartFieldProvider {
 
@@ -48,8 +49,8 @@ interface SmartFieldProvider {
             this.prefix = prefix;
         }
 
-        private String getLuceneFieldName(final String genericFieldName, final TypePrefix typePrefix) {
-            return String.valueOf(new char[]{prefix, typePrefix.prefix, '€'}).concat(genericFieldName);
+        private String getLuceneFieldName(final String concreteFieldName, final TypePrefix typePrefix) {
+            return String.valueOf(new char[]{prefix, typePrefix.prefix, '€'}).concat(concreteFieldName);
         }
 
     }
@@ -70,86 +71,18 @@ interface SmartFieldProvider {
 
     }
 
-    class Noop implements SmartFieldProvider {
-
-        public static Noop INSTANCE = new Noop();
-
-        private Noop() {
-        }
-
-        @Override
-        public Field getField(Object value) {
-            return null;
-        }
-
-        @Override
-        public Term getTerm(final Object value) {
-            return null;
-        }
-
-        @Override
-        public SortField getSort(final QueryDefinition.SortEnum sortEnum) {
-            return null;
-        }
-
-        @Override
-        public void apply(Object value, DocumentBuilder builder) {
-        }
-
-    }
-
-    abstract class Base implements SmartFieldProvider {
-
-        private final String genericFieldName;
-        protected final String concreteFieldName;
-
-        protected Base(final String genericFieldName,
-                       final FieldPrefix fieldPrefix,
-                       final TypePrefix typePrefix) {
-            this.genericFieldName = genericFieldName;
-            this.concreteFieldName = typePrefix.getLuceneFieldName(genericFieldName, fieldPrefix);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return null;
-        }
-
-        @Override
-        public Term getTerm(final Object value) {
-            throw new NotAcceptableException("The field '" + genericFieldName + "' does not support term queries.");
-        }
-
-        @Override
-        public SortField getSort(final QueryDefinition.SortEnum sortEnum) {
-            throw new NotAcceptableException("The field '" + genericFieldName + "' does not support sorting.");
-        }
-
-        @Override
-        final public void apply(final Object value, final DocumentBuilder builder) {
-            final Field field = getField(value);
-            if (field != null)
-                builder.accept(genericFieldName, concreteFieldName, field);
-        }
-
-    }
-
-    static SmartFieldProvider stored(final String genericFieldName, final SmartFieldDefinition.Type type) {
-        switch (type) {
-            case TEXT:
-                return new StoredText(genericFieldName);
-            case LONG:
-                return new StoredLong(genericFieldName);
-            case DOUBLE:
-                return new StoredDouble(genericFieldName);
-            case INTEGER:
-                return new StoredInteger(genericFieldName);
-            case FLOAT:
-                return new StoredFloat(genericFieldName);
-            default:
-                return Noop.INSTANCE;
+    static Function<String, String> buildNameProvider(final String genericFieldName,
+                                                      final WildcardMatcher wildcardMatcher,
+                                                      final FieldPrefix fieldPrefix,
+                                                      final TypePrefix typePrefix) {
+        if (wildcardMatcher == null) {
+            final String fieldName = typePrefix.getLuceneFieldName(genericFieldName, fieldPrefix);
+            return concreteFieldName -> fieldName;
+        } else {
+            return concreteFieldName -> typePrefix.getLuceneFieldName(genericFieldName, fieldPrefix);
         }
     }
+
 
     final class StoredText extends Base {
 

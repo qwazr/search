@@ -25,7 +25,10 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.Serializable;
 
-interface TypeUtils {
+class TypeUtils {
+
+    private TypeUtils() {
+    }
 
     static int getIntNumber(final String fieldName, final Object value) {
         if (value == null)
@@ -72,8 +75,7 @@ interface TypeUtils {
     static byte[] toBytes(final String fieldName, final Serializable value) {
         try {
             return SerializationUtils.toExternalizorBytes(value);
-        }
-        catch (IOException | ReflectiveOperationException e) {
+        } catch (IOException | ReflectiveOperationException e) {
             throw new ServerException(Response.Status.NOT_ACCEPTABLE,
                 "Cannot serialize the value of the field " + fieldName, e);
         }
@@ -82,8 +84,7 @@ interface TypeUtils {
     static byte[] toBytes(final String fieldName, final Externalizable value) {
         try {
             return SerializationUtils.toExternalizorBytes(value);
-        }
-        catch (IOException | ReflectiveOperationException e) {
+        } catch (IOException | ReflectiveOperationException e) {
             throw new ServerException(Response.Status.NOT_ACCEPTABLE,
                 "Cannot serialize the value of the field " + fieldName, e);
         }

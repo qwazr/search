@@ -20,29 +20,22 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.SortField;
 
-final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
+final class CustomFieldType extends CustomFieldTypeAbstract {
 
-    private final List<Consumer<FieldType>> typeSetters;
-    private final BiFunction<String, QueryDefinition.SortEnum, SortField> sortFieldProvider;
-
-    CustomFieldType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                    final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            getConverter(definition)));
-        final CustomFieldDefinition customFieldDefinition = (CustomFieldDefinition) definition;
-        typeSetters = buildTypeSetters(customFieldDefinition);
-        sortFieldProvider = buildSortFieldProvider(customFieldDefinition);
+    CustomFieldType(final String genericFieldName,
+                    final WildcardMatcher wildcardMatcher,
+                    final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher, getConverter(definition),
+            buildFieldSupplier(genericFieldName, definition),
+            buildSortFieldSupplier(definition), definition);
     }
 
     private static List<Consumer<FieldType>> buildTypeSetters(CustomFieldDefinition definition) {
@@ -74,7 +67,17 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
         return ts;
     }
 
-    private static BiFunction<String, QueryDefinition.SortEnum, SortField> buildSortFieldProvider(CustomFieldDefinition definition) {
+    private static FieldSupplier buildFieldSupplier(final String genericFieldName,
+                                                    final CustomFieldDefinition definition) {
+        final List<Consumer<FieldType>> typeSetters = buildTypeSetters(definition);
+        final FieldType type = new FieldType();
+        for (Consumer<FieldType> ts : typeSetters)
+            ts.accept(type);
+        return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
+            new CustomField(fieldName, type, value));
+    }
+
+    private static SortFieldSupplier buildSortFieldSupplier(final CustomFieldDefinition definition) {
         if (definition.indexOptions == null)
             return null;
         return (fieldName, sortEnum) -> {
@@ -92,20 +95,6 @@ final class CustomFieldType extends CustomFieldTypeAbstract.OneField {
         return FieldUtils.newStringTerm(fieldName, value);
     }
 
-    final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-        return sortFieldProvider.apply(fieldName, sortEnum);
-    }
-
-    @Override
-    final protected void newField(final String fieldName,
-                                  final Object value,
-                                  final DocumentBuilder documentBuilder) {
-        final FieldType type = new FieldType();
-        if (typeSetters != null)
-            for (Consumer<FieldType> ts : typeSetters)
-                ts.accept(type);
-        documentBuilder.accept(genericFieldName, fieldName, new CustomField(fieldName, type, value));
-    }
 
     @Override
     public ValueConverter<?> getConverter(final String field, final MultiReader reader) {

@@ -19,36 +19,34 @@ import com.qwazr.search.field.converters.MultiDVConverter;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedNumericDocValuesField;
-import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.NumericUtils;
 
-final class SortedFloatDocValuesType extends CustomFieldTypeAbstract.OneField {
+final class SortedFloatDocValuesType extends CustomFieldTypeAbstract {
 
-    SortedFloatDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                             final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.FLOAT));
+    SortedFloatDocValuesType(final String genericFieldName,
+                             final WildcardMatcher wildcardMatcher,
+                             final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.FLOAT,
+            buildFieldSupplier(genericFieldName),
+            SortUtils::floatSortField,
+            definition);
     }
 
-    final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-        return SortUtils.floatSortField(fieldName, sortEnum);
-    }
-
-    @Override
-    final protected void newField(final String fieldName, final Object value, final DocumentBuilder documentBuilder) {
-        final Field field;
-        if (value instanceof Number)
-            field = new SortedNumericDocValuesField(fieldName,
-                NumericUtils.floatToSortableInt(((Number) value).floatValue()));
-        else
-            field = new SortedNumericDocValuesField(fieldName,
-                NumericUtils.floatToSortableInt(Float.parseFloat(value.toString())));
-        documentBuilder.accept(genericFieldName, fieldName, field);
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+        return (fieldName, value, documentBuilder) -> {
+            final Field field;
+            if (value instanceof Number)
+                field = new SortedNumericDocValuesField(fieldName,
+                    NumericUtils.floatToSortableInt(((Number) value).floatValue()));
+            else
+                field = new SortedNumericDocValuesField(fieldName,
+                    NumericUtils.floatToSortableInt(Float.parseFloat(value.toString())));
+            documentBuilder.accept(genericFieldName, fieldName, field);
+        };
     }
 
     @Override

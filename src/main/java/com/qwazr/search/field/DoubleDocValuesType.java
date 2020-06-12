@@ -19,33 +19,29 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.DoubleDocValuesField;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.search.SortField;
 
-final class DoubleDocValuesType extends CustomFieldTypeAbstract.OneField {
+final class DoubleDocValuesType extends CustomFieldTypeAbstract {
 
-    DoubleDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                        final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.DOUBLE));
+    DoubleDocValuesType(final String genericFieldName,
+                        final WildcardMatcher wildcardMatcher,
+                        final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher, BytesRefUtils.Converter.DOUBLE,
+            buildFieldSupplier(genericFieldName),
+            SortUtils::doubleSortField, definition);
     }
 
-    final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-        return SortUtils.doubleSortField(fieldName, sortEnum);
-    }
-
-    @Override
-    final protected void newField(final String fieldName, final Object value, final DocumentBuilder consumer) {
-        final Field field;
-        if (value instanceof Number)
-            field = new DoubleDocValuesField(fieldName, ((Number) value).doubleValue());
-        else
-            field = new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString()));
-        consumer.accept(genericFieldName, fieldName, field);
+    private static FieldSupplier buildFieldSupplier(final String genericFieldName) {
+        return (fieldName, value, documentBuilder) -> {
+            final Field field;
+            if (value instanceof Number)
+                field = new DoubleDocValuesField(fieldName, ((Number) value).doubleValue());
+            else
+                field = new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString()));
+            documentBuilder.accept(genericFieldName, fieldName, field);
+        };
     }
 
     @Override

@@ -19,33 +19,31 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericDocValuesField;
-import org.apache.lucene.search.SortField;
 
-final class LongDocValuesType extends CustomFieldTypeAbstract.OneField {
+final class LongDocValuesType extends CustomFieldTypeAbstract {
 
-    LongDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                      final FieldDefinition definition) {
-        super(of(genericFieldName, wildcardMatcher, (CustomFieldDefinition) definition).bytesRefConverter(
-            BytesRefUtils.Converter.LONG));
+    LongDocValuesType(final String genericFieldName,
+                      final WildcardMatcher wildcardMatcher,
+                      final CustomFieldDefinition definition) {
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.LONG,
+            buildFieldSupplier(genericFieldName),
+            SortUtils::longSortField,
+            definition);
     }
 
-    final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-        return SortUtils.longSortField(fieldName, sortEnum);
-    }
-
-    @Override
-    final protected void newField(final String fieldName, final Object value, final DocumentBuilder consumer) {
-        final Field field;
-        if (value instanceof Number)
-            field = new NumericDocValuesField(fieldName, ((Number) value).longValue());
-        else
-            field = new NumericDocValuesField(fieldName, Long.parseLong(value.toString()));
-        consumer.accept(genericFieldName, fieldName, field);
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+        return (fieldName, value, documentBuilder) -> {
+            final Field field;
+            if (value instanceof Number)
+                field = new NumericDocValuesField(fieldName, ((Number) value).longValue());
+            else
+                field = new NumericDocValuesField(fieldName, Long.parseLong(value.toString()));
+            documentBuilder.accept(genericFieldName, fieldName, field);
+        };
     }
 
     @Override
