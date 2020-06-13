@@ -58,8 +58,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         try {
             indexService.searchQuery(QueryDefinition.of(new TermQuery("storedId", record.getId())).build());
             Assert.fail("Exception not thrown");
-        }
-        catch (WebApplicationException e) {
+        } catch (WebApplicationException e) {
             Assert.assertTrue(ExceptionUtils.getRootCause(e).getMessage().contains("storedId"));
         }
 
@@ -137,7 +136,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
             if (o == null)
                 return false;
             if (o instanceof Record) {
-                final Record r = (Record) o;
+                final Record<?> r = (Record<?>) o;
                 return Objects.equals(getId(), r.getId()) && Objects.equals(getStoredId(), r.getStoredId());
             } else if (o instanceof Map) {
                 final Map m = (Map) o;

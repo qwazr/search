@@ -19,6 +19,7 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.search.index.FieldMap;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import javax.annotation.Nullable;

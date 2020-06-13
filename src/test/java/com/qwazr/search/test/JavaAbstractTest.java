@@ -729,7 +729,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test930ClassicCollectorWithDrillSideways() throws URISyntaxException, IOException {
-        final AnnotatedIndexService master = getMaster();
+        final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final QueryBuilder builder = QueryDefinition.of(
             new DrillDownQuery(new MatchAllDocsQuery(), true).dynamicFilter("dynamic_multi_facet_*",
                 "dynamic_multi_facet_cat", "news"));

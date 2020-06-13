@@ -26,6 +26,7 @@ import com.qwazr.search.field.converters.MultiDVConverter;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
@@ -246,7 +247,8 @@ public abstract class FieldDefinition {
     }
 
     public abstract FieldTypeInterface newFieldType(final String genericFieldName,
-                                                    final WildcardMatcher wildcardMatcher);
+                                                    final WildcardMatcher wildcardMatcher,
+                                                    final String primaryKey);
 
     public static abstract class AbstractBuilder<B extends AbstractBuilder<B>> {
 

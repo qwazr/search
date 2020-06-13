@@ -280,7 +280,7 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
         if (fieldType == null)
             throw new NotAcceptableException("The field "
                 + (genericFieldName == null ? concreteFieldName : genericFieldName) + " is not indexed.");
-        return fieldTypeInterface.resolveFieldName(concreteFieldName, fieldType, FieldTypeInterface.ValueType.textType);
+        return fieldTypeInterface.resolveFieldName(concreteFieldName, fieldType, expectedValueType);
     }
 
     static String resolveDocValueField(final FieldMap fieldMap,

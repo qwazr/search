@@ -85,9 +85,11 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         this.valueType = builder.valueType;
     }
 
-    protected static <T> void addIfNotNull(final T item, final List<T> itemList) {
-        if (item != null)
-            itemList.add(item);
+    protected static <T> boolean addIfNotNull(final T item, final List<T> itemList) {
+        if (item == null)
+            return false;
+        itemList.add(item);
+        return true;
     }
 
     protected static FieldSupplier reduceFieldSuppliers(@NotNull final List<FieldSupplier> fieldSupplierList) {

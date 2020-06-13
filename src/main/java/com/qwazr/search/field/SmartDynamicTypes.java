@@ -20,7 +20,7 @@ import com.qwazr.utils.StringUtils;
 
 public class SmartDynamicTypes {
 
-    final static SmartFieldType doNothingType = new SmartFieldType(StringUtils.EMPTY, null,
+    final static SmartFieldType doNothingType = new SmartFieldType(StringUtils.EMPTY, null, null,
         SmartFieldDefinition.of().build());
 
     final static SmartFieldDefinition defaultNumericDefinition =
@@ -51,7 +51,7 @@ public class SmartDynamicTypes {
 
     public static SmartFieldType primary(final String primaryKey) {
         return StringUtils.isEmpty(primaryKey) ? null
-            : new SmartFieldType(primaryKey, null,
+            : new SmartFieldType(primaryKey, null, primaryKey,
             SmartFieldDefinition.of()
                 .type(SmartFieldDefinition.Type.TEXT)
                 .index(true)
@@ -66,15 +66,15 @@ public class SmartDynamicTypes {
         return primaryKeyType;
     }
 
-    public SmartFieldType getTypeFromValue(final String fieldName, final Object value) {
+    public SmartFieldType getTypeFromValue(final String primaryKey, final String fieldName, final Object value) {
         if (value == null)
             return doNothingType;
         else if (value instanceof Number)
-            return new SmartFieldType(fieldName, null, defaultNumericDefinition);
+            return new SmartFieldType(fieldName, null, primaryKey, defaultNumericDefinition);
         else if (value instanceof String)
-            return new SmartFieldType(fieldName, null, defaultTextDefinition);
+            return new SmartFieldType(fieldName, null, primaryKey, defaultTextDefinition);
         else if (value instanceof Boolean)
-            return new SmartFieldType(fieldName, null, defaultBooleanDefinition);
+            return new SmartFieldType(fieldName, null, primaryKey, defaultBooleanDefinition);
         else
             return doNothingType;
     }

@@ -27,14 +27,16 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 
     SmartFieldType(@NotNull final String genericFieldName,
                    final WildcardMatcher wildcardMatcher,
+                   final String primaryKey,
                    @NotNull final SmartFieldDefinition definition) {
-        super(new SmartBuilder(genericFieldName, wildcardMatcher, definition));
+        super(new SmartBuilder(genericFieldName, wildcardMatcher, primaryKey, definition));
     }
 
     private static class SmartBuilder extends Builder<SmartFieldDefinition> {
 
         private final SmartFieldDefinition.Type type;
         private final int maxKeywordLength;
+        private final boolean isPrimaryKey;
         private final boolean isIndex;
         private final boolean isFacet;
         private final boolean isStored;
@@ -43,21 +45,24 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
 
         private SmartBuilder(final String genericFieldName,
                              final WildcardMatcher wildcardMatcher,
+                             final String primaryKey,
                              final SmartFieldDefinition definition) {
             super(genericFieldName, wildcardMatcher, definition);
             type = definition.type == null ? SmartFieldDefinition.Type.TEXT : definition.type;
             maxKeywordLength = definition.maxKeywordLength == null
                 ? SmartFieldDefinition.DEFAULT_MAX_KEYWORD_LENGTH : definition.maxKeywordLength;
-            isIndex = definition.index != null && definition.index;
+            isPrimaryKey = primaryKey != null && primaryKey.equals(genericFieldName);
+            isIndex = (definition.index != null && definition.index);
             isFacet = definition.facet != null && definition.facet;
             isStored = definition.stored != null && definition.stored;
             isSort = definition.sort != null && definition.sort;
             isFullText = isFullTextIndexAnalyzer(definition);
-            fieldSupplier(buildFieldSupplier(genericFieldName, wildcardMatcher));
-            facetSupplier(buildFacetSupplier(genericFieldName, wildcardMatcher));
-            sortFieldSupplier(buildSortFieldSupplier(genericFieldName, wildcardMatcher));
-            primaryTermSupplier(buildPrimaryTermSupplier(genericFieldName, wildcardMatcher));
-            fieldNameResolver(buildFieldNameResolver(genericFieldName));
+            valueType(getValueType());
+            fieldSupplier(buildFieldSupplier());
+            facetSupplier(buildFacetSupplier());
+            sortFieldSupplier(buildSortFieldSupplier());
+            primaryTermSupplier(buildPrimaryTermSupplier());
+            fieldNameResolver(buildFieldNameResolver());
         }
 
         private static boolean isFullTextIndexAnalyzer(final SmartFieldDefinition definition) {
@@ -71,8 +76,24 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             return false;
         }
 
-        private FacetSupplier buildFacetSupplier(final String genericFieldName,
-                                                 final WildcardMatcher wildcardMatcher) {
+        private ValueType getValueType() {
+            switch (type) {
+                case TEXT:
+                    return ValueType.textType;
+                case LONG:
+                    return ValueType.longType;
+                case DOUBLE:
+                    return ValueType.doubleType;
+                case INTEGER:
+                    return ValueType.integerType;
+                case FLOAT:
+                    return ValueType.floatType;
+                default:
+                    return null;
+            }
+        }
+
+        private FacetSupplier buildFacetSupplier() {
             if (!isFacet)
                 return null;
             final SmartFieldProvider.SmartFieldNameResolver fieldNameSupplier = SmartFieldProvider
@@ -84,8 +105,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             };
         }
 
-        private FieldSupplier getStoredFieldSupplier(final String genericFieldName,
-                                                     final WildcardMatcher wildcardMatcher) {
+        private FieldSupplier getStoredFieldSupplier() {
             switch (type) {
                 case TEXT:
                     return SmartFieldProvider.fieldStoredText(genericFieldName, wildcardMatcher);
@@ -102,26 +122,50 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             }
         }
 
-        private FieldSupplier getIndexFieldSupplier(final String genericFieldName,
-                                                    final WildcardMatcher wildcardMatcher) {
+        private FieldSupplier getIndexFieldSupplier() {
             switch (type) {
                 case TEXT:
+                    fieldType(FieldType.stringField);
                     return SmartFieldProvider.fieldStringText(genericFieldName, wildcardMatcher, maxKeywordLength);
                 case LONG:
+                    fieldType(FieldType.pointField);
                     return SmartFieldProvider.fieldPointLong(genericFieldName, wildcardMatcher);
                 case DOUBLE:
+                    fieldType(FieldType.pointField);
                     return SmartFieldProvider.fieldPointDouble(genericFieldName, wildcardMatcher);
                 case INTEGER:
+                    fieldType(FieldType.pointField);
                     return SmartFieldProvider.fieldPointInteger(genericFieldName, wildcardMatcher);
                 case FLOAT:
+                    fieldType(FieldType.pointField);
                     return SmartFieldProvider.fieldPointFloat(genericFieldName, wildcardMatcher);
                 default:
                     return null;
             }
         }
 
-        private TermSupplier buildPrimaryTermSupplier(final String genericFieldName,
-                                                      final WildcardMatcher wildcardMatcher) {
+        private FieldSupplier getPrimaryFieldBuilder() {
+            if (!isPrimaryKey)
+                return null;
+            switch (type) {
+                case TEXT:
+                    return SmartFieldProvider.fieldStringText(genericFieldName, wildcardMatcher, maxKeywordLength);
+                case LONG:
+                    return SmartFieldProvider.fieldStringLong(genericFieldName, wildcardMatcher);
+                case DOUBLE:
+                    return SmartFieldProvider.fieldStringDouble(genericFieldName, wildcardMatcher);
+                case INTEGER:
+                    return SmartFieldProvider.fieldStringInteger(genericFieldName, wildcardMatcher);
+                case FLOAT:
+                    return SmartFieldProvider.fieldStringFloat(genericFieldName, wildcardMatcher);
+                default:
+                    return null;
+            }
+        }
+
+        private TermSupplier buildPrimaryTermSupplier() {
+            if (!isPrimaryKey)
+                return null;
             switch (type) {
                 case TEXT:
                     return SmartFieldProvider.stringTermText(genericFieldName, wildcardMatcher, maxKeywordLength);
@@ -138,8 +182,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             }
         }
 
-        private TermSupplier buildIndexTermSupplier(final String genericFieldName,
-                                                    final WildcardMatcher wildcardMatcher) {
+        private TermSupplier buildIndexTermSupplier() {
             switch (type) {
                 case TEXT:
                     return SmartFieldProvider.stringTermText(genericFieldName, wildcardMatcher, maxKeywordLength);
@@ -156,8 +199,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             }
         }
 
-        private FieldSupplier getSortedDocValuesFieldSupplier(final String genericFieldName,
-                                                              final WildcardMatcher wildcardMatcher) {
+        private FieldSupplier getSortedDocValuesFieldSupplier() {
             switch (type) {
                 case TEXT:
                     return SmartFieldProvider.fieldSortedDocValuesText(genericFieldName, wildcardMatcher, maxKeywordLength);
@@ -174,25 +216,31 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             }
         }
 
-        private FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName,
-                                                                    final WildcardMatcher wildcardMatcher) {
+        private FieldTypeInterface.FieldSupplier buildFieldSupplier() {
             final List<FieldSupplier> fieldSupplierList = new ArrayList<>();
+            if (isPrimaryKey)
+                if (addIfNotNull(getPrimaryFieldBuilder(), fieldSupplierList))
+                    fieldType(FieldType.stringField);
             if (isStored)
-                addIfNotNull(getStoredFieldSupplier(genericFieldName, wildcardMatcher), fieldSupplierList);
+                if (addIfNotNull(getStoredFieldSupplier(), fieldSupplierList))
+                    fieldType(FieldType.storedField);
             if (isIndex) {
-                addIfNotNull(getIndexFieldSupplier(genericFieldName, wildcardMatcher), fieldSupplierList);
-                if (isFullText)
+                addIfNotNull(getIndexFieldSupplier(), fieldSupplierList);
+                if (isFullText) {
                     fieldSupplierList.add(SmartFieldProvider.fullTextField(genericFieldName, wildcardMatcher));
+                    fieldType(FieldType.textField);
+                }
             }
             if (isFacet)
-                addIfNotNull(SmartFieldProvider.facetField(genericFieldName, wildcardMatcher), fieldSupplierList);
+                if (addIfNotNull(SmartFieldProvider.facetField(genericFieldName, wildcardMatcher), fieldSupplierList))
+                    fieldType(FieldType.facetField);
             if (isSort)
-                addIfNotNull(getSortedDocValuesFieldSupplier(genericFieldName, wildcardMatcher), fieldSupplierList);
+                if (addIfNotNull(getSortedDocValuesFieldSupplier(), fieldSupplierList))
+                    fieldType(FieldType.docValues);
             return reduceFieldSuppliers(fieldSupplierList);
         }
 
-        private SortFieldSupplier buildSortFieldSupplier(final String genericFieldName,
-                                                         final WildcardMatcher wildcardMatcher) {
+        private SortFieldSupplier buildSortFieldSupplier() {
             if (!isSort)
                 return null;
             switch (type) {
@@ -211,7 +259,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             }
         }
 
-        private FieldTypeInterface.FieldNameResolver buildFieldNameResolver(final String genericFieldName) {
+        private FieldTypeInterface.FieldNameResolver buildFieldNameResolver() {
             final FieldType defaultFieldType;
             if (isIndex) {
                 if (isFullText) {

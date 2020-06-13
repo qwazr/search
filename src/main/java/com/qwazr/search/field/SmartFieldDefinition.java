@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.SmartAnalyzerSet;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.SmartField;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.analysis.Analyzer;
 
@@ -47,7 +48,7 @@ public class SmartFieldDefinition extends FieldDefinition {
     SmartFieldDefinition(@JsonProperty("type") final Type type,
                          @JsonProperty("facet") final Boolean facet,
                          @JsonProperty("index") final Boolean index,
-                         @JsonProperty("max+keyword_length") final Integer maxKeywordLength,
+                         @JsonProperty("max_keyword_length") final Integer maxKeywordLength,
                          @JsonProperty("analyzer") final SmartAnalyzerSet analyzer,
                          @JsonProperty("index_analyzer") final String indexAnalyzer,
                          @JsonProperty("query_analyzer") final String queryAnalyzer,
@@ -110,8 +111,10 @@ public class SmartFieldDefinition extends FieldDefinition {
 
     @Override
     @JsonIgnore
-    public FieldTypeInterface newFieldType(String genericFieldName, WildcardMatcher wildcardMatcher) {
-        return new SmartFieldType(genericFieldName, wildcardMatcher, this);
+    public FieldTypeInterface newFieldType(final String genericFieldName,
+                                           final WildcardMatcher wildcardMatcher,
+                                           final String primaryKey) {
+        return new SmartFieldType(genericFieldName, wildcardMatcher, primaryKey, this);
     }
 
     public static SmartBuilder of() {

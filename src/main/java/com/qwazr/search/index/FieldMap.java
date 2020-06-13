@@ -52,7 +52,7 @@ public class FieldMap {
 
         this.primaryKey = primaryKey == null || primaryKey.isBlank() ? FieldDefinition.ID_FIELD : primaryKey;
 
-        this.smartDynamicTypes = new SmartDynamicTypes(SmartDynamicTypes.primary(primaryKey)) :null;
+        this.smartDynamicTypes = new SmartDynamicTypes(SmartDynamicTypes.primary(primaryKey));
 
         this.sortedSetFacetField =
             sortedSetFacetField == null ? FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD : sortedSetFacetField;
@@ -66,10 +66,10 @@ public class FieldMap {
             final FieldTypeInterface fieldType;
             if (name.indexOf('*') != -1 || name.indexOf('?') != -1) {
                 final WildcardMatcher wildcardMatcher = new WildcardMatcher(name);
-                fieldType = definition.newFieldType(name, wildcardMatcher);
+                fieldType = definition.newFieldType(name, wildcardMatcher, primaryKey);
                 wildcardMap.add(Pair.of(wildcardMatcher, fieldType));
             } else {
-                fieldType = definition.newFieldType(name, null);
+                fieldType = definition.newFieldType(name, null, primaryKey);
             }
             nameDefMap.put(name, fieldType);
         });
@@ -146,7 +146,7 @@ public class FieldMap {
             return fieldType;
 
         // Guess field type from value
-        final FieldTypeInterface smartFieldType = smartDynamicTypes.getTypeFromValue(concreteFieldName, contentValue);
+        final FieldTypeInterface smartFieldType = smartDynamicTypes.getTypeFromValue(primaryKey, concreteFieldName, contentValue);
         if (smartFieldType != null)
             return smartFieldType;
 

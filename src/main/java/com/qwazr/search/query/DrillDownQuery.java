@@ -52,7 +52,7 @@ public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
         this.genericFieldNames = genericFieldNames == null ? new LinkedHashMap<>() : genericFieldNames;
     }
 
-    public DrillDownQuery(final AbstractQuery baseQuery, final boolean useDrillSideways) {
+    public DrillDownQuery(final AbstractQuery<?> baseQuery, final boolean useDrillSideways) {
         this(baseQuery, useDrillSideways, null, null);
     }
 
@@ -74,18 +74,11 @@ public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
         throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 
         final org.apache.lucene.facet.DrillDownQuery drillDownQuery;
-        final FieldMap fieldMap = queryContext.getFieldMap();
 
         final Map<String, String> resolvedDimensions = new HashMap<>();
         dimPath.forEach(map -> map.keySet().forEach(concreteField -> {
             final String genericField = genericFieldNames.getOrDefault(concreteField, concreteField);
-            if (fieldMap != null)
-                resolvedDimensions.put(concreteField,
-                    fieldMap.getFieldType(genericField, concreteField)
-                        .resolveFieldName(concreteField,
-                            FieldTypeInterface.FieldType.facetField, FieldTypeInterface.ValueType.textType));
-            else
-                resolvedDimensions.put(concreteField, genericField);
+            resolvedDimensions.put(concreteField, genericField);
         }));
 
         final FacetsConfig facetsConfig = queryContext.getFacetsConfig(resolvedDimensions);
