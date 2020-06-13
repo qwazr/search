@@ -18,16 +18,15 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.search.spans.SpanQuery;
-
+import com.qwazr.utils.StringUtils;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.search.spans.SpanQuery;
 
 public class SpanNearQuery extends AbstractFieldSpanQuery<SpanNearQuery> {
 
@@ -64,7 +63,7 @@ public class SpanNearQuery extends AbstractFieldSpanQuery<SpanNearQuery> {
         throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
         final org.apache.lucene.search.spans.SpanNearQuery.Builder builder =
             new org.apache.lucene.search.spans.SpanNearQuery.Builder(
-                resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.text),
+                resolveField(queryContext.getFieldMap(), StringUtils.EMPTY),
                 in_order == null ? false : in_order);
         if (slop != null)
             builder.setSlop(slop);

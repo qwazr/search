@@ -54,7 +54,7 @@ abstract class RecordBuilder {
         fieldType.dispatch(fieldName, fieldValue, documentBuilder);
 
         if (fieldName.equals(primaryKey))
-            termId = fieldType.term(fieldName, fieldValue);
+            termId = fieldType.newPrimaryTerm(fieldName, fieldValue);
     }
 
     final static class ForMap extends RecordBuilder {

@@ -28,9 +28,11 @@ final class DoubleDocValuesType extends CustomFieldTypeAbstract {
     DoubleDocValuesType(final String genericFieldName,
                         final WildcardMatcher wildcardMatcher,
                         final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher, BytesRefUtils.Converter.DOUBLE,
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.DOUBLE,
             buildFieldSupplier(genericFieldName),
-            SortUtils::doubleSortField, definition);
+            SortUtils::doubleSortField,
+            definition);
     }
 
     private static FieldSupplier buildFieldSupplier(final String genericFieldName) {

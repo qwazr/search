@@ -17,31 +17,26 @@
 package com.qwazr.search.field;
 
 import javax.validation.constraints.NotNull;
-import org.apache.lucene.index.Term;
 
 class FieldUtils {
 
     private FieldUtils() {
     }
 
-    static float getFloatValue(Object value) {
+    static float getFloatValue(@NotNull final Object value) {
         return value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(value.toString());
     }
 
-    static double getDoubleValue(Object value) {
+    static double getDoubleValue(@NotNull final Object value) {
         return value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString());
     }
 
-    static int getIntValue(Object value) {
+    static int getIntValue(@NotNull final Object value) {
         return value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
     }
 
-    static long getLongValue(Object value) {
+    static long getLongValue(@NotNull final Object value) {
         return value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString());
-    }
-
-    static Term newStringTerm(String fieldName, Object value) {
-        return new Term(fieldName, value.toString());
     }
 
     static String getStringValue(@NotNull final Object value) {

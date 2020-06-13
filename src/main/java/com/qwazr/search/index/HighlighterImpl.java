@@ -15,20 +15,18 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.StringUtils;
-import org.apache.lucene.search.DocIdSetIterator;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.uhighlight.WholeBreakIterator;
-import org.apache.lucene.search.uhighlight.DefaultPassageFormatter;
-import org.apache.lucene.search.uhighlight.PassageFormatter;
-import org.apache.lucene.search.uhighlight.UnifiedHighlighter;
-
 import java.io.IOException;
 import java.text.BreakIterator;
 import java.util.List;
 import java.util.Locale;
+import org.apache.lucene.search.DocIdSetIterator;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.uhighlight.DefaultPassageFormatter;
+import org.apache.lucene.search.uhighlight.PassageFormatter;
+import org.apache.lucene.search.uhighlight.UnifiedHighlighter;
+import org.apache.lucene.search.uhighlight.WholeBreakIterator;
 
 final class HighlighterImpl extends UnifiedHighlighter {
 
@@ -52,7 +50,7 @@ final class HighlighterImpl extends UnifiedHighlighter {
         this.definition = definition;
         final String field = definition.field == null ? highlightName : definition.field;
         final String storedField = definition.storedField == null ? field : definition.storedField;
-        this.indexFields = new String[]{queryContext.fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, field, field)};
+        this.indexFields = new String[]{queryContext.fieldMap.resolveIndexFieldName(field, field)};
         this.storedFields = new String[]{queryContext.fieldMap.resolveStoredFieldName(storedField)};
         if (definition.breakIterator != null && definition.breakIterator.language != null)
             locale = Locale.forLanguageTag(definition.breakIterator.language);

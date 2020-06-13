@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import javax.validation.constraints.NotNull;
@@ -28,10 +29,6 @@ import org.apache.lucene.util.BytesRef;
 
 public interface FieldTypeInterface {
 
-    enum LuceneFieldType {
-        text, point, facet, docValue;
-    }
-
     void dispatch(final String fieldName, final Object value, final DocumentBuilder luceneDocumentBuilder);
 
     SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
@@ -40,18 +37,19 @@ public interface FieldTypeInterface {
 
     Object toTerm(final BytesRef bytesRef);
 
-    String getQueryFieldName(@NotNull final LuceneFieldType luceneFieldType,
-                             @NotNull final String fieldName);
+    String getIndexFieldName(@NotNull final String fieldName);
 
-    String getStoredFieldName(String fieldName);
+    String getStoredFieldName(@NotNull final String fieldName);
+
+    Term newIndexTerm(final String fieldName, final Object value);
+
+    Term newPrimaryTerm(final String fieldName, final Object value);
 
     FieldDefinition getDefinition();
 
     void copyTo(final String fieldName, final FieldTypeInterface fieldType);
 
-    void applyFacetsConfig(final String fieldName, final FacetsConfig facetsConfig);
-
-    Term term(String fieldName, Object value);
+    void applyFacetsConfig(final String fieldName, final FieldMap fieldMap, final FacetsConfig facetsConfig);
 
     @FunctionalInterface
     interface Supplier<T extends FieldDefinition> {
@@ -59,10 +57,11 @@ public interface FieldTypeInterface {
                                         final WildcardMatcher wildcardMatcher,
                                         final T definition);
     }
-    
+
     @FunctionalInterface
     interface FacetSupplier {
         void setConfig(final String fieldName,
+                       final FieldMap fieldMap,
                        final FacetsConfig facetsConfig);
     }
 
@@ -77,6 +76,17 @@ public interface FieldTypeInterface {
     interface SortFieldSupplier {
         SortField newSortField(final String fieldname,
                                final QueryDefinition.SortEnum sortEnum);
+    }
+
+    @FunctionalInterface
+    interface TermSupplier {
+        Term newTerm(final String fieldname,
+                     final Object value);
+    }
+
+    @FunctionalInterface
+    interface FieldNameResolver {
+        String resolve(final String fieldName);
     }
 
 }

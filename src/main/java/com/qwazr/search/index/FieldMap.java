@@ -178,7 +178,7 @@ public class FieldMap {
         final FieldTypeInterface fieldType = findFieldType(genericFieldName, concreteFieldName);
         if (fieldType == null)
             return;
-        fieldType.setFacetsConfig(concreteFieldName, this, facetsConfig);
+        fieldType.applyFacetsConfig(concreteFieldName, this, facetsConfig);
         final FieldDefinition definition = fieldType.getDefinition();
         if (definition == null)
             return;
@@ -205,26 +205,23 @@ public class FieldMap {
         }
     }
 
-    final public String resolveStoredFieldName(final String fieldName) {
+    final public String resolveStoredFieldName(@NotNull final String fieldName) {
         return getFieldType(fieldName, fieldName).getStoredFieldName(fieldName);
     }
 
-    final public String resolveQueryFieldName(@NotNull final FieldTypeInterface.LuceneFieldType luceneFieldType,
-                                              @NotNull final String fieldName) {
-        return getFieldType(fieldName, fieldName).getQueryFieldName(luceneFieldType, fieldName);
+    final public String resolveIndexFieldName(@NotNull final String fieldName) {
+        return getFieldType(fieldName, fieldName).getIndexFieldName(fieldName);
     }
 
-    final public String resolveQueryFieldName(@NotNull final FieldTypeInterface.LuceneFieldType luceneFieldType,
-                                              final String genericFieldName,
+    final public String resolveIndexFieldName(@NotNull final String genericFieldName,
                                               @NotNull final String fieldName) {
-        return getFieldType(genericFieldName, fieldName).getQueryFieldName(luceneFieldType, fieldName);
+        return getFieldType(genericFieldName, fieldName).getIndexFieldName(fieldName);
     }
 
-    final public String resolveQueryFieldName(@NotNull final FieldTypeInterface.LuceneFieldType luceneFieldType,
-                                              final String genericFieldName,
+    final public String resolveIndexFieldName(@NotNull final String genericFieldName,
                                               @NotNull final String fieldName,
                                               @NotNull final Object value) {
-        return getFieldType(genericFieldName, fieldName, value).getQueryFieldName(luceneFieldType, fieldName);
+        return getFieldType(genericFieldName, fieldName, value).getIndexFieldName(fieldName == null ? genericFieldName : fieldName);
     }
 
     static public String[] resolveFieldNames(final String[] fields, final Function<String, String> resolver) {

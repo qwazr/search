@@ -18,20 +18,11 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.TermConsumer;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ConcurrentUtils;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Query;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,6 +34,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
 
 public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
 
@@ -158,7 +156,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
             }
             final Query query =
                 new FieldQueryBuilder(alzr, fieldMap == null
-                    ? field : fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, field),
+                    ? field : fieldMap.resolveIndexFieldName(field),
                     termsFreq).parse(queryString, occur, boost);
             if (query != null)
                 queries.add(query);

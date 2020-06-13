@@ -18,14 +18,13 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
-import org.apache.lucene.index.Term;
-
+import com.qwazr.utils.StringUtils;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import org.apache.lucene.index.Term;
 
 public class PhraseQuery extends AbstractFieldQuery<PhraseQuery> {
 
@@ -63,7 +62,7 @@ public class PhraseQuery extends AbstractFieldQuery<PhraseQuery> {
         if (slop != null)
             builder.setSlop(slop);
         if (terms != null) {
-            final String resolvedField = resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.text);
+            final String resolvedField = resolveField(queryContext.getFieldMap(), StringUtils.EMPTY);
             for (String term : terms)
                 builder.add(new Term(resolvedField, term));
         }

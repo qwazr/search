@@ -17,11 +17,9 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
-import org.apache.lucene.index.Term;
-
 import java.util.Objects;
+import org.apache.lucene.index.Term;
 
 public abstract class AbstractFieldSpanQuery<T extends AbstractFieldSpanQuery<T>> extends AbstractSpanQuery<T> {
 
@@ -40,8 +38,12 @@ public abstract class AbstractFieldSpanQuery<T extends AbstractFieldSpanQuery<T>
         return Objects.equals(genericField, q.genericField) && Objects.equals(field, q.field);
     }
 
-    final protected String resolveField(final FieldMap fieldMap, final FieldTypeInterface.LuceneFieldType luceneFieldType) {
-        return AbstractFieldQuery.resolveField(fieldMap, luceneFieldType, genericField, field);
+    final protected String resolveField(final FieldMap fieldMap) {
+        return fieldMap.resolveIndexFieldName(genericField, field);
+    }
+
+    final protected String resolveField(final FieldMap fieldMap, final Object value) {
+        return fieldMap.resolveIndexFieldName(genericField, field, value);
     }
 
     final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {

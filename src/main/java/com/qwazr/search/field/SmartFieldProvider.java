@@ -16,28 +16,14 @@
 package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.*;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
-import javax.validation.constraints.NotNull;
-import java.util.function.Function;
-
 interface SmartFieldProvider {
-
-    Field getField(final Object value);
-
-    Term getTerm(final Object value);
-
-    SortField getSort(final QueryDefinition.SortEnum sortEnum);
-
-    void apply(final Object value, final DocumentBuilder builder);
 
     enum FieldPrefix {
 
@@ -71,10 +57,10 @@ interface SmartFieldProvider {
 
     }
 
-    static Function<String, String> buildNameProvider(final String genericFieldName,
-                                                      final WildcardMatcher wildcardMatcher,
-                                                      final FieldPrefix fieldPrefix,
-                                                      final TypePrefix typePrefix) {
+    private static FieldTypeInterface.FieldNameResolver buildNameProvider(final String genericFieldName,
+                                                                          final WildcardMatcher wildcardMatcher,
+                                                                          final FieldPrefix fieldPrefix,
+                                                                          final TypePrefix typePrefix) {
         if (wildcardMatcher == null) {
             final String fieldName = typePrefix.getLuceneFieldName(genericFieldName, fieldPrefix);
             return concreteFieldName -> fieldName;
@@ -83,411 +69,356 @@ interface SmartFieldProvider {
         }
     }
 
-
-    final class StoredText extends Base {
-
-        StoredText(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.storedField, TypePrefix.textType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new StoredField(concreteFieldName, value.toString());
-        }
+    static FieldTypeInterface.FieldNameResolver fieldStoredTextResolver(final String genericFieldName,
+                                                                        final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.storedField, TypePrefix.textType);
     }
 
-    final class StoredLong extends Base {
-
-        StoredLong(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.storedField, TypePrefix.longType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new StoredField(concreteFieldName, FieldUtils.getLongValue(value));
-        }
+    static FieldTypeInterface.FieldSupplier fieldStoredText(final String genericFieldName,
+                                                            final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+            fieldStoredTextResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new StoredField(fieldNameSupplier.resolve(fieldName), value.toString()));
     }
 
-    final class StoredDouble extends Base {
-
-        StoredDouble(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.storedField, TypePrefix.doubleType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new StoredField(concreteFieldName, FieldUtils.getDoubleValue(value));
-        }
+    static FieldTypeInterface.FieldNameResolver fieldStoredLongResolver(final String genericFieldName,
+                                                                        final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.storedField, TypePrefix.longType);
     }
 
-    final class StoredInteger extends Base {
-
-        StoredInteger(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.storedField, TypePrefix.integerType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new StoredField(concreteFieldName, FieldUtils.getIntValue(value));
-        }
+    static FieldTypeInterface.FieldSupplier fieldStoredLong(final String genericFieldName,
+                                                            final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+            fieldStoredLongResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new StoredField(fieldNameSupplier.resolve(fieldName), FieldUtils.getLongValue(value)));
     }
 
-    final class StoredFloat extends Base {
-
-        StoredFloat(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.storedField, TypePrefix.floatType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new StoredField(concreteFieldName, FieldUtils.getFloatValue(value));
-        }
+    static FieldTypeInterface.FieldNameResolver fieldStoredDoubleResolver(final String genericFieldName,
+                                                                          final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.storedField, TypePrefix.doubleType);
     }
 
-    static SmartFieldProvider string(final String genericFieldName,
-                                     final int nextStringLength,
-                                     final SmartFieldDefinition.Type type) {
-        switch (type) {
-            case TEXT:
-                return new StringText(genericFieldName, nextStringLength);
-            case LONG:
-                return new StringLong(genericFieldName);
-            case DOUBLE:
-                return new StringDouble(genericFieldName);
-            case INTEGER:
-                return new StringInteger(genericFieldName);
-            case FLOAT:
-                return new StringFloat(genericFieldName);
-            default:
-                return Noop.INSTANCE;
-        }
+    static FieldTypeInterface.FieldSupplier fieldStoredDouble(final String genericFieldName,
+                                                              final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+            fieldStoredDoubleResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new StoredField(fieldNameSupplier.resolve(fieldName), FieldUtils.getDoubleValue(value)));
     }
 
-    final class StringText extends Base {
+    static FieldTypeInterface.FieldNameResolver fieldStoredIntegerResolver(final String genericFieldName,
+                                                                           final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.storedField, TypePrefix.integerType);
+    }
 
-        private final int nextStringLength;
+    static FieldTypeInterface.FieldSupplier fieldStoredInteger(final String genericFieldName,
+                                                               final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+            fieldStoredIntegerResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new StoredField(fieldNameSupplier.resolve(fieldName), FieldUtils.getIntValue(value)));
+    }
 
-        StringText(final String genericFieldName, final int nextStringLength) {
-            super(genericFieldName, FieldPrefix.stringField, TypePrefix.textType);
-            this.nextStringLength = nextStringLength;
-        }
+    static FieldTypeInterface.FieldNameResolver fieldStoredFloatResolver(final String genericFieldName,
+                                                                         final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.storedField, TypePrefix.floatType);
+    }
 
-        @Override
-        public Field getField(final Object value) {
+    static FieldTypeInterface.FieldSupplier fieldStoredFloat(final String genericFieldName,
+                                                             final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+            fieldStoredFloatResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new StoredField(fieldNameSupplier.resolve(fieldName), FieldUtils.getFloatValue(value)));
+    }
+
+
+    static FieldTypeInterface.FieldNameResolver fieldStringTextResolver(final String genericFieldName,
+                                                                        final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.stringField, TypePrefix.textType);
+    }
+
+    static FieldTypeInterface.FieldSupplier fieldStringText(final String genericFieldName,
+                                                            final WildcardMatcher wildcardMatcher,
+                                                            final int maxStringLength) {
+        final FieldTypeInterface.FieldNameResolver fieldResolver = fieldStringTextResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> {
             final String stringValue = value.toString();
-            if (stringValue.length() > nextStringLength)
-                return null;
-            return new StringField(concreteFieldName, stringValue, Field.Store.NO);
-        }
+            if (stringValue.length() <= maxStringLength)
+                builder.accept(genericFieldName, fieldName,
+                    new StringField(fieldResolver.resolve(fieldName), stringValue, Field.Store.NO));
+        };
+    }
 
-        @Override
-        public Term getTerm(final Object value) {
-            return new Term(concreteFieldName, value.toString());
-        }
+    static FieldTypeInterface.TermSupplier stringTermText(final String genericFieldName,
+                                                          final WildcardMatcher wildcardMatcher,
+                                                          final int maxStringLength) {
+        final FieldTypeInterface.FieldNameResolver fieldResolver = fieldStringTextResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value) -> {
+            final String stringValue = value.toString();
+            if (stringValue.length() > maxStringLength)
+                return null;
+            return new Term(fieldResolver.resolve(fieldName), stringValue);
+        };
     }
 
     private static BytesRef getLongValue(Object value) {
         return BytesRefUtils.fromLong(FieldUtils.getLongValue(value));
     }
 
-    final class StringLong extends Base {
+    static FieldTypeInterface.FieldNameResolver fieldStringLongResolver(final String genericFieldName,
+                                                                        final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.stringField, TypePrefix.longType);
+    }
 
-        StringLong(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.stringField, TypePrefix.longType);
-        }
+    static FieldTypeInterface.FieldSupplier fieldStringLong(final String genericFieldName,
+                                                            final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringLongResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new StringField(fieldNameResolver.resolve(fieldName), getLongValue(value), Field.Store.NO));
+    }
 
-        @Override
-        public Field getField(final Object value) {
-            return new StringField(concreteFieldName, getLongValue(value), Field.Store.NO);
-        }
-
-        @Override
-        public Term getTerm(final Object value) {
-            return new Term(concreteFieldName, getLongValue(value));
-        }
+    static FieldTypeInterface.TermSupplier stringTermLong(final String genericFieldName,
+                                                          final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringLongResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value) -> new Term(fieldNameResolver.resolve(fieldName), getLongValue(value));
     }
 
     private static BytesRef getDoubleValue(Object value) {
         return BytesRefUtils.fromDouble(FieldUtils.getDoubleValue(value));
     }
 
-    final class StringDouble extends Base {
+    static FieldTypeInterface.FieldNameResolver fieldStringDoubleResolver(final String genericFieldName,
+                                                                          final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.stringField, TypePrefix.doubleType);
+    }
 
-        StringDouble(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.stringField, TypePrefix.doubleType);
-        }
+    static FieldTypeInterface.FieldSupplier fieldStringDouble(final String genericFieldName,
+                                                              final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringDoubleResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new StringField(fieldNameResolver.resolve(fieldName), getDoubleValue(value), Field.Store.NO));
+    }
 
-        @Override
-        public Field getField(final Object value) {
-            return new StringField(concreteFieldName, getDoubleValue(value), Field.Store.NO);
-        }
-
-        @Override
-        public Term getTerm(final Object value) {
-            return new Term(concreteFieldName, getDoubleValue(value));
-        }
+    static FieldTypeInterface.TermSupplier stringTermDouble(final String genericFieldName,
+                                                            final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringDoubleResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value) -> new Term(fieldNameResolver.resolve(fieldName), getDoubleValue(value));
     }
 
     private static BytesRef getIntegerValue(Object value) {
         return BytesRefUtils.fromInteger(FieldUtils.getIntValue(value));
     }
 
-    final class StringInteger extends Base {
+    static FieldTypeInterface.FieldNameResolver fieldStringIntegerResolver(final String genericFieldName,
+                                                                           final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.stringField, TypePrefix.integerType);
+    }
 
-        StringInteger(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.stringField, TypePrefix.integerType);
-        }
+    static FieldTypeInterface.FieldSupplier fieldStringInteger(final String genericFieldName,
+                                                               final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringIntegerResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new StringField(fieldNameResolver.resolve(fieldName), getIntegerValue(value), Field.Store.NO));
+    }
 
-        @Override
-        public Field getField(final Object value) {
-            return new StringField(concreteFieldName, getIntegerValue(value), Field.Store.NO);
-        }
-
-        @Override
-        public Term getTerm(final Object value) {
-            return new Term(concreteFieldName, getIntegerValue(value));
-        }
+    static FieldTypeInterface.TermSupplier stringTermInteger(final String genericFieldName,
+                                                             final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringIntegerResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value) -> new Term(fieldNameResolver.resolve(fieldName), getIntegerValue(value));
     }
 
     private static BytesRef getFloatValue(Object value) {
         return BytesRefUtils.fromFloat(FieldUtils.getFloatValue(value));
     }
 
-    final class StringFloat extends Base {
-
-        StringFloat(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.stringField, TypePrefix.floatType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new StringField(concreteFieldName, getFloatValue(value), Field.Store.NO);
-        }
-
-        @Override
-        public Term getTerm(final Object value) {
-            return new Term(concreteFieldName, getFloatValue(value));
-        }
+    static FieldTypeInterface.FieldNameResolver fieldStringFloatResolver(final String genericFieldName,
+                                                                         final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.stringField, TypePrefix.floatType);
     }
 
-    static SmartFieldProvider sortedDocValue(final String genericFieldName, final SmartFieldDefinition.Type type) {
-        switch (type) {
-            case TEXT:
-                return new SortedDocValuesText(genericFieldName);
-            case LONG:
-                return new SortedDocValuesLong(genericFieldName);
-            case DOUBLE:
-                return new SortedDocValuesDouble(genericFieldName);
-            case INTEGER:
-                return new SortedDocValuesInteger(genericFieldName);
-            case FLOAT:
-                return new SortedDocValuesFloat(genericFieldName);
-            default:
-                return Noop.INSTANCE;
-        }
+    static FieldTypeInterface.FieldSupplier fieldStringFloat(final String genericFieldName,
+                                                             final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringFloatResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new StringField(fieldNameResolver.resolve(fieldName), getFloatValue(value), Field.Store.NO));
     }
 
-    final class SortedDocValuesText extends Base {
-
-        SortedDocValuesText(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.docValues, TypePrefix.textType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new SortedDocValuesField(concreteFieldName, new BytesRef(value.toString()));
-        }
-
-        @Override
-        public SortField getSort(final QueryDefinition.SortEnum sortEnum) {
-            return SortUtils.stringSortField(concreteFieldName, sortEnum);
-        }
-
+    static FieldTypeInterface.TermSupplier stringTermFloat(final String genericFieldName,
+                                                           final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringFloatResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value) -> new Term(fieldNameResolver.resolve(fieldName), getFloatValue(value));
     }
 
-    final class SortedDocValuesLong extends Base {
-
-        SortedDocValuesLong(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.docValues, TypePrefix.longType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new SortedNumericDocValuesField(concreteFieldName, FieldUtils.getLongValue(value));
-        }
-
-        @Override
-        public SortField getSort(final QueryDefinition.SortEnum sortEnum) {
-            return SortUtils.longSortField(concreteFieldName, sortEnum);
-        }
+    static FieldTypeInterface.FieldSupplier fieldSortedDocValuesText(final String genericFieldName,
+                                                                     final WildcardMatcher wildcardMatcher,
+                                                                     final int maxStringLength) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.textType);
+        return (fieldName, value, builder) -> {
+            final String stringValue = value.toString();
+            if (stringValue.length() <= maxStringLength)
+                builder.accept(genericFieldName, fieldName,
+                    new SortedDocValuesField(fieldNameSupplier.resolve(fieldName), new BytesRef(value.toString())));
+        };
     }
 
-    final class SortedDocValuesInteger extends Base {
-
-        SortedDocValuesInteger(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.docValues, TypePrefix.integerType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new SortedNumericDocValuesField(concreteFieldName, FieldUtils.getIntValue(value));
-        }
-
-        @Override
-        public SortField getSort(final QueryDefinition.SortEnum sortEnum) {
-            return SortUtils.integerSortField(concreteFieldName, sortEnum);
-        }
+    static FieldTypeInterface.SortFieldSupplier fieldSortedFieldText(final String genericFieldName,
+                                                                     final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.textType);
+        return (fieldName, sortEnum) -> SortUtils.stringSortField(fieldNameSupplier.resolve(fieldName), sortEnum);
     }
 
-    final class SortedDocValuesDouble extends Base {
-
-        SortedDocValuesDouble(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.docValues, TypePrefix.doubleType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new SortedNumericDocValuesField(concreteFieldName,
-                NumericUtils.doubleToSortableLong(FieldUtils.getDoubleValue(value)));
-        }
-
-        @Override
-        public SortField getSort(final QueryDefinition.SortEnum sortEnum) {
-            return SortUtils.doubleSortField(concreteFieldName, sortEnum);
-        }
+    static FieldTypeInterface.FieldSupplier fieldSortedDocValuesLong(final String genericFieldName,
+                                                                     final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.longType);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new SortedNumericDocValuesField(fieldNameSupplier.resolve(fieldName), FieldUtils.getLongValue(value)));
     }
 
-    final class SortedDocValuesFloat extends Base {
-
-        SortedDocValuesFloat(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.docValues, TypePrefix.floatType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new SortedNumericDocValuesField(concreteFieldName,
-                NumericUtils.floatToSortableInt(FieldUtils.getFloatValue(value)));
-        }
-
-        @Override
-        public SortField getSort(final QueryDefinition.SortEnum sortEnum) {
-            return SortUtils.floatSortField(concreteFieldName, sortEnum);
-        }
+    static FieldTypeInterface.SortFieldSupplier fieldSortedFieldLong(final String genericFieldName,
+                                                                     final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.longType);
+        return (fieldName, sortEnum) -> SortUtils.longSortField(fieldNameSupplier.resolve(fieldName), sortEnum);
     }
 
-    static SmartFieldProvider point(final String genericFieldName, final SmartFieldDefinition.Type type) {
-        switch (type) {
-            case LONG:
-                return new PointLong(genericFieldName);
-            case DOUBLE:
-                return new PointDouble(genericFieldName);
-            case INTEGER:
-                return new PointInteger(genericFieldName);
-            case FLOAT:
-                return new PointFloat(genericFieldName);
-            default:
-                return Noop.INSTANCE;
-        }
+    static FieldTypeInterface.FieldSupplier fieldSortedDocValuesInteger(final String genericFieldName,
+                                                                        final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.integerType);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new SortedNumericDocValuesField(fieldNameSupplier.resolve(fieldName), FieldUtils.getIntValue(value)));
     }
 
-    final class PointLong extends Base {
-
-        PointLong(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.pointField, TypePrefix.longType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new LongPoint(concreteFieldName,
-                value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString())
-            );
-        }
-
-        @Override
-        public Term getTerm(final Object value) {
-            return new Term(concreteFieldName, getLongValue(value));
-        }
+    static FieldTypeInterface.SortFieldSupplier fieldSortedFieldInteger(final String genericFieldName,
+                                                                        final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.integerType);
+        return (fieldName, sortEnum) -> SortUtils.integerSortField(fieldNameSupplier.resolve(fieldName), sortEnum);
     }
 
-    final class PointDouble extends Base {
-
-        PointDouble(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.pointField, TypePrefix.doubleType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new DoublePoint(concreteFieldName,
-                value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString())
-            );
-        }
-
-        @Override
-        public Term getTerm(final Object value) {
-            return new Term(concreteFieldName, getDoubleValue(value));
-        }
+    static FieldTypeInterface.FieldSupplier fieldSortedDocValuesFloat(final String genericFieldName,
+                                                                      final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.floatType);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new SortedNumericDocValuesField(fieldNameSupplier.resolve(fieldName),
+                NumericUtils.floatToSortableInt(FieldUtils.getFloatValue(value))));
     }
 
-    final class PointInteger extends Base {
-
-        PointInteger(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.pointField, TypePrefix.integerType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new IntPoint(concreteFieldName,
-                value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString())
-            );
-        }
-
-        @Override
-        public Term getTerm(final Object value) {
-            return new Term(concreteFieldName, getIntegerValue(value));
-        }
+    static FieldTypeInterface.SortFieldSupplier fieldSortedFieldFloat(final String genericFieldName,
+                                                                      final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.floatType);
+        return (fieldName, sortEnum) -> SortUtils.floatSortField(fieldNameSupplier.resolve(fieldName), sortEnum);
     }
 
-    final class PointFloat extends Base {
-
-        PointFloat(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.pointField, TypePrefix.floatType);
-        }
-
-        @Override
-        public Field getField(final Object value) {
-            return new FloatPoint(concreteFieldName,
-                value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(value.toString())
-            );
-        }
-
-        @Override
-        public Term getTerm(final Object value) {
-            return new Term(concreteFieldName, getFloatValue(value));
-        }
+    static FieldTypeInterface.FieldSupplier fieldSortedDocValuesDouble(final String genericFieldName,
+                                                                       final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.doubleType);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new SortedNumericDocValuesField(fieldNameSupplier.resolve(fieldName),
+                NumericUtils.doubleToSortableLong(FieldUtils.getDoubleValue(value))));
     }
 
-    final class Facet extends Base {
-
-        Facet(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.facetField, TypePrefix.textType);
-        }
-
-        @Override
-        public Field getField(Object value) {
-            return new SortedSetDocValuesFacetField(concreteFieldName, value.toString());
-        }
+    static FieldTypeInterface.SortFieldSupplier fieldSortedFieldDouble(final String genericFieldName,
+                                                                       final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.doubleType);
+        return (fieldName, sortEnum) -> SortUtils.doubleSortField(fieldNameSupplier.resolve(fieldName), sortEnum);
     }
 
-    final class FullText extends Base {
+    static FieldTypeInterface.FieldNameResolver fieldPointLongResolver(final String genericFieldName,
+                                                                       final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.pointField, TypePrefix.longType);
+    }
 
-        FullText(final String genericFieldName) {
-            super(genericFieldName, FieldPrefix.textField, TypePrefix.textType);
-        }
+    static FieldTypeInterface.FieldSupplier fieldPointLong(final String genericFieldName,
+                                                           final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+            fieldPointLongResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new LongPoint(fieldNameSupplier.resolve(fieldName), FieldUtils.getLongValue(value)));
+    }
 
-        @Override
-        public Field getField(@NotNull final Object value) {
-            return new TextField(concreteFieldName, value.toString(), Field.Store.NO);
-        }
+    static FieldTypeInterface.FieldNameResolver fieldPointDoubleResolver(final String genericFieldName,
+                                                                         final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.pointField, TypePrefix.doubleType);
+    }
+
+    static FieldTypeInterface.FieldSupplier fieldPointDouble(final String genericFieldName,
+                                                             final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+            fieldPointDoubleResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new DoublePoint(fieldNameSupplier.resolve(fieldName), FieldUtils.getDoubleValue(value)));
+    }
+
+    static FieldTypeInterface.FieldNameResolver fieldPointIntegerResolver(final String genericFieldName,
+                                                                          final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.pointField, TypePrefix.integerType);
+    }
+
+    static FieldTypeInterface.FieldSupplier fieldPointInteger(final String genericFieldName,
+                                                              final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+            fieldPointIntegerResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new IntPoint(fieldNameSupplier.resolve(fieldName), FieldUtils.getIntValue(value)));
+    }
+
+    static FieldTypeInterface.FieldNameResolver fieldPointFloatResolver(final String genericFieldName,
+                                                                        final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.pointField, TypePrefix.floatType);
+    }
+
+
+    static FieldTypeInterface.FieldSupplier fieldPointFloat(final String genericFieldName,
+                                                            final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+            fieldPointFloatResolver(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new FloatPoint(fieldNameSupplier.resolve(fieldName), FieldUtils.getFloatValue(value)));
+    }
+
+    static FieldTypeInterface.FieldNameResolver facetFieldNameSupplier(final String genericFieldName,
+                                                                       final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(genericFieldName, wildcardMatcher, FieldPrefix.facetField, TypePrefix.textType);
+    }
+
+    static FieldTypeInterface.FieldSupplier facetField(final String genericFieldName,
+                                                       final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = facetFieldNameSupplier(genericFieldName, wildcardMatcher);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new SortedSetDocValuesFacetField(fieldNameSupplier.resolve(fieldName), value.toString()));
+    }
+
+    static FieldTypeInterface.FieldSupplier fullTextField(final String genericFieldName,
+                                                          final WildcardMatcher wildcardMatcher) {
+        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldPrefix.textField, TypePrefix.textType);
+        return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
+            new TextField(fieldNameSupplier.resolve(fieldName), value.toString(), Field.Store.NO));
     }
 
 }

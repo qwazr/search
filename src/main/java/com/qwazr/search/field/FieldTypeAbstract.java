@@ -19,16 +19,19 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.WildcardMatcher;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.util.BytesRef;
 
@@ -48,6 +51,14 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     @NotNull
     final private SortFieldSupplier sortFieldSupplier;
     @NotNull
+    final private TermSupplier primaryTermSupplier;
+    @NotNull
+    final private TermSupplier indexTermSupplier;
+    @NotNull
+    final private FieldNameResolver indexFieldNameResolver;
+    @NotNull
+    final private FieldNameResolver storedFieldNameResolver;
+    @NotNull
     final private Map<FieldTypeInterface, String> copyToFields;
 
     protected FieldTypeAbstract(@NotNull final String genericFieldName,
@@ -56,17 +67,42 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
                                 final FieldSupplier fieldSupplier,
                                 final FacetSupplier facetSupplier,
                                 final SortFieldSupplier sortFieldSupplier,
+                                final TermSupplier primaryTermSupplier,
+                                final TermSupplier indexTermSupplier,
+                                final FieldNameResolver indexFieldNameResolver,
+                                final FieldNameResolver storedFieldNameResolver,
                                 @NotNull final T definition) {
         this.genericFieldName = genericFieldName;
         this.wildcardMatcher = wildcardMatcher;
         this.definition = definition;
         this.bytesRefConverter = bytesRefConverter == null ? BytesRefUtils.Converter.NOPE : bytesRefConverter;
-        this.fieldSupplier = fieldSupplier == null ? (f, v, b) -> {
+        this.fieldSupplier = fieldSupplier == null ? (fieldName, value, documentBuilder) -> {
         } : fieldSupplier;
-        this.facetSupplier = facetSupplier == null ? (f, c) -> {
+        this.facetSupplier = facetSupplier == null ? (fieldName, fieldMap, facetsConfig) -> {
         } : facetSupplier;
-        this.sortFieldSupplier = sortFieldSupplier == null ? (f, s) -> null : sortFieldSupplier;
+        this.sortFieldSupplier = sortFieldSupplier == null ? (fieldName, sortEnum) -> null : sortFieldSupplier;
+        this.primaryTermSupplier = primaryTermSupplier == null ? (fieldName, value) -> null : primaryTermSupplier;
+        this.indexTermSupplier = indexTermSupplier == null ? (fieldName, value) -> null : indexTermSupplier;
+        this.indexFieldNameResolver = indexFieldNameResolver == null ? (fieldName) -> null : indexFieldNameResolver;
+        this.storedFieldNameResolver = storedFieldNameResolver == null ? (fieldName) -> null : storedFieldNameResolver;
         this.copyToFields = new LinkedHashMap<>();
+    }
+
+    protected static <T> void addIfNotNull(final T item, final List<T> itemList) {
+        if (item != null)
+            itemList.add(item);
+    }
+
+    protected static FieldSupplier reduceFieldSuppliers(@NotNull final List<FieldSupplier> fieldSupplierList) {
+        if (fieldSupplierList.isEmpty())
+            return null;
+        if (fieldSupplierList.size() == 1)
+            return fieldSupplierList.get(0);
+        final FieldSupplier[] fieldSuppliers = fieldSupplierList.toArray(new FieldSupplier[0]);
+        return (fieldName, value, documentBuilder) -> {
+            for (FieldSupplier fieldSupplier : fieldSuppliers)
+                fieldSupplier.addFields(fieldName, value, documentBuilder);
+        };
     }
 
     protected static boolean isStored(final CustomFieldDefinition definition) {
@@ -75,8 +111,9 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 
     @Override
     public final void applyFacetsConfig(final String fieldName,
+                                        final FieldMap fieldMap,
                                         final FacetsConfig facetsConfig) {
-        facetSupplier.setConfig(fieldName, facetsConfig);
+        facetSupplier.setConfig(fieldName, fieldMap, facetsConfig);
     }
 
     @Override
@@ -198,6 +235,26 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
                 copyToFields.forEach(
                     (fieldType, copyFieldName) -> fieldType.dispatch(copyFieldName, value, documentBuilder));
         }
+    }
+
+    @Override
+    final public String getIndexFieldName(@NotNull final String fieldName) {
+        return indexFieldNameResolver.resolve(fieldName);
+    }
+
+    @Override
+    final public String getStoredFieldName(@NotNull final String fieldName) {
+        return storedFieldNameResolver.resolve(fieldName);
+    }
+
+    @Override
+    final public Term newIndexTerm(final String fieldName, final Object value) {
+        return indexTermSupplier.newTerm(fieldName, value);
+    }
+
+    @Override
+    final public Term newPrimaryTerm(final String fieldName, final Object value) {
+        return primaryTermSupplier.newTerm(fieldName, value);
     }
 
     @Override

@@ -15,27 +15,11 @@
  */
 package com.qwazr.search.field;
 
-import javax.validation.constraints.NotNull;
-import org.apache.lucene.index.Term;
-
 final public class CopyToFieldType extends FieldTypeAbstract<FieldDefinition> {
 
     public CopyToFieldType() {
-        super(null, null, null, null, null, null, null);
+        super(null, null, null, null, null, null, null, null, null, null, null);
     }
 
-    @Override
-    public String getQueryFieldName(@NotNull LuceneFieldType luceneFieldType, @NotNull String fieldName) {
-        return null;
-    }
 
-    @Override
-    public String getStoredFieldName(String fieldName) {
-        return null;
-    }
-
-    @Override
-    public Term term(String fieldName, Object value) {
-        return null;
-    }
 }

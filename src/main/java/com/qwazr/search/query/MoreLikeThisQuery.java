@@ -16,16 +16,10 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.StringUtils;
-import org.apache.lucene.queries.mlt.MoreLikeThis;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.Query;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
@@ -33,6 +27,10 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import org.apache.lucene.queries.mlt.MoreLikeThis;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.Query;
 
 public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
 
@@ -124,7 +122,7 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
             mlt.setFieldNames(fieldMap == null ?
                 fieldnames :
                 FieldMap.resolveFieldNames(fieldnames,
-                    f -> fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, f)));
+                    f -> fieldMap.resolveIndexFieldName(f)));
         if (max_doc_freq != null)
             mlt.setMaxDocFreq(max_doc_freq);
         if (max_doc_freq_pct != null)
@@ -151,7 +149,7 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
             throw new ParseException("Either doc_num or like_text/fieldname are missing");
 
         final org.apache.lucene.search.BooleanQuery bq = (org.apache.lucene.search.BooleanQuery) mlt.like(
-            AbstractFieldQuery.resolveField(fieldMap, FieldTypeInterface.LuceneFieldType.text, fieldname, fieldname, StringUtils.EMPTY), new StringReader(like_text));
+            AbstractFieldQuery.resolveField(fieldMap, fieldname, fieldname, StringUtils.EMPTY), new StringReader(like_text));
         final org.apache.lucene.search.BooleanQuery.Builder newBq = new org.apache.lucene.search.BooleanQuery.Builder();
         for (BooleanClause clause : bq)
             newBq.add(clause);

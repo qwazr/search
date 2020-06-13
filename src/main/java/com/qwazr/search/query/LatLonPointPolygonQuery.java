@@ -18,14 +18,12 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
+import java.util.Arrays;
+import java.util.Objects;
 import org.apache.lucene.document.LatLonPoint;
 import org.apache.lucene.geo.Polygon;
 import org.apache.lucene.search.Query;
-
-import java.util.Arrays;
-import java.util.Objects;
 
 public class LatLonPointPolygonQuery extends AbstractFieldQuery<LatLonPointPolygonQuery> {
 
@@ -95,7 +93,7 @@ public class LatLonPointPolygonQuery extends AbstractFieldQuery<LatLonPointPolyg
         if (lucenePolygons == null)
             lucenePolygons = toPolygons(polygons);
         return LatLonPoint.newPolygonQuery(
-            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point),
+            resolveField(queryContext.getFieldMap()),
             lucenePolygons);
     }
 

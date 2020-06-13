@@ -19,19 +19,17 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
-import org.apache.lucene.search.Query;
-
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.apache.lucene.search.Query;
 
 public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
 
@@ -56,7 +54,7 @@ public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
                          final org.apache.lucene.search.BlendedTermQuery.Builder builder) {
             final org.apache.lucene.index.Term term =
                 BytesRefUtils.toTerm(fieldMap == null ? field
-                        : fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, genericField, field, value),
+                        : fieldMap.resolveIndexFieldName(genericField, field, value),
                     value);
             if (boost == null)
                 builder.add(term);

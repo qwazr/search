@@ -19,7 +19,6 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.utils.WildcardMatcher;
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import javax.validation.constraints.NotNull;
 import org.apache.lucene.index.Term;
 
 abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefinition> {
@@ -31,47 +30,41 @@ abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefi
                                       final SortFieldSupplier sortFieldSupplier,
                                       final CustomFieldDefinition definition) {
         super(genericFieldName, wildcardMatcher, bytesRefConverter, fieldSupplier,
-            buildFacetConfig(definition), sortFieldSupplier, definition);
+            buildFacetConfig(definition),
+            sortFieldSupplier,
+            buildPrimaryTermSupplier(),
+            buildPrimaryTermSupplier(),
+            indexFilename -> indexFilename,
+            storedFilename -> storedFilename,
+            definition);
     }
 
     private static FacetSupplier buildFacetConfig(final CustomFieldDefinition definition) {
         final Collection<FacetSupplier> facetSuppliers = new LinkedHashSet<>();
         if (definition.facetMultivalued != null)
             facetSuppliers.add(
-                (fieldName, facetsConfig)
+                (fieldName, fieldMap, facetsConfig)
                     -> facetsConfig.setMultiValued(fieldName, definition.facetMultivalued));
         if (definition.facetHierarchical != null)
             facetSuppliers.add(
-                (fieldName, facetsConfig)
+                (fieldName, fieldMap, facetsConfig)
                     -> facetsConfig.setHierarchical(fieldName, definition.facetHierarchical));
         if (definition.facetRequireDimCount != null)
-            facetSuppliers.add((fieldName, facetsConfig)
+            facetSuppliers.add((fieldName, fieldMap, facetsConfig)
                 -> facetsConfig.setRequireDimCount(fieldName, definition.facetRequireDimCount));
         if (facetSuppliers.isEmpty())
             return null;
         if (facetSuppliers.size() == 1)
             return facetSuppliers.iterator().next();
         final FacetSupplier[] facetSupplierArray = facetSuppliers.toArray(new FacetSupplier[0]);
-        return (fieldName, facetsConfig) -> {
+        return (fieldName, fieldMap, facetsConfig) -> {
             for (final FacetSupplier facetSupplier : facetSupplierArray)
-                facetSupplier.setConfig(fieldName, facetsConfig);
+                facetSupplier.setConfig(fieldName, fieldMap, facetsConfig);
         };
     }
 
-    @Override
-    public String getQueryFieldName(@NotNull final LuceneFieldType luceneFieldType,
-                                    @NotNull final String fieldName) {
-        return fieldName;
-    }
-
-    @Override
-    public String getStoredFieldName(String fieldName) {
-        return null;
-    }
-
-    @Override
-    public Term term(String fieldName, Object value) {
-        return null;
+    static private FieldTypeInterface.TermSupplier buildPrimaryTermSupplier() {
+        return (fieldName, value) -> new Term(fieldName, value.toString());
     }
 
 }

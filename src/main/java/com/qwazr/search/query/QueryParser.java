@@ -18,13 +18,12 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.StringUtils;
+import java.util.Objects;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
-
-import java.util.Objects;
 
 public class QueryParser extends AbstractClassicQueryParser<QueryParser> {
 
@@ -53,7 +52,7 @@ public class QueryParser extends AbstractClassicQueryParser<QueryParser> {
         final FieldMap fieldMap = queryContext.getFieldMap();
         final org.apache.lucene.queryparser.classic.QueryParser parser =
             new org.apache.lucene.queryparser.classic.QueryParser(
-                AbstractFieldQuery.resolveField(fieldMap, FieldTypeInterface.LuceneFieldType.text, defaulField, defaulField),
+                AbstractFieldQuery.resolveField(fieldMap, defaulField, defaulField, StringUtils.EMPTY),
                 resolveAnalyzer(queryContext));
         setParserParameters(parser);
         return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));

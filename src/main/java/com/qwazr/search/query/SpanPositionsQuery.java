@@ -18,8 +18,10 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.StringUtils;
+import java.io.IOException;
+import java.util.Objects;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
@@ -30,9 +32,6 @@ import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.spans.SpanPositionRangeQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
-
-import java.io.IOException;
-import java.util.Objects;
 
 public class SpanPositionsQuery extends AbstractFieldQuery<SpanPositionsQuery> {
 
@@ -63,7 +62,7 @@ public class SpanPositionsQuery extends AbstractFieldQuery<SpanPositionsQuery> {
     final public Query getQuery(final QueryContext queryContext) throws IOException {
 
         final BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        final String resolvedField = resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.text);
+        final String resolvedField = resolveField(queryContext.getFieldMap(), StringUtils.EMPTY);
         try (final TokenStream tokenStream = queryContext.getQueryAnalyzer().tokenStream(resolvedField, query_string)) {
             final CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
             final PositionIncrementAttribute pocincrAttribute =

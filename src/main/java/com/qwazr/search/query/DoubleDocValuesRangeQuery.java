@@ -19,15 +19,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
+import java.net.URI;
+import java.util.Map;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.NumericUtils;
-
-import java.net.URI;
-import java.util.Map;
 
 public class DoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, DoubleDocValuesRangeQuery> {
 
@@ -58,7 +56,7 @@ public class DoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, Double
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return NumericDocValuesField.newSlowRangeQuery(
-            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.docValue),
+            resolveField(queryContext.getFieldMap(), 0D),
             NumericUtils.doubleToSortableLong(lowerValue), NumericUtils.doubleToSortableLong(upperValue));
     }
 }

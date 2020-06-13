@@ -18,14 +18,12 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
-import org.apache.lucene.document.LongPoint;
-import org.apache.lucene.search.Query;
-
 import java.util.Arrays;
 import java.util.Collection;
+import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.search.Query;
 
 public class LongMultiRangeQuery extends AbstractMultiRangeQuery<LongMultiRangeQuery> {
 
@@ -57,7 +55,7 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery<LongMultiRangeQ
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        final String resolvedField = resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point);
+        final String resolvedField = resolveField(queryContext.getFieldMap(), 0L);
         if (lowerValues.length == 1)
             return LongPoint.newRangeQuery(resolvedField, lowerValues[0], upperValues[0]);
         else

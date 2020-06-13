@@ -18,12 +18,11 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.StringUtils;
+import java.util.Objects;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
-
-import java.util.Objects;
 
 public class PrefixQuery extends AbstractFieldQuery<PrefixQuery> {
 
@@ -48,6 +47,6 @@ public class PrefixQuery extends AbstractFieldQuery<PrefixQuery> {
 
     @Override
     final public Query getQuery(final QueryContext queryContext) {
-        return new org.apache.lucene.search.PrefixQuery(new Term(resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.text), text));
+        return new org.apache.lucene.search.PrefixQuery(new Term(resolveField(queryContext.getFieldMap(), StringUtils.EMPTY), text));
     }
 }

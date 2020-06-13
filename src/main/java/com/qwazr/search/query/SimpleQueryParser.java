@@ -18,17 +18,16 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.Query;
-
+import com.qwazr.utils.StringUtils;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.Query;
 
 public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
 
@@ -123,7 +122,7 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
 
         final Map<String, Float> resolvedBoosts = fieldMap == null || weights == null ? weights
             : FieldMap.resolveFieldNames(weights, new HashMap<>(),
-            f -> fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, f));
+            f -> fieldMap.resolveIndexFieldName(f, StringUtils.EMPTY));
 
         final int fl = flags == -2 ? computeTag() : flags;
 

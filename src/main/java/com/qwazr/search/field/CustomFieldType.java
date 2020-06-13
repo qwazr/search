@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import org.apache.lucene.document.FieldType;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.SortField;
 
 final class CustomFieldType extends CustomFieldTypeAbstract {
@@ -33,9 +32,11 @@ final class CustomFieldType extends CustomFieldTypeAbstract {
     CustomFieldType(final String genericFieldName,
                     final WildcardMatcher wildcardMatcher,
                     final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher, getConverter(definition),
+        super(genericFieldName, wildcardMatcher,
+            getConverter(definition),
             buildFieldSupplier(genericFieldName, definition),
-            buildSortFieldSupplier(definition), definition);
+            buildSortFieldSupplier(definition),
+            definition);
     }
 
     private static List<Consumer<FieldType>> buildTypeSetters(CustomFieldDefinition definition) {
@@ -89,12 +90,6 @@ final class CustomFieldType extends CustomFieldTypeAbstract {
             return sortField;
         };
     }
-
-    @Override
-    final public Term term(String fieldName, Object value) {
-        return FieldUtils.newStringTerm(fieldName, value);
-    }
-
 
     @Override
     public ValueConverter<?> getConverter(final String field, final MultiReader reader) {

@@ -18,12 +18,10 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
+import java.util.Arrays;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.search.Query;
-
-import java.util.Arrays;
 
 public class IntSetQuery extends AbstractFieldQuery<IntSetQuery> {
 
@@ -49,7 +47,7 @@ public class IntSetQuery extends AbstractFieldQuery<IntSetQuery> {
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return IntPoint.newSetQuery(
-            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point),
+            resolveField(queryContext.getFieldMap(), 0),
             values);
     }
 }

@@ -18,11 +18,10 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.search.MultiTermQuery;
-
+import com.qwazr.utils.StringUtils;
 import java.util.Objects;
+import org.apache.lucene.search.MultiTermQuery;
 
 public class TermRangeQuery extends AbstractFieldQuery<TermRangeQuery> {
 
@@ -60,7 +59,7 @@ public class TermRangeQuery extends AbstractFieldQuery<TermRangeQuery> {
     @Override
     final public MultiTermQuery getQuery(final QueryContext queryContext) {
         return org.apache.lucene.search.TermRangeQuery.newStringRange(
-            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.text),
+            resolveField(queryContext.getFieldMap(), StringUtils.EMPTY),
             lower_term, upper_term, include_lower == null ? true : include_lower,
             include_upper == null ? true : include_upper);
     }

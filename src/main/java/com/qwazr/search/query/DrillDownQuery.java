@@ -17,13 +17,8 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +28,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
 public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
 
@@ -81,7 +79,7 @@ public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
         dimPath.forEach(map -> map.keySet().forEach(concreteField -> {
             final String genericField = genericFieldNames.getOrDefault(concreteField, concreteField);
             if (fieldMap != null)
-                resolvedDimensions.put(concreteField, fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.facet, genericField, concreteField));
+                resolvedDimensions.put(concreteField, fieldMap.resolveIndexFieldName(genericField));
             else
                 resolvedDimensions.put(concreteField, genericField);
         }));

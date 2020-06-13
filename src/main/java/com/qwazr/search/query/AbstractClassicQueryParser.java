@@ -113,14 +113,14 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
     protected Map<String, Float> resolvedBoosts(final FieldMap fieldMap) {
         return boosts != null && fieldMap != null ?
             FieldMap.resolveFieldNames(boosts, new HashMap<>(),
-                f -> fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, f)) :
+                f -> fieldMap.resolveIndexFieldName(f)) :
             boosts;
     }
 
     protected String[] resolveFields(final FieldMap fieldMap) {
         return fields != null && fieldMap != null ?
             FieldMap.resolveFieldNames(fields,
-                f -> fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.text, f)) :
+                f -> fieldMap.resolveIndexFieldName(f)) :
             fields;
     }
 

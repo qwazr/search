@@ -19,15 +19,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
+import java.net.URI;
+import java.util.Map;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.NumericUtils;
-
-import java.net.URI;
-import java.util.Map;
 
 public class DoubleDocValuesExactQuery extends AbstractExactQuery<Double, DoubleDocValuesExactQuery> {
 
@@ -53,7 +51,7 @@ public class DoubleDocValuesExactQuery extends AbstractExactQuery<Double, Double
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return NumericDocValuesField.newSlowExactQuery(
-            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.docValue, value),
+            resolveField(queryContext.getFieldMap(), value),
             NumericUtils.doubleToSortableLong(value));
     }
 }

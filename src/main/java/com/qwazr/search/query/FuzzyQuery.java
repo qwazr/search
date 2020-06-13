@@ -18,12 +18,11 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.StringUtils;
+import java.util.Objects;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MultiTermQuery;
-
-import java.util.Objects;
 
 public class FuzzyQuery extends AbstractMultiTermQuery<FuzzyQuery> {
 
@@ -76,7 +75,7 @@ public class FuzzyQuery extends AbstractMultiTermQuery<FuzzyQuery> {
     final public MultiTermQuery getQuery(final QueryContext queryContext) {
         return applyRewriteMethod(
             new org.apache.lucene.search.FuzzyQuery(
-                new Term(resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.text), text),
+                new Term(resolveField(queryContext.getFieldMap(), StringUtils.EMPTY), text),
                 max_edits == null ? org.apache.lucene.search.FuzzyQuery.defaultMaxEdits : max_edits,
                 prefix_length == null ? org.apache.lucene.search.FuzzyQuery.defaultPrefixLength : prefix_length,
                 max_expansions == null ?

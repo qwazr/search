@@ -18,13 +18,11 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldMap;
-import org.apache.lucene.index.Term;
-
 import java.net.URI;
 import java.util.Objects;
+import org.apache.lucene.index.Term;
 
 public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extends AbstractQuery<T> {
 
@@ -55,36 +53,35 @@ public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extend
     }
 
     static String resolveField(final FieldMap fieldMap,
-                               final FieldTypeInterface.LuceneFieldType luceneFieldType,
                                final String genericField,
-                               final String field,
-                               final Object value) {
-        return fieldMap == null ? field : fieldMap.resolveQueryFieldName(luceneFieldType, genericField, field, value);
+                               final String field) {
+        return fieldMap == null ? field : fieldMap.resolveIndexFieldName(genericField, field);
     }
 
-    final protected String resolveField(final FieldMap fieldMap,
-                                        final FieldTypeInterface.LuceneFieldType luceneFieldType,
-                                        final Object value) {
-        return resolveField(fieldMap, luceneFieldType, genericField, field, value);
+    final protected String resolveField(final FieldMap fieldMap) {
+        return resolveField(fieldMap, genericField, field);
     }
 
     static String resolveField(final FieldMap fieldMap,
-                               final FieldTypeInterface.LuceneFieldType luceneFieldType,
                                final String genericField,
-                               final String field) {
-        return fieldMap == null ? field : fieldMap.resolveQueryFieldName(luceneFieldType, genericField, field);
+                               final String field,
+                               final Object value) {
+        return fieldMap == null ? field : fieldMap.resolveIndexFieldName(genericField, field, value);
     }
 
-    final protected String resolveField(final FieldMap fieldMap, final FieldTypeInterface.LuceneFieldType luceneFieldType) {
-        return resolveField(fieldMap, luceneFieldType, genericField, field);
+    final protected String resolveField(final FieldMap fieldMap,
+                                        final Object value) {
+        return resolveField(fieldMap, genericField, field, value);
     }
 
-    static Term getResolvedTerm(final FieldMap fieldMap, final String genericFieldName, final String concreteFieldName,
+    static Term getResolvedTerm(final FieldMap fieldMap,
+                                final String genericFieldName,
+                                final String concreteFieldName,
                                 final Object value) {
         return fieldMap == null ?
             new Term(concreteFieldName, BytesRefUtils.fromAny(value)) :
             Objects.requireNonNull(fieldMap.getFieldType(genericFieldName, concreteFieldName, value),
-                "Unknown field: " + concreteFieldName).term(concreteFieldName, value);
+                "Unknown field: " + concreteFieldName).newPrimaryTerm(concreteFieldName, value);
     }
 
     final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {

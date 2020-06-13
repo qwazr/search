@@ -16,12 +16,16 @@
 package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.concurrent.BiConsumerEx;
 import com.qwazr.utils.concurrent.ConcurrentUtils;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
@@ -35,12 +39,6 @@ import org.apache.lucene.facet.taxonomy.TaxonomyFacetSumIntAssociations;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
 
 abstract class FacetsBuilder {
 
@@ -64,7 +62,7 @@ abstract class FacetsBuilder {
         this.sortedSetFacetField = queryContext.fieldMap.getSortedSetFacetField();
         this.resolvedDimensions = new HashMap<>();
         getFields(facetsDef).forEach((concrete, generic) -> resolvedDimensions.put(concrete,
-            queryContext.fieldMap.resolveQueryFieldName(FieldTypeInterface.LuceneFieldType.facet, generic, concrete)));
+            queryContext.fieldMap.resolveIndexFieldName(generic, concrete)));
         this.searchQuery = searchQuery;
         this.timeTracker = timeTracker;
     }

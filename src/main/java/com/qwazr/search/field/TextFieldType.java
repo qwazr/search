@@ -19,7 +19,6 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.Term;
 
 final class TextFieldType extends CustomFieldTypeAbstract {
 
@@ -33,11 +32,6 @@ final class TextFieldType extends CustomFieldTypeAbstract {
             definition);
     }
 
-    @Override
-    public Term term(String fieldName, Object value) {
-        return FieldUtils.newStringTerm(fieldName, value);
-    }
-
     private static FieldSupplier buildFieldSupplier(final String genericFieldName,
                                                     final CustomFieldDefinition definition) {
         final Field.Store fieldStore = isStored(definition) ? Field.Store.YES : Field.Store.NO;
@@ -45,5 +39,5 @@ final class TextFieldType extends CustomFieldTypeAbstract {
             documentBuilder.accept(genericFieldName, fieldName,
                 new TextField(fieldName, value.toString(), fieldStore));
     }
-    
+
 }

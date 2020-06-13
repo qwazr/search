@@ -21,7 +21,6 @@ import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.SortedDocValuesField;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.util.BytesRef;
 
 final class SortedDocValuesType extends CustomFieldTypeAbstract {
@@ -36,7 +35,7 @@ final class SortedDocValuesType extends CustomFieldTypeAbstract {
             definition);
     }
 
-    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+    private static FieldSupplier buildFieldSupplier(final String genericFieldName) {
         return (fieldName, value, documentBuilder) ->
             documentBuilder.accept(genericFieldName, fieldName,
                 new SortedDocValuesField(fieldName, new BytesRef(value.toString())));
@@ -45,16 +44,6 @@ final class SortedDocValuesType extends CustomFieldTypeAbstract {
     @Override
     final public ValueConverter<?> getConverter(final String fieldName, final MultiReader reader) {
         return new SingleDVConverter.SortedDVConverter(reader, fieldName);
-    }
-
-    @Override
-    public String getStoredFieldName(String fieldName) {
-        return fieldName;
-    }
-
-    @Override
-    public Term term(String fieldName, Object value) {
-        return new Term(fieldName, value.toString());
     }
 
 }

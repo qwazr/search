@@ -107,7 +107,7 @@ public abstract class FieldDefinition {
         }
 
         @Override
-        final public ValueConverter getConverter(final MultiReader reader, final String field) {
+        final public ValueConverter<?> getConverter(final MultiReader reader, final String field) {
             return valueConverterSupplier.getConverter(reader, field);
         }
 

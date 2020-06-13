@@ -16,17 +16,12 @@
 package com.qwazr.search.analysis;
 
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.util.ResourceLoader;
-
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +29,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.Response;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.util.ResourceLoader;
 
 public class AnalyzerContext {
 
@@ -62,7 +60,7 @@ public class AnalyzerContext {
 
         fieldMap.forEach((fieldName, fieldType) -> {
             try {
-                final String queryFieldName = fieldType.getQueryFieldName(FieldTypeInterface.LuceneFieldType.text, fieldName);
+                final String queryFieldName = fieldType.getIndexFieldName(fieldName);
                 if (queryFieldName == null)
                     return;
                 final FieldDefinition fieldDefinition = fieldType.getDefinition();

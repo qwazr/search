@@ -18,14 +18,12 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
-import org.apache.lucene.document.DoublePoint;
-import org.apache.lucene.search.Query;
-
 import java.util.Arrays;
 import java.util.Collection;
+import org.apache.lucene.document.DoublePoint;
+import org.apache.lucene.search.Query;
 
 public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<DoubleMultiRangeQuery> {
 
@@ -62,7 +60,7 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<DoubleMultiRa
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return DoublePoint.newRangeQuery(
-            resolveField(queryContext.getFieldMap(), FieldTypeInterface.LuceneFieldType.point),
+            resolveField(queryContext.getFieldMap(), 0D),
             lowerValues, upperValues);
     }
 
