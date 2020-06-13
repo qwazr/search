@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LatLonPoint;
 import org.apache.lucene.search.Query;
@@ -41,7 +42,7 @@ public class LatLonPointBBoxQuery extends AbstractGeoBoxQuery<LatLonPointBBoxQue
     @Override
     final public Query getQuery(final QueryContext queryContext) {
         return LatLonPoint.newBoxQuery(
-            resolveField(queryContext.getFieldMap()),
+            resolvePointField(queryContext.getFieldMap(), 0D, FieldTypeInterface.ValueType.doubleType),
             minLatitude, maxLatitude, minLongitude, maxLongitude);
     }
 }

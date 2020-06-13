@@ -29,7 +29,7 @@ public class WildcardQuery extends AbstractMultiTermQuery<WildcardQuery> {
 
     @JsonCreator
     private WildcardQuery(@JsonProperty("generic_field") final String genericField,
-            @JsonProperty("field") final String field, @JsonProperty("term") final String term) {
+                          @JsonProperty("field") final String field, @JsonProperty("term") final String term) {
         super(WildcardQuery.class, genericField, field, null);
         this.term = term;
     }
@@ -52,7 +52,7 @@ public class WildcardQuery extends AbstractMultiTermQuery<WildcardQuery> {
     @Override
     final public MultiTermQuery getQuery(final QueryContext queryContext) {
         return applyRewriteMethod(
-                new org.apache.lucene.search.WildcardQuery(getResolvedTerm(queryContext.getFieldMap(), term)));
+            new org.apache.lucene.search.WildcardQuery(resolveIndexTextTerm(queryContext.getFieldMap(), term)));
     }
 
 }

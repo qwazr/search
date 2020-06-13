@@ -28,7 +28,12 @@ final class FloatAssociationFacetType extends CustomFieldTypeAbstract {
     FloatAssociationFacetType(final String genericFieldName,
                               final WildcardMatcher wildcardMatcher,
                               final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher, BytesRefUtils.Converter.FLOAT_FACET, null, null, definition);
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.FLOAT_FACET,
+            null, null, null,
+            definition,
+            ValueType.textType,
+            FieldType.facetField);
     }
 
     @Override

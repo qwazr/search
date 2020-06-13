@@ -22,9 +22,12 @@ import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.utils.WildcardMatcher;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import org.apache.lucene.document.FieldType;
+import org.apache.lucene.index.DocValuesType;
+import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.search.SortField;
 
 final class CustomFieldType extends CustomFieldTypeAbstract {
@@ -36,11 +39,14 @@ final class CustomFieldType extends CustomFieldTypeAbstract {
             getConverter(definition),
             buildFieldSupplier(genericFieldName, definition),
             buildSortFieldSupplier(definition),
-            definition);
+            FieldUtils::newStringTerm,
+            definition,
+            ValueType.textType,
+            getFieldTypes(definition));
     }
 
-    private static List<Consumer<FieldType>> buildTypeSetters(CustomFieldDefinition definition) {
-        final List<Consumer<FieldType>> ts = new ArrayList<>();
+    private static List<Consumer<org.apache.lucene.document.FieldType>> buildTypeSetters(final CustomFieldDefinition definition) {
+        final List<Consumer<org.apache.lucene.document.FieldType>> ts = new ArrayList<>();
         if (definition.stored != null)
             ts.add(type -> type.setStored(definition.stored));
         if (definition.tokenized != null)
@@ -68,11 +74,28 @@ final class CustomFieldType extends CustomFieldTypeAbstract {
         return ts;
     }
 
+    private static Collection<FieldType> getFieldTypes(final CustomFieldDefinition definition) {
+        final Collection<FieldType> fieldTypes = new ArrayList<>();
+        if (definition.indexOptions != null && definition.indexOptions != IndexOptions.NONE) {
+            if (definition.tokenized)
+                fieldTypes.add(FieldType.stringField);
+            else
+                fieldTypes.add(FieldType.textField);
+        }
+        if (definition.stored != null && definition.stored)
+            fieldTypes.add(FieldType.storedField);
+        if (definition.docValuesType != null && definition.docValuesType != DocValuesType.NONE)
+            fieldTypes.add(FieldType.docValues);
+        if (definition.dataDimensionCount != null && definition.dataDimensionCount > 0)
+            fieldTypes.add(FieldType.pointField);
+        return fieldTypes;
+    }
+
     private static FieldSupplier buildFieldSupplier(final String genericFieldName,
                                                     final CustomFieldDefinition definition) {
-        final List<Consumer<FieldType>> typeSetters = buildTypeSetters(definition);
-        final FieldType type = new FieldType();
-        for (Consumer<FieldType> ts : typeSetters)
+        final List<Consumer<org.apache.lucene.document.FieldType>> typeSetters = buildTypeSetters(definition);
+        final org.apache.lucene.document.FieldType type = new org.apache.lucene.document.FieldType();
+        for (final Consumer<org.apache.lucene.document.FieldType> ts : typeSetters)
             ts.accept(type);
         return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
             new CustomField(fieldName, type, value));

@@ -23,6 +23,7 @@ import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.CollectionsUtils;
+import com.qwazr.utils.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 
 import java.util.Arrays;
@@ -113,14 +114,14 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
     protected Map<String, Float> resolvedBoosts(final FieldMap fieldMap) {
         return boosts != null && fieldMap != null ?
             FieldMap.resolveFieldNames(boosts, new HashMap<>(),
-                f -> fieldMap.resolveIndexFieldName(f)) :
+                f -> fieldMap.getFieldType(f, f, StringUtils.EMPTY).resolveFieldName(f, null, null)) :
             boosts;
     }
 
     protected String[] resolveFields(final FieldMap fieldMap) {
         return fields != null && fieldMap != null ?
             FieldMap.resolveFieldNames(fields,
-                f -> fieldMap.resolveIndexFieldName(f)) :
+                f -> fieldMap.getFieldType(f, f, StringUtils.EMPTY).resolveFieldName(f, null, null)) :
             fields;
     }
 

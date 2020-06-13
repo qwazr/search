@@ -57,7 +57,7 @@ public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy
     }
 
     @Test
-    public void luceneQuery() throws IOException {
+    public void luceneQuery()  {
         Query luceneQuery =
                 TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build().getQuery(QueryContext.DEFAULT);
         Assert.assertNotNull(luceneQuery);

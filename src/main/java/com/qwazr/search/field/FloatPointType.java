@@ -29,7 +29,10 @@ final class FloatPointType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.FLOAT_POINT,
             buildFieldSupplier(genericFieldName, definition),
             null,
-            definition);
+            null,
+            definition,
+            ValueType.floatType,
+            FieldType.pointField);
     }
 
     private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName,

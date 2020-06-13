@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import java.util.Arrays;
@@ -60,8 +61,9 @@ public class DoubleMultiRangeQuery extends AbstractMultiRangeQuery<DoubleMultiRa
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return DoublePoint.newRangeQuery(
-            resolveField(queryContext.getFieldMap(), 0D),
-            lowerValues, upperValues);
+            resolvePointField(queryContext.getFieldMap(), 0D, FieldTypeInterface.ValueType.doubleType),
+            lowerValues, upperValues
+        );
     }
 
     public static class Builder extends AbstractBuilder<Double, Builder> {

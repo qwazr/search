@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.utils.StringUtils;
 import java.io.IOException;
 import java.text.BreakIterator;
@@ -50,8 +51,8 @@ final class HighlighterImpl extends UnifiedHighlighter {
         this.definition = definition;
         final String field = definition.field == null ? highlightName : definition.field;
         final String storedField = definition.storedField == null ? field : definition.storedField;
-        this.indexFields = new String[]{queryContext.fieldMap.resolveIndexFieldName(field, field)};
-        this.storedFields = new String[]{queryContext.fieldMap.resolveStoredFieldName(storedField)};
+        this.indexFields = new String[]{queryContext.fieldMap.getFieldType(field, field).resolveFieldName(field, null, null)};
+        this.storedFields = new String[]{queryContext.fieldMap.getFieldType(storedField, storedField).resolveFieldName(storedField, FieldTypeInterface.FieldType.storedField, null)};
         if (definition.breakIterator != null && definition.breakIterator.language != null)
             locale = Locale.forLanguageTag(definition.breakIterator.language);
         else

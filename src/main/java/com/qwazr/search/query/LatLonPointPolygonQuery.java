@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import java.util.Arrays;
 import java.util.Objects;
@@ -93,7 +94,7 @@ public class LatLonPointPolygonQuery extends AbstractFieldQuery<LatLonPointPolyg
         if (lucenePolygons == null)
             lucenePolygons = toPolygons(polygons);
         return LatLonPoint.newPolygonQuery(
-            resolveField(queryContext.getFieldMap()),
+            resolvePointField(queryContext.getFieldMap(), 0D, FieldTypeInterface.ValueType.doubleType),
             lucenePolygons);
     }
 

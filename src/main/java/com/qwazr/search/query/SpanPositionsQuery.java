@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.StringUtils;
 import java.io.IOException;
@@ -62,7 +63,7 @@ public class SpanPositionsQuery extends AbstractFieldQuery<SpanPositionsQuery> {
     final public Query getQuery(final QueryContext queryContext) throws IOException {
 
         final BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        final String resolvedField = resolveField(queryContext.getFieldMap(), StringUtils.EMPTY);
+        final String resolvedField = resolveIndexTextField(queryContext.getFieldMap(), StringUtils.EMPTY);
         try (final TokenStream tokenStream = queryContext.getQueryAnalyzer().tokenStream(resolvedField, query_string)) {
             final CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
             final PositionIncrementAttribute pocincrAttribute =

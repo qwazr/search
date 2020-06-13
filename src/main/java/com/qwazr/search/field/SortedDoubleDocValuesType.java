@@ -33,7 +33,10 @@ final class SortedDoubleDocValuesType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.DOUBLE,
             buildFieldSupplier(genericFieldName),
             SortUtils::doubleSortField,
-            definition);
+            null,
+            definition,
+            ValueType.doubleType,
+            FieldType.docValues);
     }
 
     private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {

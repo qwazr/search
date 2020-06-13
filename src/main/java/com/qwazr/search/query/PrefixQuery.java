@@ -47,6 +47,8 @@ public class PrefixQuery extends AbstractFieldQuery<PrefixQuery> {
 
     @Override
     final public Query getQuery(final QueryContext queryContext) {
-        return new org.apache.lucene.search.PrefixQuery(new Term(resolveField(queryContext.getFieldMap(), StringUtils.EMPTY), text));
+        return new org.apache.lucene.search.PrefixQuery(
+            new Term(resolveIndexTextField(queryContext.getFieldMap(), StringUtils.EMPTY), text)
+        );
     }
 }

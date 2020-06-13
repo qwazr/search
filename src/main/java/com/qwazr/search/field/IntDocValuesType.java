@@ -32,7 +32,10 @@ final class IntDocValuesType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.INT,
             buildFieldSupplier(genericFieldName),
             SortUtils::integerSortField,
-            definition);
+            null,
+            definition,
+            ValueType.integerType,
+            FieldType.docValues);
     }
 
 

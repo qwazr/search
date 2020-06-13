@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import java.util.Arrays;
 import org.apache.lucene.document.IntPoint;
@@ -29,7 +30,8 @@ public class IntSetQuery extends AbstractFieldQuery<IntSetQuery> {
 
     @JsonCreator
     public IntSetQuery(@JsonProperty("generic_field") final String genericField,
-                       @JsonProperty("field") final String field, @JsonProperty("values") final int... values) {
+                       @JsonProperty("field") final String field,
+                       @JsonProperty("values") final int... values) {
         super(IntSetQuery.class, genericField, field);
         this.values = values;
     }
@@ -47,7 +49,7 @@ public class IntSetQuery extends AbstractFieldQuery<IntSetQuery> {
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return IntPoint.newSetQuery(
-            resolveField(queryContext.getFieldMap(), 0),
+            resolvePointField(queryContext.getFieldMap(), 0, FieldTypeInterface.ValueType.integerType),
             values);
     }
 }

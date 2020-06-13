@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.StringUtils;
 import java.util.Objects;
@@ -53,7 +54,7 @@ public class SortedDocValuesRangeQuery extends AbstractRangeQuery<String, Sorted
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return SortedDocValuesField.newSlowRangeQuery(
-            resolveField(queryContext.getFieldMap(), StringUtils.EMPTY),
+            resolveDocValueField(queryContext.getFieldMap(), StringUtils.EMPTY, FieldTypeInterface.ValueType.textType),
             new BytesRef(lowerValue), new BytesRef(upperValue), lowerInclusive, upperInclusive);
     }
 }

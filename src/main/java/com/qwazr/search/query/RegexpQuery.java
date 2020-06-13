@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,41 +27,41 @@ import java.util.Objects;
 
 public class RegexpQuery extends AbstractFieldQuery<RegexpQuery> {
 
-	final public String text;
-	final public Integer flags;
-	final public Integer max_determinized_states;
+    final public String text;
+    final public Integer flags;
+    final public Integer max_determinized_states;
 
-	@JsonCreator
-	public RegexpQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("text") final String text,
-			@JsonProperty("flags") final Integer flags,
-			@JsonProperty("max_determinized_states") final Integer maxDeterminizedStates) {
-		super(RegexpQuery.class, genericField, field);
-		this.text = text;
-		this.flags = flags;
-		this.max_determinized_states = maxDeterminizedStates;
-	}
+    @JsonCreator
+    public RegexpQuery(@JsonProperty("generic_field") final String genericField,
+                       @JsonProperty("field") final String field, @JsonProperty("text") final String text,
+                       @JsonProperty("flags") final Integer flags,
+                       @JsonProperty("max_determinized_states") final Integer maxDeterminizedStates) {
+        super(RegexpQuery.class, genericField, field);
+        this.text = text;
+        this.flags = flags;
+        this.max_determinized_states = maxDeterminizedStates;
+    }
 
-	public RegexpQuery(final String field, final String text, final Integer flags,
-			final Integer maxDeterminizedStates) {
-		this(null, field, text, flags, maxDeterminizedStates);
-	}
+    public RegexpQuery(final String field, final String text, final Integer flags,
+                       final Integer maxDeterminizedStates) {
+        this(null, field, text, flags, maxDeterminizedStates);
+    }
 
-	public RegexpQuery(final String field, final String text, final Integer flags) {
-		this(field, text, flags, null);
-	}
+    public RegexpQuery(final String field, final String text, final Integer flags) {
+        this(field, text, flags, null);
+    }
 
-	@Override
-	final public Query getQuery(final QueryContext queryContext) {
-		return new org.apache.lucene.search.RegexpQuery(getResolvedTerm(queryContext.getFieldMap(), text),
-				flags == null ? RegExp.ALL : flags,
-				max_determinized_states == null ? Operations.DEFAULT_MAX_DETERMINIZED_STATES : max_determinized_states);
-	}
+    @Override
+    final public Query getQuery(final QueryContext queryContext) {
+        return new org.apache.lucene.search.RegexpQuery(resolveIndexTextTerm(queryContext.getFieldMap(), text),
+            flags == null ? RegExp.ALL : flags,
+            max_determinized_states == null ? Operations.DEFAULT_MAX_DETERMINIZED_STATES : max_determinized_states);
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(RegexpQuery q) {
-		return super.isEqual(q) && Objects.equals(text, q.text) && Objects.equals(flags, q.flags) &&
-				Objects.equals(max_determinized_states, q.max_determinized_states);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(RegexpQuery q) {
+        return super.isEqual(q) && Objects.equals(text, q.text) && Objects.equals(flags, q.flags) &&
+            Objects.equals(max_determinized_states, q.max_determinized_states);
+    }
 }

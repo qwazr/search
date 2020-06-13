@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.search.Query;
@@ -25,7 +26,8 @@ public class SortedIntDocValuesRangeQuery extends AbstractRangeQuery<Integer, So
 
     @JsonCreator
     public SortedIntDocValuesRangeQuery(@JsonProperty("generic_field") final String genericField,
-                                        @JsonProperty("field") final String field, @JsonProperty("lower_value") final Integer lowerValue,
+                                        @JsonProperty("field") final String field,
+                                        @JsonProperty("lower_value") final Integer lowerValue,
                                         @JsonProperty("upper_value") final Integer upperValue) {
         super(SortedIntDocValuesRangeQuery.class, genericField, field,
             lowerValue == null ? IntDocValuesRangeQuery.MIN : lowerValue,
@@ -39,7 +41,8 @@ public class SortedIntDocValuesRangeQuery extends AbstractRangeQuery<Integer, So
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return SortedNumericDocValuesField.newSlowRangeQuery(
-            resolveField(queryContext.getFieldMap(), 0),
-            lowerValue, upperValue);
+            resolveDocValueField(queryContext.getFieldMap(), 0, FieldTypeInterface.ValueType.integerType),
+            lowerValue, upperValue
+        );
     }
 }

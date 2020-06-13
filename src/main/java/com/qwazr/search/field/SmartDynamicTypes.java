@@ -20,7 +20,7 @@ import com.qwazr.utils.StringUtils;
 
 public class SmartDynamicTypes {
 
-    final static SmartFieldType doNothingType = new SmartFieldType(null, null,
+    final static SmartFieldType doNothingType = new SmartFieldType(StringUtils.EMPTY, null,
         SmartFieldDefinition.of().build());
 
     final static SmartFieldDefinition defaultNumericDefinition =
@@ -45,8 +45,12 @@ public class SmartDynamicTypes {
 
     final private SmartFieldType primaryKeyType;
 
-    public SmartDynamicTypes(final String primaryKey) {
-        primaryKeyType = StringUtils.isEmpty(primaryKey) ? null
+    public SmartDynamicTypes(final SmartFieldType primaryKeyType) {
+        this.primaryKeyType = primaryKeyType;
+    }
+
+    public static SmartFieldType primary(final String primaryKey) {
+        return StringUtils.isEmpty(primaryKey) ? null
             : new SmartFieldType(primaryKey, null,
             SmartFieldDefinition.of()
                 .type(SmartFieldDefinition.Type.TEXT)

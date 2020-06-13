@@ -17,6 +17,7 @@
 package com.qwazr.search.field;
 
 import javax.validation.constraints.NotNull;
+import org.apache.lucene.index.Term;
 
 class FieldUtils {
 
@@ -44,4 +45,7 @@ class FieldUtils {
         return stringValue == null || stringValue.isEmpty() ? null : stringValue;
     }
 
+    static Term newStringTerm(final String fieldName, final Object value) {
+        return new Term(fieldName, value.toString());
+    }
 }

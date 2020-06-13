@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@ import java.util.Objects;
 
 public class FunctionQuery extends AbstractQuery<FunctionQuery> {
 
-	final public AbstractValueSource source;
+	final public AbstractValueSource<?> source;
 
 	@JsonCreator
-	public FunctionQuery(@JsonProperty("source") final AbstractValueSource source) {
+	public FunctionQuery(@JsonProperty("source") final AbstractValueSource<?> source) {
 		super(FunctionQuery.class);
 		this.source = Objects.requireNonNull(source, "The source property is missing");
 	}

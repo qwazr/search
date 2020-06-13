@@ -31,7 +31,10 @@ final class StoredFieldType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.STRING,
             buildFieldSupplier(genericFieldName),
             null,
-            definition);
+            null,
+            definition,
+            null,
+            FieldType.storedField);
     }
 
     private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {

@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
@@ -25,7 +26,8 @@ public class DoubleRangeQuery extends AbstractRangeQuery<Double, DoubleRangeQuer
 
     @JsonCreator
     public DoubleRangeQuery(@JsonProperty("generic_field") final String genericField,
-                            @JsonProperty("field") final String field, @JsonProperty("lower_value") final Double lowerValue,
+                            @JsonProperty("field") final String field,
+                            @JsonProperty("lower_value") final Double lowerValue,
                             @JsonProperty("upper_value") final Double upperValue) {
         super(DoubleRangeQuery.class, genericField, field,
             lowerValue == null ? DoubleDocValuesRangeQuery.MIN : lowerValue,
@@ -39,7 +41,8 @@ public class DoubleRangeQuery extends AbstractRangeQuery<Double, DoubleRangeQuer
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return DoublePoint.newRangeQuery(
-            resolveField(queryContext.getFieldMap(), 0D),
-            lowerValue, upperValue);
+            resolvePointField(queryContext.getFieldMap(), 0D, FieldTypeInterface.ValueType.doubleType),
+            lowerValue, upperValue
+        );
     }
 }

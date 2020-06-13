@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.document.SortedSetDocValuesField;
@@ -39,7 +40,7 @@ public class SortedSetDocValuesExactQuery extends AbstractExactQuery<String, Sor
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return SortedSetDocValuesField.newSlowExactQuery(
-            resolveField(queryContext.getFieldMap(), StringUtils.EMPTY),
+            resolveDocValueField(queryContext.getFieldMap(), StringUtils.EMPTY, FieldTypeInterface.ValueType.textType),
             new BytesRef(value));
     }
 }

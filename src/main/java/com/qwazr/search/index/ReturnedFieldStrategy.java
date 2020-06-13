@@ -121,7 +121,7 @@ public interface ReturnedFieldStrategy {
         }
 
         @Override
-        public void extract(final IndexSearcher searcher, final ResultDocumentBuilder<?> builder) throws IOException {
+        public void extract(final IndexSearcher searcher, final ResultDocumentBuilder<?> builder) {
         }
 
         @Override
@@ -144,9 +144,7 @@ public interface ReturnedFieldStrategy {
             final MultiReader multiReader = new MultiReader(context.indexReader);
             for (final String fieldName : returnedFields) {
                 final FieldTypeInterface fieldType = context.fieldMap.getFieldType(null, fieldName);
-                if (fieldType == null)
-                    continue;
-                final String storedFieldName = fieldType.getStoredFieldName(fieldName);
+                final String storedFieldName = fieldType.resolveFieldName(fieldName, FieldTypeInterface.FieldType.storedField, null);
                 if (storedFieldName != null)
                     storedFields.put(storedFieldName, fieldName);
                 final ValueConverter<?> converter = fieldType.getConverter(fieldName, multiReader);

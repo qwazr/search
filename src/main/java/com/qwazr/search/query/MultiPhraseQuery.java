@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
+import com.qwazr.utils.StringUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -82,7 +83,7 @@ public class MultiPhraseQuery extends AbstractFieldQuery<MultiPhraseQuery> {
     @Override
     final public org.apache.lucene.search.MultiPhraseQuery getQuery(final QueryContext queryContext) {
         Objects.requireNonNull(field, "The field property should not be null");
-        final String resolvedField = resolveField(queryContext.getFieldMap());
+        final String resolvedField = resolveIndexTextField(queryContext.getFieldMap(), StringUtils.EMPTY);
         final org.apache.lucene.search.MultiPhraseQuery.Builder builder =
             new org.apache.lucene.search.MultiPhraseQuery.Builder();
         if (slop != null)

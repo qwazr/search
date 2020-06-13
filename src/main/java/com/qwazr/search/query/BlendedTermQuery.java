@@ -54,7 +54,7 @@ public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
                          final org.apache.lucene.search.BlendedTermQuery.Builder builder) {
             final org.apache.lucene.index.Term term =
                 BytesRefUtils.toTerm(fieldMap == null ? field
-                        : fieldMap.resolveIndexFieldName(genericField, field, value),
+                        : fieldMap.getFieldType(genericField, field, value).resolveFieldName(field, null, null),
                     value);
             if (boost == null)
                 builder.add(term);

@@ -33,7 +33,10 @@ final class SortedFloatDocValuesType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.FLOAT,
             buildFieldSupplier(genericFieldName),
             SortUtils::floatSortField,
-            definition);
+            null,
+            definition,
+            ValueType.floatType,
+            FieldType.docValues);
     }
 
     private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {

@@ -29,7 +29,10 @@ final class IntPointType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.INT_POINT,
             buildFieldSupplier(genericFieldName, definition),
             null,
-            definition);
+            null,
+            definition,
+            ValueType.integerType,
+            FieldType.pointField);
     }
 
     private static FieldSupplier buildFieldSupplier(final String genericFieldName,

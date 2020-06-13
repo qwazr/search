@@ -18,7 +18,7 @@ package com.qwazr.search.field;
 final public class CopyToFieldType extends FieldTypeAbstract<FieldDefinition> {
 
     public CopyToFieldType() {
-        super(null, null, null, null, null, null, null, null, null, null, null);
+        super(of(null, null, null));
     }
 
 

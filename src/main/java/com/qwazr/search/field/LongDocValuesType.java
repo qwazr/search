@@ -32,7 +32,10 @@ final class LongDocValuesType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.LONG,
             buildFieldSupplier(genericFieldName),
             SortUtils::longSortField,
-            definition);
+            null,
+            definition,
+            ValueType.longType,
+            FieldType.docValues);
     }
 
     private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {

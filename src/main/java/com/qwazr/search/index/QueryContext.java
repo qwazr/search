@@ -16,6 +16,10 @@
 package com.qwazr.search.index;
 
 import com.qwazr.binder.FieldMapWrapper;
+import com.qwazr.search.field.FieldDefinition;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
@@ -48,7 +52,20 @@ public interface QueryContext extends IndexContext {
         throw new NotImplementedException("Not available");
     }
 
-    QueryContext DEFAULT = () -> {
+    QueryContext DEFAULT = new QueryContext() {
+
+        @Override
+        public FieldMap getFieldMap() {
+            return new FieldMap(FieldDefinition.ID_FIELD,
+                new LinkedHashMap<>(),
+                FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD,
+                FieldDefinition.RECORD_FIELD);
+        }
+
+        @Override
+        public void close() {
+        }
+
     };
 
 }

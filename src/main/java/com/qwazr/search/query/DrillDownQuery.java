@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import java.io.IOException;
@@ -79,7 +80,10 @@ public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
         dimPath.forEach(map -> map.keySet().forEach(concreteField -> {
             final String genericField = genericFieldNames.getOrDefault(concreteField, concreteField);
             if (fieldMap != null)
-                resolvedDimensions.put(concreteField, fieldMap.resolveIndexFieldName(genericField));
+                resolvedDimensions.put(concreteField,
+                    fieldMap.getFieldType(genericField, concreteField)
+                        .resolveFieldName(concreteField,
+                            FieldTypeInterface.FieldType.facetField, FieldTypeInterface.ValueType.textType));
             else
                 resolvedDimensions.put(concreteField, genericField);
         }));

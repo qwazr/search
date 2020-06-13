@@ -156,7 +156,8 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
             }
             final Query query =
                 new FieldQueryBuilder(alzr, fieldMap == null
-                    ? field : fieldMap.resolveIndexFieldName(field),
+                    ? field : fieldMap.getFieldType(field, field, StringUtils.EMPTY)
+                    .resolveFieldName(field, null, null),
                     termsFreq).parse(queryString, occur, boost);
             if (query != null)
                 queries.add(query);

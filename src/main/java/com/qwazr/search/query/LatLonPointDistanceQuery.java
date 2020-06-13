@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LatLonPoint;
 import org.apache.lucene.search.Query;
@@ -55,7 +56,7 @@ public class LatLonPointDistanceQuery extends AbstractFieldQuery<LatLonPointDist
     @Override
     final public Query getQuery(final QueryContext queryContext) {
         return LatLonPoint.newDistanceQuery(
-            resolveField(queryContext.getFieldMap()),
+            resolvePointField(queryContext.getFieldMap(), 0D, FieldTypeInterface.ValueType.doubleType),
             centerLatitude, centerLongitude, radiusMeters);
     }
 }

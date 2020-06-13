@@ -27,14 +27,16 @@ final class FloatDocValuesType extends CustomFieldTypeAbstract {
     FloatDocValuesType(final String genericFieldName,
                        final WildcardMatcher wildcardMatcher,
                        final CustomFieldDefinition definition) {
-        super(genericFieldName,
-            wildcardMatcher,
+        super(genericFieldName, wildcardMatcher,
             BytesRefUtils.Converter.FLOAT,
             buildFieldSupplier(genericFieldName),
             SortUtils::floatSortField,
-            definition);
+            null,
+            definition,
+            ValueType.floatType,
+            FieldType.docValues);
     }
-    
+
     private static FieldSupplier buildFieldSupplier(final String genericFieldName) {
         return (fieldName, value, documentBuilder) -> {
             final FloatDocValuesField field;

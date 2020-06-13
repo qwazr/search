@@ -19,6 +19,8 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.facet.FacetField;
 
@@ -33,8 +35,18 @@ final class FacetType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.STRING,
             buildFieldSupplier(genericFieldName, definition),
             null,
-            definition);
+            null,
+            definition,
+            ValueType.textType,
+            getFieldTypes(definition));
         store = isStored(definition);
+    }
+
+    private static Collection<FieldType> getFieldTypes(final CustomFieldDefinition definition) {
+        if (isStored(definition))
+            return Arrays.asList(FieldType.facetField, FieldType.storedField);
+        else
+            return Collections.singletonList(FieldType.facetField);
     }
 
     @Override

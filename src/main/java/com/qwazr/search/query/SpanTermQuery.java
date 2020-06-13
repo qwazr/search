@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,27 +25,29 @@ import java.util.Objects;
 
 public class SpanTermQuery extends AbstractFieldSpanQuery<SpanTermQuery> {
 
-	final public Object value;
+    final public Object value;
 
-	@JsonCreator
-	public SpanTermQuery(@JsonProperty("generic_field") final String genericField,
-			@JsonProperty("field") final String field, @JsonProperty("value") final Object value) {
-		super(SpanTermQuery.class, genericField, field);
-		this.value = value;
-	}
+    @JsonCreator
+    public SpanTermQuery(@JsonProperty("generic_field") final String genericField,
+                         @JsonProperty("field") final String field,
+                         @JsonProperty("value") final Object value) {
+        super(SpanTermQuery.class, genericField, field);
+        this.value = value;
+    }
 
-	public SpanTermQuery(final String field, final Object value) {
-		this(null, field, value);
-	}
+    public SpanTermQuery(final String field, final Object value) {
+        this(null, field, value);
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(SpanTermQuery q) {
-		return super.isEqual(q) && Objects.equals(value, q.value);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(SpanTermQuery q) {
+        return super.isEqual(q) && Objects.equals(value, q.value);
+    }
 
-	@Override
-	final public SpanQuery getQuery(final QueryContext queryContext) {
-		return new org.apache.lucene.search.spans.SpanTermQuery(getResolvedTerm(queryContext.getFieldMap(), value));
-	}
+    @Override
+    final public SpanQuery getQuery(final QueryContext queryContext) {
+        return new org.apache.lucene.search.spans.SpanTermQuery(
+            resolveFullTextTerm(queryContext.getFieldMap(), genericField, field, value));
+    }
 }

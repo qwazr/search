@@ -29,7 +29,10 @@ final class LongPointType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.LONG_POINT,
             buildFieldSupplier(genericFieldName, definition),
             null,
-            definition);
+            null,
+            definition,
+            ValueType.longType,
+            FieldType.pointField);
     }
 
     private static FieldSupplier buildFieldSupplier(final String genericFieldName,

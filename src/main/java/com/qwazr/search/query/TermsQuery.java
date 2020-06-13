@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
@@ -64,7 +65,8 @@ public class TermsQuery extends AbstractMultiTermQuery<TermsQuery> {
             terms.forEach(term -> bytesRefs.add(BytesRefUtils.fromAny(term)));
         } else
             bytesRefs = bytesRefCollection;
-        return new TermInSetQuery(resolveField(queryContext.getFieldMap(), StringUtils.EMPTY), bytesRefs);
+        final String fieldName = resolveIndexTextField(queryContext.getFieldMap(), StringUtils.EMPTY);
+        return new TermInSetQuery(fieldName, bytesRefs);
     }
 
     public static Builder of(final String genericField, final String field) {

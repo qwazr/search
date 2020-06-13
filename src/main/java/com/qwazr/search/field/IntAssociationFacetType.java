@@ -29,7 +29,12 @@ final class IntAssociationFacetType extends CustomFieldTypeAbstract {
     IntAssociationFacetType(final String genericFieldName,
                             final WildcardMatcher wildcardMatcher,
                             final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher, BytesRefUtils.Converter.INT_FACET, null, null, definition);
+        super(genericFieldName, wildcardMatcher,
+            BytesRefUtils.Converter.INT_FACET,
+            null, null, null,
+            definition,
+            ValueType.textType,
+            FieldType.facetField);
     }
 
     @Override

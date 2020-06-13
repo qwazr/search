@@ -48,6 +48,6 @@ public class DocValuesFieldExistsQuery extends AbstractFieldQuery<DocValuesField
     @Override
     final public Query getQuery(final QueryContext queryContext) {
         return new org.apache.lucene.search.DocValuesFieldExistsQuery(
-            resolveField(queryContext.getFieldMap()));
+            resolveDocValueField(queryContext.getFieldMap(), null, null));
     }
 }

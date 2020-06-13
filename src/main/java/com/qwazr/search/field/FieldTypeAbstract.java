@@ -25,10 +25,14 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.WildcardMatcher;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.core.Response;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.Term;
@@ -55,37 +59,30 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     @NotNull
     final private TermSupplier indexTermSupplier;
     @NotNull
-    final private FieldNameResolver indexFieldNameResolver;
-    @NotNull
-    final private FieldNameResolver storedFieldNameResolver;
+    final private FieldNameResolver fieldNameResolver;
     @NotNull
     final private Map<FieldTypeInterface, String> copyToFields;
 
-    protected FieldTypeAbstract(@NotNull final String genericFieldName,
-                                final WildcardMatcher wildcardMatcher,
-                                final BytesRefUtils.Converter<?> bytesRefConverter,
-                                final FieldSupplier fieldSupplier,
-                                final FacetSupplier facetSupplier,
-                                final SortFieldSupplier sortFieldSupplier,
-                                final TermSupplier primaryTermSupplier,
-                                final TermSupplier indexTermSupplier,
-                                final FieldNameResolver indexFieldNameResolver,
-                                final FieldNameResolver storedFieldNameResolver,
-                                @NotNull final T definition) {
-        this.genericFieldName = genericFieldName;
-        this.wildcardMatcher = wildcardMatcher;
-        this.definition = definition;
-        this.bytesRefConverter = bytesRefConverter == null ? BytesRefUtils.Converter.NOPE : bytesRefConverter;
-        this.fieldSupplier = fieldSupplier == null ? (fieldName, value, documentBuilder) -> {
-        } : fieldSupplier;
-        this.facetSupplier = facetSupplier == null ? (fieldName, fieldMap, facetsConfig) -> {
-        } : facetSupplier;
-        this.sortFieldSupplier = sortFieldSupplier == null ? (fieldName, sortEnum) -> null : sortFieldSupplier;
-        this.primaryTermSupplier = primaryTermSupplier == null ? (fieldName, value) -> null : primaryTermSupplier;
-        this.indexTermSupplier = indexTermSupplier == null ? (fieldName, value) -> null : indexTermSupplier;
-        this.indexFieldNameResolver = indexFieldNameResolver == null ? (fieldName) -> null : indexFieldNameResolver;
-        this.storedFieldNameResolver = storedFieldNameResolver == null ? (fieldName) -> null : storedFieldNameResolver;
+    final private Set<FieldType> fieldTypes;
+    final private ValueType valueType;
+
+
+    protected FieldTypeAbstract(final Builder<T> builder) {
+        this.genericFieldName = builder.genericFieldName;
+        this.wildcardMatcher = builder.wildcardMatcher;
+        this.definition = builder.definition;
+        this.bytesRefConverter = builder.bytesRefConverter == null ? BytesRefUtils.Converter.NOPE : builder.bytesRefConverter;
+        this.fieldSupplier = builder.fieldSupplier == null ? (fieldName, value, documentBuilder) -> {
+        } : builder.fieldSupplier;
+        this.facetSupplier = builder.facetSupplier == null ? (fieldName, fieldMap, facetsConfig) -> {
+        } : builder.facetSupplier;
+        this.sortFieldSupplier = builder.sortFieldSupplier == null ? (fieldName, sortEnum) -> null : builder.sortFieldSupplier;
+        this.primaryTermSupplier = builder.primaryTermSupplier == null ? (fieldName, value) -> null : builder.primaryTermSupplier;
+        this.indexTermSupplier = builder.indexTermSupplier == null ? (fieldName, value) -> null : builder.indexTermSupplier;
+        this.fieldNameResolver = builder.fieldNameResolver == null ? (name, field, value) -> null : builder.fieldNameResolver;
         this.copyToFields = new LinkedHashMap<>();
+        this.fieldTypes = builder.fieldTypes == null ? Collections.emptySet() : Collections.unmodifiableSet(builder.fieldTypes);
+        this.valueType = builder.valueType;
     }
 
     protected static <T> void addIfNotNull(final T item, final List<T> itemList) {
@@ -105,10 +102,6 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         };
     }
 
-    protected static boolean isStored(final CustomFieldDefinition definition) {
-        return definition.stored != null && definition.stored;
-    }
-
     @Override
     public final void applyFacetsConfig(final String fieldName,
                                         final FieldMap fieldMap,
@@ -122,7 +115,11 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     }
 
     final public SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum) {
-        return sortFieldSupplier.newSortField(fieldName, sortEnum);
+        final SortField sortField = sortFieldSupplier.newSortField(fieldName, sortEnum);
+        if (sortField == null)
+            throw new NotAcceptableException("This field does not support sorting: "
+                + (genericFieldName == null ? fieldName : genericFieldName));
+        return sortField;
     }
 
     @Override
@@ -133,6 +130,19 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     @Override
     final public FieldDefinition getDefinition() {
         return definition;
+    }
+
+    @Override
+    final public ValueType getValueType() {
+        return valueType;
+    }
+
+    @Override
+    final public FieldType findFirstOf(final FieldType... expectedTypes) {
+        for (final FieldType expectedType : expectedTypes)
+            if (fieldTypes.contains(expectedType))
+                return expectedType;
+        return null;
     }
 
     protected void fillArray(final String fieldName, final int[] values, final DocumentBuilder documentBuilder) {
@@ -178,7 +188,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
                            final Map<Object, Object> values,
                            final DocumentBuilder documentBuilder) {
         throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-            "Map is not asupported type for the field: " + fieldName);
+            "Map is not a supported type for the field: " + fieldName);
     }
 
     protected void fillWildcardMatcher(final String wildcardName, final Object value,
@@ -238,23 +248,26 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     }
 
     @Override
-    final public String getIndexFieldName(@NotNull final String fieldName) {
-        return indexFieldNameResolver.resolve(fieldName);
-    }
-
-    @Override
-    final public String getStoredFieldName(@NotNull final String fieldName) {
-        return storedFieldNameResolver.resolve(fieldName);
-    }
-
-    @Override
-    final public Term newIndexTerm(final String fieldName, final Object value) {
-        return indexTermSupplier.newTerm(fieldName, value);
+    final public String resolveFieldName(final String fieldName, final FieldType fieldType, final ValueType valueType) {
+        return fieldNameResolver.resolve(fieldName, fieldType, valueType);
     }
 
     @Override
     final public Term newPrimaryTerm(final String fieldName, final Object value) {
-        return primaryTermSupplier.newTerm(fieldName, value);
+        final Term term = primaryTermSupplier.newTerm(fieldName, value);
+        if (term == null)
+            throw new NotAcceptableException(
+                "This field cannot be used as a primary key: " + (genericFieldName == null ? fieldName : genericFieldName));
+        return term;
+    }
+
+    @Override
+    final public Term newIndexTerm(final String fieldName, final Object value) {
+        final Term term = indexTermSupplier.newTerm(fieldName, value);
+        if (term == null)
+            throw new NotAcceptableException(
+                "This field cannot is not indexed: " + (genericFieldName == null ? fieldName : genericFieldName));
+        return term;
     }
 
     @Override
@@ -262,4 +275,85 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         return bytesRef == null ? null : bytesRefConverter.to(bytesRef);
     }
 
+    static <T extends FieldDefinition> Builder<T> of(final String genericFieldName, final WildcardMatcher wildcardMatcher, final T definition) {
+        return new Builder<>(genericFieldName, wildcardMatcher, definition);
+    }
+
+    protected static class Builder<T extends FieldDefinition> {
+
+        protected final String genericFieldName;
+        protected final WildcardMatcher wildcardMatcher;
+        protected final T definition;
+
+
+        private BytesRefUtils.Converter<?> bytesRefConverter;
+        private FieldSupplier fieldSupplier;
+        private FacetSupplier facetSupplier;
+        private SortFieldSupplier sortFieldSupplier;
+        private TermSupplier primaryTermSupplier;
+        private TermSupplier indexTermSupplier;
+        private FieldNameResolver fieldNameResolver;
+        private Set<FieldType> fieldTypes;
+        private ValueType valueType;
+
+        protected Builder(final String genericFieldName, final WildcardMatcher wildcardMatcher, final T definition) {
+            this.genericFieldName = genericFieldName;
+            this.wildcardMatcher = wildcardMatcher;
+            this.definition = definition;
+        }
+
+        public Builder<T> bytesRefConverter(BytesRefUtils.Converter<?> bytesRefConverter) {
+            this.bytesRefConverter = bytesRefConverter;
+            return this;
+        }
+
+        public Builder<T> fieldSupplier(FieldSupplier fieldSupplier) {
+            this.fieldSupplier = fieldSupplier;
+            return this;
+        }
+
+        public Builder<T> facetSupplier(FacetSupplier facetSupplier) {
+            this.facetSupplier = facetSupplier;
+            return this;
+        }
+
+        public Builder<T> sortFieldSupplier(SortFieldSupplier sortFieldSupplier) {
+            this.sortFieldSupplier = sortFieldSupplier;
+            return this;
+        }
+
+        public Builder<T> primaryTermSupplier(TermSupplier primaryTermSupplier) {
+            this.primaryTermSupplier = primaryTermSupplier;
+            return this;
+        }
+
+        public Builder<T> indexTermSupplier(TermSupplier indexTermSupplier) {
+            this.indexTermSupplier = indexTermSupplier;
+            return this;
+        }
+
+        public Builder<T> fieldNameResolver(FieldNameResolver fieldNameResolver) {
+            this.fieldNameResolver = fieldNameResolver;
+            return this;
+        }
+
+        public Builder<T> fieldType(FieldType fieldType) {
+            if (fieldTypes == null)
+                fieldTypes = new HashSet<>();
+            this.fieldTypes.add(fieldType);
+            return this;
+        }
+
+        public Builder<T> fieldTypes(Collection<FieldType> fieldTypes) {
+            for (final FieldType fieldType : fieldTypes)
+                fieldType(fieldType);
+            return this;
+        }
+
+        public Builder<T> valueType(ValueType valueType) {
+            this.valueType = valueType;
+            return this;
+        }
+
+    }
 }

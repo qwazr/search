@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import java.util.Arrays;
@@ -55,7 +56,7 @@ public class LongMultiRangeQuery extends AbstractMultiRangeQuery<LongMultiRangeQ
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        final String resolvedField = resolveField(queryContext.getFieldMap(), 0L);
+        final String resolvedField = resolvePointField(queryContext.getFieldMap(), 0L, FieldTypeInterface.ValueType.longType);
         if (lowerValues.length == 1)
             return LongPoint.newRangeQuery(resolvedField, lowerValues[0], upperValues[0]);
         else

@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import java.util.Arrays;
@@ -60,8 +61,9 @@ public class IntMultiRangeQuery extends AbstractMultiRangeQuery<IntMultiRangeQue
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return IntPoint.newRangeQuery(
-            resolveField(queryContext.getFieldMap(), 0),
-            lowerValues, upperValues);
+            resolvePointField(queryContext.getFieldMap(), 0, FieldTypeInterface.ValueType.integerType),
+            lowerValues, upperValues
+        );
     }
 
     public static class Builder extends AbstractBuilder<Integer, Builder> {

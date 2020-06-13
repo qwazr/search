@@ -21,6 +21,7 @@ import com.qwazr.search.index.DocumentBuilder;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.Term;
@@ -37,13 +38,15 @@ public interface FieldTypeInterface {
 
     Object toTerm(final BytesRef bytesRef);
 
-    String getIndexFieldName(@NotNull final String fieldName);
+    String resolveFieldName(@Nullable final String fieldName, @Nullable final FieldType fieldType, @Nullable final ValueType valueType);
 
-    String getStoredFieldName(@NotNull final String fieldName);
+    Term newPrimaryTerm(final String fieldName, final Object value);
 
     Term newIndexTerm(final String fieldName, final Object value);
 
-    Term newPrimaryTerm(final String fieldName, final Object value);
+    ValueType getValueType();
+
+    FieldType findFirstOf(final FieldType... expectedTypes);
 
     FieldDefinition getDefinition();
 
@@ -86,7 +89,38 @@ public interface FieldTypeInterface {
 
     @FunctionalInterface
     interface FieldNameResolver {
-        String resolve(final String fieldName);
+        String resolve(final String fieldName, final FieldType fieldType, final ValueType valueType);
+    }
+
+    enum FieldType {
+
+        storedField('r'),
+        stringField('s'),
+        facetField('f'),
+        docValues('d'),
+        textField('t'),
+        pointField('p');
+
+        final char prefix;
+
+        FieldType(char prefix) {
+            this.prefix = prefix;
+        }
+    }
+
+    enum ValueType {
+
+        textType('t'),
+        longType('l'),
+        integerType('i'),
+        doubleType('d'),
+        floatType('f');
+
+        final char prefix;
+
+        ValueType(char prefix) {
+            this.prefix = prefix;
+        }
     }
 
 }

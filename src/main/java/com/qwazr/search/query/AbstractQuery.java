@@ -23,12 +23,17 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.field.SmartFieldDefinition;
+import com.qwazr.search.index.BytesRefUtils;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.StringUtils;
+import javax.ws.rs.NotAcceptableException;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
@@ -251,4 +256,81 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
         final Constructor<AbstractQuery<?>> samplerConstructor = queryClass.getConstructor(IndexSettingsDefinition.class, Map.class, Map.class);
         return samplerConstructor.newInstance(settings, analyzers, fields);
     }
+
+    static FieldTypeInterface getFieldType(final FieldMap fieldMap,
+                                           final String genericFieldName,
+                                           final String concreteFieldName,
+                                           final Object value,
+                                           final FieldTypeInterface.ValueType expectedValue) {
+        final FieldTypeInterface fieldTypeInterface = fieldMap.getFieldType(genericFieldName, concreteFieldName, value);
+        if (expectedValue != null && fieldTypeInterface.getValueType() != expectedValue)
+            throw new NotAcceptableException("The field " + (genericFieldName == null ? concreteFieldName : genericFieldName)
+                + " has a wrong value type: " + fieldTypeInterface.getValueType() + " -  The expected value type is " + expectedValue + ".");
+        return fieldTypeInterface;
+    }
+
+    static String resolveFieldName(final FieldMap fieldMap,
+                                   final String genericFieldName,
+                                   final String concreteFieldName,
+                                   final Object value,
+                                   final FieldTypeInterface.ValueType expectedValueType,
+                                   final FieldTypeInterface.FieldType... fieldTypes) {
+        final FieldTypeInterface fieldTypeInterface = getFieldType(fieldMap, genericFieldName, concreteFieldName, value, expectedValueType);
+        final FieldTypeInterface.FieldType fieldType = fieldTypeInterface.findFirstOf(fieldTypes);
+        if (fieldType == null)
+            throw new NotAcceptableException("The field "
+                + (genericFieldName == null ? concreteFieldName : genericFieldName) + " is not indexed.");
+        return fieldTypeInterface.resolveFieldName(concreteFieldName, fieldType, FieldTypeInterface.ValueType.textType);
+    }
+
+    static String resolveDocValueField(final FieldMap fieldMap,
+                                       final String genericFieldName,
+                                       final String concreteFieldName,
+                                       final Object value,
+                                       final FieldTypeInterface.ValueType valueType) {
+        return resolveFieldName(fieldMap, genericFieldName, concreteFieldName, value,
+            valueType, FieldTypeInterface.FieldType.docValues);
+    }
+
+    static String resolvePointField(final FieldMap fieldMap,
+                                    final String genericFieldName,
+                                    final String concreteFieldName,
+                                    final Object value,
+                                    final FieldTypeInterface.ValueType valueType) {
+        return resolveFieldName(fieldMap, genericFieldName, concreteFieldName, value,
+            valueType, FieldTypeInterface.FieldType.pointField);
+    }
+
+    static String resolveIndexTextField(final FieldMap fieldMap,
+                                        final String genericFieldName,
+                                        final String concreteFieldName,
+                                        final Object value) {
+        return resolveFieldName(fieldMap, genericFieldName, concreteFieldName, value, null,
+            FieldTypeInterface.FieldType.stringField, FieldTypeInterface.FieldType.textField);
+    }
+
+    static String resolveFullTextField(final FieldMap fieldMap,
+                                       final String genericFieldName,
+                                       final String concreteFieldName,
+                                       final Object value) {
+        return resolveFieldName(fieldMap, genericFieldName, concreteFieldName, value, null,
+            FieldTypeInterface.FieldType.textField, FieldTypeInterface.FieldType.stringField);
+    }
+
+    static Term resolveIndexTextTerm(final FieldMap fieldMap,
+                                     final String genericFieldName,
+                                     final String concreteFieldName,
+                                     final Object value) {
+        final String fieldName = resolveIndexTextField(fieldMap, genericFieldName, concreteFieldName, value);
+        return new Term(fieldName, BytesRefUtils.fromAny(value));
+    }
+
+    static Term resolveFullTextTerm(final FieldMap fieldMap,
+                                    final String genericFieldName,
+                                    final String concreteFieldName,
+                                    final Object value) {
+        final String fieldName = resolveFullTextField(fieldMap, genericFieldName, concreteFieldName, value);
+        return new Term(fieldName, BytesRefUtils.fromAny(value));
+    }
 }
+

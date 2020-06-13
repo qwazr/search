@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.search.Query;
@@ -39,7 +40,8 @@ public class LongRangeQuery extends AbstractRangeQuery<Long, LongRangeQuery> {
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return LongPoint.newRangeQuery(
-            resolveField(queryContext.getFieldMap(), 0L),
-            lowerValue, upperValue);
+            resolvePointField(queryContext.getFieldMap(), 0L, FieldTypeInterface.ValueType.longType),
+            lowerValue, upperValue
+        );
     }
 }

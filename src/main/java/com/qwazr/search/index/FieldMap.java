@@ -52,7 +52,7 @@ public class FieldMap {
 
         this.primaryKey = primaryKey == null || primaryKey.isBlank() ? FieldDefinition.ID_FIELD : primaryKey;
 
-        this.smartDynamicTypes = new SmartDynamicTypes(primaryKey);
+        this.smartDynamicTypes = new SmartDynamicTypes(SmartDynamicTypes.primary(primaryKey)) :null;
 
         this.sortedSetFacetField =
             sortedSetFacetField == null ? FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD : sortedSetFacetField;
@@ -151,7 +151,7 @@ public class FieldMap {
             return smartFieldType;
 
         throw new IllegalArgumentException(
-            "The field has not been found: " + genericFieldName + " / " + concreteFieldName);
+            "The field has not been found: " + (genericFieldName == null ? concreteFieldName : genericFieldName));
     }
 
     @NotNull
@@ -203,25 +203,6 @@ public class FieldMap {
                     break;
             }
         }
-    }
-
-    final public String resolveStoredFieldName(@NotNull final String fieldName) {
-        return getFieldType(fieldName, fieldName).getStoredFieldName(fieldName);
-    }
-
-    final public String resolveIndexFieldName(@NotNull final String fieldName) {
-        return getFieldType(fieldName, fieldName).getIndexFieldName(fieldName);
-    }
-
-    final public String resolveIndexFieldName(@NotNull final String genericFieldName,
-                                              @NotNull final String fieldName) {
-        return getFieldType(genericFieldName, fieldName).getIndexFieldName(fieldName);
-    }
-
-    final public String resolveIndexFieldName(@NotNull final String genericFieldName,
-                                              @NotNull final String fieldName,
-                                              @NotNull final Object value) {
-        return getFieldType(genericFieldName, fieldName, value).getIndexFieldName(fieldName == null ? genericFieldName : fieldName);
     }
 
     static public String[] resolveFieldNames(final String[] fields, final Function<String, String> resolver) {

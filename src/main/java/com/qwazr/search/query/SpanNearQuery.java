@@ -63,7 +63,7 @@ public class SpanNearQuery extends AbstractFieldSpanQuery<SpanNearQuery> {
         throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
         final org.apache.lucene.search.spans.SpanNearQuery.Builder builder =
             new org.apache.lucene.search.spans.SpanNearQuery.Builder(
-                resolveField(queryContext.getFieldMap(), StringUtils.EMPTY),
+                resolveFullTextField(queryContext.getFieldMap(), genericField, field, StringUtils.EMPTY),
                 in_order == null ? false : in_order);
         if (slop != null)
             builder.setSlop(slop);

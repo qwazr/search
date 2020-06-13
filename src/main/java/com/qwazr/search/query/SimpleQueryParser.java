@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
@@ -122,7 +123,7 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
 
         final Map<String, Float> resolvedBoosts = fieldMap == null || weights == null ? weights
             : FieldMap.resolveFieldNames(weights, new HashMap<>(),
-            f -> fieldMap.resolveIndexFieldName(f, StringUtils.EMPTY));
+            f -> resolveFullTextField(fieldMap, f, f, StringUtils.EMPTY));
 
         final int fl = flags == -2 ? computeTag() : flags;
 

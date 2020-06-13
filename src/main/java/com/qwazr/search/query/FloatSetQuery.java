@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import java.util.Arrays;
 import org.apache.lucene.document.FloatPoint;
@@ -47,7 +48,10 @@ public class FloatSetQuery extends AbstractFieldQuery<FloatSetQuery> {
 
     @Override
     public Query getQuery(final QueryContext queryContext) {
-        return FloatPoint.newSetQuery(resolveField(queryContext.getFieldMap(), 0F), values);
+        return FloatPoint.newSetQuery(
+            resolvePointField(queryContext.getFieldMap(), 0F, FieldTypeInterface.ValueType.floatType),
+            values
+        );
     }
 
 }

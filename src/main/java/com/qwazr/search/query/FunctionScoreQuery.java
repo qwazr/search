@@ -34,10 +34,10 @@ public class FunctionScoreQuery extends AbstractQuery<FunctionScoreQuery> {
     public final DoubleValuesSource<?> boost;
 
     @JsonCreator
-    private FunctionScoreQuery(@JsonProperty("in") final AbstractQuery inQuery,
-                               @JsonProperty("boostMatch") final AbstractQuery boostMatchQuery,
+    private FunctionScoreQuery(@JsonProperty("in") final AbstractQuery<?> inQuery,
+                               @JsonProperty("boostMatch") final AbstractQuery<?> boostMatchQuery,
                                @JsonProperty("boostValue") final Float boostValue,
-                               @JsonProperty("boost") final DoubleValuesSource boost) {
+                               @JsonProperty("boost") final DoubleValuesSource<?> boost) {
         super(FunctionScoreQuery.class);
         this.inQuery = inQuery;
         this.boostMatchQuery = boostMatchQuery;
@@ -49,13 +49,13 @@ public class FunctionScoreQuery extends AbstractQuery<FunctionScoreQuery> {
         this(inQuery, boostMatchQuery, boostValue, null);
     }
 
-    public FunctionScoreQuery(final AbstractQuery inQuery, final DoubleValuesSource<?> boost) {
+    public FunctionScoreQuery(final AbstractQuery<?> inQuery, final DoubleValuesSource<?> boost) {
         this(inQuery, null, null, boost);
     }
 
     @Override
     final public Query getQuery(final QueryContext queryContext)
-            throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+        throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
         Objects.requireNonNull(inQuery, "Missing inQuery property");
         final Query in = inQuery.getQuery(queryContext);
         if (boost != null) {
@@ -71,7 +71,7 @@ public class FunctionScoreQuery extends AbstractQuery<FunctionScoreQuery> {
     @Override
     protected boolean isEqual(final FunctionScoreQuery q) {
         return Objects.equals(inQuery, q.inQuery) && Objects.equals(boostMatchQuery, q.boostMatchQuery) &&
-                Objects.equals(boostValue, q.boostValue) && Objects.equals(boost, q.boost);
+            Objects.equals(boostValue, q.boostValue) && Objects.equals(boost, q.boost);
     }
 
 }

@@ -18,10 +18,12 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldMap;
 import java.net.URI;
 import java.util.Objects;
+import javax.ws.rs.NotAcceptableException;
 import org.apache.lucene.index.Term;
 
 public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extends AbstractQuery<T> {
@@ -52,40 +54,44 @@ public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extend
         this(queryClass, builder.genericField, builder.field);
     }
 
-    static String resolveField(final FieldMap fieldMap,
-                               final String genericField,
-                               final String field) {
-        return fieldMap == null ? field : fieldMap.resolveIndexFieldName(genericField, field);
+    final protected String resolveFieldName(final FieldMap fieldMap,
+                                            final Object value,
+                                            final FieldTypeInterface.ValueType valueType,
+                                            final FieldTypeInterface.FieldType... fieldTypes) {
+        return resolveFieldName(fieldMap, genericField, field, value, valueType, fieldTypes);
     }
 
-    final protected String resolveField(final FieldMap fieldMap) {
-        return resolveField(fieldMap, genericField, field);
+    final protected String resolveDocValueField(final FieldMap fieldMap,
+                                                final Object value,
+                                                FieldTypeInterface.ValueType valueType) {
+        return resolveDocValueField(fieldMap, genericField, field, value, valueType);
     }
 
-    static String resolveField(final FieldMap fieldMap,
-                               final String genericField,
-                               final String field,
-                               final Object value) {
-        return fieldMap == null ? field : fieldMap.resolveIndexFieldName(genericField, field, value);
+    final protected String resolvePointField(final FieldMap fieldMap,
+                                             final Object value,
+                                             FieldTypeInterface.ValueType valueType) {
+        return resolvePointField(fieldMap, genericField, field, value, valueType);
     }
 
-    final protected String resolveField(final FieldMap fieldMap,
-                                        final Object value) {
-        return resolveField(fieldMap, genericField, field, value);
+
+    final protected String resolveIndexTextField(final FieldMap fieldMap,
+                                                 final Object value) {
+        return resolveIndexTextField(fieldMap, genericField, field, value);
     }
 
-    static Term getResolvedTerm(final FieldMap fieldMap,
-                                final String genericFieldName,
-                                final String concreteFieldName,
-                                final Object value) {
-        return fieldMap == null ?
-            new Term(concreteFieldName, BytesRefUtils.fromAny(value)) :
-            Objects.requireNonNull(fieldMap.getFieldType(genericFieldName, concreteFieldName, value),
-                "Unknown field: " + concreteFieldName).newPrimaryTerm(concreteFieldName, value);
+    final protected String resolveFullTextField(final FieldMap fieldMap,
+                                                final Object value) {
+        return resolveFullTextField(fieldMap, genericField, field, value);
     }
 
-    final protected Term getResolvedTerm(final FieldMap fieldMap, final Object value) {
-        return getResolvedTerm(fieldMap, genericField, field, value);
+    final protected Term resolveIndexTextTerm(final FieldMap fieldMap,
+                                              final Object value) {
+        return resolveIndexTextTerm(fieldMap, genericField, field, value);
+    }
+
+    final protected Term resolveFullTextTerm(final FieldMap fieldMap,
+                                             final Object value) {
+        return resolveFullTextTerm(fieldMap, genericField, field, value);
     }
 
     @Override

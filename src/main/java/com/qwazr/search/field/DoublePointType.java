@@ -29,7 +29,11 @@ final class DoublePointType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.DOUBLE_POINT,
             buildFieldSupplier(genericFieldName, definition),
             null,
-            definition);
+            null,
+            definition,
+            ValueType.doubleType,
+            FieldType.pointField
+        );
     }
 
     private static FieldSupplier buildFieldSupplier(final String genericFieldName,

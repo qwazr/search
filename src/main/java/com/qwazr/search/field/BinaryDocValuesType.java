@@ -27,7 +27,13 @@ final class BinaryDocValuesType extends CustomFieldTypeAbstract {
     BinaryDocValuesType(final String genericFieldName,
                         final WildcardMatcher wildcardMatcher,
                         final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher, null, buildFieldSupplier(genericFieldName), null, definition);
+        super(genericFieldName, wildcardMatcher, null,
+            buildFieldSupplier(genericFieldName),
+            null,
+            null,
+            definition,
+            ValueType.textType,
+            FieldType.docValues);
     }
 
     private static FieldSupplier buildFieldSupplier(final String genericFieldName) {

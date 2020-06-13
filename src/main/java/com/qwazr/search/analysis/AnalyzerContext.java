@@ -16,6 +16,7 @@
 package com.qwazr.search.analysis;
 
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ClassLoaderUtils;
@@ -60,7 +61,7 @@ public class AnalyzerContext {
 
         fieldMap.forEach((fieldName, fieldType) -> {
             try {
-                final String queryFieldName = fieldType.getIndexFieldName(fieldName);
+                final String queryFieldName = fieldType.resolveFieldName(fieldName, FieldTypeInterface.FieldType.textField, FieldTypeInterface.ValueType.textType);
                 if (queryFieldName == null)
                     return;
                 final FieldDefinition fieldDefinition = fieldType.getDefinition();

@@ -22,134 +22,115 @@ import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
+import static com.qwazr.search.field.FieldTypeInterface.FieldType;
+import static com.qwazr.search.field.FieldTypeInterface.ValueType;
 
 interface SmartFieldProvider {
 
-    enum FieldPrefix {
-
-        storedField('r'), stringField('s'), facetField('f'), docValues('d'), textField('t'), pointField('p');
-
-        final char prefix;
-
-        FieldPrefix(char prefix) {
-            this.prefix = prefix;
-        }
-
-        private String getLuceneFieldName(final String concreteFieldName, final TypePrefix typePrefix) {
-            return String.valueOf(new char[]{prefix, typePrefix.prefix, '€'}).concat(concreteFieldName);
-        }
-
+    @FunctionalInterface
+    interface SmartFieldNameResolver {
+        String resolve(String fieldName);
     }
 
-    enum TypePrefix {
-
-        textType('t'), longType('l'), integerType('i'), doubleType('d'), floatType('f');
-
-        final char prefix;
-
-        TypePrefix(char prefix) {
-            this.prefix = prefix;
-        }
-
-        private String getLuceneFieldName(final String genericFieldName, final FieldPrefix fieldPrefix) {
-            return fieldPrefix.getLuceneFieldName(genericFieldName, this);
-        }
-
+    static String getLuceneFieldName(final String genericFieldName,
+                                     final FieldTypeInterface.FieldType fieldType,
+                                     final FieldTypeInterface.ValueType valueType) {
+        return String.valueOf(new char[]{fieldType.prefix, valueType.prefix, '€'}).concat(genericFieldName);
     }
 
-    private static FieldTypeInterface.FieldNameResolver buildNameProvider(final String genericFieldName,
-                                                                          final WildcardMatcher wildcardMatcher,
-                                                                          final FieldPrefix fieldPrefix,
-                                                                          final TypePrefix typePrefix) {
+    private static SmartFieldNameResolver buildNameProvider(final String genericFieldName,
+                                                            final WildcardMatcher wildcardMatcher,
+                                                            final FieldType fieldType,
+                                                            final ValueType valueType) {
         if (wildcardMatcher == null) {
-            final String fieldName = typePrefix.getLuceneFieldName(genericFieldName, fieldPrefix);
-            return concreteFieldName -> fieldName;
+            final String resolveFieldName = getLuceneFieldName(genericFieldName, fieldType, valueType);
+            return fieldName -> resolveFieldName;
         } else {
-            return concreteFieldName -> typePrefix.getLuceneFieldName(genericFieldName, fieldPrefix);
+            return fieldName -> getLuceneFieldName(genericFieldName, fieldType, valueType);
         }
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldStoredTextResolver(final String genericFieldName,
-                                                                        final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldStoredTextResolver(final String genericFieldName,
+                                                          final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.storedField, TypePrefix.textType);
+            genericFieldName, wildcardMatcher, FieldType.storedField, ValueType.textType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldStoredText(final String genericFieldName,
                                                             final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+        final SmartFieldNameResolver fieldNameSupplier =
             fieldStoredTextResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new StoredField(fieldNameSupplier.resolve(fieldName), value.toString()));
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldStoredLongResolver(final String genericFieldName,
-                                                                        final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldStoredLongResolver(final String genericFieldName,
+                                                          final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.storedField, TypePrefix.longType);
+            genericFieldName, wildcardMatcher, FieldType.storedField, ValueType.longType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldStoredLong(final String genericFieldName,
                                                             final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+        final SmartFieldNameResolver fieldNameSupplier =
             fieldStoredLongResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new StoredField(fieldNameSupplier.resolve(fieldName), FieldUtils.getLongValue(value)));
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldStoredDoubleResolver(final String genericFieldName,
-                                                                          final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldStoredDoubleResolver(final String genericFieldName,
+                                                            final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.storedField, TypePrefix.doubleType);
+            genericFieldName, wildcardMatcher, FieldType.storedField, ValueType.doubleType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldStoredDouble(final String genericFieldName,
                                                               final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+        final SmartFieldNameResolver fieldNameSupplier =
             fieldStoredDoubleResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new StoredField(fieldNameSupplier.resolve(fieldName), FieldUtils.getDoubleValue(value)));
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldStoredIntegerResolver(final String genericFieldName,
-                                                                           final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldStoredIntegerResolver(final String genericFieldName,
+                                                             final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.storedField, TypePrefix.integerType);
+            genericFieldName, wildcardMatcher, FieldType.storedField, ValueType.integerType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldStoredInteger(final String genericFieldName,
                                                                final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+        final SmartFieldNameResolver fieldNameSupplier =
             fieldStoredIntegerResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new StoredField(fieldNameSupplier.resolve(fieldName), FieldUtils.getIntValue(value)));
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldStoredFloatResolver(final String genericFieldName,
-                                                                         final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldStoredFloatResolver(final String genericFieldName,
+                                                           final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.storedField, TypePrefix.floatType);
+            genericFieldName, wildcardMatcher, FieldType.storedField, ValueType.floatType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldStoredFloat(final String genericFieldName,
                                                              final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+        final SmartFieldNameResolver fieldNameSupplier =
             fieldStoredFloatResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new StoredField(fieldNameSupplier.resolve(fieldName), FieldUtils.getFloatValue(value)));
     }
 
 
-    static FieldTypeInterface.FieldNameResolver fieldStringTextResolver(final String genericFieldName,
-                                                                        final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldStringTextResolver(final String genericFieldName,
+                                                          final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.stringField, TypePrefix.textType);
+            genericFieldName, wildcardMatcher, FieldType.stringField, ValueType.textType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldStringText(final String genericFieldName,
                                                             final WildcardMatcher wildcardMatcher,
                                                             final int maxStringLength) {
-        final FieldTypeInterface.FieldNameResolver fieldResolver = fieldStringTextResolver(genericFieldName, wildcardMatcher);
+        final SmartFieldNameResolver fieldResolver = fieldStringTextResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> {
             final String stringValue = value.toString();
             if (stringValue.length() <= maxStringLength)
@@ -161,7 +142,7 @@ interface SmartFieldProvider {
     static FieldTypeInterface.TermSupplier stringTermText(final String genericFieldName,
                                                           final WildcardMatcher wildcardMatcher,
                                                           final int maxStringLength) {
-        final FieldTypeInterface.FieldNameResolver fieldResolver = fieldStringTextResolver(genericFieldName, wildcardMatcher);
+        final SmartFieldNameResolver fieldResolver = fieldStringTextResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value) -> {
             final String stringValue = value.toString();
             if (stringValue.length() > maxStringLength)
@@ -174,22 +155,22 @@ interface SmartFieldProvider {
         return BytesRefUtils.fromLong(FieldUtils.getLongValue(value));
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldStringLongResolver(final String genericFieldName,
-                                                                        final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldStringLongResolver(final String genericFieldName,
+                                                          final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.stringField, TypePrefix.longType);
+            genericFieldName, wildcardMatcher, FieldType.stringField, ValueType.longType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldStringLong(final String genericFieldName,
                                                             final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringLongResolver(genericFieldName, wildcardMatcher);
+        final SmartFieldNameResolver fieldNameResolver = fieldStringLongResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new StringField(fieldNameResolver.resolve(fieldName), getLongValue(value), Field.Store.NO));
     }
 
     static FieldTypeInterface.TermSupplier stringTermLong(final String genericFieldName,
                                                           final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringLongResolver(genericFieldName, wildcardMatcher);
+        final SmartFieldNameResolver fieldNameResolver = fieldStringLongResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value) -> new Term(fieldNameResolver.resolve(fieldName), getLongValue(value));
     }
 
@@ -197,22 +178,22 @@ interface SmartFieldProvider {
         return BytesRefUtils.fromDouble(FieldUtils.getDoubleValue(value));
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldStringDoubleResolver(final String genericFieldName,
-                                                                          final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldStringDoubleResolver(final String genericFieldName,
+                                                            final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.stringField, TypePrefix.doubleType);
+            genericFieldName, wildcardMatcher, FieldType.stringField, ValueType.doubleType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldStringDouble(final String genericFieldName,
                                                               final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringDoubleResolver(genericFieldName, wildcardMatcher);
+        final SmartFieldNameResolver fieldNameResolver = fieldStringDoubleResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new StringField(fieldNameResolver.resolve(fieldName), getDoubleValue(value), Field.Store.NO));
     }
 
     static FieldTypeInterface.TermSupplier stringTermDouble(final String genericFieldName,
                                                             final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringDoubleResolver(genericFieldName, wildcardMatcher);
+        final SmartFieldNameResolver fieldNameResolver = fieldStringDoubleResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value) -> new Term(fieldNameResolver.resolve(fieldName), getDoubleValue(value));
     }
 
@@ -220,22 +201,22 @@ interface SmartFieldProvider {
         return BytesRefUtils.fromInteger(FieldUtils.getIntValue(value));
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldStringIntegerResolver(final String genericFieldName,
-                                                                           final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldStringIntegerResolver(final String genericFieldName,
+                                                             final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.stringField, TypePrefix.integerType);
+            genericFieldName, wildcardMatcher, FieldType.stringField, ValueType.integerType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldStringInteger(final String genericFieldName,
                                                                final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringIntegerResolver(genericFieldName, wildcardMatcher);
+        final SmartFieldNameResolver fieldNameResolver = fieldStringIntegerResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new StringField(fieldNameResolver.resolve(fieldName), getIntegerValue(value), Field.Store.NO));
     }
 
     static FieldTypeInterface.TermSupplier stringTermInteger(final String genericFieldName,
                                                              final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringIntegerResolver(genericFieldName, wildcardMatcher);
+        final SmartFieldNameResolver fieldNameResolver = fieldStringIntegerResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value) -> new Term(fieldNameResolver.resolve(fieldName), getIntegerValue(value));
     }
 
@@ -243,30 +224,30 @@ interface SmartFieldProvider {
         return BytesRefUtils.fromFloat(FieldUtils.getFloatValue(value));
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldStringFloatResolver(final String genericFieldName,
-                                                                         final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldStringFloatResolver(final String genericFieldName,
+                                                           final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.stringField, TypePrefix.floatType);
+            genericFieldName, wildcardMatcher, FieldType.stringField, ValueType.floatType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldStringFloat(final String genericFieldName,
                                                              final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringFloatResolver(genericFieldName, wildcardMatcher);
+        final SmartFieldNameResolver fieldNameResolver = fieldStringFloatResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new StringField(fieldNameResolver.resolve(fieldName), getFloatValue(value), Field.Store.NO));
     }
 
     static FieldTypeInterface.TermSupplier stringTermFloat(final String genericFieldName,
                                                            final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameResolver = fieldStringFloatResolver(genericFieldName, wildcardMatcher);
+        final SmartFieldNameResolver fieldNameResolver = fieldStringFloatResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value) -> new Term(fieldNameResolver.resolve(fieldName), getFloatValue(value));
     }
 
     static FieldTypeInterface.FieldSupplier fieldSortedDocValuesText(final String genericFieldName,
                                                                      final WildcardMatcher wildcardMatcher,
                                                                      final int maxStringLength) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.textType);
+        final SmartFieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldType.docValues, ValueType.textType);
         return (fieldName, value, builder) -> {
             final String stringValue = value.toString();
             if (stringValue.length() <= maxStringLength)
@@ -277,45 +258,45 @@ interface SmartFieldProvider {
 
     static FieldTypeInterface.SortFieldSupplier fieldSortedFieldText(final String genericFieldName,
                                                                      final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.textType);
+        final SmartFieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldType.docValues, ValueType.textType);
         return (fieldName, sortEnum) -> SortUtils.stringSortField(fieldNameSupplier.resolve(fieldName), sortEnum);
     }
 
     static FieldTypeInterface.FieldSupplier fieldSortedDocValuesLong(final String genericFieldName,
                                                                      final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.longType);
+        final SmartFieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldType.docValues, ValueType.longType);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new SortedNumericDocValuesField(fieldNameSupplier.resolve(fieldName), FieldUtils.getLongValue(value)));
     }
 
     static FieldTypeInterface.SortFieldSupplier fieldSortedFieldLong(final String genericFieldName,
                                                                      final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.longType);
+        final SmartFieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldType.docValues, ValueType.longType);
         return (fieldName, sortEnum) -> SortUtils.longSortField(fieldNameSupplier.resolve(fieldName), sortEnum);
     }
 
     static FieldTypeInterface.FieldSupplier fieldSortedDocValuesInteger(final String genericFieldName,
                                                                         final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.integerType);
+        final SmartFieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldType.docValues, ValueType.integerType);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new SortedNumericDocValuesField(fieldNameSupplier.resolve(fieldName), FieldUtils.getIntValue(value)));
     }
 
     static FieldTypeInterface.SortFieldSupplier fieldSortedFieldInteger(final String genericFieldName,
                                                                         final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.integerType);
+        final SmartFieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldType.docValues, ValueType.integerType);
         return (fieldName, sortEnum) -> SortUtils.integerSortField(fieldNameSupplier.resolve(fieldName), sortEnum);
     }
 
     static FieldTypeInterface.FieldSupplier fieldSortedDocValuesFloat(final String genericFieldName,
                                                                       final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.floatType);
+        final SmartFieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldType.docValues, ValueType.floatType);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new SortedNumericDocValuesField(fieldNameSupplier.resolve(fieldName),
                 NumericUtils.floatToSortableInt(FieldUtils.getFloatValue(value))));
@@ -323,15 +304,15 @@ interface SmartFieldProvider {
 
     static FieldTypeInterface.SortFieldSupplier fieldSortedFieldFloat(final String genericFieldName,
                                                                       final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.floatType);
+        final SmartFieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldType.docValues, ValueType.floatType);
         return (fieldName, sortEnum) -> SortUtils.floatSortField(fieldNameSupplier.resolve(fieldName), sortEnum);
     }
 
     static FieldTypeInterface.FieldSupplier fieldSortedDocValuesDouble(final String genericFieldName,
                                                                        final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.doubleType);
+        final SmartFieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldType.docValues, ValueType.doubleType);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new SortedNumericDocValuesField(fieldNameSupplier.resolve(fieldName),
                 NumericUtils.doubleToSortableLong(FieldUtils.getDoubleValue(value))));
@@ -339,84 +320,84 @@ interface SmartFieldProvider {
 
     static FieldTypeInterface.SortFieldSupplier fieldSortedFieldDouble(final String genericFieldName,
                                                                        final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.docValues, TypePrefix.doubleType);
+        final SmartFieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldType.docValues, ValueType.doubleType);
         return (fieldName, sortEnum) -> SortUtils.doubleSortField(fieldNameSupplier.resolve(fieldName), sortEnum);
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldPointLongResolver(final String genericFieldName,
-                                                                       final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldPointLongResolver(final String genericFieldName,
+                                                         final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.pointField, TypePrefix.longType);
+            genericFieldName, wildcardMatcher, FieldType.pointField, ValueType.longType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldPointLong(final String genericFieldName,
                                                            final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+        final SmartFieldNameResolver fieldNameSupplier =
             fieldPointLongResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new LongPoint(fieldNameSupplier.resolve(fieldName), FieldUtils.getLongValue(value)));
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldPointDoubleResolver(final String genericFieldName,
-                                                                         final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldPointDoubleResolver(final String genericFieldName,
+                                                           final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.pointField, TypePrefix.doubleType);
+            genericFieldName, wildcardMatcher, FieldType.pointField, ValueType.doubleType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldPointDouble(final String genericFieldName,
                                                              final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+        final SmartFieldNameResolver fieldNameSupplier =
             fieldPointDoubleResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new DoublePoint(fieldNameSupplier.resolve(fieldName), FieldUtils.getDoubleValue(value)));
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldPointIntegerResolver(final String genericFieldName,
-                                                                          final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldPointIntegerResolver(final String genericFieldName,
+                                                            final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.pointField, TypePrefix.integerType);
+            genericFieldName, wildcardMatcher, FieldType.pointField, ValueType.integerType);
     }
 
     static FieldTypeInterface.FieldSupplier fieldPointInteger(final String genericFieldName,
                                                               final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+        final SmartFieldNameResolver fieldNameSupplier =
             fieldPointIntegerResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new IntPoint(fieldNameSupplier.resolve(fieldName), FieldUtils.getIntValue(value)));
     }
 
-    static FieldTypeInterface.FieldNameResolver fieldPointFloatResolver(final String genericFieldName,
-                                                                        final WildcardMatcher wildcardMatcher) {
+    static SmartFieldNameResolver fieldPointFloatResolver(final String genericFieldName,
+                                                          final WildcardMatcher wildcardMatcher) {
         return buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.pointField, TypePrefix.floatType);
+            genericFieldName, wildcardMatcher, FieldType.pointField, ValueType.floatType);
     }
 
 
     static FieldTypeInterface.FieldSupplier fieldPointFloat(final String genericFieldName,
                                                             final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier =
+        final SmartFieldNameResolver fieldNameSupplier =
             fieldPointFloatResolver(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new FloatPoint(fieldNameSupplier.resolve(fieldName), FieldUtils.getFloatValue(value)));
     }
 
-    static FieldTypeInterface.FieldNameResolver facetFieldNameSupplier(final String genericFieldName,
-                                                                       final WildcardMatcher wildcardMatcher) {
-        return buildNameProvider(genericFieldName, wildcardMatcher, FieldPrefix.facetField, TypePrefix.textType);
+    static SmartFieldNameResolver facetFieldNameSupplier(final String genericFieldName,
+                                                         final WildcardMatcher wildcardMatcher) {
+        return buildNameProvider(genericFieldName, wildcardMatcher, FieldType.facetField, ValueType.textType);
     }
 
     static FieldTypeInterface.FieldSupplier facetField(final String genericFieldName,
                                                        final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = facetFieldNameSupplier(genericFieldName, wildcardMatcher);
+        final SmartFieldNameResolver fieldNameSupplier = facetFieldNameSupplier(genericFieldName, wildcardMatcher);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new SortedSetDocValuesFacetField(fieldNameSupplier.resolve(fieldName), value.toString()));
     }
 
     static FieldTypeInterface.FieldSupplier fullTextField(final String genericFieldName,
                                                           final WildcardMatcher wildcardMatcher) {
-        final FieldTypeInterface.FieldNameResolver fieldNameSupplier = buildNameProvider(
-            genericFieldName, wildcardMatcher, FieldPrefix.textField, TypePrefix.textType);
+        final SmartFieldNameResolver fieldNameSupplier = buildNameProvider(
+            genericFieldName, wildcardMatcher, FieldType.textField, ValueType.textType);
         return (fieldName, value, builder) -> builder.accept(genericFieldName, fieldName,
             new TextField(fieldNameSupplier.resolve(fieldName), value.toString(), Field.Store.NO));
     }

@@ -17,6 +17,9 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.utils.WildcardMatcher;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 
@@ -29,7 +32,17 @@ final class TextFieldType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.STRING,
             buildFieldSupplier(genericFieldName, definition),
             null,
-            definition);
+            FieldUtils::newStringTerm,
+            definition,
+            ValueType.textType,
+            getFieldTypes(definition));
+    }
+
+    private static Collection<FieldType> getFieldTypes(final CustomFieldDefinition definition) {
+        if (isStored(definition))
+            return Arrays.asList(FieldType.textField, FieldType.storedField);
+        else
+            return Collections.singletonList(FieldType.textField);
     }
 
     private static FieldSupplier buildFieldSupplier(final String genericFieldName,

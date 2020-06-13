@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import java.net.URI;
@@ -51,7 +52,8 @@ public class DoubleDocValuesExactQuery extends AbstractExactQuery<Double, Double
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return NumericDocValuesField.newSlowExactQuery(
-            resolveField(queryContext.getFieldMap(), value),
-            NumericUtils.doubleToSortableLong(value));
+            resolveDocValueField(queryContext.getFieldMap(), 0D, FieldTypeInterface.ValueType.doubleType),
+            NumericUtils.doubleToSortableLong(value)
+        );
     }
 }

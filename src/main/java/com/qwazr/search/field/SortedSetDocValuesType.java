@@ -33,7 +33,10 @@ final class SortedSetDocValuesType extends CustomFieldTypeAbstract {
             BytesRefUtils.Converter.STRING,
             buildFieldSupplier(genericFieldName),
             null,
-            definition);
+            null,
+            definition,
+            ValueType.textType,
+            FieldType.docValues);
     }
 
     private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {

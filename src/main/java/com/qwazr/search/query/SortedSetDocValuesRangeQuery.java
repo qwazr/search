@@ -17,9 +17,12 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
+import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.StringUtils;
 import java.util.Objects;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.BytesRef;
@@ -54,7 +57,8 @@ public class SortedSetDocValuesRangeQuery extends AbstractRangeQuery<String, Sor
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return SortedSetDocValuesField.newSlowRangeQuery(
-            resolveField(queryContext.getFieldMap(), StringUtils.EMPTY),
+            resolveDocValueField(queryContext.getFieldMap(), StringUtils.EMPTY, FieldTypeInterface.ValueType.textType),
             new BytesRef(lowerValue), new BytesRef(upperValue), lowerInclusive, upperInclusive);
     }
+
 }

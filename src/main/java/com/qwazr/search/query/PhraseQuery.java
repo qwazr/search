@@ -62,8 +62,8 @@ public class PhraseQuery extends AbstractFieldQuery<PhraseQuery> {
         if (slop != null)
             builder.setSlop(slop);
         if (terms != null) {
-            final String resolvedField = resolveField(queryContext.getFieldMap(), StringUtils.EMPTY);
-            for (String term : terms)
+            final String resolvedField = resolveIndexTextField(queryContext.getFieldMap(), StringUtils.EMPTY);
+            for (final String term : terms)
                 builder.add(new Term(resolvedField, term));
         }
         return builder.build();

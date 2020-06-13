@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import java.util.Arrays;
@@ -55,7 +56,8 @@ public class FacetPathQuery extends AbstractQuery<FacetPathQuery> {
 
         final FieldMap fieldMap = queryContext.getFieldMap();
         final String resolvedDimension =
-            fieldMap == null ? dimension : fieldMap.resolveIndexFieldName(genericField, dimension);
+            fieldMap == null ? dimension : fieldMap.getFieldType(genericField, dimension).resolveFieldName(dimension,
+                FieldTypeInterface.FieldType.facetField, FieldTypeInterface.ValueType.textType);
         final String indexFieldName =
             queryContext.getFacetsConfig(genericField, dimension).getDimConfig(resolvedDimension).indexFieldName;
         final Term term = new Term(indexFieldName, FacetsConfig.pathToString(resolvedDimension, path));

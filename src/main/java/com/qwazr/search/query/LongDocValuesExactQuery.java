@@ -17,6 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.search.Query;
@@ -27,7 +28,8 @@ public class LongDocValuesExactQuery extends AbstractExactQuery<Long, LongDocVal
 
     @JsonCreator
     public LongDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-                                   @JsonProperty("field") final String field, @JsonProperty("value") final Long value) {
+                                   @JsonProperty("field") final String field,
+                                   @JsonProperty("value") final Long value) {
         super(LongDocValuesExactQuery.class, genericField, field, value == null ? ZERO : value);
         this.value = value;
     }
@@ -39,7 +41,8 @@ public class LongDocValuesExactQuery extends AbstractExactQuery<Long, LongDocVal
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return NumericDocValuesField.newSlowExactQuery(
-            resolveField(queryContext.getFieldMap()),
-            value);
+            resolveDocValueField(queryContext.getFieldMap(), value, FieldTypeInterface.ValueType.longType),
+            value
+        );
     }
 }

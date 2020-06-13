@@ -122,7 +122,7 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
             mlt.setFieldNames(fieldMap == null ?
                 fieldnames :
                 FieldMap.resolveFieldNames(fieldnames,
-                    f -> fieldMap.resolveIndexFieldName(f)));
+                    f -> fieldMap.getFieldType(f, f, StringUtils.EMPTY).resolveFieldName(f, null, null)));
         if (max_doc_freq != null)
             mlt.setMaxDocFreq(max_doc_freq);
         if (max_doc_freq_pct != null)
@@ -149,7 +149,7 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
             throw new ParseException("Either doc_num or like_text/fieldname are missing");
 
         final org.apache.lucene.search.BooleanQuery bq = (org.apache.lucene.search.BooleanQuery) mlt.like(
-            AbstractFieldQuery.resolveField(fieldMap, fieldname, fieldname, StringUtils.EMPTY), new StringReader(like_text));
+            resolveFullTextField(fieldMap, fieldname, fieldname, StringUtils.EMPTY), new StringReader(like_text));
         final org.apache.lucene.search.BooleanQuery.Builder newBq = new org.apache.lucene.search.BooleanQuery.Builder();
         for (BooleanClause clause : bq)
             newBq.add(clause);

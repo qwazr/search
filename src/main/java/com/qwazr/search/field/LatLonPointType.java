@@ -26,7 +26,11 @@ final class LatLonPointType extends CustomFieldTypeAbstract {
     LatLonPointType(final String genericFieldName,
                     final WildcardMatcher wildcardMatcher,
                     final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher, null, null, null, definition);
+        super(genericFieldName, wildcardMatcher,
+            null, null, null, null,
+            definition,
+            ValueType.doubleType,
+            FieldType.pointField);
     }
 
     @Override

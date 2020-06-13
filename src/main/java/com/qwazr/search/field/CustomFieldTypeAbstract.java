@@ -28,15 +28,45 @@ abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefi
                                       final BytesRefUtils.Converter<?> bytesRefConverter,
                                       final FieldSupplier fieldSupplier,
                                       final SortFieldSupplier sortFieldSupplier,
-                                      final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher, bytesRefConverter, fieldSupplier,
-            buildFacetConfig(definition),
-            sortFieldSupplier,
-            buildPrimaryTermSupplier(),
-            buildPrimaryTermSupplier(),
-            indexFilename -> indexFilename,
-            storedFilename -> storedFilename,
-            definition);
+                                      final TermSupplier primaryTermSupplier,
+                                      final CustomFieldDefinition definition,
+                                      final ValueType valueType,
+                                      final Collection<FieldType> fieldTypes) {
+        super(of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(bytesRefConverter)
+            .fieldSupplier(fieldSupplier)
+            .facetSupplier(buildFacetConfig(definition))
+            .sortFieldSupplier(sortFieldSupplier)
+            .primaryTermSupplier(primaryTermSupplier)
+            .fieldNameResolver((fn, ft, vt) -> fn)
+            .valueType(valueType)
+            .fieldTypes(fieldTypes)
+        );
+    }
+
+    protected CustomFieldTypeAbstract(final String genericFieldName,
+                                      final WildcardMatcher wildcardMatcher,
+                                      final BytesRefUtils.Converter<?> bytesRefConverter,
+                                      final FieldSupplier fieldSupplier,
+                                      final SortFieldSupplier sortFieldSupplier,
+                                      final TermSupplier primaryTermSupplier,
+                                      final CustomFieldDefinition definition,
+                                      final ValueType valueType,
+                                      final FieldType fieldType) {
+        super(of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(bytesRefConverter)
+            .fieldSupplier(fieldSupplier)
+            .facetSupplier(buildFacetConfig(definition))
+            .sortFieldSupplier(sortFieldSupplier)
+            .primaryTermSupplier(primaryTermSupplier)
+            .fieldNameResolver((fn, ft, vt) -> fn)
+            .valueType(valueType)
+            .fieldType(fieldType)
+        );
+    }
+
+    protected static boolean isStored(final CustomFieldDefinition definition) {
+        return definition.stored != null && definition.stored;
     }
 
     private static FacetSupplier buildFacetConfig(final CustomFieldDefinition definition) {
@@ -61,10 +91,6 @@ abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefi
             for (final FacetSupplier facetSupplier : facetSupplierArray)
                 facetSupplier.setConfig(fieldName, fieldMap, facetsConfig);
         };
-    }
-
-    static private FieldTypeInterface.TermSupplier buildPrimaryTermSupplier() {
-        return (fieldName, value) -> new Term(fieldName, value.toString());
     }
 
 }
