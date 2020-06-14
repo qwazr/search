@@ -41,7 +41,6 @@ import java.lang.reflect.Field;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -182,7 +181,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public LinkedHashMap<String, FieldDefinition> getFields(final String schemaName, final String indexName) {
+    final public Map<String, FieldDefinition> getFields(final String schemaName, final String indexName) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).get(indexName, false).getFields();
@@ -206,8 +205,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
         }
     }
 
-    final public LinkedHashMap<String, FieldDefinition> setFields(final String schemaName, final String indexName,
-                                                                  final LinkedHashMap<String, FieldDefinition> fields) {
+    final public Map<String, FieldDefinition> setFields(final String schemaName, final String indexName,
+                                                        final Map<String, FieldDefinition> fields) {
         try {
             checkRight(schemaName);
             indexManager.get(schemaName).get(indexName, false).setFields(fields);
@@ -304,8 +303,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(final String schemaName,
-                                                                        final String indexName) {
+    final public Map<String, AnalyzerDefinition> getAnalyzers(final String schemaName,
+                                                              final String indexName) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).get(indexName, false).getAnalyzers();
@@ -353,8 +352,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
         }
     }
 
-    final public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String schemaName, final String indexName,
-                                                                        final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+    @Override
+    final public Map<String, AnalyzerDefinition> setAnalyzers(final String schemaName, final String indexName,
+                                                              final Map<String, AnalyzerDefinition> analyzers) {
         try {
             checkRight(schemaName);
             indexManager.get(schemaName).get(indexName, false).setAnalyzers(analyzers);

@@ -35,7 +35,6 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -99,42 +98,48 @@ public interface IndexServiceInterface extends ServiceInterface {
     @GET
     @Path("/{schema_name}/{index_name}/fields")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    LinkedHashMap<String, FieldDefinition> getFields(@PathParam("schema_name") String schema_name,
-                                                     @PathParam("index_name") String index_name);
+    Map<String, FieldDefinition> getFields(@PathParam("schema_name") String schema_name,
+                                           @PathParam("index_name") String index_name);
 
     @POST
     @Path("/{schema_name}/{index_name}/fields")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    LinkedHashMap<String, FieldDefinition> setFields(@PathParam("schema_name") String schema_name,
-                                                     @PathParam("index_name") String index_name, LinkedHashMap<String, FieldDefinition> fields);
+    Map<String, FieldDefinition> setFields(@PathParam("schema_name") String schema_name,
+                                           @PathParam("index_name") String index_name,
+                                           Map<String, FieldDefinition> fields);
 
     @GET
     @Path("/{schema_name}/{index_name}/fields/{field_name}/analyzer/query")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     List<TermDefinition> doAnalyzeQuery(@PathParam("schema_name") String schema_name,
-                                        @PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
+                                        @PathParam("index_name") String index_name,
+                                        @PathParam("field_name") String field_name,
                                         @QueryParam("text") String text);
 
     @GET
     @Path("/{schema_name}/{index_name}/fields/{field_name}/analyzer/index")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     List<TermDefinition> doAnalyzeIndex(@PathParam("schema_name") String schema_name,
-                                        @PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
+                                        @PathParam("index_name") String index_name,
+                                        @PathParam("field_name") String field_name,
                                         @QueryParam("text") String text);
 
     @GET
     @Path("/{schema_name}/{index_name}/fields/{field_name}/stats")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    FieldStats getFieldStats(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
+    FieldStats getFieldStats(@PathParam("schema_name") String schema_name,
+                             @PathParam("index_name") String index_name,
                              @PathParam("field_name") String field_name);
 
     @GET
     @Path("/{schema_name}/{index_name}/fields/{field_name}/terms")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     List<TermEnumDefinition> doExtractTerms(@PathParam("schema_name") String schema_name,
-                                            @PathParam("index_name") String index_name, @PathParam("field_name") String field_name,
-                                            @QueryParam("start") Integer start, @QueryParam("rows") Integer rows);
+                                            @PathParam("index_name") String index_name,
+                                            @PathParam("field_name") String field_name,
+                                            @QueryParam("start") Integer start,
+                                            @QueryParam("rows") Integer rows);
 
     @GET
     @Path("/{schema_name}/{index_name}/fields/{field_name}/terms/{prefix}")
@@ -165,8 +170,8 @@ public interface IndexServiceInterface extends ServiceInterface {
     @GET
     @Path("/{schema_name}/{index_name}/analyzers")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    LinkedHashMap<String, AnalyzerDefinition> getAnalyzers(@PathParam("schema_name") String schema_name,
-                                                           @PathParam("index_name") String index_name);
+    Map<String, AnalyzerDefinition> getAnalyzers(@PathParam("schema_name") String schema_name,
+                                                 @PathParam("index_name") String index_name);
 
     @GET
     @Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")
@@ -186,8 +191,9 @@ public interface IndexServiceInterface extends ServiceInterface {
     @Path("/{schema_name}/{index_name}/analyzers")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(@PathParam("schema_name") String schema_name,
-                                                           @PathParam("index_name") String index_name, LinkedHashMap<String, AnalyzerDefinition> analyzers);
+    Map<String, AnalyzerDefinition> setAnalyzers(@PathParam("schema_name") String schema_name,
+                                                 @PathParam("index_name") String index_name,
+                                                 Map<String, AnalyzerDefinition> analyzers);
 
     @DELETE
     @Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")
@@ -423,7 +429,7 @@ public interface IndexServiceInterface extends ServiceInterface {
         new GenericType<>() {
         };
 
-    GenericType<LinkedHashMap<String, IndexInstance.ResourceInfo>> mapStringResourceInfoType =
+    GenericType<Map<String, IndexInstance.ResourceInfo>> mapStringResourceInfoType =
         new GenericType<>() {
         };
 
@@ -431,10 +437,10 @@ public interface IndexServiceInterface extends ServiceInterface {
         new GenericType<>() {
         };
 
-    GenericType<LinkedHashMap<String, Object>> mapStringObjectType = new GenericType<>() {
+    GenericType<Map<String, Object>> mapStringObjectType = new GenericType<>() {
     };
 
-    GenericType<LinkedHashMap<String, FieldDefinition>> mapStringFieldType =
+    GenericType<Map<String, FieldDefinition>> mapStringFieldType =
         new GenericType<>() {
         };
 
@@ -444,7 +450,7 @@ public interface IndexServiceInterface extends ServiceInterface {
     GenericType<List<TermEnumDefinition>> listTermEnumDefinitionType = new GenericType<>() {
     };
 
-    GenericType<LinkedHashMap<String, AnalyzerDefinition>> mapStringAnalyzerType =
+    GenericType<Map<String, AnalyzerDefinition>> mapStringAnalyzerType =
         new GenericType<>() {
         };
 

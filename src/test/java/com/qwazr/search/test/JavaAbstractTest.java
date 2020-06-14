@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -160,7 +160,7 @@ public abstract class JavaAbstractTest {
     @Test
     public void test072CreateUpdateFields() throws URISyntaxException, IOException {
         final AnnotatedIndexService<?> service = getMaster();
-        LinkedHashMap<String, FieldDefinition> fields = service.createUpdateFields();
+        Map<String, FieldDefinition> fields = service.createUpdateFields();
         Assert.assertNotNull(fields);
         CustomFieldDefinition field;
         Assert.assertNotNull("The Title field is not present", field = (CustomFieldDefinition) fields.get("title"));
@@ -176,8 +176,8 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test074GetFields() throws URISyntaxException, IOException {
-        final AnnotatedIndexService service = getMaster();
-        LinkedHashMap<String, FieldDefinition> fields = service.getFields();
+        final AnnotatedIndexService<?> service = getMaster();
+        Map<String, FieldDefinition> fields = service.getFields();
         Assert.assertNotNull(fields);
         Assert.assertFalse(fields.isEmpty());
         fields.forEach((fieldName, fieldDefinition) -> {
@@ -190,7 +190,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test076FieldNoChanges() throws URISyntaxException, IOException {
-        final AnnotatedIndexService service = getMaster();
+        final AnnotatedIndexService<?> service = getMaster();
         final Map<String, AnnotatedIndexService.FieldStatus> fieldChanges = service.getFieldChanges();
         Assert.assertNotNull(fieldChanges);
         Assert.assertEquals(0, fieldChanges.size());
@@ -203,8 +203,8 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test080GetAnalyzers() throws URISyntaxException, IOException {
-        final AnnotatedIndexService service = getMaster();
-        LinkedHashMap<String, AnalyzerDefinition> analyzers = service.getAnalyzers();
+        final AnnotatedIndexService<?> service = getMaster();
+        Map<String, AnalyzerDefinition> analyzers = service.getAnalyzers();
         Assert.assertNotNull(analyzers);
         Assert.assertTrue(analyzers.isEmpty());
         analyzers.forEach((analyzerName, analyzerDefinition) -> {
@@ -593,15 +593,15 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test800replicationCheck()
-        throws URISyntaxException, IOException, ExecutionException, InterruptedException {
+        throws URISyntaxException, IOException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final IndexStatus masterStatus = master.getIndexStatus();
         Assert.assertNotNull(masterStatus);
         Assert.assertNotNull(masterStatus.indexUuid);
         Assert.assertNotNull(masterStatus.version);
 
-        final LinkedHashMap<String, FieldDefinition> masterFields = master.getFields();
-        final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers = master.getAnalyzers();
+        final Map<String, FieldDefinition> masterFields = master.getFields();
+        final Map<String, AnalyzerDefinition> masterAnalyzers = master.getAnalyzers();
 
         final AnnotatedIndexService<AnnotatedRecord> slave = getSlave();
 
@@ -640,8 +640,8 @@ public abstract class JavaAbstractTest {
         Assert.assertEquals(masterStatus.version, slaveStatus.version);
         Assert.assertEquals(masterStatus.numDocs, slaveStatus.numDocs);
 
-        final LinkedHashMap<String, FieldDefinition> slaveFields = slave.getFields();
-        final LinkedHashMap<String, AnalyzerDefinition> slaveAnalyzers = slave.getAnalyzers();
+        final Map<String, FieldDefinition> slaveFields = slave.getFields();
+        final Map<String, AnalyzerDefinition> slaveAnalyzers = slave.getAnalyzers();
         Assert.assertNotNull(slaveFields);
         Assert.assertNotNull(slaveAnalyzers);
 

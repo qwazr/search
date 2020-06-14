@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,99 +34,94 @@ import java.net.URISyntaxException;
 
 public class QueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException, java.text.ParseException {
-		initIndexManager();
-		indexManager.registerConstructorParameter(SynonymMap.class,
-				RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
-						RealTimeSynonymsResourcesTest.EN_FR_DE_SYNONYMS));
-		initIndexService();
-		indexService.postDocument(
-				new IndexRecord.NoTaxonomy("1").textField("Hello world").textSynonymsField1("hello world"));
-	}
+    @BeforeClass
+    public static void setup() throws IOException, URISyntaxException {
+        initIndexManager();
+        indexManager.registerConstructorParameter(SynonymMap.class,
+            RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
+                RealTimeSynonymsResourcesTest.EN_FR_DE_SYNONYMS));
+        initIndexService();
+        indexService.postDocument(
+            new IndexRecord.NoTaxonomy("1").textField("Hello world").textSynonymsField1("hello world"));
+    }
 
-	@Test
-	public void testWithDefaultAnalyzer() {
-		QueryDefinition queryDef = QueryDefinition.of(
-				QueryParser.of("textField").setDefaultOperator(QueryParserOperator.AND).setQueryString("Hello").build())
-				.build();
-		checkQuery(queryDef);
-	}
+    @Test
+    public void testWithDefaultAnalyzer() {
+        QueryDefinition queryDef = QueryDefinition.of(
+            QueryParser.of("textField").setDefaultOperator(QueryParserOperator.AND).setQueryString("Hello").build())
+            .build();
+        checkQuery(queryDef);
+    }
 
-	@Test
-	public void testWithCustomAnalyzer() {
-		QueryDefinition queryDef = QueryDefinition.of(QueryParser.of("textField")
-				.setDefaultOperator(QueryParserOperator.AND)
-				.setQueryString("hello World")
-				.setAnalyzer(new StandardAnalyzer())
-				.build()).
-				build();
-		checkQuery(queryDef);
-	}
+    @Test
+    public void testWithCustomAnalyzer() {
+        QueryDefinition queryDef = QueryDefinition.of(QueryParser.of("textField")
+            .setDefaultOperator(QueryParserOperator.AND)
+            .setQueryString("hello World")
+            .setAnalyzer(new StandardAnalyzer())
+            .build()).
+            build();
+        checkQuery(queryDef);
+    }
 
-	@Test
-	public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
-		Query luceneQuery = QueryParser.of("textField")
-				.setDefaultOperator(QueryParserOperator.AND)
-				.setQueryString("Hello World")
-				.build()
-				.getQuery(QueryContext.DEFAULT);
-		Assert.assertNotNull(luceneQuery);
-	}
+    @Test
+    public void luceneQuery() throws ParseException {
+        Query luceneQuery = QueryParser.of("textField")
+            .setDefaultOperator(QueryParserOperator.AND)
+            .setQueryString("Hello World")
+            .build()
+            .getQuery(QueryContextTest.DEFAULT);
+        Assert.assertNotNull(luceneQuery);
+    }
 
-	@Test
-	public void testWithGraphSynonymsOperatorOrKeywordsIsOneMultiWordSynonym()
-			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = QueryParser.of("textSynonymsField1")
-				.setDefaultOperator(QueryParserOperator.OR)
-				.setSplitOnWhitespace(false)
-				.setQueryString("bonjour le monde")
-				.build();
-		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
-	}
+    @Test
+    public void testWithGraphSynonymsOperatorOrKeywordsIsOneMultiWordSynonym() {
+        AbstractQuery<?> query = QueryParser.of("textSynonymsField1")
+            .setDefaultOperator(QueryParserOperator.OR)
+            .setSplitOnWhitespace(false)
+            .setQueryString("bonjour le monde")
+            .build();
+        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+    }
 
-	@Test
-	public void testWithGraphSynonymsOperatorOrKeywordsIsContainsMultiWordSynonym()
-			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = QueryParser.of("textSynonymsField1")
-				.setDefaultOperator(QueryParserOperator.OR)
-				.setSplitOnWhitespace(false)
-				.setQueryString("hello bonjour le monde")
-				.build();
-		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
-	}
+    @Test
+    public void testWithGraphSynonymsOperatorOrKeywordsIsContainsMultiWordSynonym() {
+        AbstractQuery<?> query = QueryParser.of("textSynonymsField1")
+            .setDefaultOperator(QueryParserOperator.OR)
+            .setSplitOnWhitespace(false)
+            .setQueryString("hello bonjour le monde")
+            .build();
+        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+    }
 
-	@Test
-	public void testWithGraphSynonymsOperatorAndKeywordsIsOneMultiWordSynonym()
-			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = QueryParser.of("textSynonymsField1")
-				.setDefaultOperator(QueryParserOperator.AND)
-				.setSplitOnWhitespace(false)
-				.setQueryString("bonjour le monde")
-				.build();
-		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
-	}
+    @Test
+    public void testWithGraphSynonymsOperatorAndKeywordsIsOneMultiWordSynonym() {
+        AbstractQuery<?> query = QueryParser.of("textSynonymsField1")
+            .setDefaultOperator(QueryParserOperator.AND)
+            .setSplitOnWhitespace(false)
+            .setQueryString("bonjour le monde")
+            .build();
+        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+    }
 
-	@Test
-	public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymLast()
-			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = QueryParser.of("textSynonymsField1")
-				.setDefaultOperator(QueryParserOperator.AND)
-				.setSplitOnWhitespace(false)
-				.setQueryString("hello bonjour le monde")
-				.build();
-		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
-	}
+    @Test
+    public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymLast() {
+        AbstractQuery<?> query = QueryParser.of("textSynonymsField1")
+            .setDefaultOperator(QueryParserOperator.AND)
+            .setSplitOnWhitespace(false)
+            .setQueryString("hello bonjour le monde")
+            .build();
+        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+    }
 
-	@Test
-	public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymFirst()
-			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = QueryParser.of("textSynonymsField1")
-				.setDefaultOperator(QueryParserOperator.AND)
-				.setSplitOnWhitespace(false)
-				.setQueryString("bonjour le monde hello")
-				.build();
-		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
-	}
+    @Test
+    public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymFirst() {
+        AbstractQuery<?> query = QueryParser.of("textSynonymsField1")
+            .setDefaultOperator(QueryParserOperator.AND)
+            .setSplitOnWhitespace(false)
+            .setQueryString("bonjour le monde hello")
+            .build();
+        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+    }
 
 }

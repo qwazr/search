@@ -31,6 +31,7 @@ import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.StringUtils;
+import java.util.Arrays;
 import javax.ws.rs.NotAcceptableException;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.index.Term;
@@ -278,9 +279,17 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
         final FieldTypeInterface fieldTypeInterface = getFieldType(fieldMap, genericFieldName, concreteFieldName, value, expectedValueType);
         final FieldTypeInterface.FieldType fieldType = fieldTypeInterface.findFirstOf(fieldTypes);
         if (fieldType == null)
-            throw new NotAcceptableException("The field "
-                + (genericFieldName == null ? concreteFieldName : genericFieldName) + " is not indexed.");
+            throw new NotAcceptableException("The field \""
+                + (genericFieldName == null ? concreteFieldName : genericFieldName)
+                + "\" has not the expected types: " + Arrays.toString(fieldTypes));
         return fieldTypeInterface.resolveFieldName(concreteFieldName, fieldType, expectedValueType);
+    }
+
+    static String resolveFacetField(final FieldMap fieldMap,
+                                    final String genericFieldName,
+                                    final String concreteFieldName) {
+        return resolveFieldName(fieldMap, genericFieldName, concreteFieldName,
+            StringUtils.EMPTY, FieldTypeInterface.ValueType.textType, FieldTypeInterface.FieldType.facetField);
     }
 
     static String resolveDocValueField(final FieldMap fieldMap,

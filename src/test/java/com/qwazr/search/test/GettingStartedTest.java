@@ -22,12 +22,11 @@ import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.PostDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
-import java.util.LinkedHashMap;
 
 import static com.qwazr.search.test.JsonAbstractTest.getDocs;
 import static com.qwazr.search.test.JsonAbstractTest.getFieldMap;
@@ -39,7 +38,7 @@ public class GettingStartedTest {
 
     private final static String MY_SCHEMA = "my_schema";
     private final static String MY_INDEX = "my_index";
-    public static final LinkedHashMap<String, FieldDefinition> MY_FIELDS_JSON = getFieldMap("my_fields.json");
+    public static final Map<String, FieldDefinition> MY_FIELDS_JSON = getFieldMap("my_fields.json");
     public static final JsonNode MY_RECORD_JSON = getJsonNode("my_record.json");
     public static final JsonNode MY_RECORDS_JSON = getJsonNode("my_records.json");
     public static final PostDefinition.Documents MY_DOCS_JSON = getDocs("my_docs.json");
@@ -66,7 +65,7 @@ public class GettingStartedTest {
     @Test
     public void test130SetFields() {
         IndexServiceInterface client = TestServer.remote;
-        final LinkedHashMap<String, FieldDefinition> fields = client.setFields(MY_SCHEMA, MY_INDEX, MY_FIELDS_JSON);
+        final Map<String, FieldDefinition> fields = client.setFields(MY_SCHEMA, MY_INDEX, MY_FIELDS_JSON);
         Assert.assertEquals(fields.size(), MY_FIELDS_JSON.size());
     }
 

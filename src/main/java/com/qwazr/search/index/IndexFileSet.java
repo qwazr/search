@@ -27,96 +27,97 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
 class IndexFileSet {
 
-	final static String INDEX_DATA = "data";
-	final static String INDEX_TAXONOMY = "taxonomy";
-	final static String REPL_WORK = "repl_work";
-	final static String UUID_FILE = "uuid";
-	final static String UUID_MASTER_FILE = "uuid.master";
-	final static String SETTINGS_FILE = "settings.json";
-	final static String FIELDS_FILE = "fields.json";
-	final static String ANALYZERS_FILE = "analyzers.json";
-	final static String RESOURCES_DIR = "resources";
+    final static String INDEX_DATA = "data";
+    final static String INDEX_TAXONOMY = "taxonomy";
+    final static String REPL_WORK = "repl_work";
+    final static String UUID_FILE = "uuid";
+    final static String UUID_MASTER_FILE = "uuid.master";
+    final static String SETTINGS_FILE = "settings.json";
+    final static String FIELDS_FILE = "fields.json";
+    final static String ANALYZERS_FILE = "analyzers.json";
+    final static String RESOURCES_DIR = "resources";
 
-	final private File uuidFile;
-	final File uuidMasterFile;
-	final private File settingsFile;
-	final Path mainDirectory;
-	final Path dataDirectory;
-	final Path taxonomyDirectory;
-	final private File analyzerMapFile;
-	final Path resourcesDirectoryPath;
-	final private File fieldMapFile;
-	final Path replWorkPath;
+    final private File uuidFile;
+    final File uuidMasterFile;
+    final private File settingsFile;
+    final Path mainDirectory;
+    final Path dataDirectory;
+    final Path taxonomyDirectory;
+    final private File analyzerMapFile;
+    final Path resourcesDirectoryPath;
+    final private File fieldMapFile;
+    final Path replWorkPath;
 
-	IndexFileSet(final Path mainDirectory) {
-		this.uuidFile = mainDirectory.resolve(UUID_FILE).toFile();
-		this.uuidMasterFile = mainDirectory.resolve(UUID_MASTER_FILE).toFile();
-		this.mainDirectory = mainDirectory;
-		this.dataDirectory = mainDirectory.resolve(INDEX_DATA);
-		this.taxonomyDirectory = mainDirectory.resolve(INDEX_TAXONOMY);
-		this.analyzerMapFile = mainDirectory.resolve(ANALYZERS_FILE).toFile();
-		this.resourcesDirectoryPath = mainDirectory.resolve(RESOURCES_DIR);
-		this.fieldMapFile = mainDirectory.resolve(FIELDS_FILE).toFile();
-		this.settingsFile = mainDirectory.resolve(SETTINGS_FILE).toFile();
-		this.replWorkPath = mainDirectory.resolve(REPL_WORK);
-	}
+    IndexFileSet(final Path mainDirectory) {
+        this.uuidFile = mainDirectory.resolve(UUID_FILE).toFile();
+        this.uuidMasterFile = mainDirectory.resolve(UUID_MASTER_FILE).toFile();
+        this.mainDirectory = mainDirectory;
+        this.dataDirectory = mainDirectory.resolve(INDEX_DATA);
+        this.taxonomyDirectory = mainDirectory.resolve(INDEX_TAXONOMY);
+        this.analyzerMapFile = mainDirectory.resolve(ANALYZERS_FILE).toFile();
+        this.resourcesDirectoryPath = mainDirectory.resolve(RESOURCES_DIR);
+        this.fieldMapFile = mainDirectory.resolve(FIELDS_FILE).toFile();
+        this.settingsFile = mainDirectory.resolve(SETTINGS_FILE).toFile();
+        this.replWorkPath = mainDirectory.resolve(REPL_WORK);
+    }
 
-	String checkIndexDirectory() throws IOException {
-		if (!Files.exists(mainDirectory))
-			Files.createDirectory(mainDirectory);
-		if (!Files.isDirectory(mainDirectory))
-			throw new IOException(
-					"This name is not valid. No directory exists for this location: " + mainDirectory.toAbsolutePath());
-		return Objects.requireNonNull(mainDirectory.getFileName(), "Can't extract directory name: " + mainDirectory)
-				.toString();
-	}
+    String checkIndexDirectory() throws IOException {
+        if (!Files.exists(mainDirectory))
+            Files.createDirectory(mainDirectory);
+        if (!Files.isDirectory(mainDirectory))
+            throw new IOException(
+                "This name is not valid. No directory exists for this location: " + mainDirectory.toAbsolutePath());
+        return Objects.requireNonNull(mainDirectory.getFileName(), "Can't extract directory name: " + mainDirectory)
+            .toString();
+    }
 
-	/**
-	 * Manage the index UUID
-	 *
-	 * @return
-	 */
-	UUID checkUuid() throws IOException {
-		final UUID indexUuid;
-		if (uuidFile.exists()) {
-			if (!uuidFile.isFile())
-				throw new IOException("The UUID path is not a file: " + uuidFile);
-			indexUuid = UUID.fromString(IOUtils.readFileAsString(uuidFile));
-		} else {
-			indexUuid = HashUtils.newTimeBasedUUID();
-			IOUtils.writeStringToFile(indexUuid.toString(), uuidFile);
-		}
-		return indexUuid;
-	}
+    /**
+     * Manage the index UUID
+     *
+     * @return
+     */
+    UUID checkUuid() throws IOException {
+        final UUID indexUuid;
+        if (uuidFile.exists()) {
+            if (!uuidFile.isFile())
+                throw new IOException("The UUID path is not a file: " + uuidFile);
+            indexUuid = UUID.fromString(IOUtils.readFileAsString(uuidFile));
+        } else {
+            indexUuid = HashUtils.newTimeBasedUUID();
+            IOUtils.writeStringToFile(indexUuid.toString(), uuidFile);
+        }
+        return indexUuid;
+    }
 
-	IndexSettingsDefinition loadSettings() throws IOException {
-		return IndexSettingsDefinition.load(settingsFile, () -> IndexSettingsDefinition.EMPTY);
-	}
+    IndexSettingsDefinition loadSettings() throws IOException {
+        return IndexSettingsDefinition.load(settingsFile, () -> IndexSettingsDefinition.EMPTY);
+    }
 
-	void writeSettings(final IndexSettingsDefinition settings) throws IOException {
-		IndexSettingsDefinition.save(settings, settingsFile);
-	}
+    void writeSettings(final IndexSettingsDefinition settings) throws IOException {
+        IndexSettingsDefinition.save(settings, settingsFile);
+    }
 
-	LinkedHashMap<String, FieldDefinition> loadFieldMap() throws IOException {
-		return FieldDefinition.loadMap(fieldMapFile, LinkedHashMap::new);
-	}
+    Map<String, FieldDefinition> loadFieldMap() throws IOException {
+        return FieldDefinition.loadMap(fieldMapFile, LinkedHashMap::new);
+    }
 
-	void writeFieldMap(final LinkedHashMap<String, FieldDefinition> fields) throws IOException {
-		FieldDefinition.saveMap(fields, fieldMapFile);
-	}
+    void writeFieldMap(final Map<String, FieldDefinition> fields) throws IOException {
+        FieldDefinition.saveMap(fields, fieldMapFile);
+    }
 
-	LinkedHashMap<String, CustomAnalyzer.Factory> loadAnalyzerDefinitionMap() throws IOException {
-		return CustomAnalyzer.createFactoryMap(AnalyzerDefinition.loadMap(analyzerMapFile, LinkedHashMap::new),
-				LinkedHashMap::new);
-	}
+    LinkedHashMap<String, CustomAnalyzer.Factory> loadAnalyzerDefinitionMap() throws IOException {
+        return CustomAnalyzer.createFactoryMap(AnalyzerDefinition.loadMap(analyzerMapFile, LinkedHashMap::new),
+            LinkedHashMap::new);
+    }
 
-	void writeAnalyzerDefinitionMap(final LinkedHashMap<String, AnalyzerDefinition> definitionMap) throws IOException {
-		AnalyzerDefinition.saveMap(definitionMap, analyzerMapFile);
-	}
+    void writeAnalyzerDefinitionMap(final LinkedHashMap<String, AnalyzerDefinition> definitionMap) throws IOException {
+        AnalyzerDefinition.saveMap(definitionMap, analyzerMapFile);
+    }
 
 }

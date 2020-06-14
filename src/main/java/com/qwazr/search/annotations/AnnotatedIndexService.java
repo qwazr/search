@@ -233,7 +233,7 @@ public class AnnotatedIndexService<T> {
      *
      * @return the field map
      */
-    public LinkedHashMap<String, FieldDefinition> createUpdateFields() {
+    public Map<String, FieldDefinition> createUpdateFields() {
         return indexService.setFields(schemaName, indexName, fieldDefinitions);
     }
 
@@ -277,8 +277,8 @@ public class AnnotatedIndexService<T> {
      * @return the changed fields
      */
     public Map<String, FieldStatus> getFieldChanges() {
-        final LinkedHashMap<String, FieldDefinition> indexFields = indexService.getFields(schemaName, indexName);
-        final HashMap<String, FieldStatus> fieldChanges = new HashMap<>();
+        final Map<String, FieldDefinition> indexFields = indexService.getFields(schemaName, indexName);
+        final Map<String, FieldStatus> fieldChanges = new HashMap<>();
         fieldMap.forEach((name, propertyField) -> {
             final FieldDefinition annotatedField = fieldDefinitions.get(name);
             final FieldDefinition indexField = indexFields == null ? null : indexFields.get(name);
@@ -535,7 +535,7 @@ public class AnnotatedIndexService<T> {
         return indexService.getIndex(schemaName, indexName);
     }
 
-    public LinkedHashMap<String, FieldDefinition> getFields() {
+    public Map<String, FieldDefinition> getFields() {
         return indexService.getFields(schemaName, indexName);
     }
 
@@ -555,7 +555,7 @@ public class AnnotatedIndexService<T> {
         indexService.deleteField(schemaName, indexName, fieldName);
     }
 
-    public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers() {
+    public Map<String, AnalyzerDefinition> getAnalyzers() {
         return indexService.getAnalyzers(schemaName, indexName);
     }
 
@@ -567,8 +567,7 @@ public class AnnotatedIndexService<T> {
         return indexService.setAnalyzer(schemaName, indexName, analyzerName, analyzerDefinition);
     }
 
-    public LinkedHashMap<String, AnalyzerDefinition> setAnalyzers(final String analyzerName,
-                                                                  final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
+    public Map<String, AnalyzerDefinition> setAnalyzers(final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
         return indexService.setAnalyzers(schemaName, indexName, analyzers);
     }
 

@@ -218,18 +218,16 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("stringField", 1F)
             .enableFuzzyQuery(true)
             .build()
-            .getQuery(QueryContext.DEFAULT);
+            .getQuery(QueryContextTest.DEFAULT);
         Assert.assertNotNull(luceneQuery);
         Assert.assertEquals(
-            "((textField:hello~2 textField:world~2)~1)^2.0 ((stringField:hello~2 stringField:world~2)~1)",
+            "((tt€textField:hello~2 tt€textField:world~2)~1)^2.0 ((tt€stringField:hello~2 tt€stringField:world~2)~1)",
             luceneQuery.toString());
     }
 
     @Test
-    public void testWithGraphSynonymsOperatorOrKeywordsIsOneMultiWordSynonym()
-        throws QueryNodeException, ReflectiveOperationException,
-        org.apache.lucene.queryparser.classic.ParseException, IOException {
-        AbstractQuery query = MultiFieldQuery.of()
+    public void testWithGraphSynonymsOperatorOrKeywordsIsOneMultiWordSynonym() {
+        AbstractQuery<?> query = MultiFieldQuery.of()
             .defaultOperator(QueryParserOperator.OR)
             .queryString("bonjour le monde")
             .fieldBoost("textSynonymsField1", 1.0F)
@@ -240,10 +238,8 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
     }
 
     @Test
-    public void testWithGraphSynonymsOperatorOrKeywordsIsContainsMultiWordSynonym()
-        throws QueryNodeException, ReflectiveOperationException,
-        org.apache.lucene.queryparser.classic.ParseException, IOException {
-        AbstractQuery query = MultiFieldQuery.of()
+    public void testWithGraphSynonymsOperatorOrKeywordsIsContainsMultiWordSynonym() {
+        AbstractQuery<?> query = MultiFieldQuery.of()
             .defaultOperator(QueryParserOperator.OR)
             .queryString("hello bonjour le monde")
             .fieldBoost("textSynonymsField1", 1.0F)
@@ -254,10 +250,8 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
     }
 
     @Test
-    public void testWithGraphSynonymsOperatorAndKeywordsIsOneMultiWordSynonym()
-        throws QueryNodeException, ReflectiveOperationException,
-        org.apache.lucene.queryparser.classic.ParseException, IOException {
-        AbstractQuery query = MultiFieldQuery.of()
+    public void testWithGraphSynonymsOperatorAndKeywordsIsOneMultiWordSynonym() {
+        AbstractQuery<?> query = MultiFieldQuery.of()
             .defaultOperator(QueryParserOperator.AND)
             .queryString("bonjour le monde")
             .fieldBoost("textSynonymsField1", 1.0F)
@@ -271,7 +265,7 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
 
     @Test
     public void testWithGraphSynonymsOperatorAndComplexAnalyzer() {
-        AbstractQuery query = MultiFieldQuery.of()
+        AbstractQuery<?> query = MultiFieldQuery.of()
             .defaultOperator(QueryParserOperator.AND)
             .queryString("Hello Worlds")
             .minNumberShouldMatch(50)
@@ -284,10 +278,8 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
     }
 
     @Test
-    public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymLast()
-        throws QueryNodeException, ReflectiveOperationException,
-        org.apache.lucene.queryparser.classic.ParseException, IOException {
-        AbstractQuery query = QueryParser.of("textSynonymsField1")
+    public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymLast() {
+        AbstractQuery<?> query = QueryParser.of("textSynonymsField1")
             .setDefaultOperator(QueryParserOperator.AND)
             .setSplitOnWhitespace(false)
             .setQueryString("hello bonjour le monde")
@@ -297,10 +289,8 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
     }
 
     @Test
-    public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymFirst()
-        throws QueryNodeException, ReflectiveOperationException,
-        org.apache.lucene.queryparser.classic.ParseException, IOException {
-        AbstractQuery query = QueryParser.of("textSynonymsField1")
+    public void testWithGraphSynonymsOperatorAndKeywordsContainsMultiWordSynonymFirst() {
+        AbstractQuery<?> query = QueryParser.of("textSynonymsField1")
             .setDefaultOperator(QueryParserOperator.AND)
             .setSplitOnWhitespace(false)
             .setQueryString("bonjour le monde hello")
@@ -310,9 +300,8 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
     }
 
     @Test
-    public void testWithQueryWithoutToken() throws QueryNodeException, ReflectiveOperationException,
-        org.apache.lucene.queryparser.classic.ParseException, IOException {
-        AbstractQuery query = MultiFieldQuery.of()
+    public void testWithQueryWithoutToken() {
+        AbstractQuery<?> query = MultiFieldQuery.of()
             .defaultOperator(QueryParserOperator.AND)
             .queryString(" & ")
             .minNumberShouldMatch(50)
@@ -324,9 +313,8 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
     }
 
     @Test
-    public void testWithQueryWithBlankQueryString() throws QueryNodeException, ReflectiveOperationException,
-        org.apache.lucene.queryparser.classic.ParseException, IOException {
-        AbstractQuery query = MultiFieldQuery.of()
+    public void testWithQueryWithBlankQueryString() {
+        AbstractQuery<?> query = MultiFieldQuery.of()
             .defaultOperator(QueryParserOperator.AND)
             .queryString(" ")
             .minNumberShouldMatch(50)

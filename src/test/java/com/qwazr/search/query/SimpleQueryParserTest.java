@@ -37,47 +37,47 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoT
     public static void setup() throws IOException, InterruptedException, URISyntaxException {
         initIndexManager();
         indexManager.registerConstructorParameter(SynonymMap.class,
-                RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
-                        RealTimeSynonymsResourcesTest.EN_FR_DE_SYNONYMS));
+            RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
+                RealTimeSynonymsResourcesTest.EN_FR_DE_SYNONYMS));
         initIndexService();
         indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello")
-                .stringField("world")
-                .textSynonymsField1("hello world"));
+            .stringField("world")
+            .textSynonymsField1("hello world"));
     }
 
     @Test
     public void testWithDefaultAnalyzer() {
         QueryDefinition queryDef = QueryDefinition.of(SimpleQueryParser.of()
-                .setDefaultOperator(QueryParserOperator.AND)
-                .addBoost("textField", 1F)
-                .addBoost("stringField", 1F)
-                .setQueryString("Hello")
-                .build()).build();
+            .setDefaultOperator(QueryParserOperator.AND)
+            .addBoost("textField", 1F)
+            .addBoost("stringField", 1F)
+            .setQueryString("Hello")
+            .build()).build();
         checkQuery(queryDef);
     }
 
     @Test
     public void testWithCustomAnalyzer() {
         QueryDefinition queryDef = QueryDefinition.of(SimpleQueryParser.of()
-                .setDefaultOperator(QueryParserOperator.AND)
-                .addBoost("textField", 1F)
-                .addBoost("stringField", 1F)
-                .setAnalyzer(new StandardAnalyzer())
-                .setQueryString("Hello World")
-                .build()).
-                build();
+            .setDefaultOperator(QueryParserOperator.AND)
+            .addBoost("textField", 1F)
+            .addBoost("stringField", 1F)
+            .setAnalyzer(new StandardAnalyzer())
+            .setQueryString("Hello World")
+            .build()).
+            build();
         checkQuery(queryDef);
     }
 
     @Test
     public void luceneQuery() {
         Query luceneQuery = SimpleQueryParser.of()
-                .setDefaultOperator(QueryParserOperator.AND)
-                .addBoost("textField", 1F)
-                .addBoost("stringField", 1F)
-                .setQueryString("Hello World")
-                .build()
-                .getQuery(QueryContext.DEFAULT);
+            .setDefaultOperator(QueryParserOperator.AND)
+            .addBoost("textField", 1F)
+            .addBoost("stringField", 1F)
+            .setQueryString("Hello World")
+            .build()
+            .getQuery(QueryContextTest.DEFAULT);
         Assert.assertNotNull(luceneQuery);
     }
 
@@ -85,10 +85,10 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoT
     @Ignore
     public void testWithSynonymsOr() {
         AbstractQuery query = SimpleQueryParser.of()
-                .addField("textSynonymsField1", "textField", "stringField")
-                .setDefaultOperator(QueryParserOperator.OR)
-                .setQueryString("bonjour le monde")
-                .build();
+            .addField("textSynonymsField1", "textField", "stringField")
+            .setDefaultOperator(QueryParserOperator.OR)
+            .setQueryString("bonjour le monde")
+            .build();
         checkQuery(QueryDefinition.of(query).queryDebug(true).build());
     }
 
@@ -96,10 +96,10 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoT
     @Ignore
     public void testWithSynonymsAnd() {
         AbstractQuery query = SimpleQueryParser.of()
-                .addField("textSynonymsField1", "textSynonymsField2")
-                .setDefaultOperator(QueryParserOperator.AND)
-                .setQueryString("bonjour le monde")
-                .build();
+            .addField("textSynonymsField1", "textSynonymsField2")
+            .setDefaultOperator(QueryParserOperator.AND)
+            .setQueryString("bonjour le monde")
+            .build();
         checkQuery(QueryDefinition.of(query).queryDebug(true).build());
     }
 

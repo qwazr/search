@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
+import com.qwazr.utils.StringUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,16 +74,17 @@ public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
     final public org.apache.lucene.facet.DrillDownQuery getQuery(final QueryContext queryContext)
         throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 
-        final org.apache.lucene.facet.DrillDownQuery drillDownQuery;
-
+        final FieldMap fieldMap = queryContext.getFieldMap();
         final Map<String, String> resolvedDimensions = new HashMap<>();
         dimPath.forEach(map -> map.keySet().forEach(concreteField -> {
             final String genericField = genericFieldNames.getOrDefault(concreteField, concreteField);
-            resolvedDimensions.put(concreteField, genericField);
+            final String facetField = resolveFacetField(fieldMap, genericField, concreteField);
+            resolvedDimensions.put(concreteField, facetField);
         }));
 
         final FacetsConfig facetsConfig = queryContext.getFacetsConfig(resolvedDimensions);
         Objects.requireNonNull(facetsConfig, "FacetsConfig is null");
+        final org.apache.lucene.facet.DrillDownQuery drillDownQuery;
         if (baseQuery == null)
             drillDownQuery = new org.apache.lucene.facet.DrillDownQuery(facetsConfig);
         else

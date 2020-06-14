@@ -21,6 +21,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.field.SmartDynamicTypes;
 import com.qwazr.utils.WildcardMatcher;
+import java.util.Collections;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.FacetsConfig;
 
@@ -38,17 +39,17 @@ public class FieldMap {
 
     private final SmartDynamicTypes smartDynamicTypes;
     private final String primaryKey;
-    private final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap;
-    private final HashMap<String, FieldTypeInterface> nameDefMap;
+    private final Map<String, FieldDefinition> fieldDefinitionMap;
+    private final Map<String, FieldTypeInterface> nameDefMap;
     private final Collection<Pair<WildcardMatcher, FieldTypeInterface>> wildcardMap;
     private final FacetsConfig facetsConfig;
     public final String sortedSetFacetField;
     public final String recordField;
 
-    FieldMap(final String primaryKey,
-             final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap,
-             final String sortedSetFacetField,
-             final String recordField) {
+    public FieldMap(final String primaryKey,
+                    final Map<String, FieldDefinition> fieldDefinitions,
+                    final String sortedSetFacetField,
+                    final String recordField) {
 
         this.primaryKey = primaryKey == null || primaryKey.isBlank() ? FieldDefinition.ID_FIELD : primaryKey;
 
@@ -62,7 +63,9 @@ public class FieldMap {
         nameDefMap = new HashMap<>();
         wildcardMap = new ArrayList<>();
 
-        fieldDefinitionMap.forEach((name, definition) -> {
+        this.fieldDefinitionMap = Collections.unmodifiableMap(fieldDefinitions);
+
+        this.fieldDefinitionMap.forEach((name, definition) -> {
             final FieldTypeInterface fieldType;
             if (name.indexOf('*') != -1 || name.indexOf('?') != -1) {
                 final WildcardMatcher wildcardMatcher = new WildcardMatcher(name);
@@ -90,8 +93,6 @@ public class FieldMap {
             }
         });
         nameDefMap.putAll(newFields);
-
-        this.fieldDefinitionMap = fieldDefinitionMap;
 
         facetsConfig = new FacetsConfig();
     }
@@ -164,7 +165,7 @@ public class FieldMap {
             "The field has not been found: " + genericFieldName + " / " + concreteFieldName);
     }
 
-    final LinkedHashMap<String, FieldDefinition> getFieldDefinitionMap() {
+    final Map<String, FieldDefinition> getFieldDefinitionMap() {
         return fieldDefinitionMap;
     }
 

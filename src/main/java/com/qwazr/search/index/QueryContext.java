@@ -52,20 +52,4 @@ public interface QueryContext extends IndexContext {
         throw new NotImplementedException("Not available");
     }
 
-    QueryContext DEFAULT = new QueryContext() {
-
-        @Override
-        public FieldMap getFieldMap() {
-            return new FieldMap(FieldDefinition.ID_FIELD,
-                new LinkedHashMap<>(),
-                FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD,
-                FieldDefinition.RECORD_FIELD);
-        }
-
-        @Override
-        public void close() {
-        }
-
-    };
-
 }

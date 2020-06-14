@@ -172,7 +172,7 @@ final public class IndexInstance implements Closeable {
             queryAnalyzers.getActiveAnalyzers()));
     }
 
-    LinkedHashMap<String, FieldDefinition> getFields() {
+    Map<String, FieldDefinition> getFields() {
         return fieldMap.getFieldDefinitionMap();
     }
 
@@ -212,7 +212,7 @@ final public class IndexInstance implements Closeable {
         queryAnalyzers.update(analyzerContext.queryAnalyzerMap);
     }
 
-    void setFields(final LinkedHashMap<String, FieldDefinition> fields) throws ServerException, IOException {
+    void setFields(final Map<String, FieldDefinition> fields) throws ServerException, IOException {
         fieldMapLock.lock();
         try {
             fileSet.writeFieldMap(fields);

@@ -19,6 +19,11 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.SmartField;
 import com.qwazr.search.index.QueryDefinition;
+import com.qwazr.search.query.AbstractQuery;
+import com.qwazr.search.query.DoubleExactQuery;
+import com.qwazr.search.query.FloatExactQuery;
+import com.qwazr.search.query.IntExactQuery;
+import com.qwazr.search.query.LongExactQuery;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.RandomUtils;
@@ -46,11 +51,11 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         indexService.postDocument(record);
         Assert.assertEquals(last + 1, indexService.getIndexStatus().numDocs, 0);
 
-        // Second insert, shoudl replace the precious one
+        // Second insert, should replace the precious one
         indexService.postDocument(record);
         Assert.assertEquals(last + 1, indexService.getIndexStatus().numDocs, 0);
 
-        // We check that we found it
+        // We check that we found it using getDocument
         T record2 = indexService.getDocument(record.getId());
         Assert.assertEquals(record, record2);
 
@@ -62,13 +67,14 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
             Assert.assertTrue(ExceptionUtils.getRootCause(e).getMessage().contains("storedId"));
         }
 
+
         // We should also found it using the secondId
         Assert.assertEquals(record, indexService.searchQuery(
-            QueryDefinition.of(new TermQuery("id2", record.getId())).returnedField("*").build())
+            QueryDefinition.of(record.getId2Query()).returnedField("*").build())
             .getDocuments()
             .get(0).record);
 
-        // Find it on map
+        // Find it with map result
         Assert.assertEquals(record, indexService.searchQueryWithMap(
             QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, record.getId())).returnedField("*").build())
             .getDocuments()
@@ -131,6 +137,13 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         abstract T getStoredId();
 
+        abstract AbstractQuery<?> getId2Query();
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getId(), getStoredId());
+        }
+
         @Override
         public boolean equals(Object o) {
             if (o == null)
@@ -145,6 +158,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
             }
             return false;
         }
+
     }
 
     @Index(name = "SmartFieldString", schema = "TestQueries")
@@ -176,6 +190,11 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         @Override
         public String getStoredId() {
             return storedId;
+        }
+
+        @Override
+        AbstractQuery<?> getId2Query() {
+            return new TermQuery("id2", id);
         }
     }
 
@@ -212,6 +231,11 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         public Integer getStoredId() {
             return storedId;
         }
+
+        @Override
+        AbstractQuery<?> getId2Query() {
+            return new IntExactQuery("id2", id);
+        }
     }
 
     @Index(name = "SmartFieldPrimitiveInteger", schema = "TestQueries")
@@ -247,6 +271,11 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         public Integer getStoredId() {
             return storedId;
         }
+
+        @Override
+        AbstractQuery<?> getId2Query() {
+            return new IntExactQuery("id2", id);
+        }
     }
 
     @Index(name = "SmartFieldLong", schema = "TestQueries")
@@ -279,6 +308,11 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         public Long getStoredId() {
             return storedId;
         }
+
+        @Override
+        AbstractQuery<?> getId2Query() {
+            return new LongExactQuery("id2", id);
+        }
     }
 
     @Index(name = "SmartFieldPrimitiveLong", schema = "TestQueries")
@@ -310,6 +344,11 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         @Override
         public Long getStoredId() {
             return storedId;
+        }
+
+        @Override
+        AbstractQuery<?> getId2Query() {
+            return new LongExactQuery("id2", id);
         }
     }
 
@@ -346,6 +385,11 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         public Float getStoredId() {
             return storedId;
         }
+
+        @Override
+        AbstractQuery<?> getId2Query() {
+            return new FloatExactQuery("id2", id);
+        }
     }
 
     @Index(name = "SmartFieldPrimitiveFloat", schema = "TestQueries")
@@ -380,6 +424,11 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         @Override
         public Float getStoredId() {
             return storedId;
+        }
+
+        @Override
+        AbstractQuery<?> getId2Query() {
+            return new FloatExactQuery("id2", id);
         }
     }
 
@@ -416,6 +465,11 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         public Double getStoredId() {
             return storedId;
         }
+
+        @Override
+        AbstractQuery<?> getId2Query() {
+            return new DoubleExactQuery("id2", id);
+        }
     }
 
     @Index(name = "SmartFieldPrimitiveDouble", schema = "TestQueries")
@@ -450,6 +504,11 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         @Override
         public Double getStoredId() {
             return storedId;
+        }
+
+        @Override
+        AbstractQuery<?> getId2Query() {
+            return new DoubleExactQuery("id2", id);
         }
     }
 }

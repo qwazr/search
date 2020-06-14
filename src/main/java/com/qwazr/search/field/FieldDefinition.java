@@ -26,7 +26,6 @@ import com.qwazr.search.field.converters.MultiDVConverter;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
-import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
@@ -35,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -178,11 +176,11 @@ public abstract class FieldDefinition {
             && Objects.equals(queryAnalyzer, f.queryAnalyzer);
     }
 
-    public final static TypeReference<LinkedHashMap<String, FieldDefinition>> mapStringFieldTypeRef =
+    public final static TypeReference<Map<String, FieldDefinition>> mapStringFieldTypeRef =
         new TypeReference<>() {
         };
 
-    public static LinkedHashMap<String, FieldDefinition> newFieldMap(final String jsonString) throws IOException {
+    public static Map<String, FieldDefinition> newFieldMap(final String jsonString) throws IOException {
         if (StringUtils.isEmpty(jsonString))
             return null;
         return ObjectMappers.JSON.readValue(jsonString, mapStringFieldTypeRef);
@@ -210,7 +208,7 @@ public abstract class FieldDefinition {
 
     public final static String DOC_FIELD = "$doc";
 
-    static public void saveMap(final LinkedHashMap<String, FieldDefinition> fieldDefinitionMap, final File fieldMapFile)
+    static public void saveMap(final Map<String, FieldDefinition> fieldDefinitionMap, final File fieldMapFile)
         throws IOException {
         if (fieldDefinitionMap == null)
             Files.deleteIfExists(fieldMapFile.toPath());
@@ -218,8 +216,8 @@ public abstract class FieldDefinition {
             ObjectMappers.JSON.writeValue(fieldMapFile, fieldDefinitionMap);
     }
 
-    static public LinkedHashMap<String, FieldDefinition> loadMap(final File fieldMapFile,
-                                                                 final Supplier<LinkedHashMap<String, FieldDefinition>> defaultMap) throws IOException {
+    static public Map<String, FieldDefinition> loadMap(final File fieldMapFile,
+                                                       final Supplier<Map<String, FieldDefinition>> defaultMap) throws IOException {
         return fieldMapFile != null && fieldMapFile.exists() && fieldMapFile.isFile() ?
             ObjectMappers.JSON.readValue(fieldMapFile, FieldDefinition.mapStringFieldTypeRef) :
             defaultMap == null ? null : defaultMap.get();

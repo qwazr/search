@@ -37,7 +37,7 @@ public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy
         initIndexService();
         indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World").stringField("Hello World"));
         indexService.postDocument(
-                new IndexRecord.NoTaxonomy("2").textField("Hello World 2").stringField("Hello World 2"));
+            new IndexRecord.NoTaxonomy("2").textField("Hello World 2").stringField("Hello World 2"));
     }
 
     private void checkQuery(QueryDefinition queryDef, long totalHits) {
@@ -52,14 +52,14 @@ public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy
     @Test
     public void testArray() {
         QueryDefinition queryDef =
-                QueryDefinition.of(TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build()).build();
+            QueryDefinition.of(TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build()).build();
         checkQuery(queryDef, 2L);
     }
 
     @Test
-    public void luceneQuery()  {
+    public void luceneQuery() {
         Query luceneQuery =
-                TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build().getQuery(QueryContext.DEFAULT);
+            TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build().getQuery(QueryContextTest.DEFAULT);
         Assert.assertNotNull(luceneQuery);
     }
 

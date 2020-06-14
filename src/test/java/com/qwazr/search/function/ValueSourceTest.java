@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.qwazr.search.function;
 
-import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.QueryContextTest;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -31,46 +31,46 @@ import java.io.IOException;
 
 public class ValueSourceTest {
 
-	protected void checkValueSource(AbstractValueSource valueSource)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+    protected void checkValueSource(AbstractValueSource<?> valueSource)
+        throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 
-		final AbstractValueSource valueSource2 =
-				ObjectMappers.JSON.readValue(ObjectMappers.JSON.writeValueAsString(valueSource),
-						AbstractValueSource.class);
-		Assert.assertEquals(valueSource, valueSource2);
-		Assert.assertNotNull(valueSource.getValueSource(QueryContext.DEFAULT));
-		Assert.assertEquals(valueSource.getValueSource(QueryContext.DEFAULT),
-				valueSource2.getValueSource(QueryContext.DEFAULT));
-	}
+        final AbstractValueSource<?> valueSource2 =
+            ObjectMappers.JSON.readValue(ObjectMappers.JSON.writeValueAsString(valueSource),
+                AbstractValueSource.class);
+        Assert.assertEquals(valueSource, valueSource2);
+        Assert.assertNotNull(valueSource.getValueSource(QueryContextTest.DEFAULT));
+        Assert.assertEquals(valueSource.getValueSource(QueryContextTest.DEFAULT),
+            valueSource2.getValueSource(QueryContextTest.DEFAULT));
+    }
 
-	@Test
-	public void test() throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
-		checkValueSource(new ConstValueSource(RandomUtils.nextFloat(1f, 2f)));
-		checkValueSource(new DefFunction(new ConstValueSource(1.0f), new NumDocsValueSource()));
-		checkValueSource(new DivFloatFunction(new ConstValueSource(1.0f), new ConstValueSource(2.0f)));
-		checkValueSource(new DoubleConstValueSource(2.0));
-		checkValueSource(new DoubleFieldSource(RandomStringUtils.randomAlphanumeric(5)));
-		checkValueSource(new FloatFieldSource(RandomStringUtils.randomAlphanumeric(5)));
-		checkValueSource(
-				new IfFunction(new ConstValueSource(1.0f), new NumDocsValueSource(), new DoubleConstValueSource(2.0)));
-		checkValueSource(new IntFieldSource(RandomStringUtils.randomAlphanumeric(5)));
-		checkValueSource(new MaxDocValueSource());
-		checkValueSource(new MaxFloatFunction(new ConstValueSource(1.0f), new ConstValueSource(2.0f),
-				new ConstValueSource(3.0f)));
-		checkValueSource(new MinFloatFunction(new ConstValueSource(1.0f), new ConstValueSource(2.0f),
-				new ConstValueSource(3.0f)));
-		checkValueSource(new LongFieldSource(RandomStringUtils.randomAlphanumeric(5)));
-		checkValueSource(new MultiValuedLongFieldSource("test", SortedNumericSelector.Type.MAX));
-		checkValueSource(new MultiValuedDoubleFieldSource("test", SortedNumericSelector.Type.MIN));
-		checkValueSource(new MultiValuedIntFieldSource("test", SortedNumericSelector.Type.MAX));
-		checkValueSource(new MultiValuedFloatFieldSource("test", SortedNumericSelector.Type.MIN));
-		checkValueSource(new NumDocsValueSource());
-		checkValueSource(new PowFloatFunction(new ConstValueSource(2f), new ConstValueSource(4f)));
-		checkValueSource(
-				new ProductFloatFunction(new ConstValueSource(2f), new ConstValueSource(4f), new ConstValueSource(6f)));
-		checkValueSource(new QueryValueSource(new MatchAllDocsQuery(), 3f));
-		checkValueSource(new SortedSetFieldSource("test"));
-		checkValueSource(
-				new SumFloatFunction(new ConstValueSource(2f), new ConstValueSource(4f), new ConstValueSource(6f)));
-	}
+    @Test
+    public void test() throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+        checkValueSource(new ConstValueSource(RandomUtils.nextFloat(1f, 2f)));
+        checkValueSource(new DefFunction(new ConstValueSource(1.0f), new NumDocsValueSource()));
+        checkValueSource(new DivFloatFunction(new ConstValueSource(1.0f), new ConstValueSource(2.0f)));
+        checkValueSource(new DoubleConstValueSource(2.0));
+        checkValueSource(new DoubleFieldSource(RandomStringUtils.randomAlphanumeric(5)));
+        checkValueSource(new FloatFieldSource(RandomStringUtils.randomAlphanumeric(5)));
+        checkValueSource(
+            new IfFunction(new ConstValueSource(1.0f), new NumDocsValueSource(), new DoubleConstValueSource(2.0)));
+        checkValueSource(new IntFieldSource(RandomStringUtils.randomAlphanumeric(5)));
+        checkValueSource(new MaxDocValueSource());
+        checkValueSource(new MaxFloatFunction(new ConstValueSource(1.0f), new ConstValueSource(2.0f),
+            new ConstValueSource(3.0f)));
+        checkValueSource(new MinFloatFunction(new ConstValueSource(1.0f), new ConstValueSource(2.0f),
+            new ConstValueSource(3.0f)));
+        checkValueSource(new LongFieldSource(RandomStringUtils.randomAlphanumeric(5)));
+        checkValueSource(new MultiValuedLongFieldSource("test", SortedNumericSelector.Type.MAX));
+        checkValueSource(new MultiValuedDoubleFieldSource("test", SortedNumericSelector.Type.MIN));
+        checkValueSource(new MultiValuedIntFieldSource("test", SortedNumericSelector.Type.MAX));
+        checkValueSource(new MultiValuedFloatFieldSource("test", SortedNumericSelector.Type.MIN));
+        checkValueSource(new NumDocsValueSource());
+        checkValueSource(new PowFloatFunction(new ConstValueSource(2f), new ConstValueSource(4f)));
+        checkValueSource(
+            new ProductFloatFunction(new ConstValueSource(2f), new ConstValueSource(4f), new ConstValueSource(6f)));
+        checkValueSource(new QueryValueSource(new MatchAllDocsQuery(), 3f));
+        checkValueSource(new SortedSetFieldSource("test"));
+        checkValueSource(
+            new SumFloatFunction(new ConstValueSource(2f), new ConstValueSource(4f), new ConstValueSource(6f)));
+    }
 }

@@ -35,81 +35,81 @@ import java.net.URISyntaxException;
 
 public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException, java.text.ParseException {
-		initIndexManager();
-		indexManager.registerConstructorParameter(SynonymMap.class,
-				RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
-						RealTimeSynonymsResourcesTest.EN_FR_DE_SYNONYMS));
-		initIndexService();
-		indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello")
-				.stringField("world")
-				.textSynonymsField1("hello world"));
-	}
+    @BeforeClass
+    public static void setup() throws IOException, InterruptedException, URISyntaxException, java.text.ParseException {
+        initIndexManager();
+        indexManager.registerConstructorParameter(SynonymMap.class,
+            RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
+                RealTimeSynonymsResourcesTest.EN_FR_DE_SYNONYMS));
+        initIndexService();
+        indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello")
+            .stringField("world")
+            .textSynonymsField1("hello world"));
+    }
 
-	@Test
-	public void testWithDefaultAnalyzer() {
-		QueryDefinition queryDef = QueryDefinition.of(MultiFieldQueryParser.of()
-				.addField("textField", "stringField")
-				.setDefaultOperator(QueryParserOperator.AND)
-				.addBoost("textField", 1F)
-				.addBoost("stringField", 1F)
-				.setQueryString("Hello")
-				.build()).build();
-		checkQuery(queryDef);
-	}
+    @Test
+    public void testWithDefaultAnalyzer() {
+        QueryDefinition queryDef = QueryDefinition.of(MultiFieldQueryParser.of()
+            .addField("textField", "stringField")
+            .setDefaultOperator(QueryParserOperator.AND)
+            .addBoost("textField", 1F)
+            .addBoost("stringField", 1F)
+            .setQueryString("Hello")
+            .build()).build();
+        checkQuery(queryDef);
+    }
 
-	@Test
-	public void testWithCustomAnalyzer() {
-		QueryDefinition queryDef = QueryDefinition.of(MultiFieldQueryParser.of()
-				.addField("textField", "stringField")
-				.setDefaultOperator(QueryParserOperator.AND)
-				.addBoost("textField", 1F)
-				.addBoost("stringField", 1F)
-				.setQueryString("Hello World")
-				.setAnalyzer(new StandardAnalyzer())
-				.build()).
-				build();
-		checkQuery(queryDef);
-	}
+    @Test
+    public void testWithCustomAnalyzer() {
+        QueryDefinition queryDef = QueryDefinition.of(MultiFieldQueryParser.of()
+            .addField("textField", "stringField")
+            .setDefaultOperator(QueryParserOperator.AND)
+            .addBoost("textField", 1F)
+            .addBoost("stringField", 1F)
+            .setQueryString("Hello World")
+            .setAnalyzer(new StandardAnalyzer())
+            .build()).
+            build();
+        checkQuery(queryDef);
+    }
 
-	@Test
-	public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
-		Query luceneQuery = MultiFieldQueryParser.of()
-				.addField("textField", "stringField")
-				.setDefaultOperator(QueryParserOperator.AND)
-				.
-						addBoost("textField", 1F)
-				.addBoost("stringField", 1F)
-				.setQueryString("Hello World")
-				.build()
-				.getQuery(QueryContext.DEFAULT);
-		Assert.assertNotNull(luceneQuery);
-	}
+    @Test
+    public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
+        Query luceneQuery = MultiFieldQueryParser.of()
+            .addField("textField", "stringField")
+            .setDefaultOperator(QueryParserOperator.AND)
+            .
+                addBoost("textField", 1F)
+            .addBoost("stringField", 1F)
+            .setQueryString("Hello World")
+            .build()
+            .getQuery(QueryContextTest.DEFAULT);
+        Assert.assertNotNull(luceneQuery);
+    }
 
-	@Test
-	public void testWithSynonymsOr()
-			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = MultiFieldQueryParser.of()
-				.addField("textSynonymsField1", "textField", "stringField")
-				.setDefaultOperator(QueryParserOperator.OR)
-				.setSplitOnWhitespace(false)
-				.setQueryString("bonjour le monde")
-				.build();
-		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
-	}
+    @Test
+    public void testWithSynonymsOr()
+        throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
+        AbstractQuery query = MultiFieldQueryParser.of()
+            .addField("textSynonymsField1", "textField", "stringField")
+            .setDefaultOperator(QueryParserOperator.OR)
+            .setSplitOnWhitespace(false)
+            .setQueryString("bonjour le monde")
+            .build();
+        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+    }
 
-	@Test
-	@Ignore
-	public void testWithSynonymsAnd()
-			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		AbstractQuery query = MultiFieldQueryParser.of()
-				.addField("textSynonymsField1", "textSynonymsField2")
-				.setDefaultOperator(QueryParserOperator.AND)
-				.setSplitOnWhitespace(false)
-				.setQueryString("bonjour le monde")
-				.build();
-		checkQuery(QueryDefinition.of(query).queryDebug(true).build());
-	}
+    @Test
+    @Ignore
+    public void testWithSynonymsAnd()
+        throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
+        AbstractQuery query = MultiFieldQueryParser.of()
+            .addField("textSynonymsField1", "textSynonymsField2")
+            .setDefaultOperator(QueryParserOperator.AND)
+            .setSplitOnWhitespace(false)
+            .setQueryString("bonjour le monde")
+            .build();
+        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+    }
 
 }

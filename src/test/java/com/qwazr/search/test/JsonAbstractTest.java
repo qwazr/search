@@ -58,7 +58,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -94,10 +93,10 @@ public abstract class JsonAbstractTest {
     public static final String SYNONYMS_TXT = "synonyms.txt";
     public static final String SYNONYMS2_TXT = "synonyms2.txt";
     public static final long SYNONYM_LAST_MODIFIED = System.currentTimeMillis();
-    public static final LinkedHashMap<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
+    public static final Map<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
     public static final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
     public static final FieldDefinition FIELD_UPDATE_JSON = getField("field_update.json");
-    public static final LinkedHashMap<String, AnalyzerDefinition> ANALYZERS_JSON = getAnalyzerMap("analyzers.json");
+    public static final Map<String, AnalyzerDefinition> ANALYZERS_JSON = getAnalyzerMap("analyzers.json");
     public static final AnalyzerDefinition ANALYZER_FRENCH_JSON = getAnalyzer("analyzer_french.json");
     public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
     public static final IndexSettingsDefinition INDEX_MASTER_SETTINGS = getIndexSettings("index_master_settings.json");
@@ -193,7 +192,7 @@ public abstract class JsonAbstractTest {
         }
     }
 
-    public static LinkedHashMap<String, FieldDefinition> getFieldMap(String res) {
+    public static Map<String, FieldDefinition> getFieldMap(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return FieldDefinition.newFieldMap(IOUtils.toString(is, StandardCharsets.UTF_8));
         } catch (IOException e) {
@@ -209,7 +208,7 @@ public abstract class JsonAbstractTest {
         }
     }
 
-    private static LinkedHashMap<String, AnalyzerDefinition> getAnalyzerMap(String res) {
+    private static Map<String, AnalyzerDefinition> getAnalyzerMap(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return AnalyzerDefinition.newAnalyzerMap(IOUtils.toString(is, StandardCharsets.UTF_8));
         } catch (IOException e) {
@@ -320,7 +319,7 @@ public abstract class JsonAbstractTest {
     public void test120SetAnalyzers() throws URISyntaxException, IOException {
         IndexServiceInterface client = getClient();
         checkErrorStatusCode(() -> client.setAnalyzers(SCHEMA_NAME, INDEX_DUMMY_NAME, ANALYZERS_JSON), 404);
-        LinkedHashMap<String, AnalyzerDefinition> analyzers =
+        Map<String, AnalyzerDefinition> analyzers =
             client.setAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME, ANALYZERS_JSON);
         Assert.assertEquals(analyzers.size(), ANALYZERS_JSON.size());
         IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
@@ -386,8 +385,7 @@ public abstract class JsonAbstractTest {
     public void test130SetFields() throws URISyntaxException, IOException {
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(() -> client.setFields(SCHEMA_NAME, INDEX_DUMMY_NAME, null), 404);
-        final LinkedHashMap<String, FieldDefinition> fields =
-            client.setFields(SCHEMA_NAME, INDEX_MASTER_NAME, FIELDS_JSON);
+        final Map<String, FieldDefinition> fields = client.setFields(SCHEMA_NAME, INDEX_MASTER_NAME, FIELDS_JSON);
         Assert.assertEquals(fields.size(), FIELDS_JSON.size());
         final IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(indexStatus.fields);
@@ -1022,9 +1020,8 @@ public abstract class JsonAbstractTest {
         Assert.assertNotNull(masterStatus.version);
 
         // Get the fields and analyzers of the master
-        final LinkedHashMap<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
-        final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers =
-            client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final Map<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final Map<String, AnalyzerDefinition> masterAnalyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(masterFields);
         Assert.assertNotNull(masterAnalyzers);
 
@@ -1036,9 +1033,8 @@ public abstract class JsonAbstractTest {
         Assert.assertEquals(slaveStatus.masterUuid, masterStatus.indexUuid);
 
         // Get the fields and analyzers of the slave
-        final LinkedHashMap<String, FieldDefinition> slaveFields = client.getFields(SCHEMA_NAME, INDEX_SLAVE_NAME);
-        final LinkedHashMap<String, AnalyzerDefinition> slaveAnalyzers =
-            client.getAnalyzers(SCHEMA_NAME, INDEX_SLAVE_NAME);
+        final Map<String, FieldDefinition> slaveFields = client.getFields(SCHEMA_NAME, INDEX_SLAVE_NAME);
+        final Map<String, AnalyzerDefinition> slaveAnalyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_SLAVE_NAME);
         Assert.assertNotNull(slaveFields);
         Assert.assertNotNull(slaveAnalyzers);
 
@@ -1060,9 +1056,8 @@ public abstract class JsonAbstractTest {
     public void test850replicationCheck() throws URISyntaxException, ExecutionException, InterruptedException {
         final IndexServiceInterface client = getClient();
 
-        final LinkedHashMap<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
-        final LinkedHashMap<String, AnalyzerDefinition> masterAnalyzers =
-            client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final Map<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final Map<String, AnalyzerDefinition> masterAnalyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(masterFields);
         Assert.assertNotNull(masterAnalyzers);
 

@@ -22,6 +22,7 @@ import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
+import java.util.Arrays;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import org.apache.lucene.facet.FacetsConfig;
@@ -95,17 +96,28 @@ public interface FieldTypeInterface {
 
     enum FieldType {
 
-        storedField('r'),
-        stringField('s'),
-        facetField('f'),
-        docValues('d'),
-        textField('t'),
-        pointField('p');
+        storedField('r', "Stored field"),
+        stringField('s', "String indexed field"),
+        facetField('f', "Faceted field"),
+        docValues('d', "Sorted field"),
+        textField('t', " Full text indexed field"),
+        pointField('p', "Numeric indexed field");
 
         final char prefix;
 
-        FieldType(char prefix) {
+        /**
+         * The description is used visible on error messages
+         */
+        private final String description;
+
+        FieldType(char prefix, final String description) {
             this.prefix = prefix;
+            this.description = description;
+        }
+
+        @Override
+        public String toString() {
+            return description;
         }
     }
 
