@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015-2018 Emmanuel Keller / QWAZR
+ *  Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -34,9 +34,9 @@ import java.util.Objects;
 
 public final class FilteredQuery extends org.apache.lucene.search.Query {
 
-    private final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap;
+    private final Map<Integer, RoaringDocIdSet> docIdSetMap;
 
-    public FilteredQuery(final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap) {
+    public FilteredQuery(final Map<Integer, RoaringDocIdSet> docIdSetMap) {
         this.docIdSetMap = docIdSetMap;
     }
 
@@ -59,10 +59,10 @@ public final class FilteredQuery extends org.apache.lucene.search.Query {
 
             @Override
             final public Scorer scorer(final LeafReaderContext context) throws IOException {
-                final RoaringDocIdSet docIdSet = docIdSetMap.get(context);
+                final RoaringDocIdSet docIdSet = docIdSetMap.get(context.docBase);
                 final DocIdSetIterator docIdSetIterator = docIdSet == null ? null : docIdSet.iterator();
                 return new ConstantScoreScorer(this, score(), scoreMode,
-                        docIdSetIterator == null ? DocIdSetIterator.empty() : docIdSetIterator);
+                    docIdSetIterator == null ? DocIdSetIterator.empty() : docIdSetIterator);
             }
 
             @Override
@@ -70,16 +70,16 @@ public final class FilteredQuery extends org.apache.lucene.search.Query {
 
                 final float score = score();
                 final int maxDoc = context.reader().maxDoc();
-                final RoaringDocIdSet docIdSet = docIdSetMap.get(context);
+                final RoaringDocIdSet docIdSet = docIdSetMap.get(context.docBase);
                 final int cost = docIdSet.cardinality();
                 final Weight weight = this;
 
                 return new BulkScorer() {
                     @Override
                     final public int score(final LeafCollector collector, final Bits acceptDocs, final int min, int max)
-                            throws IOException {
+                        throws IOException {
                         max = Math.min(max, maxDoc);
-                            final FakeScorer scorer = new FakeScorer(weight);
+                        final FakeScorer scorer = new FakeScorer(weight);
                         scorer.score = score;
                         collector.setScorer(scorer);
                         int doc;

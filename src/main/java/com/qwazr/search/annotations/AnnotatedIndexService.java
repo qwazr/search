@@ -125,21 +125,21 @@ public class AnnotatedIndexService<T> {
                 final IndexField indexField = field.getDeclaredAnnotation(IndexField.class);
                 final String fieldName = FieldMapWrappers.getFieldName(indexField.name(), field);
                 putCheckNotTwice(indexFieldMap, fieldName, indexField);
-                fieldMap.putIfAbsent(fieldName, field);
+                fieldMap.put(fieldName, field);
             }
             if (field.isAnnotationPresent(SmartField.class)) {
                 field.setAccessible(true);
                 final SmartField smartField = field.getDeclaredAnnotation(SmartField.class);
                 final String fieldName = FieldMapWrappers.getFieldName(smartField.name(), field);
                 putCheckNotTwice(smartFieldMap, fieldName, smartField);
-                fieldMap.putIfAbsent(fieldName, field);
+                fieldMap.put(fieldName, field);
             }
             if (field.isAnnotationPresent(Copy.class)) {
                 field.setAccessible(true);
                 final Copy copy = field.getDeclaredAnnotation(Copy.class);
                 final String fieldName = FieldMapWrappers.getFieldName(copy.name(), field);
                 putCheckNotTwice(copyMap, fieldName, copy);
-                fieldMap.putIfAbsent(fieldName, field);
+                fieldMap.put(fieldName, field);
             }
         });
 

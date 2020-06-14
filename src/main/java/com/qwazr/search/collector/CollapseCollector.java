@@ -17,6 +17,9 @@
 package com.qwazr.search.collector;
 
 import com.qwazr.search.query.lucene.FilteredQuery;
+import com.qwazr.utils.Equalizer;
+import com.qwazr.utils.HashUtils;
+import com.qwazr.utils.concurrent.ThreadUtils;
 import it.unimi.dsi.fastutil.floats.Float2ReferenceRBTreeMap;
 import it.unimi.dsi.fastutil.floats.Float2ReferenceSortedMap;
 import it.unimi.dsi.fastutil.ints.Int2FloatMap;
@@ -27,6 +30,14 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SortedDocValues;
@@ -43,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.IntConsumer;
+import org.roaringbitmap.RoaringBitmap;
 
 public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.Query, CollapseCollector.Leaf, CollapseCollector> {
 
@@ -61,36 +73,36 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
     }
 
     private void reduce(final GroupQueue groupQueue,
-                        final Map<LeafReaderContext, RoaringDocIdSet> docIdMaps,
+                        final Map<Integer, RoaringDocIdSet> docIdMaps,
                         final Int2IntLinkedOpenHashMap collapsedMap) {
 
         // Fill the priority queue which the results of each segments
         getLeaves().forEach(leaf -> leaf.reduce(groupQueue));
 
-
         // The DocID must be sorted and grouped by segment
-        final Map<LeafReaderContext, IntSortedSet> sortedInts = new HashMap<>();
+        final Map<Integer, Pair<Integer, IntSortedSet>> sortedInts = new HashMap<>();
         for (final GroupLeader groupLeader : groupQueue.groupLeaders.values()) {
-            sortedInts.computeIfAbsent(groupLeader.context, ctx -> new IntAVLTreeSet()).add(groupLeader.doc);
-            collapsedMap.addTo(groupLeader.context.docBase + groupLeader.doc, groupLeader.collapsedCount);
+            sortedInts.computeIfAbsent(groupLeader.docBase,
+                leaf -> Pair.of(groupLeader.maxDoc, new IntAVLTreeSet())).getValue().add(groupLeader.doc);
+            collapsedMap.addTo(groupLeader.docBase + groupLeader.doc, groupLeader.collapsedCount);
         }
 
         // Now we can build the bitsets
-        sortedInts.forEach((ctx, sortedInt) -> {
-            final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(ctx.reader().maxDoc());
-            sortedInt.forEach((IntConsumer) builder::add);
-            docIdMaps.put(ctx, builder.build());
+        sortedInts.forEach((docBase, sortedInt) -> {
+            final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(sortedInt.getKey());
+            sortedInt.getValue().forEach((IntConsumer) builder::add);
+            docIdMaps.put(docBase, builder.build());
         });
 
         // Add empty bitset for unassigned leaf
-        getLeaves().forEach(leaf -> docIdMaps.putIfAbsent(leaf.context,
-                new RoaringDocIdSet.Builder(leaf.context.reader().maxDoc()).build()));
+        getLeaves().forEach(leaf -> docIdMaps.computeIfAbsent(leaf.docBase,
+            ctx -> new RoaringDocIdSet.Builder(leaf.maxDoc).build()));
+
     }
 
     @Override
     final public Query reduce(final List<CollapseCollector> leafCollectors) {
-
-        final Map<LeafReaderContext, RoaringDocIdSet> docIdMaps = new HashMap<>();
+        final Map<Integer, RoaringDocIdSet> docIdMaps = new ConcurrentHashMap<>();
         final GroupQueue groupQueue = new GroupQueue(maxRows);
         // Stores for each doc the number of collapsed documents
         final Int2IntLinkedOpenHashMap collapsedMap = new Int2IntLinkedOpenHashMap(groupQueue.groupLeaders.size());
@@ -104,19 +116,19 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
         return new Query(new FilteredQuery(docIdMaps), collapsedMap, collapsedCount);
     }
 
-    final static class Leaf implements LeafCollector {
+    final static class Leaf extends Equalizer<Leaf> implements LeafCollector {
 
-        private final LeafReaderContext context;
         private final SortedDocValues sdv;
         private final Int2IntMap docIds;
         private final Int2FloatMap scores;
         private final Int2IntMap count;
         private final int docBase;
+        private final int maxDoc;
 
         private Scorable scorer;
 
         private Leaf(final String fieldName, final LeafReaderContext context) throws IOException {
-            this.context = context;
+            super(Leaf.class);
             final LeafReader reader = context.reader();
             sdv = reader.getSortedDocValues(fieldName);
             final int numDocs = reader.numDocs();
@@ -126,6 +138,17 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
             count = new Int2IntOpenHashMap(numDocs);
             count.defaultReturnValue(0);
             docBase = context.docBase;
+            maxDoc = reader.maxDoc();
+        }
+
+        @Override
+        protected boolean isEqual(Leaf leaf) {
+            return leaf == this;
+        }
+
+        @Override
+        public int hashCode() {
+            return docBase;
         }
 
         @Override
@@ -137,10 +160,9 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
             docIds.keySet().forEach((IntConsumer) ord -> {
                 try {
                     groupQueue.offer(sdv.lookupOrd(ord), scores.get(ord), count.get(ord),
-                            (bytesRef, score, collapsedCount) -> new GroupLeader(context, bytesRef, docIds.get(ord) + docBase,
-                                    score, collapsedCount));
-                }
-                catch (IOException e) {
+                        (bytesRef, score, collapsedCount) -> new GroupLeader(docBase, maxDoc, bytesRef, docIds.get(ord) + docBase,
+                            score, collapsedCount));
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             });
@@ -165,14 +187,20 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
 
     final static class GroupLeader extends ScoreDoc {
 
-        final LeafReaderContext context;
+        final int docBase;
+        final int maxDoc;
         final BytesRef bytesRef;
         int collapsedCount;
 
-        GroupLeader(final LeafReaderContext context, final BytesRef bytesRef, final int doc, final float score,
+        GroupLeader(final int docBase,
+                    final int maxDoc,
+                    final BytesRef bytesRef,
+                    final int doc,
+                    final float score,
                     final int collapsedCount) {
             super(doc, score);
-            this.context = context;
+            this.maxDoc = maxDoc;
+            this.docBase = docBase;
             this.bytesRef = bytesRef;
             this.collapsedCount = collapsedCount;
         }
@@ -195,8 +223,10 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
             scoreGroups = new Float2ReferenceRBTreeMap<>();
         }
 
-        void offer(final BytesRef bytesRef, final float score, final int count,
-                   final GroupLeaderProvider groupLeaderProvider) {
+        synchronized void offer(final BytesRef bytesRef,
+                                final float score,
+                                final int count,
+                                final GroupLeaderProvider groupLeaderProvider) {
 
             // Do we already have a leader ? If the score is greater we can ignore the offered one
             final GroupLeader previousGroupLeader = groupLeaders.get(bytesRef);
@@ -206,9 +236,9 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
             }
 
             final BytesRef newBytesRef =
-                    previousGroupLeader == null ? BytesRef.deepCopyOf(bytesRef) : previousGroupLeader.bytesRef;
+                previousGroupLeader == null ? BytesRef.deepCopyOf(bytesRef) : previousGroupLeader.bytesRef;
             groupLeaders.put(newBytesRef, groupLeaderProvider.get(newBytesRef, score,
-                    previousGroupLeader == null ? count - 1 : previousGroupLeader.collapsedCount + count));
+                previousGroupLeader == null ? count - 1 : previousGroupLeader.collapsedCount + count));
 
             Object2BooleanLinkedOpenHashMap<BytesRef> bytesRefs = scoreGroups.get(score);
             if (bytesRefs == null) {
@@ -241,7 +271,8 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
         final Int2IntLinkedOpenHashMap collapsedMap;
         final long collapsedCount;
 
-        Query(final FilteredQuery filteredQuery, final Int2IntLinkedOpenHashMap collapsedMap,
+        Query(final FilteredQuery filteredQuery,
+              final Int2IntLinkedOpenHashMap collapsedMap,
               final long collapsedCount) {
             super(filteredQuery);
             this.collapsedMap = collapsedMap;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,50 +41,51 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
         initIndexService();
         Collection<IndexRecord.NoTaxonomy> indexRecords = new ArrayList<>();
         int k = 0;
-        for (int i = 0; i < RandomUtils.nextInt(8, 12); i++) {
+        final int il = RandomUtils.nextInt(8, 12);
+        for (int i = 0; i < il; i++) {
             indexRecords.clear();
-            for (int j = 0; j < RandomUtils.nextInt(5000, 15000); j++)
+            final int jl = RandomUtils.nextInt(5000, 15000);
+            for (int j = 0; j < jl; j++)
                 indexRecords.add(getRandomRecord(i, k++));
             indexService.postDocuments(indexRecords);
         }
     }
 
     static IndexRecord.NoTaxonomy getRandomRecord(int i, int k) {
-        String value = "sdv" + i;// (char) (65 + RandomUtils.nextInt(0, 10));
+        String value = "sdv" + i;
         return new IndexRecord.NoTaxonomy(Integer.toString(k)).sortedDocValue(value)
-                .textField("text" + i)
-                .stringField(RandomUtils.alphanumeric(25))
-                .intPoint(RandomUtils.nextInt(0, 100000))
-                .storedField(RandomUtils.alphanumeric(50));
+            .textField("text" + i)
+            .stringField(RandomUtils.alphanumeric(25))
+            .intPoint(RandomUtils.nextInt(0, 100000))
+            .storedField(RandomUtils.alphanumeric(50));
     }
 
     @Test
-    @Ignore
     public void test() {
         final QueryDefinition queryDef1 = QueryDefinition.of(BooleanQuery.of()
-                .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text1"))
-                .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text2"))
-                .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text3"))
-                .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text4"))
-                .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text5"))
-                .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text6"))
-                .build())
-                .collector("collapse", CollapseCollector.class, "sortedDocValue", 5)
-                .build();
+            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text1"))
+            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text2"))
+            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text3"))
+            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text4"))
+            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text5"))
+            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text6"))
+            .build())
+            .collector("collapse", CollapseCollector.class, "sortedDocValue", 5)
+            .build();
 
         final ResultDefinition.WithObject<IndexRecord.NoTaxonomy> firstPassResults = indexService.searchQuery(queryDef1);
         Assert.assertNotNull(firstPassResults);
         final CollapseCollector.Query collapseQuery =
-                firstPassResults.getCollector("collapse", CollapseCollector.Query.class);
+            firstPassResults.getCollector("collapse", CollapseCollector.Query.class);
         Assert.assertNotNull(collapseQuery);
 
         final QueryDefinition queryDef2 = QueryDefinition.of(collapseQuery).queryDebug(true).build();
         Assert.assertTrue(
-                collapseQuery.getCollapsed() > 0 && collapseQuery.getCollapsed() < firstPassResults.getTotalHits());
+            collapseQuery.getCollapsed() > 0 && collapseQuery.getCollapsed() < firstPassResults.getTotalHits());
         final ResultDefinition.WithObject<IndexRecord.NoTaxonomy> secondPassResults = indexService.searchQuery(queryDef2);
         Assert.assertNotNull(secondPassResults);
-        // TODO 5 or 6 ?
-        Assert.assertEquals(6, secondPassResults.totalHits);
+
+        Assert.assertEquals(collapseQuery.collapsedMap.size(), secondPassResults.totalHits);
         for (final ResultDocumentAbstract result : secondPassResults.getDocuments())
             Assert.assertNotEquals(-1, collapseQuery.getCollapsed(result.getDoc()));
     }
@@ -104,8 +105,8 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
         for (int i = 1; i < 10; i++) {
             final int doc = i;
             queue.offer(new BytesRef("test" + i), i, i * 10,
-                    (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(null, bytesRef, doc, score,
-                            collapsed));
+                (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(0, 0, bytesRef, doc, score,
+                    collapsed));
         }
         Assert.assertEquals(3, queue.groupLeaders.size());
         checkGroupLeader(queue, "test7", 7, 7f, 69);
@@ -119,8 +120,8 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
         for (int i = 1; i < 10; i++) {
             final int doc = i;
             queue.offer(new BytesRef("test"), i, i * 10,
-                    (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(null, bytesRef, doc, score,
-                            collapsed));
+                (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(0, 0, bytesRef, doc, score,
+                    collapsed));
         }
         Assert.assertEquals(1, queue.groupLeaders.size());
         checkGroupLeader(queue, "test", 9, 9f, 449);
@@ -132,8 +133,8 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
         for (int i = 1; i < 10; i++) {
             final int doc = i;
             queue.offer(new BytesRef("test" + i % 2), i, i * 10,
-                    (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(null, bytesRef, doc, score,
-                            collapsed));
+                (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(0, 0, bytesRef, doc, score,
+                    collapsed));
         }
         Assert.assertEquals(2, queue.groupLeaders.size());
         checkGroupLeader(queue, "test0", 8, 8f, 199);
@@ -146,8 +147,8 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
         for (int i = 9; i > 0; i--) {
             final int doc = i;
             queue.offer(new BytesRef("test" + i % 2), i, i * 10,
-                    (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(null, bytesRef, doc, score,
-                            collapsed));
+                (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(0, 0, bytesRef, doc, score,
+                    collapsed));
         }
         Assert.assertEquals(2, queue.groupLeaders.size());
         checkGroupLeader(queue, "test0", 8, 8f, 199);

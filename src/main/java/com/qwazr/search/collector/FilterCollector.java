@@ -37,8 +37,8 @@ public class FilterCollector extends BaseCollector.Parallel<FilterCollector.Quer
     }
 
     private Query reduce() {
-        final Map<LeafReaderContext, RoaringDocIdSet> docIdSetMap = new HashMap<>();
-        getLeaves().forEach(leaf -> docIdSetMap.put(leaf.context, leaf.docIdsBuilder.build()));
+        final Map<Integer, RoaringDocIdSet> docIdSetMap = new HashMap<>();
+        getLeaves().forEach(leaf -> docIdSetMap.put(leaf.docBase, leaf.docIdsBuilder.build()));
         return new FilterCollector.Query(new FilteredQuery(docIdSetMap));
     }
 
@@ -58,11 +58,11 @@ public class FilterCollector extends BaseCollector.Parallel<FilterCollector.Quer
 
     static class Leaf implements LeafCollector {
 
-        private final LeafReaderContext context;
+        private final Integer docBase;
         private final RoaringDocIdSet.Builder docIdsBuilder;
 
         private Leaf(final LeafReaderContext context) {
-            this.context = context;
+            this.docBase = context.docBase;
             this.docIdsBuilder = new RoaringDocIdSet.Builder(context.reader().maxDoc());
         }
 
