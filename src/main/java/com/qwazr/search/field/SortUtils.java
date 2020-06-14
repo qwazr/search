@@ -183,8 +183,6 @@ public class SortUtils {
 
         // Let's check if the field exists and supports sorting
         final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
-        if (fieldType == null)
-            throw new IllegalArgumentException("Unknown sort field: " + fieldName);
         final SortField sortField = fieldType.getSortField(fieldName, sortEnum);
         if (sortField == null)
             throw new IllegalArgumentException("The field does not support sorting: " + fieldName);

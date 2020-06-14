@@ -17,9 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.UpdatableAnalyzers;
-import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
-import java.util.LinkedHashMap;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;

@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.SmartAnalyzerSet;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.SmartField;
-import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.analysis.Analyzer;
 

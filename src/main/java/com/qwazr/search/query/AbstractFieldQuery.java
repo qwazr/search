@@ -19,11 +19,9 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.field.FieldTypeInterface;
-import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldMap;
 import java.net.URI;
 import java.util.Objects;
-import javax.ws.rs.NotAcceptableException;
 import org.apache.lucene.index.Term;
 
 public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extends AbstractQuery<T> {

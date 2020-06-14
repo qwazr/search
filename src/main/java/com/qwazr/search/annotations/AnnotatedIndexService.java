@@ -76,8 +76,6 @@ public class AnnotatedIndexService<T> {
 
     private final FieldMapWrappers fieldMapWrappers;
 
-    private final Class<T> indexDefinitionClass;
-
     private final FieldMapWrapper<T> schemaFieldMapWrapper;
 
     private final LinkedHashMap<String, Field> fieldMap;
@@ -151,7 +149,6 @@ public class AnnotatedIndexService<T> {
             new CustomFieldDefinition(name, propertyField, copyMap)));
 
         this.fieldMapWrappers = new FieldMapWrappers(fieldMap.keySet());
-        this.indexDefinitionClass = indexDefinitionClass;
         this.schemaFieldMapWrapper = fieldMapWrappers.get(indexDefinitionClass);
     }
 

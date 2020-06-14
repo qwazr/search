@@ -19,7 +19,6 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.search.similarities.Similarity;
 

@@ -29,7 +29,6 @@ import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -162,7 +161,7 @@ public class FieldMap {
         if (fieldType != null)
             return fieldType;
         throw new IllegalArgumentException(
-            "The field has not been found: " + genericFieldName + " / " + concreteFieldName);
+            "The field has not been found: " + (genericFieldName == null ? concreteFieldName : genericFieldName));
     }
 
     final Map<String, FieldDefinition> getFieldDefinitionMap() {

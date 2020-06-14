@@ -19,7 +19,6 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.utils.WildcardMatcher;
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import org.apache.lucene.index.Term;
 
 abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefinition> {
 

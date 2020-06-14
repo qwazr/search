@@ -45,7 +45,7 @@ import java.util.function.Supplier;
 public interface ReturnedFieldStrategy {
 
     enum Type {
-        RECORD, FIELDS, NONE;
+        RECORD, FIELDS, NONE
     }
 
     // No parameters =  const and singleton
@@ -256,7 +256,7 @@ public interface ReturnedFieldStrategy {
         private static abstract class Holder {
 
             protected enum State {
-                nothing, single, multi;
+                nothing, single, multi
             }
 
             protected State state = State.nothing;

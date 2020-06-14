@@ -759,7 +759,7 @@ public abstract class JavaAbstractTest {
             master.searchQuery(builder.build());
             Assert.fail("Exception not thrown");
         } catch (WebApplicationException e) {
-            Assert.assertEquals("The field has not been found: null / sdflsjdfslkdfjlkj", e.getMessage());
+            Assert.assertEquals("The field has not been found: sdflsjdfslkdfjlkj", e.getMessage());
         }
     }
 

@@ -21,7 +21,6 @@ import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.document.SortedNumericDocValuesField;
-import org.apache.lucene.index.Term;
 
 final class SortedLongDocValuesType extends CustomFieldTypeAbstract {
 

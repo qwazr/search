@@ -17,11 +17,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.qwazr.search.field.FieldTypeInterface;
-import com.qwazr.search.index.FieldMap;
-import com.qwazr.utils.StringUtils;
 import java.util.Objects;
-import org.apache.lucene.index.Term;
 
 public abstract class AbstractFieldSpanQuery<T extends AbstractFieldSpanQuery<T>> extends AbstractSpanQuery<T> {
 
@@ -39,5 +35,5 @@ public abstract class AbstractFieldSpanQuery<T extends AbstractFieldSpanQuery<T>
     protected boolean isEqual(T q) {
         return Objects.equals(genericField, q.genericField) && Objects.equals(field, q.field);
     }
-    
+
 }

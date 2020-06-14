@@ -582,9 +582,6 @@ final public class IndexInstance implements Closeable {
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
-                if (fieldType == null)
-                    throw new ServerException(Response.Status.NOT_FOUND,
-                        "Field not found: " + fieldName + " - Index: " + indexName);
                 final Terms terms = MultiTerms.getTerms(indexSearcher.getIndexReader(), fieldName);
                 if (terms == null)
                     return Collections.emptyList();

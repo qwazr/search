@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.IndexField;
-import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
