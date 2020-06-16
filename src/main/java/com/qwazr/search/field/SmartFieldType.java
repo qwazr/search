@@ -101,7 +101,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             return (fieldName, fieldMap, facetsConfig) -> {
                 final String resolvedFieldName = fieldNameSupplier.resolve(fieldName);
                 facetsConfig.setMultiValued(resolvedFieldName, true);
-                facetsConfig.setIndexFieldName(resolvedFieldName, fieldMap.sortedSetFacetField);
+                facetsConfig.setIndexFieldName(resolvedFieldName, fieldMap.fieldsContext.sortedSetFacetField);
             };
         }
 

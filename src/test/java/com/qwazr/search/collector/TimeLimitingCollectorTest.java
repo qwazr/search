@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.TimeLimitingCollector;
+import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -38,7 +39,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexService(true);
         Collection<IndexRecord.NoTaxonomy> indexRecords = new ArrayList<>();
         for (int i = 0; i < 100; i++)
@@ -54,52 +55,52 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
     @Test
     public void mixingClassicAndLuceneCollectorTest() {
         QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
-                .collector("timeLimiter", TimeLimiterCollector.Lucene.class, 1000L)
-                .collector("slowDown", SlowDownCollector.Classic.class, 100)
-                .build();
+            .collector("timeLimiter", TimeLimiterCollector.Lucene.class, 1000L)
+            .collector("slowDown", SlowDownCollector.Classic.class, 100)
+            .build();
         ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
-        Assert.assertThat(results.totalHits, lessThan(20L));
-        Assert.assertThat(results.getCollector("timeLimiter"), nullValue());
-        Assert.assertThat(results.getCollector("slowDown"), equalTo(100));
+        assertThat(results.totalHits, lessThan(20L));
+        assertThat(results.getCollector("timeLimiter"), nullValue());
+        assertThat(results.getCollector("slowDown"), equalTo(100));
     }
 
     @Test
     public void concurrentCollectorTest() {
         QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
-                .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
-                .collector("slowDown", SlowDownCollector.Concurrent.class, 100)
-                .build();
+            .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
+            .collector("slowDown", SlowDownCollector.Concurrent.class, 100)
+            .build();
         ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
-        Assert.assertThat(results.totalHits, lessThan(20L));
-        Assert.assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
-        Assert.assertThat(results.getCollector("slowDown"), equalTo(100));
+        assertThat(results.totalHits, lessThan(20L));
+        assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
+        assertThat(results.getCollector("slowDown"), equalTo(100));
     }
 
     @Test
     public void mixingParallelAndLuceneCollectorTest() {
         QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
-                .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
-                .collector("slowDown", SlowDownCollector.Lucene.class, 100)
-                .build();
+            .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
+            .collector("slowDown", SlowDownCollector.Lucene.class, 100)
+            .build();
         ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
-        Assert.assertThat(results.totalHits, lessThan(20L));
-        Assert.assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
-        Assert.assertThat(results.getCollector("slowDown"), nullValue());
+        assertThat(results.totalHits, lessThan(20L));
+        assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
+        assertThat(results.getCollector("slowDown"), nullValue());
     }
 
     @Test
     public void mixingClassicAndParallelCollectorTest() {
         QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
-                .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
-                .collector("slowDown", SlowDownCollector.Classic.class, 100)
-                .build();
+            .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
+            .collector("slowDown", SlowDownCollector.Classic.class, 100)
+            .build();
         ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
-        Assert.assertThat(results.totalHits, lessThan(20L));
-        Assert.assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
-        Assert.assertThat(results.getCollector("slowDown"), equalTo(100));
+        assertThat(results.totalHits, lessThan(20L));
+        assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
+        assertThat(results.getCollector("slowDown"), equalTo(100));
     }
 }

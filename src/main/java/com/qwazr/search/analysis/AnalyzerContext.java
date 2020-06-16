@@ -20,6 +20,7 @@ import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ClassLoaderUtils;
+import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
@@ -27,33 +28,37 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.util.ResourceLoader;
 
-public class AnalyzerContext {
+public class AnalyzerContext extends Equalizer.Immutable<AnalyzerContext> {
 
     private final static Logger LOGGER = LoggerUtils.getLogger(AnalyzerContext.class);
 
-    public final Map<String, Analyzer> indexAnalyzerMap;
-    public final Map<String, Analyzer> queryAnalyzerMap;
+    public final Map<String, Analyzer> indexAnalyzers;
+    public final Map<String, Analyzer> queryAnalyzers;
 
-    public AnalyzerContext(final ConstructorParametersImpl instanceFactory, final ResourceLoader resourceLoader,
-                           final FieldMap fieldMap, final boolean failOnException,
+    public AnalyzerContext(final ConstructorParametersImpl instanceFactory,
+                           final ResourceLoader resourceLoader,
+                           @NotNull final FieldMap fieldMap,
+                           final boolean failOnException,
                            final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap,
                            final Map<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap) throws ServerException {
-
-        if (fieldMap == null || fieldMap.isEmpty()) {
-            this.indexAnalyzerMap = Collections.emptyMap();
-            this.queryAnalyzerMap = Collections.emptyMap();
+        super(AnalyzerContext.class);
+        if (fieldMap.isEmpty()) {
+            this.indexAnalyzers = Collections.emptyMap();
+            this.queryAnalyzers = Collections.emptyMap();
             return;
         }
 
-        this.indexAnalyzerMap = new HashMap<>();
-        this.queryAnalyzerMap = new HashMap<>();
+        final Map<String, Analyzer> indexAnalyzerMap = new HashMap<>();
+        final Map<String, Analyzer> queryAnalyzerMap = new HashMap<>();
 
         final AnalyzerMapBuilder builder =
             new AnalyzerMapBuilder(instanceFactory, resourceLoader, globalAnalyzerFactoryMap,
@@ -61,17 +66,17 @@ public class AnalyzerContext {
 
         fieldMap.forEach((fieldName, fieldType) -> {
             try {
-                final String queryFieldName = fieldType.resolveFieldName(fieldName, FieldTypeInterface.FieldType.textField, FieldTypeInterface.ValueType.textType);
-                if (queryFieldName == null)
+                final String resolvedFieldName = fieldType.resolveFieldName(fieldName, FieldTypeInterface.FieldType.textField, FieldTypeInterface.ValueType.textType);
+                if (resolvedFieldName == null)
                     return;
-                final FieldDefinition fieldDefinition = fieldType.getDefinition();
+                final FieldDefinition<?> fieldDefinition = fieldType.getDefinition();
 
                 // Load the index analyzer if any specific
                 final String indexAnalyzer = StringUtils.isEmpty(fieldDefinition.indexAnalyzer) ? fieldDefinition.analyzer : fieldDefinition.indexAnalyzer;
                 if (!StringUtils.isEmpty(indexAnalyzer)) {
                     final Analyzer analyzer = builder.findAnalyzer(indexAnalyzer, SmartAnalyzerSet::forIndex);
                     if (analyzer != null)
-                        indexAnalyzerMap.put(queryFieldName, analyzer);
+                        indexAnalyzerMap.put(resolvedFieldName, analyzer);
                 }
 
                 // Load the query analyzer if any specific
@@ -79,7 +84,7 @@ public class AnalyzerContext {
                 if (!StringUtils.isEmpty(queryAnalyzer)) {
                     final Analyzer analyzer = builder.findAnalyzer(queryAnalyzer, SmartAnalyzerSet::forQuery);
                     if (analyzer != null)
-                        queryAnalyzerMap.put(queryFieldName, analyzer);
+                        queryAnalyzerMap.put(resolvedFieldName, analyzer);
                 }
 
             } catch (ReflectiveOperationException | IOException e) {
@@ -89,6 +94,19 @@ public class AnalyzerContext {
                 LOGGER.log(Level.WARNING, msg, e);
             }
         });
+
+        this.indexAnalyzers = indexAnalyzerMap;
+        this.queryAnalyzers = queryAnalyzerMap;
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(indexAnalyzers, queryAnalyzers);
+    }
+
+    @Override
+    protected boolean isEqual(final AnalyzerContext analyzerContext) {
+        return Objects.equals(indexAnalyzers, queryAnalyzers);
     }
 
     @FunctionalInterface
@@ -99,7 +117,7 @@ public class AnalyzerContext {
 
     private final static String[] analyzerClassPrefixes = {StringUtils.EMPTY, "org.apache.lucene.analysis."};
 
-    public final static class AnalyzerMapBuilder {
+    final static class AnalyzerMapBuilder {
 
         private final ConstructorParametersImpl instanceFactory;
         private final ResourceLoader resourceLoader;

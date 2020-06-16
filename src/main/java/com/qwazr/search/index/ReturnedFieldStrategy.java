@@ -56,8 +56,8 @@ public interface ReturnedFieldStrategy {
                                     final Supplier<Set<String>> wildcardSupplier) {
         if (queryDefinition.returnedFields != null) {
             if (queryDefinition.returnedFields.contains("*")) {
-                if (!StringUtils.isEmpty(context.fieldMap.recordField))
-                    return new Record(context.fieldMap.recordField);
+                if (!StringUtils.isEmpty(context.fieldMap.fieldsContext.recordField))
+                    return new Record(context.fieldMap.fieldsContext.recordField);
                 else
                     return new Fields(context, wildcardSupplier.get());
             }
@@ -109,7 +109,7 @@ public interface ReturnedFieldStrategy {
             }
 
             @Override
-            public void binaryField(final FieldInfo fieldInfo, final byte[] value) throws IOException {
+            public void binaryField(final FieldInfo fieldInfo, final byte[] value) {
                 builder.setStoredFieldBytes(recordField, value);
             }
         }

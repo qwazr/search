@@ -42,7 +42,9 @@ abstract class RecordBuilder {
     }
 
     final void addRecord(final byte[] sourceBytes) {
-        documentBuilder.accept(null, fieldMap.recordField, new StoredField(fieldMap.recordField, sourceBytes));
+        documentBuilder.accept(
+            null, fieldMap.fieldsContext.recordField,
+            new StoredField(fieldMap.fieldsContext.recordField, sourceBytes));
     }
 
     // TODO type aware !

@@ -137,7 +137,7 @@ public abstract class JsonAbstractTest {
         IndexServiceInterface client = getClient();
         client.createUpdateSchema(SCHEMA_ERROR_NAME, null);
         Assert.assertNotNull(client.getIndex(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME));
-        FieldDefinition fieldDef = client.getField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description");
+        FieldDefinition<?> fieldDef = client.getField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description");
         Assert.assertNotNull(fieldDef);
         checkErrorStatusCode(() -> client.setField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description", fieldDef), 406);
         Assert.assertNotNull(client.getIndex(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME));
@@ -177,7 +177,7 @@ public abstract class JsonAbstractTest {
         Assert.assertTrue(schemas.contains(SCHEMA_NAME));
     }
 
-    public static void checkErrorStatusCode(RunnableEx runnable, int expectedStatusCode) {
+    public static void checkErrorStatusCode(RunnableEx<?> runnable, int expectedStatusCode) {
         try {
             runnable.run();
             Assert.fail("WebApplicationException was not thrown");

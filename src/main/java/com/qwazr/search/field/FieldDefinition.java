@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -171,7 +172,8 @@ public abstract class FieldDefinition<T extends FieldDefinition<T>> extends Equa
         return Objects.equals(type, f.type)
             && Objects.equals(analyzer, f.analyzer)
             && Objects.equals(indexAnalyzer, f.indexAnalyzer)
-            && Objects.equals(queryAnalyzer, f.queryAnalyzer);
+            && Objects.equals(queryAnalyzer, f.queryAnalyzer)
+            && Arrays.equals(copyFrom, f.copyFrom);
     }
 
     public final static TypeReference<Map<String, FieldDefinition<?>>> mapStringFieldTypeRef =

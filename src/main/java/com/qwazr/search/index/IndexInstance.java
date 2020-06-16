@@ -30,6 +30,7 @@ import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LoggerUtils;
@@ -109,6 +110,7 @@ final public class IndexInstance implements Closeable {
     private final ReentrantLock commitLock;
     private final ReentrantLock backupLock;
 
+    private volatile AnalyzerContext analyzerContext;
     private final UpdatableAnalyzers indexAnalyzers;
     private final UpdatableAnalyzers queryAnalyzers;
 
@@ -136,6 +138,7 @@ final public class IndexInstance implements Closeable {
         this.fieldMapLock = new ReentrantLock(true);
         this.fieldMap = builder.fieldMap;
         this.writerAndSearcher = builder.writerAndSearcher;
+        this.analyzerContext = builder.analyzerContext;
         this.indexAnalyzers = builder.indexAnalyzers;
         this.queryAnalyzers = builder.queryAnalyzers;
         this.settings = builder.settings;
@@ -168,12 +171,12 @@ final public class IndexInstance implements Closeable {
         return writerAndSearcher.search((indexSearcher, taxonomyReader) -> new IndexStatus(indexUuid,
             replicationSlave == null ? null : replicationSlave.getClientMasterUuid(), dataDirectory, indexSearcher,
             writerAndSearcher.getIndexWriter(), settings, localAnalyzerFactoryMap.keySet(),
-            fieldMap.getFieldDefinitionMap().keySet(), indexAnalyzers.getActiveAnalyzers(),
+            fieldMap.getFields().keySet(), indexAnalyzers.getActiveAnalyzers(),
             queryAnalyzers.getActiveAnalyzers()));
     }
 
     Map<String, FieldDefinition<?>> getFields() {
-        return fieldMap.getFieldDefinitionMap();
+        return fieldMap.getFields();
     }
 
     FieldStats getFieldStats(final String fieldName) throws IOException {
@@ -205,32 +208,42 @@ final public class IndexInstance implements Closeable {
     }
 
     private void refreshFieldsAnalyzers() {
-        final AnalyzerContext analyzerContext =
-            new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, true, globalAnalyzerFactoryMap,
-                localAnalyzerFactoryMap);
-        indexAnalyzers.update(analyzerContext.indexAnalyzerMap);
-        queryAnalyzers.update(analyzerContext.queryAnalyzerMap);
+        analyzerContext = new AnalyzerContext(
+            instanceFactory,
+            fileResourceLoader,
+            fieldMap,
+            true,
+            globalAnalyzerFactoryMap,
+            localAnalyzerFactoryMap);
+        indexAnalyzers.update(analyzerContext.indexAnalyzers);
+        queryAnalyzers.update(analyzerContext.queryAnalyzers);
     }
 
     void setFields(final Map<String, FieldDefinition<?>> fields) throws ServerException, IOException {
+        final boolean fieldChanged;
         fieldMapLock.lock();
         try {
+            final FieldsContext newFieldsContext = new FieldsContext(settings, fields);
             fileSet.writeFieldMap(fields);
-            fieldMap = new FieldMap(settings.primaryKey, fields, settings.sortedSetFacetField, settings.recordField);
+            fieldChanged = !Objects.equals(newFieldsContext, fieldMap.fieldsContext);
+            if (fieldChanged)
+                fieldMap = new FieldMap(newFieldsContext);
             refreshFieldsAnalyzers();
         } finally {
             fieldMapLock.unlock();
         }
+        if (fieldChanged)
+            reindex();
     }
 
     void setField(final String field_name, final FieldDefinition<?> field) throws IOException, ServerException {
-        final Map<String, FieldDefinition<?>> fields = new LinkedHashMap<>(fieldMap.getFieldDefinitionMap());
+        final Map<String, FieldDefinition<?>> fields = new LinkedHashMap<>(fieldMap.getFields());
         fields.put(field_name, field);
         setFields(fields);
     }
 
     void deleteField(final String field_name) throws IOException, ServerException {
-        final Map<String, FieldDefinition<?>> fields = new LinkedHashMap<>(fieldMap.getFieldDefinitionMap());
+        final Map<String, FieldDefinition<?>> fields = new LinkedHashMap<>(fieldMap.getFields());
         if (fields.remove(field_name) == null)
             throw new ServerException(Response.Status.NOT_FOUND,
                 "Field not found: " + field_name + " - Index: " + indexName);
@@ -239,6 +252,10 @@ final public class IndexInstance implements Closeable {
 
     LinkedHashMap<String, AnalyzerDefinition> getAnalyzers() {
         return analyzerDefinitionMap;
+    }
+
+    void reindex() {
+        //TODO;
     }
 
     private void updateLocalAnalyzers(boolean writeConfigFile) throws IOException {
@@ -646,10 +663,10 @@ final public class IndexInstance implements Closeable {
         return dataDirectory;
     }
 
-    void fillFields(final Map<String, FieldDefinition> fields) {
+    void fillFields(final Map<String, FieldDefinition<?>> fields) {
         if (fields == null)
             return;
-        this.fieldMap.getFieldDefinitionMap().forEach((name, fieldDef) -> {
+        this.fieldMap.getFields().forEach((name, fieldDef) -> {
             if (!fields.containsKey(name))
                 fields.put(name, fieldDef);
         });
@@ -664,32 +681,30 @@ final public class IndexInstance implements Closeable {
         });
     }
 
-    public static class ResourceInfo {
+    public static class ResourceInfo extends Equalizer.Immutable<ResourceInfo> {
 
         public final long lastModified;
         public final long length;
 
         public ResourceInfo() {
+            super(ResourceInfo.class);
             lastModified = 0;
             length = 0;
         }
 
         private ResourceInfo(final File file) {
+            super(ResourceInfo.class);
             lastModified = file.lastModified();
             length = file.length();
         }
 
         @Override
-        public int hashCode() {
-            int result = Long.hashCode(lastModified);
-            return 31 * result + Long.hashCode(length);
+        protected int computeHashCode() {
+            return Objects.hash(lastModified, length);
         }
 
         @Override
-        public boolean equals(final Object o) {
-            if (!(o instanceof ResourceInfo))
-                return false;
-            final ResourceInfo info = (ResourceInfo) o;
+        protected boolean isEqual(final ResourceInfo info) {
             return lastModified == info.lastModified && length == info.length;
         }
 

@@ -72,9 +72,9 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
         return new Leaf(fieldName, context);
     }
 
-    private void reduce(final GroupQueue groupQueue,
-                        final Map<Integer, RoaringDocIdSet> docIdMaps,
-                        final Int2IntLinkedOpenHashMap collapsedMap) {
+    private synchronized void reduce(final GroupQueue groupQueue,
+                                     final Map<Integer, RoaringDocIdSet> docIdMaps,
+                                     final Int2IntLinkedOpenHashMap collapsedMap) {
 
         // Fill the priority queue which the results of each segments
         getLeaves().forEach(leaf -> leaf.reduce(groupQueue));

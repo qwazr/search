@@ -163,19 +163,23 @@ public class CustomFieldDefinition extends FieldDefinition<CustomFieldDefinition
     @Override
     protected boolean isEqual(final CustomFieldDefinition f) {
         return super.isEqual(f) &&
-            Objects.equals(template, f.template) && Objects.equals(tokenized, f.tokenized) &&
-            Objects.equals(stored, f.stored) && Objects.equals(storeTermVectors, f.storeTermVectors) &&
+            Objects.equals(template, f.template) &&
+            Objects.equals(tokenized, f.tokenized) &&
+            Objects.equals(stored, f.stored) &&
+            Objects.equals(storeTermVectors, f.storeTermVectors) &&
             Objects.equals(storeTermVectorOffsets, f.storeTermVectorOffsets) &&
             Objects.equals(storeTermVectorPositions, f.storeTermVectorPositions) &&
             Objects.equals(storeTermVectorPayloads, f.storeTermVectorPayloads) &&
-            Objects.equals(omitNorms, f.omitNorms) && Objects.equals(indexOptions, f.indexOptions) &&
-            Objects.equals(docValuesType, f.docValuesType) &&
-            Objects.equals(indexDimensionCount, f.indexDimensionCount) &&
-            Objects.equals(dataDimensionCount, f.dataDimensionCount) &&
-            Objects.equals(dimensionNumBytes, f.dimensionNumBytes) && Objects.equals(attributes, f.attributes) &&
+            Objects.equals(omitNorms, f.omitNorms) &&
             Objects.equals(facetMultivalued, f.facetMultivalued) &&
             Objects.equals(facetHierarchical, f.facetHierarchical) &&
-            Objects.equals(facetRequireDimCount, f.facetRequireDimCount);
+            Objects.equals(facetRequireDimCount, f.facetRequireDimCount) &&
+            Objects.equals(indexOptions, f.indexOptions) &&
+            Objects.equals(docValuesType, f.docValuesType) &&
+            Objects.equals(dataDimensionCount, f.dataDimensionCount) &&
+            Objects.equals(indexDimensionCount, f.indexDimensionCount) &&
+            Objects.equals(dimensionNumBytes, f.dimensionNumBytes) &&
+            Objects.equals(attributes, f.attributes);
     }
 
     @Override

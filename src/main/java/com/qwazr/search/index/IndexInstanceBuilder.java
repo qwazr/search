@@ -86,6 +86,7 @@ class IndexInstanceBuilder {
 
     FieldMap fieldMap = null;
 
+    AnalyzerContext analyzerContext;
     UpdatableAnalyzers indexAnalyzers;
     UpdatableAnalyzers queryAnalyzers;
 
@@ -130,14 +131,12 @@ class IndexInstanceBuilder {
         localAnalyzerFactoryMap = fileSet.loadAnalyzerDefinitionMap();
         final Map<String, FieldDefinition<?>> fieldMapDefinition = fileSet.loadFieldMap();
 
-        fieldMap = fieldMapDefinition == null ? null : new FieldMap(settings.primaryKey, fieldMapDefinition,
-            settings.sortedSetFacetField, settings.recordField);
+        fieldMap = new FieldMap(new FieldsContext(settings, fieldMapDefinition));
 
-        final AnalyzerContext context =
-            new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap, false, globalAnalyzerFactoryMap,
-                localAnalyzerFactoryMap);
-        indexAnalyzers = new UpdatableAnalyzers(context.indexAnalyzerMap);
-        queryAnalyzers = new UpdatableAnalyzers(context.queryAnalyzerMap);
+        analyzerContext = new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap,
+            false, globalAnalyzerFactoryMap, localAnalyzerFactoryMap);
+        indexAnalyzers = new UpdatableAnalyzers(analyzerContext.indexAnalyzers);
+        queryAnalyzers = new UpdatableAnalyzers(analyzerContext.queryAnalyzers);
 
         // Open and lock the index directories
         dataDirectory = getDirectory(settings, fileSet.dataDirectory);

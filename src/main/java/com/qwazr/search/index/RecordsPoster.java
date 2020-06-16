@@ -139,7 +139,7 @@ interface RecordsPoster {
                               final IndexWriter indexWriter,
                               final TaxonomyWriter taxonomyWriter) {
             final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
-            if (!StringUtils.isEmpty(fieldMap.recordField))
+            if (!StringUtils.isEmpty(fieldMap.fieldsContext.recordField))
                 return new IndexMapDocumentWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
             else
                 return new IndexMapDocument(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
@@ -193,7 +193,7 @@ interface RecordsPoster {
                                  final IndexWriter indexWriter,
                                  final TaxonomyWriter taxonomyWriter) {
             final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
-            if (!StringUtils.isEmpty(fieldMap.recordField))
+            if (!StringUtils.isEmpty(fieldMap.fieldsContext.recordField))
                 return new IndexObjectDocumentWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
             else
                 return new IndexObjectDocument(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
@@ -255,7 +255,7 @@ interface RecordsPoster {
                                    final IndexWriter indexWriter,
                                    final TaxonomyWriter taxonomyWriter) {
             final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
-            if (!StringUtils.isEmpty(fieldMap.recordField))
+            if (!StringUtils.isEmpty(fieldMap.fieldsContext.recordField))
                 return new IndexJsonNodeObjectWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
             else
                 return new IndexJsonNodeObject(documentBuilder, fieldMap, indexWriter, taxonomyWriter);

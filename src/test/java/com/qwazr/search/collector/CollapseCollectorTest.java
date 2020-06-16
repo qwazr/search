@@ -26,7 +26,6 @@ import com.qwazr.utils.RandomUtils;
 import org.apache.lucene.util.BytesRef;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -37,7 +36,7 @@ import java.util.Collection;
 public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexService();
         Collection<IndexRecord.NoTaxonomy> indexRecords = new ArrayList<>();
         int k = 0;

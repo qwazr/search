@@ -17,6 +17,8 @@ package com.qwazr.search.query;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.FieldMap;
+import com.qwazr.search.index.FieldsContext;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import java.util.Map;
 
@@ -24,11 +26,9 @@ public class QueryContextTest implements QueryContext {
 
     private final FieldMap fieldMap;
 
-    public QueryContextTest(final String primaryKey,
-                            final String recordField,
-                            final String sortedSetFacetField,
+    public QueryContextTest(final IndexSettingsDefinition indexSettings,
                             final Map<String, FieldDefinition<?>> fields) {
-        fieldMap = new FieldMap(primaryKey, fields, sortedSetFacetField, recordField);
+        fieldMap = new FieldMap(new FieldsContext(indexSettings, fields));
     }
 
     @Override
@@ -40,12 +40,8 @@ public class QueryContextTest implements QueryContext {
     public void close() {
     }
 
-    public static QueryContextTest of(Map<String, FieldDefinition<?>> fields) {
-        return new QueryContextTest(FieldDefinition.ID_FIELD,
-            FieldDefinition.RECORD_FIELD,
-            FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD,
-            fields
-        );
+    public static QueryContextTest of(final Map<String, FieldDefinition<?>> fields) {
+        return new QueryContextTest(IndexSettingsDefinition.of().build(), fields);
     }
 
     public static final QueryContextTest DEFAULT = of(Map.of());

@@ -22,6 +22,7 @@ import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.field.SmartDynamicTypes;
 import com.qwazr.utils.WildcardMatcher;
 import java.util.Collections;
+import java.util.Objects;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.FacetsConfig;
 
@@ -37,41 +38,27 @@ import java.util.function.Function;
 public class FieldMap {
 
     private final SmartDynamicTypes smartDynamicTypes;
-    private final String primaryKey;
-    private final Map<String, FieldDefinition<?>> fieldDefinitionMap;
     private final Map<String, FieldTypeInterface> nameDefMap;
     private final Collection<Pair<WildcardMatcher, FieldTypeInterface>> wildcardMap;
     private final FacetsConfig facetsConfig;
-    public final String sortedSetFacetField;
-    public final String recordField;
+    public final FieldsContext fieldsContext;
 
-    public FieldMap(final String primaryKey,
-                    final Map<String, FieldDefinition<?>> fieldDefinitions,
-                    final String sortedSetFacetField,
-                    final String recordField) {
+    public FieldMap(@NotNull final FieldsContext fieldsContext) {
 
-        this.primaryKey = primaryKey == null || primaryKey.isBlank() ? FieldDefinition.ID_FIELD : primaryKey;
-
-        this.smartDynamicTypes = new SmartDynamicTypes(SmartDynamicTypes.primary(primaryKey));
-
-        this.sortedSetFacetField =
-            sortedSetFacetField == null ? FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD : sortedSetFacetField;
-
-        this.recordField = recordField;
+        this.fieldsContext = Objects.requireNonNull(fieldsContext, "The fieldsContext is null");
+        this.smartDynamicTypes = new SmartDynamicTypes(SmartDynamicTypes.primary(fieldsContext.primaryKey));
 
         nameDefMap = new HashMap<>();
         wildcardMap = new ArrayList<>();
 
-        this.fieldDefinitionMap = Collections.unmodifiableMap(fieldDefinitions);
-
-        this.fieldDefinitionMap.forEach((name, definition) -> {
+        fieldsContext.fields.forEach((name, definition) -> {
             final FieldTypeInterface fieldType;
             if (name.indexOf('*') != -1 || name.indexOf('?') != -1) {
                 final WildcardMatcher wildcardMatcher = new WildcardMatcher(name);
-                fieldType = definition.newFieldType(name, wildcardMatcher, primaryKey);
+                fieldType = definition.newFieldType(name, wildcardMatcher, fieldsContext.primaryKey);
                 wildcardMap.add(Pair.of(wildcardMatcher, fieldType));
             } else {
-                fieldType = definition.newFieldType(name, null, primaryKey);
+                fieldType = definition.newFieldType(name, null, fieldsContext.primaryKey);
             }
             nameDefMap.put(name, fieldType);
         });
@@ -79,7 +66,7 @@ public class FieldMap {
         // Handle copy-to
         final HashMap<String, FieldTypeInterface> newFields = new HashMap<>();
         nameDefMap.forEach((name, fieldType) -> {
-            final FieldDefinition definition = fieldType.getDefinition();
+            final FieldDefinition<?> definition = fieldType.getDefinition();
             if (definition.copyFrom == null)
                 return;
             for (String copyFrom : definition.copyFrom) {
@@ -97,7 +84,7 @@ public class FieldMap {
     }
 
     public final boolean isEmpty() {
-        return fieldDefinitionMap.isEmpty();
+        return fieldsContext.fields.isEmpty();
     }
 
     public final void forEach(final BiConsumer<String, FieldTypeInterface> consumer) {
@@ -122,9 +109,9 @@ public class FieldMap {
         }
 
         // Check record and primary key fields
-        if (recordField != null && recordField.equals(concreteFieldName))
+        if (fieldsContext.recordField != null && fieldsContext.recordField.equals(concreteFieldName))
             return smartDynamicTypes.getDoNothingType();
-        if (primaryKey != null && primaryKey.equals(concreteFieldName))
+        if (fieldsContext.primaryKey != null && fieldsContext.primaryKey.equals(concreteFieldName))
             return smartDynamicTypes.getPrimaryKeyType();
 
         //Second chance, using the wildcard collection
@@ -146,7 +133,7 @@ public class FieldMap {
             return fieldType;
 
         // Guess field type from value
-        final FieldTypeInterface smartFieldType = smartDynamicTypes.getTypeFromValue(primaryKey, concreteFieldName, contentValue);
+        final FieldTypeInterface smartFieldType = smartDynamicTypes.getTypeFromValue(fieldsContext.primaryKey, concreteFieldName, contentValue);
         if (smartFieldType != null)
             return smartFieldType;
 
@@ -164,12 +151,12 @@ public class FieldMap {
             "The field has not been found: " + (genericFieldName == null ? concreteFieldName : genericFieldName));
     }
 
-    final Map<String, FieldDefinition<?>> getFieldDefinitionMap() {
-        return fieldDefinitionMap;
+    final Map<String, FieldDefinition<?>> getFields() {
+        return fieldsContext.fields;
     }
 
     final String getPrimaryKey() {
-        return primaryKey;
+        return fieldsContext.primaryKey;
     }
 
     private void checkFacetConfig(final String genericFieldName, final String concreteFieldName) {
@@ -179,7 +166,7 @@ public class FieldMap {
         if (fieldType == null)
             return;
         fieldType.applyFacetsConfig(concreteFieldName, this, facetsConfig);
-        final FieldDefinition definition = fieldType.getDefinition();
+        final FieldDefinition<?> definition = fieldType.getDefinition();
         if (definition == null)
             return;
         if (definition instanceof CustomFieldDefinition) {
@@ -188,7 +175,7 @@ public class FieldMap {
                 customDef.template == null ? FieldDefinition.Template.NONE : customDef.template;
             switch (template) {
                 case SortedSetDocValuesFacetField:
-                    facetsConfig.setIndexFieldName(concreteFieldName, sortedSetFacetField);
+                    facetsConfig.setIndexFieldName(concreteFieldName, fieldsContext.sortedSetFacetField);
                     break;
                 case FacetField:
                     facetsConfig.setIndexFieldName(concreteFieldName, FieldDefinition.TAXONOMY_FACET_FIELD);
@@ -245,7 +232,7 @@ public class FieldMap {
     }
 
     final String getSortedSetFacetField() {
-        return sortedSetFacetField;
+        return fieldsContext.sortedSetFacetField;
     }
 
     final Set<String> getStaticFieldSet() {

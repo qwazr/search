@@ -98,7 +98,8 @@ public class SmartFieldDefinition extends FieldDefinition<SmartFieldDefinition> 
             && Objects.equals(facet, f.facet)
             && Objects.equals(index, f.index)
             && Objects.equals(sort, f.sort)
-            && Objects.equals(stored, f.stored);
+            && Objects.equals(stored, f.stored)
+            && Objects.equals(maxKeywordLength, f.maxKeywordLength);
     }
 
     @Override
