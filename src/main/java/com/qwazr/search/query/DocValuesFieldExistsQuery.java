@@ -41,7 +41,7 @@ public class DocValuesFieldExistsQuery extends AbstractFieldQuery<DocValuesField
 
     public DocValuesFieldExistsQuery(final IndexSettingsDefinition settings,
                                      final Map<String, AnalyzerDefinition> analyzers,
-                                     final Map<String, FieldDefinition> fields) {
+                                     final Map<String, FieldDefinition<?>> fields) {
         super(DocValuesFieldExistsQuery.class, DOC, null, getTextField(fields, () -> "anyField"));
     }
 

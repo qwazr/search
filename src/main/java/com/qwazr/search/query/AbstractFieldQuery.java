@@ -98,6 +98,11 @@ public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extend
         return Objects.equals(genericField, q.genericField) && Objects.equals(field, q.field);
     }
 
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(genericField, field);
+    }
+
     public static abstract class AbstractFieldBuilder<Builder extends AbstractFieldBuilder<Builder>> {
 
         final public String genericField;

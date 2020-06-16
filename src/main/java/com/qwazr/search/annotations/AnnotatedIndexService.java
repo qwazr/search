@@ -78,9 +78,9 @@ public class AnnotatedIndexService<T> {
 
     private final FieldMapWrapper<T> schemaFieldMapWrapper;
 
-    private final LinkedHashMap<String, Field> fieldMap;
+    private final Map<String, Field> fieldMap;
 
-    private final LinkedHashMap<String, FieldDefinition> fieldDefinitions;
+    private final Map<String, FieldDefinition<?>> fieldDefinitions;
 
     /**
      * Create a new index service. A class with Index and IndexField annotations.
@@ -92,8 +92,11 @@ public class AnnotatedIndexService<T> {
      * @param settings             any additional settings
      * @throws URISyntaxException if the syntax of the remote URI is wrong
      */
-    public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass,
-                                 final String schemaName, final String indexName, final IndexSettingsDefinition settings)
+    public AnnotatedIndexService(final IndexServiceInterface indexService,
+                                 final Class<T> indexDefinitionClass,
+                                 final String schemaName,
+                                 final String indexName,
+                                 final IndexSettingsDefinition settings)
         throws URISyntaxException {
         Objects.requireNonNull(indexService, "The indexService parameter is null");
         Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
@@ -230,7 +233,7 @@ public class AnnotatedIndexService<T> {
      *
      * @return the field map
      */
-    public Map<String, FieldDefinition> createUpdateFields() {
+    public Map<String, FieldDefinition<?>> createUpdateFields() {
         return indexService.setFields(schemaName, indexName, fieldDefinitions);
     }
 
@@ -274,11 +277,11 @@ public class AnnotatedIndexService<T> {
      * @return the changed fields
      */
     public Map<String, FieldStatus> getFieldChanges() {
-        final Map<String, FieldDefinition> indexFields = indexService.getFields(schemaName, indexName);
+        final Map<String, FieldDefinition<?>> indexFields = indexService.getFields(schemaName, indexName);
         final Map<String, FieldStatus> fieldChanges = new HashMap<>();
         fieldMap.forEach((name, propertyField) -> {
-            final FieldDefinition annotatedField = fieldDefinitions.get(name);
-            final FieldDefinition indexField = indexFields == null ? null : indexFields.get(name);
+            final FieldDefinition<?> annotatedField = fieldDefinitions.get(name);
+            final FieldDefinition<?> indexField = indexFields == null ? null : indexFields.get(name);
             if (indexField == null)
                 fieldChanges.put(name, FieldStatus.EXISTS_ONLY_IN_ANNOTATION);
             else if (!indexField.equals(annotatedField))
@@ -413,10 +416,9 @@ public class AnnotatedIndexService<T> {
      * Post a collection of document to the index
      *
      * @param rows a collection of document to index
-     * @throws IOException          if any I/O error occurs
-     * @throws InterruptedException if the process is interrupted
+     * @throws IOException if any I/O error occurs
      */
-    public void postDocuments(final Collection<T> rows) throws IOException, InterruptedException {
+    public void postDocuments(final Collection<T> rows) throws IOException {
         postDocuments(rows, null);
     }
 
@@ -453,8 +455,8 @@ public class AnnotatedIndexService<T> {
      * @param commitUserData the optional user data
      * @throws IOException if any I/O error occurs
      */
-    public void updateDocumentsValues(final Collection<T> rows, final Map<String, String> commitUserData)
-        throws IOException {
+    public void updateDocumentsValues(final Collection<T> rows,
+                                      final Map<String, String> commitUserData) throws IOException {
         Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
         if (annotatedService != null)
             annotatedService.updateDocsValues(schemaName, indexName, fieldMap, rows, commitUserData);
@@ -467,8 +469,7 @@ public class AnnotatedIndexService<T> {
      * Update the DocValues of a collection of document
      *
      * @param rows a collection of document with a collection of DocValues to update
-     * @throws IOException          if any I/O error occurs
-     * @throws InterruptedException if the process is interrupted
+     * @throws IOException if any I/O error occurs
      */
     public void updateDocumentsValues(final Collection<T> rows) throws IOException {
         updateDocumentsValues(rows, null);
@@ -532,11 +533,11 @@ public class AnnotatedIndexService<T> {
         return indexService.getIndex(schemaName, indexName);
     }
 
-    public Map<String, FieldDefinition> getFields() {
+    public Map<String, FieldDefinition<?>> getFields() {
         return indexService.getFields(schemaName, indexName);
     }
 
-    public FieldDefinition getField(final String fieldName) {
+    public FieldDefinition<?> getField(final String fieldName) {
         return indexService.getField(schemaName, indexName, fieldName);
     }
 
@@ -544,7 +545,7 @@ public class AnnotatedIndexService<T> {
         return indexService.getFieldStats(schemaName, indexName, fieldName);
     }
 
-    public void setField(final String fieldName, final FieldDefinition fieldDefinition) {
+    public void setField(final String fieldName, final FieldDefinition<?> fieldDefinition) {
         indexService.setField(schemaName, indexName, fieldName, fieldDefinition);
     }
 

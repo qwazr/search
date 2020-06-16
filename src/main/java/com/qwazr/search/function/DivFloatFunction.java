@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,26 +27,33 @@ import java.util.Objects;
 
 public class DivFloatFunction extends AbstractValueSource<DivFloatFunction> {
 
-	public final AbstractValueSource aVals;
-	public final AbstractValueSource bVals;
+    public final AbstractValueSource<?> aVals;
+    public final AbstractValueSource<?> bVals;
 
-	@JsonCreator
-	public DivFloatFunction(@JsonProperty("aVals") AbstractValueSource aVals,
-			@JsonProperty("bVals") AbstractValueSource bVals) {
-		super(DivFloatFunction.class);
-		this.aVals = Objects.requireNonNull(aVals, "aVals value source is missing");
-		this.bVals = Objects.requireNonNull(bVals, "bVals value source is missing");
-	}
+    @JsonCreator
+    public DivFloatFunction(@JsonProperty("aVals") AbstractValueSource<?> aVals,
+                            @JsonProperty("bVals") AbstractValueSource<?> bVals) {
+        super(DivFloatFunction.class);
+        this.aVals = Objects.requireNonNull(aVals, "aVals value source is missing");
+        this.bVals = Objects.requireNonNull(bVals, "bVals value source is missing");
+    }
 
-	@Override
-	public ValueSource getValueSource(final QueryContext queryContext)
-			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
-		return new org.apache.lucene.queries.function.valuesource.DivFloatFunction(aVals.getValueSource(queryContext),
-				bVals.getValueSource(queryContext));
-	}
+    @Override
+    public ValueSource getValueSource(final QueryContext queryContext)
+        throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+        return new org.apache.lucene.queries.function.valuesource.DivFloatFunction(
+            aVals.getValueSource(queryContext),
+            bVals.getValueSource(queryContext)
+        );
+    }
 
-	@Override
-	protected boolean isEqual(DivFloatFunction query) {
-		return Objects.equals(aVals, query.aVals) && Objects.equals(bVals, query.bVals);
-	}
+    @Override
+    protected boolean isEqual(DivFloatFunction query) {
+        return Objects.equals(aVals, query.aVals) && Objects.equals(bVals, query.bVals);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(aVals, bVals);
+    }
 }

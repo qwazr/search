@@ -27,35 +27,40 @@ import java.util.Objects;
 
 public class FunctionQuery extends AbstractQuery<FunctionQuery> {
 
-	final public AbstractValueSource<?> source;
+    final public AbstractValueSource<?> source;
 
-	@JsonCreator
-	public FunctionQuery(@JsonProperty("source") final AbstractValueSource<?> source) {
-		super(FunctionQuery.class);
-		this.source = Objects.requireNonNull(source, "The source property is missing");
-	}
+    @JsonCreator
+    public FunctionQuery(@JsonProperty("source") final AbstractValueSource<?> source) {
+        super(FunctionQuery.class);
+        this.source = Objects.requireNonNull(source, "The source property is missing");
+    }
 
-	@Override
-	final public org.apache.lucene.queries.function.FunctionQuery getQuery(final QueryContext queryContext)
-			throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
-		return new org.apache.lucene.queries.function.FunctionQuery(source.getValueSource(queryContext));
-	}
+    @Override
+    final public org.apache.lucene.queries.function.FunctionQuery getQuery(final QueryContext queryContext)
+        throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+        return new org.apache.lucene.queries.function.FunctionQuery(source.getValueSource(queryContext));
+    }
 
-	public static org.apache.lucene.queries.function.FunctionQuery[] getQueries(final FunctionQuery[] scoringQueries,
-			final QueryContext queryContext)
-			throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
-		if (scoringQueries == null)
-			return null;
-		final org.apache.lucene.queries.function.FunctionQuery[] functionQueries =
-				new org.apache.lucene.queries.function.FunctionQuery[scoringQueries.length];
-		int i = 0;
-		for (FunctionQuery scoringQuery : scoringQueries)
-			functionQueries[i++] = scoringQuery.getQuery(queryContext);
-		return functionQueries;
-	}
+    public static org.apache.lucene.queries.function.FunctionQuery[] getQueries(final FunctionQuery[] scoringQueries,
+                                                                                final QueryContext queryContext)
+        throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
+        if (scoringQueries == null)
+            return null;
+        final org.apache.lucene.queries.function.FunctionQuery[] functionQueries =
+            new org.apache.lucene.queries.function.FunctionQuery[scoringQueries.length];
+        int i = 0;
+        for (FunctionQuery scoringQuery : scoringQueries)
+            functionQueries[i++] = scoringQuery.getQuery(queryContext);
+        return functionQueries;
+    }
 
-	@Override
-	protected boolean isEqual(FunctionQuery q) {
-		return Objects.equals(source, q.source);
-	}
+    @Override
+    protected boolean isEqual(FunctionQuery q) {
+        return Objects.equals(source, q.source);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hashCode(source);
+    }
 }

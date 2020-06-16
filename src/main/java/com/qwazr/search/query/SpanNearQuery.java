@@ -31,18 +31,19 @@ import org.apache.lucene.search.spans.SpanQuery;
 public class SpanNearQuery extends AbstractFieldSpanQuery<SpanNearQuery> {
 
     final public List<AbstractSpanQuery<?>> clauses;
-    final public Boolean in_order;
+    @JsonProperty("in_order")
+    final public Boolean inOrder;
     final public Integer slop;
 
     @JsonCreator
     public SpanNearQuery(@JsonProperty("generic_field") final String genericField,
                          @JsonProperty("clauses") final List<AbstractSpanQuery<?>> clauses,
                          @JsonProperty("field") final String field,
-                         @JsonProperty("in_order") final Boolean in_order,
+                         @JsonProperty("in_order") final Boolean inOrder,
                          @JsonProperty("slop") final Integer slop) {
         super(SpanNearQuery.class, genericField, field);
         this.clauses = clauses;
-        this.in_order = in_order;
+        this.inOrder = inOrder;
         this.slop = slop;
     }
 
@@ -55,7 +56,13 @@ public class SpanNearQuery extends AbstractFieldSpanQuery<SpanNearQuery> {
     @JsonIgnore
     protected boolean isEqual(final SpanNearQuery q) {
         return super.isEqual(q) && CollectionsUtils.equals(clauses, q.clauses) &&
-            Objects.equals(in_order, q.in_order) && Objects.equals(slop, q.slop);
+            Objects.equals(inOrder, q.inOrder) && Objects.equals(slop, q.slop);
+    }
+
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(field, clauses, inOrder, slop);
     }
 
     @Override
@@ -64,7 +71,7 @@ public class SpanNearQuery extends AbstractFieldSpanQuery<SpanNearQuery> {
         final org.apache.lucene.search.spans.SpanNearQuery.Builder builder =
             new org.apache.lucene.search.spans.SpanNearQuery.Builder(
                 resolveFullTextField(queryContext.getFieldMap(), genericField, field, StringUtils.EMPTY),
-                in_order == null ? false : in_order);
+                inOrder == null ? false : inOrder);
         if (slop != null)
             builder.setSlop(slop);
         if (clauses != null)

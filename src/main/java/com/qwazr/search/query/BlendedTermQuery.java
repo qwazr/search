@@ -24,8 +24,11 @@ import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
+import com.qwazr.utils.Equalizer;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,7 +36,7 @@ import org.apache.lucene.search.Query;
 
 public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
 
-    public static class Term {
+    public static class Term extends Equalizer.Immutable<Term> {
 
         @JsonProperty("generic_field")
         public final String genericField;
@@ -44,6 +47,7 @@ public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
         @JsonCreator
         public Term(@JsonProperty("generic_field") final String genericField, @JsonProperty("field") final String field,
                     @JsonProperty("value") final Object value, @JsonProperty("boost") final Float boost) {
+            super(Term.class);
             this.genericField = genericField;
             this.field = field;
             this.value = value;
@@ -63,17 +67,12 @@ public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
         }
 
         @Override
-        public int hashCode() {
+        protected int computeHashCode() {
             return Objects.hash(genericField, field, value, boost);
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (!(o instanceof Term))
-                return false;
-            if (o == this)
-                return true;
-            final Term t = (Term) o;
+        protected boolean isEqual(Term t) {
             return Objects.equals(genericField, t.genericField) && Objects.equals(field, t.field) &&
                 Objects.equals(value, t.value) && Objects.equals(boost, t.boost);
         }
@@ -91,7 +90,7 @@ public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
 
     public BlendedTermQuery(final IndexSettingsDefinition indexSettingsDefinition,
                             final Map<String, AnalyzerDefinition> analyzers,
-                            final Map<String, FieldDefinition> fields) {
+                            final Map<String, FieldDefinition<?>> fields) {
         super(BlendedTermQuery.class, DOC);
         final String field = getFullTextField(fields,
             () -> getTextField(fields,
@@ -124,6 +123,11 @@ public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
         if (terms != null)
             terms.forEach(term -> term.add(queryContext.getFieldMap(), builder));
         return builder.build();
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hashCode(terms);
     }
 
     @Override

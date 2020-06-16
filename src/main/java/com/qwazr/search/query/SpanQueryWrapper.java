@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,32 +30,37 @@ import java.util.Objects;
 
 public class SpanQueryWrapper extends AbstractSpanQuery<SpanQueryWrapper> {
 
-	@JsonProperty("wrapped_query")
-	final public AbstractQuery wrappedQuery;
+    @JsonProperty("wrapped_query")
+    final public AbstractQuery<?> wrappedQuery;
 
-	@JsonCreator
-	public SpanQueryWrapper(@JsonProperty("wrapped_query") final AbstractQuery wrappedQuery) {
-		super(SpanQueryWrapper.class);
-		this.wrappedQuery = wrappedQuery;
-	}
+    @JsonCreator
+    public SpanQueryWrapper(@JsonProperty("wrapped_query") final AbstractQuery<?> wrappedQuery) {
+        super(SpanQueryWrapper.class);
+        this.wrappedQuery = wrappedQuery;
+    }
 
-	@Override
-	@JsonIgnore
-	final public SpanQuery getQuery(final QueryContext queryContext)
-			throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
-		final Query subQuery = wrappedQuery.getQuery(queryContext);
-		if (subQuery instanceof SpanQuery)
-			return (SpanQuery) subQuery;
-		else if (subQuery instanceof MultiTermQuery)
-			return new org.apache.lucene.search.spans.SpanMultiTermQueryWrapper((MultiTermQuery) subQuery);
-		else if (subQuery instanceof org.apache.lucene.search.TermQuery)
-			return new org.apache.lucene.search.spans.SpanTermQuery(
-					((org.apache.lucene.search.TermQuery) subQuery).getTerm());
-		throw new ParseException("Cannot convert " + subQuery.getClass().getName() + " as SpanQuery");
-	}
+    @Override
+    @JsonIgnore
+    final public SpanQuery getQuery(final QueryContext queryContext)
+        throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
+        final Query subQuery = wrappedQuery.getQuery(queryContext);
+        if (subQuery instanceof SpanQuery)
+            return (SpanQuery) subQuery;
+        else if (subQuery instanceof MultiTermQuery)
+            return new org.apache.lucene.search.spans.SpanMultiTermQueryWrapper((MultiTermQuery) subQuery);
+        else if (subQuery instanceof org.apache.lucene.search.TermQuery)
+            return new org.apache.lucene.search.spans.SpanTermQuery(
+                ((org.apache.lucene.search.TermQuery) subQuery).getTerm());
+        throw new ParseException("Cannot convert " + subQuery.getClass().getName() + " as SpanQuery");
+    }
 
-	@Override
-	protected boolean isEqual(SpanQueryWrapper q) {
-		return Objects.equals(wrappedQuery, q.wrappedQuery);
-	}
+    @Override
+    protected boolean isEqual(SpanQueryWrapper q) {
+        return Objects.equals(wrappedQuery, q.wrappedQuery);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hashCode(wrappedQuery);
+    }
 }

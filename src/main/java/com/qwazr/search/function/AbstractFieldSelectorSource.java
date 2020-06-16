@@ -20,7 +20,7 @@ import org.apache.lucene.search.SortedNumericSelector;
 import java.util.Objects;
 
 public abstract class AbstractFieldSelectorSource<T extends AbstractFieldSelectorSource<T>>
-        extends AbstractFieldSource<T> {
+    extends AbstractFieldSource<T> {
 
     public final SortedNumericSelector.Type selector;
 
@@ -31,7 +31,7 @@ public abstract class AbstractFieldSelectorSource<T extends AbstractFieldSelecto
     }
 
     @Override
-    public boolean isEqual(final AbstractFieldSelectorSource source) {
+    public boolean isEqual(final T source) {
         return super.isEqual(source) && Objects.equals(selector, source.selector);
     }
 }

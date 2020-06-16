@@ -26,12 +26,17 @@ import java.util.Objects;
 
 public class JoinQuery extends AbstractQuery<JoinQuery> {
 
-    final public String from_index;
-    final public String from_field;
-    final public String to_field;
-    final public Boolean multiple_values_per_document;
-    final public ScoreMode score_mode;
-    final public AbstractQuery<?> from_query;
+    @JsonProperty("from_index")
+    final public String fromIndex;
+    @JsonProperty("from_field")
+    final public String fromField;
+    final public String toField;
+    @JsonProperty("multiple_values_per_document")
+    final public Boolean multipleValuesPerDocument;
+    @JsonProperty("score_mode")
+    final public ScoreMode scoreMode;
+    @JsonProperty("from_query")
+    final public AbstractQuery<?> fromQuery;
 
     @JsonCreator
     public JoinQuery(@JsonProperty("from_index") final String fromIndex,
@@ -41,25 +46,31 @@ public class JoinQuery extends AbstractQuery<JoinQuery> {
                      @JsonProperty("score_mode") final ScoreMode scoreMode,
                      @JsonProperty("from_query") final AbstractQuery<?> fromQuery) {
         super(JoinQuery.class);
-        this.from_index = fromIndex;
-        this.from_field = fromField;
-        this.to_field = toField;
-        this.multiple_values_per_document = multipleValuesPerDocument;
-        this.score_mode = scoreMode;
-        this.from_query = fromQuery;
+        this.fromIndex = fromIndex;
+        this.fromField = fromField;
+        this.toField = toField;
+        this.multipleValuesPerDocument = multipleValuesPerDocument;
+        this.scoreMode = scoreMode;
+        this.fromQuery = fromQuery;
     }
 
     @Override
     final public Query getQuery(final QueryContext queryContext) throws IOException {
-        return queryContext.getIndex(from_index).createJoinQuery(this);
+        return queryContext.getIndex(fromIndex).createJoinQuery(this);
     }
 
     @Override
-    protected boolean isEqual(JoinQuery q) {
-        return Objects.equals(from_query, q.from_query) && Objects.equals(from_field, q.from_field) &&
-            Objects.equals(to_field, q.to_field) &&
-            Objects.equals(multiple_values_per_document, q.multiple_values_per_document) &&
-            Objects.equals(score_mode, q.score_mode) && Objects.equals(from_query, q.from_query);
+    protected boolean isEqual(final JoinQuery q) {
+        return Objects.equals(fromIndex, q.fromIndex)
+            && Objects.equals(fromField, q.fromField)
+            && Objects.equals(toField, q.toField)
+            && Objects.equals(multipleValuesPerDocument, q.multipleValuesPerDocument)
+            && Objects.equals(scoreMode, q.scoreMode)
+            && Objects.equals(fromQuery, q.fromQuery);
     }
 
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(fromIndex, fromField, toField, multipleValuesPerDocument, scoreMode, fromQuery);
+    }
 }

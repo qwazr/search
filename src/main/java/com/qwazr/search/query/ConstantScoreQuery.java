@@ -44,7 +44,7 @@ public class ConstantScoreQuery extends AbstractQuery<ConstantScoreQuery> {
 
     public ConstantScoreQuery(final IndexSettingsDefinition settings,
                               final Map<String, AnalyzerDefinition> analyzers,
-                              final Map<String, FieldDefinition> fields) {
+                              final Map<String, FieldDefinition<?>> fields) {
         super(ConstantScoreQuery.class, DOC);
         query = new TermQuery(settings, analyzers, fields);
     }
@@ -56,7 +56,12 @@ public class ConstantScoreQuery extends AbstractQuery<ConstantScoreQuery> {
     }
 
     @Override
-    protected boolean isEqual(ConstantScoreQuery q) {
+    protected boolean isEqual(final ConstantScoreQuery q) {
         return Objects.equals(query, q.query);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hashCode(query);
     }
 }

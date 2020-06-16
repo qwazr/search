@@ -106,6 +106,11 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
     }
 
     @Override
+    protected int computeHashCode() {
+        return Objects.hash(fieldsBoosts, defaultOperator, minNumberShouldMatch, tieBreakerMultiplier);
+    }
+
+    @Override
     protected boolean isEqual(MultiFieldQuery q) {
         return CollectionsUtils.equals(fieldsBoosts, q.fieldsBoosts) &&
             CollectionsUtils.equals(fieldsDisabledGraph, q.fieldsDisabledGraph) &&

@@ -172,7 +172,7 @@ final public class IndexInstance implements Closeable {
             queryAnalyzers.getActiveAnalyzers()));
     }
 
-    Map<String, FieldDefinition> getFields() {
+    Map<String, FieldDefinition<?>> getFields() {
         return fieldMap.getFieldDefinitionMap();
     }
 
@@ -212,7 +212,7 @@ final public class IndexInstance implements Closeable {
         queryAnalyzers.update(analyzerContext.queryAnalyzerMap);
     }
 
-    void setFields(final Map<String, FieldDefinition> fields) throws ServerException, IOException {
+    void setFields(final Map<String, FieldDefinition<?>> fields) throws ServerException, IOException {
         fieldMapLock.lock();
         try {
             fileSet.writeFieldMap(fields);
@@ -223,14 +223,14 @@ final public class IndexInstance implements Closeable {
         }
     }
 
-    void setField(final String field_name, final FieldDefinition field) throws IOException, ServerException {
-        final LinkedHashMap<String, FieldDefinition> fields = new LinkedHashMap<>(fieldMap.getFieldDefinitionMap());
+    void setField(final String field_name, final FieldDefinition<?> field) throws IOException, ServerException {
+        final Map<String, FieldDefinition<?>> fields = new LinkedHashMap<>(fieldMap.getFieldDefinitionMap());
         fields.put(field_name, field);
         setFields(fields);
     }
 
     void deleteField(final String field_name) throws IOException, ServerException {
-        final LinkedHashMap<String, FieldDefinition> fields = new LinkedHashMap<>(fieldMap.getFieldDefinitionMap());
+        final Map<String, FieldDefinition<?>> fields = new LinkedHashMap<>(fieldMap.getFieldDefinitionMap());
         if (fields.remove(field_name) == null)
             throw new ServerException(Response.Status.NOT_FOUND,
                 "Field not found: " + field_name + " - Index: " + indexName);
@@ -317,12 +317,12 @@ final public class IndexInstance implements Closeable {
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContext queryContext = buildQueryContext(indexSearcher, taxonomyReader)) {
-                    final Query fromQuery = joinQuery.from_query == null ?
+                    final Query fromQuery = joinQuery.fromQuery == null ?
                         new MatchAllDocsQuery() :
-                        joinQuery.from_query.getQuery(queryContext);
-                    return JoinUtil.createJoinQuery(joinQuery.from_field, joinQuery.multiple_values_per_document,
-                        joinQuery.to_field, fromQuery, indexSearcher,
-                        joinQuery.score_mode == null ? ScoreMode.None : joinQuery.score_mode);
+                        joinQuery.fromQuery.getQuery(queryContext);
+                    return JoinUtil.createJoinQuery(joinQuery.fromField, joinQuery.multipleValuesPerDocument,
+                        joinQuery.toField, fromQuery, indexSearcher,
+                        joinQuery.scoreMode == null ? ScoreMode.None : joinQuery.scoreMode);
                 } catch (ParseException | QueryNodeException | ReflectiveOperationException e) {
                     throw ServerException.of(e);
                 }

@@ -40,7 +40,7 @@ import java.util.Objects;
     @JsonSubTypes.Type(value = DoubleValuesSource.Score.class)
 
 })
-public abstract class DoubleValuesSource<T extends DoubleValuesSource<?>> extends Equalizer<T> {
+public abstract class DoubleValuesSource<T extends DoubleValuesSource<T>> extends Equalizer.Immutable<T> {
 
     protected DoubleValuesSource(final Class<T> ownClass) {
         super(ownClass);
@@ -69,6 +69,11 @@ public abstract class DoubleValuesSource<T extends DoubleValuesSource<?>> extend
         protected boolean isEqual(final Constant constant) {
             return value == constant.value;
         }
+
+        @Override
+        protected int computeHashCode() {
+            return Double.hashCode(value);
+        }
     }
 
     protected static abstract class AbstractField<T extends AbstractField<T>> extends DoubleValuesSource<T> {
@@ -84,6 +89,11 @@ public abstract class DoubleValuesSource<T extends DoubleValuesSource<?>> extend
         @Override
         final protected boolean isEqual(final T other) {
             return Objects.equals(field, other.field);
+        }
+
+        @Override
+        protected int computeHashCode() {
+            return Objects.hashCode(field);
         }
 
     }
@@ -160,11 +170,18 @@ public abstract class DoubleValuesSource<T extends DoubleValuesSource<?>> extend
         final protected boolean isEqual(final Query other) {
             return Objects.equals(query, other.query);
         }
+
+        @Override
+        protected int computeHashCode() {
+            return Objects.hashCode(query);
+        }
+
+
     }
 
     public static class Score extends DoubleValuesSource<Score> {
 
-        public final Score INSTANCE = new Score();
+        public static final Score INSTANCE = new Score();
 
         @JsonCreator
         public Score() {
@@ -179,6 +196,11 @@ public abstract class DoubleValuesSource<T extends DoubleValuesSource<?>> extend
         @Override
         final protected boolean isEqual(final Score other) {
             return true;
+        }
+
+        @Override
+        protected int computeHashCode() {
+            return ownClass.hashCode();
         }
     }
 }

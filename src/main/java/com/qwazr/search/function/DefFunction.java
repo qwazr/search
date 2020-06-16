@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,14 +26,14 @@ import java.io.IOException;
 
 public class DefFunction extends AbstractValueSources<DefFunction> {
 
-	@JsonCreator
-	public DefFunction(@JsonProperty("sources") final AbstractValueSource... sources) {
-		super(DefFunction.class, sources);
-	}
+    @JsonCreator
+    public DefFunction(@JsonProperty("sources") final AbstractValueSource<?>... sources) {
+        super(DefFunction.class, sources);
+    }
 
-	@Override
-	public ValueSource getValueSource(final QueryContext queryContext)
-			throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
-		return new org.apache.lucene.queries.function.valuesource.DefFunction(getValueSourceList(queryContext));
-	}
+    @Override
+    public ValueSource getValueSource(final QueryContext queryContext)
+        throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
+        return new org.apache.lucene.queries.function.valuesource.DefFunction(getValueSourceList(queryContext));
+    }
 }

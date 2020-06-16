@@ -56,7 +56,7 @@ public class DisjunctionMaxQuery extends AbstractQuery<DisjunctionMaxQuery> {
 
     public DisjunctionMaxQuery(final IndexSettingsDefinition settings,
                                final Map<String, AnalyzerDefinition> analyzers,
-                               final Map<String, FieldDefinition> fields) {
+                               final Map<String, FieldDefinition<?>> fields) {
         super(DisjunctionMaxQuery.class, DOC);
         final String field = getFullTextField(fields,
             () -> getTextField(fields,
@@ -81,5 +81,10 @@ public class DisjunctionMaxQuery extends AbstractQuery<DisjunctionMaxQuery> {
     @Override
     protected boolean isEqual(DisjunctionMaxQuery q) {
         return CollectionsUtils.equals(queries, q.queries);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(queries, tieBreakerMultiplier);
     }
 }

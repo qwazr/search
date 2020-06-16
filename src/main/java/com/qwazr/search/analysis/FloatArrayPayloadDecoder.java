@@ -17,10 +17,11 @@
 package com.qwazr.search.analysis;
 
 import com.qwazr.utils.Equalizer;
+import java.util.Arrays;
 import org.apache.lucene.queries.payloads.PayloadDecoder;
 import org.apache.lucene.util.BytesRef;
 
-public class FloatArrayPayloadDecoder extends Equalizer<FloatArrayPayloadDecoder> implements PayloadDecoder {
+public class FloatArrayPayloadDecoder extends Equalizer.Immutable<FloatArrayPayloadDecoder> implements PayloadDecoder {
 
     private final float[] boosts;
 
@@ -38,6 +39,11 @@ public class FloatArrayPayloadDecoder extends Equalizer<FloatArrayPayloadDecoder
 
     @Override
     protected boolean isEqual(final FloatArrayPayloadDecoder query) {
-        return true;
+        return Arrays.equals(boosts, query.boosts);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Arrays.hashCode(boosts);
     }
 }

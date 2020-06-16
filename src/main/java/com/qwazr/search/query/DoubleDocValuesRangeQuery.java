@@ -50,7 +50,7 @@ public class DoubleDocValuesRangeQuery extends AbstractRangeQuery<Double, Double
 
     public DoubleDocValuesRangeQuery(final IndexSettingsDefinition settings,
                                      final Map<String, AnalyzerDefinition> analyzers,
-                                     final Map<String, FieldDefinition> fields) {
+                                     final Map<String, FieldDefinition<?>> fields) {
         super(DoubleDocValuesRangeQuery.class, DOC, null,
             getDoubleField(fields, () -> "doubleField"), -10d, 10d);
     }

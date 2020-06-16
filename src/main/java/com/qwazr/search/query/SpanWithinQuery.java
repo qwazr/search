@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,26 +27,31 @@ import java.util.Objects;
 
 public class SpanWithinQuery extends AbstractSpanQuery<SpanWithinQuery> {
 
-	final public AbstractSpanQuery big;
-	final public AbstractSpanQuery little;
+    final public AbstractSpanQuery<?> big;
+    final public AbstractSpanQuery<?> little;
 
-	@JsonCreator
-	public SpanWithinQuery(@JsonProperty("big") final AbstractSpanQuery big,
-			@JsonProperty("little") final AbstractSpanQuery little) {
-		super(SpanWithinQuery.class);
-		this.big = Objects.requireNonNull(big, "the big query is missing");
-		this.little = Objects.requireNonNull(little, "the little query is missing");
-	}
+    @JsonCreator
+    public SpanWithinQuery(@JsonProperty("big") final AbstractSpanQuery<?> big,
+                           @JsonProperty("little") final AbstractSpanQuery<?> little) {
+        super(SpanWithinQuery.class);
+        this.big = Objects.requireNonNull(big, "the big query is missing");
+        this.little = Objects.requireNonNull(little, "the little query is missing");
+    }
 
-	@Override
-	final public SpanQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
-		return new org.apache.lucene.search.spans.SpanWithinQuery(big.getQuery(queryContext),
-				little.getQuery(queryContext));
-	}
+    @Override
+    final public SpanQuery getQuery(final QueryContext queryContext)
+        throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+        return new org.apache.lucene.search.spans.SpanWithinQuery(big.getQuery(queryContext),
+            little.getQuery(queryContext));
+    }
 
-	@Override
-	protected boolean isEqual(SpanWithinQuery q) {
-		return Objects.equals(big, q.big) && Objects.equals(little, q.little);
-	}
+    @Override
+    protected boolean isEqual(SpanWithinQuery q) {
+        return Objects.equals(big, q.big) && Objects.equals(little, q.little);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(big, little);
+    }
 }

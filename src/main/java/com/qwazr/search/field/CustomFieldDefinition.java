@@ -30,7 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class CustomFieldDefinition extends FieldDefinition {
+public class CustomFieldDefinition extends FieldDefinition<CustomFieldDefinition> {
 
     public final Template template;
 
@@ -87,7 +87,7 @@ public class CustomFieldDefinition extends FieldDefinition {
                                  @JsonProperty("dimension_num_bytes") final Integer dimensionNumBytes,
                                  @JsonProperty("attributes") final Map<String, String> attributes,
                                  @JsonProperty("copy_from") String[] copyFrom) {
-        super(null, analyzer, indexAnalyzer, queryAnalyzer, copyFrom);
+        super(CustomFieldDefinition.class, null, analyzer, indexAnalyzer, queryAnalyzer, copyFrom);
         this.template = template;
         this.tokenized = tokenized;
         this.stored = stored;
@@ -108,7 +108,7 @@ public class CustomFieldDefinition extends FieldDefinition {
     }
 
     private CustomFieldDefinition(CustomBuilder builder) {
-        super(builder);
+        super(CustomFieldDefinition.class, builder);
         this.template = builder.template;
         this.tokenized = builder.tokenized;
         this.stored = builder.stored;
@@ -131,7 +131,7 @@ public class CustomFieldDefinition extends FieldDefinition {
     }
 
     public CustomFieldDefinition(final String fieldName, final IndexField indexField, final Map<String, Copy> copyMap) {
-        super(null,
+        super(CustomFieldDefinition.class, null,
             from(indexField.analyzer(), indexField.analyzerClass()),
             from(indexField.indexAnalyzer(), indexField.indexAnalyzerClass()),
             from(indexField.queryAnalyzer(), indexField.queryAnalyzerClass()),
@@ -156,20 +156,14 @@ public class CustomFieldDefinition extends FieldDefinition {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hashCode(template);
+    protected int computeHashCode() {
+        return Objects.hash(template, tokenized, stored, indexOptions, type, analyzer, indexAnalyzer, queryAnalyzer);
     }
 
     @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof CustomFieldDefinition))
-            return false;
-        if (o == this)
-            return true;
-        if (!super.equals(o))
-            return false;
-        final CustomFieldDefinition f = (CustomFieldDefinition) o;
-        return Objects.equals(template, f.template) && Objects.equals(tokenized, f.tokenized) &&
+    protected boolean isEqual(final CustomFieldDefinition f) {
+        return super.isEqual(f) &&
+            Objects.equals(template, f.template) && Objects.equals(tokenized, f.tokenized) &&
             Objects.equals(stored, f.stored) && Objects.equals(storeTermVectors, f.storeTermVectors) &&
             Objects.equals(storeTermVectorOffsets, f.storeTermVectorOffsets) &&
             Objects.equals(storeTermVectorPositions, f.storeTermVectorPositions) &&

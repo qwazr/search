@@ -128,7 +128,7 @@ class IndexInstanceBuilder {
             settings.sortedSetFacetField);
 
         localAnalyzerFactoryMap = fileSet.loadAnalyzerDefinitionMap();
-        final Map<String, FieldDefinition> fieldMapDefinition = fileSet.loadFieldMap();
+        final Map<String, FieldDefinition<?>> fieldMapDefinition = fileSet.loadFieldMap();
 
         fieldMap = fieldMapDefinition == null ? null : new FieldMap(settings.primaryKey, fieldMapDefinition,
             settings.sortedSetFacetField, settings.recordField);
@@ -173,8 +173,7 @@ class IndexInstanceBuilder {
     }
 
     private Similarity getFromFactory(final ResourceLoader resourceLoader, final String similarityName,
-                                      final Map<String, ? extends SimilarityFactory> similarityFactoryMap)
-        throws IOException, ReflectiveOperationException {
+                                      final Map<String, ? extends SimilarityFactory> similarityFactoryMap) {
         if (similarityFactoryMap == null)
             return null;
         final SimilarityFactory factory = similarityFactoryMap.get(similarityName);

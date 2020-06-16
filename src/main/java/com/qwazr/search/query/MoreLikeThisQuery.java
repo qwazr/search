@@ -95,6 +95,11 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
     }
 
     @Override
+    protected int computeHashCode() {
+        return Objects.hash(like_text, fieldname, percent_terms_to_match, max_doc_freq, max_query_terms);
+    }
+
+    @Override
     protected boolean isEqual(MoreLikeThisQuery q) {
         return Objects.equals(like_text, q.like_text) && Objects.equals(fieldname, q.fieldname) &&
             Objects.equals(percent_terms_to_match, q.percent_terms_to_match) &&

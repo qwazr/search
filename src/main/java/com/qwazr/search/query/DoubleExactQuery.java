@@ -46,7 +46,7 @@ public class DoubleExactQuery extends AbstractExactQuery<Double, DoubleExactQuer
 
     public DoubleExactQuery(final IndexSettingsDefinition settings,
                             final Map<String, AnalyzerDefinition> analyzers,
-                            final Map<String, FieldDefinition> fields) {
+                            final Map<String, FieldDefinition<?>> fields) {
         super(DoubleExactQuery.class, DOC, null, getDoubleField(fields, () -> "doubleField"), 3.14d);
     }
 

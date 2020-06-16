@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,25 +28,31 @@ import java.util.Objects;
 
 public class QueryValueSource extends AbstractValueSource<QueryValueSource> {
 
-	final public AbstractQuery query;
-	final public Float defVal;
+    final public AbstractQuery<?> query;
+    final public Float defVal;
 
-	@JsonCreator
-	public QueryValueSource(@JsonProperty("query") AbstractQuery query, @JsonProperty("defVal") Float defVal) {
-		super(QueryValueSource.class);
-		this.query = Objects.requireNonNull(query, "The query is missing");
-		this.defVal = Objects.requireNonNull(defVal, "The default value is missing (defVal)");
-	}
+    @JsonCreator
+    public QueryValueSource(final @JsonProperty("query") AbstractQuery<?> query,
+                            final @JsonProperty("defVal") Float defVal) {
+        super(QueryValueSource.class);
+        this.query = Objects.requireNonNull(query, "The query is missing");
+        this.defVal = Objects.requireNonNull(defVal, "The default value is missing (defVal)");
+    }
 
-	@Override
-	public ValueSource getValueSource(final QueryContext queryContext)
-			throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-		return new org.apache.lucene.queries.function.valuesource.QueryValueSource(query.getQuery(queryContext),
-				defVal);
-	}
+    @Override
+    public ValueSource getValueSource(final QueryContext queryContext)
+        throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
+        return new org.apache.lucene.queries.function.valuesource.QueryValueSource(
+            query.getQuery(queryContext), defVal);
+    }
 
-	@Override
-	protected boolean isEqual(final QueryValueSource source) {
-		return Objects.equals(query, source.query) && Objects.equals(defVal, source.defVal);
-	}
+    @Override
+    protected boolean isEqual(final QueryValueSource source) {
+        return Objects.equals(query, source.query) && Objects.equals(defVal, source.defVal);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(query, defVal);
+    }
 }

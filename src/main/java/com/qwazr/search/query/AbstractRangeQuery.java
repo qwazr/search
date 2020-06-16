@@ -57,4 +57,9 @@ public abstract class AbstractRangeQuery<V, T extends AbstractRangeQuery<V, T>> 
             Objects.equals(upperValue, q.upperValue);
     }
 
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(lowerValue, upperValue);
+    }
+
 }

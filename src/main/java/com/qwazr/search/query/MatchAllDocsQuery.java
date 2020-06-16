@@ -36,7 +36,7 @@ public class MatchAllDocsQuery extends AbstractQuery<MatchAllDocsQuery> {
 
     public MatchAllDocsQuery(final IndexSettingsDefinition settings,
                              final Map<String, AnalyzerDefinition> analyzers,
-                             final Map<String, FieldDefinition> fields) {
+                             final Map<String, FieldDefinition<?>> fields) {
         super(MatchAllDocsQuery.class, DOC);
     }
 
@@ -51,7 +51,7 @@ public class MatchAllDocsQuery extends AbstractQuery<MatchAllDocsQuery> {
     }
 
     @Override
-    public int hashCode() {
+    public int computeHashCode() {
         return MatchAllDocsQuery.class.hashCode();
     }
 }

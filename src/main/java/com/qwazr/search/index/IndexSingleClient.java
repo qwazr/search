@@ -130,7 +130,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
-    public Map<String, FieldDefinition> getFields(final String schemaName, final String indexName) {
+    public Map<String, FieldDefinition<?>> getFields(final String schemaName, final String indexName) {
         try {
             return indexTarget.path(schemaName)
                 .path(indexName)
@@ -143,8 +143,9 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
-    public Map<String, FieldDefinition> setFields(final String schemaName, final String indexName,
-                                                  final Map<String, FieldDefinition> fields) {
+    public Map<String, FieldDefinition<?>> setFields(final String schemaName,
+                                                     final String indexName,
+                                                     final Map<String, FieldDefinition<?>> fields) {
         try {
             return indexTarget.path(schemaName)
                 .path(indexName)
@@ -230,7 +231,7 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
-    public FieldDefinition getField(final String schemaName, final String indexName, final String fieldName) {
+    public FieldDefinition<?> getField(final String schemaName, final String indexName, final String fieldName) {
         return indexTarget.path(schemaName)
             .path(indexName)
             .path("fields")
@@ -240,8 +241,10 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
-    public FieldDefinition setField(final String schemaName, final String indexName, final String fieldName,
-                                    final FieldDefinition field) {
+    public FieldDefinition<?> setField(final String schemaName,
+                                       final String indexName,
+                                       final String fieldName,
+                                       final FieldDefinition<?> field) {
         try {
             return indexTarget.path(schemaName)
                 .path(indexName)

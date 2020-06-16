@@ -25,102 +25,107 @@ import java.util.Objects;
 
 public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> extends AbstractQuery<T> {
 
-	@JsonProperty("enable_position_increments")
-	final public Boolean enablePositionIncrements;
+    @JsonProperty("enable_position_increments")
+    final public Boolean enablePositionIncrements;
 
-	@JsonProperty("auto_generate_multi_term_synonyms_phrase_query")
-	final public Boolean autoGenerateMultiTermSynonymsPhraseQuery;
+    @JsonProperty("auto_generate_multi_term_synonyms_phrase_query")
+    final public Boolean autoGenerateMultiTermSynonymsPhraseQuery;
 
-	@JsonProperty("enable_graph_queries")
-	final public Boolean enableGraphQueries;
+    @JsonProperty("enable_graph_queries")
+    final public Boolean enableGraphQueries;
 
-	@JsonProperty("query_string")
-	final public String queryString;
+    @JsonProperty("query_string")
+    final public String queryString;
 
-	@JsonIgnore
-	final protected Analyzer analyzer;
+    @JsonIgnore
+    final protected Analyzer analyzer;
 
-	protected AbstractQueryParser(Class<T> queryClass) {
-		super(queryClass);
-		analyzer = null;
-		enablePositionIncrements = null;
-		autoGenerateMultiTermSynonymsPhraseQuery = null;
-		enableGraphQueries = null;
-		queryString = null;
-	}
+    protected AbstractQueryParser(Class<T> queryClass) {
+        super(queryClass);
+        analyzer = null;
+        enablePositionIncrements = null;
+        autoGenerateMultiTermSynonymsPhraseQuery = null;
+        enableGraphQueries = null;
+        queryString = null;
+    }
 
-	protected AbstractQueryParser(Class<T> queryClass, AbstractBuilder builder) {
-		super(queryClass);
-		this.analyzer = builder.analyzer;
-		this.enablePositionIncrements = builder.enablePositionIncrements;
-		this.autoGenerateMultiTermSynonymsPhraseQuery = builder.autoGenerateMultiTermSynonymsPhraseQuery;
-		this.enableGraphQueries = builder.enableGraphQueries;
-		this.queryString = builder.queryString;
-	}
+    protected AbstractQueryParser(Class<T> queryClass, AbstractBuilder builder) {
+        super(queryClass);
+        this.analyzer = builder.analyzer;
+        this.enablePositionIncrements = builder.enablePositionIncrements;
+        this.autoGenerateMultiTermSynonymsPhraseQuery = builder.autoGenerateMultiTermSynonymsPhraseQuery;
+        this.enableGraphQueries = builder.enableGraphQueries;
+        this.queryString = builder.queryString;
+    }
 
-	protected void setQueryBuilderParameters(final QueryBuilder queryBuilder) {
-		if (analyzer != null)
-			queryBuilder.setAnalyzer(analyzer);
-		if (enablePositionIncrements != null)
-			queryBuilder.setEnablePositionIncrements(enablePositionIncrements);
-		if (autoGenerateMultiTermSynonymsPhraseQuery != null)
-			queryBuilder.setAutoGenerateMultiTermSynonymsPhraseQuery(autoGenerateMultiTermSynonymsPhraseQuery);
-		if (enableGraphQueries != null)
-			queryBuilder.setEnableGraphQueries(enableGraphQueries);
-	}
+    protected void setQueryBuilderParameters(final QueryBuilder queryBuilder) {
+        if (analyzer != null)
+            queryBuilder.setAnalyzer(analyzer);
+        if (enablePositionIncrements != null)
+            queryBuilder.setEnablePositionIncrements(enablePositionIncrements);
+        if (autoGenerateMultiTermSynonymsPhraseQuery != null)
+            queryBuilder.setAutoGenerateMultiTermSynonymsPhraseQuery(autoGenerateMultiTermSynonymsPhraseQuery);
+        if (enableGraphQueries != null)
+            queryBuilder.setEnableGraphQueries(enableGraphQueries);
+    }
 
-	@Override
-	@JsonIgnore
-	protected boolean isEqual(T q) {
-		return Objects.equals(enablePositionIncrements, q.enablePositionIncrements) &&
-				Objects.equals(autoGenerateMultiTermSynonymsPhraseQuery, q.autoGenerateMultiTermSynonymsPhraseQuery) &&
-				Objects.equals(enableGraphQueries, q.enableGraphQueries) &&
-				Objects.equals(queryString, q.queryString) && Objects.equals(analyzer, q.analyzer);
-	}
+    @Override
+    @JsonIgnore
+    protected boolean isEqual(T q) {
+        return Objects.equals(enablePositionIncrements, q.enablePositionIncrements) &&
+            Objects.equals(autoGenerateMultiTermSynonymsPhraseQuery, q.autoGenerateMultiTermSynonymsPhraseQuery) &&
+            Objects.equals(enableGraphQueries, q.enableGraphQueries) &&
+            Objects.equals(queryString, q.queryString) && Objects.equals(analyzer, q.analyzer);
+    }
 
-	public static abstract class AbstractBuilder<B extends AbstractBuilder, T extends AbstractQueryParser> {
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, autoGenerateMultiTermSynonymsPhraseQuery, queryString);
+    }
 
-		private final Class<B> builderClass;
+    public static abstract class AbstractBuilder<B extends AbstractBuilder<B, T>, T extends AbstractQueryParser> {
 
-		private Analyzer analyzer;
-		private Boolean enablePositionIncrements;
-		private Boolean autoGenerateMultiTermSynonymsPhraseQuery;
-		private Boolean enableGraphQueries;
-		private String queryString;
+        private final Class<B> builderClass;
 
-		protected AbstractBuilder(Class<B> builderClass) {
-			this.builderClass = builderClass;
-		}
+        private Analyzer analyzer;
+        private Boolean enablePositionIncrements;
+        private Boolean autoGenerateMultiTermSynonymsPhraseQuery;
+        private Boolean enableGraphQueries;
+        private String queryString;
 
-		protected B me() {
-			return builderClass.cast(this);
-		}
+        protected AbstractBuilder(Class<B> builderClass) {
+            this.builderClass = builderClass;
+        }
 
-		public abstract T build();
+        protected B me() {
+            return builderClass.cast(this);
+        }
 
-		final public B setAnalyzer(Analyzer analyzer) {
-			this.analyzer = analyzer;
-			return me();
-		}
+        public abstract T build();
 
-		final public B setEnablePositionIncrements(Boolean enablePositionIncrements) {
-			this.enablePositionIncrements = enablePositionIncrements;
-			return me();
-		}
+        final public B setAnalyzer(Analyzer analyzer) {
+            this.analyzer = analyzer;
+            return me();
+        }
 
-		final public B setAutoGenerateMultiTermSynonymsPhraseQuery(Boolean autoGenerateMultiTermSynonymsPhraseQuery) {
-			this.autoGenerateMultiTermSynonymsPhraseQuery = autoGenerateMultiTermSynonymsPhraseQuery;
-			return me();
-		}
+        final public B setEnablePositionIncrements(Boolean enablePositionIncrements) {
+            this.enablePositionIncrements = enablePositionIncrements;
+            return me();
+        }
 
-		final public B setEnableGraphQueries(Boolean enableGraphQueries) {
-			this.enableGraphQueries = enableGraphQueries;
-			return me();
-		}
+        final public B setAutoGenerateMultiTermSynonymsPhraseQuery(Boolean autoGenerateMultiTermSynonymsPhraseQuery) {
+            this.autoGenerateMultiTermSynonymsPhraseQuery = autoGenerateMultiTermSynonymsPhraseQuery;
+            return me();
+        }
 
-		final public B setQueryString(String queryString) {
-			this.queryString = queryString;
-			return me();
-		}
-	}
+        final public B setEnableGraphQueries(Boolean enableGraphQueries) {
+            this.enableGraphQueries = enableGraphQueries;
+            return me();
+        }
+
+        final public B setQueryString(String queryString) {
+            this.queryString = queryString;
+            return me();
+        }
+    }
 }

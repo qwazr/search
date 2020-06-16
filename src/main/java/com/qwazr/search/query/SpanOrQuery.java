@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,27 +28,31 @@ import java.util.Objects;
 
 public class SpanOrQuery extends AbstractSpanQuery<SpanOrQuery> {
 
-	final public List<AbstractSpanQuery> clauses;
+    final public List<AbstractSpanQuery<?>> clauses;
 
-	@JsonCreator
-	public SpanOrQuery(@JsonProperty("clauses") final List<AbstractSpanQuery> clauses) {
-		super(SpanOrQuery.class);
-		this.clauses = Objects.requireNonNull(clauses, "The clauses are null");
-	}
+    @JsonCreator
+    public SpanOrQuery(@JsonProperty("clauses") final List<AbstractSpanQuery<?>> clauses) {
+        super(SpanOrQuery.class);
+        this.clauses = Objects.requireNonNull(clauses, "The clauses are null");
+    }
 
-	@Override
-	final public SpanQuery getQuery(final QueryContext queryContext)
-			throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
-		final SpanQuery[] spanQueries = new SpanQuery[clauses.size()];
-		int i = 0;
-		for (final AbstractSpanQuery query : clauses)
-			spanQueries[i++] = query.getQuery(queryContext);
-		return new org.apache.lucene.search.spans.SpanOrQuery(spanQueries);
-	}
+    @Override
+    final public SpanQuery getQuery(final QueryContext queryContext)
+        throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+        final SpanQuery[] spanQueries = new SpanQuery[clauses.size()];
+        int i = 0;
+        for (final AbstractSpanQuery<?> query : clauses)
+            spanQueries[i++] = query.getQuery(queryContext);
+        return new org.apache.lucene.search.spans.SpanOrQuery(spanQueries);
+    }
 
-	@Override
-	protected boolean isEqual(SpanOrQuery q) {
-		return Objects.deepEquals(clauses, q.clauses);
-	}
+    @Override
+    protected boolean isEqual(SpanOrQuery q) {
+        return Objects.equals(clauses, q.clauses);
+    }
 
+    @Override
+    protected int computeHashCode() {
+        return Objects.hashCode(clauses);
+    }
 }

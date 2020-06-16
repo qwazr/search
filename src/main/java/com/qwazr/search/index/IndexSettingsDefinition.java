@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Index;
+import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
 import org.apache.lucene.search.Sort;
@@ -39,7 +40,7 @@ import java.util.function.Supplier;
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     isGetterVisibility = JsonAutoDetect.Visibility.NONE,
     fieldVisibility = JsonAutoDetect.Visibility.NONE)
-public class IndexSettingsDefinition {
+public class IndexSettingsDefinition extends Equalizer.Immutable<IndexSettingsDefinition> {
 
     public enum Type {
         FSDirectory, RAMDirectory
@@ -141,6 +142,7 @@ public class IndexSettingsDefinition {
         @JsonProperty("merged_segment_warmer") final Boolean mergedSegmentWarmer,
         @JsonProperty("nrt_caching_directory_max_merge_size_mb") final Double nrtCachingDirectoryMaxMergeSizeMB,
         @JsonProperty("nrt_caching_directory_max_cached_mb") final Double nrtCachingDirectoryMaxCachedMB) {
+        super(IndexSettingsDefinition.class);
         this.primaryKey = primaryKey;
         this.directoryType = directoryType;
         this.mergeScheduler = mergeScheduler;
@@ -165,6 +167,7 @@ public class IndexSettingsDefinition {
     }
 
     private IndexSettingsDefinition(final Builder builder) {
+        super(IndexSettingsDefinition.class);
         this.primaryKey = builder.primaryKey;
         this.directoryType = builder.directoryType;
         this.mergeScheduler = builder.mergeScheduler;
@@ -201,15 +204,13 @@ public class IndexSettingsDefinition {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(primaryKey, directoryType, ramBufferSize, useCompoundFile, similarityClass, sortedSetFacetField, recordField);
+    protected int computeHashCode() {
+        return Objects.hash(primaryKey, directoryType, ramBufferSize,
+            useCompoundFile, similarityClass, sortedSetFacetField, recordField);
     }
 
     @Override
-    public final boolean equals(final Object o) {
-        if (!(o instanceof IndexSettingsDefinition))
-            return false;
-        final IndexSettingsDefinition s = (IndexSettingsDefinition) o;
+    public final boolean isEqual(final IndexSettingsDefinition s) {
         if (!Objects.equals(primaryKey, s.primaryKey))
             return false;
         if (!Objects.equals(directoryType, s.directoryType))

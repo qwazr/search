@@ -19,7 +19,7 @@ package com.qwazr.search.analysis;
 import com.qwazr.utils.Equalizer;
 import org.apache.lucene.queries.payloads.PayloadDecoder;
 
-public abstract class BasePayloadDecoder<T extends BasePayloadDecoder<?>> extends Equalizer<T> implements PayloadDecoder {
+public abstract class BasePayloadDecoder<T extends BasePayloadDecoder<T>> extends Equalizer.Immutable<T> implements PayloadDecoder {
 
     protected final float defaultValue;
 
@@ -29,7 +29,7 @@ public abstract class BasePayloadDecoder<T extends BasePayloadDecoder<?>> extend
     }
 
     @Override
-    public int hashCode() {
+    protected int computeHashCode() {
         return Float.hashCode(defaultValue);
     }
 

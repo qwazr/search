@@ -19,15 +19,20 @@ import java.util.Objects;
 
 public abstract class AbstractFieldSource<T extends AbstractFieldSource<T>> extends AbstractValueSource<T> {
 
-	public final String field;
+    public final String field;
 
-	protected AbstractFieldSource(final Class<T> ownClass, final String field) {
-		super(ownClass);
-		this.field = Objects.requireNonNull(field, "The field is missing");
-	}
+    protected AbstractFieldSource(final Class<T> ownClass, final String field) {
+        super(ownClass);
+        this.field = Objects.requireNonNull(field, "The field is missing");
+    }
 
-	@Override
-	public boolean isEqual(AbstractFieldSource source) {
-		return Objects.equals(field, source.field);
-	}
+    @Override
+    protected boolean isEqual(final T source) {
+        return Objects.equals(field, source.field);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hashCode(field);
+    }
 }

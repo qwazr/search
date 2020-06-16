@@ -70,6 +70,11 @@ public class FacetPathQuery extends AbstractQuery<FacetPathQuery> {
             Arrays.equals(path, q.path);
     }
 
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(dimension, genericField, path);
+    }
+
     public static class Builder {
 
         String dimension;

@@ -44,4 +44,5 @@ public class LongRangeQuery extends AbstractRangeQuery<Long, LongRangeQuery> {
             lowerValue, upperValue
         );
     }
+
 }

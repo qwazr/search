@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ public class AnnotatedIndexServiceTest {
         Assert.assertNotNull(index.settings.indexReaderWarmer);
         Assert.assertTrue(index.settings.indexReaderWarmer);
 
-        Map<String, FieldDefinition> fields = service.createUpdateFields();
+        Map<String, FieldDefinition<?>> fields = service.createUpdateFields();
         Assert.assertNotNull(fields);
         Assert.assertEquals(3, fields.size());
 

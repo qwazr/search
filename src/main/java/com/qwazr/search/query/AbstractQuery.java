@@ -138,7 +138,7 @@ import java.util.function.Supplier;
     isGetterVisibility = JsonAutoDetect.Visibility.NONE,
     creatorVisibility = JsonAutoDetect.Visibility.NONE,
     fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
-public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalizer<T> {
+public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalizer.Immutable<T> {
 
     protected final static URI CORE_BASE_DOC_URI = URI.create("https://lucene.apache.org/core/8_5_2/");
 
@@ -171,7 +171,7 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
         TYPES = Collections.unmodifiableSortedMap(typeMap);
     }
 
-    static public boolean hasFullTextAnalyzer(final FieldDefinition fieldDefinition) {
+    static public boolean hasFullTextAnalyzer(final FieldDefinition<?> fieldDefinition) {
         if (StringUtils.isAllEmpty(fieldDefinition.analyzer, fieldDefinition.queryAnalyzer, fieldDefinition.indexAnalyzer))
             return false;
         final String alzr = fieldDefinition.analyzer != null ? fieldDefinition.analyzer
@@ -181,8 +181,8 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
     }
 
 
-    static private boolean fieldCheck(final FieldDefinition field,
-                                      final Function<FieldDefinition, Boolean> fieldConsumer,
+    static private boolean fieldCheck(final FieldDefinition<?> field,
+                                      final Function<FieldDefinition<?>, Boolean> fieldConsumer,
                                       final Function<SmartFieldDefinition, Boolean> smartFieldConsumer) {
 
         if (field instanceof SmartFieldDefinition)
@@ -191,18 +191,18 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
         return fieldConsumer.apply(field);
     }
 
-    static private String forEachField(final Map<String, FieldDefinition> fields,
-                                       final Function<FieldDefinition, Boolean> fieldConsumer,
+    static private String forEachField(final Map<String, FieldDefinition<?>> fields,
+                                       final Function<FieldDefinition<?>, Boolean> fieldConsumer,
                                        final Function<SmartFieldDefinition, Boolean> smartFieldConsumer,
                                        final Supplier<String> defaultField) {
         if (fields != null)
-            for (final Map.Entry<String, FieldDefinition> entry : fields.entrySet())
+            for (final Map.Entry<String, FieldDefinition<?>> entry : fields.entrySet())
                 if (fieldCheck(entry.getValue(), fieldConsumer, smartFieldConsumer))
                     return entry.getKey();
         return defaultField.get();
     }
 
-    static protected String getTextField(Map<String, FieldDefinition> fields,
+    static protected String getTextField(Map<String, FieldDefinition<?>> fields,
                                          final Supplier<String> defaultField) {
         return forEachField(fields,
             f -> Boolean.FALSE,
@@ -210,7 +210,7 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
             defaultField);
     }
 
-    static protected String getFullTextField(final Map<String, FieldDefinition> fields,
+    static protected String getFullTextField(final Map<String, FieldDefinition<?>> fields,
                                              final Supplier<String> defaultField) {
         return forEachField(fields,
             AbstractQuery::hasFullTextAnalyzer,
@@ -218,7 +218,7 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
             defaultField);
     }
 
-    static protected String getDoubleField(final Map<String, FieldDefinition> fields,
+    static protected String getDoubleField(final Map<String, FieldDefinition<?>> fields,
                                            final Supplier<String> defaultField) {
         return forEachField(fields,
             f -> Boolean.FALSE,
@@ -226,7 +226,7 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
             defaultField);
     }
 
-    static protected String getLongField(final Map<String, FieldDefinition> fields,
+    static protected String getLongField(final Map<String, FieldDefinition<?>> fields,
                                          final Supplier<String> defaultField) {
         return forEachField(fields,
             f -> Boolean.FALSE,
@@ -234,7 +234,7 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
             defaultField);
     }
 
-    static protected String getFloatField(final Map<String, FieldDefinition> fields,
+    static protected String getFloatField(final Map<String, FieldDefinition<?>> fields,
                                           final Supplier<String> defaultField) {
         return forEachField(fields,
             f -> Boolean.FALSE,
@@ -242,7 +242,7 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
             defaultField);
     }
 
-    static protected String getIntField(final Map<String, FieldDefinition> fields,
+    static protected String getIntField(final Map<String, FieldDefinition<?>> fields,
                                         final Supplier<String> defaultField) {
         return forEachField(fields,
             f -> Boolean.FALSE,
@@ -253,7 +253,7 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
     public static AbstractQuery<?> getSample(final Class<AbstractQuery<?>> queryClass,
                                              final IndexSettingsDefinition settings,
                                              final Map<String, AnalyzerDefinition> analyzers,
-                                             final Map<String, FieldDefinition> fields) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
+                                             final Map<String, FieldDefinition<?>> fields) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
         final Constructor<AbstractQuery<?>> samplerConstructor = queryClass.getConstructor(IndexSettingsDefinition.class, Map.class, Map.class);
         return samplerConstructor.newInstance(settings, analyzers, fields);
     }

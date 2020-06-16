@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +22,14 @@ import org.apache.lucene.queries.function.ValueSource;
 
 public class DoubleFieldSource extends AbstractFieldSource<DoubleFieldSource> {
 
-	@JsonCreator
-	public DoubleFieldSource(@JsonProperty("field") String field) {
-		super(DoubleFieldSource.class, field);
-	}
+    @JsonCreator
+    public DoubleFieldSource(@JsonProperty("field") String field) {
+        super(DoubleFieldSource.class, field);
+    }
 
-	@Override
-	public ValueSource getValueSource(final QueryContext queryContext) {
-		return new org.apache.lucene.queries.function.valuesource.DoubleFieldSource(field);
-	}
-
+    @Override
+    public ValueSource getValueSource(final QueryContext queryContext) {
+        return new org.apache.lucene.queries.function.valuesource.DoubleFieldSource(field);
+    }
+    
 }

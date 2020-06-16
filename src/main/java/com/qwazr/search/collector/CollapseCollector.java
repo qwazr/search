@@ -116,7 +116,7 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
         return new Query(new FilteredQuery(docIdMaps), collapsedMap, collapsedCount);
     }
 
-    final static class Leaf extends Equalizer<Leaf> implements LeafCollector {
+    final static class Leaf extends Equalizer.Immutable<Leaf> implements LeafCollector {
 
         private final SortedDocValues sdv;
         private final Int2IntMap docIds;
@@ -147,7 +147,7 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
         }
 
         @Override
-        public int hashCode() {
+        protected int computeHashCode() {
             return docBase;
         }
 

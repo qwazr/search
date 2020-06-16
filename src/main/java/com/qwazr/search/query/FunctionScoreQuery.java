@@ -74,4 +74,8 @@ public class FunctionScoreQuery extends AbstractQuery<FunctionScoreQuery> {
             Objects.equals(boostValue, q.boostValue) && Objects.equals(boost, q.boost);
     }
 
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(inQuery, boostMatchQuery, boostValue, boost);
+    }
 }

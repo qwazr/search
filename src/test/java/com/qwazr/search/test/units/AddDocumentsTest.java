@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
     final private static Integer[][] MULTI_INTEGER_STORED_FIELDS = {{11, 12, 13}, {21, 22, 23}, {31, 32, 33}};
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexService();
         for (int i = 0; i < ID_FIELDS.length; i++)
             indexService.postDocument(new IndexRecord.NoTaxonomy(ID_FIELDS[i]).storedField(STORED_FIELDS[i])
@@ -173,8 +173,7 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
                 try {
                     while (System.currentTimeMillis() < endTime)
                         indexService.addDocument(getRandomDoc(), null);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }));
@@ -182,8 +181,7 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
                 try {
                     while (System.currentTimeMillis() < endTime)
                         indexService.addDocuments(getRandomDocs(10), null);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }));

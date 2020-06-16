@@ -106,14 +106,19 @@ public class DrillDownQuery extends AbstractQuery<DrillDownQuery> {
         if (dimPath.size() != q.dimPath.size())
             return false;
         final Iterator<LinkedHashMap<String, String[]>> mapIterator = q.dimPath.iterator();
-        for (LinkedHashMap<String, String[]> map1 : dimPath) {
-            final LinkedHashMap<String, String[]> map2 = mapIterator.next();
+        for (final Map<String, String[]> map1 : dimPath) {
+            final Map<String, String[]> map2 = mapIterator.next();
             for (Map.Entry<String, String[]> entry1 : map1.entrySet()) {
                 if (!Arrays.equals(entry1.getValue(), map2.get(entry1.getKey())))
                     return false;
             }
         }
         return true;
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(baseQuery, genericFieldNames, useDrillSideways, dimPath);
     }
 
 }

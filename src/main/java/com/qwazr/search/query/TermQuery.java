@@ -48,7 +48,7 @@ public class TermQuery extends AbstractFieldQuery<TermQuery> {
 
     public TermQuery(final IndexSettingsDefinition settings,
                      final Map<String, AnalyzerDefinition> analyzers,
-                     final Map<String, FieldDefinition> fields) {
+                     final Map<String, FieldDefinition<?>> fields) {
         super(TermQuery.class, DOC,
             null, getFullTextField(fields, () -> getTextField(fields, () -> "text")));
         this.term = "Hello";
@@ -65,5 +65,10 @@ public class TermQuery extends AbstractFieldQuery<TermQuery> {
         return new org.apache.lucene.search.TermQuery(
             resolveIndexTextTerm(queryContext.getFieldMap(), term)
         );
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hashCode(term);
     }
 }

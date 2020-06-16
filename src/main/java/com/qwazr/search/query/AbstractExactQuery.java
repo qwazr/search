@@ -47,5 +47,10 @@ public abstract class AbstractExactQuery<V, T extends AbstractExactQuery<V, T>> 
     final protected boolean isEqual(T q) {
         return super.isEqual(q) && Objects.equals(value, q.value);
     }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hashCode(value);
+    }
 }
 

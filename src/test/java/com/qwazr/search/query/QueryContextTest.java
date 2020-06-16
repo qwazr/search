@@ -27,7 +27,7 @@ public class QueryContextTest implements QueryContext {
     public QueryContextTest(final String primaryKey,
                             final String recordField,
                             final String sortedSetFacetField,
-                            final Map<String, FieldDefinition> fields) {
+                            final Map<String, FieldDefinition<?>> fields) {
         fieldMap = new FieldMap(primaryKey, fields, sortedSetFacetField, recordField);
     }
 
@@ -40,7 +40,7 @@ public class QueryContextTest implements QueryContext {
     public void close() {
     }
 
-    public static QueryContextTest of(Map<String, FieldDefinition> fields) {
+    public static QueryContextTest of(Map<String, FieldDefinition<?>> fields) {
         return new QueryContextTest(FieldDefinition.ID_FIELD,
             FieldDefinition.RECORD_FIELD,
             FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD,

@@ -16,6 +16,7 @@
 package com.qwazr.search.function;
 
 import com.qwazr.search.index.QueryContext;
+import java.util.Arrays;
 import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -35,7 +36,7 @@ public abstract class AbstractValueSources<T extends AbstractValueSources<T>> ex
     }
 
     protected ValueSource[] getValueSourceArray(final QueryContext queryContext)
-            throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+        throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
         final ValueSource[] valueSources = new ValueSource[sources.length];
         int i = 0;
         for (AbstractValueSource<?> source : sources)
@@ -44,7 +45,7 @@ public abstract class AbstractValueSources<T extends AbstractValueSources<T>> ex
     }
 
     protected List<ValueSource> getValueSourceList(final QueryContext queryContext)
-            throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
+        throws ReflectiveOperationException, IOException, ParseException, QueryNodeException {
         final List<ValueSource> valueSources = new ArrayList<>(sources.length);
         for (AbstractValueSource<?> source : sources)
             valueSources.add(source.getValueSource(queryContext));
@@ -52,7 +53,12 @@ public abstract class AbstractValueSources<T extends AbstractValueSources<T>> ex
     }
 
     @Override
-    public boolean isEqual(AbstractValueSources valueSources) {
+    protected int computeHashCode() {
+        return Arrays.hashCode(sources);
+    }
+
+    @Override
+    protected boolean isEqual(final T valueSources) {
         int i = 0;
         for (AbstractValueSource<?> source : sources)
             if (!Objects.equals(source, valueSources.sources[i++]))

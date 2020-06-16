@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,8 +38,8 @@ public class MultiFieldQueryParser extends AbstractClassicQueryParser<MultiField
     final public Query getQuery(final QueryContext queryContext) throws ParseException {
         final FieldMap fieldMap = queryContext.getFieldMap();
         final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser =
-                new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(resolveFields(fieldMap),
-                        resolveAnalyzer(queryContext), resolvedBoosts(fieldMap));
+            new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(resolveFields(fieldMap),
+                resolveAnalyzer(queryContext), resolvedBoosts(fieldMap));
         setParserParameters(parser);
         return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
     }

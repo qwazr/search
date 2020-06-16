@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,21 +24,26 @@ import java.util.Objects;
 
 public class DoubleConstValueSource extends AbstractValueSource<DoubleConstValueSource> {
 
-	public final Double constant;
+    public final Double constant;
 
-	@JsonCreator
-	public DoubleConstValueSource(@JsonProperty("constant") Double constant) {
-		super(DoubleConstValueSource.class);
-		this.constant = Objects.requireNonNull(constant, "constant value is missing");
-	}
+    @JsonCreator
+    public DoubleConstValueSource(@JsonProperty("constant") Double constant) {
+        super(DoubleConstValueSource.class);
+        this.constant = Objects.requireNonNull(constant, "constant value is missing");
+    }
 
-	@Override
-	public ValueSource getValueSource(QueryContext queryContext) {
-		return new org.apache.lucene.queries.function.valuesource.DoubleConstValueSource(constant);
-	}
+    @Override
+    public ValueSource getValueSource(QueryContext queryContext) {
+        return new org.apache.lucene.queries.function.valuesource.DoubleConstValueSource(constant);
+    }
 
-	@Override
-	protected boolean isEqual(DoubleConstValueSource query) {
-		return Objects.equals(constant, query.constant);
-	}
+    @Override
+    protected boolean isEqual(DoubleConstValueSource query) {
+        return Objects.equals(constant, query.constant);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hashCode(constant);
+    }
 }

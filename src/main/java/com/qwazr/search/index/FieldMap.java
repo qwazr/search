@@ -38,7 +38,7 @@ public class FieldMap {
 
     private final SmartDynamicTypes smartDynamicTypes;
     private final String primaryKey;
-    private final Map<String, FieldDefinition> fieldDefinitionMap;
+    private final Map<String, FieldDefinition<?>> fieldDefinitionMap;
     private final Map<String, FieldTypeInterface> nameDefMap;
     private final Collection<Pair<WildcardMatcher, FieldTypeInterface>> wildcardMap;
     private final FacetsConfig facetsConfig;
@@ -46,7 +46,7 @@ public class FieldMap {
     public final String recordField;
 
     public FieldMap(final String primaryKey,
-                    final Map<String, FieldDefinition> fieldDefinitions,
+                    final Map<String, FieldDefinition<?>> fieldDefinitions,
                     final String sortedSetFacetField,
                     final String recordField) {
 
@@ -164,7 +164,7 @@ public class FieldMap {
             "The field has not been found: " + (genericFieldName == null ? concreteFieldName : genericFieldName));
     }
 
-    final Map<String, FieldDefinition> getFieldDefinitionMap() {
+    final Map<String, FieldDefinition<?>> getFieldDefinitionMap() {
         return fieldDefinitionMap;
     }
 

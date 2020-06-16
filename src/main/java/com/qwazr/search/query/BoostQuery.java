@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,8 @@ public class BoostQuery extends AbstractQuery<BoostQuery> {
     final public Float boost;
 
     @JsonCreator
-    public BoostQuery(@JsonProperty("query") final AbstractQuery<?> query, @JsonProperty("boost") final Float boost) {
+    public BoostQuery(@JsonProperty("query") final AbstractQuery<?> query,
+                      @JsonProperty("boost") final Float boost) {
         super(BoostQuery.class);
         this.query = Objects.requireNonNull(query, "The query property is missing");
         this.boost = Objects.requireNonNull(boost, "The boost property is missing");
@@ -46,7 +47,7 @@ public class BoostQuery extends AbstractQuery<BoostQuery> {
 
     public BoostQuery(final IndexSettingsDefinition settings,
                       final Map<String, AnalyzerDefinition> analyzers,
-                      final Map<String, FieldDefinition> fields) {
+                      final Map<String, FieldDefinition<?>> fields) {
         super(BoostQuery.class, DOC);
         final String field = getFullTextField(fields,
             () -> getTextField(fields,
@@ -64,5 +65,10 @@ public class BoostQuery extends AbstractQuery<BoostQuery> {
     @Override
     protected boolean isEqual(final BoostQuery q) {
         return Objects.equals(query, q.query) && Objects.equals(boost, q.boost);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(query, boost);
     }
 }

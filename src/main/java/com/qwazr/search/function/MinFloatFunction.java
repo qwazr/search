@@ -26,15 +26,15 @@ import java.io.IOException;
 
 public class MinFloatFunction extends AbstractValueSources<MinFloatFunction> {
 
-	@JsonCreator
-	public MinFloatFunction(@JsonProperty("sources") AbstractValueSource... sources) {
-		super(MinFloatFunction.class, sources);
-	}
+    @JsonCreator
+    public MinFloatFunction(@JsonProperty("sources") AbstractValueSource<?>... sources) {
+        super(MinFloatFunction.class, sources);
+    }
 
-	@Override
-	public ValueSource getValueSource(final QueryContext queryContext)
-			throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
-		return new org.apache.lucene.queries.function.valuesource.MinFloatFunction(getValueSourceArray(queryContext));
-	}
+    @Override
+    public ValueSource getValueSource(final QueryContext queryContext)
+        throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
+        return new org.apache.lucene.queries.function.valuesource.MinFloatFunction(getValueSourceArray(queryContext));
+    }
 
 }

@@ -19,6 +19,7 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
+import java.util.Objects;
 import org.apache.lucene.search.Query;
 
 import java.net.URI;
@@ -45,7 +46,12 @@ public class MatchNoDocsQuery extends AbstractQuery<MatchNoDocsQuery> {
     }
 
     @Override
-    protected boolean isEqual(MatchNoDocsQuery query) {
-        return query != null;
+    protected boolean isEqual(final MatchNoDocsQuery query) {
+        return true;
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return ownClass.hashCode();
     }
 }

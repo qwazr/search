@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,19 +115,24 @@ public class PayloadScoreQuery extends AbstractQuery<PayloadScoreQuery> {
                              final DecoderType decoderType,
                              final Boolean includeSpanScore) {
         this(wrappedQuery,
-                Objects.requireNonNull(functionType, "The function is missing").payloadFunction,
-                Objects.requireNonNull(decoderType, "The decoder is missing"),
-                includeSpanScore);
+            Objects.requireNonNull(functionType, "The function is missing").payloadFunction,
+            Objects.requireNonNull(decoderType, "The decoder is missing"),
+            includeSpanScore);
     }
 
     @Override
     protected boolean isEqual(final PayloadScoreQuery q) {
         return Objects.equals(wrappedQuery, q.wrappedQuery) &&
-                Objects.equals(includeSpanScore, q.includeSpanScore) &&
-                Objects.equals(payloadFunctionInstance, q.payloadFunctionInstance) &&
-                Objects.equals(payloadFunction, q.payloadFunction) &&
-                Objects.equals(payloadDecoderInstance, q.payloadDecoderInstance) &&
-                Objects.equals(payloadDecoder, q.payloadDecoder);
+            Objects.equals(includeSpanScore, q.includeSpanScore) &&
+            Objects.equals(payloadFunctionInstance, q.payloadFunctionInstance) &&
+            Objects.equals(payloadFunction, q.payloadFunction) &&
+            Objects.equals(payloadDecoderInstance, q.payloadDecoderInstance) &&
+            Objects.equals(payloadDecoder, q.payloadDecoder);
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(wrappedQuery, includeSpanScore, payloadFunctionInstance, payloadDecoderInstance);
     }
 
     final static String[] payloadFunctionClassPrefixes = {"", "org.apache.lucene.queries.payloads."};
@@ -135,21 +140,21 @@ public class PayloadScoreQuery extends AbstractQuery<PayloadScoreQuery> {
     final static String[] payloadDecoderClassPrefixes = {"", "com.qwazr.search.analysis."};
 
     private static PayloadFunction getPayloadFunction(final String payloadFunction)
-            throws ReflectiveOperationException {
+        throws ReflectiveOperationException {
         return (PayloadFunction) ClassLoaderUtils.findClass(payloadFunction, payloadFunctionClassPrefixes)
-                .getDeclaredConstructor().newInstance();
+            .getDeclaredConstructor().newInstance();
     }
 
     private static PayloadDecoder getPayloadDecoder(final String payloadDecoder)
-            throws ReflectiveOperationException {
+        throws ReflectiveOperationException {
         return (PayloadDecoder) ClassLoaderUtils.findClass(payloadDecoder, payloadDecoderClassPrefixes)
-                .getDeclaredConstructor().newInstance();
+            .getDeclaredConstructor().newInstance();
     }
 
     @Override
     final public Query getQuery(final QueryContext queryContext)
-            throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
+        throws IOException, ParseException, QueryNodeException, ReflectiveOperationException {
         return new org.apache.lucene.queries.payloads.PayloadScoreQuery(wrappedQuery.getQuery(queryContext),
-                payloadFunctionInstance, payloadDecoderInstance, includeSpanScore);
+            payloadFunctionInstance, payloadDecoderInstance, includeSpanScore);
     }
 }

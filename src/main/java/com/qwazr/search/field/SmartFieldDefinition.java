@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class SmartFieldDefinition extends FieldDefinition {
+public class SmartFieldDefinition extends FieldDefinition<SmartFieldDefinition> {
 
     public final static int DEFAULT_MAX_KEYWORD_LENGTH = 2048;
 
@@ -54,7 +54,8 @@ public class SmartFieldDefinition extends FieldDefinition {
                          @JsonProperty("sort") final Boolean sort,
                          @JsonProperty("stored") final Boolean stored,
                          @JsonProperty("copy_from") final String[] copyFrom) {
-        super(type,
+        super(SmartFieldDefinition.class,
+            type,
             analyzer != null && analyzer != SmartAnalyzerSet.keyword ? analyzer.name() : null,
             indexAnalyzer,
             queryAnalyzer,
@@ -67,7 +68,7 @@ public class SmartFieldDefinition extends FieldDefinition {
     }
 
     private SmartFieldDefinition(final SmartBuilder builder) {
-        super(builder);
+        super(SmartFieldDefinition.class, builder);
         facet = builder.facet;
         index = builder.index;
         sort = builder.sort;
@@ -78,7 +79,8 @@ public class SmartFieldDefinition extends FieldDefinition {
     public SmartFieldDefinition(final String fieldName,
                                 final SmartField smartField,
                                 final Map<String, Copy> copyMap) {
-        super(smartField.type(),
+        super(SmartFieldDefinition.class,
+            smartField.type(),
             smartField.analyzerClass() != Analyzer.class ? smartField.analyzerClass().getName() : smartField.analyzer().name(),
             from(smartField.indexAnalyzer(), smartField.indexAnalyzerClass()),
             from(smartField.queryAnalyzer(), smartField.queryAnalyzerClass()),
@@ -91,21 +93,12 @@ public class SmartFieldDefinition extends FieldDefinition {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hashCode(type);
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof SmartFieldDefinition))
-            return false;
-        if (o == this)
-            return true;
-        if (!super.equals(o))
-            return false;
-        final SmartFieldDefinition f = (SmartFieldDefinition) o;
-        return Objects.equals(facet, f.facet) && Objects.equals(index, f.index) && Objects.equals(sort, f.sort) &&
-            Objects.equals(stored, f.stored);
+    protected boolean isEqual(final SmartFieldDefinition f) {
+        return equals(f)
+            && Objects.equals(facet, f.facet)
+            && Objects.equals(index, f.index)
+            && Objects.equals(sort, f.sort)
+            && Objects.equals(stored, f.stored);
     }
 
     @Override

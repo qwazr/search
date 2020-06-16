@@ -50,4 +50,9 @@ public class SpanTermQuery extends AbstractFieldSpanQuery<SpanTermQuery> {
         return new org.apache.lucene.search.spans.SpanTermQuery(
             resolveFullTextTerm(queryContext.getFieldMap(), genericField, field, value));
     }
+
+    @Override
+    protected int computeHashCode() {
+        return Objects.hashCode(value);
+    }
 }

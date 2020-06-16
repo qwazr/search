@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.qwazr.search.field;
 
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.test.units.AbstractIndexTest;
+import java.util.Map;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -42,13 +43,13 @@ public class SmartFieldBuilderTest extends AbstractIndexTest {
     public void testSetField() {
         indexService.setField(SCHEMA, INDEX, "emptyField", SmartFieldDefinition.of().build());
         indexService.setField(SCHEMA, INDEX, "doubleField",
-                SmartFieldDefinition.of().type(SmartFieldDefinition.Type.DOUBLE).build());
+            SmartFieldDefinition.of().type(SmartFieldDefinition.Type.DOUBLE).build());
         indexService.setField(SCHEMA, INDEX, "indexField", SmartFieldDefinition.of().index(true).build());
     }
 
     @Test
     public void testSetFields() {
-        LinkedHashMap<String, FieldDefinition> fields = new LinkedHashMap<>();
+        Map<String, FieldDefinition<?>> fields = new LinkedHashMap<>();
         fields.put("emptyField2", SmartFieldDefinition.of().build());
         fields.put("doubleField2", SmartFieldDefinition.of().type(SmartFieldDefinition.Type.DOUBLE).build());
         fields.put("indexField2", SmartFieldDefinition.of().index(true).build());

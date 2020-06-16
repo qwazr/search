@@ -90,6 +90,11 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
             Objects.equals(splitOnWhitespace, q.splitOnWhitespace);
     }
 
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(fields, boosts, default_operator);
+    }
+
     protected void setParserParameters(final org.apache.lucene.queryparser.classic.QueryParser parser) {
         setQueryBuilderParameters(parser);
         if (default_operator != null)

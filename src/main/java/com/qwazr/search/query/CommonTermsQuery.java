@@ -52,7 +52,7 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
-    public static class Term extends Equalizer<Term> {
+    public static class Term extends Equalizer.Immutable<Term> {
 
         public final String field;
         public final Object value;
@@ -74,7 +74,7 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
         }
 
         @Override
-        public int hashCode() {
+        protected int computeHashCode() {
             return Objects.hash(field, value);
         }
     }
@@ -95,7 +95,7 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
 
     public CommonTermsQuery(final IndexSettingsDefinition settings,
                             final Map<String, AnalyzerDefinition> analyzers,
-                            final Map<String, FieldDefinition> fields) {
+                            final Map<String, FieldDefinition<?>> fields) {
         super(CommonTermsQuery.class, DOC);
         final String field = getFullTextField(fields,
             () -> getTextField(fields,
@@ -113,7 +113,7 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
     }
 
     @Override
-    public int hashCode() {
+    protected int computeHashCode() {
         return Objects.hash(highFreqOccur, lowFreqOccur, maxTermFrequency, terms);
     }
 

@@ -95,5 +95,10 @@ public class FilterCollector extends BaseCollector.Parallel<FilterCollector.Quer
         protected boolean isEqual(Query q) {
             return Objects.equals(filteredQuery, q.filteredQuery);
         }
+
+        @Override
+        protected int computeHashCode() {
+            return Objects.hash(filteredQuery);
+        }
     }
 }

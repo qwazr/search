@@ -65,7 +65,7 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
-    public static class BooleanClause extends Equalizer<BooleanClause> {
+    public static class BooleanClause extends Equalizer.Immutable<BooleanClause> {
 
         public final Occur occur;
         public final AbstractQuery<?> query;
@@ -86,12 +86,12 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
         }
 
         @Override
-        public int hashCode() {
+        protected int computeHashCode() {
             return Objects.hash(occur, query);
         }
 
         @Override
-        public boolean isEqual(BooleanClause o) {
+        protected boolean isEqual(BooleanClause o) {
             return Objects.equals(occur, o.occur) && Objects.equals(query, o.query);
         }
     }
@@ -108,7 +108,7 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 
     public BooleanQuery(final IndexSettingsDefinition settings,
                         final Map<String, AnalyzerDefinition> analyzers,
-                        final Map<String, FieldDefinition> fields) {
+                        final Map<String, FieldDefinition<?>> fields) {
         super(BooleanQuery.class, DOC);
         minimumNumberShouldMatch = 2;
         final String field = getFullTextField(fields,
@@ -166,7 +166,7 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
     }
 
     @Override
-    public int hashCode() {
+    public int computeHashCode() {
         return Objects.hash(clauses, minimumNumberShouldMatch);
     }
 
@@ -192,7 +192,7 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
             return this;
         }
 
-        public final Builder addClause(final Occur occur, final AbstractQuery query) {
+        public final Builder addClause(final Occur occur, final AbstractQuery<?> query) {
             return addClause(new BooleanClause(occur, query));
         }
 
@@ -216,19 +216,19 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
             return addClauses(booleanClauses);
         }
 
-        public final Builder filter(final AbstractQuery query) {
+        public final Builder filter(final AbstractQuery<?> query) {
             return addClause(Occur.filter, query);
         }
 
-        public final Builder must(final AbstractQuery query) {
+        public final Builder must(final AbstractQuery<?> query) {
             return addClause(Occur.must, query);
         }
 
-        public final Builder mustNot(final AbstractQuery query) {
+        public final Builder mustNot(final AbstractQuery<?> query) {
             return addClause(Occur.must_not, query);
         }
 
-        public final Builder should(final AbstractQuery query) {
+        public final Builder should(final AbstractQuery<?> query) {
             return addClause(Occur.should, query);
         }
 

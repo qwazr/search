@@ -28,28 +28,28 @@ import java.io.IOException;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "source")
 @JsonSubTypes({@JsonSubTypes.Type(value = ConstValueSource.class),
-        @JsonSubTypes.Type(value = DefFunction.class),
-        @JsonSubTypes.Type(value = DivFloatFunction.class),
-        @JsonSubTypes.Type(value = DoubleConstValueSource.class),
-        @JsonSubTypes.Type(value = DoubleFieldSource.class),
-        @JsonSubTypes.Type(value = FloatFieldSource.class),
-        @JsonSubTypes.Type(value = IfFunction.class),
-        @JsonSubTypes.Type(value = IntFieldSource.class),
-        @JsonSubTypes.Type(value = LongFieldSource.class),
-        @JsonSubTypes.Type(value = MaxDocValueSource.class),
-        @JsonSubTypes.Type(value = MaxFloatFunction.class),
-        @JsonSubTypes.Type(value = MinFloatFunction.class),
-        @JsonSubTypes.Type(value = MultiValuedDoubleFieldSource.class),
-        @JsonSubTypes.Type(value = MultiValuedFloatFieldSource.class),
-        @JsonSubTypes.Type(value = MultiValuedIntFieldSource.class),
-        @JsonSubTypes.Type(value = MultiValuedLongFieldSource.class),
-        @JsonSubTypes.Type(value = NumDocsValueSource.class),
-        @JsonSubTypes.Type(value = PowFloatFunction.class),
-        @JsonSubTypes.Type(value = ProductFloatFunction.class),
-        @JsonSubTypes.Type(value = QueryValueSource.class),
-        @JsonSubTypes.Type(value = SortedSetFieldSource.class),
-        @JsonSubTypes.Type(value = SumFloatFunction.class)})
-public abstract class AbstractValueSource<T extends AbstractValueSource<?>> extends Equalizer<T> {
+    @JsonSubTypes.Type(value = DefFunction.class),
+    @JsonSubTypes.Type(value = DivFloatFunction.class),
+    @JsonSubTypes.Type(value = DoubleConstValueSource.class),
+    @JsonSubTypes.Type(value = DoubleFieldSource.class),
+    @JsonSubTypes.Type(value = FloatFieldSource.class),
+    @JsonSubTypes.Type(value = IfFunction.class),
+    @JsonSubTypes.Type(value = IntFieldSource.class),
+    @JsonSubTypes.Type(value = LongFieldSource.class),
+    @JsonSubTypes.Type(value = MaxDocValueSource.class),
+    @JsonSubTypes.Type(value = MaxFloatFunction.class),
+    @JsonSubTypes.Type(value = MinFloatFunction.class),
+    @JsonSubTypes.Type(value = MultiValuedDoubleFieldSource.class),
+    @JsonSubTypes.Type(value = MultiValuedFloatFieldSource.class),
+    @JsonSubTypes.Type(value = MultiValuedIntFieldSource.class),
+    @JsonSubTypes.Type(value = MultiValuedLongFieldSource.class),
+    @JsonSubTypes.Type(value = NumDocsValueSource.class),
+    @JsonSubTypes.Type(value = PowFloatFunction.class),
+    @JsonSubTypes.Type(value = ProductFloatFunction.class),
+    @JsonSubTypes.Type(value = QueryValueSource.class),
+    @JsonSubTypes.Type(value = SortedSetFieldSource.class),
+    @JsonSubTypes.Type(value = SumFloatFunction.class)})
+public abstract class AbstractValueSource<T extends AbstractValueSource<T>> extends Equalizer.Immutable<T> {
 
     protected AbstractValueSource(final Class<T> ownClass) {
         super(ownClass);
@@ -57,6 +57,6 @@ public abstract class AbstractValueSource<T extends AbstractValueSource<?>> exte
 
     @JsonIgnore
     abstract public ValueSource getValueSource(final QueryContext queryContext)
-            throws QueryNodeException, ReflectiveOperationException, ParseException, IOException;
-
+        throws QueryNodeException, ReflectiveOperationException, ParseException, IOException;
+    
 }

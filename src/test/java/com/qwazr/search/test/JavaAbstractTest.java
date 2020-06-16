@@ -160,7 +160,7 @@ public abstract class JavaAbstractTest {
     @Test
     public void test072CreateUpdateFields() throws URISyntaxException, IOException {
         final AnnotatedIndexService<?> service = getMaster();
-        Map<String, FieldDefinition> fields = service.createUpdateFields();
+        Map<String, FieldDefinition<?>> fields = service.createUpdateFields();
         Assert.assertNotNull(fields);
         CustomFieldDefinition field;
         Assert.assertNotNull("The Title field is not present", field = (CustomFieldDefinition) fields.get("title"));
@@ -177,7 +177,7 @@ public abstract class JavaAbstractTest {
     @Test
     public void test074GetFields() throws URISyntaxException, IOException {
         final AnnotatedIndexService<?> service = getMaster();
-        Map<String, FieldDefinition> fields = service.getFields();
+        Map<String, FieldDefinition<?>> fields = service.getFields();
         Assert.assertNotNull(fields);
         Assert.assertFalse(fields.isEmpty());
         fields.forEach((fieldName, fieldDefinition) -> {
@@ -600,7 +600,7 @@ public abstract class JavaAbstractTest {
         Assert.assertNotNull(masterStatus.indexUuid);
         Assert.assertNotNull(masterStatus.version);
 
-        final Map<String, FieldDefinition> masterFields = master.getFields();
+        final Map<String, FieldDefinition<?>> masterFields = master.getFields();
         final Map<String, AnalyzerDefinition> masterAnalyzers = master.getAnalyzers();
 
         final AnnotatedIndexService<AnnotatedRecord> slave = getSlave();
@@ -640,7 +640,7 @@ public abstract class JavaAbstractTest {
         Assert.assertEquals(masterStatus.version, slaveStatus.version);
         Assert.assertEquals(masterStatus.numDocs, slaveStatus.numDocs);
 
-        final Map<String, FieldDefinition> slaveFields = slave.getFields();
+        final Map<String, FieldDefinition<?>> slaveFields = slave.getFields();
         final Map<String, AnalyzerDefinition> slaveAnalyzers = slave.getAnalyzers();
         Assert.assertNotNull(slaveFields);
         Assert.assertNotNull(slaveAnalyzers);

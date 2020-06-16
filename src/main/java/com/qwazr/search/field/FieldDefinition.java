@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.field;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -27,6 +26,7 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.SingleDVConverter;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.utils.ArrayUtils;
+import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.WildcardMatcher;
@@ -55,7 +55,7 @@ import org.apache.lucene.facet.FacetsConfig;
     @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "LONG"),
     @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "FLOAT"),
     @JsonSubTypes.Type(value = SmartFieldDefinition.class, name = "DOUBLE")})
-public abstract class FieldDefinition {
+public abstract class FieldDefinition<T extends FieldDefinition<T>> extends Equalizer.Immutable<T> {
 
     /* Used by CustomFieldDefinition */
     public enum Template implements ValueConverter.Supplier, FieldTypeInterface.Supplier<CustomFieldDefinition> {
@@ -135,12 +135,13 @@ public abstract class FieldDefinition {
     @JsonProperty("copy_from")
     public final String[] copyFrom;
 
-    @JsonCreator
-    protected FieldDefinition(@JsonProperty("type") final SmartFieldDefinition.Type type,
-                              @JsonProperty("analyzer") final String analyzer,
-                              @JsonProperty("index_analyzer") final String indexAnalyzer,
-                              @JsonProperty("query_analyzer") final String queryAnalyzer,
-                              @JsonProperty("copy_from") final String[] copyFrom) {
+    protected FieldDefinition(final Class<T> fieldClass,
+                              final SmartFieldDefinition.Type type,
+                              final String analyzer,
+                              final String indexAnalyzer,
+                              final String queryAnalyzer,
+                              final String[] copyFrom) {
+        super(fieldClass);
         this.type = type;
         this.analyzer = analyzer;
         this.indexAnalyzer = indexAnalyzer;
@@ -148,7 +149,9 @@ public abstract class FieldDefinition {
         this.copyFrom = copyFrom;
     }
 
-    protected FieldDefinition(final AbstractBuilder<? extends AbstractBuilder<?>> builder) {
+    protected FieldDefinition(final Class<T> fieldClass,
+                              final AbstractBuilder<? extends AbstractBuilder<?>> builder) {
+        super(fieldClass);
         this.type = builder.type;
         this.analyzer = builder.analyzer;
         this.indexAnalyzer = builder.indexAnalyzer;
@@ -159,34 +162,29 @@ public abstract class FieldDefinition {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hashCode(type);
+    protected int computeHashCode() {
+        return Objects.hash(type, analyzer, indexAnalyzer, queryAnalyzer);
     }
 
     @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof FieldDefinition))
-            return false;
-        if (o == this)
-            return true;
-        final FieldDefinition f = (FieldDefinition) o;
+    protected boolean isEqual(final T f) {
         return Objects.equals(type, f.type)
             && Objects.equals(analyzer, f.analyzer)
             && Objects.equals(indexAnalyzer, f.indexAnalyzer)
             && Objects.equals(queryAnalyzer, f.queryAnalyzer);
     }
 
-    public final static TypeReference<Map<String, FieldDefinition>> mapStringFieldTypeRef =
+    public final static TypeReference<Map<String, FieldDefinition<?>>> mapStringFieldTypeRef =
         new TypeReference<>() {
         };
 
-    public static Map<String, FieldDefinition> newFieldMap(final String jsonString) throws IOException {
+    public static Map<String, FieldDefinition<?>> newFieldMap(final String jsonString) throws IOException {
         if (StringUtils.isEmpty(jsonString))
             return null;
         return ObjectMappers.JSON.readValue(jsonString, mapStringFieldTypeRef);
     }
 
-    public static FieldDefinition newField(final String jsonString) throws IOException {
+    public static FieldDefinition<?> newField(final String jsonString) throws IOException {
         return ObjectMappers.JSON.readValue(jsonString, FieldDefinition.class);
     }
 
@@ -208,7 +206,7 @@ public abstract class FieldDefinition {
 
     public final static String DOC_FIELD = "$doc";
 
-    static public void saveMap(final Map<String, FieldDefinition> fieldDefinitionMap, final File fieldMapFile)
+    static public void saveMap(final Map<String, FieldDefinition<?>> fieldDefinitionMap, final File fieldMapFile)
         throws IOException {
         if (fieldDefinitionMap == null)
             Files.deleteIfExists(fieldMapFile.toPath());
@@ -216,8 +214,8 @@ public abstract class FieldDefinition {
             ObjectMappers.JSON.writeValue(fieldMapFile, fieldDefinitionMap);
     }
 
-    static public Map<String, FieldDefinition> loadMap(final File fieldMapFile,
-                                                       final Supplier<Map<String, FieldDefinition>> defaultMap) throws IOException {
+    static public Map<String, FieldDefinition<?>> loadMap(final File fieldMapFile,
+                                                          final Supplier<Map<String, FieldDefinition<?>>> defaultMap) throws IOException {
         return fieldMapFile != null && fieldMapFile.exists() && fieldMapFile.isFile() ?
             ObjectMappers.JSON.readValue(fieldMapFile, FieldDefinition.mapStringFieldTypeRef) :
             defaultMap == null ? null : defaultMap.get();
