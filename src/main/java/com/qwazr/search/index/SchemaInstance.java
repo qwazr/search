@@ -68,10 +68,10 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
     private final ReadWriteLock backupLock = ReadWriteLock.stamped();
 
     SchemaInstance(final ConstructorParametersImpl instanceFactory,
-            final Map<String, SimilarityFactory> similarityFactoryMap,
-            final Map<String, AnalyzerFactory> analyzerFactoryMap, final Map<String, Sort> sortMap,
-            final IndexServiceInterface service, final File schemaDirectory, final ExecutorService executorService)
-            throws IOException {
+                   final Map<String, SimilarityFactory> similarityFactoryMap,
+                   final Map<String, AnalyzerFactory> analyzerFactoryMap, final Map<String, Sort> sortMap,
+                   final IndexServiceInterface service, final File schemaDirectory, final ExecutorService executorService)
+        throws IOException {
 
         this.readWriteSemaphores = new ReadWriteSemaphores(null, null);
         this.instanceFactory = instanceFactory;
@@ -89,15 +89,15 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
         settingsFile = new File(schemaDirectory, SETTINGS_FILE);
         settingsDefinition = settingsFile.exists() && settingsFile.length() > 0 ?
-                ObjectMappers.JSON.readValue(settingsFile, SchemaSettingsDefinition.class) :
-                SchemaSettingsDefinition.EMPTY;
+            ObjectMappers.JSON.readValue(settingsFile, SchemaSettingsDefinition.class) :
+            SchemaSettingsDefinition.EMPTY;
         checkSettings();
 
         try (final Stream<Path> stream = Files.list(this.schemaDirectory)) {
             stream.filter(path -> Files.isDirectory(path))
-                    .forEach(indexPath -> indexMap.put(indexPath.toFile().getName(),
-                            new IndexInstanceManager(this, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
-                                    sortMap, readWriteSemaphores, executorService, service, indexPath)));
+                .forEach(indexPath -> indexMap.put(indexPath.toFile().getName(),
+                    new IndexInstanceManager(this, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
+                        sortMap, readWriteSemaphores, executorService, service, indexPath)));
         }
     }
 
@@ -109,13 +109,13 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
     IndexInstance createUpdate(final String indexName, final IndexSettingsDefinition settings) throws Exception {
         Objects.requireNonNull(settings, "The settings cannot be null");
         return indexMap.computeIfAbsent(indexName,
-                name -> new IndexInstanceManager(this, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
-                        sortMap, readWriteSemaphores, executorService, service, schemaDirectory.resolve(name)))
-                .createUpdate(settings);
+            name -> new IndexInstanceManager(this, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
+                sortMap, readWriteSemaphores, executorService, service, schemaDirectory.resolve(name)))
+            .createUpdate(settings);
     }
 
     private IndexInstanceManager checkIndexExists(final String indexName,
-            final IndexInstanceManager indexInstanceManager) {
+                                                  final IndexInstanceManager indexInstanceManager) {
         if (indexInstanceManager == null)
             throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);
         return indexInstanceManager;
@@ -125,14 +125,16 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
      * Returns the indexInstance. If the index does not exists, an exception it
      * thrown. This method never returns a null value.
      *
-     * @param indexName        The name of the index
-     * @param ensureWriterOpen if true the index will be reopen if the writer has been closed
+     * @param indexName The name of the index
      * @return the indexInstance
      */
-    public IndexInstance get(String indexName, boolean ensureWriterOpen) {
+    public IndexInstance get(final String indexName) {
         final IndexInstanceManager indexInstanceManager = checkIndexExists(indexName, indexMap.get(indexName));
         try {
-            return ensureWriterOpen ? indexInstanceManager.getIndexInstance() : indexInstanceManager.open();
+            final IndexInstance indexInstance = indexInstanceManager.getIndexInstance();
+            if (indexInstance != null)
+                return indexInstance;
+            return indexInstanceManager.open();
         } catch (Exception e) {
             throw ServerException.of(e);
         }
@@ -140,7 +142,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
 
     @Override
     public IndexInstance getIndex(String name) {
-        return get(name, false);
+        return get(name);
     }
 
     void delete() {
@@ -173,7 +175,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
     private void checkBackupConfig() {
         if (settingsDefinition == null || StringUtils.isEmpty(settingsDefinition.backupDirectoryPath))
             throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-                    "Backup path not defined in the schema settings - Schema: " + schemaName);
+                "Backup path not defined in the schema settings - Schema: " + schemaName);
     }
 
     private Path getBackupDirectory(final String backupName, boolean createIfNotExists) throws IOException {
@@ -190,8 +192,8 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
             throw new IOException("The backup name is empty");
         if (backupNameMatcher.matcher(backupName).find())
             throw new IOException(
-                    "The backup name should only contains alphanumeric characters, dash, or underscore : " +
-                            backupName);
+                "The backup name should only contains alphanumeric characters, dash, or underscore : " +
+                    backupName);
         final Path backupDirectory = backupSchemaDirectory.resolve(backupName);
         if (createIfNotExists && Files.notExists(backupDirectory))
             Files.createDirectory(backupDirectory);
@@ -208,7 +210,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
                 }
             });
         } else
-            consumer.accept(indexName, get(indexName, false));
+            consumer.accept(indexName, get(indexName));
     }
 
     SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) throws IOException {
@@ -244,16 +246,16 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
     }
 
     SortedMap<String, SortedMap<String, BackupStatus>> getBackups(final String indexName, final String backupName,
-            final boolean extractVersion) {
+                                                                  final boolean extractVersion) {
         return backupLock.readEx(() -> {
             checkBackupConfig();
             final SortedMap<String, SortedMap<String, BackupStatus>> results =
-                    Collections.synchronizedSortedMap(new TreeMap<>());
+                Collections.synchronizedSortedMap(new TreeMap<>());
 
             backupIterator(backupName, backupDirectory -> {
 
                 final SortedMap<String, BackupStatus> backupResults =
-                        Collections.synchronizedSortedMap(new TreeMap<>());
+                    Collections.synchronizedSortedMap(new TreeMap<>());
 
                 indexIterator(indexName, (idxName, indexInstance) -> {
                     try {
@@ -272,7 +274,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
     }
 
     private void backupIndexDirectoryIterator(final Path backupDirectory, final String indexName,
-            final Consumer<Path> consumer) {
+                                              final Consumer<Path> consumer) {
         final Path backupSchemaDirectory = backupRootDirectory.resolve(schemaName);
         if (Files.notExists(backupSchemaDirectory) || !Files.isDirectory(backupSchemaDirectory))
             return;
@@ -299,30 +301,30 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
             final AtomicInteger counter = new AtomicInteger();
 
             backupIterator(backupName, backupDirectory -> backupIndexDirectoryIterator(backupDirectory, indexName,
-                    backupIndexDirectory -> {
+                backupIndexDirectory -> {
 
-                        try {
+                    try {
 
-                            final IndexInstance indexInstance =
-                                    get(backupIndexDirectory.getFileName().toString(), false);
-                            if (indexInstance != null)
-                                indexInstance.deleteBackup(backupIndexDirectory);
-                            else
-                                FileUtils.deleteDirectory(backupIndexDirectory);
+                        final IndexInstance indexInstance =
+                            get(backupIndexDirectory.getFileName().toString());
+                        if (indexInstance != null)
+                            indexInstance.deleteBackup(backupIndexDirectory);
+                        else
+                            FileUtils.deleteDirectory(backupIndexDirectory);
 
-                            counter.incrementAndGet();
+                        counter.incrementAndGet();
 
-                            if (Files.exists(backupDirectory)) {
-                                try (final Stream<Path> stream = Files.list(backupDirectory)) {
-                                    if (stream.count() == 0)
-                                        Files.deleteIfExists(backupDirectory);
-                                }
+                        if (Files.exists(backupDirectory)) {
+                            try (final Stream<Path> stream = Files.list(backupDirectory)) {
+                                if (stream.count() == 0)
+                                    Files.deleteIfExists(backupDirectory);
                             }
-                        } catch (IOException e) {
-                            throw ServerException.of(e);
                         }
+                    } catch (IOException e) {
+                        throw ServerException.of(e);
+                    }
 
-                    }));
+                }));
             return counter.get();
         });
     }
@@ -362,7 +364,7 @@ class SchemaInstance implements IndexInstance.Provider, Closeable {
     }
 
     IndexStatus mergeIndex(final String indexName, final String mergedIndexName,
-            final Map<String, String> commitUserData) throws IOException {
+                           final Map<String, String> commitUserData) throws IOException {
         return getIndex(indexName).merge(getIndex(mergedIndexName), commitUserData);
     }
 }

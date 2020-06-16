@@ -184,7 +184,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     final public Map<String, FieldDefinition<?>> getFields(final String schemaName, final String indexName) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, false).getFields();
+            return indexManager.get(schemaName).get(indexName).getFields();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -194,7 +194,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     final public FieldDefinition<?> getField(final String schemaName, final String indexName, final String fieldName) {
         try {
             checkRight(schemaName);
-            Map<String, FieldDefinition<?>> fieldMap = indexManager.get(schemaName).get(indexName, false).getFields();
+            Map<String, FieldDefinition<?>> fieldMap = indexManager.get(schemaName).get(indexName).getFields();
             final FieldDefinition<?> fieldDef = (fieldMap != null) ? fieldMap.get(fieldName) : null;
             if (fieldDef == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
@@ -210,7 +210,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                            final Map<String, FieldDefinition<?>> fields) {
         try {
             checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName, false).setFields(fields);
+            indexManager.get(schemaName).get(indexName).setFields(fields);
             return fields;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -223,7 +223,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                             final String text,
                                             final boolean index) throws IOException {
         checkRight(schemaName);
-        final IndexInstance indexInstance = indexManager.get(schemaName).get(indexName, false);
+        final IndexInstance indexInstance = indexManager.get(schemaName).get(indexName);
         final FunctionEx<Analyzer, List<TermDefinition>, IOException> analyzerFunction = analyzer -> {
             if (analyzer == null)
                 throw new ServerException(
@@ -250,7 +250,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     public FieldStats getFieldStats(String schemaName, String indexName, String fieldName) {
         checkRight(schemaName);
         try {
-            return indexManager.get(schemaName).get(indexName, false).getFieldStats(fieldName);
+            return indexManager.get(schemaName).get(indexName).getFieldStats(fieldName);
         } catch (IOException e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -267,7 +267,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                          final String fieldName, final String prefix, final Integer start, final Integer rows) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, false).getTermsEnum(fieldName, prefix, start, rows);
+            return indexManager.get(schemaName).get(indexName).getTermsEnum(fieldName, prefix, start, rows);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -290,7 +290,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                              final FieldDefinition<?> field) {
         try {
             checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName, false).setField(fieldName, field);
+            indexManager.get(schemaName).get(indexName).setField(fieldName, field);
             return field;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -301,7 +301,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     final public boolean deleteField(final String schemaName, final String indexName, final String fieldName) {
         try {
             checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName, false).deleteField(fieldName);
+            indexManager.get(schemaName).get(indexName).deleteField(fieldName);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -313,7 +313,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                               final String indexName) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, false).getAnalyzers();
+            return indexManager.get(schemaName).get(indexName).getAnalyzers();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -326,7 +326,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
         try {
             checkRight(schemaName);
             final Map<String, AnalyzerDefinition> analyzerMap =
-                indexManager.get(schemaName).get(indexName, false).getAnalyzers();
+                indexManager.get(schemaName).get(indexName).getAnalyzers();
             final AnalyzerDefinition analyzerDef = (analyzerMap != null) ? analyzerMap.get(analyzerName) : null;
             if (analyzerDef == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
@@ -341,7 +341,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     final public void refreshAnalyzers(final String schemaName, final String indexName) {
         try {
             checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName, false).refreshAnalyzers();
+            indexManager.get(schemaName).get(indexName).refreshAnalyzers();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -352,7 +352,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                 final String analyzerName, final AnalyzerDefinition analyzer) {
         try {
             checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName, false).setAnalyzer(analyzerName, analyzer);
+            indexManager.get(schemaName).get(indexName).setAnalyzer(analyzerName, analyzer);
             return analyzer;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -365,7 +365,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                               final Map<String, AnalyzerDefinition> analyzers) {
         try {
             checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName, false).setAnalyzers(analyzers);
+            indexManager.get(schemaName).get(indexName).setAnalyzers(analyzers);
             return analyzers;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -378,7 +378,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                         final String analyzerName) {
         try {
             checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName, false).deleteAnalyzer(analyzerName);
+            indexManager.get(schemaName).get(indexName).deleteAnalyzer(analyzerName);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -392,7 +392,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                    final String text) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text);
+            return indexManager.get(schemaName).get(indexName).testAnalyzer(analyzerName, text);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -406,7 +406,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
         try {
             checkRight(schemaName);
             return TermDefinition.toDot(
-                indexManager.get(schemaName).get(indexName, false).testAnalyzer(analyzerName, text));
+                indexManager.get(schemaName).get(indexName).testAnalyzer(analyzerName, text));
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -416,7 +416,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     final public IndexStatus getIndex(final String schemaName, final String indexName) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, false).getStatus();
+            return indexManager.get(schemaName).get(indexName).getStatus();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -425,7 +425,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     @Override
     public IndexSettingsDefinition getIndexSettings(String schemaName, String indexName) {
         checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName, false).getSettings();
+        return indexManager.get(schemaName).get(indexName).getSettings();
     }
 
     @Override
@@ -467,7 +467,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                             final PostDefinition.Document post) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, true).postMappedDocument(post);
+            return indexManager.get(schemaName).get(indexName).postMappedDocument(post);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -477,7 +477,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     public Integer postJson(final String schemaName, final String indexName, final JsonNode jsonNode) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, true).postJsonNode(jsonNode);
+            return indexManager.get(schemaName).get(indexName).postJsonNode(jsonNode);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -489,7 +489,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                     final Integer count) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, true).getJsonSamples(count == null ? 2 : count);
+            return indexManager.get(schemaName).get(indexName).getJsonSamples(count == null ? 2 : count);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -499,7 +499,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     public Map<String, Object> getJsonSample(final String schemaName, final String indexName) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, false).getJsonSample();
+            return indexManager.get(schemaName).get(indexName).getJsonSample();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -511,7 +511,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                              final PostDefinition.Documents post) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, true).postMappedDocuments(post);
+            return indexManager.get(schemaName).get(indexName).postMappedDocuments(post);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -524,7 +524,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                       final T document,
                                       final Map<String, String> commitUserData) throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData);
+        return indexManager.get(schemaName).get(indexName).postDocument(fields, document, commitUserData);
     }
 
     @Override
@@ -534,7 +534,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                        final Collection<T> documents,
                                        final Map<String, String> commitUserData) throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName, true).postDocuments(fields, documents, commitUserData);
+        return indexManager.get(schemaName).get(indexName).postDocuments(fields, documents, commitUserData);
     }
 
     @Override
@@ -544,7 +544,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                      final T document,
                                      final Map<String, String> commitUserData) throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName, true).postDocument(fields, document, commitUserData);
+        return indexManager.get(schemaName).get(indexName).postDocument(fields, document, commitUserData);
     }
 
     @Override
@@ -554,9 +554,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                       final Collection<T> documents,
                                       final Map<String, String> commitUserData) throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName)
-            .get(indexName, true)
-            .postDocuments(fields, documents, commitUserData);
+        return indexManager.get(schemaName).get(indexName).postDocuments(fields, documents, commitUserData);
     }
 
     @Override
@@ -565,7 +563,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                final PostDefinition.Document post) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, true).updateMappedDocValues(post);
+            return indexManager.get(schemaName).get(indexName).updateMappedDocValues(post);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -577,7 +575,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                 final PostDefinition.Documents post) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName, true).updateMappedDocsValues(post);
+            return indexManager.get(schemaName).get(indexName).updateMappedDocsValues(post);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -591,7 +589,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                          final Map<String, String> commitUserData)
         throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName, true).updateDocValues(fields, document, commitUserData);
+        return indexManager.get(schemaName).get(indexName).updateDocValues(fields, document, commitUserData);
     }
 
     @Override
@@ -602,7 +600,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                           final Map<String, String> commitUserData)
         throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName, true).updateDocsValues(fields, documents, commitUserData);
+        return indexManager.get(schemaName).get(indexName).updateDocsValues(fields, documents, commitUserData);
     }
 
     @Override
@@ -650,7 +648,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
         try {
             checkRight(null);
             final InputStream input = indexManager.get(schemaName)
-                .get(indexName, false)
+                .get(indexName)
                 .replicationObtain(sessionID, ReplicationProcess.Source.valueOf(source), fileName);
             if (input == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
@@ -667,7 +665,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                             final String sessionID) {
         try {
             checkRight(null);
-            indexManager.get(schemaName).get(indexName, false).replicationRelease(sessionID);
+            indexManager.get(schemaName).get(indexName).replicationRelease(sessionID);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -680,7 +678,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                       final String currentVersion) {
         try {
             checkRight(null);
-            return indexManager.get(schemaName).get(indexName, false).replicationUpdate(currentVersion);
+            return indexManager.get(schemaName).get(indexName).replicationUpdate(currentVersion);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -692,7 +690,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
         checkRight(null);
         try {
             LOGGER.info(() -> "Start replication " + schemaName + '/' + indexName);
-            final ReplicationStatus status = indexManager.get(schemaName).get(indexName, false).replicationCheck();
+            final ReplicationStatus status = indexManager.get(schemaName).get(indexName).replicationCheck();
             LOGGER.info(() -> "End replication " + schemaName + '/' + indexName + " - time: " + status.time +
                 "ms - size: " + status.size);
             return status;
@@ -706,7 +704,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                                 final String indexName) {
         try {
             checkRight(null);
-            return indexManager.get(schemaName).get(indexName, false).getResources();
+            return indexManager.get(schemaName).get(indexName).getResources();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -718,7 +716,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                    final String resourceName) {
         try {
             checkRight(null);
-            final InputStream input = indexManager.get(schemaName).get(indexName, false).getResource(resourceName);
+            final InputStream input = indexManager.get(schemaName).get(indexName).getResource(resourceName);
             if (input == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
                     "Resource not found: " + resourceName + " - Schema/index: " + schemaName + '/' + indexName);
@@ -736,7 +734,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                 final InputStream inputStream) {
         try {
             checkRight(null);
-            indexManager.get(schemaName).get(indexName, false).postResource(resourceName, lastModified, inputStream);
+            indexManager.get(schemaName).get(indexName).postResource(resourceName, lastModified, inputStream);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -747,7 +745,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     public boolean deleteResource(final String schemaName, final String indexName, final String resourceName) {
         try {
             checkRight(null);
-            indexManager.get(schemaName).get(indexName, false).deleteResource(resourceName);
+            indexManager.get(schemaName).get(indexName).deleteResource(resourceName);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -758,7 +756,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     final public boolean deleteAll(final String schemaName, final String indexName) {
         try {
             checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName, false).deleteAll(null);
+            indexManager.get(schemaName).get(indexName).deleteAll(null);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -773,7 +771,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     private ResultDefinition.WithMap doSearchMap(final String schemaName, final String indexName, final QueryDefinition query)
         throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName, false).query(context -> context.searchMap(query));
+        return indexManager.get(schemaName).get(indexName).query(context -> context.searchMap(query));
     }
 
     private <T> ResultDefinition.WithObject<T> doSearchObject(final String schemaName,
@@ -781,9 +779,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                               final QueryDefinition query,
                                                               final FieldMapWrapper<T> wrapper) throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName)
-            .get(indexName, false)
-            .query(context -> context.searchObject(query, wrapper));
+        return indexManager.get(schemaName).get(indexName).query(context -> context.searchObject(query, wrapper));
     }
 
     @Override
@@ -795,9 +791,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
             if (StringUtils.isEmpty(id))
                 throw new ServerException(Response.Status.NOT_ACCEPTABLE,
                     "The id is empty - Schema/index: " + schemaName + '/' + indexName);
-            final ResultDefinition.WithMap result = indexManager.get(schemaName)
-                .get(indexName, false)
-                .getDocument(id);
+            final ResultDefinition.WithMap result = indexManager.get(schemaName).get(indexName).getDocument(id);
             if (result != null) {
                 final List<ResultDocumentMap> docs = result.getDocuments();
                 if (docs != null && !docs.isEmpty())
@@ -841,9 +835,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
             if (id == null)
                 throw new ServerException(Response.Status.NOT_ACCEPTABLE,
                     "The id is null - Schema/index: " + schemaName + '/' + indexName);
-            final ResultDefinition.WithObject<T> result = indexManager.get(schemaName)
-                .get(indexName, false)
-                .getDocument(id, wrapper);
+            final ResultDefinition.WithObject<T> result = indexManager.get(schemaName).get(indexName).getDocument(id, wrapper);
             if (result == null)
                 return null;
             final List<ResultDocumentObject<T>> docs = result.getDocuments();
@@ -883,7 +875,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                       final Boolean delete) {
         try {
             checkRight(schemaName);
-            final IndexInstance index = indexManager.get(schemaName).get(indexName, delete != null && delete);
+            final IndexInstance index = indexManager.get(schemaName).get(indexName);
             if (delete != null && delete)
                 return index.deleteByQuery(query);
             else
@@ -900,9 +892,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                                                 final FieldMapWrapper<T> wrapper) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName)
-                .get(indexName, false)
-                .query(context -> context.searchObject(query, wrapper));
+            return indexManager.get(schemaName).get(indexName).query(context -> context.searchObject(query, wrapper));
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -915,9 +905,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                               final ResultDocumentsInterface resultDocuments) {
         try {
             checkRight(schemaName);
-            return indexManager.get(schemaName)
-                .get(indexName, false)
-                .query(context -> context.searchInterface(query, resultDocuments));
+            return indexManager.get(schemaName).get(indexName).query(context -> context.searchInterface(query, resultDocuments));
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
@@ -928,7 +916,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                           int docId) {
         try {
             checkRight(schemaName);
-            final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
+            final IndexInstance index = indexManager.get(schemaName).get(indexName);
             return new ExplainDefinition(index.explain(query, docId));
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -940,7 +928,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                    final int docId) {
         try {
             checkRight(schemaName);
-            final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
+            final IndexInstance index = indexManager.get(schemaName).get(indexName);
             return index.explain(query, docId).toString();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -961,14 +949,14 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     @Override
     public <T> T query(final String schemaName, final String indexName, final QueryActions<T> actions) throws IOException {
         checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName, false).query(actions);
+        return indexManager.get(schemaName).get(indexName).query(actions);
     }
 
     @Override
     public <T> T write(final String schemaName, final String indexName, final WriteActions<T> actions)
         throws IOException {
         checkRight(schemaName);
-        final IndexInstance index = indexManager.get(schemaName).get(indexName, false);
+        final IndexInstance index = indexManager.get(schemaName).get(indexName);
         return index.write(actions);
     }
 

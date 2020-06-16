@@ -71,13 +71,11 @@ class IndexInstanceManager implements Closeable {
             this.analyzerFactoryMap = analyzerFactoryMap;
             this.sortMap = sortMap;
             this.readWriteSemaphores = readWriteSemaphores;
-
             this.indexName = fileSet.checkIndexDirectory();
             this.indexUuid = fileSet.checkUuid();
             this.settings = fileSet.loadSettings();
 
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw ServerException.of(e);
         }
     }
@@ -116,8 +114,7 @@ class IndexInstanceManager implements Closeable {
                 try (final CheckIndex checkIndex = new CheckIndex(directory)) {
                     return checkIndex.checkIndex();
                 }
-            }
-            finally {
+            } finally {
                 ensureOpen();
             }
         });
@@ -154,8 +151,7 @@ class IndexInstanceManager implements Closeable {
             if (Files.exists(fileSet.mainDirectory)) {
                 try {
                     FileUtils.deleteDirectory(fileSet.mainDirectory);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     throw ServerException.of(e);
                 }
             }
