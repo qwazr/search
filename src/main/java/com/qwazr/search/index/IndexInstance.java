@@ -38,6 +38,8 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.FunctionEx;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
@@ -124,6 +126,8 @@ final public class IndexInstance implements Closeable {
     private final ReplicationMaster replicationMaster;
     private final ReplicationSlave replicationSlave;
 
+    private final ReindexThread reindexThread;
+
     IndexInstance(final IndexInstanceBuilder builder) {
         this.readWriteSemaphores = builder.readWriteSemaphores;
         this.indexProvider = builder.indexProvider;
@@ -150,6 +154,9 @@ final public class IndexInstance implements Closeable {
         this.backupLock = new ReentrantLock(true);
         this.replicationMaster = builder.replicationMaster;
         this.replicationSlave = builder.replicationSlave;
+        this.reindexThread =
+            builder.replicationMaster != null && !StringUtils.isBlank(settings.recordField)
+                ? new ReindexThread(executorService, this) : null;
     }
 
     public IndexSettingsDefinition getSettings() {
@@ -542,7 +549,12 @@ final public class IndexInstance implements Closeable {
         return write(context -> checkCommit(context.postMappedDocuments(post), post));
     }
 
-    public int postJsonNode(final JsonNode jsonNode) throws IOException {
+    final int postJsonNodes(final Collection<JsonNode> jsonNodes) throws IOException {
+        checkIsMaster();
+        return write(context -> checkCommit(context.postJsonNodes(jsonNodes)));
+    }
+
+    final int postJsonNode(final JsonNode jsonNode) throws IOException {
         checkIsMaster();
         return write(context -> checkCommit(context.postJsonNode(jsonNode)));
     }
@@ -814,4 +826,9 @@ final public class IndexInstance implements Closeable {
         return getJsonSample(null);
     }
 
+    ReindexThread getReindexThread() {
+        if (reindexThread == null)
+            throw new NotAcceptableException("Reindexing is not available on slave indexes.");
+        return reindexThread;
+    }
 }

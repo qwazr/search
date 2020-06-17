@@ -153,6 +153,17 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
     }
 
     @Override
+    public int postJsonNodes(final Collection<JsonNode> jsonNodes) throws IOException {
+        if (jsonNodes == null)
+            return 0;
+        final RecordsPoster.JsonNodeDocument poster =
+            RecordsPoster.JsonNodeDocument.of(fieldMap, indexWriter, taxonomyWriter);
+        for (final JsonNode jsonNode : jsonNodes)
+            poster.accept(jsonNode);
+        return poster.getCount();
+    }
+
+    @Override
     public final <T> int updateDocValues(final Map<String, Field> fields,
                                          final T document,
                                          final Map<String, String> commitUserData) throws IOException {

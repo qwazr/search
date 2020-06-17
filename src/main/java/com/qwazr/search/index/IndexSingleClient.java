@@ -473,6 +473,48 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
+    public ReindexDefinition getReindexStatus(String schemaName, String indexName) {
+        try {
+            return indexTarget.path(schemaName)
+                .path(indexName)
+                .path("reindex")
+                .request(preferedSerializedMediaType)
+                .get(ReindexDefinition.class);
+        } catch (WebApplicationException e) {
+            throw ServerException.from(e);
+        }
+    }
+
+    @Override
+    public ReindexDefinition startReindex(final String schemaName,
+                                          final String indexName,
+                                          final Integer bufferSize) {
+        try {
+            return indexTarget.path(schemaName)
+                .path(indexName)
+                .path("reindex")
+                .queryParam("buffer_size", bufferSize)
+                .request(preferedSerializedMediaType)
+                .post(null, ReindexDefinition.class);
+        } catch (WebApplicationException e) {
+            throw ServerException.from(e);
+        }
+    }
+
+    @Override
+    public ReindexDefinition stopReindex(final String schemaName, final String indexName) {
+        try {
+            return indexTarget.path(schemaName)
+                .path(indexName)
+                .path("reindex")
+                .request(preferedSerializedMediaType)
+                .delete(ReindexDefinition.class);
+        } catch (WebApplicationException e) {
+            throw ServerException.from(e);
+        }
+    }
+
+    @Override
     public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
                                                                                             final String indexName, final String backupName, final Boolean extractVersion) {
         return indexTarget.path(schemaName)

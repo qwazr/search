@@ -184,7 +184,8 @@ public class QueryBuilder {
         return sort(fieldName.name(), sortEnum);
     }
 
-    public QueryBuilder collector(final String name, final Class<? extends Collector> collectorClass,
+    public QueryBuilder collector(final String name,
+                                  final Class<? extends Collector> collectorClass,
                                   final Object... arguments) {
         if (name == null || collectorClass == null)
             return this;

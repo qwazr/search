@@ -44,18 +44,18 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
     private static AnnotatedIndexService<Record> indexService;
 
     @BeforeClass
-    public static void setup() throws IOException, URISyntaxException, InterruptedException {
+    public static void setup() throws IOException, URISyntaxException {
         indexService = initIndexService(Record.class);
-        indexService.postDocument(new Record(1, new String[] { "tag1", "tag1and2" }));
-        indexService.postDocument(new Record(2, new String[] { "tag2", "tag1and2" }));
+        indexService.postDocument(new Record(1, new String[]{"tag1", "tag1and2"}));
+        indexService.postDocument(new Record(2, new String[]{"tag2", "tag1and2"}));
     }
 
     ResultDefinition.WithObject<Record> checkResult(AbstractQuery query, String queryExplain, long... expectedIds) {
         final ResultDefinition.WithObject<Record> result = indexService.searchQuery(QueryDefinition.of(query)
-                .returnedField("*")
-                .queryDebug(true)
-                .facet("tags", FacetDefinition.of().build())
-                .build(), Record.class);
+            .returnedField("*")
+            .queryDebug(true)
+            .facet("tags", FacetDefinition.of().build())
+            .build(), Record.class);
         if (queryExplain != null)
             Assert.assertEquals(queryExplain, result.query);
         else
@@ -70,16 +70,16 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
     @Test
     public void drillDownQueryTest() {
         checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).filter("tags", "tag1"),
-                "+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
+            "+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
         checkResult(new DrillDownQuery(null, false).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
         checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).filter("tags", "tag1and2"),
-                "+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
+            "+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
 
         checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).filter("tags", "tag1"),
-                "+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
+            "+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
         checkResult(new DrillDownQuery(null, true).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
         checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).filter("tags", "tag1and2"),
-                "+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
+            "+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
     }
 
     @Test
@@ -100,7 +100,7 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
         final public long id;
 
         @SmartField(type = SmartFieldDefinition.Type.TEXT, facet = true)
-        @Copy(to = { @Copy.To(order = 3, field = "full") })
+        @Copy(to = {@Copy.To(order = 3, field = "full")})
         final public String[] tags;
 
         Record(long id, String[] tags) {

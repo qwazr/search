@@ -345,6 +345,26 @@ public interface IndexServiceInterface extends ServiceInterface {
                                                                 @PathParam("backup_name") String backup_name);
 
     @GET
+    @Path("/{schema_name}/{index_name}/reindex")
+    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
+    ReindexDefinition getReindexStatus(@PathParam("schema_name") String schemaName,
+                                       @PathParam("index_name") String indexName);
+
+    @POST
+    @Path("/{schema_name}/{index_name}/reindex")
+    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
+    ReindexDefinition startReindex(@PathParam("schema_name") String schemaName,
+                                   @PathParam("index_name") String indexName,
+                                   @QueryParam("buffer_size") Integer bufferSize);
+
+    @DELETE
+    @Path("/{schema_name}/{index_name}/reindex")
+    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
+    ReindexDefinition stopReindex(@PathParam("schema_name") String schemaName,
+                                  @PathParam("index_name") String indexName);
+
+
+    @GET
     @Path("/{schema_name}/{index_name}/backup/{backup_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(@PathParam("schema_name") String schema_name,

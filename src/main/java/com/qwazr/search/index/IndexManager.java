@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,8 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 
     private final ExecutorService executorService;
 
-    public IndexManager(final Path indexesDirectory, final ExecutorService executorService,
+    public IndexManager(final Path indexesDirectory,
+                        final ExecutorService executorService,
                         final ConstructorParameters constructorParameters) {
         super(constructorParameters == null ? new ConcurrentHashMap<>() : constructorParameters.getMap());
         this.rootDirectory = indexesDirectory.toFile();
@@ -90,14 +91,14 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
                 schemaMap.put(schemaDirectory.getName(),
                     new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, sortMap, service,
                         schemaDirectory, executorService));
-            }
-            catch (ServerException | IOException e) {
+            } catch (ServerException | IOException e) {
                 LOGGER.log(Level.SEVERE, e, e::getMessage);
             }
         }
     }
 
-    public IndexManager(final Path indexesDirectory, final ExecutorService executorService) {
+    public IndexManager(final Path indexesDirectory,
+                        final ExecutorService executorService) {
         this(indexesDirectory, executorService, null);
     }
 
@@ -146,8 +147,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         shemaLock.lock();
         try {
             schemaMap.values().forEach(IOUtils::closeQuietly);
-        }
-        finally {
+        } finally {
             shemaLock.unlock();
         }
     }
@@ -162,8 +162,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
             if (settings != null)
                 schemaInstance.setSettings(settings);
             return schemaInstance.getSettings();
-        }
-        finally {
+        } finally {
             shemaLock.unlock();
         }
     }
@@ -189,8 +188,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
             final SchemaInstance schemaInstance = get(schemaName);
             schemaInstance.delete();
             schemaMap.remove(schemaName);
-        }
-        finally {
+        } finally {
             shemaLock.unlock();
         }
     }
@@ -199,8 +197,7 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
         shemaLock.lock();
         try {
             return new TreeSet<>(schemaMap.keySet());
-        }
-        finally {
+        } finally {
             shemaLock.unlock();
         }
     }
@@ -214,13 +211,13 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
                     consumer.accept(entry.getKey(), entry.getValue());
             } else
                 consumer.accept(schemaName, get(schemaName));
-        }
-        finally {
+        } finally {
             shemaLock.unlock();
         }
     }
 
-    SortedMap<String, SortedMap<String, BackupStatus>> backups(final String schemaName, final String indexName,
+    SortedMap<String, SortedMap<String, BackupStatus>> backups(final String schemaName,
+                                                               final String indexName,
                                                                final String backupName) throws IOException {
         final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
         schemaIterator(schemaName, (schName, schemaInstance) -> {
@@ -236,7 +233,9 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     }
 
     SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
-                                                                                     final String indexName, final String backupName, final boolean extractVersion) throws IOException {
+                                                                                     final String indexName,
+                                                                                     final String backupName,
+                                                                                     final boolean extractVersion) throws IOException {
         final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> results = new TreeMap<>();
         schemaIterator(schemaName, (schName, schemaInstance) -> {
             synchronized (results) {

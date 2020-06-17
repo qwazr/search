@@ -38,70 +38,69 @@ import java.util.concurrent.Executors;
 
 public class SearchServer implements BaseServer {
 
-	private final GenericServer server;
-	private final IndexServiceBuilder serviceBuilder;
-	private final ClusterManager clusterManager;
-	private final IndexManager indexManager;
+    private final GenericServer server;
+    private final IndexServiceBuilder serviceBuilder;
+    private final ClusterManager clusterManager;
+    private final IndexManager indexManager;
 
-	private SearchServer(final ServerConfiguration configuration) throws IOException {
+    private SearchServer(final ServerConfiguration configuration) throws IOException {
 
-		final ExecutorService executorService = Executors.newCachedThreadPool();
-		final GenericServerBuilder builder = GenericServer.of(configuration, executorService);
+        final ExecutorService executorService = Executors.newCachedThreadPool();
+        final GenericServerBuilder builder = GenericServer.of(configuration, executorService);
 
-		final Set<String> services = new HashSet<>();
-		services.add(ClusterServiceInterface.SERVICE_NAME);
-		services.add(IndexServiceInterface.SERVICE_NAME);
+        final Set<String> services = new HashSet<>();
+        services.add(ClusterServiceInterface.SERVICE_NAME);
+        services.add(IndexServiceInterface.SERVICE_NAME);
 
-		final ApplicationBuilder webServices = ApplicationBuilder.of("/*").classes(RestApplication.JSON_CLASSES).
-				singletons(new WelcomeShutdownService());
+        final ApplicationBuilder webServices = ApplicationBuilder.of("/*").classes(RestApplication.JSON_CLASSES).
+            singletons(new WelcomeShutdownService());
 
-		clusterManager = new ClusterManager(executorService, configuration).registerProtocolListener(builder, services);
-		webServices.singletons(clusterManager.getService());
+        clusterManager = new ClusterManager(executorService, configuration).registerProtocolListener(builder, services);
+        webServices.singletons(clusterManager.getService());
 
-		indexManager =
-				new IndexManager(IndexManager.checkIndexesDirectory(configuration.dataDirectory), executorService);
-		builder.shutdownListener(server -> indexManager.close());
-		webServices.singletons(indexManager.getService());
+        indexManager = new IndexManager(IndexManager.checkIndexesDirectory(configuration.dataDirectory), executorService);
+        builder.shutdownListener(server -> indexManager.close());
+        webServices.singletons(indexManager.getService());
 
-		builder.getWebServiceContext().jaxrs(webServices);
-		serviceBuilder = new IndexServiceBuilder(clusterManager, indexManager);
-		server = builder.build();
-	}
+        builder.getWebServiceContext().jaxrs(webServices);
+        serviceBuilder = new IndexServiceBuilder(clusterManager, indexManager);
+        server = builder.build();
+    }
 
-	public ClusterManager getClusterManager() {
-		return clusterManager;
-	}
+    public ClusterManager getClusterManager() {
+        return clusterManager;
+    }
 
-	public IndexManager getIndexManager() {
-		return indexManager;
-	}
+    public IndexManager getIndexManager() {
+        return indexManager;
+    }
 
-	@Override
-	public GenericServer getServer() {
-		return server;
-	}
+    @Override
+    public GenericServer getServer() {
+        return server;
+    }
 
-	private static volatile SearchServer INSTANCE;
+    private static volatile SearchServer INSTANCE;
 
-	public static SearchServer getInstance() {
-		return INSTANCE;
-	}
+    public static SearchServer getInstance() {
+        return INSTANCE;
+    }
 
-	public IndexServiceBuilder getServiceBuilder() {
-		return serviceBuilder;
-	}
+    public IndexServiceBuilder getServiceBuilder() {
+        return serviceBuilder;
+    }
 
-	public static synchronized void main(final String... args) throws IOException, ServletException, JMException {
-		shutdown();
-		INSTANCE = new SearchServer(new ServerConfiguration(args));
-		INSTANCE.start();
-	}
+    public static synchronized void main(final String... args) throws IOException, ServletException, JMException {
+        shutdown();
+        INSTANCE = new SearchServer(new ServerConfiguration(args));
+        INSTANCE.start();
+    }
 
-	public static synchronized void shutdown() {
-		if (INSTANCE == null)
-			return;
-		INSTANCE.stop();
-		INSTANCE = null;
-	}
+    public static synchronized void shutdown() {
+        if (INSTANCE == null)
+            return;
+        INSTANCE.stop();
+        INSTANCE = null;
+    }
 
 }

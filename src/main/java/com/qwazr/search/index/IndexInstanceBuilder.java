@@ -146,7 +146,7 @@ class IndexInstanceBuilder {
     }
 
     private Similarity findSimilarity(final String similarityName, final String similarityClassName,
-                                      final ResourceLoader resourceLoader) throws IOException, ReflectiveOperationException {
+                                      final ResourceLoader resourceLoader) throws ReflectiveOperationException {
         if (similarityName != null && !similarityName.isEmpty()) {
             final Similarity similarity = getFromFactory(resourceLoader, similarityName, similarityFactoryMap);
             if (similarity != null)
@@ -296,8 +296,8 @@ class IndexInstanceBuilder {
 
         if (IndexSettingsDefinition.useTaxonomyIndex(settings)) {
             openOrCreateTaxonomyIndex(false);
-            replicationMaster =
-                new ReplicationMaster.WithIndexAndTaxo(indexUuid.toString(), fileSet, indexWriter, taxonomyWriter);
+            replicationMaster = new ReplicationMaster.WithIndexAndTaxo(
+                indexUuid.toString(), fileSet, indexWriter, taxonomyWriter);
             writerAndSearcher = new WriterAndSearcher.WithIndexAndTaxo(indexWriter, taxonomyWriter,
                 () -> new SearcherTaxonomyManager(indexWriter, true, searcherFactory, taxonomyWriter));
         } else {
@@ -305,6 +305,7 @@ class IndexInstanceBuilder {
             writerAndSearcher = new WriterAndSearcher.WithIndex(indexWriter,
                 () -> new SearcherManager(indexWriter, searcherFactory));
         }
+
     }
 
     private void abort() {
@@ -331,7 +332,7 @@ class IndexInstanceBuilder {
         }
     }
 
-    IndexInstance build() throws ReflectiveOperationException, IOException {
+    IndexInstance build() {
         try {
             buildCommon();
             if (settings.master != null && settings.master.schema != null && settings.master.index != null)
@@ -339,9 +340,6 @@ class IndexInstanceBuilder {
             else
                 buildMaster();
             return new IndexInstance(this);
-        } catch (IOException | ReflectiveOperationException e) {
-            abort();
-            throw e;
         } catch (Exception e) {
             abort();
             throw ServerException.of(e);

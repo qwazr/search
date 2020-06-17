@@ -1,5 +1,5 @@
-/**
- * Copyright 2017 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,4 +39,6 @@ public interface ResultDocumentsInterface {
     default void highlight(int pos, String name, String snippet) {
     }
 
+    ResultDocumentsInterface NOPE = new ResultDocumentsInterface() {
+    };
 }

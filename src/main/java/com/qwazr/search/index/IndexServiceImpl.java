@@ -604,11 +604,46 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(
-        final String schemaName, final String indexName, final String backupName) {
-        checkRight(null);
+    final public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(final String schemaName,
+                                                                             final String indexName,
+                                                                             final String backupName) {
         try {
+            checkRight(null);
             return indexManager.backups(schemaName, indexName, backupName);
+        } catch (Exception e) {
+            throw ServerException.getJsonException(LOGGER, e);
+        }
+    }
+
+    @Override
+    public ReindexDefinition getReindexStatus(final String schemaName,
+                                              final String indexName) {
+        try {
+            checkRight(schemaName);
+            return indexManager.get(schemaName).get(indexName).getReindexThread().getStatus();
+        } catch (Exception e) {
+            throw ServerException.getJsonException(LOGGER, e);
+        }
+    }
+
+    @Override
+    public ReindexDefinition startReindex(final String schemaName,
+                                          final String indexName,
+                                          final Integer bufferSize) {
+        try {
+            checkRight(schemaName);
+            return indexManager.get(schemaName).get(indexName).getReindexThread().start(bufferSize == null ? 50 : bufferSize);
+        } catch (Exception e) {
+            throw ServerException.getJsonException(LOGGER, e);
+        }
+    }
+
+    @Override
+    public ReindexDefinition stopReindex(final String schemaName,
+                                         final String indexName) {
+        try {
+            checkRight(schemaName);
+            return indexManager.get(schemaName).get(indexName).getReindexThread().abort();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }

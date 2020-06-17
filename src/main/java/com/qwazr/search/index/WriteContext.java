@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 
@@ -51,6 +52,8 @@ public interface WriteContext extends IndexContext {
     int postMappedDocuments(final PostDefinition.Documents post) throws IOException;
 
     int postJsonNode(final JsonNode jsonNode) throws IOException;
+
+    int postJsonNodes(final Collection<JsonNode> jsonNode) throws IOException;
 
     <T> int updateDocValues(final Map<String, Field> fields, final T document, final Map<String, String> commitUserData)
         throws IOException;
