@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -32,8 +31,13 @@ public interface DocumentBuilder {
 
     final class ForLuceneDocument implements DocumentBuilder {
 
-        final Map<String, String> dimensions = new HashMap<>();
-        final Document document = new Document();
+        final Map<String, String> dimensions;
+        final Document document;
+
+        public ForLuceneDocument() {
+            dimensions = new HashMap<>();
+            document = new Document();
+        }
 
         @Override
         final public void reset() {
@@ -51,7 +55,14 @@ public interface DocumentBuilder {
 
     final class ForLuceneDocValues implements DocumentBuilder {
 
-        final List<Field> fieldList = new ArrayList<>();
+        private final String primaryKey;
+
+        final List<Field> fieldList;
+
+        public ForLuceneDocValues(String primaryKey) {
+            fieldList = new ArrayList<>();
+            this.primaryKey = primaryKey;
+        }
 
         @Override
         final public void reset() {
@@ -61,7 +72,7 @@ public interface DocumentBuilder {
         @Override
         final public void accept(final String genericFieldName, final String concreteFieldName, final Field field) {
             // We will not update the internal ID of the document
-            if (FieldDefinition.ID_FIELD.equals(field.name()))
+            if (primaryKey.equals(field.name()))
                 return;
             fieldList.add(field);
         }

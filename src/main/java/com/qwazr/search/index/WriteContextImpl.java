@@ -16,8 +16,13 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.HashUtils;
+import com.qwazr.utils.StringUtils;
+import java.util.function.Supplier;
+import javax.ws.rs.NotAcceptableException;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
@@ -33,14 +38,27 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
 
     final IndexWriter indexWriter;
     final TaxonomyWriter taxonomyWriter;
+    private final String primaryKey;
+    private final Supplier<String> autoIdProvider;
 
-    WriteContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
-                     final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
-                     final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap, final IndexWriter indexWriter,
+    WriteContextImpl(final IndexInstance.Provider indexProvider,
+                     final ResourceLoader resourceLoader,
+                     final ExecutorService executorService,
+                     final UpdatableAnalyzers indexAnalyzers,
+                     final UpdatableAnalyzers queryAnalyzers,
+                     final FieldMap fieldMap,
+                     final IndexWriter indexWriter,
                      final TaxonomyWriter taxonomyWriter) {
         super(indexProvider, resourceLoader, executorService, indexAnalyzers, queryAnalyzers, fieldMap);
         this.indexWriter = indexWriter;
         this.taxonomyWriter = taxonomyWriter;
+        this.primaryKey = fieldMap.getPrimaryKey();
+        if (StringUtils.isBlank(primaryKey))
+            autoIdProvider = null;
+        else {
+            final HashUtils.B64 b64 = HashUtils.b64url();
+            autoIdProvider = () -> b64.toBase64(HashUtils.newTimeBasedUUID());
+        }
     }
 
     @Override
@@ -136,6 +154,18 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         return postMappedDocs(poster, post);
     }
 
+    private void postJsonNode(final RecordsPoster.JsonNodeDocument poster,
+                              final JsonNode jsonNode) throws IOException {
+        if (!jsonNode.isObject())
+            throw new NotAcceptableException("This json type can't be indexed as a document: " + jsonNode.getNodeType());
+        final ObjectNode objectNode = (ObjectNode) jsonNode;
+        if (autoIdProvider != null) {
+            if (!objectNode.has(primaryKey))
+                objectNode.put(primaryKey, autoIdProvider.get());
+        }
+        poster.accept((ObjectNode) jsonNode);
+    }
+
     @Override
     public int postJsonNode(final JsonNode jsonNode) throws IOException {
         if (jsonNode == null)
@@ -143,12 +173,13 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         final RecordsPoster.JsonNodeDocument poster =
             RecordsPoster.JsonNodeDocument.of(fieldMap, indexWriter, taxonomyWriter);
         if (jsonNode.isArray()) {
-            for (final JsonNode element : jsonNode)
-                poster.accept(element);
+            for (final JsonNode element : jsonNode) {
+                postJsonNode(poster, element);
+            }
         } else if (jsonNode.isObject())
-            poster.accept(jsonNode);
+            poster.accept((ObjectNode) jsonNode);
         else
-            throw new ServerException("The json should be either an array or an object.");
+            throw new ServerException("The json should be either an array or an object: " + jsonNode.getNodeType());
         return poster.getCount();
     }
 
@@ -159,7 +190,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         final RecordsPoster.JsonNodeDocument poster =
             RecordsPoster.JsonNodeDocument.of(fieldMap, indexWriter, taxonomyWriter);
         for (final JsonNode jsonNode : jsonNodes)
-            poster.accept(jsonNode);
+            postJsonNode(poster, jsonNode);
         return poster.getCount();
     }
 

@@ -16,29 +16,37 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
+import com.qwazr.server.ServerException;
+import com.qwazr.utils.HashUtils;
+import com.qwazr.utils.StringUtils;
+import java.util.function.Supplier;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.core.Response;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.Term;
 
 import java.lang.reflect.Field;
+import org.apache.lucene.util.BytesRef;
 
 abstract class RecordBuilder {
 
     private final String primaryKey;
     private final DocumentBuilder documentBuilder;
     private final FieldMap fieldMap;
-
-    volatile Term termId;
+    private Term termId;
 
     RecordBuilder(final FieldMap fieldMap, final DocumentBuilder documentBuilder) {
         this.primaryKey = fieldMap.getPrimaryKey();
         this.fieldMap = fieldMap;
         this.documentBuilder = documentBuilder;
-        this.termId = null;
     }
 
-    final void reset() {
-        termId = null;
+    final Term getTermId() {
+        if (termId == null)
+            throw new BadRequestException("The primary key \"" + primaryKey + "\" is missing.");
+        return termId;
     }
 
     final void addRecord(final byte[] sourceBytes) {
@@ -47,7 +55,7 @@ abstract class RecordBuilder {
             new StoredField(fieldMap.fieldsContext.recordField, sourceBytes));
     }
 
-    // TODO type aware !
+    // TODO type aware ?
     final void addFieldValue(final String fieldName, final Object fieldValue) {
         if (fieldValue == null)
             return;

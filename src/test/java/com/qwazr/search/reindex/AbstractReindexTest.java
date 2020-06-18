@@ -21,15 +21,14 @@ import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.ReindexDefinition;
 import com.qwazr.search.test.units.AbstractIndexTest;
-import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.ObjectMappers;
-import com.qwazr.utils.RandomUtils;
 import com.qwazr.utils.WaitFor;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import javax.ws.rs.WebApplicationException;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -38,21 +37,19 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.core.IsEqual.equalTo;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class ReindexTest extends AbstractIndexTest {
+public abstract class AbstractReindexTest extends AbstractIndexTest {
 
     private final static String SCHEMA = "reindexSchema";
     private final static String INDEX = "reindexIndex";
 
     static IndexServiceInterface service;
 
-    @BeforeClass
-    public static void setup() throws JsonProcessingException {
+    protected static void setup(final Supplier<Map<String, Object>> docSupplier) throws JsonProcessingException {
         service = initIndexManager(true).getService();
         service.createUpdateSchema(SCHEMA);
         service.createUpdateIndex(SCHEMA, INDEX,
@@ -64,22 +61,16 @@ public class ReindexTest extends AbstractIndexTest {
         for (int i = 0; i < 20; i++) {
             service.postJson(SCHEMA, INDEX, ObjectMappers.JSON.readTree(
                 ObjectMappers.JSON.writeValueAsString(
-                    getRandomDocs(50))));
+                    getRandomDocs(50, docSupplier))));
         }
         assertThat(service.getIndex(SCHEMA, INDEX).numDocs, equalTo(1000L));
     }
 
-    public static Map<String, Object> getRandomDoc() {
-        return Map.of(
-            "id", HashUtils.newTimeBasedUUID().toString(),
-            "text", RandomUtils.alphanumeric(100),
-            "value", RandomUtils.nextInt(0, 10));
-    }
-
-    public static List<Map<String, Object>> getRandomDocs(int count) {
+    public static List<Map<String, Object>> getRandomDocs(int count,
+                                                          final Supplier<Map<String, Object>> docSupplier) {
         final List<Map<String, Object>> docs = new ArrayList<>(count);
         for (int i = 0; i < count; i++)
-            docs.add(getRandomDoc());
+            docs.add(docSupplier.get());
         return docs;
     }
 

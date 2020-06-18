@@ -55,7 +55,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
     private final boolean isConcurrent;
 
     QueryExecution(final QueryContextImpl queryContext, final QueryDefinition queryDefinition)
-            throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
+        throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
 
         this.timeTracker = new TimeTracker();
 
@@ -63,8 +63,8 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
         this.queryDef = queryDefinition;
 
         this.query = queryDef.luceneQuery != null ?
-                queryDef.luceneQuery :
-                queryDef.query == null ? new MatchAllDocsQuery() : queryDef.query.getQuery(queryContext);
+            queryDef.luceneQuery :
+            queryDef.query == null ? new MatchAllDocsQuery() : queryDef.query.getQuery(queryContext);
 
         this.sort = queryDef.sorts == null ? null : SortUtils.buildSort(queryContext.fieldMap, queryDef.sorts);
 
@@ -76,8 +76,8 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
         this.end = Math.min(start + rows, queryContext.indexReader.numDocs());
 
         this.useDrillSideways =
-                queryDef.query instanceof DrillDownQuery && ((DrillDownQuery) queryDef.query).useDrillSideways &&
-                        queryDef.facets != null;
+            queryDef.query instanceof DrillDownQuery && ((DrillDownQuery) queryDef.query).useDrillSideways &&
+                queryDef.facets != null;
         if (queryDef.collectors != null && !queryDef.collectors.isEmpty()) {
             collectorConstructors = new LinkedHashMap<>();
             isConcurrent = buildExternalCollectors(queryDef.collectors, collectorConstructors);
@@ -94,11 +94,11 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 
     private static Constructor<?> getConstructor(final Class<? extends Collector> collectorClass,
                                                  final Object[] arguments)
-            throws NoSuchMethodException {
+        throws NoSuchMethodException {
         final Class<?>[] classes = new Class[arguments.length];
         int i = 0;
-        for (Object arg : arguments)
-            classes[i++] = arg.getClass();
+        for (final Object arg : arguments)
+            classes[i++] = arg == null ? Object.class : arg.getClass();
         return collectorClass.getConstructor(classes);
     }
 
@@ -137,8 +137,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
                     return (Collector) constructor.newInstance(arguments);
                 else
                     return (Collector) constructor.newInstance();
-            }
-            catch (ReflectiveOperationException e) {
+            } catch (ReflectiveOperationException e) {
                 throw new InternalServerErrorException("Cannot create the collector " + constructor, e);
             }
         }
@@ -146,7 +145,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
 
     private static boolean buildExternalCollectors(final Map<String, QueryDefinition.CollectorDefinition> collectors,
                                                    final Map<String, CollectorConstructor> collectorConstructors)
-            throws ReflectiveOperationException {
+        throws ReflectiveOperationException {
         if (collectors == null || collectors.isEmpty())
             return true;
         int classicCollectors = 0;
@@ -166,7 +165,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
         final ResultDocumentsInterface resultDocumentsInterface = resultDocuments.getResultDocuments();
 
         final QueryCollectors queryCollectors =
-                isConcurrent ? new QueryCollectorManager(this) : new QueryCollectorsClassic(this);
+            isConcurrent ? new QueryCollectorManager(this) : new QueryCollectorsClassic(this);
 
         final FacetsBuilder facetsBuilder = queryCollectors.execute();
 
@@ -177,16 +176,16 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
         if (queryDef.highlighters != null && topDocs != null) {
             highlighters = new LinkedHashMap<>();
             queryDef.highlighters.forEach((name, highlighterDefinition) -> highlighters.put(name,
-                    new HighlighterImpl(name, highlighterDefinition, queryContext)));
+                new HighlighterImpl(name, highlighterDefinition, queryContext)));
         } else
             highlighters = null;
 
         timeTracker.next("search_query");
 
         final ResultDocumentsBuilder resultBuilder =
-                new ResultDocumentsBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
-                        queryCollectors.getExternalResults(), timeTracker, facetsBuilder,
-                        totalHits == null ? 0 : totalHits, resultDocumentsInterface);
+            new ResultDocumentsBuilder(queryDef, topDocs, queryContext.indexSearcher, query, highlighters,
+                queryCollectors.getExternalResults(), timeTracker, facetsBuilder,
+                totalHits == null ? 0 : totalHits, resultDocumentsInterface);
 
         return resultDocuments.apply(resultBuilder);
     }

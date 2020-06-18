@@ -33,6 +33,7 @@ import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.search.similarity.SimilarityForTest;
 import com.qwazr.search.similarity.CustomSimilarity;
+import com.qwazr.utils.HashUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.TokenStream;
@@ -122,7 +123,7 @@ public class AnnotatedIndexServiceTest {
 
         Map<String, FieldDefinition<?>> fields = service.createUpdateFields();
         Assert.assertNotNull(fields);
-        Assert.assertEquals(3, fields.size());
+        Assert.assertEquals(4, fields.size());
 
         // Check analyzer creation
         service.testAnalyzer(AnnotatedRecord.INJECTED_ANALYZER_NAME, "Test");
@@ -171,13 +172,9 @@ public class AnnotatedIndexServiceTest {
     }
 
     @Test
-    public void test200addDocuments() {
-        try {
-            service.addDocument(new IndexRecord("This is the title", "Few terms in the content"));
-            Assert.assertEquals(Long.valueOf(1), service.getIndexStatus().numDocs);
-        } catch (Exception e) {
-            Assert.fail(e.getMessage());
-        }
+    public void test200addDocuments() throws IOException {
+        service.addDocument(new IndexRecord("This is the title", "Few terms in the content"));
+        Assert.assertEquals(Long.valueOf(1), service.getIndexStatus().numDocs);
     }
 
     @Test
@@ -259,6 +256,9 @@ public class AnnotatedIndexServiceTest {
     @Index(schema = "schemaName", name = "indexName", similarityClass = SimilarityForTest.class)
     public static class IndexRecord {
 
+        @IndexField(template = FieldDefinition.Template.StringField, name = FieldDefinition.ID_FIELD)
+        final public String id;
+
         @IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class, stored = true)
         @Copy(to = @Copy.To(order = 1, field = "full"))
         final public String title;
@@ -271,6 +271,7 @@ public class AnnotatedIndexServiceTest {
         final public String full;
 
         public IndexRecord(String title, String content) {
+            this.id = HashUtils.newTimeBasedUUID().toString();
             this.title = title;
             this.content = content;
             this.full = null;

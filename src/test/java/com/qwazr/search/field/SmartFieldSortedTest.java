@@ -22,6 +22,7 @@ import com.qwazr.search.annotations.SmartField;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.test.units.AbstractIndexTest;
+import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.RandomUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -110,6 +111,9 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
     @Index(name = "SmartFieldSorted", schema = "TestQueries")
     static public class Record {
 
+        @SmartField(type = SmartFieldDefinition.Type.TEXT, name = FieldDefinition.ID_FIELD)
+        final public String id;
+
         @SmartField(type = SmartFieldDefinition.Type.LONG, sort = true, stored = true)
         final public Long longSort;
 
@@ -129,6 +133,7 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
         final public String nonSortable;
 
         Record(boolean random) {
+            id = HashUtils.newTimeBasedUUID().toString();
             longSort = random ? RandomUtils.nextLong() : null;
             intSort = random ? RandomUtils.nextInt() : null;
             floatSort = random ? RandomUtils.nextFloat() : null;

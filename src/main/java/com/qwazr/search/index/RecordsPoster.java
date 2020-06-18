@@ -15,12 +15,18 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeCreator;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.SerializationUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.concurrent.RunnableEx;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
@@ -37,9 +43,7 @@ interface RecordsPoster {
 
     int getCount();
 
-    abstract class CommonPoster
-        <RECORDBUILDER extends RecordBuilder,
-            DOCUMENTBUILDER extends DocumentBuilder>
+    abstract class CommonPoster<RECORDBUILDER extends RecordBuilder, DOCUMENTBUILDER extends DocumentBuilder>
         implements RecordsPoster {
 
         protected final DOCUMENTBUILDER documentBuilder;
@@ -72,12 +76,18 @@ interface RecordsPoster {
     abstract class Documents<RECORDBUILDER extends RecordBuilder>
         extends CommonPoster<RECORDBUILDER, DocumentBuilder.ForLuceneDocument> {
 
+        protected final RunnableEx<IOException> index;
+
         private Documents(final DocumentBuilder.ForLuceneDocument documentBuilder,
                           final RECORDBUILDER recordBuilder,
                           final FieldMap fieldMap,
                           final IndexWriter indexWriter,
                           final TaxonomyWriter taxonomyWriter) {
             super(documentBuilder, recordBuilder, fieldMap, indexWriter, taxonomyWriter);
+            if (StringUtils.isBlank(fieldMap.getPrimaryKey()))
+                index = this::addDocument;
+            else
+                index = this::updateDocument;
         }
 
         private Document getFacetedDoc() throws IOException {
@@ -85,24 +95,16 @@ interface RecordsPoster {
             return facetsConfig.build(taxonomyWriter, documentBuilder.document);
         }
 
-        private void updateDocument(final Term termId) throws IOException {
-            indexWriter.updateDocument(termId, getFacetedDoc());
-            count++;
-            documentBuilder.reset();
-        }
-
-        private void addDocument() throws IOException {
+        final void addDocument() throws IOException {
             indexWriter.addDocument(getFacetedDoc());
             count++;
             documentBuilder.reset();
         }
 
-        void index() throws IOException {
-            if (recordBuilder.termId != null)
-                updateDocument(recordBuilder.termId);
-            else
-                addDocument();
-            recordBuilder.reset();
+        final void updateDocument() throws IOException {
+            indexWriter.updateDocument(recordBuilder.getTermId(), getFacetedDoc());
+            count++;
+            documentBuilder.reset();
         }
 
     }
@@ -118,17 +120,12 @@ interface RecordsPoster {
             super(documentBuilder, recordBuilder, fieldMap, indexWriter, taxonomyWriter);
         }
 
-        final void updateDocValues() throws IOException {
-            if (recordBuilder.termId == null)
-                throw new ServerException(Response.Status.BAD_REQUEST,
-                    "The primary key " + FieldDefinition.ID_FIELD + " is missing - Index: " + indexWriter);
-            indexWriter.updateDocValues(recordBuilder.termId, documentBuilder.fieldList.toArray(
+        final protected void updateDocValues() throws IOException {
+            indexWriter.updateDocValues(recordBuilder.getTermId(), documentBuilder.fieldList.toArray(
                 new org.apache.lucene.document.Field[0]));
             count++;
             documentBuilder.reset();
-            recordBuilder.reset();
         }
-
     }
 
     interface MapDocument extends RecordsPoster {
@@ -148,7 +145,7 @@ interface RecordsPoster {
         static MapDocument forDocValueUpdate(final FieldMap fieldMap,
                                              final IndexWriter indexWriter,
                                              final TaxonomyWriter taxonomyWriter) {
-            final DocumentBuilder.ForLuceneDocValues documentBuilder = new DocumentBuilder.ForLuceneDocValues();
+            final DocumentBuilder.ForLuceneDocValues documentBuilder = new DocumentBuilder.ForLuceneDocValues(fieldMap.getPrimaryKey());
             return new UpdateMapDocValues(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
         }
     }
@@ -165,7 +162,7 @@ interface RecordsPoster {
         @Override
         public void accept(final Map<String, ?> document) throws IOException {
             document.forEach(recordBuilder::accept);
-            index();
+            index.run();
         }
 
     }
@@ -203,7 +200,7 @@ interface RecordsPoster {
                                                 final FieldMap fieldMap,
                                                 final IndexWriter indexWriter,
                                                 final TaxonomyWriter taxonomyWriter) {
-            final DocumentBuilder.ForLuceneDocValues documentBuilder = new DocumentBuilder.ForLuceneDocValues();
+            final DocumentBuilder.ForLuceneDocValues documentBuilder = new DocumentBuilder.ForLuceneDocValues(fieldMap.getPrimaryKey());
             return new UpdateObjectDocValues(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
         }
     }
@@ -224,7 +221,7 @@ interface RecordsPoster {
         @Override
         public void accept(final Object object) throws IOException {
             fields.forEach((name, field) -> recordBuilder.accept(name, field, object));
-            index();
+            index.run();
         }
     }
 
@@ -249,7 +246,7 @@ interface RecordsPoster {
 
     interface JsonNodeDocument extends RecordsPoster {
 
-        void accept(final JsonNode jsonNode) throws IOException;
+        void accept(final ObjectNode objectNode) throws IOException;
 
         static JsonNodeDocument of(final FieldMap fieldMap,
                                    final IndexWriter indexWriter,
@@ -273,9 +270,9 @@ interface RecordsPoster {
         }
 
         @Override
-        public void accept(final JsonNode jsonNode) throws IOException {
+        public void accept(final ObjectNode jsonNode) throws IOException {
             jsonNode.fields().forEachRemaining(entry -> recordBuilder.accept(entry.getKey(), entry.getValue()));
-            index();
+            index.run();
         }
     }
 
@@ -286,9 +283,9 @@ interface RecordsPoster {
         }
 
         @Override
-        final public void accept(final JsonNode jsonNode) throws IOException {
-            recordBuilder.addRecord(ObjectMappers.SMILE.writeValueAsBytes(jsonNode));
-            super.accept(jsonNode);
+        final public void accept(final ObjectNode objectNode) throws IOException {
+            recordBuilder.addRecord(ObjectMappers.SMILE.writeValueAsBytes(objectNode));
+            super.accept(objectNode);
         }
     }
 

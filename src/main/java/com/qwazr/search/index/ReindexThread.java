@@ -100,23 +100,25 @@ class ReindexThread {
                                final IndexInstance indexInstance,
                                final int maxBufferSize) {
             this.maxBufferSize = maxBufferSize;
-            status = ReindexDefinition.Status.initialized;
-            startTime = Date.from(Instant.now());
+            this.status = ReindexDefinition.Status.initialized;
+            this.startTime = Date.from(Instant.now());
             this.indexInstance = indexInstance;
-            future = CompletableFuture.runAsync(this, executorService);
-            abort = new AtomicBoolean(false);
-            completedRecords = new AtomicLong(0);
+            this.abort = new AtomicBoolean(false);
+            this.completedRecords = new AtomicLong(0);
             final IndexStatus indexStatus;
             try {
                 indexStatus = indexInstance.getStatus();
             } catch (IOException e) {
                 throw new InternalServerErrorException("Error while getting the index status: " + e.getMessage(), e);
             }
-            if (StringUtils.isEmpty(indexStatus.settings.primaryKey))
-                throw new NotAcceptableException("Reindex requires a primary key. Check that your index configuration defines a primar key.");
-            recordField = indexStatus.settings.recordField;
-            numDocs = new AtomicLong(indexStatus.numDocs == null ? 0 : indexStatus.numDocs);
-            buffer = new ArrayList<>();
+            if (StringUtils.isBlank(indexStatus.settings.primaryKey))
+                throw new NotAcceptableException("Reindex requires a primary key. Check that your index configuration defines a primary key.");
+            if (StringUtils.isBlank(indexStatus.settings.recordField))
+                throw new NotAcceptableException("Reindex requires a record field. Check that your index configuration defines a record field.");
+            this.recordField = indexStatus.settings.recordField;
+            this.numDocs = new AtomicLong(indexStatus.numDocs == null ? 0 : indexStatus.numDocs);
+            this.buffer = new ArrayList<>();
+            this.future = CompletableFuture.runAsync(this, executorService);
         }
 
 
