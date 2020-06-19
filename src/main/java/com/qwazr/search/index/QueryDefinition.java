@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,152 +15,119 @@
  */
 package com.qwazr.search.index;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.query.AbstractQuery;
-import com.qwazr.utils.CollectionsUtils;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.qwazr.search.query.QueryInterface;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
-import org.apache.lucene.search.Query;
-
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Objects;
+import org.apache.lucene.search.Query;
 
 @JsonInclude(Include.NON_EMPTY)
-public class QueryDefinition extends BaseQueryDefinition {
+@JsonAutoDetect(
+    creatorVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    fieldVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonDeserialize(as = BaseQueryDefinition.class)
+public interface QueryDefinition {
 
-	final public LinkedHashMap<String, SortEnum> sorts;
-	final public LinkedHashMap<String, CollectorDefinition> collectors;
+    @JsonProperty("query")
+    QueryInterface getQuery();
 
-	public enum SortEnum {
+    @JsonProperty("start")
+    Integer getStart();
 
-		ascending,
+    @JsonProperty("rows")
+    Integer getRows();
 
-		descending,
+    int DEFAULT_START = 0;
 
-		ascending_missing_first,
+    @JsonIgnore
+    int getStartValue();
 
-		ascending_missing_last,
+    int DEFAULT_ROWS = 10;
 
-		descending_missing_first,
+    @JsonIgnore
+    int getRowsValue();
 
-		descending_missing_last
-	}
+    @JsonIgnore
+    int getEndValue();
 
-	final public LinkedHashMap<String, FacetDefinition> facets;
 
-	final public LinkedHashMap<String, HighlighterDefinition> highlighters;
+    @JsonProperty("returned_fields")
+    LinkedHashSet<String> getReturnedFields();
 
-	@JsonProperty("commit_user_data")
-	final public Map<String, String> commitUserData;
+    @JsonProperty("query_debug")
+    Boolean getQueryDebug();
 
-	@JsonIgnore
-	final Query luceneQuery;
+    enum SortEnum {
 
-	final public AbstractQuery query;
+        ascending,
 
-	public static class CollectorDefinition {
+        descending,
 
-		@JsonProperty("class")
-		final public String classname;
+        ascending_missing_first,
 
-		final public Object[] arguments;
+        ascending_missing_last,
 
-		@JsonCreator
-		public CollectorDefinition(@JsonProperty("class") final String classname,
-				@JsonProperty("arguments") final Object... arguments) {
-			this.classname = classname;
-			this.arguments = arguments == null || arguments.length == 0 ? null : arguments;
-		}
+        descending_missing_first,
 
-		@Override
-		public int hashCode() {
-			return Objects.hashCode(classname);
-		}
+        descending_missing_last
+    }
 
-		@Override
-		public boolean equals(Object o) {
-			if (!(o instanceof CollectorDefinition))
-				return false;
-			if (o == this)
-				return true;
-			final CollectorDefinition c = (CollectorDefinition) o;
-			return Objects.equals(classname, c.classname) && Arrays.equals(arguments, c.arguments);
-		}
-	}
+    @JsonProperty("sorts")
+    LinkedHashMap<String, QueryDefinition.SortEnum> getSorts();
 
-	@JsonCreator
-	QueryDefinition(@JsonProperty("start") Integer start, @JsonProperty("rows") Integer rows,
-			@JsonProperty("returned_fields") LinkedHashSet<String> returnedFields,
-			@JsonProperty("query_debug") Boolean queryDebug,
-			@JsonProperty("sorts") LinkedHashMap<String, SortEnum> sorts,
-			@JsonProperty("collectors") LinkedHashMap<String, CollectorDefinition> collectors,
-			@JsonProperty("facets") LinkedHashMap<String, FacetDefinition> facets,
-			@JsonProperty("highlighters") LinkedHashMap<String, HighlighterDefinition> highlighters,
-			@JsonProperty("query") AbstractQuery query,
-			@JsonProperty("commit_user_data") Map<String, String> commitUserData) {
-		super(start, rows, returnedFields, queryDebug);
-		this.sorts = sorts;
-		this.collectors = collectors;
-		this.facets = facets;
-		this.highlighters = highlighters;
-		this.query = query;
-		this.commitUserData = commitUserData;
-		luceneQuery = null;
-	}
+    @JsonInclude(Include.NON_EMPTY)
+    @JsonDeserialize(as = BaseCollectorDefinition.class)
+    interface CollectorDefinition {
 
-	QueryDefinition(final QueryBuilder builder) {
-		super(builder);
-		facets = builder.facets;
-		sorts = builder.sorts;
-		collectors = builder.collectors;
-		highlighters = builder.highlighters;
-		query = builder.query;
-		luceneQuery = builder.luceneQuery;
-		commitUserData = builder.commitUserData;
-	}
+        @JsonProperty("class")
+        String getClassname();
 
-	@Override
-	public int hashCode() {
-		return Objects.hashCode(query);
-	}
+        @JsonProperty("arguments")
+        Object[] getArguments();
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		if (!(o instanceof QueryDefinition))
-			return false;
-		if (o == this)
-			return true;
-		final QueryDefinition q = (QueryDefinition) o;
-		return Objects.equals(query, q.query) && CollectionsUtils.equals(sorts, q.sorts) &&
-				CollectionsUtils.equals(collectors, q.collectors) && CollectionsUtils.equals(facets, q.facets) &&
-				CollectionsUtils.equals(highlighters, q.highlighters) &&
-				CollectionsUtils.equals(commitUserData, q.commitUserData);
-	}
+    @JsonProperty("collectors")
+    LinkedHashMap<String, CollectorDefinition> getCollectors();
 
-	public static QueryBuilder of(final QueryDefinition queryDefinition) {
-		return new QueryBuilder(queryDefinition);
-	}
+    @JsonProperty("facets")
+    LinkedHashMap<String, FacetDefinition> getFacets();
 
-	public static QueryBuilder of(final Query query) {
-		return new QueryBuilder(query);
-	}
+    @JsonProperty("highlighters")
+    LinkedHashMap<String, HighlighterDefinition> getHighlighters();
 
-	public static QueryBuilder of(final AbstractQuery query) {
-		return new QueryBuilder(query);
-	}
+    @JsonProperty("commit_user_data")
+    Map<String, String> getCommitUserData();
 
-	public static QueryDefinition newQuery(final String jsonString) throws IOException {
-		if (StringUtils.isEmpty(jsonString))
-			return null;
-		return ObjectMappers.JSON.readValue(jsonString, QueryDefinition.class);
-	}
+    @JsonIgnore
+    Query getLuceneQuery();
+
+    @JsonIgnore
+    QueryBuilder of();
+
+    static QueryBuilder of(final Query query) {
+        return new QueryBuilder(query);
+    }
+
+    static QueryBuilder of(final QueryInterface query) {
+        return new QueryBuilder(query);
+    }
+
+    static QueryDefinition newQuery(final String jsonString) throws IOException {
+        if (StringUtils.isEmpty(jsonString))
+            return null;
+        return ObjectMappers.JSON.readValue(jsonString, QueryDefinition.class);
+    }
 
 }

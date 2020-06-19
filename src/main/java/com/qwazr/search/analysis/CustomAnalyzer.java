@@ -45,14 +45,20 @@ final public class CustomAnalyzer extends Analyzer {
     public CustomAnalyzer(final ResourceLoader resourceLoader, final AnalyzerDefinition analyzerDefinition)
         throws IOException, ReflectiveOperationException {
         super(GLOBAL_REUSE_STRATEGY);
-        positionIncrementGap = analyzerDefinition.position_increment_gap == null ?
-            null :
-            new HashMap<>(analyzerDefinition.position_increment_gap);
-        offsetGap = analyzerDefinition.offset_gap == null ? null : new HashMap<>(analyzerDefinition.offset_gap);
-        tokenizerFactory = getFactory(resourceLoader, analyzerDefinition.tokenizer, KeywordTokenizerFactory.class);
-        if (analyzerDefinition.filters != null && !analyzerDefinition.filters.isEmpty()) {
-            tokenFilterFactories = new ArrayList<>(analyzerDefinition.filters.size());
-            for (LinkedHashMap<String, String> filterDef : analyzerDefinition.filters)
+
+        final Map<String, Integer> defPositionIncrementGap = analyzerDefinition.getPositionIncrementGap();
+        positionIncrementGap = defPositionIncrementGap == null || defPositionIncrementGap.isEmpty() ? null : new HashMap<>(defPositionIncrementGap);
+
+        final Map<String, Integer> defOffsetGap = analyzerDefinition.getOffsetGap();
+        offsetGap = defOffsetGap == null || defOffsetGap.isEmpty() ? null : new HashMap<>(defOffsetGap);
+
+        tokenizerFactory = getFactory(resourceLoader, analyzerDefinition.getTokenizer(), KeywordTokenizerFactory.class);
+
+        final List<LinkedHashMap<String, String>> defFilters = analyzerDefinition.getFilters();
+
+        if (defFilters != null && !defFilters.isEmpty()) {
+            tokenFilterFactories = new ArrayList<>(defFilters.size());
+            for (final LinkedHashMap<String, String> filterDef : defFilters)
                 tokenFilterFactories.add(getFactory(resourceLoader, filterDef, null));
         } else
             tokenFilterFactories = null;
@@ -84,11 +90,12 @@ final public class CustomAnalyzer extends Analyzer {
     }
 
     private static <T extends AbstractAnalysisFactory> T getFactory(final ResourceLoader resourceLoader,
-                                                                    LinkedHashMap<String, String> args, final Class<T> defaultClass)
+                                                                    Map<String, String> args,
+                                                                    final Class<T> defaultClass)
         throws ReflectiveOperationException, IOException {
         final String clazz;
         if (args != null) {
-            args = (LinkedHashMap<String, String>) args.clone();
+            args = new LinkedHashMap<>(args);
             clazz = args.remove("class");
         } else
             clazz = null;
@@ -108,8 +115,7 @@ final public class CustomAnalyzer extends Analyzer {
             clazz += "Factory";
         try {
             return ClassLoaderUtils.findClass(clazz);
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             clazz = "org.apache.lucene.analysis." + clazz;
             return ClassLoaderUtils.findClass(clazz);
         }

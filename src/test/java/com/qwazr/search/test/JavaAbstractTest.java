@@ -112,14 +112,14 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test010CheckMasterClient() throws URISyntaxException, IOException {
-        final AnnotatedIndexService master = getMaster();
+        final AnnotatedIndexService<?> master = getMaster();
         Assert.assertEquals(AnnotatedRecord.SCHEMA_NAME, master.getSchemaName());
         Assert.assertEquals(AnnotatedRecord.INDEX_NAME_MASTER, master.getIndexName());
     }
 
     @Test
     public void test050CreateSchema() throws URISyntaxException, IOException {
-        final AnnotatedIndexService service = getMaster();
+        final AnnotatedIndexService<?> service = getMaster();
         final SchemaSettingsDefinition settings1 = service.createUpdateSchema();
         Assert.assertNotNull(settings1);
         final SchemaSettingsDefinition settings2 = service.createUpdateSchema(settings1);
@@ -134,7 +134,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test060CreateMasterIndex() throws URISyntaxException, IOException {
-        final AnnotatedIndexService service = getMaster();
+        final AnnotatedIndexService<?> service = getMaster();
         final IndexStatus indexStatus1 = service.createUpdateIndex();
         Assert.assertNotNull(indexStatus1);
         Assert.assertNotNull(indexStatus1.indexUuid);
@@ -144,7 +144,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test070FieldChangesNoFields() throws URISyntaxException, IOException {
-        final AnnotatedIndexService service = getMaster();
+        final AnnotatedIndexService<?> service = getMaster();
         final Map<String, AnnotatedIndexService.FieldStatus> fieldChanges = service.getFieldChanges();
         Assert.assertNotNull(fieldChanges);
         Assert.assertEquals(18, fieldChanges.size());
@@ -674,7 +674,7 @@ public abstract class JavaAbstractTest {
         Assert.assertEquals(2, result.totalHits);
     }
 
-    static void checkCollector(ResultDefinition result, String name, Object... possibleValues) {
+    static void checkCollector(ResultDefinition<?> result, String name, Object... possibleValues) {
         Assert.assertNotNull(result);
         Assert.assertNotNull(result.collectors);
         Object collectorResult = result.getCollector(name, Object.class);
@@ -730,7 +730,7 @@ public abstract class JavaAbstractTest {
             new DrillDownQuery(new MatchAllDocsQuery(), true).dynamicFilter("dynamic_multi_facet_*",
                 "dynamic_multi_facet_cat", "news"));
         builder.collector("maxQuantity", ClassicMaxCollector.class);
-        builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10));
+        builder.facet("dynamic_multi_facet_cat", FacetDefinition.create(10));
         ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
         checkCollector(result, "maxQuantity", 20L, 20);
         checkFacets(result, "dynamic_multi_facet_cat", "news");
@@ -741,7 +741,7 @@ public abstract class JavaAbstractTest {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
         builder.collector("maxQuantity", ClassicMaxCollector.class);
-        builder.facet("dynamic_multi_facet_cat", new FacetDefinition(10));
+        builder.facet("dynamic_multi_facet_cat", FacetDefinition.create(10));
         ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
         checkCollector(result, "maxQuantity", 20L, 20);
         checkFacets(result, "dynamic_multi_facet_cat", "news");

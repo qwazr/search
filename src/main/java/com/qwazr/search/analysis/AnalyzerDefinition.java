@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,13 @@
  */
 package com.qwazr.search.analysis;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,51 +30,49 @@ import java.util.List;
 import java.util.function.Supplier;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class AnalyzerDefinition {
+@JsonAutoDetect(
+    creatorVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    fieldVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonDeserialize(as = BaseAnalyzerDefinition.class)
+public interface AnalyzerDefinition {
 
-    public final LinkedHashMap<String, Integer> position_increment_gap;
-    public final LinkedHashMap<String, Integer> offset_gap;
-    public final LinkedHashMap<String, String> tokenizer;
-    public final List<LinkedHashMap<String, String>> filters;
+    @JsonProperty("position_increment_gap")
+    LinkedHashMap<String, Integer> getPositionIncrementGap();
 
-    public AnalyzerDefinition() {
-        tokenizer = null;
-        filters = null;
-        position_increment_gap = null;
-        offset_gap = null;
-    }
+    @JsonProperty("offset_gap")
+    LinkedHashMap<String, Integer> getOffsetGap();
 
-    public AnalyzerDefinition(final LinkedHashMap<String, Integer> positionIncrementGaps,
-                              final LinkedHashMap<String, Integer> offsetGaps, final LinkedHashMap<String, String> tokenizer,
-                              final List<LinkedHashMap<String, String>> filters) {
-        this.position_increment_gap = positionIncrementGaps;
-        this.offset_gap = offsetGaps;
-        this.tokenizer = tokenizer;
-        this.filters = filters;
-    }
+    @JsonProperty("tokenizer")
+    LinkedHashMap<String, String> getTokenizer();
 
-    public final static TypeReference<LinkedHashMap<String, AnalyzerDefinition>> mapStringAnalyzerTypeRef =
+    @JsonProperty("filters")
+    List<LinkedHashMap<String, String>> getFilters();
+
+    TypeReference<LinkedHashMap<String, AnalyzerDefinition>> mapStringAnalyzerTypeRef =
         new TypeReference<>() {
         };
 
-    public static LinkedHashMap<String, AnalyzerDefinition> newAnalyzerMap(String jsonString) throws IOException {
+    static LinkedHashMap<String, AnalyzerDefinition> newAnalyzerMap(final String jsonString) throws IOException {
         if (StringUtils.isEmpty(jsonString))
             return null;
         return ObjectMappers.JSON.readValue(jsonString, mapStringAnalyzerTypeRef);
     }
 
-    public static AnalyzerDefinition newAnalyzer(String jsonString) throws IOException {
+    static AnalyzerDefinition newAnalyzer(String jsonString) throws IOException {
         return ObjectMappers.JSON.readValue(jsonString, AnalyzerDefinition.class);
     }
 
-    public static LinkedHashMap<String, AnalyzerDefinition> loadMap(final File mapFile,
-                                                                    final Supplier<LinkedHashMap<String, AnalyzerDefinition>> defaultMap) throws IOException {
+    static LinkedHashMap<String, AnalyzerDefinition> loadMap(final File mapFile,
+                                                             final Supplier<LinkedHashMap<String, AnalyzerDefinition>> defaultMap) throws IOException {
         return mapFile != null && mapFile.exists() && mapFile.isFile() ?
             ObjectMappers.JSON.readValue(mapFile, AnalyzerDefinition.mapStringAnalyzerTypeRef) :
             defaultMap == null ? null : defaultMap.get();
     }
 
-    public static void saveMap(final LinkedHashMap<String, AnalyzerDefinition> definitionMap, final File mapFile)
+    static void saveMap(final LinkedHashMap<String, AnalyzerDefinition> definitionMap, final File mapFile)
         throws IOException {
         if (definitionMap == null)
             Files.deleteIfExists(mapFile.toPath());

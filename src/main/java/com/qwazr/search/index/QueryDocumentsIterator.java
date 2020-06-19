@@ -1,5 +1,5 @@
-/**
- * Copyright 2017 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,10 +36,11 @@ public class QueryDocumentsIterator<T> implements Iterator<T> {
     private int currentPos;
 
     public QueryDocumentsIterator(@NotNull final AnnotatedIndexService<?> service,
-            @NotNull final QueryDefinition queryDefinition, @NotNull final Class<T> recordClass) {
+                                  @NotNull final QueryDefinition queryDefinition,
+                                  @NotNull final Class<T> recordClass) {
         this.service = service;
         this.recordClass = recordClass;
-        this.queryBuilder = new QueryBuilder(queryDefinition);
+        this.queryBuilder = queryDefinition.of();
         this.count = 0;
         this.pos = 0;
         queryBuilder.start(0);

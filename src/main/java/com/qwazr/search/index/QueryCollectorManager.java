@@ -60,15 +60,14 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
                 new MixedDrillSideways(queryExecution).search(
                     (org.apache.lucene.facet.DrillDownQuery) queryExecution.query, this);
             facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.facetsConfig,
-                queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+                queryExecution.queryDef.getFacets(), queryExecution.query, queryExecution.timeTracker,
                 drillSidewaysResult).build();
 
         } else {
 
             try {
                 queryExecution.queryContext.indexSearcher.search(queryExecution.query, this);
-            }
-            catch (RuntimeException e) {
+            } catch (RuntimeException e) {
                 if (ExceptionUtils.getRootCause(e) instanceof TimeLimitingCollector.TimeExceededException)
                     LOGGER.log(Level.WARNING, e, e::getMessage);
                 else
@@ -79,7 +78,7 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
             facetsBuilder = facetsCollector == null ?
                 null :
                 new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
-                    queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+                    queryExecution.queryDef.getFacets(), queryExecution.query, queryExecution.timeTracker,
                     facetsCollector).build();
         }
 
@@ -142,7 +141,8 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
     public final FacetsCollector getFacetsCollector() {
         if (facetsCollector != null) // cache
             return facetsCollector;
-        if (queryExecution.queryDef.facets == null || queryExecution.queryDef.facets.isEmpty())
+        final Map<String, FacetDefinition> queryFacets = queryExecution.queryDef.getFacets();
+        if (queryFacets == null || queryFacets.isEmpty())
             return null;
         if (queryCollectorsList == null || queryCollectorsList.isEmpty())
             return EMPTY_FACETS_COLLECTOR;
@@ -156,12 +156,13 @@ class QueryCollectorManager extends QueryCollectors implements CollectorManager<
 
     @Override
     public final Map<String, Object> getExternalResults() {
-        if (queryCollectorsList == null || queryCollectorsList.isEmpty())
+        if (queryExecution.queryDef == null || queryCollectorsList == null || queryCollectorsList.isEmpty())
             return null;
-        if (queryExecution.queryDef == null || queryExecution.queryDef.collectors == null)
+        final Map<String, QueryDefinition.CollectorDefinition> queryDefCollectors = queryExecution.queryDef.getCollectors();
+        if (queryDefCollectors == null || queryDefCollectors.isEmpty())
             return null;
         final Map<String, Object> results = new HashMap<>();
-        for (final String collectorName : queryExecution.queryDef.collectors.keySet()) {
+        for (final String collectorName : queryDefCollectors.keySet()) {
             final List<Collector> userCollectors = new ArrayList<>();
             for (final QueryCollectorsClassic queryCollectors : queryCollectorsList)
                 if (queryCollectors.userCollectors != null)

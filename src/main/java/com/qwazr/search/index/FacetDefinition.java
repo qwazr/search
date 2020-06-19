@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,36 +15,50 @@
  */
 package com.qwazr.search.index;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.query.AbstractQuery;
-import com.qwazr.utils.CollectionsUtils;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.qwazr.search.query.QueryInterface;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import org.apache.lucene.facet.LabelAndValue;
 
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class FacetDefinition {
+@JsonAutoDetect(
+    creatorVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    fieldVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonDeserialize(as = BaseFacetDefinition.class)
+public interface FacetDefinition {
 
-    final public Integer top;
+    @JsonProperty("top")
+    Integer getTop();
+
+    int DEFAULT_TOP = 10;
 
     @JsonProperty("generic_field_name")
-    final public String genericFieldName;
+    String getGenericFieldName();
 
-    final public LinkedHashMap<String, AbstractQuery> queries;
+    @JsonProperty("queries")
+    @NotNull
+    Map<String, QueryInterface> getQueries();
 
     @JsonProperty("specific_values")
-    final public LinkedHashSet<String[]> specificValues;
+    @NotNull
+    Set<String[]> getSpecificValues();
 
-    final public String prefix;
+    @JsonProperty("prefix")
+    String getPrefix();
 
-    final public Sort sort;
+    @JsonProperty("sort")
+    Sort getSort();
 
-    public enum Sort implements Comparator<LabelAndValue> {
+    enum Sort implements Comparator<LabelAndValue> {
 
         value_descending(FacetBuilder.VALUE_DESCENDING),
         value_ascending(FacetBuilder.VALUE_ASCENDING),
@@ -63,113 +77,18 @@ public class FacetDefinition {
         }
     }
 
-    public FacetDefinition() {
-        this((Integer) null);
+    FacetDefinition EMPTY = new BaseFacetDefinition();
+
+    static FacetDefinition create(int top) {
+        return new BaseFacetDefinition(top);
     }
 
-    public FacetDefinition(Integer top) {
-        this(top, null);
+    static FacetDefinitionBuilder of() {
+        return new FacetDefinitionBuilder();
     }
 
-    public FacetDefinition(Integer top, String prefix) {
-        this(top, prefix, null);
+    static FacetDefinitionBuilder of(Integer top) {
+        return new FacetDefinitionBuilder().top(top);
     }
 
-    public FacetDefinition(Integer top, String prefix, Sort sort) {
-        this(top, prefix, sort, null, null, null);
-    }
-
-    @JsonCreator
-    public FacetDefinition(@JsonProperty("top") Integer top, @JsonProperty("prefix") String prefix,
-                           @JsonProperty("sort") Sort sort, @JsonProperty("queries") LinkedHashMap<String, AbstractQuery> queries,
-                           @JsonProperty("specific_values") LinkedHashSet<String[]> specificValues,
-                           @JsonProperty("genericFieldName") String genericFieldName) {
-        this.top = top;
-        this.prefix = prefix;
-        this.sort = sort;
-        this.queries = queries;
-        this.specificValues = specificValues;
-        this.genericFieldName = genericFieldName;
-    }
-
-    private FacetDefinition(final Builder builder) {
-        this(builder.top,
-                builder.prefix,
-                builder.sort, builder.queries == null || builder.queries.isEmpty() ? null : builder.queries,
-                builder.specificValues == null || builder.specificValues.isEmpty() ? null : builder.specificValues,
-                builder.genericFieldName);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(genericFieldName, top);
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof FacetDefinition))
-            return false;
-        if (o == this)
-            return true;
-        final FacetDefinition f = (FacetDefinition) o;
-        return Objects.equals(top, f.top) && CollectionsUtils.equals(queries, f.queries) &&
-                CollectionsUtils.equals(specificValues, f.specificValues) && Objects.equals(prefix, f.prefix) &&
-                Objects.equals(sort, f.sort) && Objects.equals(genericFieldName, f.genericFieldName);
-    }
-
-    public static Builder of() {
-        return new Builder();
-    }
-
-    public static Builder of(Integer top) {
-        return new Builder().top(top);
-    }
-
-    public static class Builder {
-
-        public Integer top;
-        public String prefix;
-        public Sort sort;
-        public LinkedHashMap<String, AbstractQuery> queries;
-        public LinkedHashSet<String[]> specificValues;
-        public String genericFieldName;
-
-        public Builder top(Integer top) {
-            this.top = top;
-            return this;
-        }
-
-        public Builder prefix(String prefix) {
-            this.prefix = prefix;
-            return this;
-        }
-
-        public Builder sort(Sort sort) {
-            this.sort = sort;
-            return this;
-        }
-
-        public Builder query(String name, AbstractQuery query) {
-            if (queries == null)
-                queries = new LinkedHashMap<>();
-            queries.put(name, query);
-            return this;
-        }
-
-        public Builder specificValues(String... path) {
-            if (specificValues == null)
-                specificValues = new LinkedHashSet<>();
-            specificValues.add(path);
-            return this;
-        }
-
-        public Builder genericFieldName(String genericFieldName) {
-            this.genericFieldName = genericFieldName;
-            return this;
-        }
-
-        public FacetDefinition build() {
-            return new FacetDefinition(this);
-        }
-    }
 }

@@ -16,25 +16,24 @@
 package com.qwazr.search.field;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.annotations.Copy;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.utils.WildcardMatcher;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.LinkedHashMap;
-import java.util.Objects;
-
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CustomFieldDefinition extends BaseFieldDefinition<CustomFieldDefinition> {
 
+    @JsonProperty("template")
     public final Template template;
-
+    @JsonProperty("tokenized")
     public final Boolean tokenized;
+    @JsonProperty("stored")
     public final Boolean stored;
     @JsonProperty("store_termvectors")
     public final Boolean storeTermVectors;

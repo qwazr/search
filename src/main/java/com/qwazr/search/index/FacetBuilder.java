@@ -31,8 +31,9 @@ final class FacetBuilder {
     private final List<LabelAndValue> facetResult;
 
     FacetBuilder(final FacetDefinition facetDefinition) {
-        prefix = StringUtils.isEmpty(facetDefinition.prefix) ? null : facetDefinition.prefix;
-        sort = facetDefinition.sort;
+        final String facetPrefix = facetDefinition.getPrefix();
+        prefix = StringUtils.isBlank(facetPrefix) ? null : facetPrefix;
+        sort = facetDefinition.getSort();
         facetResult = new ArrayList<>();
     }
 

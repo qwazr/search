@@ -36,84 +36,84 @@ import java.util.Set;
 
 public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-	private static List<IndexRecord.NoTaxonomy> documents;
-	private static List<IndexRecord.NoTaxonomy> subset;
+    private static List<IndexRecord.NoTaxonomy> documents;
+    private static List<IndexRecord.NoTaxonomy> subset;
 
-	@BeforeClass
-	public static void setup() throws IOException, InterruptedException, URISyntaxException {
-		initIndexService();
-		documents = new ArrayList<>();
-		subset = new ArrayList<>();
-		for (int i = 0; i < RandomUtils.nextInt(300, 500); i++)
-			documents.add(new IndexRecord.NoTaxonomy(Integer.toString(i)).intPoint(RandomUtils.nextInt(0, 2)));
-		indexService.postDocuments(documents);
-	}
+    @BeforeClass
+    public static void setup() throws IOException, URISyntaxException {
+        initIndexService();
+        documents = new ArrayList<>();
+        subset = new ArrayList<>();
+        for (int i = 0; i < RandomUtils.nextInt(300, 500); i++)
+            documents.add(new IndexRecord.NoTaxonomy(Integer.toString(i)).intPoint(RandomUtils.nextInt(0, 2)));
+        indexService.postDocuments(documents);
+    }
 
-	void checkIterate(Iterator<? extends IndexRecord> iterator, Set<String> ids) {
-		int initialSize = ids.size();
-		int count = 0;
-		while (iterator.hasNext()) {
-			final IndexRecord record = iterator.next();
-			Assert.assertNotNull(record);
-			Assert.assertTrue(ids.remove(record.id));
-			count++;
-		}
+    void checkIterate(Iterator<? extends IndexRecord<?>> iterator, Set<String> ids) {
+        int initialSize = ids.size();
+        int count = 0;
+        while (iterator.hasNext()) {
+            final IndexRecord<?> record = iterator.next();
+            Assert.assertNotNull(record);
+            Assert.assertTrue(ids.remove(record.id));
+            count++;
+        }
 
-		Assert.assertEquals(initialSize, count);
-		Assert.assertEquals(0, ids.size());
+        Assert.assertEquals(initialSize, count);
+        Assert.assertEquals(0, ids.size());
 
-		try {
-			iterator.next();
-			Assert.fail("NoSuchElementException not thrown");
-		} catch (NoSuchElementException e) {
-			Assert.assertNotNull(e);
-		}
-	}
+        try {
+            iterator.next();
+            Assert.fail("NoSuchElementException not thrown");
+        } catch (NoSuchElementException e) {
+            Assert.assertNotNull(e);
+        }
+    }
 
-	@Test
-	public void iterateAll() throws ReflectiveOperationException {
-		final Iterator<? extends IndexRecord> iterator =
-				indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*").build(),
-						IndexRecord.NoTaxonomy.class);
-		Assert.assertNotNull(iterator);
+    @Test
+    public void iterateAll() {
+        final Iterator<? extends IndexRecord<?>> iterator =
+            indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*").build(),
+                IndexRecord.NoTaxonomy.class);
+        Assert.assertNotNull(iterator);
 
-		final Set<String> ids = new HashSet<>();
-		documents.forEach(r -> ids.add(r.id));
-		Assert.assertEquals(ids.size(), documents.size());
+        final Set<String> ids = new HashSet<>();
+        documents.forEach(r -> ids.add(r.id));
+        Assert.assertEquals(ids.size(), documents.size());
 
-		checkIterate(iterator, ids);
-	}
+        checkIterate(iterator, ids);
+    }
 
-	@Test
-	public void iterateSubSet() throws ReflectiveOperationException {
+    @Test
+    public void iterateSubSet() {
 
-		final Iterator<? extends IndexRecord> iterator = indexService.searchIterator(
-				QueryDefinition.of(new IntExactQuery("intPoint", 0)).returnedField("*").build(),
-				IndexRecord.NoTaxonomy.class);
-		Assert.assertNotNull(iterator);
+        final Iterator<? extends IndexRecord<?>> iterator = indexService.searchIterator(
+            QueryDefinition.of(new IntExactQuery("intPoint", 0)).returnedField("*").build(),
+            IndexRecord.NoTaxonomy.class);
+        Assert.assertNotNull(iterator);
 
-		final Set<String> ids = new HashSet<>();
-		documents.stream().filter(doc -> doc.intPoint == 0).forEach(r -> ids.add(r.id));
-		Assert.assertNotEquals(0, ids.size());
-		Assert.assertNotEquals(documents.size(), ids.size());
+        final Set<String> ids = new HashSet<>();
+        documents.stream().filter(doc -> doc.intPoint == 0).forEach(r -> ids.add(r.id));
+        Assert.assertNotEquals(0, ids.size());
+        Assert.assertNotEquals(documents.size(), ids.size());
 
-		checkIterate(iterator, ids);
-	}
+        checkIterate(iterator, ids);
+    }
 
-	@Test
-	public void iterateNone() throws ReflectiveOperationException {
+    @Test
+    public void iterateNone() {
 
-		final Iterator<? extends IndexRecord> iterator = indexService.searchIterator(
-				QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, -1)).returnedField("*").build(),
-				IndexRecord.NoTaxonomy.class);
-		Assert.assertNotNull(iterator);
-		Assert.assertFalse(iterator.hasNext());
+        final Iterator<? extends IndexRecord<?>> iterator = indexService.searchIterator(
+            QueryDefinition.of(new TermQuery(FieldDefinition.ID_FIELD, -1)).returnedField("*").build(),
+            IndexRecord.NoTaxonomy.class);
+        Assert.assertNotNull(iterator);
+        Assert.assertFalse(iterator.hasNext());
 
-		try {
-			iterator.next();
-			Assert.fail("NoSuchElementException not thrown");
-		} catch (NoSuchElementException e) {
-			Assert.assertNotNull(e);
-		}
-	}
+        try {
+            iterator.next();
+            Assert.fail("NoSuchElementException not thrown");
+        } catch (NoSuchElementException e) {
+            Assert.assertNotNull(e);
+        }
+    }
 }

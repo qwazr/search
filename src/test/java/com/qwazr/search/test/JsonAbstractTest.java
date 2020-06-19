@@ -354,8 +354,8 @@ public abstract class JsonAbstractTest {
         checkErrorStatusCode(() -> client.getAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, DUMMY_ANALYZER_NAME), 404);
         final AnalyzerDefinition analyzer = client.getAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, "FrenchAnalyzer");
         Assert.assertNotNull(analyzer);
-        Assert.assertEquals(analyzer.filters.size(), ANALYZER_FRENCH_JSON.filters.size());
-        Assert.assertEquals(analyzer.tokenizer.size(), ANALYZER_FRENCH_JSON.tokenizer.size());
+        Assert.assertEquals(analyzer.getFilters().size(), ANALYZER_FRENCH_JSON.getFilters().size());
+        Assert.assertEquals(analyzer.getTokenizer().size(), ANALYZER_FRENCH_JSON.getTokenizer().size());
     }
 
     @Test
@@ -789,7 +789,7 @@ public abstract class JsonAbstractTest {
 
     private void checkSynonyms(final IndexServiceInterface client, final String queryString,
                                final String... multiWordsHighlights) throws IOException {
-        final QueryBuilder builder = QueryDefinition.of(QUERY_HIGHLIGHT);
+        final QueryBuilder builder = QUERY_HIGHLIGHT.of();
         builder.query(QueryParser.of("description")
             .setDefaultOperator(QueryParserOperator.AND)
             .setQueryString(queryString)

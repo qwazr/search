@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.field;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,6 +38,12 @@ import javax.validation.constraints.NotNull;
 import org.apache.lucene.facet.FacetsConfig;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonAutoDetect(
+    creatorVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    fieldVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.EXISTING_PROPERTY,
     visible = true,
@@ -52,6 +59,7 @@ public interface FieldDefinition {
     /**
      * This property is present for polymorphism
      */
+    @JsonProperty("type")
     SmartFieldDefinition.Type getType();
 
     @JsonProperty("analyzer")

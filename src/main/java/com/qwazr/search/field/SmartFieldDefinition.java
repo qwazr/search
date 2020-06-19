@@ -33,10 +33,15 @@ public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefiniti
 
     public final static int DEFAULT_MAX_KEYWORD_LENGTH = 2048;
 
+    @JsonProperty("index")
     final public Boolean index;
+    @JsonProperty("facet")
     final public Boolean facet;
+    @JsonProperty("sort")
     final public Boolean sort;
+    @JsonProperty("stored")
     final public Boolean stored;
+    @JsonProperty("maxKeywordLength")
     final public Integer maxKeywordLength;
 
     public enum Type {

@@ -27,6 +27,7 @@ import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.field.SmartFieldDefinition;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.query.JoinQuery;
+import com.qwazr.search.query.QueryInterface;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
@@ -583,16 +584,17 @@ final public class IndexInstance implements Closeable {
     final ResultDefinition.WithMap deleteByQuery(final QueryDefinition queryDefinition) throws IOException {
         checkIsMaster();
         Objects.requireNonNull(queryDefinition, "The queryDefinition is missing - Index: " + indexName);
-        Objects.requireNonNull(queryDefinition.query, "The query is missing - Index: " + indexName);
+        final QueryInterface queryInterface = Objects.requireNonNull(queryDefinition.getQuery(), "The query is missing - Index: " + indexName);
         try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContext queryContext = buildQueryContext(indexSearcher, taxonomyReader)) {
-                    final Query query = queryDefinition.query.getQuery(queryContext);
+                    final Query query = queryInterface.getQuery(queryContext);
                     final IndexWriter indexWriter = writerAndSearcher.getIndexWriter();
                     int docs = indexWriter.getDocStats().numDocs;
                     indexWriter.deleteDocuments(query);
-                    if (queryDefinition.commitUserData != null)
-                        indexWriter.setLiveCommitData(queryDefinition.commitUserData.entrySet());
+                    final Map<String, String> commitUserData = queryDefinition.getCommitUserData();
+                    if (commitUserData != null && !commitUserData.isEmpty())
+                        indexWriter.setLiveCommitData(commitUserData.entrySet());
                     nrtCommit();
                     docs -= indexWriter.getDocStats().numDocs;
                     return new ResultDefinition.WithMap(docs);
@@ -764,12 +766,12 @@ final public class IndexInstance implements Closeable {
         return new FileResourceLoader(resourceLoader, fileSet.resourcesDirectoryPath);
     }
 
-    final AbstractQuery<?> getQuerySample(final String queryType) {
-        final Class<AbstractQuery<?>> queryClass = AbstractQuery.TYPES.get(queryType);
+    final QueryInterface getQuerySample(final String queryType) {
+        final Class<QueryInterface> queryClass = AbstractQuery.TYPES.get(queryType);
         if (queryClass == null)
             throw new NotFoundException("The type does not exist: " + queryType);
         try {
-            return AbstractQuery.getSample(queryClass, settings, getAnalyzers(), getFields());
+            return QueryInterface.getSample(queryClass, settings, getAnalyzers(), getFields());
         } catch (NoSuchMethodException e) {
             throw new NotFoundException("This query has no sample: " + queryType);
         } catch (ReflectiveOperationException e) {

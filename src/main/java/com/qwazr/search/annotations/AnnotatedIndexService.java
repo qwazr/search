@@ -39,13 +39,10 @@ import com.qwazr.search.index.ResultDocumentsInterface;
 import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.index.TermDefinition;
 import com.qwazr.search.index.TermEnumDefinition;
-import com.qwazr.search.query.AbstractQuery;
+import com.qwazr.search.query.QueryInterface;
 import com.qwazr.utils.AnnotationsUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
-import org.apache.commons.lang3.NotImplementedException;
-
-import javax.ws.rs.NotAcceptableException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -61,6 +58,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
+import javax.ws.rs.NotAcceptableException;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class AnnotatedIndexService<T> {
 
@@ -255,7 +254,7 @@ public class AnnotatedIndexService<T> {
      * @param queryType The type of the query to get the sample of
      * @return a sample of query based on the type and the current index settings, field and analyzer.
      */
-    public AbstractQuery<?> getQuerySample(final String queryType) {
+    public QueryInterface getQuerySample(final String queryType) {
         return indexService.getQuerySample(schemaName, indexName, queryType);
     }
 

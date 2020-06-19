@@ -77,7 +77,8 @@ class ResultDocumentsBuilder {
         this.totalHits = totalHits;
 
         this.facets = facetsBuilder == null ? null : facetsBuilder.results;
-        this.queryDebug = queryDefinition.queryDebug != null && queryDefinition.queryDebug && luceneQuery != null ?
+        final Boolean defQueryDebug = queryDefinition.getQueryDebug();
+        this.queryDebug = defQueryDebug != null && defQueryDebug && luceneQuery != null ?
             luceneQuery.toString(StringUtils.EMPTY) :
             null;
 

@@ -20,6 +20,7 @@ import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.AbstractQuery;
+import com.qwazr.search.query.QueryInterface;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.AbstractServiceImpl;
@@ -27,14 +28,6 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.FunctionEx;
-import org.apache.commons.io.input.AutoCloseInputStream;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.search.MatchAllDocsQuery;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -47,6 +40,13 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.UUID;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import org.apache.commons.io.input.AutoCloseInputStream;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.search.MatchAllDocsQuery;
 
 final class IndexServiceImpl extends AbstractServiceImpl implements IndexServiceInterface, AnnotatedServiceInterface {
 
@@ -1001,9 +1001,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    public AbstractQuery<?> getQuerySample(final String schemaName,
-                                           final String indexName,
-                                           final String queryType) {
+    public QueryInterface getQuerySample(final String schemaName,
+                                         final String indexName,
+                                         final String queryType) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).getIndex(indexName).getQuerySample(queryType);

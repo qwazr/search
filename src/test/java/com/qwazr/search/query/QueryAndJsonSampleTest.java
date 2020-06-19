@@ -52,14 +52,13 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
         final List<String> typesWithSample = new ArrayList<>();
         for (final String type : types) {
             try {
-                final AbstractQuery<?> sampleQuery = indexService.getQuerySample(type);
-                assertThat(sampleQuery.docUri, notNullValue());
-                assertThat(sampleQuery.docUri.toString(),
-                    ((HttpURLConnection) sampleQuery.docUri.toURL().openConnection()).getResponseCode(),
+                final QueryInterface sampleQuery = indexService.getQuerySample(type);
+                assertThat(sampleQuery.getDocUri(), notNullValue());
+                assertThat(sampleQuery.getDocUri().toString(),
+                    ((HttpURLConnection) sampleQuery.getDocUri().toURL().openConnection()).getResponseCode(),
                     equalTo(200));
                 typesWithSample.add(type);
-            }
-            catch (WebApplicationException e) {
+            } catch (WebApplicationException e) {
                 assertThat(e.getResponse().getStatus(), equalTo(404));
                 assertThat(e.getMessage(), equalTo("This query has no sample: " + type));
             }

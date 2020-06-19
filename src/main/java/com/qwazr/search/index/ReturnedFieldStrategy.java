@@ -54,15 +54,16 @@ public interface ReturnedFieldStrategy {
     static ReturnedFieldStrategy of(final QueryContextImpl context,
                                     final QueryDefinition queryDefinition,
                                     final Supplier<Set<String>> wildcardSupplier) {
-        if (queryDefinition.returnedFields != null) {
-            if (queryDefinition.returnedFields.contains("*")) {
+        final Set<String> returnedFields = queryDefinition.getReturnedFields();
+        if (returnedFields != null) {
+            if (returnedFields.contains("*")) {
                 if (!StringUtils.isEmpty(context.fieldMap.fieldsContext.recordField))
                     return new Record(context.fieldMap.fieldsContext.recordField);
                 else
                     return new Fields(context, wildcardSupplier.get());
             }
-            if (!queryDefinition.returnedFields.isEmpty())
-                return new Fields(context, queryDefinition.returnedFields);
+            if (!returnedFields.isEmpty())
+                return new Fields(context, returnedFields);
         }
         return NONE;
     }

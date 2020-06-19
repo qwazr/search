@@ -18,6 +18,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.collector.ClassicCollector;
 import com.qwazr.search.collector.ParallelCollector;
+import com.qwazr.search.query.QueryInterface;
 import com.qwazr.utils.LoggerUtils;
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetsCollector;
@@ -59,7 +60,7 @@ class QueryCollectorsClassic extends QueryCollectors {
     QueryCollectorsClassic(final QueryExecution<?> queryExecution) {
         super(queryExecution);
         collectors = new ArrayList<>();
-        facetsCollector = queryExecution.useDrillSideways ? null : buildFacetsCollector(queryExecution.queryDef.facets);
+        facetsCollector = queryExecution.useDrillSideways ? null : buildFacetsCollector(queryExecution.queryDef.getFacets());
         totalHitCountCollector = buildTotalHitsCollector(queryExecution.end);
         topDocsCollector = buildTopDocCollector(queryExecution.sort, queryExecution.end);
         if (queryExecution.collectorConstructors != null) {
@@ -91,9 +92,11 @@ class QueryCollectorsClassic extends QueryCollectors {
     private FacetsCollector buildFacetsCollector(final LinkedHashMap<String, FacetDefinition> facets) {
         if (facets == null || facets.isEmpty())
             return null;
-        for (FacetDefinition facet : facets.values())
-            if (facet.queries == null || facet.queries.isEmpty())
+        for (final FacetDefinition facet : facets.values()) {
+            final Map<String, QueryInterface> queries = facet.getQueries();
+            if (queries.isEmpty())
                 return add(new FacetsCollector());
+        }
         return null;
     }
 
@@ -126,22 +129,21 @@ class QueryCollectorsClassic extends QueryCollectors {
                     queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState)
                     .search((org.apache.lucene.facet.DrillDownQuery) queryExecution.query, finalCollector);
             facetsBuilder = new FacetsBuilder.WithSideways(queryExecution.queryContext, queryExecution.facetsConfig,
-                queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+                queryExecution.queryDef.getFacets(), queryExecution.query, queryExecution.timeTracker,
                 drillSidewaysResult).build();
 
         } else {
 
             try {
                 queryExecution.queryContext.indexSearcher.search(queryExecution.query, finalCollector);
-            }
-            catch (TimeLimitingCollector.TimeExceededException e) {
+            } catch (TimeLimitingCollector.TimeExceededException e) {
                 LOGGER.log(Level.WARNING, e, e::getMessage);
             }
 
             facetsBuilder = facetsCollector == null ?
                 null :
                 new FacetsBuilder.WithCollectors(queryExecution.queryContext, queryExecution.facetsConfig,
-                    queryExecution.queryDef.facets, queryExecution.query, queryExecution.timeTracker,
+                    queryExecution.queryDef.getFacets(), queryExecution.query, queryExecution.timeTracker,
                     facetsCollector).build();
 
         }
@@ -173,7 +175,7 @@ class QueryCollectorsClassic extends QueryCollectors {
         if (userCollectors == null)
             return null;
         final Map<String, Object> results = new HashMap<>();
-        for (final String name : queryExecution.queryDef.collectors.keySet()) {
+        for (final String name : queryExecution.queryDef.getCollectors().keySet()) {
             final Collector collector = userCollectors.get(name);
             if (collector instanceof ParallelCollector) {
                 final ParallelCollector parallelCollector = (ParallelCollector) collector;

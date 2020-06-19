@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,19 +40,19 @@ public class PagingTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
     private static LinkedHashMap<String, IndexRecord> documents;
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexService();
         documents = new LinkedHashMap<>();
         for (int i = 0; i < RandomUtils.nextInt(201, 299); i++) {
             final IndexRecord.WithTaxonomy record =
-                    new IndexRecord.WithTaxonomy(Integer.toString(i)).sortedDocValue(RandomUtils.alphanumeric(5))
-                            .facetField(Integer.toString(RandomUtils.nextInt(1, 3)));
+                new IndexRecord.WithTaxonomy(Integer.toString(i)).sortedDocValue(RandomUtils.alphanumeric(5))
+                    .facetField(Integer.toString(RandomUtils.nextInt(1, 3)));
             documents.put(record.id, record);
             indexService.postDocument(record);
         }
     }
 
-    private long checkEmpty(ResultDefinition result) {
+    private long checkEmpty(ResultDefinition<?> result) {
         Assert.assertNotNull(result);
         return result.getTotalHits();
     }
@@ -74,7 +74,7 @@ public class PagingTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
             // Check Object
             final ResultDefinition.WithObject<IndexRecord.WithTaxonomy> resultObject =
-                    indexService.searchQuery(queryDef);
+                indexService.searchQuery(queryDef);
             List<ResultDocumentObject<IndexRecord.WithTaxonomy>> objectDocs = resultObject.getDocuments();
             Assert.assertEquals(expectedRows, objectDocs.size());
             int i = 0;
@@ -106,27 +106,27 @@ public class PagingTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
     }
 
     @Test
-    public void pagingWithoutSort() throws URISyntaxException {
+    public void pagingWithoutSort() {
         checkPaging(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*"));
     }
 
     @Test
-    public void pagingSort() throws URISyntaxException {
+    public void pagingSort() {
         checkPaging(QueryDefinition.of(new MatchAllDocsQuery())
-                .returnedField("*")
-                .sort("sortedDocValue", QueryDefinition.SortEnum.ascending));
+            .returnedField("*")
+            .sort("sortedDocValue", QueryDefinition.SortEnum.ascending));
     }
 
     @Test
-    public void pagingFacetSort() throws URISyntaxException {
+    public void pagingFacetSort() {
         checkPaging(QueryDefinition.of(new MatchAllDocsQuery())
-                .returnedField("*")
-                .facet("facetField", new FacetDefinition(10))
-                .sort("sortedDocValue", QueryDefinition.SortEnum.ascending));
+            .returnedField("*")
+            .facet("facetField", FacetDefinition.create(10))
+            .sort("sortedDocValue", QueryDefinition.SortEnum.ascending));
     }
 
     @Test
-    public void pagingFacetWithoutSort() throws URISyntaxException {
+    public void pagingFacetWithoutSort() {
         checkPaging(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*"));
     }
 }

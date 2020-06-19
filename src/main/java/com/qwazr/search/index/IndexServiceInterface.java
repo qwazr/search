@@ -19,19 +19,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.jaxrs.smile.SmileMediaTypes;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.query.AbstractQuery;
+import com.qwazr.search.query.QueryInterface;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.PATCH;
 import com.qwazr.server.ServiceInterface;
 import com.qwazr.utils.concurrent.FunctionEx;
-import org.apache.commons.lang3.NotImplementedException;
-import org.glassfish.jersey.server.ManagedAsync;
-
-import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.*;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -40,6 +32,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.UUID;
+import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.NotImplementedException;
+import org.glassfish.jersey.server.ManagedAsync;
 
 @RolesAllowed(IndexServiceInterface.SERVICE_NAME)
 @Path("/" + IndexServiceInterface.PATH)
@@ -546,7 +553,7 @@ public interface IndexServiceInterface extends ServiceInterface {
     @GET
     @Path("/{schema_name}/{index_name}/search/queries/types/{query_type}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    <QUERY extends AbstractQuery<QUERY>> QUERY getQuerySample(@PathParam("schema_name") String schemaName,
-                                                              @PathParam("index_name") String indexName,
-                                                              @PathParam("query_type") String queryType);
+    QueryInterface getQuerySample(@PathParam("schema_name") String schemaName,
+                                  @PathParam("index_name") String indexName,
+                                  @PathParam("query_type") String queryType);
 }

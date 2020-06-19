@@ -19,13 +19,12 @@ import com.qwazr.search.index.FacetDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class AssociatedFacetTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
@@ -54,14 +53,14 @@ public class AssociatedFacetTest extends AbstractIndexTest.WithIndexRecord.WithT
 
     @Test
     public void intFacets() {
-        ResultDefinition result = indexService.searchQuery(
-                QueryDefinition.of(new MatchAllDocsQuery()).facet("intAssociatedFacet", new FacetDefinition()).build());
+        ResultDefinition<?> result = indexService.searchQuery(
+            QueryDefinition.of(new MatchAllDocsQuery()).facet("intAssociatedFacet", FacetDefinition.EMPTY).build());
         Assert.assertNotNull(result);
         Assert.assertEquals(6, result.totalHits);
         checkIntFacets(result);
     }
 
-    private void checkFloatFacets(ResultDefinition result, String... expectedKeys) {
+    private void checkFloatFacets(ResultDefinition<?> result, String... expectedKeys) {
         Assert.assertNotNull(result.facets);
         Assert.assertTrue(result.isAnyFacet());
         Map<String, Number> facet = (Map<String, Number>) result.getFacets().get("floatAssociatedFacet");
@@ -70,15 +69,15 @@ public class AssociatedFacetTest extends AbstractIndexTest.WithIndexRecord.WithT
             Assert.assertTrue(facet.containsKey(key));
     }
 
-    private void checkFloatFacets(ResultDefinition result) {
+    private void checkFloatFacets(ResultDefinition<?> result) {
         checkFloatFacets(result, "float4", "float5", "float6");
     }
 
     @Test
     public void floatFacets() {
-        ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
-                .facet("floatAssociatedFacet", new FacetDefinition())
-                .build());
+        ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
+            .facet("floatAssociatedFacet", FacetDefinition.EMPTY)
+            .build());
         Assert.assertNotNull(result);
         Assert.assertEquals(6, result.totalHits);
         checkFloatFacets(result);
@@ -86,10 +85,10 @@ public class AssociatedFacetTest extends AbstractIndexTest.WithIndexRecord.WithT
 
     @Test
     public void allFacets() {
-        ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
-                .facet("floatAssociatedFacet", new FacetDefinition())
-                .facet("intAssociatedFacet", FacetDefinition.of().build())
-                .build());
+        ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
+            .facet("floatAssociatedFacet", FacetDefinition.EMPTY)
+            .facet("intAssociatedFacet", FacetDefinition.of().build())
+            .build());
         Assert.assertNotNull(result);
         Assert.assertEquals(6, result.totalHits);
         checkIntFacets(result);
@@ -98,10 +97,10 @@ public class AssociatedFacetTest extends AbstractIndexTest.WithIndexRecord.WithT
 
     @Test
     public void limitFacet() {
-        ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
-                .facet("floatAssociatedFacet", FacetDefinition.of(2).build())
-                .facet("intAssociatedFacet", new FacetDefinition(2))
-                .build());
+        ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
+            .facet("floatAssociatedFacet", FacetDefinition.of(2).build())
+            .facet("intAssociatedFacet", FacetDefinition.create(2))
+            .build());
         Assert.assertNotNull(result);
         Assert.assertEquals(6, result.totalHits);
         Assert.assertNotNull(result.facets);

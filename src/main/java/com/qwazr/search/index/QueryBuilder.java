@@ -15,15 +15,14 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.search.query.AbstractQuery;
-import org.apache.lucene.search.Collector;
-import org.apache.lucene.search.Query;
-
+import com.qwazr.search.query.QueryInterface;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.Query;
 
 public class QueryBuilder {
 
@@ -31,56 +30,35 @@ public class QueryBuilder {
     Integer rows;
     Boolean queryDebug;
     LinkedHashSet<String> returnedFields;
-
     LinkedHashMap<String, FacetDefinition> facets;
-
     LinkedHashMap<String, QueryDefinition.SortEnum> sorts;
     LinkedHashMap<String, QueryDefinition.CollectorDefinition> collectors;
-
     LinkedHashMap<String, HighlighterDefinition> highlighters;
-
-    AbstractQuery query;
-
+    QueryInterface query;
     Query luceneQuery;
-
-    Map<String, String> commitUserData;
+    LinkedHashMap<String, String> commitUserData;
 
     public QueryBuilder() {
-    }
-
-    public QueryBuilder(final QueryDefinition queryDef) {
-        start = queryDef.start;
-        rows = queryDef.rows;
-        queryDebug = queryDef.queryDebug;
-        returnedFields = queryDef.returnedFields;
-
-        facets = queryDef.facets;
-        sorts = queryDef.sorts;
-        collectors = queryDef.collectors;
-
-        highlighters = queryDef.highlighters;
-
-        query = queryDef.query;
-        luceneQuery = queryDef.luceneQuery;
-        commitUserData = queryDef.commitUserData;
     }
 
     public QueryBuilder(final Query query) {
         this.luceneQuery = query;
     }
 
-    public QueryBuilder(final AbstractQuery query) {
+    public QueryBuilder(final QueryInterface query) {
         this.query = query;
     }
 
     public QueryBuilder query(final Query query) {
         this.luceneQuery = query;
-        this.query = null;
+        if (query != null)
+            this.query = null;
         return this;
     }
 
-    public QueryBuilder query(final AbstractQuery query) {
-        this.luceneQuery = null;
+    public QueryBuilder query(final QueryInterface query) {
+        if (query != null)
+            this.luceneQuery = null;
         this.query = query;
         return this;
     }
@@ -191,7 +169,16 @@ public class QueryBuilder {
             return this;
         if (this.collectors == null)
             this.collectors = new LinkedHashMap<>();
-        this.collectors.put(name, new QueryDefinition.CollectorDefinition(collectorClass.getName(), arguments));
+        this.collectors.put(name, new BaseCollectorDefinition(collectorClass.getName(), arguments));
+        return this;
+    }
+
+    public QueryBuilder collectors(final Map<String, QueryDefinition.CollectorDefinition> collectors) {
+        if (collectors == null || collectors.isEmpty())
+            return this;
+        if (this.collectors == null)
+            this.collectors = new LinkedHashMap<>();
+        this.collectors.putAll(collectors);
         return this;
     }
 
@@ -223,7 +210,16 @@ public class QueryBuilder {
         return this;
     }
 
+    public QueryBuilder commitUserData(final Map<String, String> commitUserData) {
+        if (commitUserData == null || commitUserData.isEmpty())
+            return this;
+        if (this.commitUserData == null)
+            this.commitUserData = new LinkedHashMap<>();
+        this.commitUserData.putAll(commitUserData);
+        return this;
+    }
+
     public QueryDefinition build() {
-        return new QueryDefinition(this);
+        return new BaseQueryDefinition(this);
     }
 }

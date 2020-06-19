@@ -17,7 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
-import com.qwazr.search.query.AbstractQuery;
+import com.qwazr.search.query.QueryInterface;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.concurrent.BiConsumerEx;
@@ -50,8 +50,6 @@ abstract class FacetsBuilder {
     private final Query searchQuery;
     private final TimeTracker timeTracker;
 
-    public final static int DEFAULT_TOP = 10;
-
     final LinkedHashMap<String, Map<String, Number>> results = new LinkedHashMap<>();
 
     private FacetsBuilder(final QueryContextImpl queryContext,
@@ -70,18 +68,19 @@ abstract class FacetsBuilder {
     }
 
     final FacetsBuilder build() throws Exception {
-        for (Map.Entry<String, FacetDefinition> entry : facetsDef.entrySet()) {
+        for (final Map.Entry<String, FacetDefinition> entry : facetsDef.entrySet()) {
             final String dimension = entry.getKey();
             final String resolvedDimension = resolvedDimensions.get(dimension);
             final FacetDefinition facet = entry.getValue();
             final FacetBuilder facetBuilder = new FacetBuilder(facet);
-            final boolean isQueries = facet.queries != null && !facet.queries.isEmpty();
-            final boolean isSpecificValues = facet.specificValues != null && !facet.specificValues.isEmpty();
-            final Integer top = facet.top != null ? facet.top : (isQueries || isSpecificValues) ? null : DEFAULT_TOP;
-            if (isSpecificValues || top != null)
-                buildFacetState(resolvedDimension, top, facet.specificValues, facetBuilder);
-            if (isQueries)
-                buildFacetQueries(facet.queries, facetBuilder);
+            final Map<String, QueryInterface> queries = facet.getQueries();
+            final Set<String[]> specificValues = facet.getSpecificValues();
+            final Integer topdef = facet.getTop();
+            final Integer top = topdef != null ? topdef : (queries.isEmpty() && specificValues.isEmpty()) ? FacetDefinition.DEFAULT_TOP : null;
+            if (!specificValues.isEmpty() || top != null)
+                buildFacetState(resolvedDimension, top, specificValues, facetBuilder);
+            if (!queries.isEmpty())
+                buildFacetQueries(queries, facetBuilder);
             results.put(dimension, facetBuilder.build());
         }
 
@@ -112,9 +111,9 @@ abstract class FacetsBuilder {
         }
     }
 
-    private void buildFacetQueries(final LinkedHashMap<String, AbstractQuery> queries, final FacetBuilder facetBuilder)
+    private void buildFacetQueries(final Map<String, QueryInterface> queries, final FacetBuilder facetBuilder)
         throws Exception {
-        final BiConsumerEx<String, AbstractQuery, Exception> consumer = (name, facetQuery) -> {
+        final BiConsumerEx<String, QueryInterface, Exception> consumer = (name, facetQuery) -> {
             final BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(searchQuery, BooleanClause.Occur.FILTER);
             builder.add(facetQuery.getQuery(queryContext), BooleanClause.Occur.FILTER);
@@ -128,8 +127,9 @@ abstract class FacetsBuilder {
             return null;
         final Map<String, String> fields = new HashMap<>();
         facets.forEach((field, facetDefinition) -> {
-            if (facetDefinition.queries == null) {
-                fields.put(field, facetDefinition.genericFieldName == null ? field : facetDefinition.genericFieldName);
+            if (facetDefinition.getQueries().isEmpty()) {
+                final String genericFieldName = facetDefinition.getGenericFieldName();
+                fields.put(field, genericFieldName == null ? field : genericFieldName);
             }
         });
         return fields;
