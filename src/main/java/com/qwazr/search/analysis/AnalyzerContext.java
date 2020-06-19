@@ -69,19 +69,19 @@ public class AnalyzerContext extends Equalizer.Immutable<AnalyzerContext> {
                 final String resolvedFieldName = fieldType.resolveFieldName(fieldName, FieldTypeInterface.FieldType.textField, FieldTypeInterface.ValueType.textType);
                 if (resolvedFieldName == null)
                     return;
-                final FieldDefinition<?> fieldDefinition = fieldType.getDefinition();
+                final FieldDefinition fieldDefinition = fieldType.getDefinition();
 
                 // Load the index analyzer if any specific
-                final String indexAnalyzer = StringUtils.isEmpty(fieldDefinition.indexAnalyzer) ? fieldDefinition.analyzer : fieldDefinition.indexAnalyzer;
-                if (!StringUtils.isEmpty(indexAnalyzer)) {
+                final String indexAnalyzer = fieldDefinition.resolvedIndexAnalyzer();
+                if (indexAnalyzer != null) {
                     final Analyzer analyzer = builder.findAnalyzer(indexAnalyzer, SmartAnalyzerSet::forIndex);
                     if (analyzer != null)
                         indexAnalyzerMap.put(resolvedFieldName, analyzer);
                 }
 
                 // Load the query analyzer if any specific
-                final String queryAnalyzer = StringUtils.isEmpty(fieldDefinition.queryAnalyzer) ? fieldDefinition.analyzer : fieldDefinition.queryAnalyzer;
-                if (!StringUtils.isEmpty(queryAnalyzer)) {
+                final String queryAnalyzer = fieldDefinition.resolvedQueryAnalyzer();
+                if (queryAnalyzer != null) {
                     final Analyzer analyzer = builder.findAnalyzer(queryAnalyzer, SmartAnalyzerSet::forQuery);
                     if (analyzer != null)
                         queryAnalyzerMap.put(resolvedFieldName, analyzer);

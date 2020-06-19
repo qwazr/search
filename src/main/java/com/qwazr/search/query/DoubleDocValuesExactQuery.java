@@ -44,7 +44,7 @@ public class DoubleDocValuesExactQuery extends AbstractExactQuery<Double, Double
 
     public DoubleDocValuesExactQuery(final IndexSettingsDefinition settings,
                                      final Map<String, AnalyzerDefinition> analyzers,
-                                     final Map<String, FieldDefinition<?>> fields) {
+                                     final Map<String, FieldDefinition> fields) {
         super(DoubleDocValuesExactQuery.class, DOC, null,
             getDoubleField(fields, () -> "doubleField"), 3.14d);
     }

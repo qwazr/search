@@ -27,7 +27,7 @@ public class QueryContextTest implements QueryContext {
     private final FieldMap fieldMap;
 
     public QueryContextTest(final IndexSettingsDefinition indexSettings,
-                            final Map<String, FieldDefinition<?>> fields) {
+                            final Map<String, FieldDefinition> fields) {
         fieldMap = new FieldMap(new FieldsContext(indexSettings, fields));
     }
 
@@ -40,7 +40,7 @@ public class QueryContextTest implements QueryContext {
     public void close() {
     }
 
-    public static QueryContextTest of(final Map<String, FieldDefinition<?>> fields) {
+    public static QueryContextTest of(final Map<String, FieldDefinition> fields) {
         return new QueryContextTest(IndexSettingsDefinition.of().build(), fields);
     }
 

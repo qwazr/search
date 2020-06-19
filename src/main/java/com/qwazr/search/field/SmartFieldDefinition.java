@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class SmartFieldDefinition extends FieldDefinition<SmartFieldDefinition> {
+public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefinition> {
 
     public final static int DEFAULT_MAX_KEYWORD_LENGTH = 2048;
 

@@ -121,7 +121,7 @@ public class AnnotatedIndexServiceTest {
         Assert.assertNotNull(index.settings.indexReaderWarmer);
         Assert.assertTrue(index.settings.indexReaderWarmer);
 
-        Map<String, FieldDefinition<?>> fields = service.createUpdateFields();
+        Map<String, FieldDefinition> fields = service.createUpdateFields();
         Assert.assertNotNull(fields);
         Assert.assertEquals(4, fields.size());
 

@@ -49,7 +49,7 @@ public class SmartFieldBuilderTest extends AbstractIndexTest {
 
     @Test
     public void testSetFields() {
-        Map<String, FieldDefinition<?>> fields = new LinkedHashMap<>();
+        Map<String, FieldDefinition> fields = new LinkedHashMap<>();
         fields.put("emptyField2", SmartFieldDefinition.of().build());
         fields.put("doubleField2", SmartFieldDefinition.of().type(SmartFieldDefinition.Type.DOUBLE).build());
         fields.put("indexField2", SmartFieldDefinition.of().index(true).build());

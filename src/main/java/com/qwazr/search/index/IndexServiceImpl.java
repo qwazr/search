@@ -181,7 +181,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public Map<String, FieldDefinition<?>> getFields(final String schemaName, final String indexName) {
+    final public Map<String, FieldDefinition> getFields(final String schemaName, final String indexName) {
         try {
             checkRight(schemaName);
             return indexManager.get(schemaName).get(indexName).getFields();
@@ -191,11 +191,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public FieldDefinition<?> getField(final String schemaName, final String indexName, final String fieldName) {
+    final public FieldDefinition getField(final String schemaName, final String indexName, final String fieldName) {
         try {
             checkRight(schemaName);
-            Map<String, FieldDefinition<?>> fieldMap = indexManager.get(schemaName).get(indexName).getFields();
-            final FieldDefinition<?> fieldDef = (fieldMap != null) ? fieldMap.get(fieldName) : null;
+            Map<String, FieldDefinition> fieldMap = indexManager.get(schemaName).get(indexName).getFields();
+            final FieldDefinition fieldDef = (fieldMap != null) ? fieldMap.get(fieldName) : null;
             if (fieldDef == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
                     "Field not found: " + fieldName + " - Schema/index:" + schemaName + '/' + indexName);
@@ -205,9 +205,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
         }
     }
 
-    final public Map<String, FieldDefinition<?>> setFields(final String schemaName,
-                                                           final String indexName,
-                                                           final Map<String, FieldDefinition<?>> fields) {
+    final public Map<String, FieldDefinition> setFields(final String schemaName,
+                                                        final String indexName,
+                                                        final Map<String, FieldDefinition> fields) {
         try {
             checkRight(schemaName);
             indexManager.get(schemaName).get(indexName).setFields(fields);
@@ -284,10 +284,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public FieldDefinition<?> setField(final String schemaName,
-                                             final String indexName,
-                                             final String fieldName,
-                                             final FieldDefinition<?> field) {
+    final public FieldDefinition setField(final String schemaName,
+                                          final String indexName,
+                                          final String fieldName,
+                                          final FieldDefinition field) {
         try {
             checkRight(schemaName);
             indexManager.get(schemaName).get(indexName).setField(fieldName, field);

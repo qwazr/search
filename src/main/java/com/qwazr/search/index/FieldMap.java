@@ -21,19 +21,17 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.field.SmartDynamicTypes;
 import com.qwazr.utils.WildcardMatcher;
-import java.util.Collections;
-import java.util.Objects;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.lucene.facet.FacetsConfig;
-
-import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import javax.validation.constraints.NotNull;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.lucene.facet.FacetsConfig;
 
 public class FieldMap {
 
@@ -66,10 +64,8 @@ public class FieldMap {
         // Handle copy-to
         final HashMap<String, FieldTypeInterface> newFields = new HashMap<>();
         nameDefMap.forEach((name, fieldType) -> {
-            final FieldDefinition<?> definition = fieldType.getDefinition();
-            if (definition.copyFrom == null)
-                return;
-            for (String copyFrom : definition.copyFrom) {
+            final FieldDefinition definition = fieldType.getDefinition();
+            for (final String copyFrom : definition.getCopyFrom()) {
                 final FieldTypeInterface fieldDest;
                 if (nameDefMap.containsKey(copyFrom))
                     fieldDest = nameDefMap.get(copyFrom);
@@ -151,7 +147,7 @@ public class FieldMap {
             "The field has not been found: " + (genericFieldName == null ? concreteFieldName : genericFieldName));
     }
 
-    final Map<String, FieldDefinition<?>> getFields() {
+    final Map<String, FieldDefinition> getFields() {
         return fieldsContext.fields;
     }
 
@@ -166,7 +162,7 @@ public class FieldMap {
         if (fieldType == null)
             return;
         fieldType.applyFacetsConfig(concreteFieldName, this, facetsConfig);
-        final FieldDefinition<?> definition = fieldType.getDefinition();
+        final FieldDefinition definition = fieldType.getDefinition();
         if (definition == null)
             return;
         if (definition instanceof CustomFieldDefinition) {

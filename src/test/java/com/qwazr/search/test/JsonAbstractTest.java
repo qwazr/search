@@ -93,9 +93,9 @@ public abstract class JsonAbstractTest {
     public static final String SYNONYMS_TXT = "synonyms.txt";
     public static final String SYNONYMS2_TXT = "synonyms2.txt";
     public static final long SYNONYM_LAST_MODIFIED = System.currentTimeMillis();
-    public static final Map<String, FieldDefinition<?>> FIELDS_JSON = getFieldMap("fields.json");
-    public static final FieldDefinition<?> FIELD_NAME_JSON = getField("field_name.json");
-    public static final FieldDefinition<?> FIELD_UPDATE_JSON = getField("field_update.json");
+    public static final Map<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
+    public static final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
+    public static final FieldDefinition FIELD_UPDATE_JSON = getField("field_update.json");
     public static final Map<String, AnalyzerDefinition> ANALYZERS_JSON = getAnalyzerMap("analyzers.json");
     public static final AnalyzerDefinition ANALYZER_FRENCH_JSON = getAnalyzer("analyzer_french.json");
     public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
@@ -137,7 +137,7 @@ public abstract class JsonAbstractTest {
         IndexServiceInterface client = getClient();
         client.createUpdateSchema(SCHEMA_ERROR_NAME, null);
         Assert.assertNotNull(client.getIndex(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME));
-        FieldDefinition<?> fieldDef = client.getField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description");
+        FieldDefinition fieldDef = client.getField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description");
         Assert.assertNotNull(fieldDef);
         checkErrorStatusCode(() -> client.setField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description", fieldDef), 406);
         Assert.assertNotNull(client.getIndex(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME));
@@ -192,7 +192,7 @@ public abstract class JsonAbstractTest {
         }
     }
 
-    public static Map<String, FieldDefinition<?>> getFieldMap(String res) {
+    public static Map<String, FieldDefinition> getFieldMap(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return FieldDefinition.newFieldMap(IOUtils.toString(is, StandardCharsets.UTF_8));
         } catch (IOException e) {
@@ -200,7 +200,7 @@ public abstract class JsonAbstractTest {
         }
     }
 
-    private static FieldDefinition<?> getField(String res) {
+    private static FieldDefinition getField(String res) {
         try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
             return FieldDefinition.newField(IOUtils.toString(is, StandardCharsets.UTF_8));
         } catch (IOException e) {
@@ -385,7 +385,7 @@ public abstract class JsonAbstractTest {
     public void test130SetFields() throws URISyntaxException, IOException {
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(() -> client.setFields(SCHEMA_NAME, INDEX_DUMMY_NAME, null), 404);
-        final Map<String, FieldDefinition<?>> fields = client.setFields(SCHEMA_NAME, INDEX_MASTER_NAME, FIELDS_JSON);
+        final Map<String, FieldDefinition> fields = client.setFields(SCHEMA_NAME, INDEX_MASTER_NAME, FIELDS_JSON);
         Assert.assertEquals(fields.size(), FIELDS_JSON.size());
         final IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(indexStatus.fields);
@@ -401,7 +401,7 @@ public abstract class JsonAbstractTest {
             CustomFieldDefinition fieldDef =
                 (CustomFieldDefinition) client.getField(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName);
             Assert.assertEquals(fieldDef.template, ((CustomFieldDefinition) fieldDefinition).template);
-            Assert.assertEquals(fieldDef.analyzer, ((CustomFieldDefinition) fieldDefinition).analyzer);
+            Assert.assertEquals(fieldDef.getAnalyzer(), fieldDefinition.getAnalyzer());
         });
 
     }
@@ -411,7 +411,7 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(() -> client.deleteField(SCHEMA_NAME, INDEX_DUMMY_NAME, "name"), 404);
         client.deleteField(SCHEMA_NAME, INDEX_MASTER_NAME, "name");
-        final Map<String, FieldDefinition<?>> fields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(fields);
         Assert.assertNull(fields.get("name"));
     }
@@ -421,7 +421,7 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(() -> client.setField(SCHEMA_NAME, INDEX_DUMMY_NAME, null, null), 404);
         client.setField(SCHEMA_NAME, INDEX_MASTER_NAME, "name", FIELD_NAME_JSON);
-        final Map<String, FieldDefinition<?>> fields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(fields);
         Assert.assertNotNull(fields.get("name"));
     }
@@ -1020,7 +1020,7 @@ public abstract class JsonAbstractTest {
         Assert.assertNotNull(masterStatus.version);
 
         // Get the fields and analyzers of the master
-        final Map<String, FieldDefinition<?>> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final Map<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
         final Map<String, AnalyzerDefinition> masterAnalyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(masterFields);
         Assert.assertNotNull(masterAnalyzers);
@@ -1033,7 +1033,7 @@ public abstract class JsonAbstractTest {
         Assert.assertEquals(slaveStatus.masterUuid, masterStatus.indexUuid);
 
         // Get the fields and analyzers of the slave
-        final Map<String, FieldDefinition<?>> slaveFields = client.getFields(SCHEMA_NAME, INDEX_SLAVE_NAME);
+        final Map<String, FieldDefinition> slaveFields = client.getFields(SCHEMA_NAME, INDEX_SLAVE_NAME);
         final Map<String, AnalyzerDefinition> slaveAnalyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_SLAVE_NAME);
         Assert.assertNotNull(slaveFields);
         Assert.assertNotNull(slaveAnalyzers);
@@ -1056,7 +1056,7 @@ public abstract class JsonAbstractTest {
     public void test850replicationCheck() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
 
-        final Map<String, FieldDefinition<?>> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final Map<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
         final Map<String, AnalyzerDefinition> masterAnalyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
         Assert.assertNotNull(masterFields);
         Assert.assertNotNull(masterAnalyzers);

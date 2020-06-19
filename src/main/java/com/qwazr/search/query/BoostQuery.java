@@ -47,7 +47,7 @@ public class BoostQuery extends AbstractQuery<BoostQuery> {
 
     public BoostQuery(final IndexSettingsDefinition settings,
                       final Map<String, AnalyzerDefinition> analyzers,
-                      final Map<String, FieldDefinition<?>> fields) {
+                      final Map<String, FieldDefinition> fields) {
         super(BoostQuery.class, DOC);
         final String field = getFullTextField(fields,
             () -> getTextField(fields,

@@ -31,24 +31,22 @@ import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.StringUtils;
-import java.util.Arrays;
-import javax.ws.rs.NotAcceptableException;
-import org.apache.lucene.analysis.core.KeywordAnalyzer;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.search.Query;
-
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.ws.rs.NotAcceptableException;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.search.Query;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
@@ -171,18 +169,8 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
         TYPES = Collections.unmodifiableSortedMap(typeMap);
     }
 
-    static public boolean hasFullTextAnalyzer(final FieldDefinition<?> fieldDefinition) {
-        if (StringUtils.isAllEmpty(fieldDefinition.analyzer, fieldDefinition.queryAnalyzer, fieldDefinition.indexAnalyzer))
-            return false;
-        final String alzr = fieldDefinition.analyzer != null ? fieldDefinition.analyzer
-            : fieldDefinition.queryAnalyzer != null ? fieldDefinition.queryAnalyzer
-            : fieldDefinition.indexAnalyzer;
-        return !(alzr.endsWith(KeywordAnalyzer.class.getSimpleName()));
-    }
-
-
-    static private boolean fieldCheck(final FieldDefinition<?> field,
-                                      final Function<FieldDefinition<?>, Boolean> fieldConsumer,
+    static private boolean fieldCheck(final FieldDefinition field,
+                                      final Function<FieldDefinition, Boolean> fieldConsumer,
                                       final Function<SmartFieldDefinition, Boolean> smartFieldConsumer) {
 
         if (field instanceof SmartFieldDefinition)
@@ -191,69 +179,69 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
         return fieldConsumer.apply(field);
     }
 
-    static private String forEachField(final Map<String, FieldDefinition<?>> fields,
-                                       final Function<FieldDefinition<?>, Boolean> fieldConsumer,
+    static private String forEachField(final Map<String, FieldDefinition> fields,
+                                       final Function<FieldDefinition, Boolean> fieldConsumer,
                                        final Function<SmartFieldDefinition, Boolean> smartFieldConsumer,
                                        final Supplier<String> defaultField) {
         if (fields != null)
-            for (final Map.Entry<String, FieldDefinition<?>> entry : fields.entrySet())
+            for (final Map.Entry<String, FieldDefinition> entry : fields.entrySet())
                 if (fieldCheck(entry.getValue(), fieldConsumer, smartFieldConsumer))
                     return entry.getKey();
         return defaultField.get();
     }
 
-    static protected String getTextField(Map<String, FieldDefinition<?>> fields,
+    static protected String getTextField(Map<String, FieldDefinition> fields,
                                          final Supplier<String> defaultField) {
         return forEachField(fields,
             f -> Boolean.FALSE,
-            s -> s.type == SmartFieldDefinition.Type.TEXT,
+            s -> s.getType() == SmartFieldDefinition.Type.TEXT,
             defaultField);
     }
 
-    static protected String getFullTextField(final Map<String, FieldDefinition<?>> fields,
+    static protected String getFullTextField(final Map<String, FieldDefinition> fields,
                                              final Supplier<String> defaultField) {
         return forEachField(fields,
-            AbstractQuery::hasFullTextAnalyzer,
+            FieldDefinition::hasFullTextAnalyzer,
             s -> Boolean.FALSE,
             defaultField);
     }
 
-    static protected String getDoubleField(final Map<String, FieldDefinition<?>> fields,
+    static protected String getDoubleField(final Map<String, FieldDefinition> fields,
                                            final Supplier<String> defaultField) {
         return forEachField(fields,
             f -> Boolean.FALSE,
-            s -> s.type == SmartFieldDefinition.Type.DOUBLE,
+            s -> s.getType() == SmartFieldDefinition.Type.DOUBLE,
             defaultField);
     }
 
-    static protected String getLongField(final Map<String, FieldDefinition<?>> fields,
+    static protected String getLongField(final Map<String, FieldDefinition> fields,
                                          final Supplier<String> defaultField) {
         return forEachField(fields,
             f -> Boolean.FALSE,
-            s -> s.type == SmartFieldDefinition.Type.LONG,
+            s -> s.getType() == SmartFieldDefinition.Type.LONG,
             defaultField);
     }
 
-    static protected String getFloatField(final Map<String, FieldDefinition<?>> fields,
+    static protected String getFloatField(final Map<String, FieldDefinition> fields,
                                           final Supplier<String> defaultField) {
         return forEachField(fields,
             f -> Boolean.FALSE,
-            s -> s.type == SmartFieldDefinition.Type.FLOAT,
+            s -> s.getType() == SmartFieldDefinition.Type.FLOAT,
             defaultField);
     }
 
-    static protected String getIntField(final Map<String, FieldDefinition<?>> fields,
+    static protected String getIntField(final Map<String, FieldDefinition> fields,
                                         final Supplier<String> defaultField) {
         return forEachField(fields,
             f -> Boolean.FALSE,
-            s -> s.type == SmartFieldDefinition.Type.INTEGER,
+            s -> s.getType() == SmartFieldDefinition.Type.INTEGER,
             defaultField);
     }
 
     public static AbstractQuery<?> getSample(final Class<AbstractQuery<?>> queryClass,
                                              final IndexSettingsDefinition settings,
                                              final Map<String, AnalyzerDefinition> analyzers,
-                                             final Map<String, FieldDefinition<?>> fields) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
+                                             final Map<String, FieldDefinition> fields) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
         final Constructor<AbstractQuery<?>> samplerConstructor = queryClass.getConstructor(IndexSettingsDefinition.class, Map.class, Map.class);
         return samplerConstructor.newInstance(settings, analyzers, fields);
     }

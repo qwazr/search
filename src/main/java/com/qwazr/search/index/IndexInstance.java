@@ -24,6 +24,7 @@ import com.qwazr.search.analysis.CustomAnalyzer;
 import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
+import com.qwazr.search.field.SmartFieldDefinition;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.query.JoinQuery;
 import com.qwazr.search.query.TermQuery;
@@ -38,28 +39,6 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.FunctionEx;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.facet.taxonomy.TaxonomyReader;
-import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Terms;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.join.JoinUtil;
-import org.apache.lucene.search.join.ScoreMode;
-import org.apache.lucene.store.Directory;
-
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.NotAcceptableException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.Response;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -83,6 +62,25 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotAcceptableException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Response;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.facet.taxonomy.TaxonomyReader;
+import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.MultiTerms;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.join.JoinUtil;
+import org.apache.lucene.search.join.ScoreMode;
+import org.apache.lucene.store.Directory;
 
 final public class IndexInstance implements Closeable {
 
@@ -182,7 +180,7 @@ final public class IndexInstance implements Closeable {
             queryAnalyzers.getActiveAnalyzers()));
     }
 
-    Map<String, FieldDefinition<?>> getFields() {
+    Map<String, FieldDefinition> getFields() {
         return fieldMap.getFields();
     }
 
@@ -226,7 +224,7 @@ final public class IndexInstance implements Closeable {
         queryAnalyzers.update(analyzerContext.queryAnalyzers);
     }
 
-    void setFields(final Map<String, FieldDefinition<?>> fields) throws ServerException, IOException {
+    void setFields(final Map<String, FieldDefinition> fields) throws ServerException, IOException {
         final boolean fieldChanged;
         fieldMapLock.lock();
         try {
@@ -243,14 +241,14 @@ final public class IndexInstance implements Closeable {
             reindex();
     }
 
-    void setField(final String field_name, final FieldDefinition<?> field) throws IOException, ServerException {
-        final Map<String, FieldDefinition<?>> fields = new LinkedHashMap<>(fieldMap.getFields());
+    void setField(final String field_name, final FieldDefinition field) throws IOException, ServerException {
+        final Map<String, FieldDefinition> fields = new LinkedHashMap<>(fieldMap.getFields());
         fields.put(field_name, field);
         setFields(fields);
     }
 
     void deleteField(final String field_name) throws IOException, ServerException {
-        final Map<String, FieldDefinition<?>> fields = new LinkedHashMap<>(fieldMap.getFields());
+        final Map<String, FieldDefinition> fields = new LinkedHashMap<>(fieldMap.getFields());
         if (fields.remove(field_name) == null)
             throw new ServerException(Response.Status.NOT_FOUND,
                 "Field not found: " + field_name + " - Index: " + indexName);
@@ -675,7 +673,7 @@ final public class IndexInstance implements Closeable {
         return dataDirectory;
     }
 
-    void fillFields(final Map<String, FieldDefinition<?>> fields) {
+    void fillFields(final Map<String, FieldDefinition> fields) {
         if (fields == null)
             return;
         this.fieldMap.getFields().forEach((name, fieldDef) -> {
@@ -786,8 +784,9 @@ final public class IndexInstance implements Closeable {
             if (primaryKeyValue != null && name.equals(settings.primaryKey))
                 value = "id" + primaryKeyValue.toString();
             else {
-                if (def.type != null) {
-                    switch (def.type) {
+                final SmartFieldDefinition.Type type = def.getType();
+                if (type != null) {
+                    switch (type) {
                         case TEXT:
                             value = "Hello world";
                             break;

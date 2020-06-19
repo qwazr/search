@@ -30,7 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class CustomFieldDefinition extends FieldDefinition<CustomFieldDefinition> {
+public class CustomFieldDefinition extends BaseFieldDefinition<CustomFieldDefinition> {
 
     public final Template template;
 

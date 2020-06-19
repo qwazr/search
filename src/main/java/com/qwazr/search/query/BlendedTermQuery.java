@@ -26,9 +26,7 @@ import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.Equalizer;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -90,7 +88,7 @@ public class BlendedTermQuery extends AbstractQuery<BlendedTermQuery> {
 
     public BlendedTermQuery(final IndexSettingsDefinition indexSettingsDefinition,
                             final Map<String, AnalyzerDefinition> analyzers,
-                            final Map<String, FieldDefinition<?>> fields) {
+                            final Map<String, FieldDefinition> fields) {
         super(BlendedTermQuery.class, DOC);
         final String field = getFullTextField(fields,
             () -> getTextField(fields,

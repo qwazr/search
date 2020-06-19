@@ -49,26 +49,22 @@ import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.query.TermsQuery;
 import com.qwazr.search.query.WildcardQuery;
+import static com.qwazr.search.test.JsonAbstractTest.checkErrorStatusCode;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.function.BiFunction;
+import javax.ws.rs.WebApplicationException;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.search.join.ScoreMode;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
-import javax.ws.rs.WebApplicationException;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.concurrent.ExecutionException;
-import java.util.function.BiFunction;
-
-import static com.qwazr.search.test.JsonAbstractTest.checkErrorStatusCode;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class JavaAbstractTest {
@@ -160,13 +156,13 @@ public abstract class JavaAbstractTest {
     @Test
     public void test072CreateUpdateFields() throws URISyntaxException, IOException {
         final AnnotatedIndexService<?> service = getMaster();
-        Map<String, FieldDefinition<?>> fields = service.createUpdateFields();
+        Map<String, FieldDefinition> fields = service.createUpdateFields();
         Assert.assertNotNull(fields);
         CustomFieldDefinition field;
         Assert.assertNotNull("The Title field is not present", field = (CustomFieldDefinition) fields.get("title"));
-        Assert.assertEquals("en.EnglishAnalyzer", field.analyzer);
+        Assert.assertEquals("en.EnglishAnalyzer", field.getAnalyzer());
         Assert.assertNotNull("The Content field is not present", field = (CustomFieldDefinition) fields.get("content"));
-        Assert.assertEquals(EnglishAnalyzer.class.getName(), field.analyzer);
+        Assert.assertEquals(EnglishAnalyzer.class.getName(), field.getAnalyzer());
         Assert.assertNotNull("The Category field is not present",
             field = (CustomFieldDefinition) fields.get("category"));
         Assert.assertEquals(FieldDefinition.Template.SortedSetDocValuesFacetField, field.template);
@@ -177,14 +173,14 @@ public abstract class JavaAbstractTest {
     @Test
     public void test074GetFields() throws URISyntaxException, IOException {
         final AnnotatedIndexService<?> service = getMaster();
-        Map<String, FieldDefinition<?>> fields = service.getFields();
+        Map<String, FieldDefinition> fields = service.getFields();
         Assert.assertNotNull(fields);
         Assert.assertFalse(fields.isEmpty());
         fields.forEach((fieldName, fieldDefinition) -> {
             CustomFieldDefinition fieldDef = (CustomFieldDefinition) service.getField(fieldName);
             Assert.assertNotNull(fieldDef);
             Assert.assertEquals(fieldDef.template, ((CustomFieldDefinition) fieldDefinition).template);
-            Assert.assertEquals(fieldDef.analyzer, ((CustomFieldDefinition) fieldDefinition).analyzer);
+            Assert.assertEquals(fieldDef.getAnalyzer(), ((CustomFieldDefinition) fieldDefinition).getAnalyzer());
         });
     }
 
@@ -600,7 +596,7 @@ public abstract class JavaAbstractTest {
         Assert.assertNotNull(masterStatus.indexUuid);
         Assert.assertNotNull(masterStatus.version);
 
-        final Map<String, FieldDefinition<?>> masterFields = master.getFields();
+        final Map<String, FieldDefinition> masterFields = master.getFields();
         final Map<String, AnalyzerDefinition> masterAnalyzers = master.getAnalyzers();
 
         final AnnotatedIndexService<AnnotatedRecord> slave = getSlave();
@@ -640,7 +636,7 @@ public abstract class JavaAbstractTest {
         Assert.assertEquals(masterStatus.version, slaveStatus.version);
         Assert.assertEquals(masterStatus.numDocs, slaveStatus.numDocs);
 
-        final Map<String, FieldDefinition<?>> slaveFields = slave.getFields();
+        final Map<String, FieldDefinition> slaveFields = slave.getFields();
         final Map<String, AnalyzerDefinition> slaveAnalyzers = slave.getAnalyzers();
         Assert.assertNotNull(slaveFields);
         Assert.assertNotNull(slaveAnalyzers);
@@ -652,7 +648,7 @@ public abstract class JavaAbstractTest {
     private final static String BACKUP_NAME = "myBackup";
 
     @Test
-    public void test850backup() throws IOException, URISyntaxException, ExecutionException, InterruptedException {
+    public void test850backup() throws IOException, URISyntaxException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> globalStatus =
             master.getBackups("*", true);

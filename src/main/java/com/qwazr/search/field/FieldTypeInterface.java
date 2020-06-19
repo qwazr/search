@@ -47,14 +47,14 @@ public interface FieldTypeInterface {
 
     FieldType findFirstOf(final FieldType... expectedTypes);
 
-    FieldDefinition<?> getDefinition();
+    FieldDefinition getDefinition();
 
     void copyTo(final String fieldName, final FieldTypeInterface fieldType);
 
     void applyFacetsConfig(final String fieldName, final FieldMap fieldMap, final FacetsConfig facetsConfig);
 
     @FunctionalInterface
-    interface Supplier<T extends FieldDefinition<?>> {
+    interface Supplier<T extends FieldDefinition> {
         FieldTypeInterface newFieldType(final String genericFieldName,
                                         final WildcardMatcher wildcardMatcher,
                                         final T definition);

@@ -36,7 +36,7 @@ public class MatchAllDocsQuery extends AbstractQuery<MatchAllDocsQuery> {
 
     public MatchAllDocsQuery(final IndexSettingsDefinition settings,
                              final Map<String, AnalyzerDefinition> analyzers,
-                             final Map<String, FieldDefinition<?>> fields) {
+                             final Map<String, FieldDefinition> fields) {
         super(MatchAllDocsQuery.class, DOC);
     }
 

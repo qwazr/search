@@ -103,11 +103,11 @@ class IndexFileSet {
         IndexSettingsDefinition.save(settings, settingsFile);
     }
 
-    Map<String, FieldDefinition<?>> loadFieldMap() throws IOException {
+    Map<String, FieldDefinition> loadFieldMap() throws IOException {
         return FieldDefinition.loadMap(fieldMapFile, LinkedHashMap::new);
     }
 
-    void writeFieldMap(final Map<String, FieldDefinition<?>> fields) throws IOException {
+    void writeFieldMap(final Map<String, FieldDefinition> fields) throws IOException {
         FieldDefinition.saveMap(fields, fieldMapFile);
     }
 

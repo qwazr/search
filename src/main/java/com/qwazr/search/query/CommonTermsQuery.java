@@ -95,7 +95,7 @@ public class CommonTermsQuery extends AbstractQuery<CommonTermsQuery> {
 
     public CommonTermsQuery(final IndexSettingsDefinition settings,
                             final Map<String, AnalyzerDefinition> analyzers,
-                            final Map<String, FieldDefinition<?>> fields) {
+                            final Map<String, FieldDefinition> fields) {
         super(CommonTermsQuery.class, DOC);
         final String field = getFullTextField(fields,
             () -> getTextField(fields,

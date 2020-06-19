@@ -26,7 +26,7 @@ public class FieldDefinitionTest {
 
     @Test
     public void readCustomFieldDefinitionTest() throws IOException {
-        Map<String, FieldDefinition<?>> fields =
+        Map<String, FieldDefinition> fields =
             ObjectMappers.JSON.readValue(com.qwazr.search.test.JavaTest.class.getResourceAsStream("fields.json"),
                 FieldDefinition.mapStringFieldTypeRef);
         Assert.assertNotNull(fields);
@@ -35,7 +35,7 @@ public class FieldDefinitionTest {
 
     @Test
     public void readSmartFieldDefinitionTest() throws IOException {
-        Map<String, FieldDefinition<?>> fields =
+        Map<String, FieldDefinition> fields =
             ObjectMappers.JSON.readValue(FieldDefinitionTest.class.getResourceAsStream("smart_fields.json"),
                 FieldDefinition.mapStringFieldTypeRef);
         Assert.assertNotNull(fields);
@@ -63,7 +63,7 @@ public class FieldDefinitionTest {
         Assert.assertEquals(analyzer, fieldDef.analyzer);
         Assert.assertEquals(indexAnalyzer, fieldDef.indexAnalyzer);
         Assert.assertEquals(queryAnalyzer, fieldDef.queryAnalyzer);
-        Assert.assertArrayEquals(copyFrom, fieldDef.copyFrom);
+        Assert.assertArrayEquals(copyFrom == null ? new String[0] : copyFrom, fieldDef.copyFrom);
     }
 
     @Test

@@ -80,7 +80,7 @@ public class AnnotatedIndexService<T> {
 
     private final Map<String, Field> fieldMap;
 
-    private final Map<String, FieldDefinition<?>> fieldDefinitions;
+    private final Map<String, FieldDefinition> fieldDefinitions;
 
     /**
      * Create a new index service. A class with Index and IndexField annotations.
@@ -233,7 +233,7 @@ public class AnnotatedIndexService<T> {
      *
      * @return the field map
      */
-    public Map<String, FieldDefinition<?>> createUpdateFields() {
+    public Map<String, FieldDefinition> createUpdateFields() {
         return indexService.setFields(schemaName, indexName, fieldDefinitions);
     }
 
@@ -277,11 +277,11 @@ public class AnnotatedIndexService<T> {
      * @return the changed fields
      */
     public Map<String, FieldStatus> getFieldChanges() {
-        final Map<String, FieldDefinition<?>> indexFields = indexService.getFields(schemaName, indexName);
+        final Map<String, FieldDefinition> indexFields = indexService.getFields(schemaName, indexName);
         final Map<String, FieldStatus> fieldChanges = new HashMap<>();
         fieldMap.forEach((name, propertyField) -> {
-            final FieldDefinition<?> annotatedField = fieldDefinitions.get(name);
-            final FieldDefinition<?> indexField = indexFields == null ? null : indexFields.get(name);
+            final FieldDefinition annotatedField = fieldDefinitions.get(name);
+            final FieldDefinition indexField = indexFields == null ? null : indexFields.get(name);
             if (indexField == null)
                 fieldChanges.put(name, FieldStatus.EXISTS_ONLY_IN_ANNOTATION);
             else if (!indexField.equals(annotatedField))
@@ -533,11 +533,11 @@ public class AnnotatedIndexService<T> {
         return indexService.getIndex(schemaName, indexName);
     }
 
-    public Map<String, FieldDefinition<?>> getFields() {
+    public Map<String, FieldDefinition> getFields() {
         return indexService.getFields(schemaName, indexName);
     }
 
-    public FieldDefinition<?> getField(final String fieldName) {
+    public FieldDefinition getField(final String fieldName) {
         return indexService.getField(schemaName, indexName, fieldName);
     }
 
@@ -545,7 +545,7 @@ public class AnnotatedIndexService<T> {
         return indexService.getFieldStats(schemaName, indexName, fieldName);
     }
 
-    public void setField(final String fieldName, final FieldDefinition<?> fieldDefinition) {
+    public void setField(final String fieldName, final FieldDefinition fieldDefinition) {
         indexService.setField(schemaName, indexName, fieldName, fieldDefinition);
     }
 

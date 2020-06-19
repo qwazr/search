@@ -108,7 +108,7 @@ public class BooleanQuery extends AbstractQuery<BooleanQuery> {
 
     public BooleanQuery(final IndexSettingsDefinition settings,
                         final Map<String, AnalyzerDefinition> analyzers,
-                        final Map<String, FieldDefinition<?>> fields) {
+                        final Map<String, FieldDefinition> fields) {
         super(BooleanQuery.class, DOC);
         minimumNumberShouldMatch = 2;
         final String field = getFullTextField(fields,

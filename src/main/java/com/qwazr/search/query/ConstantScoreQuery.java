@@ -44,7 +44,7 @@ public class ConstantScoreQuery extends AbstractQuery<ConstantScoreQuery> {
 
     public ConstantScoreQuery(final IndexSettingsDefinition settings,
                               final Map<String, AnalyzerDefinition> analyzers,
-                              final Map<String, FieldDefinition<?>> fields) {
+                              final Map<String, FieldDefinition> fields) {
         super(ConstantScoreQuery.class, DOC);
         query = new TermQuery(settings, analyzers, fields);
     }

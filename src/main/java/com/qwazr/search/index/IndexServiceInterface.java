@@ -98,16 +98,16 @@ public interface IndexServiceInterface extends ServiceInterface {
     @GET
     @Path("/{schema_name}/{index_name}/fields")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Map<String, FieldDefinition<?>> getFields(@PathParam("schema_name") String schema_name,
-                                              @PathParam("index_name") String index_name);
+    Map<String, FieldDefinition> getFields(@PathParam("schema_name") String schema_name,
+                                           @PathParam("index_name") String index_name);
 
     @POST
     @Path("/{schema_name}/{index_name}/fields")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Map<String, FieldDefinition<?>> setFields(@PathParam("schema_name") String schema_name,
-                                              @PathParam("index_name") String index_name,
-                                              Map<String, FieldDefinition<?>> fields);
+    Map<String, FieldDefinition> setFields(@PathParam("schema_name") String schema_name,
+                                           @PathParam("index_name") String index_name,
+                                           Map<String, FieldDefinition> fields);
 
     @GET
     @Path("/{schema_name}/{index_name}/fields/{field_name}/analyzer/query")
@@ -154,17 +154,18 @@ public interface IndexServiceInterface extends ServiceInterface {
     @GET
     @Path("/{schema_name}/{index_name}/fields/{field_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    FieldDefinition<?> getField(@PathParam("schema_name") String schema_name,
-                                @PathParam("index_name") String index_name,
-                                @PathParam("field_name") String field_name);
+    FieldDefinition getField(@PathParam("schema_name") String schema_name,
+                             @PathParam("index_name") String index_name,
+                             @PathParam("field_name") String field_name);
 
     @POST
     @Path("/{schema_name}/{index_name}/fields/{field_name}")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    FieldDefinition<?> setField(@PathParam("schema_name") String schema_name,
-                                @PathParam("index_name") String index_name,
-                                @PathParam("field_name") String field_name, FieldDefinition<?> fields);
+    FieldDefinition setField(@PathParam("schema_name") String schema_name,
+                             @PathParam("index_name") String index_name,
+                             @PathParam("field_name") String field_name,
+                             FieldDefinition field);
 
     @DELETE
     @Path("/{schema_name}/{index_name}/fields/{field_name}")
@@ -501,7 +502,7 @@ public interface IndexServiceInterface extends ServiceInterface {
     GenericType<Map<String, Object>> mapStringObjectType = new GenericType<>() {
     };
 
-    GenericType<Map<String, FieldDefinition<?>>> mapStringFieldType =
+    GenericType<Map<String, FieldDefinition>> mapStringFieldType =
         new GenericType<>() {
         };
 
@@ -545,7 +546,7 @@ public interface IndexServiceInterface extends ServiceInterface {
     @GET
     @Path("/{schema_name}/{index_name}/search/queries/types/{query_type}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    AbstractQuery<?> getQuerySample(@PathParam("schema_name") String schemaName,
-                                    @PathParam("index_name") String indexName,
-                                    @PathParam("query_type") String queryType);
+    <QUERY extends AbstractQuery<QUERY>> QUERY getQuerySample(@PathParam("schema_name") String schemaName,
+                                                              @PathParam("index_name") String indexName,
+                                                              @PathParam("query_type") String queryType);
 }
