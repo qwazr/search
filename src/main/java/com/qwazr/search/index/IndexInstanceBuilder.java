@@ -23,7 +23,7 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.concurrent.ReadWriteSemaphores;
+import com.qwazr.utils.concurrent.AutoLockSemaphore;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.codecs.simpletext.SimpleTextCodec;
@@ -61,7 +61,8 @@ class IndexInstanceBuilder {
 
     final IndexFileSet fileSet;
     final ExecutorService executorService;
-    final ReadWriteSemaphores readWriteSemaphores;
+    final AutoLockSemaphore writeSemaphore;
+    final AutoLockSemaphore readSemaphore;
     final IndexInstance.Provider indexProvider;
 
     private final IndexServiceInterface indexService;
@@ -102,7 +103,6 @@ class IndexInstanceBuilder {
                          final Map<String, SimilarityFactory> similarityFactoryMap,
                          final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap,
                          final Map<String, Sort> sortMap,
-                         final ReadWriteSemaphores readWriteSemaphores,
                          final ExecutorService executorService,
                          final IndexServiceInterface indexService,
                          final IndexFileSet fileSet,
@@ -111,7 +111,6 @@ class IndexInstanceBuilder {
                          final String indexName) {
         this.fileSet = fileSet;
         this.executorService = executorService;
-        this.readWriteSemaphores = readWriteSemaphores;
         this.indexProvider = indexManager;
         this.instanceFactory = indexManager;
         this.settings = settings;
@@ -122,6 +121,8 @@ class IndexInstanceBuilder {
         this.fileResourceLoader = new FileResourceLoader(null, fileSet.resourcesDirectoryPath);
         this.indexUuid = indexUuid;
         this.indexName = indexName;
+        this.writeSemaphore = AutoLockSemaphore.of(settings == null ? -1 : settings.maxConcurrentWrite == null ? -1 : settings.maxConcurrentWrite);
+        this.readSemaphore = AutoLockSemaphore.of(settings == null ? -1 : settings.maxConcurrentRead == null ? -1 : settings.maxConcurrentRead);
     }
 
     private void buildCommon() throws IOException, ReflectiveOperationException {

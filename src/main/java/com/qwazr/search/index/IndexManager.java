@@ -22,7 +22,6 @@ import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteLock;
-import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParameters;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import java.io.Closeable;
@@ -53,8 +52,6 @@ public class IndexManager extends ConstructorParametersImpl implements IndexInst
     public final static String INDEXES_DIRECTORY = "indexes";
     public final static String BACKUPS_DIRECTORY = "backups";
 
-    private final ReadWriteSemaphores readWriteSemaphores;
-
     private final ConcurrentHashMap<String, IndexInstanceManager> indexMap;
 
     private final Path indexesDirectory;
@@ -80,7 +77,6 @@ public class IndexManager extends ConstructorParametersImpl implements IndexInst
         this.indexesDirectory = indexesDirectory;
         this.executorService = executorService;
         this.backupRootDirectory = backupRootDirectory;
-        this.readWriteSemaphores = new ReadWriteSemaphores(null, null);
 
         service = new IndexServiceImpl(this);
         indexMap = new ConcurrentHashMap<>();
@@ -92,7 +88,7 @@ public class IndexManager extends ConstructorParametersImpl implements IndexInst
             stream.filter(path -> Files.isDirectory(path))
                 .forEach(indexPath -> indexMap.put(indexPath.toFile().getName(),
                     new IndexInstanceManager(this, similarityFactoryMap, analyzerFactoryMap,
-                        sortMap, readWriteSemaphores, executorService, service, indexPath)));
+                        sortMap, executorService, service, indexPath)));
         } catch (IOException e) {
             throw new InternalServerErrorException("Issue while reading the index directory: " + indexesDirectory, e);
         }
@@ -159,7 +155,7 @@ public class IndexManager extends ConstructorParametersImpl implements IndexInst
         Objects.requireNonNull(settings, "The settings cannot be null");
         final IndexInstanceManager indexInstanceManager = indexMap.computeIfAbsent(indexName,
             name -> new IndexInstanceManager(this, similarityFactoryMap, analyzerFactoryMap,
-                sortMap, readWriteSemaphores, executorService, service, indexesDirectory.resolve(name)));
+                sortMap, executorService, service, indexesDirectory.resolve(name)));
         buildIndexNameMap();
         return indexInstanceManager.createUpdate(settings);
     }

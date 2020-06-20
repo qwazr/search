@@ -20,7 +20,6 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.concurrent.ReadWriteLock;
-import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,7 +43,6 @@ class IndexInstanceManager implements Closeable {
     private final Map<String, SimilarityFactory> similarityFactoryMap;
     private final Map<String, AnalyzerFactory> analyzerFactoryMap;
     private final Map<String, Sort> sortMap;
-    private final ReadWriteSemaphores readWriteSemaphores;
 
     private final UUID indexUuid;
     private final String indexName;
@@ -55,7 +53,6 @@ class IndexInstanceManager implements Closeable {
                          final Map<String, SimilarityFactory> similarityFactoryMap,
                          final Map<String, AnalyzerFactory> analyzerFactoryMap,
                          final Map<String, Sort> sortMap,
-                         final ReadWriteSemaphores readWriteSemaphores,
                          final ExecutorService executorService,
                          final IndexServiceInterface indexServiceInterface,
                          final Path indexDirectory) {
@@ -68,11 +65,9 @@ class IndexInstanceManager implements Closeable {
             this.similarityFactoryMap = similarityFactoryMap;
             this.analyzerFactoryMap = analyzerFactoryMap;
             this.sortMap = sortMap;
-            this.readWriteSemaphores = readWriteSemaphores;
             this.indexName = fileSet.checkIndexDirectory();
             this.indexUuid = fileSet.checkUuid();
             this.settings = fileSet.loadSettings();
-
         } catch (IOException e) {
             throw ServerException.of(e);
         }
@@ -82,7 +77,7 @@ class IndexInstanceManager implements Closeable {
         if (indexInstance == null)
             indexInstance =
                 new IndexInstanceBuilder(indexManager, similarityFactoryMap, analyzerFactoryMap,
-                    sortMap, readWriteSemaphores, executorService, indexServiceInterface, fileSet, settings,
+                    sortMap, executorService, indexServiceInterface, fileSet, settings,
                     indexUuid, indexName).build();
         return indexInstance;
     }

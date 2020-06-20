@@ -37,8 +37,8 @@ import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.concurrent.AutoLockSemaphore;
 import com.qwazr.utils.concurrent.FunctionEx;
-import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
 import java.io.Closeable;
 import java.io.File;
@@ -96,7 +96,8 @@ final public class IndexInstance implements Closeable {
     private final UUID indexUuid;
     private final String indexName;
 
-    private final ReadWriteSemaphores readWriteSemaphores;
+    private final AutoLockSemaphore writeSemaphore;
+    private final AutoLockSemaphore readSemaphore;
     private final Directory dataDirectory;
     private final Directory taxonomyDirectory;
     private final WriterAndSearcher writerAndSearcher;
@@ -128,7 +129,8 @@ final public class IndexInstance implements Closeable {
     private final ReindexThread reindexThread;
 
     IndexInstance(final IndexInstanceBuilder builder) {
-        this.readWriteSemaphores = builder.readWriteSemaphores;
+        this.writeSemaphore = builder.writeSemaphore;
+        this.readSemaphore = builder.readSemaphore;
         this.indexProvider = builder.indexProvider;
         this.fileSet = builder.fileSet;
         this.indexName = builder.indexName;
@@ -186,7 +188,7 @@ final public class IndexInstance implements Closeable {
     }
 
     FieldStats getFieldStats(final String fieldName) throws IOException {
-        try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
+        try (final AutoLockSemaphore.Lock lock = readSemaphore.acquire()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 final Terms terms = MultiTerms.getTerms(indexSearcher.getIndexReader(), fieldName);
                 return terms == null ? new FieldStats() : new FieldStats(terms, fieldMap.getFieldType(null, fieldName));
@@ -195,7 +197,7 @@ final public class IndexInstance implements Closeable {
     }
 
     IndexStatus getStatus() throws IOException {
-        try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
+        try (final AutoLockSemaphore.Lock lock = readSemaphore.acquire()) {
             return getIndexStatus();
         }
     }
@@ -337,7 +339,7 @@ final public class IndexInstance implements Closeable {
     }
 
     public Query createJoinQuery(final JoinQuery joinQuery) throws IOException {
-        try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
+        try (final AutoLockSemaphore.Lock lock = readSemaphore.acquire()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContext queryContext = buildQueryContext(indexSearcher, taxonomyReader)) {
                     final Query fromQuery = joinQuery.fromQuery == null ?
@@ -373,7 +375,7 @@ final public class IndexInstance implements Closeable {
                 throw new IOException(
                     "The backup path is not a directory: " + backupIndexDirectory.toAbsolutePath() + " " +
                         Thread.currentThread().getId());
-            try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
+            try (final AutoLockSemaphore.Lock lock = readSemaphore.acquire()) {
                 return new ReplicationBackup(this, backupIndexDirectory, taxonomyDirectory != null).backup();
             } catch (IOException e) {
                 // If any error occurred, we delete the backup directory
@@ -406,7 +408,7 @@ final public class IndexInstance implements Closeable {
 
     final BackupStatus getBackup(final Path backupIndexDirectory, final boolean extractVersion) throws IOException {
         checkIsMaster();
-        try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
+        try (final AutoLockSemaphore.Lock lock = readSemaphore.acquire()) {
             return BackupStatus.newBackupStatus(backupIndexDirectory, extractVersion);
         }
     }
@@ -444,7 +446,7 @@ final public class IndexInstance implements Closeable {
             throw new ServerException(Response.Status.NOT_ACCEPTABLE,
                 "No replication master has been setup - Index: " + indexName);
 
-        try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
+        try (final AutoLockSemaphore.Lock lock = writeSemaphore.acquire()) {
             // We only want one replication at a time
             replicationLock.lock();
             try {
@@ -465,7 +467,7 @@ final public class IndexInstance implements Closeable {
 
     final void deleteAll(Map<String, String> commitUserData) throws IOException {
         checkIsMaster();
-        try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
+        try (final AutoLockSemaphore.Lock lock = writeSemaphore.acquire()) {
             writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
                 indexWriter.deleteAll();
                 if (commitUserData != null)
@@ -479,9 +481,9 @@ final public class IndexInstance implements Closeable {
     final IndexStatus merge(final IndexInstance mergedIndex, final Map<String, String> commitUserData)
         throws IOException {
         checkIsMaster();
-        try (final ReadWriteSemaphores.Lock writeLock = readWriteSemaphores.acquireWriteSemaphore()) {
+        try (final AutoLockSemaphore.Lock writeLock = writeSemaphore.acquire()) {
             writerAndSearcher.write((indexWriter, taxonomyWriter) -> {
-                try (final ReadWriteSemaphores.Lock readLock = mergedIndex.readWriteSemaphores.acquireReadSemaphore()) {
+                try (final AutoLockSemaphore.Lock readLock = mergedIndex.readSemaphore.acquire()) {
                     indexWriter.addIndexes(mergedIndex.dataDirectory);
                     if (commitUserData != null)
                         indexWriter.setLiveCommitData(commitUserData.entrySet());
@@ -499,7 +501,7 @@ final public class IndexInstance implements Closeable {
     }
 
     final <T> T write(final IndexServiceInterface.WriteActions<T> writeActions) throws IOException {
-        try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
+        try (final AutoLockSemaphore.Lock lock = writeSemaphore.acquire()) {
             return writerAndSearcher.write(((indexWriter, taxonomyWriter) -> {
                 try (final WriteContext context = buildWriteContext(indexWriter, taxonomyWriter)) {
                     return writeActions.apply(context);
@@ -585,7 +587,7 @@ final public class IndexInstance implements Closeable {
         checkIsMaster();
         Objects.requireNonNull(queryDefinition, "The queryDefinition is missing - Index: " + indexName);
         final QueryInterface queryInterface = Objects.requireNonNull(queryDefinition.getQuery(), "The query is missing - Index: " + indexName);
-        try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireWriteSemaphore()) {
+        try (final AutoLockSemaphore.Lock lock = writeSemaphore.acquire()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContext queryContext = buildQueryContext(indexSearcher, taxonomyReader)) {
                     final Query query = queryInterface.getQuery(queryContext);
@@ -608,7 +610,7 @@ final public class IndexInstance implements Closeable {
     final List<TermEnumDefinition> getTermsEnum(final String fieldName, final String prefix, final Integer start,
                                                 final Integer rows) throws IOException {
         Objects.requireNonNull(fieldName, "The field name is missing - Index: " + indexName);
-        try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
+        try (final AutoLockSemaphore.Lock lock = readSemaphore.acquire()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName);
                 final Terms terms = MultiTerms.getTerms(indexSearcher.getIndexReader(), fieldName);
@@ -627,7 +629,7 @@ final public class IndexInstance implements Closeable {
     }
 
     final <T> T query(final IndexServiceInterface.QueryActions<T> queryActions) throws IOException {
-        try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
+        try (final AutoLockSemaphore.Lock lock = readSemaphore.acquire()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader)) {
                     return queryActions.apply(context);
@@ -660,7 +662,7 @@ final public class IndexInstance implements Closeable {
     }
 
     final Explanation explain(final QueryDefinition queryDefinition, final int docId) throws IOException {
-        try (final ReadWriteSemaphores.Lock lock = readWriteSemaphores.acquireReadSemaphore()) {
+        try (final AutoLockSemaphore.Lock lock = readSemaphore.acquire()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader)) {
                     return new QueryExecution<>(context, queryDefinition).explain(docId);
