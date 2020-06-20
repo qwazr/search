@@ -45,13 +45,13 @@ public abstract class AbstractIndexTest {
     static final Logger LOGGER = LoggerUtils.getLogger(AbstractIndexTest.class);
 
     protected static IndexManager initIndexManager(final boolean withExecutorService,
-                                                   final Path backupDirectoryPath) {
+                                                   final Path backupsDirectoryPath) {
         try {
             if (executor != null || rootDirectory != null || indexManager != null)
                 throw new RuntimeException("IndexManager already setup");
             executor = withExecutorService ? Executors.newCachedThreadPool() : null;
             rootDirectory = Files.createTempDirectory("qwazr_index_test");
-            return indexManager = new IndexManager(rootDirectory, executor, backupDirectoryPath);
+            return indexManager = new IndexManager(rootDirectory, executor, backupsDirectoryPath);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

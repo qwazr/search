@@ -65,11 +65,16 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.io.output.NullOutputStream;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class JsonAbstractTest {
+
+    @Rule
+    public ExpectedException exceptionRule = ExpectedException.none();
 
     public static final String INDEX_DUMMY_NAME = "index-dummy";
     public static final String INDEX_ERROR_NAME = "test_error_index";
@@ -127,10 +132,8 @@ public abstract class JsonAbstractTest {
     @Test
     public void test020CheckErrorIndex() throws URISyntaxException {
         IndexServiceInterface client = getClient();
-        Assert.assertNotNull(client.getIndex(INDEX_ERROR_NAME));
-        FieldDefinition fieldDef = client.getField(INDEX_ERROR_NAME, "description");
-        Assert.assertNotNull(fieldDef);
-        checkErrorStatusCode(() -> client.setField(INDEX_ERROR_NAME, "description", fieldDef), 406);
+        exceptionRule.expect(WebApplicationException.class);
+        exceptionRule.expectMessage("Index not found: " + INDEX_ERROR_NAME);
         Assert.assertNotNull(client.getIndex(INDEX_ERROR_NAME));
     }
 
@@ -516,7 +519,7 @@ public abstract class JsonAbstractTest {
     @Test
     public void test250FirstBackup() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        Assert.assertTrue(client.getBackups(INDEX_DUMMY_NAME, INDEX_BACKUP_NAME1, true).isEmpty());
+        Assert.assertTrue(client.getBackups(INDEX_MASTER_NAME, INDEX_BACKUP_NAME1, true).isEmpty());
         final SortedMap<String, SortedMap<String, BackupStatus>> results =
             client.getBackups(INDEX_MASTER_NAME, INDEX_BACKUP_NAME1, true);
         Assert.assertNotNull(results);
@@ -928,7 +931,6 @@ public abstract class JsonAbstractTest {
         builder.start(0).rows(0);
         ResultDefinition.WithMap result = client.searchQuery(INDEX_MASTER_NAME, builder.build(), false);
         Assert.assertNotNull(result);
-        Assert.assertNotNull(result.totalHits);
         Assert.assertTrue(result.totalHits > 0);
         builder.rows(1);
         Set<Integer> idSet = new HashSet<>();
@@ -963,7 +965,7 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         Assert.assertEquals(Integer.valueOf(1),
             client.deleteBackups(INDEX_MASTER_NAME, INDEX_BACKUP_NAME1));
-        Assert.assertEquals(Integer.valueOf(3), client.deleteBackups("*", "*"));
+        Assert.assertEquals(Integer.valueOf(2), client.deleteBackups("*", "*"));
     }
 
     private void checkReplication(final IndexServiceInterface client) {
@@ -1084,7 +1086,7 @@ public abstract class JsonAbstractTest {
         }
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.HOURS);
-        for (Future future : futures)
+        for (Future<?> future : futures)
             future.get();
         checkReplication(client);
     }
@@ -1106,7 +1108,7 @@ public abstract class JsonAbstractTest {
     @Test
     public void test900DeleteDoc() throws URISyntaxException, IOException {
         final IndexServiceInterface client = getClient();
-        final ResultDefinition result = client.searchQuery(INDEX_MASTER_NAME, DELETE_QUERY, true);
+        final ResultDefinition<?> result = client.searchQuery(INDEX_MASTER_NAME, DELETE_QUERY, true);
         Assert.assertNotNull(result);
         Assert.assertEquals(3L, result.totalHits);
         checkAllSizes(client, 3);
@@ -1140,4 +1142,9 @@ public abstract class JsonAbstractTest {
         Assert.assertFalse(indexes.containsKey(INDEX_MASTER_NAME));
     }
 
+    @Test
+    public void test999stopServer() throws IOException {
+        TestServer.stopServer();
+        Assert.assertNull(TestServer.service);
+    }
 }

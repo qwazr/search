@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -55,6 +56,11 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
     public static void beforeClass() throws Exception {
         LOGGER.setLevel(Level.INFO);
         TestServer.startServer();
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        TestServer.stopServer();
     }
 
     @Override

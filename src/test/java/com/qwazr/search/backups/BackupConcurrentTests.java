@@ -41,9 +41,7 @@ import java.util.logging.Logger;
 
 public class BackupConcurrentTests extends AbstractIndexTest {
 
-    private final static String SCHEMA_NAME = "backup_schema";
-
-    private static Path backupPath;
+    private static Path backupsPath;
 
     private static IndexServiceInterface service;
 
@@ -51,8 +49,8 @@ public class BackupConcurrentTests extends AbstractIndexTest {
 
     @BeforeClass
     public static void setup() throws IOException, URISyntaxException {
-        backupPath = Files.createTempDirectory("backup");
-        initIndexManager(true, backupPath);
+        backupsPath = Files.createTempDirectory("backups");
+        initIndexManager(true, backupsPath);
         service = indexManager.getService();
 
         final AnnotatedIndexService<IndexRecord.NoTaxonomy> indexNoTaxo =

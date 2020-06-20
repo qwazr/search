@@ -22,16 +22,16 @@ import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.PostDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
+import static com.qwazr.search.test.JsonAbstractTest.getDocs;
+import static com.qwazr.search.test.JsonAbstractTest.getFieldMap;
+import static com.qwazr.search.test.JsonAbstractTest.getJsonNode;
+import static com.qwazr.search.test.JsonAbstractTest.getQuery;
+import java.io.IOException;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
-import static com.qwazr.search.test.JsonAbstractTest.getDocs;
-import static com.qwazr.search.test.JsonAbstractTest.getFieldMap;
-import static com.qwazr.search.test.JsonAbstractTest.getJsonNode;
-import static com.qwazr.search.test.JsonAbstractTest.getQuery;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GettingStartedTest {
@@ -100,4 +100,9 @@ public class GettingStartedTest {
         Assert.assertEquals(2, result.totalHits);
     }
 
+    @Test
+    public void test999stopServer() throws IOException {
+        TestServer.stopServer();
+        Assert.assertNull(TestServer.service);
+    }
 }

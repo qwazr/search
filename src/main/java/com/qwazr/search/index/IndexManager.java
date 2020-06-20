@@ -31,6 +31,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
@@ -59,7 +60,7 @@ public class IndexManager extends ConstructorParametersImpl implements IndexInst
     private final Path indexesDirectory;
 
     private final Path backupRootDirectory;
-    private final ReadWriteLock backupLock = ReadWriteLock.reentrant(true);
+    private final ReadWriteLock backupLock = ReadWriteLock.stamped();
 
     private volatile SortedMap<String, UUID> indexSortedMap;
 
@@ -242,8 +243,8 @@ public class IndexManager extends ConstructorParametersImpl implements IndexInst
             consumer.accept(indexName, get(indexName));
     }
 
-    SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) throws IOException {
-        return backupLock.writeEx(() -> {
+    SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) {
+        return backupLock.write(() -> {
             checkBackupConfig();
             final Path backupDirectory = getBackupDirectory(backupName, true);
             final SortedMap<String, BackupStatus> results = Collections.synchronizedSortedMap(new TreeMap<>());
@@ -259,8 +260,6 @@ public class IndexManager extends ConstructorParametersImpl implements IndexInst
     }
 
     private void backupIterator(final String backupName, final Consumer<Path> consumer) {
-        if (Files.notExists(backupRootDirectory) || !Files.isDirectory(backupRootDirectory))
-            return;
         try {
             if ("*".equals(backupName)) {
                 try (final Stream<Path> stream = Files.list(backupRootDirectory)) {
@@ -327,33 +326,34 @@ public class IndexManager extends ConstructorParametersImpl implements IndexInst
     int deleteBackups(final String indexName, final String backupName) {
         return backupLock.write(() -> {
             checkBackupConfig();
-            final AtomicInteger counter = new AtomicInteger();
 
+            final Map<String, Path> indexesToDelete = new LinkedHashMap<>();
             backupIterator(backupName, backupDirectory -> backupIndexDirectoryIterator(backupDirectory, indexName,
-                backupIndexDirectory -> {
+                indexDir -> indexesToDelete.put(indexDir.getFileName().toString(), indexDir)));
 
-                    try {
+            final AtomicInteger counter = new AtomicInteger();
+            indexesToDelete.forEach((indexToDelete, backupDirectory) -> {
+                try {
+                    final IndexInstance indexInstance = get(indexToDelete);
+                    if (indexInstance != null)
+                        indexInstance.deleteBackup(backupDirectory);
+                    else
+                        FileUtils.deleteDirectory(backupDirectory);
+                    counter.incrementAndGet();
 
-                        final IndexInstance indexInstance =
-                            get(backupIndexDirectory.getFileName().toString());
-                        if (indexInstance != null)
-                            indexInstance.deleteBackup(backupIndexDirectory);
-                        else
-                            FileUtils.deleteDirectory(backupIndexDirectory);
-
-                        counter.incrementAndGet();
-
-                        if (Files.exists(backupDirectory)) {
-                            try (final Stream<Path> stream = Files.list(backupDirectory)) {
-                                if (stream.count() == 0)
-                                    Files.deleteIfExists(backupDirectory);
-                            }
+                    if (Files.exists(backupDirectory)) {
+                        final long childCount;
+                        try (final Stream<Path> stream = Files.list(backupDirectory)) {
+                            childCount = stream.count();
                         }
-                    } catch (IOException e) {
-                        throw ServerException.of(e);
+                        if (childCount == 0)
+                            Files.deleteIfExists(backupDirectory);
                     }
+                } catch (IOException e) {
+                    throw ServerException.of(e);
+                }
 
-                }));
+            });
             return counter.get();
         });
     }

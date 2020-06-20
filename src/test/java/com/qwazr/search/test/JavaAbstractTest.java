@@ -73,16 +73,6 @@ public abstract class JavaAbstractTest {
 
     protected abstract IndexServiceInterface getIndexService() throws URISyntaxException, IOException;
 
-    static final Path backupDir;
-
-    static {
-        try {
-            backupDir = Files.createTempDirectory("java-test-backup");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private final IndexSettingsDefinition indexSlaveDefinition;
 
     public static synchronized <T> AnnotatedIndexService<T> getService(final IndexServiceInterface indexService,
@@ -797,6 +787,12 @@ public abstract class JavaAbstractTest {
         getMaster().deleteIndex();
         checkErrorStatusCode(() -> getMaster().getIndexStatus(), 404);
         Assert.assertFalse(Files.exists(indexMaster));
+    }
+
+    @Test
+    public void test999stopServer() throws IOException {
+        TestServer.stopServer();
+        Assert.assertNull(TestServer.service);
     }
 
 }

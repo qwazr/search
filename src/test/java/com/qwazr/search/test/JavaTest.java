@@ -54,8 +54,9 @@ public class JavaTest {
         @BeforeClass
         public static void beforeClass() throws IOException {
             final Path rootDirectory = Files.createTempDirectory("qwazr_index_test");
+            final Path backupsDirectory = Files.createTempDirectory("qwazr_index_test_backups");
             indexDirectory = rootDirectory;
-            indexManager = new IndexManager(rootDirectory, Executors.newCachedThreadPool());
+            indexManager = new IndexManager(rootDirectory, Executors.newCachedThreadPool(), backupsDirectory);
             indexManager.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME,
                 resourceLoader -> new AnnotatedRecord.TestAnalyzer(new AtomicInteger()));
         }

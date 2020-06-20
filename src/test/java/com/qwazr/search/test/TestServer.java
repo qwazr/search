@@ -34,21 +34,14 @@ public class TestServer {
 
     static final String BASE_URL = "http://localhost:9091";
 
-    static final Path dataDir;
-
-    static {
-        try {
-            dataDir = Files.createTempDirectory("data");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static final AtomicInteger injectedAnalyzerCount = new AtomicInteger();
+
+    public static Path dataDir;
 
     public static synchronized void startServer() throws Exception {
         if (service != null)
             return;
+        dataDir = Files.createTempDirectory("data");
         FileUtils.copyDirectory(new File("src/test/data"), dataDir.toFile());
         System.setProperty("QWAZR_DATA", dataDir.toAbsolutePath().toString());
         System.setProperty("PUBLIC_ADDR", "localhost");
@@ -63,6 +56,14 @@ public class TestServer {
         IndexServiceBuilder indexServiceBuilder = SearchServer.getInstance().getServiceBuilder();
         service = indexServiceBuilder.local();
         remote = indexServiceBuilder.remote(RemoteService.of(BASE_URL).build());
+    }
+
+    public static synchronized void stopServer() throws IOException {
+        SearchServer.getInstance().stop();
+        FileUtils.deleteDirectory(dataDir);
+        dataDir = null;
+        service = null;
+        remote = null;
     }
 
 }
