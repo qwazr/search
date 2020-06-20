@@ -44,26 +44,24 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class AbstractReindexTest extends AbstractIndexTest {
 
-    private final static String SCHEMA = "reindexSchema";
     private final static String INDEX = "reindexIndex";
 
     static IndexServiceInterface service;
 
     protected static void setup(final Supplier<Map<String, Object>> docSupplier) throws JsonProcessingException {
         service = initIndexManager(true).getService();
-        service.createUpdateSchema(SCHEMA);
-        service.createUpdateIndex(SCHEMA, INDEX,
+        service.createUpdateIndex(INDEX,
             IndexSettingsDefinition.of()
                 .recordField(FieldDefinition.RECORD_FIELD)
                 .primaryKey("id")
                 .build()
         );
         for (int i = 0; i < 20; i++) {
-            service.postJson(SCHEMA, INDEX, ObjectMappers.JSON.readTree(
+            service.postJson(INDEX, ObjectMappers.JSON.readTree(
                 ObjectMappers.JSON.writeValueAsString(
                     getRandomDocs(50, docSupplier))));
         }
-        assertThat(service.getIndex(SCHEMA, INDEX).numDocs, equalTo(1000L));
+        assertThat(service.getIndex(INDEX).numDocs, equalTo(1000L));
     }
 
     public static List<Map<String, Object>> getRandomDocs(int count,
@@ -76,7 +74,7 @@ public abstract class AbstractReindexTest extends AbstractIndexTest {
 
     @Test
     public void test00NoReindexStatus() {
-        final ReindexDefinition reindexStatus = service.getReindexStatus(SCHEMA, INDEX);
+        final ReindexDefinition reindexStatus = service.getReindexStatus(INDEX);
         assertThat(reindexStatus, notNullValue());
         assertThat(reindexStatus.error, nullValue());
         assertThat(reindexStatus.start, nullValue());
@@ -90,13 +88,13 @@ public abstract class AbstractReindexTest extends AbstractIndexTest {
         Assert.assertThrows(
             "There is no reindexing process currently running",
             WebApplicationException.class,
-            () -> service.stopReindex(SCHEMA, INDEX));
+            () -> service.stopReindex(INDEX));
     }
 
     @Test
     public void test10StartReindexStatusOnNotRunning() {
         final Date start = new Date();
-        final ReindexDefinition reindexStatus = service.startReindex(SCHEMA, INDEX, 20);
+        final ReindexDefinition reindexStatus = service.startReindex(INDEX, 20);
         assertThat(reindexStatus, notNullValue());
         assertThat(reindexStatus.error, nullValue());
         assertThat(reindexStatus.start, notNullValue());
@@ -114,20 +112,20 @@ public abstract class AbstractReindexTest extends AbstractIndexTest {
             .pauseTime(TimeUnit.SECONDS, 1)
             .timeOut(TimeUnit.MINUTES, 1)
             .until(() -> {
-                final ReindexDefinition reindexStatus = service.getReindexStatus(SCHEMA, INDEX);
+                final ReindexDefinition reindexStatus = service.getReindexStatus(INDEX);
                 if (reindexStatus.status == ReindexDefinition.Status.done)
                     return true;
                 assertThat(reindexStatus.error, nullValue());
                 return false;
             });
 
-        final ReindexDefinition reindexStatus = service.getReindexStatus(SCHEMA, INDEX);
+        final ReindexDefinition reindexStatus = service.getReindexStatus(INDEX);
         assertThat(reindexStatus, notNullValue());
         assertThat(reindexStatus.error, nullValue());
         assertThat(reindexStatus.start, notNullValue());
         assertThat(reindexStatus.end, greaterThanOrEqualTo(date));
         assertThat(reindexStatus.completion, equalTo(100F));
 
-        assertThat(service.getIndex(SCHEMA, INDEX).numDocs, equalTo(1000L));
+        assertThat(service.getIndex(INDEX).numDocs, equalTo(1000L));
     }
 }

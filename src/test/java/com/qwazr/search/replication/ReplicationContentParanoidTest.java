@@ -28,10 +28,6 @@ import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.RandomUtils;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -39,15 +35,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class ReplicationContentParanoidTest extends ReplicationTestBase<AnnotatedRecord> {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(ReplicationContentParanoidTest.class);
 
-    private final static String SCHEMA = "repli-content";
     private final static String MASTER = "replication-master";
 
     public ReplicationContentParanoidTest() {
@@ -62,23 +59,23 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 
     @Override
     public AnnotatedIndexService<AnnotatedRecord> getMaster() throws URISyntaxException {
-        return new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, MASTER, IndexSettingsDefinition.of()
-                .mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
-                .mergedSegmentWarmer(true)
-                .indexReaderWarmer(false)
-                .useCompoundFile(false)
-                .build());
+        return new AnnotatedIndexService<>(service, AnnotatedRecord.class, MASTER, IndexSettingsDefinition.of()
+            .mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
+            .mergedSegmentWarmer(true)
+            .indexReaderWarmer(false)
+            .useCompoundFile(false)
+            .build());
     }
 
     @Override
     public List<AnnotatedIndexService<AnnotatedRecord>> getSlaves() throws URISyntaxException {
         return Arrays.asList(
 
-                new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "replication-slave1",
-                        IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(false).build()),
+            new AnnotatedIndexService<>(service, AnnotatedRecord.class, "replication-slave1",
+                IndexSettingsDefinition.of().master(MASTER).indexReaderWarmer(false).build()),
 
-                new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "replication-slave2",
-                        IndexSettingsDefinition.of().master(SCHEMA, MASTER).indexReaderWarmer(true).build()));
+            new AnnotatedIndexService<>(service, AnnotatedRecord.class, "replication-slave2",
+                IndexSettingsDefinition.of().master(MASTER).indexReaderWarmer(true).build()));
     }
 
     private Map<String, String> getCommitData(UUID version) {
@@ -112,7 +109,7 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
     }
 
     @Test
-    public void contentTest() throws IOException, InterruptedException, ExecutionException {
+    public void contentTest() throws IOException {
 
         Assert.assertNotNull(master);
 
@@ -134,7 +131,7 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 
             // Post the documents
             final List<AnnotatedRecord> records =
-                    AnnotatedRecord.randomList(BATCH_SIZE, val -> RandomUtils.nextInt(0, ID_RANGE));
+                AnnotatedRecord.randomList(BATCH_SIZE, val -> RandomUtils.nextInt(0, ID_RANGE));
             final Map<String, String> commitData = getCommitData(HashUtils.newTimeBasedUUID());
             master.postDocuments(records, commitData);
             final IndexStatus masterStatus = master.getIndexStatus();
@@ -142,7 +139,7 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 
             // Do the replication
             final ReplicationStatus.Strategy expectedStrategy =
-                    i == 0 ? ReplicationStatus.Strategy.full : ReplicationStatus.Strategy.incremental;
+                i == 0 ? ReplicationStatus.Strategy.full : ReplicationStatus.Strategy.incremental;
             checkReplicationStatus(slave1.replicationCheck(), expectedStrategy, null);
             checkReplicationStatus(slave2.replicationCheck(), expectedStrategy, null);
             checkSlaveStatusEqualsMasterStatus();
@@ -150,21 +147,21 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
             // Compare content
 
             final QueryDefinition queryIterator = QueryDefinition.of(new MatchAllDocsQuery())
-                    .returnedField(FieldDefinition.ID_FIELD, "title")
-                    .build();
+                .returnedField(FieldDefinition.ID_FIELD, "title")
+                .build();
 
             switch (indexMinTime(timeTracker(() -> master.searchQuery(queryIterator)),
-                    timeTracker(() -> slave1.searchQuery(queryIterator)),
-                    timeTracker(() -> slave2.searchQuery(queryIterator)))) {
-            case 1:
-                masterTotalQueryTimeWins++;
-                break;
-            case 2:
-                slave1TotalQueryTimeWins++;
-                break;
-            case 3:
-                slave2TotalQueryTimeWins++;
-                break;
+                timeTracker(() -> slave1.searchQuery(queryIterator)),
+                timeTracker(() -> slave2.searchQuery(queryIterator)))) {
+                case 1:
+                    masterTotalQueryTimeWins++;
+                    break;
+                case 2:
+                    slave1TotalQueryTimeWins++;
+                    break;
+                case 3:
+                    slave2TotalQueryTimeWins++;
+                    break;
             }
 
             compareMasterAndSlaveRecords((m, s) -> {
@@ -173,8 +170,8 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
             });
 
             LOGGER.info(
-                    () -> "num_docs: " + masterStatus.numDocs + " - num_deleted_docs: " + masterStatus.numDeletedDocs +
-                            " - segment_count: " + masterStatus.segmentCount);
+                () -> "num_docs: " + masterStatus.numDocs + " - num_deleted_docs: " + masterStatus.numDeletedDocs +
+                    " - segment_count: " + masterStatus.segmentCount);
 
             LOGGER.info("Master first Query wins: " + masterTotalQueryTimeWins);
             LOGGER.info("Slave 1 first Query wins: " + slave1TotalQueryTimeWins);

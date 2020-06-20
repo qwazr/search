@@ -36,7 +36,6 @@ import static com.qwazr.search.test.JsonAbstractTest.getQuery;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GettingStartedTest {
 
-    private final static String MY_SCHEMA = "my_schema";
     private final static String MY_INDEX = "my_index";
     public static final Map<String, FieldDefinition> MY_FIELDS_JSON = getFieldMap("my_fields.json");
     public static final JsonNode MY_RECORD_JSON = getJsonNode("my_record.json");
@@ -51,28 +50,23 @@ public class GettingStartedTest {
     }
 
     @Test
-    public void test0100CreateSchema() {
-        Assert.assertNotNull(TestServer.remote.createUpdateSchema(MY_SCHEMA));
-    }
-
-    @Test
     public void test0110CreateIndex() {
         IndexServiceInterface client = TestServer.remote;
-        IndexStatus indexStatus = client.createUpdateIndex(MY_SCHEMA, MY_INDEX, null);
+        IndexStatus indexStatus = client.createUpdateIndex(MY_INDEX, null);
         Assert.assertNotNull(indexStatus);
     }
 
     @Test
     public void test130SetFields() {
         IndexServiceInterface client = TestServer.remote;
-        final Map<String, FieldDefinition> fields = client.setFields(MY_SCHEMA, MY_INDEX, MY_FIELDS_JSON);
+        final Map<String, FieldDefinition> fields = client.setFields(MY_INDEX, MY_FIELDS_JSON);
         Assert.assertEquals(fields.size(), MY_FIELDS_JSON.size());
     }
 
     @Test
     public void test200UpdateOneRecord() {
         IndexServiceInterface client = TestServer.remote;
-        final Integer result = client.postJson(MY_SCHEMA, MY_INDEX, MY_RECORD_JSON);
+        final Integer result = client.postJson(MY_INDEX, MY_RECORD_JSON);
         Assert.assertNotNull(result);
         Assert.assertEquals(Integer.valueOf(1), result);
     }
@@ -80,7 +74,7 @@ public class GettingStartedTest {
     @Test
     public void test210UpdateRecords() {
         IndexServiceInterface client = TestServer.remote;
-        final Integer result = client.postJson(MY_SCHEMA, MY_INDEX, MY_RECORDS_JSON);
+        final Integer result = client.postJson(MY_INDEX, MY_RECORDS_JSON);
         Assert.assertNotNull(result);
         Assert.assertEquals(Integer.valueOf(MY_RECORDS_JSON.size()), result);
     }
@@ -88,12 +82,12 @@ public class GettingStartedTest {
     @Test
     public void test220UpdateDocs() {
         IndexServiceInterface client = TestServer.remote;
-        final Integer result = client.postMappedDocuments(MY_SCHEMA, MY_INDEX, MY_DOCS_JSON);
+        final Integer result = client.postMappedDocuments(MY_INDEX, MY_DOCS_JSON);
         Assert.assertNotNull(result);
         Assert.assertEquals(Integer.valueOf(MY_DOCS_JSON.documents.size()), result);
 
         // Check commit user data
-        final IndexStatus status = client.getIndex(MY_SCHEMA, MY_INDEX);
+        final IndexStatus status = client.getIndex(MY_INDEX);
         Assert.assertNotNull(status.commitUserData);
         Assert.assertEquals("my_value", status.commitUserData.get("my_key"));
     }
@@ -101,7 +95,7 @@ public class GettingStartedTest {
     @Test
     public void test300Query() {
         IndexServiceInterface client = TestServer.remote;
-        final ResultDefinition.WithMap result = client.searchQuery(MY_SCHEMA, MY_INDEX, MY_SEARCH_JSON, null);
+        final ResultDefinition.WithMap result = client.searchQuery(MY_INDEX, MY_SEARCH_JSON, null);
         Assert.assertNotNull(result);
         Assert.assertEquals(2, result.totalHits);
     }

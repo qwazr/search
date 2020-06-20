@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,34 +24,27 @@ import java.net.URISyntaxException;
 
 public class RemoteIndexTest {
 
-	@Test
-	public void localPattern() throws URISyntaxException {
-		final RemoteIndex remoteIndex = RemoteIndex.build("my_schema/my_index");
-		Assert.assertNotNull(remoteIndex);
-		Assert.assertEquals("my_schema", remoteIndex.schema);
-		Assert.assertEquals("my_index", remoteIndex.index);
-		Assert.assertEquals("http://localhost:9091", remoteIndex.serverAddress);
-		Assert.assertEquals("http://localhost:9091/", remoteIndex.serviceAddress);
-	}
+    @Test
+    public void localPattern() throws URISyntaxException {
+        final RemoteIndex remoteIndex = RemoteIndex.build("my_index");
+        Assert.assertNotNull(remoteIndex);
+        Assert.assertEquals("my_index", remoteIndex.index);
+        Assert.assertEquals("http://localhost:9091", remoteIndex.serverAddress);
+        Assert.assertEquals("http://localhost:9091/", remoteIndex.serviceAddress);
+    }
 
-	@Test(expected = IllegalArgumentException.class)
-	public void wrongLocalPattern() throws URISyntaxException {
-		RemoteIndex.build("my_schema");
-	}
+    @Test
+    public void remoteUrl() throws URISyntaxException {
+        final RemoteIndex remoteIndex = RemoteIndex.build("http://birdie:1234/indexes/my_index");
+        Assert.assertNotNull(remoteIndex);
+        Assert.assertEquals("my_index", remoteIndex.index);
+        Assert.assertEquals("http://birdie:1234", remoteIndex.serverAddress);
+        Assert.assertEquals("http://birdie:1234/", remoteIndex.serviceAddress);
+    }
 
-	@Test
-	public void remoteUrl() throws URISyntaxException {
-		final RemoteIndex remoteIndex = RemoteIndex.build("http://birdie:1234/indexes/my_schema/my_index");
-		Assert.assertNotNull(remoteIndex);
-		Assert.assertEquals("my_schema", remoteIndex.schema);
-		Assert.assertEquals("my_index", remoteIndex.index);
-		Assert.assertEquals("http://birdie:1234", remoteIndex.serverAddress);
-		Assert.assertEquals("http://birdie:1234/", remoteIndex.serviceAddress);
-	}
-
-	@Test(expected = URISyntaxException.class)
-	public void wrongRemoteUrl() throws URISyntaxException {
-		RemoteIndex.build("http://birdie:1234/my_schema");
-	}
+    @Test(expected = URISyntaxException.class)
+    public void wrongRemoteUrl() throws URISyntaxException {
+        RemoteIndex.build("http://birdie:1234");
+    }
 
 }

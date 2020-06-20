@@ -144,7 +144,7 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
         Assert.assertNotNull(result);
     }
 
-    @Index(name = "SmartFieldSorted", schema = "TestQueries")
+    @Index(name = "SmartFieldSorted")
     static public class Record {
 
         @SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.LONG, index = true, stored = true)

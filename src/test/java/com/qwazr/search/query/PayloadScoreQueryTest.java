@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PayloadScoreQueryTest
-        extends AbstractIndexTest.WithIndexRecord<PayloadScoreQueryTest.WithPayloadBoostRecord> {
+    extends AbstractIndexTest.WithIndexRecord<PayloadScoreQueryTest.WithPayloadBoostRecord> {
 
     private static AnnotatedIndexService<WithPayloadBoostRecord> indexService;
 
@@ -57,32 +57,29 @@ public class PayloadScoreQueryTest
     @Test
     public void test() {
         ResultDefinition.WithObject<WithPayloadBoostRecord> result = indexService.searchQuery(QueryDefinition.of(
-                new PayloadScoreQuery(
-                        new SpanTermQuery("full", "hello"),
-                        PayloadScoreQuery.FunctionType.MAX.payloadFunction,
-                        new FloatArrayPayloadDecoder(10, 100, 1000),
-                        true))
-                .queryDebug(true)
-                .build());
+            new PayloadScoreQuery(
+                new SpanTermQuery("full", "hello"),
+                PayloadScoreQuery.FunctionType.MAX.payloadFunction,
+                new FloatArrayPayloadDecoder(10, 100, 1000),
+                true))
+            .queryDebug(true)
+            .build());
         Assert.assertNotNull(result);
         Assert.assertEquals(1L, result.getTotalHits(), 0);
         Assert.assertEquals("PayloadScoreQuery(full:hello, function: MaxPayloadFunction, includeSpanScore: true)",
-                result.query);
+            result.query);
         Assert.assertEquals(3.4314215183258057, result.getDocuments().get(0).getScore(), 0.00001);
 
     }
 
-    @Index(name = "IndexRecord",
-            schema = "TestQueries",
-            enableTaxonomyIndex = false,
-            useCompoundFile = false)
+    @Index(name = "IndexRecord", enableTaxonomyIndex = false, useCompoundFile = false)
     public static class WithPayloadBoostRecord extends IndexRecord<WithPayloadBoostRecord> {
 
         @IndexField(template = FieldDefinition.Template.TextField,
-                analyzerClass = FullAsciiIndex.class,
-                queryAnalyzerClass = SmartAnalyzerSet.AsciiQuery.class,
-                tokenized = true,
-                indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
+            analyzerClass = FullAsciiIndex.class,
+            queryAnalyzerClass = SmartAnalyzerSet.AsciiQuery.class,
+            tokenized = true,
+            indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
         final public List<String> full = new ArrayList<>();
 
         public WithPayloadBoostRecord() {
@@ -90,6 +87,11 @@ public class PayloadScoreQueryTest
 
         WithPayloadBoostRecord(String id) {
             super(id);
+        }
+
+        @Override
+        protected WithPayloadBoostRecord me() {
+            return this;
         }
 
         @Override

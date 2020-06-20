@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,8 @@ public class SortIndexTest extends AbstractIndexTest {
         final IndexServiceInterface indexService = initIndexManager(true).getService();
         final Sort sort = new Sort(new SortField("id", SortField.Type.STRING));
         indexManager.registerSort("sortById", sort);
-        indexService.createUpdateSchema("schema");
         final IndexSettingsDefinition settings = IndexSettingsDefinition.of().sort("sortById").build();
-        final IndexStatus status = indexService.createUpdateIndex("schema", "index", settings);
+        final IndexStatus status = indexService.createUpdateIndex("index", settings);
         Assert.assertNotNull(status);
         Assert.assertEquals(status.settings.sort, "sortById");
         Assert.assertEquals(status.indexSortFields, Set.of("id"));

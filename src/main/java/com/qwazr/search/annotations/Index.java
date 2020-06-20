@@ -33,8 +33,6 @@ public @interface Index {
 
     String name() default StringUtils.EMPTY;
 
-    String schema() default StringUtils.EMPTY;
-
     String similarity() default StringUtils.EMPTY;
 
     Class<? extends Similarity> similarityClass() default BM25Similarity.class;
@@ -74,4 +72,8 @@ public @interface Index {
     double nrtCachingDirectoryMaxCachedMB() default IndexSettingsDefinition.DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB;
 
     String primaryKey() default FieldDefinition.ID_FIELD;
+
+    int maxConcurrentWrite() default -1; // Infinite
+
+    int maxConcurrentRead() default -1; // Infinite
 }

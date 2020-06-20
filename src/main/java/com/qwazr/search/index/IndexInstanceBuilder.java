@@ -98,17 +98,22 @@ class IndexInstanceBuilder {
     private Sort sort;
     private SearcherFactory searcherFactory;
 
-    IndexInstanceBuilder(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
+    IndexInstanceBuilder(final IndexManager indexManager,
                          final Map<String, SimilarityFactory> similarityFactoryMap,
-                         final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap, final Map<String, Sort> sortMap,
-                         final ReadWriteSemaphores readWriteSemaphores, final ExecutorService executorService,
-                         final IndexServiceInterface indexService, final IndexFileSet fileSet,
-                         final IndexSettingsDefinition settings, final UUID indexUuid, final String indexName) {
+                         final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap,
+                         final Map<String, Sort> sortMap,
+                         final ReadWriteSemaphores readWriteSemaphores,
+                         final ExecutorService executorService,
+                         final IndexServiceInterface indexService,
+                         final IndexFileSet fileSet,
+                         final IndexSettingsDefinition settings,
+                         final UUID indexUuid,
+                         final String indexName) {
         this.fileSet = fileSet;
         this.executorService = executorService;
         this.readWriteSemaphores = readWriteSemaphores;
-        this.indexProvider = indexProvider;
-        this.instanceFactory = instanceFactory;
+        this.indexProvider = indexManager;
+        this.instanceFactory = indexManager;
         this.settings = settings;
         this.similarityFactoryMap = similarityFactoryMap;
         this.sortMap = sortMap;
@@ -335,7 +340,7 @@ class IndexInstanceBuilder {
     IndexInstance build() {
         try {
             buildCommon();
-            if (settings.master != null && settings.master.schema != null && settings.master.index != null)
+            if (settings.master != null && settings.master.index != null)
                 buildSlave();
             else
                 buildMaster();

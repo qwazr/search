@@ -36,7 +36,6 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -44,7 +43,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.NotImplementedException;
 import org.glassfish.jersey.server.ManagedAsync;
 
@@ -57,428 +55,351 @@ public interface IndexServiceInterface extends ServiceInterface {
 
     String MEDIATYPE_TEXT_GRAPHVIZ = "text/vnd.graphviz";
 
-    @POST
-    @Path("/{schema_name}")
-    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    SchemaSettingsDefinition createUpdateSchema(@PathParam("schema_name") String schema_name);
-
-    @POST
-    @Path("/{schema_name}")
-    @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    SchemaSettingsDefinition createUpdateSchema(@PathParam("schema_name") String schema_name,
-                                                SchemaSettingsDefinition settings);
-
     @GET
     @Path("/")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Set<String> getSchemas();
-
-    @DELETE
-    @Path("/{schema_name}")
-    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
-    boolean deleteSchema(@PathParam("schema_name") String schema_name);
-
-    @HEAD
-    @Path("/{schema_name}")
-    @Produces({MediaType.TEXT_PLAIN})
-    Response getSchema(@PathParam("schema_name") String schema_name);
-
-    @GET
-    @Path("/{schema_name}")
-    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Map<String, UUID> getIndexes(@PathParam("schema_name") String schema_name);
+    Map<String, UUID> getIndexes();
 
     @POST
-    @Path("/{schema_name}/{index_name}")
+    @Path("/{index_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    IndexStatus createUpdateIndex(@PathParam("schema_name") String schema_name,
-                                  @PathParam("index_name") String index_name);
+    IndexStatus createUpdateIndex(@PathParam("index_name") String indexName);
 
     @POST
-    @Path("/{schema_name}/{index_name}")
+    @Path("/{index_name}")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    IndexStatus createUpdateIndex(@PathParam("schema_name") String schema_name,
-                                  @PathParam("index_name") String index_name, IndexSettingsDefinition settings);
+    IndexStatus createUpdateIndex(@PathParam("index_name") String indexName, IndexSettingsDefinition settings);
 
     @GET
-    @Path("/{schema_name}/{index_name}/fields")
+    @Path("/{index_name}/fields")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Map<String, FieldDefinition> getFields(@PathParam("schema_name") String schema_name,
-                                           @PathParam("index_name") String index_name);
+    Map<String, FieldDefinition> getFields(@PathParam("index_name") String indexName);
 
     @POST
-    @Path("/{schema_name}/{index_name}/fields")
+    @Path("/{index_name}/fields")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Map<String, FieldDefinition> setFields(@PathParam("schema_name") String schema_name,
-                                           @PathParam("index_name") String index_name,
+    Map<String, FieldDefinition> setFields(@PathParam("index_name") String indexName,
                                            Map<String, FieldDefinition> fields);
 
     @GET
-    @Path("/{schema_name}/{index_name}/fields/{field_name}/analyzer/query")
+    @Path("/{index_name}/fields/{field_name}/analyzer/query")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    List<TermDefinition> doAnalyzeQuery(@PathParam("schema_name") String schema_name,
-                                        @PathParam("index_name") String index_name,
-                                        @PathParam("field_name") String field_name,
+    List<TermDefinition> doAnalyzeQuery(@PathParam("index_name") String indexName,
+                                        @PathParam("field_name") String fieldName,
                                         @QueryParam("text") String text);
 
     @GET
-    @Path("/{schema_name}/{index_name}/fields/{field_name}/analyzer/index")
+    @Path("/{index_name}/fields/{field_name}/analyzer/index")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    List<TermDefinition> doAnalyzeIndex(@PathParam("schema_name") String schema_name,
-                                        @PathParam("index_name") String index_name,
-                                        @PathParam("field_name") String field_name,
+    List<TermDefinition> doAnalyzeIndex(@PathParam("index_name") String indexName,
+                                        @PathParam("field_name") String fieldName,
                                         @QueryParam("text") String text);
 
     @GET
-    @Path("/{schema_name}/{index_name}/fields/{field_name}/stats")
+    @Path("/{index_name}/fields/{field_name}/stats")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    FieldStats getFieldStats(@PathParam("schema_name") String schema_name,
-                             @PathParam("index_name") String index_name,
-                             @PathParam("field_name") String field_name);
+    FieldStats getFieldStats(@PathParam("index_name") String indexName,
+                             @PathParam("field_name") String fieldName);
 
     @GET
-    @Path("/{schema_name}/{index_name}/fields/{field_name}/terms")
+    @Path("/{index_name}/fields/{field_name}/terms")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    List<TermEnumDefinition> doExtractTerms(@PathParam("schema_name") String schema_name,
-                                            @PathParam("index_name") String index_name,
-                                            @PathParam("field_name") String field_name,
+    List<TermEnumDefinition> doExtractTerms(@PathParam("index_name") String indexName,
+                                            @PathParam("field_name") String fieldName,
                                             @QueryParam("start") Integer start,
                                             @QueryParam("rows") Integer rows);
 
     @GET
-    @Path("/{schema_name}/{index_name}/fields/{field_name}/terms/{prefix}")
+    @Path("/{index_name}/fields/{field_name}/terms/{prefix}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    List<TermEnumDefinition> doExtractTerms(@PathParam("schema_name") String schema_name,
-                                            @PathParam("index_name") String index_name,
-                                            @PathParam("field_name") String field_name,
+    List<TermEnumDefinition> doExtractTerms(@PathParam("index_name") String indexName,
+                                            @PathParam("field_name") String fieldName,
                                             @PathParam("prefix") String prefix,
                                             @QueryParam("start") Integer start,
                                             @QueryParam("rows") Integer rows);
 
     @GET
-    @Path("/{schema_name}/{index_name}/fields/{field_name}")
+    @Path("/{index_name}/fields/{field_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    FieldDefinition getField(@PathParam("schema_name") String schema_name,
-                             @PathParam("index_name") String index_name,
-                             @PathParam("field_name") String field_name);
+    FieldDefinition getField(@PathParam("index_name") String indexName,
+                             @PathParam("field_name") String fieldName);
 
     @POST
-    @Path("/{schema_name}/{index_name}/fields/{field_name}")
+    @Path("/{index_name}/fields/{field_name}")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    FieldDefinition setField(@PathParam("schema_name") String schema_name,
-                             @PathParam("index_name") String index_name,
-                             @PathParam("field_name") String field_name,
+    FieldDefinition setField(@PathParam("index_name") String indexName,
+                             @PathParam("field_name") String fieldName,
                              FieldDefinition field);
 
     @DELETE
-    @Path("/{schema_name}/{index_name}/fields/{field_name}")
+    @Path("/{index_name}/fields/{field_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
-    boolean deleteField(@PathParam("schema_name") String schema_name,
-                        @PathParam("index_name") String index_name,
-                        @PathParam("field_name") String field_name);
+    boolean deleteField(@PathParam("index_name") String indexName,
+                        @PathParam("field_name") String fieldName);
 
     @GET
-    @Path("/{schema_name}/{index_name}/analyzers")
+    @Path("/{index_name}/analyzers")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Map<String, AnalyzerDefinition> getAnalyzers(@PathParam("schema_name") String schema_name,
-                                                 @PathParam("index_name") String index_name);
+    Map<String, AnalyzerDefinition> getAnalyzers(@PathParam("index_name") String indexName);
 
     @GET
-    @Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")
+    @Path("/{index_name}/analyzers/{analyzer_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    AnalyzerDefinition getAnalyzer(@PathParam("schema_name") String schema_name,
-                                   @PathParam("index_name") String index_name,
-                                   @PathParam("analyzer_name") String analyzer_name);
+    AnalyzerDefinition getAnalyzer(@PathParam("index_name") String indexName,
+                                   @PathParam("analyzer_name") String analyzerName);
 
     @POST
-    @Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")
+    @Path("/{index_name}/analyzers/{analyzer_name}")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    AnalyzerDefinition setAnalyzer(@PathParam("schema_name") String schema_name,
-                                   @PathParam("index_name") String index_name,
-                                   @PathParam("analyzer_name") String analyzer_name,
+    AnalyzerDefinition setAnalyzer(@PathParam("index_name") String indexName,
+                                   @PathParam("analyzer_name") String analyzerName,
                                    AnalyzerDefinition analyzer);
 
     @POST
-    @Path("/{schema_name}/{index_name}/analyzers")
+    @Path("/{index_name}/analyzers")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Map<String, AnalyzerDefinition> setAnalyzers(@PathParam("schema_name") String schema_name,
-                                                 @PathParam("index_name") String index_name,
+    Map<String, AnalyzerDefinition> setAnalyzers(@PathParam("index_name") String indexName,
                                                  Map<String, AnalyzerDefinition> analyzers);
 
     @DELETE
-    @Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")
+    @Path("/{index_name}/analyzers/{analyzer_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
-    boolean deleteAnalyzer(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name,
-                           @PathParam("analyzer_name") String analyzer_name);
+    boolean deleteAnalyzer(@PathParam("index_name") String indexName,
+                           @PathParam("analyzer_name") String analyzerName);
 
     @PATCH
-    @Path("/{schema_name}/{index_name}/analyzers")
-    void refreshAnalyzers(@PathParam("schema_name") String schema_name, @PathParam("index_name") String index_name);
+    @Path("/{index_name}/analyzers")
+    void refreshAnalyzers(@PathParam("index_name") String indexName);
 
     @POST
-    @Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}")
+    @Path("/{index_name}/analyzers/{analyzer_name}")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    List<TermDefinition> testAnalyzer(@PathParam("schema_name") String schema_name,
-                                      @PathParam("index_name") String index_name,
-                                      @PathParam("analyzer_name") String analyzer_name, String text);
+    List<TermDefinition> testAnalyzer(@PathParam("index_name") String indexName,
+                                      @PathParam("analyzer_name") String analyzerName,
+                                      String text);
 
     @GET
-    @Path("/{schema_name}/{index_name}/analyzers/{analyzer_name}/dot")
+    @Path("/{index_name}/analyzers/{analyzer_name}/dot")
     @Produces(MediaType.TEXT_PLAIN)
-    String testAnalyzerDot(@PathParam("schema_name") String schema_name,
-                           @PathParam("index_name") String index_name,
-                           @PathParam("analyzer_name") String analyzer_name,
+    String testAnalyzerDot(@PathParam("index_name") String indexName,
+                           @PathParam("analyzer_name") String analyzerName,
                            @QueryParam("text") String text);
 
     @GET
-    @Path("/{schema_name}/{index_name}")
+    @Path("/{index_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    IndexStatus getIndex(@PathParam("schema_name") String schema_name,
-                         @PathParam("index_name") String index_name);
+    IndexStatus getIndex(@PathParam("index_name") String indexName);
 
     @GET
-    @Path("/{schema_name}/{index_name}/settings")
+    @Path("/{index_name}/settings")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    IndexSettingsDefinition getIndexSettings(@PathParam("schema_name") String schemaName,
-                                             @PathParam("index_name") String indexName);
+    IndexSettingsDefinition getIndexSettings(@PathParam("index_name") String indexName);
 
 
     @POST
-    @Path("/{schema_name}/{index_name}/merge/{merged_index}")
+    @Path("/{index_name}/merge/{merged_index}")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    IndexStatus mergeIndex(@PathParam("schema_name") String schema_name,
-                           @PathParam("index_name") String index_name,
-                           @PathParam("merged_index") String merged_index,
+    IndexStatus mergeIndex(@PathParam("index_name") String indexName,
+                           @PathParam("merged_index") String mergedIndex,
                            final Map<String, String> commitUserData);
 
     @POST
-    @Path("/{schema_name}/{index_name}/check")
+    @Path("/{index_name}/check")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    IndexCheckStatus checkIndex(@PathParam("schema_name") String schema_name,
-                                @PathParam("index_name") String index_name);
+    IndexCheckStatus checkIndex(@PathParam("index_name") String indexName);
 
     @DELETE
-    @Path("/{schema_name}/{index_name}")
+    @Path("/{index_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
-    boolean deleteIndex(@PathParam("schema_name") String schema_name,
-                        @PathParam("index_name") String index_name);
+    boolean deleteIndex(@PathParam("index_name") String indexName);
 
     @DELETE
-    @Path("/{schema_name}/{index_name}/docs")
+    @Path("/{index_name}/docs")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
-    boolean deleteAll(@PathParam("schema_name") String schema_name,
-                      @PathParam("index_name") String index_name);
+    boolean deleteAll(@PathParam("index_name") String indexName);
 
     @GET
-    @Path("/{schema_name}/{index_name}/doc")
+    @Path("/{index_name}/doc")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    List<Map<String, Object>> getDocuments(@PathParam("schema_name") String schema_name,
-                                           @PathParam("index_name") String index_name,
+    List<Map<String, Object>> getDocuments(@PathParam("index_name") String indexName,
                                            @QueryParam("start") Integer start,
                                            @QueryParam("rows") Integer rows);
 
     @GET
-    @Path("/{schema_name}/{index_name}/doc/{id}")
+    @Path("/{index_name}/doc/{id}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Map<String, Object> getDocument(@PathParam("schema_name") String schema_name,
-                                    @PathParam("index_name") String index_name,
-                                    @PathParam("id") String doc_id);
+    Map<String, Object> getDocument(@PathParam("index_name") String indexName,
+                                    @PathParam("id") String docId);
 
     @POST
-    @Path("/{schema_name}/{index_name}/doc")
+    @Path("/{index_name}/doc")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Integer postMappedDocument(@PathParam("schema_name") String schema_name,
-                               @PathParam("index_name") String index_name,
+    Integer postMappedDocument(@PathParam("index_name") String indexName,
                                PostDefinition.Document document);
 
     @POST
-    @Path("/{schema_name}/{index_name}/json")
+    @Path("/{index_name}/json")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Integer postJson(@PathParam("schema_name") String schema_name,
-                     @PathParam("index_name") String index_name,
+    Integer postJson(@PathParam("index_name") String indexName,
                      JsonNode jsonNode);
 
     @GET
-    @Path("/{schema_name}/{index_name}/json/samples")
+    @Path("/{index_name}/json/samples")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    List<Map<String, Object>> getJsonSamples(@PathParam("schema_name") String schemaName,
-                                             @PathParam("index_name") String indexName,
-                                             @QueryParam("counnt") Integer count);
+    List<Map<String, Object>> getJsonSamples(@PathParam("index_name") String indexName,
+                                             @QueryParam("count") Integer count);
 
     @GET
-    @Path("/{schema_name}/{index_name}/json/sample")
+    @Path("/{index_name}/json/sample")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Map<String, Object> getJsonSample(@PathParam("schema_name") String schemaName,
-                                      @PathParam("index_name") String indexName);
+    Map<String, Object> getJsonSample(@PathParam("index_name") String indexName);
 
     @POST
-    @Path("/{schema_name}/{index_name}/docs")
+    @Path("/{index_name}/docs")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Integer postMappedDocuments(@PathParam("schema_name") String schema_name,
-                                @PathParam("index_name") String index_name,
+    Integer postMappedDocuments(@PathParam("index_name") String indexName,
                                 PostDefinition.Documents documents);
 
     @POST
-    @Path("/{schema_name}/{index_name}/doc/values")
+    @Path("/{index_name}/doc/values")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Integer updateMappedDocValues(@PathParam("schema_name") String schema_name,
-                                  @PathParam("index_name") String index_name,
+    Integer updateMappedDocValues(@PathParam("index_name") String indexName,
                                   PostDefinition.Document document);
 
     @POST
-    @Path("/{schema_name}/{index_name}/docs/values")
+    @Path("/{index_name}/docs/values")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Integer updateMappedDocsValues(@PathParam("schema_name") String schema_name,
-                                   @PathParam("index_name") String index_name,
+    Integer updateMappedDocsValues(@PathParam("index_name") String indexName,
                                    PostDefinition.Documents documents);
 
     @POST
     @ManagedAsync
-    @Path("/{schema_name}/{index_name}/backup/{backup_name}")
+    @Path("/{index_name}/backup/{backup_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    SortedMap<String, SortedMap<String, BackupStatus>> doBackup(@PathParam("schema_name") String schema_name,
-                                                                @PathParam("index_name") String index_name,
-                                                                @PathParam("backup_name") String backup_name);
+    SortedMap<String, BackupStatus> doBackup(@PathParam("index_name") String indexName,
+                                             @PathParam("backup_name") String backup_name);
 
     @GET
-    @Path("/{schema_name}/{index_name}/reindex")
+    @Path("/{index_name}/reindex")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    ReindexDefinition getReindexStatus(@PathParam("schema_name") String schemaName,
-                                       @PathParam("index_name") String indexName);
+    ReindexDefinition getReindexStatus(@PathParam("index_name") String indexName);
 
     @POST
-    @Path("/{schema_name}/{index_name}/reindex")
+    @Path("/{index_name}/reindex")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    ReindexDefinition startReindex(@PathParam("schema_name") String schemaName,
-                                   @PathParam("index_name") String indexName,
+    ReindexDefinition startReindex(@PathParam("index_name") String indexName,
                                    @QueryParam("buffer_size") Integer bufferSize);
 
     @DELETE
-    @Path("/{schema_name}/{index_name}/reindex")
+    @Path("/{index_name}/reindex")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    ReindexDefinition stopReindex(@PathParam("schema_name") String schemaName,
-                                  @PathParam("index_name") String indexName);
+    ReindexDefinition stopReindex(@PathParam("index_name") String indexName);
 
 
     @GET
-    @Path("/{schema_name}/{index_name}/backup/{backup_name}")
+    @Path("/{index_name}/backup/{backup_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(@PathParam("schema_name") String schema_name,
-                                                                                     @PathParam("index_name") String index_name,
-                                                                                     @PathParam("backup_name") String backup_name,
-                                                                                     @QueryParam("extractVersion") Boolean extractVersion);
+    SortedMap<String, SortedMap<String, BackupStatus>> getBackups(@PathParam("index_name") String indexName,
+                                                                  @PathParam("backup_name") String backupName,
+                                                                  @QueryParam("extractVersion") Boolean extractVersion);
 
     @DELETE
-    @Path("/{schema_name}/{index_name}/backup/{backup_name}")
+    @Path("/{index_name}/backup/{backup_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Integer deleteBackups(@PathParam("schema_name") String schema_name,
-                          @PathParam("index_name") String index_name,
-                          @PathParam("backup_name") String backup_name);
+    Integer deleteBackups(@PathParam("index_name") String indexName,
+                          @PathParam("backup_name") String backupName);
 
     @GET
-    @Path("/{schema_name}/{index_name}/replication/{session_id}/{source}/{filename}")
+    @Path("/{index_name}/replication/{session_id}/{source}/{filename}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    InputStream replicationObtain(@PathParam("schema_name") String schema_name,
-                                  @PathParam("index_name") String index_name,
+    InputStream replicationObtain(@PathParam("index_name") String indexName,
                                   @PathParam("session_id") String sessionID,
                                   @PathParam("source") String source,
                                   @PathParam("filename") String fileName);
 
     @DELETE
-    @Path("/{schema_name}/{index_name}/replication/{session_id}")
+    @Path("/{index_name}/replication/{session_id}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
-    boolean replicationRelease(@PathParam("schema_name") String schema_name,
-                               @PathParam("index_name") String index_name,
+    boolean replicationRelease(@PathParam("index_name") String indexName,
                                @PathParam("session_id") String sessionID);
 
     @POST
-    @Path("/{schema_name}/{index_name}/replication")
+    @Path("/{index_name}/replication")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    ReplicationSession replicationUpdate(@PathParam("schema_name") String schema_name,
-                                         @PathParam("index_name") String index_name,
+    ReplicationSession replicationUpdate(@PathParam("index_name") String indexName,
                                          String current_version);
 
     @GET
     @ManagedAsync
-    @Path("/{schema_name}/{index_name}/replication")
+    @Path("/{index_name}/replication")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    ReplicationStatus replicationCheck(@PathParam("schema_name") String schema_name,
-                                       @PathParam("index_name") String index_name);
+    ReplicationStatus replicationCheck(@PathParam("index_name") String indexName);
 
     @GET
-    @Path("/{schema_name}/{index_name}/resources")
+    @Path("/{index_name}/resources")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Map<String, IndexInstance.ResourceInfo> getResources(@PathParam("schema_name") String schema_name,
-                                                         @PathParam("index_name") String index_name);
+    Map<String, IndexInstance.ResourceInfo> getResources(@PathParam("index_name") String indexName);
 
     @GET
-    @Path("/{schema_name}/{index_name}/resources/{resource_name}")
-    InputStream getResource(@PathParam("schema_name") String schema_name,
-                            @PathParam("index_name") String index_name,
+    @Path("/{index_name}/resources/{resource_name}")
+    InputStream getResource(@PathParam("index_name") String indexName,
                             @PathParam("resource_name") String resourceName);
 
     @POST
-    @Path("/{schema_name}/{index_name}/resources/{resource_name}")
+    @Path("/{index_name}/resources/{resource_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
-    boolean postResource(@PathParam("schema_name") String schema_name,
-                         @PathParam("index_name") String index_name,
+    boolean postResource(@PathParam("index_name") String indexName,
                          @PathParam("resource_name") String resourceName,
                          @QueryParam("lastModified") Long lastModified,
                          InputStream inputStream);
 
     @DELETE
-    @Path("/{schema_name}/{index_name}/resources/{resource_name}")
+    @Path("/{index_name}/resources/{resource_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
-    boolean deleteResource(@PathParam("schema_name") String schema_name,
-                           @PathParam("index_name") String index_name,
+    boolean deleteResource(@PathParam("index_name") String indexName,
                            @PathParam("resource_name") String resourceName);
 
     @POST
-    @Path("/{schema_name}/{index_name}/search")
+    @Path("/{index_name}/search")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    ResultDefinition.WithMap searchQuery(@PathParam("schema_name") String schema_name,
-                                         @PathParam("index_name") String index_name,
+    ResultDefinition.WithMap searchQuery(@PathParam("index_name") String indexName,
                                          QueryDefinition query,
                                          @QueryParam("delete") Boolean delete);
 
     @POST
-    @Path("/{schema_name}/{index_name}/search/explain/{doc}")
+    @Path("/{index_name}/search/explain/{doc}")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    ExplainDefinition explainQuery(@PathParam("schema_name") String schema_name,
-                                   @PathParam("index_name") String index_name,
+    ExplainDefinition explainQuery(@PathParam("index_name") String indexName,
                                    QueryDefinition query,
                                    @PathParam("doc") int docId);
 
     @POST
-    @Path("/{schema_name}/{index_name}/search/explain/{doc}")
+    @Path("/{index_name}/search/explain/{doc}")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces(MediaType.TEXT_PLAIN)
-    String explainQueryText(@PathParam("schema_name") String schema_name,
-                            @PathParam("index_name") String index_name,
+    String explainQueryText(@PathParam("index_name") String indexName,
                             QueryDefinition query,
                             @PathParam("doc") int docId);
 
     @POST
-    @Path("/{schema_name}/{index_name}/search/explain/{doc}")
+    @Path("/{index_name}/search/explain/{doc}")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     @Produces(MEDIATYPE_TEXT_GRAPHVIZ)
-    String explainQueryDot(@PathParam("schema_name") String schema_name,
-                           @PathParam("index_name") String index_name,
+    String explainQueryDot(@PathParam("index_name") String indexName,
                            QueryDefinition query,
                            @PathParam("doc") int docId,
                            @QueryParam("wrap") final Integer descriptionWrapSize);
@@ -489,12 +410,11 @@ public interface IndexServiceInterface extends ServiceInterface {
     GenericType<Map<String, UUID>> mapStringUuidType = new GenericType<>() {
     };
 
-    GenericType<SortedMap<String, SortedMap<String, BackupStatus>>> mapStringMapStringBackupStatusType =
+    GenericType<SortedMap<String, BackupStatus>> mapStringBackupStatusType =
         new GenericType<>() {
         };
 
-    GenericType<SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>>>
-        mapStringMapStringMapStringBackupStatusType =
+    GenericType<SortedMap<String, SortedMap<String, BackupStatus>>> mapStringMapStringBackupStatusType =
         new GenericType<>() {
         };
 
@@ -527,8 +447,7 @@ public interface IndexServiceInterface extends ServiceInterface {
     interface QueryActions<T> extends FunctionEx<QueryContext, T, IOException> {
     }
 
-    default <T> T query(final String schemaName,
-                        final String indexName,
+    default <T> T query(final String indexName,
                         final QueryActions<T> actions) throws IOException {
         throw new NotImplementedException("Method not available");
     }
@@ -537,23 +456,20 @@ public interface IndexServiceInterface extends ServiceInterface {
     interface WriteActions<T> extends FunctionEx<WriteContext, T, IOException> {
     }
 
-    default <T> T write(final String schemaName,
-                        final String indexName,
+    default <T> T write(final String indexName,
                         final WriteActions<T> actions)
         throws IOException {
         throw new NotImplementedException("Method not available");
     }
 
     @GET
-    @Path("/{schema_name}/{index_name}/search/queries/types")
+    @Path("/{index_name}/search/queries/types")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Set<String> getQueryTypes(@PathParam("schema_name") String schemaName,
-                              @PathParam("index_name") String indexName);
+    Set<String> getQueryTypes(@PathParam("index_name") String indexName);
 
     @GET
-    @Path("/{schema_name}/{index_name}/search/queries/types/{query_type}")
+    @Path("/{index_name}/search/queries/types/{query_type}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    QueryInterface getQuerySample(@PathParam("schema_name") String schemaName,
-                                  @PathParam("index_name") String indexName,
+    QueryInterface getQuerySample(@PathParam("index_name") String indexName,
                                   @PathParam("query_type") String queryType);
 }

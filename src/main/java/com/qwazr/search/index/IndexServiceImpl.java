@@ -79,10 +79,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
 
     /**
      * Check the right permissions
-     *
-     * @param schemaName the name of the schema
      */
-    private void checkRight(final String schemaName) {
+    private void checkRight() {
         if (QWAZR_INDEX_ROOT_USER == null || request == null)
             return;
         final Principal principal = request.getUserPrincipal();
@@ -93,82 +91,25 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
             throw new ServerException(Response.Status.UNAUTHORIZED);
         if (name.equals(QWAZR_INDEX_ROOT_USER))
             return;
-        if (name.equals(schemaName))
-            return;
         throw new ServerException(Response.Status.UNAUTHORIZED);
     }
 
     @Override
-    final public Map<String, UUID> getIndexes(final String schemaName) {
+    final public Map<String, UUID> getIndexes() {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).getIndexMap();
+            checkRight();
+            return indexManager.getIndexMap();
         } catch (ServerException e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public SchemaSettingsDefinition createUpdateSchema(final String schemaName) {
-        try {
-            checkRight(null);
-            indexManager.createUpdate(schemaName, null);
-            return indexManager.get(schemaName).getSettings();
-        } catch (Exception e) {
-            throw ServerException.getJsonException(LOGGER, e);
-        }
-    }
-
-    @Override
-    final public SchemaSettingsDefinition createUpdateSchema(final String schemaName,
-                                                             final SchemaSettingsDefinition settings) {
-        try {
-            checkRight(null);
-            return indexManager.createUpdate(schemaName, settings);
-        } catch (Exception e) {
-            throw ServerException.getJsonException(LOGGER, e);
-        }
-    }
-
-    @Override
-    final public Set<String> getSchemas() {
-        try {
-            checkRight(null);
-            return indexManager.nameSet();
-        } catch (Exception e) {
-            throw ServerException.getJsonException(LOGGER, e);
-        }
-    }
-
-    @Override
-    final public boolean deleteSchema(final String schemaName) {
-        try {
-            checkRight(null);
-            indexManager.delete(schemaName);
-            return true;
-        } catch (Exception e) {
-            throw ServerException.getJsonException(LOGGER, e);
-        }
-    }
-
-    @Override
-    public Response getSchema(final String schemaName) {
-        try {
-            checkRight(null);
-            indexManager.get(schemaName);
-            return Response.ok().build();
-        } catch (Exception e) {
-            throw ServerException.getTextException(LOGGER, e);
-        }
-    }
-
-    @Override
-    final public IndexStatus createUpdateIndex(final String schemaName, final String indexName,
+    final public IndexStatus createUpdateIndex(final String indexName,
                                                final IndexSettingsDefinition settings) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName)
-                .createUpdate(indexName, settings == null ? IndexSettingsDefinition.EMPTY : settings)
+            checkRight();
+            return indexManager.createUpdate(indexName, settings == null ? IndexSettingsDefinition.EMPTY : settings)
                 .getStatus();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -176,58 +117,57 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public IndexStatus createUpdateIndex(final String schemaName, final String indexName) {
-        return createUpdateIndex(schemaName, indexName, IndexSettingsDefinition.EMPTY);
+    final public IndexStatus createUpdateIndex(final String indexName) {
+        return createUpdateIndex(indexName, IndexSettingsDefinition.EMPTY);
     }
 
     @Override
-    final public Map<String, FieldDefinition> getFields(final String schemaName, final String indexName) {
+    final public Map<String, FieldDefinition> getFields(final String indexName) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).getFields();
+            checkRight();
+            return indexManager.get(indexName).getFields();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public FieldDefinition getField(final String schemaName, final String indexName, final String fieldName) {
+    final public FieldDefinition getField(final String indexName, final String fieldName) {
         try {
-            checkRight(schemaName);
-            Map<String, FieldDefinition> fieldMap = indexManager.get(schemaName).get(indexName).getFields();
+            checkRight();
+            Map<String, FieldDefinition> fieldMap = indexManager.get(indexName).getFields();
             final FieldDefinition fieldDef = (fieldMap != null) ? fieldMap.get(fieldName) : null;
             if (fieldDef == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
-                    "Field not found: " + fieldName + " - Schema/index:" + schemaName + '/' + indexName);
+                    "Field not found: " + fieldName + " - Index:" + indexName);
             return fieldDef;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
-    final public Map<String, FieldDefinition> setFields(final String schemaName,
-                                                        final String indexName,
+    @Override
+    final public Map<String, FieldDefinition> setFields(final String indexName,
                                                         final Map<String, FieldDefinition> fields) {
         try {
-            checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName).setFields(fields);
+            checkRight();
+            indexManager.get(indexName).setFields(fields);
             return fields;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
-    private List<TermDefinition> doAnalyzer(final String schemaName,
-                                            final String indexName,
+    private List<TermDefinition> doAnalyzer(final String indexName,
                                             final String fieldName,
                                             final String text,
                                             final boolean index) throws IOException {
-        checkRight(schemaName);
-        final IndexInstance indexInstance = indexManager.get(schemaName).get(indexName);
+        checkRight();
+        final IndexInstance indexInstance = indexManager.get(indexName);
         final FunctionEx<Analyzer, List<TermDefinition>, IOException> analyzerFunction = analyzer -> {
             if (analyzer == null)
                 throw new ServerException(
-                    "No analyzer found for " + fieldName + " - Schema/index: " + schemaName + '/' + indexName);
+                    "No analyzer found for " + fieldName + " - Index: " + indexName);
             return TermDefinition.buildTermList(analyzer, fieldName, text);
         };
         return index ?
@@ -237,60 +177,66 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public List<TermDefinition> doAnalyzeIndex(final String schemaName, final String indexName,
-                                                     final String fieldName, final String text) {
+    final public List<TermDefinition> doAnalyzeIndex(final String indexName,
+                                                     final String fieldName,
+                                                     final String text) {
         try {
-            return doAnalyzer(schemaName, indexName, fieldName, text, true);
+            return doAnalyzer(indexName, fieldName, text, true);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public FieldStats getFieldStats(String schemaName, String indexName, String fieldName) {
-        checkRight(schemaName);
+    public FieldStats getFieldStats(final String indexName, final String fieldName) {
+        checkRight();
         try {
-            return indexManager.get(schemaName).get(indexName).getFieldStats(fieldName);
+            return indexManager.get(indexName).getFieldStats(fieldName);
         } catch (IOException e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public List<TermEnumDefinition> doExtractTerms(final String schemaName, final String indexName,
-                                                         final String fieldName, final Integer start, final Integer rows) {
-        return doExtractTerms(schemaName, indexName, fieldName, null, start, rows);
+    final public List<TermEnumDefinition> doExtractTerms(final String indexName,
+                                                         final String fieldName,
+                                                         final Integer start,
+                                                         final Integer rows) {
+        return doExtractTerms(indexName, fieldName, null, start, rows);
     }
 
     @Override
-    final public List<TermEnumDefinition> doExtractTerms(final String schemaName, final String indexName,
-                                                         final String fieldName, final String prefix, final Integer start, final Integer rows) {
+    final public List<TermEnumDefinition> doExtractTerms(final String indexName,
+                                                         final String fieldName,
+                                                         final String prefix,
+                                                         final Integer start,
+                                                         final Integer rows) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).getTermsEnum(fieldName, prefix, start, rows);
+            checkRight();
+            return indexManager.get(indexName).getTermsEnum(fieldName, prefix, start, rows);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public List<TermDefinition> doAnalyzeQuery(final String schemaName, final String indexName,
-                                                     final String fieldName, final String text) {
+    final public List<TermDefinition> doAnalyzeQuery(final String indexName,
+                                                     final String fieldName,
+                                                     final String text) {
         try {
-            return doAnalyzer(schemaName, indexName, fieldName, text, false);
+            return doAnalyzer(indexName, fieldName, text, false);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public FieldDefinition setField(final String schemaName,
-                                          final String indexName,
+    final public FieldDefinition setField(final String indexName,
                                           final String fieldName,
                                           final FieldDefinition field) {
         try {
-            checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName).setField(fieldName, field);
+            checkRight();
+            indexManager.get(indexName).setField(fieldName, field);
             return field;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -298,10 +244,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public boolean deleteField(final String schemaName, final String indexName, final String fieldName) {
+    final public boolean deleteField(final String indexName,
+                                     final String fieldName) {
         try {
-            checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName).deleteField(fieldName);
+            checkRight();
+            indexManager.get(indexName).deleteField(fieldName);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -309,28 +256,26 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public Map<String, AnalyzerDefinition> getAnalyzers(final String schemaName,
-                                                              final String indexName) {
+    final public Map<String, AnalyzerDefinition> getAnalyzers(final String indexName) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).getAnalyzers();
+            checkRight();
+            return indexManager.get(indexName).getAnalyzers();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public AnalyzerDefinition getAnalyzer(final String schemaName,
-                                                final String indexName,
+    final public AnalyzerDefinition getAnalyzer(final String indexName,
                                                 final String analyzerName) {
         try {
-            checkRight(schemaName);
+            checkRight();
             final Map<String, AnalyzerDefinition> analyzerMap =
-                indexManager.get(schemaName).get(indexName).getAnalyzers();
+                indexManager.get(indexName).getAnalyzers();
             final AnalyzerDefinition analyzerDef = (analyzerMap != null) ? analyzerMap.get(analyzerName) : null;
             if (analyzerDef == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
-                    "Analyzer not found: " + analyzerName + " - Schema/index: " + schemaName + '/' + indexName);
+                    "Analyzer not found: " + analyzerName + " - Index: " + indexName);
             return analyzerDef;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -338,21 +283,22 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public void refreshAnalyzers(final String schemaName, final String indexName) {
+    final public void refreshAnalyzers(final String indexName) {
         try {
-            checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName).refreshAnalyzers();
+            checkRight();
+            indexManager.get(indexName).refreshAnalyzers();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public AnalyzerDefinition setAnalyzer(final String schemaName, final String indexName,
-                                                final String analyzerName, final AnalyzerDefinition analyzer) {
+    final public AnalyzerDefinition setAnalyzer(final String indexName,
+                                                final String analyzerName,
+                                                final AnalyzerDefinition analyzer) {
         try {
-            checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName).setAnalyzer(analyzerName, analyzer);
+            checkRight();
+            indexManager.get(indexName).setAnalyzer(analyzerName, analyzer);
             return analyzer;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -360,12 +306,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public Map<String, AnalyzerDefinition> setAnalyzers(final String schemaName,
-                                                              final String indexName,
+    final public Map<String, AnalyzerDefinition> setAnalyzers(final String indexName,
                                                               final Map<String, AnalyzerDefinition> analyzers) {
         try {
-            checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName).setAnalyzers(analyzers);
+            checkRight();
+            indexManager.get(indexName).setAnalyzers(analyzers);
             return analyzers;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -373,12 +318,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public boolean deleteAnalyzer(final String schemaName,
-                                        final String indexName,
+    final public boolean deleteAnalyzer(final String indexName,
                                         final String analyzerName) {
         try {
-            checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName).deleteAnalyzer(analyzerName);
+            checkRight();
+            indexManager.get(indexName).deleteAnalyzer(analyzerName);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -386,76 +330,73 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public List<TermDefinition> testAnalyzer(final String schemaName,
-                                                   final String indexName,
+    final public List<TermDefinition> testAnalyzer(final String indexName,
                                                    final String analyzerName,
                                                    final String text) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).testAnalyzer(analyzerName, text);
+            checkRight();
+            return indexManager.get(indexName).testAnalyzer(analyzerName, text);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public String testAnalyzerDot(final String schemaName,
-                                  final String indexName,
+    public String testAnalyzerDot(final String indexName,
                                   final String analyzerName,
                                   final String text) {
         try {
-            checkRight(schemaName);
+            checkRight();
             return TermDefinition.toDot(
-                indexManager.get(schemaName).get(indexName).testAnalyzer(analyzerName, text));
+                indexManager.get(indexName).testAnalyzer(analyzerName, text));
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public IndexStatus getIndex(final String schemaName, final String indexName) {
+    final public IndexStatus getIndex(final String indexName) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).getStatus();
+            checkRight();
+            return indexManager.get(indexName).getStatus();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public IndexSettingsDefinition getIndexSettings(String schemaName, String indexName) {
-        checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName).getSettings();
+    public IndexSettingsDefinition getIndexSettings(final String indexName) {
+        checkRight();
+        return indexManager.get(indexName).getSettings();
     }
 
     @Override
-    final public IndexStatus mergeIndex(final String schemaName,
-                                        final String indexName,
+    final public IndexStatus mergeIndex(final String indexName,
                                         final String mergedIndexName,
                                         final Map<String, String> commitUserData) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).mergeIndex(indexName, mergedIndexName, commitUserData);
+            checkRight();
+            return indexManager.mergeIndex(indexName, mergedIndexName, commitUserData);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public IndexCheckStatus checkIndex(String schemaName, String indexName) {
+    public IndexCheckStatus checkIndex(final String indexName) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).checkIndex(indexName);
+            checkRight();
+            return indexManager.checkIndex(indexName);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public boolean deleteIndex(final String schemaName, final String indexName) {
+    final public boolean deleteIndex(final String indexName) {
         try {
-            checkRight(schemaName);
-            indexManager.get(schemaName).delete(indexName);
+            checkRight();
+            indexManager.delete(indexName);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -463,231 +404,214 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public Integer postMappedDocument(final String schemaName, final String indexName,
+    final public Integer postMappedDocument(final String indexName,
                                             final PostDefinition.Document post) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).postMappedDocument(post);
+            checkRight();
+            return indexManager.get(indexName).postMappedDocument(post);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public Integer postJson(final String schemaName, final String indexName, final JsonNode jsonNode) {
+    public Integer postJson(final String indexName, final JsonNode jsonNode) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).postJsonNode(jsonNode);
+            checkRight();
+            return indexManager.get(indexName).postJsonNode(jsonNode);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public List<Map<String, Object>> getJsonSamples(final String schemaName,
-                                                    final String indexName,
+    public List<Map<String, Object>> getJsonSamples(final String indexName,
                                                     final Integer count) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).getJsonSamples(count == null ? 2 : count);
+            checkRight();
+            return indexManager.get(indexName).getJsonSamples(count == null ? 2 : count);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public Map<String, Object> getJsonSample(final String schemaName, final String indexName) {
+    public Map<String, Object> getJsonSample(final String indexName) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).getJsonSample();
+            checkRight();
+            return indexManager.get(indexName).getJsonSample();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public Integer postMappedDocuments(final String schemaName,
-                                             final String indexName,
+    final public Integer postMappedDocuments(final String indexName,
                                              final PostDefinition.Documents post) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).postMappedDocuments(post);
+            checkRight();
+            return indexManager.get(indexName).postMappedDocuments(post);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public <T> int postDocument(final String schemaName,
-                                      final String indexName,
+    final public <T> int postDocument(final String indexName,
                                       final Map<String, Field> fields,
                                       final T document,
                                       final Map<String, String> commitUserData) throws IOException {
-        checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName).postDocument(fields, document, commitUserData);
+        checkRight();
+        return indexManager.get(indexName).postDocument(fields, document, commitUserData);
     }
 
     @Override
-    final public <T> int postDocuments(final String schemaName,
-                                       final String indexName,
+    final public <T> int postDocuments(final String indexName,
                                        final Map<String, Field> fields,
                                        final Collection<T> documents,
                                        final Map<String, String> commitUserData) throws IOException {
-        checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName).postDocuments(fields, documents, commitUserData);
+        checkRight();
+        return indexManager.get(indexName).postDocuments(fields, documents, commitUserData);
     }
 
     @Override
-    final public <T> int addDocument(final String schemaName,
-                                     final String indexName,
+    final public <T> int addDocument(final String indexName,
                                      final Map<String, Field> fields,
                                      final T document,
                                      final Map<String, String> commitUserData) throws IOException {
-        checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName).postDocument(fields, document, commitUserData);
+        checkRight();
+        return indexManager.get(indexName).postDocument(fields, document, commitUserData);
     }
 
     @Override
-    final public <T> int addDocuments(final String schemaName,
-                                      final String indexName,
+    final public <T> int addDocuments(final String indexName,
                                       final Map<String, Field> fields,
                                       final Collection<T> documents,
                                       final Map<String, String> commitUserData) throws IOException {
-        checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName).postDocuments(fields, documents, commitUserData);
+        checkRight();
+        return indexManager.get(indexName).postDocuments(fields, documents, commitUserData);
     }
 
     @Override
-    final public Integer updateMappedDocValues(final String schemaName,
-                                               final String indexName,
+    final public Integer updateMappedDocValues(final String indexName,
                                                final PostDefinition.Document post) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).updateMappedDocValues(post);
+            checkRight();
+            return indexManager.get(indexName).updateMappedDocValues(post);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public Integer updateMappedDocsValues(final String schemaName,
-                                                final String indexName,
+    final public Integer updateMappedDocsValues(final String indexName,
                                                 final PostDefinition.Documents post) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).updateMappedDocsValues(post);
+            checkRight();
+            return indexManager.get(indexName).updateMappedDocsValues(post);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public <T> int updateDocValues(final String schemaName,
-                                         final String indexName,
+    final public <T> int updateDocValues(final String indexName,
                                          final Map<String, Field> fields,
                                          final T document,
                                          final Map<String, String> commitUserData)
         throws IOException {
-        checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName).updateDocValues(fields, document, commitUserData);
+        checkRight();
+        return indexManager.get(indexName).updateDocValues(fields, document, commitUserData);
     }
 
     @Override
-    final public <T> int updateDocsValues(final String schemaName,
-                                          final String indexName,
+    final public <T> int updateDocsValues(final String indexName,
                                           final Map<String, Field> fields,
                                           final Collection<T> documents,
                                           final Map<String, String> commitUserData)
         throws IOException {
-        checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName).updateDocsValues(fields, documents, commitUserData);
+        checkRight();
+        return indexManager.get(indexName).updateDocsValues(fields, documents, commitUserData);
     }
 
     @Override
-    final public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(final String schemaName,
-                                                                             final String indexName,
-                                                                             final String backupName) {
+    final public SortedMap<String, BackupStatus> doBackup(final String indexName,
+                                                          final String backupName) {
         try {
-            checkRight(null);
-            return indexManager.backups(schemaName, indexName, backupName);
+            checkRight();
+            return indexManager.backups(indexName, backupName);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public ReindexDefinition getReindexStatus(final String schemaName,
-                                              final String indexName) {
+    public ReindexDefinition getReindexStatus(final String indexName) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).getReindexThread().getStatus();
+            checkRight();
+            return indexManager.get(indexName).getReindexThread().getStatus();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public ReindexDefinition startReindex(final String schemaName,
-                                          final String indexName,
+    public ReindexDefinition startReindex(final String indexName,
                                           final Integer bufferSize) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).getReindexThread().start(bufferSize == null ? 50 : bufferSize);
+            checkRight();
+            return indexManager.get(indexName).getReindexThread().start(bufferSize == null ? 50 : bufferSize);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public ReindexDefinition stopReindex(final String schemaName,
-                                         final String indexName) {
+    public ReindexDefinition stopReindex(final String indexName) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).getReindexThread().abort();
+            checkRight();
+            return indexManager.get(indexName).getReindexThread().abort();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
-                                                                                            final String indexName,
-                                                                                            final String backupName,
-                                                                                            final Boolean extractVersion) {
+    public SortedMap<String, SortedMap<String, BackupStatus>> getBackups(final String indexName,
+                                                                         final String backupName,
+                                                                         final Boolean extractVersion) {
         try {
-            checkRight(null);
-            return indexManager.getBackups(schemaName, indexName, backupName, extractVersion != null && extractVersion);
+            checkRight();
+            return indexManager.getBackups(indexName, backupName, extractVersion != null && extractVersion);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public Integer deleteBackups(final String schemaName,
-                                 final String indexName,
+    public Integer deleteBackups(final String indexName,
                                  final String backupName) {
         try {
-            checkRight(null);
-            return indexManager.deleteBackups(schemaName, indexName, backupName);
+            checkRight();
+            return indexManager.deleteBackups(indexName, backupName);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public InputStream replicationObtain(final String schemaName,
-                                               final String indexName,
+    final public InputStream replicationObtain(final String indexName,
                                                final String sessionID,
                                                final String source,
                                                final String fileName) {
         try {
-            checkRight(null);
-            final InputStream input = indexManager.get(schemaName)
+            checkRight();
+            final InputStream input = indexManager
                 .get(indexName)
                 .replicationObtain(sessionID, ReplicationProcess.Source.valueOf(source), fileName);
             if (input == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
-                    "File not found: " + fileName + " - Schema/index: " + schemaName + '/' + indexName);
+                    "File not found: " + fileName + " - Index: " + indexName);
             return new AutoCloseInputStream(input);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -695,12 +619,11 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public boolean replicationRelease(final String schemaName,
-                                            final String indexName,
+    final public boolean replicationRelease(final String indexName,
                                             final String sessionID) {
         try {
-            checkRight(null);
-            indexManager.get(schemaName).get(indexName).replicationRelease(sessionID);
+            checkRight();
+            indexManager.get(indexName).replicationRelease(sessionID);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -708,25 +631,23 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public ReplicationSession replicationUpdate(final String schemaName,
-                                                      final String indexName,
+    final public ReplicationSession replicationUpdate(final String indexName,
                                                       final String currentVersion) {
         try {
-            checkRight(null);
-            return indexManager.get(schemaName).get(indexName).replicationUpdate(currentVersion);
+            checkRight();
+            return indexManager.get(indexName).replicationUpdate(currentVersion);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    final public ReplicationStatus replicationCheck(final String schemaName,
-                                                    final String indexName) {
-        checkRight(null);
+    final public ReplicationStatus replicationCheck(final String indexName) {
         try {
-            LOGGER.info(() -> "Start replication " + schemaName + '/' + indexName);
-            final ReplicationStatus status = indexManager.get(schemaName).get(indexName).replicationCheck();
-            LOGGER.info(() -> "End replication " + schemaName + '/' + indexName + " - time: " + status.time +
+            checkRight();
+            LOGGER.info(() -> "Start replication on \"" + indexName + "\"");
+            final ReplicationStatus status = indexManager.get(indexName).replicationCheck();
+            LOGGER.info(() -> "End replication on \"" + indexName + "\" - time: " + status.time +
                 "ms - size: " + status.size);
             return status;
         } catch (final Exception e) {
@@ -735,26 +656,24 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    public Map<String, IndexInstance.ResourceInfo> getResources(final String schemaName,
-                                                                final String indexName) {
+    public Map<String, IndexInstance.ResourceInfo> getResources(final String indexName) {
         try {
-            checkRight(null);
-            return indexManager.get(schemaName).get(indexName).getResources();
+            checkRight();
+            return indexManager.get(indexName).getResources();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public InputStream getResource(final String schemaName,
-                                   final String indexName,
+    public InputStream getResource(final String indexName,
                                    final String resourceName) {
         try {
-            checkRight(null);
-            final InputStream input = indexManager.get(schemaName).get(indexName).getResource(resourceName);
+            checkRight();
+            final InputStream input = indexManager.get(indexName).getResource(resourceName);
             if (input == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
-                    "Resource not found: " + resourceName + " - Schema/index: " + schemaName + '/' + indexName);
+                    "Resource not found: " + resourceName + " - Index: " + indexName);
             return new AutoCloseInputStream(input);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -762,14 +681,13 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    public boolean postResource(final String schemaName,
-                                final String indexName,
+    public boolean postResource(final String indexName,
                                 final String resourceName,
                                 final Long lastModified,
                                 final InputStream inputStream) {
         try {
-            checkRight(null);
-            indexManager.get(schemaName).get(indexName).postResource(resourceName, lastModified, inputStream);
+            checkRight();
+            indexManager.get(indexName).postResource(resourceName, lastModified, inputStream);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -777,10 +695,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    public boolean deleteResource(final String schemaName, final String indexName, final String resourceName) {
+    public boolean deleteResource(final String indexName, final String resourceName) {
         try {
-            checkRight(null);
-            indexManager.get(schemaName).get(indexName).deleteResource(resourceName);
+            checkRight();
+            indexManager.get(indexName).deleteResource(resourceName);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -788,10 +706,10 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public boolean deleteAll(final String schemaName, final String indexName) {
+    final public boolean deleteAll(final String indexName) {
         try {
-            checkRight(schemaName);
-            indexManager.get(schemaName).get(indexName).deleteAll(null);
+            checkRight();
+            indexManager.get(indexName).deleteAll(null);
             return true;
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -803,37 +721,35 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
         return QueryDefinition.of(new MatchAllDocsQuery()).start(start).rows(rows).returnedField("*").build();
     }
 
-    private ResultDefinition.WithMap doSearchMap(final String schemaName, final String indexName, final QueryDefinition query)
+    private ResultDefinition.WithMap doSearchMap(final String indexName, final QueryDefinition query)
         throws IOException {
-        checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName).query(context -> context.searchMap(query));
+        checkRight();
+        return indexManager.get(indexName).query(context -> context.searchMap(query));
     }
 
-    private <T> ResultDefinition.WithObject<T> doSearchObject(final String schemaName,
-                                                              final String indexName,
+    private <T> ResultDefinition.WithObject<T> doSearchObject(final String indexName,
                                                               final QueryDefinition query,
                                                               final FieldMapWrapper<T> wrapper) throws IOException {
-        checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName).query(context -> context.searchObject(query, wrapper));
+        checkRight();
+        return indexManager.get(indexName).query(context -> context.searchObject(query, wrapper));
     }
 
     @Override
-    final public Map<String, Object> getDocument(final String schemaName,
-                                                 final String indexName,
+    final public Map<String, Object> getDocument(final String indexName,
                                                  final String id) {
         try {
-            checkRight(schemaName);
+            checkRight();
             if (StringUtils.isEmpty(id))
                 throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-                    "The id is empty - Schema/index: " + schemaName + '/' + indexName);
-            final ResultDefinition.WithMap result = indexManager.get(schemaName).get(indexName).getDocument(id);
+                    "The id is empty - Index: " + indexName);
+            final ResultDefinition.WithMap result = indexManager.get(indexName).getDocument(id);
             if (result != null) {
                 final List<ResultDocumentMap> docs = result.getDocuments();
                 if (docs != null && !docs.isEmpty())
                     return docs.get(0).getFields();
             }
             throw new ServerException(Response.Status.NOT_FOUND,
-                "Document not found: " + id + " - Schema/index: " + schemaName + '/' + indexName);
+                "Document not found: " + id + " - Index: " + indexName);
 
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -841,15 +757,14 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public List<Map<String, Object>> getDocuments(final String schemaName,
-                                                        final String indexName,
+    final public List<Map<String, Object>> getDocuments(final String indexName,
                                                         final Integer start,
                                                         final Integer rows) {
         try {
-            final ResultDefinition.WithMap result = doSearchMap(schemaName, indexName, getMatchAllDocQuery(start, rows));
+            final ResultDefinition.WithMap result = doSearchMap(indexName, getMatchAllDocQuery(start, rows));
             if (result == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
-                    "No document found" + " - Schema/index: " + schemaName + '/' + indexName);
+                    "No document found" + " - Index: " + indexName);
             final List<Map<String, Object>> documents = new ArrayList<>();
             final List<ResultDocumentMap> docs = result.getDocuments();
             if (docs != null)
@@ -861,16 +776,15 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public <T> T getDocument(final String schemaName,
-                                   final String indexName,
+    final public <T> T getDocument(final String indexName,
                                    final Object id,
                                    final FieldMapWrapper<T> wrapper) {
         try {
-            checkRight(schemaName);
+            checkRight();
             if (id == null)
                 throw new ServerException(Response.Status.NOT_ACCEPTABLE,
-                    "The id is null - Schema/index: " + schemaName + '/' + indexName);
-            final ResultDefinition.WithObject<T> result = indexManager.get(schemaName).get(indexName).getDocument(id, wrapper);
+                    "The id is null - Index: " + indexName);
+            final ResultDefinition.WithObject<T> result = indexManager.get(indexName).getDocument(id, wrapper);
             if (result == null)
                 return null;
             final List<ResultDocumentObject<T>> docs = result.getDocuments();
@@ -883,16 +797,16 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public <T> List<T> getDocuments(final String schemaName,
-                                          final String indexName,
+    final public <T> List<T> getDocuments(final String indexName,
                                           final Integer start,
-                                          final Integer rows, final FieldMapWrapper<T> wrapper) {
+                                          final Integer rows,
+                                          final FieldMapWrapper<T> wrapper) {
         try {
             final ResultDefinition.WithObject<T> result =
-                doSearchObject(schemaName, indexName, getMatchAllDocQuery(start, rows), wrapper);
+                doSearchObject(indexName, getMatchAllDocQuery(start, rows), wrapper);
             if (result == null)
                 throw new ServerException(Response.Status.NOT_FOUND,
-                    "No document found" + " - Schema/index: " + schemaName + '/' + indexName);
+                    "No document found" + " - Index: " + indexName);
             final List<T> documents = new ArrayList<>();
             final List<ResultDocumentObject<T>> docs = result.getDocuments();
             if (docs != null)
@@ -904,13 +818,12 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public ResultDefinition.WithMap searchQuery(final String schemaName,
-                                                      final String indexName,
+    final public ResultDefinition.WithMap searchQuery(final String indexName,
                                                       final QueryDefinition query,
                                                       final Boolean delete) {
         try {
-            checkRight(schemaName);
-            final IndexInstance index = indexManager.get(schemaName).get(indexName);
+            checkRight();
+            final IndexInstance index = indexManager.get(indexName);
             if (delete != null && delete)
                 return index.deleteByQuery(query);
             else
@@ -921,37 +834,36 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    final public <T> ResultDefinition.WithObject<T> searchQuery(final String schemaName,
-                                                                final String indexName,
+    final public <T> ResultDefinition.WithObject<T> searchQuery(final String indexName,
                                                                 final QueryDefinition query,
                                                                 final FieldMapWrapper<T> wrapper) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).query(context -> context.searchObject(query, wrapper));
+            checkRight();
+            return indexManager.get(indexName).query(context -> context.searchObject(query, wrapper));
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public ResultDefinition.Empty searchQuery(final String schemaName,
-                                              final String indexName,
+    public ResultDefinition.Empty searchQuery(final String indexName,
                                               final QueryDefinition query,
                                               final ResultDocumentsInterface resultDocuments) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).get(indexName).query(context -> context.searchInterface(query, resultDocuments));
+            checkRight();
+            return indexManager.get(indexName).query(context -> context.searchInterface(query, resultDocuments));
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }
     }
 
     @Override
-    public ExplainDefinition explainQuery(final String schemaName, final String indexName, final QueryDefinition query,
+    public ExplainDefinition explainQuery(final String indexName,
+                                          final QueryDefinition query,
                                           int docId) {
         try {
-            checkRight(schemaName);
-            final IndexInstance index = indexManager.get(schemaName).get(indexName);
+            checkRight();
+            final IndexInstance index = indexManager.get(indexName);
             return new ExplainDefinition(index.explain(query, docId));
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -959,11 +871,12 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    public String explainQueryText(final String schemaName, final String indexName, final QueryDefinition query,
+    public String explainQueryText(final String indexName,
+                                   final QueryDefinition query,
                                    final int docId) {
         try {
-            checkRight(schemaName);
-            final IndexInstance index = indexManager.get(schemaName).get(indexName);
+            checkRight();
+            final IndexInstance index = indexManager.get(indexName);
             return index.explain(query, docId).toString();
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
@@ -971,10 +884,12 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    public String explainQueryDot(final String schemaName, final String indexName, final QueryDefinition query,
-                                  final int docId, final Integer descriptionWrapSize) {
+    public String explainQueryDot(final String indexName,
+                                  final QueryDefinition query,
+                                  final int docId,
+                                  final Integer descriptionWrapSize) {
         try {
-            return ExplainDefinition.toDot(explainQuery(schemaName, indexName, query, docId),
+            return ExplainDefinition.toDot(explainQuery(indexName, query, docId),
                 descriptionWrapSize == null ? 28 : descriptionWrapSize);
         } catch (IOException e) {
             throw ServerException.getTextException(LOGGER, e);
@@ -982,31 +897,32 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    public <T> T query(final String schemaName, final String indexName, final QueryActions<T> actions) throws IOException {
-        checkRight(schemaName);
-        return indexManager.get(schemaName).get(indexName).query(actions);
+    public <T> T query(final String indexName,
+                       final QueryActions<T> actions) throws IOException {
+        checkRight();
+        return indexManager.get(indexName).query(actions);
     }
 
     @Override
-    public <T> T write(final String schemaName, final String indexName, final WriteActions<T> actions)
+    public <T> T write(final String indexName,
+                       final WriteActions<T> actions)
         throws IOException {
-        checkRight(schemaName);
-        final IndexInstance index = indexManager.get(schemaName).get(indexName);
+        checkRight();
+        final IndexInstance index = indexManager.get(indexName);
         return index.write(actions);
     }
 
     @Override
-    public Set<String> getQueryTypes(final String schemaName, final String indexName) {
+    public Set<String> getQueryTypes(final String indexName) {
         return AbstractQuery.TYPES.keySet();
     }
 
     @Override
-    public QueryInterface getQuerySample(final String schemaName,
-                                         final String indexName,
+    public QueryInterface getQuerySample(final String indexName,
                                          final String queryType) {
         try {
-            checkRight(schemaName);
-            return indexManager.get(schemaName).getIndex(indexName).getQuerySample(queryType);
+            checkRight();
+            return indexManager.get(indexName).getQuerySample(queryType);
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }

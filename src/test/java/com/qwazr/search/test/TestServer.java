@@ -15,45 +15,54 @@
  */
 package com.qwazr.search.test;
 
-import com.google.common.io.Files;
 import com.qwazr.search.SearchServer;
 import com.qwazr.search.index.IndexServiceBuilder;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.similarity.CustomSimilarity;
 import com.qwazr.server.RemoteService;
 import com.qwazr.utils.FileUtils;
-
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestServer {
 
-	public static IndexServiceInterface service;
-	public static IndexServiceInterface remote;
+    public static IndexServiceInterface service;
+    public static IndexServiceInterface remote;
 
-	static final String BASE_URL = "http://localhost:9091";
+    static final String BASE_URL = "http://localhost:9091";
 
-	static final File dataDir = Files.createTempDir();
+    static final Path dataDir;
 
-	public static final AtomicInteger injectedAnalyzerCount = new AtomicInteger();
+    static {
+        try {
+            dataDir = Files.createTempDirectory("data");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	public static synchronized void startServer() throws Exception {
-		if (service != null)
-			return;
-		FileUtils.copyDirectory(new File("src/test/data"), dataDir);
-		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
-		System.setProperty("PUBLIC_ADDR", "localhost");
-		System.setProperty("LISTEN_ADDR", "localhost");
-		SearchServer.main();
-		SearchServer.getInstance()
-				.getIndexManager()
-				.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME,
-						resourceLoader -> new AnnotatedRecord.TestAnalyzer(injectedAnalyzerCount))
-                .registerSimilarityFactory(CustomSimilarity.CUSTOM_SIMILARITY,
-                        resourceLoader -> new CustomSimilarity(1.2f));
-		IndexServiceBuilder indexServiceBuilder = SearchServer.getInstance().getServiceBuilder();
-		service = indexServiceBuilder.local();
-		remote = indexServiceBuilder.remote(RemoteService.of(BASE_URL).build());
-	}
+    public static final AtomicInteger injectedAnalyzerCount = new AtomicInteger();
+
+    public static synchronized void startServer() throws Exception {
+        if (service != null)
+            return;
+        FileUtils.copyDirectory(new File("src/test/data"), dataDir.toFile());
+        System.setProperty("QWAZR_DATA", dataDir.toAbsolutePath().toString());
+        System.setProperty("PUBLIC_ADDR", "localhost");
+        System.setProperty("LISTEN_ADDR", "localhost");
+        SearchServer.main();
+        SearchServer.getInstance()
+            .getIndexManager()
+            .registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME,
+                resourceLoader -> new AnnotatedRecord.TestAnalyzer(injectedAnalyzerCount))
+            .registerSimilarityFactory(CustomSimilarity.CUSTOM_SIMILARITY,
+                resourceLoader -> new CustomSimilarity(1.2f));
+        IndexServiceBuilder indexServiceBuilder = SearchServer.getInstance().getServiceBuilder();
+        service = indexServiceBuilder.local();
+        remote = indexServiceBuilder.remote(RemoteService.of(BASE_URL).build());
+    }
 
 }

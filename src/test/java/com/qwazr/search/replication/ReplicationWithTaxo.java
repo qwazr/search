@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,12 +29,11 @@ import java.util.concurrent.ExecutionException;
 
 public class ReplicationWithTaxo extends ReplicationTestManager {
 
-    private final static String SCHEMA = "FilesReplicationNoTaxo";
     private final static String MASTER = "master";
 
     @Override
     public AnnotatedIndexService<AnnotatedRecord> getMaster() throws URISyntaxException {
-        return new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, MASTER, IndexSettingsDefinition.of()
+        return new AnnotatedIndexService<>(service, AnnotatedRecord.class, MASTER, IndexSettingsDefinition.of()
             .mergeScheduler(IndexSettingsDefinition.MergeScheduler.CONCURRENT)
             .enableTaxonomyIndex(true)
             .build());
@@ -42,8 +41,8 @@ public class ReplicationWithTaxo extends ReplicationTestManager {
 
     @Override
     public List<AnnotatedIndexService<AnnotatedRecord>> getSlaves() throws URISyntaxException {
-        return Collections.singletonList(new AnnotatedIndexService<>(service, AnnotatedRecord.class, SCHEMA, "slave",
-            IndexSettingsDefinition.of().master(SCHEMA, MASTER).enableTaxonomyIndex(true).build()));
+        return Collections.singletonList(new AnnotatedIndexService<>(service, AnnotatedRecord.class, "slave",
+            IndexSettingsDefinition.of().master(MASTER).enableTaxonomyIndex(true).build()));
 
     }
 

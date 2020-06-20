@@ -63,7 +63,7 @@ public class SmartFieldSamplesTest extends AbstractIndexTest {
         }
     }
 
-    @Index(name = "SmartFieldSorted", schema = "TestQueries", primaryKey = "id")
+    @Index(name = "SmartFieldSorted", primaryKey = "id")
     static public class Record {
 
         @SmartField(type = SmartFieldDefinition.Type.TEXT, index = true)

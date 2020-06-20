@@ -15,7 +15,6 @@
  */
 package com.qwazr.search.test;
 
-import com.google.common.io.Files;
 import com.qwazr.search.SearchServer;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.annotations.AnnotatedIndexService;
@@ -34,7 +33,6 @@ import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentObject;
-import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.index.TermDefinition;
 import com.qwazr.search.index.TermEnumDefinition;
 import com.qwazr.search.query.DrillDownQuery;
@@ -50,9 +48,10 @@ import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.query.TermsQuery;
 import com.qwazr.search.query.WildcardQuery;
 import static com.qwazr.search.test.JsonAbstractTest.checkErrorStatusCode;
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -74,14 +73,24 @@ public abstract class JavaAbstractTest {
 
     protected abstract IndexServiceInterface getIndexService() throws URISyntaxException, IOException;
 
-    static final File backupDir = Files.createTempDir();
+    static final Path backupDir;
+
+    static {
+        try {
+            backupDir = Files.createTempDirectory("java-test-backup");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private final IndexSettingsDefinition indexSlaveDefinition;
 
     public static synchronized <T> AnnotatedIndexService<T> getService(final IndexServiceInterface indexService,
-                                                                       final Class<T> indexClass, final String indexName, final IndexSettingsDefinition settings)
+                                                                       final Class<T> indexClass,
+                                                                       final String indexName,
+                                                                       final IndexSettingsDefinition settings)
         throws URISyntaxException {
-        return new AnnotatedIndexService<>(indexService, indexClass, null, indexName, settings);
+        return new AnnotatedIndexService<>(indexService, indexClass, indexName, settings);
     }
 
     public static synchronized <T> AnnotatedIndexService<T> getService(final IndexServiceInterface indexService,
@@ -113,23 +122,7 @@ public abstract class JavaAbstractTest {
     @Test
     public void test010CheckMasterClient() throws URISyntaxException, IOException {
         final AnnotatedIndexService<?> master = getMaster();
-        Assert.assertEquals(AnnotatedRecord.SCHEMA_NAME, master.getSchemaName());
         Assert.assertEquals(AnnotatedRecord.INDEX_NAME_MASTER, master.getIndexName());
-    }
-
-    @Test
-    public void test050CreateSchema() throws URISyntaxException, IOException {
-        final AnnotatedIndexService<?> service = getMaster();
-        final SchemaSettingsDefinition settings1 = service.createUpdateSchema();
-        Assert.assertNotNull(settings1);
-        final SchemaSettingsDefinition settings2 = service.createUpdateSchema(settings1);
-        Assert.assertNotNull(settings2);
-        Assert.assertEquals(settings1, settings2);
-        final SchemaSettingsDefinition settings =
-            SchemaSettingsDefinition.of().backupDirectoryPath(backupDir.getAbsolutePath()).build();
-        final SchemaSettingsDefinition settings3 = service.createUpdateSchema(settings);
-        Assert.assertEquals(settings, settings3);
-        Assert.assertEquals(200, getIndexService().getSchema(service.getSchemaName()).getStatus());
     }
 
     @Test
@@ -603,7 +596,7 @@ public abstract class JavaAbstractTest {
 
         // Let's first create an empty index (without master)
         final IndexStatus nonSlaveStatus =
-            getIndexService().createUpdateIndex(slave.getSchemaName(), slave.getIndexName(),
+            getIndexService().createUpdateIndex(slave.getIndexName(),
                 IndexSettingsDefinition.of().enableTaxonomyIndex(false).build());
         Assert.assertNotNull(nonSlaveStatus);
         Assert.assertNull(nonSlaveStatus.masterUuid);
@@ -616,7 +609,6 @@ public abstract class JavaAbstractTest {
         Assert.assertNotNull(indexStatus.indexUuid);
         Assert.assertNotNull(indexStatus.settings);
         Assert.assertNotNull(indexStatus.settings.master);
-        Assert.assertNotNull(indexStatus.settings.master.schema);
         Assert.assertNotNull(indexStatus.settings.master.index);
 
         // Second call to check setting comparison
@@ -650,14 +642,12 @@ public abstract class JavaAbstractTest {
     @Test
     public void test850backup() throws IOException, URISyntaxException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
-        final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> globalStatus =
+        final SortedMap<String, SortedMap<String, BackupStatus>> globalStatus =
             master.getBackups("*", true);
         Assert.assertNotNull(globalStatus);
-        final SortedMap<String, SortedMap<String, BackupStatus>> backupStatus = master.doBackup(BACKUP_NAME);
+        final SortedMap<String, BackupStatus> indexesStatus = master.doBackup(BACKUP_NAME);
         Assert.assertNotNull(globalStatus);
-        final SortedMap<String, BackupStatus> schemaStatus = backupStatus.get(master.getSchemaName());
-        Assert.assertNotNull(schemaStatus);
-        final BackupStatus indexBackupStatus = schemaStatus.get(master.getIndexName());
+        final BackupStatus indexBackupStatus = indexesStatus.get(master.getIndexName());
         Assert.assertNotNull(indexBackupStatus);
         Assert.assertNotNull(indexBackupStatus.date);
         Assert.assertNotNull(indexBackupStatus.filesCount);
@@ -766,7 +756,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test960DeleteBackup() throws URISyntaxException, IOException {
-        SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups =
+        SortedMap<String, SortedMap<String, BackupStatus>> backups =
             getMaster().getBackups("*", true);
         Assert.assertNotNull(backups);
         Assert.assertFalse(backups.isEmpty());
@@ -778,14 +768,10 @@ public abstract class JavaAbstractTest {
         Assert.assertTrue(backups.isEmpty());
     }
 
-    protected abstract File getIndexDirectory();
+    protected abstract Path getIndexDirectory();
 
-    private File getSchemaDir() {
-        return new File(getIndexDirectory(), AnnotatedRecord.SCHEMA_NAME);
-    }
-
-    private File getIndexDir(String name) {
-        return new File(getSchemaDir(), name);
+    private Path getIndexDir(String name) {
+        return getIndexDirectory().resolve(name);
     }
 
     @Test
@@ -800,24 +786,17 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test980DeleteIndex() throws URISyntaxException, IOException {
-        File indexSlave = getIndexDir(AnnotatedRecord.INDEX_NAME_SLAVE);
-        Assert.assertTrue(indexSlave.exists());
+        Path indexSlave = getIndexDir(AnnotatedRecord.INDEX_NAME_SLAVE);
+        Assert.assertTrue(Files.exists(indexSlave));
         getSlave().deleteIndex();
         checkErrorStatusCode(() -> getSlave().getIndexStatus(), 404);
-        Assert.assertFalse(indexSlave.exists());
+        Assert.assertFalse(Files.exists(indexSlave));
 
-        File indexMaster = getIndexDir(AnnotatedRecord.INDEX_NAME_MASTER);
-        Assert.assertTrue(indexMaster.exists());
+        Path indexMaster = getIndexDir(AnnotatedRecord.INDEX_NAME_MASTER);
+        Assert.assertTrue(Files.exists(indexMaster));
         getMaster().deleteIndex();
         checkErrorStatusCode(() -> getMaster().getIndexStatus(), 404);
-        Assert.assertFalse(indexMaster.exists());
-    }
-
-    @Test
-    public void test990DeleteSchema() throws URISyntaxException, IOException {
-        Assert.assertTrue(getSchemaDir().exists());
-        getMaster().deleteSchema();
-        Assert.assertFalse(getSchemaDir().exists());
+        Assert.assertFalse(Files.exists(indexMaster));
     }
 
 }

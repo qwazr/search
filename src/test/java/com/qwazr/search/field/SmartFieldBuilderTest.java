@@ -28,23 +28,21 @@ public class SmartFieldBuilderTest extends AbstractIndexTest {
 
     private static IndexServiceInterface indexService;
 
-    private final static String SCHEMA = "smartFieldTestSchema";
     private final static String INDEX = "smartFieldTestIndex";
 
     @BeforeClass
     public static void setup() {
         initIndexManager();
         indexService = indexManager.getService();
-        indexService.createUpdateSchema(SCHEMA);
-        indexService.createUpdateIndex(SCHEMA, INDEX);
+        indexService.createUpdateIndex(INDEX);
     }
 
     @Test
     public void testSetField() {
-        indexService.setField(SCHEMA, INDEX, "emptyField", SmartFieldDefinition.of().build());
-        indexService.setField(SCHEMA, INDEX, "doubleField",
+        indexService.setField(INDEX, "emptyField", SmartFieldDefinition.of().build());
+        indexService.setField(INDEX, "doubleField",
             SmartFieldDefinition.of().type(SmartFieldDefinition.Type.DOUBLE).build());
-        indexService.setField(SCHEMA, INDEX, "indexField", SmartFieldDefinition.of().index(true).build());
+        indexService.setField(INDEX, "indexField", SmartFieldDefinition.of().index(true).build());
     }
 
     @Test
@@ -53,7 +51,7 @@ public class SmartFieldBuilderTest extends AbstractIndexTest {
         fields.put("emptyField2", SmartFieldDefinition.of().build());
         fields.put("doubleField2", SmartFieldDefinition.of().type(SmartFieldDefinition.Type.DOUBLE).build());
         fields.put("indexField2", SmartFieldDefinition.of().index(true).build());
-        indexService.setFields(SCHEMA, INDEX, fields);
+        indexService.setFields(INDEX, fields);
 
     }
 }

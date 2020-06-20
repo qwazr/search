@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,32 +27,32 @@ import java.net.URISyntaxException;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonAutoDetect(creatorVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+    setterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public class RemoteIndex extends RemoteService {
 
-    final public String schema;
     final public String index;
 
     @JsonCreator
-    private RemoteIndex(@JsonProperty("scheme") String scheme, @JsonProperty("host") String host,
-                        @JsonProperty("port") Integer port, @JsonProperty("path") String path,
-                        @JsonProperty("timeout") Integer timeout, @JsonProperty("username") String username,
-                        @JsonProperty("password") String password, @JsonProperty("schema") String schema,
+    private RemoteIndex(@JsonProperty("scheme") String scheme,
+                        @JsonProperty("host") String host,
+                        @JsonProperty("port") Integer port,
+                        @JsonProperty("path") String path,
+                        @JsonProperty("timeout") Integer timeout,
+                        @JsonProperty("username") String username,
+                        @JsonProperty("password") String password,
                         @JsonProperty("index") String index) {
         super(scheme, host, port, path, timeout, username, password);
-        this.schema = schema;
         this.index = index;
     }
 
-    public RemoteIndex(final RemoteService.Builder builder, final String schema, final String index) {
+    public RemoteIndex(final RemoteService.Builder builder, final String index) {
         super(builder);
-        this.schema = schema;
         this.index = index;
     }
 
-    RemoteIndex(String schema, String index) {
-        this(null, null, null, null, null, null, null, schema, index);
+    RemoteIndex(String index) {
+        this(null, null, null, null, null, null, null, index);
     }
 
     /**
@@ -75,21 +75,21 @@ public class RemoteIndex extends RemoteService {
             final URI uri = URI.create(remoteIndexPattern);
 
             final String[] paths = StringUtils.split(uri.getPath(), '/');
-            if (paths.length != 3 || !IndexServiceInterface.PATH.equals(paths[0]))
+            if (paths.length != 2 || !IndexServiceInterface.PATH.equals(paths[0]))
                 throw new URISyntaxException(remoteIndexPattern,
-                        "The URL form should be: http://hostname/" + IndexServiceInterface.PATH + "/{schema}/{index}?" +
-                                TIMEOUT_PARAMETER + "={timeout}");
+                    "The URL form should be: http://hostname/" + IndexServiceInterface.PATH + "/{index}?" +
+                        TIMEOUT_PARAMETER + "={timeout}");
 
             final RemoteService.Builder builder = RemoteService.of(uri);
             builder.setPath(null);
-            return new RemoteIndex(builder, paths[1], paths[2]);
+            return new RemoteIndex(builder, paths[1]);
         } else {
             final String[] paths = StringUtils.split(remoteIndexPattern, '/');
-            if (paths.length == 2)
-                return new RemoteIndex(paths[0], paths[1]);
+            if (paths.length == 1)
+                return new RemoteIndex(paths[0]);
         }
         throw new IllegalArgumentException(
-                "The index pattern should be in the local form {schema}/{index}, or using an URL");
+            "The index pattern should be in the local form {index}, or using an URL");
     }
 
 }

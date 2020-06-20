@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,51 +27,51 @@ import java.util.concurrent.ExecutorService;
 
 class IndexContextImpl implements IndexContext, Closeable {
 
-	final ExecutorService executorService;
-	final Analyzer queryAnalyzers;
-	final Analyzer indexAnalyzers;
-	final FieldMap fieldMap;
-	final ResourceLoader resourceLoader;
-	final IndexInstance.Provider indexProvider;
+    final ExecutorService executorService;
+    final Analyzer queryAnalyzers;
+    final Analyzer indexAnalyzers;
+    final FieldMap fieldMap;
+    final ResourceLoader resourceLoader;
+    final IndexInstance.Provider indexProvider;
 
-	IndexContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
-			final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
-			final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap) {
-		this.indexProvider = indexProvider;
-		this.resourceLoader = resourceLoader;
-		this.executorService = executorService;
-		this.queryAnalyzers = queryAnalyzers == null ? null : queryAnalyzers.getAnalyzers();
-		this.indexAnalyzers = indexAnalyzers == null ? null : indexAnalyzers.getAnalyzers();
-		this.fieldMap = fieldMap;
-	}
+    IndexContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
+                     final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
+                     final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap) {
+        this.indexProvider = indexProvider == null ? i -> null : indexProvider;
+        this.resourceLoader = resourceLoader;
+        this.executorService = executorService;
+        this.queryAnalyzers = queryAnalyzers == null ? null : queryAnalyzers.getAnalyzers();
+        this.indexAnalyzers = indexAnalyzers == null ? null : indexAnalyzers.getAnalyzers();
+        this.fieldMap = fieldMap;
+    }
 
-	@Override
-	final public IndexInstance getIndex(final String indexName) {
-		return indexProvider == null ? null : indexProvider.getIndex(indexName);
-	}
+    @Override
+    final public IndexInstance getIndex(final String indexName) {
+        return indexProvider.get(indexName);
+    }
 
-	@Override
-	final public Analyzer getQueryAnalyzer() {
-		return queryAnalyzers;
-	}
+    @Override
+    final public Analyzer getQueryAnalyzer() {
+        return queryAnalyzers;
+    }
 
-	@Override
-	final public Analyzer getIndexAnalyzer() {
-		return indexAnalyzers;
-	}
+    @Override
+    final public Analyzer getIndexAnalyzer() {
+        return indexAnalyzers;
+    }
 
-	@Override
-	final public FacetsConfig getFacetsConfig(final String genericFieldName, final String concreteFieldName) {
-		return fieldMap.getFacetsConfig(genericFieldName, concreteFieldName);
-	}
+    @Override
+    final public FacetsConfig getFacetsConfig(final String genericFieldName, final String concreteFieldName) {
+        return fieldMap.getFacetsConfig(genericFieldName, concreteFieldName);
+    }
 
-	@Override
-	final public FacetsConfig getFacetsConfig(final Map<String, String> dimensions) {
-		return fieldMap.getFacetsConfig(dimensions);
-	}
+    @Override
+    final public FacetsConfig getFacetsConfig(final Map<String, String> dimensions) {
+        return fieldMap.getFacetsConfig(dimensions);
+    }
 
-	@Override
-	public void close() {
-		IOUtils.closeQuietly(queryAnalyzers, indexAnalyzers);
-	}
+    @Override
+    public void close() {
+        IOUtils.closeQuietly(queryAnalyzers, indexAnalyzers);
+    }
 }

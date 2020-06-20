@@ -31,68 +31,68 @@ import java.util.UUID;
 
 class ReplicationSlave extends ReplicationClient {
 
-	private final File masterUuidFile;
-	private volatile UUID clientMasterUuid;
-	private final IndexServiceInterface indexService;
-	private final RemoteIndex master;
+    private final File masterUuidFile;
+    private volatile UUID clientMasterUuid;
+    private final IndexServiceInterface indexService;
+    private final RemoteIndex master;
 
-	ReplicationSlave(final File masterUuidFile, final IndexServiceInterface localService, final RemoteIndex master,
-			final SlaveNode slaveNode) throws IOException {
-		super(slaveNode);
-		this.masterUuidFile = masterUuidFile;
-		this.master = master;
-		this.indexService = master == null ? null : master.host == null ? localService : new IndexSingleClient(master);
-		getClientMasterUuid();
-	}
+    ReplicationSlave(final File masterUuidFile, final IndexServiceInterface localService, final RemoteIndex master,
+                     final SlaveNode slaveNode) throws IOException {
+        super(slaveNode);
+        this.masterUuidFile = masterUuidFile;
+        this.master = master;
+        this.indexService = master == null ? null : master.host == null ? localService : new IndexSingleClient(master);
+        getClientMasterUuid();
+    }
 
-	UUID getClientMasterUuid() throws IOException {
-		if (masterUuidFile.exists() && masterUuidFile.length() > 0)
-			clientMasterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
-		else
-			clientMasterUuid = null;
-		return clientMasterUuid;
-	}
+    UUID getClientMasterUuid() throws IOException {
+        if (masterUuidFile.exists() && masterUuidFile.length() > 0)
+            clientMasterUuid = UUID.fromString(IOUtils.readFileAsString(masterUuidFile));
+        else
+            clientMasterUuid = null;
+        return clientMasterUuid;
+    }
 
-	void setClientMasterUuid(final UUID remoteMasterUuid) throws IOException {
-		if (remoteMasterUuid.equals(clientMasterUuid))
-			return;
-		IOUtils.writeStringToFile(remoteMasterUuid.toString(), masterUuidFile);
-		clientMasterUuid = remoteMasterUuid;
-	}
+    void setClientMasterUuid(final UUID remoteMasterUuid) throws IOException {
+        if (remoteMasterUuid.equals(clientMasterUuid))
+            return;
+        IOUtils.writeStringToFile(remoteMasterUuid.toString(), masterUuidFile);
+        clientMasterUuid = remoteMasterUuid;
+    }
 
-	private IndexServiceInterface checkService() {
-		if (indexService == null)
-			throw new ServerException(Response.Status.NOT_ACCEPTABLE, "The remote master has not been set");
-		return indexService;
-	}
+    private IndexServiceInterface checkService() {
+        if (indexService == null)
+            throw new ServerException(Response.Status.NOT_ACCEPTABLE, "The remote master has not been set");
+        return indexService;
+    }
 
-	@Override
-	public InputStream getItem(final String sessionId, final ReplicationProcess.Source source, final String file) {
-		return checkService().replicationObtain(master.schema, master.index, sessionId, source.name(), file);
-	}
+    @Override
+    public InputStream getItem(final String sessionId, final ReplicationProcess.Source source, final String file) {
+        return checkService().replicationObtain(master.index, sessionId, source.name(), file);
+    }
 
-	ReplicationStatus replicate(final Switcher switcher) throws IOException {
-		final ReplicationSession session = checkService().replicationUpdate(master.schema, master.index, null);
-		try {
-			return replicate(session, getClientMasterUuid(), switcher);
-		} finally {
-			checkService().replicationRelease(master.schema, master.index, session.sessionUuid);
-		}
-	}
+    ReplicationStatus replicate(final Switcher switcher) throws IOException {
+        final ReplicationSession session = checkService().replicationUpdate(master.index, null);
+        try {
+            return replicate(session, getClientMasterUuid(), switcher);
+        } finally {
+            checkService().replicationRelease(master.index, session.sessionUuid);
+        }
+    }
 
-	static ReplicationSlave withIndexAndTaxo(final IndexFileSet fileSet, final IndexServiceInterface localService,
-			final RemoteIndex master, final Directory dataDirectory, final Directory taxonomyDirectory)
-			throws IOException {
-		return new ReplicationSlave(fileSet.uuidMasterFile, localService, master,
-				new SlaveNode.WithIndexAndTaxo(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
-						taxonomyDirectory, fileSet.taxonomyDirectory, fileSet.replWorkPath, fileSet.mainDirectory));
-	}
+    static ReplicationSlave withIndexAndTaxo(final IndexFileSet fileSet, final IndexServiceInterface localService,
+                                             final RemoteIndex master, final Directory dataDirectory, final Directory taxonomyDirectory)
+        throws IOException {
+        return new ReplicationSlave(fileSet.uuidMasterFile, localService, master,
+            new SlaveNode.WithIndexAndTaxo(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
+                taxonomyDirectory, fileSet.taxonomyDirectory, fileSet.replWorkPath, fileSet.mainDirectory));
+    }
 
-	static ReplicationSlave withIndex(final IndexFileSet fileSet, final IndexServiceInterface localService,
-			final RemoteIndex master, final Directory dataDirectory) throws IOException {
-		return new ReplicationSlave(fileSet.uuidMasterFile, localService, master,
-				new SlaveNode.WithIndex(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
-						fileSet.replWorkPath, fileSet.mainDirectory));
-	}
+    static ReplicationSlave withIndex(final IndexFileSet fileSet, final IndexServiceInterface localService,
+                                      final RemoteIndex master, final Directory dataDirectory) throws IOException {
+        return new ReplicationSlave(fileSet.uuidMasterFile, localService, master,
+            new SlaveNode.WithIndex(fileSet.resourcesDirectoryPath, dataDirectory, fileSet.dataDirectory,
+                fileSet.replWorkPath, fileSet.mainDirectory));
+    }
 
 }

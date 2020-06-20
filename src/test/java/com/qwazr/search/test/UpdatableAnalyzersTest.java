@@ -111,7 +111,7 @@ public class UpdatableAnalyzersTest {
         Assert.assertEquals(0, updatableAnalyzers.getActiveAnalyzers());
     }
 
-    @Index(name = "index", schema = "schema")
+    @Index(name = "index")
     public static class IndexRecord {
 
         @IndexField(name = FieldDefinition.ID_FIELD, template = StringField, stored = true)
@@ -133,9 +133,7 @@ public class UpdatableAnalyzersTest {
     }
 
     @Test
-    public void replication() throws IOException, URISyntaxException, InterruptedException, ExecutionException {
-
-        final String SCHEMA = "schema";
+    public void replication() throws IOException, URISyntaxException {
 
         final Path path = Files.createTempDirectory("updatable-replication");
 
@@ -144,22 +142,21 @@ public class UpdatableAnalyzersTest {
 
         // Get the master index service
         final AnnotatedIndexService<IndexRecord> master =
-                new AnnotatedIndexService<>(service, IndexRecord.class, SCHEMA, "master", null);
-        master.createUpdateSchema();
+            new AnnotatedIndexService<>(service, IndexRecord.class, "master", null);
         master.createUpdateIndex();
         master.createUpdateFields();
 
         // Get the slave index
         final AnnotatedIndexService<IndexRecord> slave =
-                new AnnotatedIndexService<>(service, IndexRecord.class, SCHEMA, "slave",
-                        IndexSettingsDefinition.of().master("schema/master").build());
+            new AnnotatedIndexService<>(service, IndexRecord.class, "slave",
+                IndexSettingsDefinition.of().master("master").build());
         slave.createUpdateIndex();
         slave.createUpdateFields();
 
         checkActiveAnalyzers(1, master, slave);
 
         final QueryDefinition query =
-                QueryDefinition.of(QueryParser.of("title").setQueryString("a").build()).returnedField("*").build();
+            QueryDefinition.of(QueryParser.of("title").setQueryString("a").build()).returnedField("*").build();
 
         master.postDocument(new IndexRecord());
         master.searchQuery(query);

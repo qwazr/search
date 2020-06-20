@@ -23,15 +23,14 @@ import com.qwazr.search.annotations.Index;
 import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.similarities.Similarity;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.Objects;
 import java.util.function.Supplier;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.similarities.Similarity;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonAutoDetect(
@@ -119,6 +118,12 @@ public class IndexSettingsDefinition extends Equalizer.Immutable<IndexSettingsDe
     @JsonProperty("nrt_caching_directory_max_cached_mb")
     final public Double nrtCachingDirectoryMaxCachedMB;
 
+    @JsonProperty("max_concurrent_write")
+    final public Integer maxConcurrentWrite;
+
+    @JsonProperty("max_concurrent_read")
+    final public Integer maxConcurrentRead;
+
     @JsonCreator
     private IndexSettingsDefinition(
         @JsonProperty("primary_key") final String primaryKey,
@@ -141,7 +146,9 @@ public class IndexSettingsDefinition extends Equalizer.Immutable<IndexSettingsDe
         @JsonProperty("index_reader_warmer") final Boolean indexReaderWarmer,
         @JsonProperty("merged_segment_warmer") final Boolean mergedSegmentWarmer,
         @JsonProperty("nrt_caching_directory_max_merge_size_mb") final Double nrtCachingDirectoryMaxMergeSizeMB,
-        @JsonProperty("nrt_caching_directory_max_cached_mb") final Double nrtCachingDirectoryMaxCachedMB) {
+        @JsonProperty("nrt_caching_directory_max_cached_mb") final Double nrtCachingDirectoryMaxCachedMB,
+        @JsonProperty("max_concurrent_write") final Integer maxConcurrentWrite,
+        @JsonProperty("max_concurrent_read") final Integer maxConcurrentRead) {
         super(IndexSettingsDefinition.class);
         this.primaryKey = primaryKey;
         this.directoryType = directoryType;
@@ -164,6 +171,8 @@ public class IndexSettingsDefinition extends Equalizer.Immutable<IndexSettingsDe
         this.mergedSegmentWarmer = mergedSegmentWarmer;
         this.nrtCachingDirectoryMaxMergeSizeMB = nrtCachingDirectoryMaxMergeSizeMB;
         this.nrtCachingDirectoryMaxCachedMB = nrtCachingDirectoryMaxCachedMB;
+        this.maxConcurrentWrite = maxConcurrentWrite;
+        this.maxConcurrentRead = maxConcurrentRead;
     }
 
     private IndexSettingsDefinition(final Builder builder) {
@@ -189,6 +198,8 @@ public class IndexSettingsDefinition extends Equalizer.Immutable<IndexSettingsDe
         this.mergedSegmentWarmer = builder.mergedSegmentWarmer;
         this.nrtCachingDirectoryMaxMergeSizeMB = builder.nrtCachingDirectoryMaxMergeSizeMB;
         this.nrtCachingDirectoryMaxCachedMB = builder.nrtCachingDirectoryMaxCachedMB;
+        this.maxConcurrentWrite = builder.maxConcurrentWrite;
+        this.maxConcurrentRead = builder.maxConcurrentRead;
     }
 
     final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition(new Builder());
@@ -291,6 +302,8 @@ public class IndexSettingsDefinition extends Equalizer.Immutable<IndexSettingsDe
         private Boolean mergedSegmentWarmer;
         private Double nrtCachingDirectoryMaxMergeSizeMB;
         private Double nrtCachingDirectoryMaxCachedMB;
+        private Integer maxConcurrentWrite;
+        private Integer maxConcurrentRead;
 
         private Builder() {
         }
@@ -316,6 +329,8 @@ public class IndexSettingsDefinition extends Equalizer.Immutable<IndexSettingsDe
             mergedSegmentWarmer(annotatedIndex.mergedSegmentWarmer());
             nrtCachingDirectoryMaxMergeSizeMB(annotatedIndex.nrtCachingDirectoryMaxMergeSizeMB());
             nrtCachingDirectoryMaxCachedMB(annotatedIndex.nrtCachingDirectoryMaxCachedMB());
+            maxConcurrentWrite(annotatedIndex.maxConcurrentWrite());
+            maxConcurrentRead(annotatedIndex.maxConcurrentRead());
         }
 
         private Builder(final IndexSettingsDefinition settings) {
@@ -340,6 +355,8 @@ public class IndexSettingsDefinition extends Equalizer.Immutable<IndexSettingsDe
             this.mergedSegmentWarmer = settings.mergedSegmentWarmer;
             this.nrtCachingDirectoryMaxMergeSizeMB = settings.nrtCachingDirectoryMaxMergeSizeMB;
             this.nrtCachingDirectoryMaxCachedMB = settings.nrtCachingDirectoryMaxCachedMB;
+            this.maxConcurrentWrite = settings.maxConcurrentWrite;
+            this.maxConcurrentRead = settings.maxConcurrentRead;
         }
 
         public Builder primaryKey(final String primaryKey) {
@@ -387,11 +404,6 @@ public class IndexSettingsDefinition extends Equalizer.Immutable<IndexSettingsDe
 
         public Builder master(final RemoteIndex master) {
             this.master = master;
-            return this;
-        }
-
-        public Builder master(final String schema, final String index) {
-            this.master = new RemoteIndex(schema, index);
             return this;
         }
 
@@ -457,6 +469,16 @@ public class IndexSettingsDefinition extends Equalizer.Immutable<IndexSettingsDe
 
         public Builder nrtCachingDirectoryMaxCachedMB(final Double nrtCachingDirectoryMaxCachedMB) {
             this.nrtCachingDirectoryMaxCachedMB = nrtCachingDirectoryMaxCachedMB;
+            return this;
+        }
+
+        public Builder maxConcurrentWrite(final int maxConcurrentWrite) {
+            this.maxConcurrentWrite = maxConcurrentWrite;
+            return this;
+        }
+
+        public Builder maxConcurrentRead(final int maxConcurrentRead) {
+            this.maxConcurrentRead = maxConcurrentRead;
             return this;
         }
 

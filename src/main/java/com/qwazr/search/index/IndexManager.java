@@ -18,48 +18,50 @@ package com.qwazr.search.index;
 import com.qwazr.search.analysis.AnalyzerFactory;
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.ExceptionUtils;
+import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.concurrent.BiConsumerEx;
+import com.qwazr.utils.concurrent.ReadWriteLock;
+import com.qwazr.utils.concurrent.ReadWriteSemaphores;
 import com.qwazr.utils.reflection.ConstructorParameters;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
-import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.lucene.search.Sort;
-
-import javax.ws.rs.core.Response.Status;
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.core.Response;
+import org.apache.lucene.search.Sort;
 
-public class IndexManager extends ConstructorParametersImpl implements Closeable {
+public class IndexManager extends ConstructorParametersImpl implements IndexInstance.Provider, Closeable {
 
-    public final static String INDEXES_DIRECTORY = "index";
+    public final static String INDEXES_DIRECTORY = "indexes";
+    public final static String BACKUPS_DIRECTORY = "backups";
 
-    private static final Logger LOGGER = LoggerUtils.getLogger(IndexManager.class);
+    private final ReadWriteSemaphores readWriteSemaphores;
 
-    private final Lock shemaLock;
+    private final ConcurrentHashMap<String, IndexInstanceManager> indexMap;
 
-    private final ConcurrentHashMap<String, SchemaInstance> schemaMap;
+    private final Path indexesDirectory;
 
-    private final File rootDirectory;
+    private final Path backupRootDirectory;
+    private final ReadWriteLock backupLock = ReadWriteLock.reentrant(true);
+
+    private volatile SortedMap<String, UUID> indexSortedMap;
 
     private final IndexServiceInterface service;
 
@@ -71,44 +73,50 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
 
     public IndexManager(final Path indexesDirectory,
                         final ExecutorService executorService,
-                        final ConstructorParameters constructorParameters) {
+                        final ConstructorParameters constructorParameters,
+                        final Path backupRootDirectory) {
         super(constructorParameters == null ? new ConcurrentHashMap<>() : constructorParameters.getMap());
-        this.rootDirectory = indexesDirectory.toFile();
+        this.indexesDirectory = indexesDirectory;
         this.executorService = executorService;
+        this.backupRootDirectory = backupRootDirectory;
+        this.readWriteSemaphores = new ReadWriteSemaphores(null, null);
 
         service = new IndexServiceImpl(this);
-        schemaMap = new ConcurrentHashMap<>();
-        shemaLock = new ReentrantLock(true);
+        indexMap = new ConcurrentHashMap<>();
         similarityFactoryMap = new ConcurrentHashMap<>();
         sortMap = new ConcurrentHashMap<>();
         analyzerFactoryMap = new ConcurrentHashMap<>();
 
-        final File[] directories = rootDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
-        if (directories == null)
-            return;
-        for (File schemaDirectory : directories) {
-            try {
-                schemaMap.put(schemaDirectory.getName(),
-                    new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, sortMap, service,
-                        schemaDirectory, executorService));
-            } catch (ServerException | IOException e) {
-                LOGGER.log(Level.SEVERE, e, e::getMessage);
-            }
+        try (final Stream<Path> stream = Files.list(indexesDirectory)) {
+            stream.filter(path -> Files.isDirectory(path))
+                .forEach(indexPath -> indexMap.put(indexPath.toFile().getName(),
+                    new IndexInstanceManager(this, similarityFactoryMap, analyzerFactoryMap,
+                        sortMap, readWriteSemaphores, executorService, service, indexPath)));
+        } catch (IOException e) {
+            throw new InternalServerErrorException("Issue while reading the index directory: " + indexesDirectory, e);
         }
+        buildIndexNameMap();
     }
+
+    public IndexManager(final Path indexesDirectory,
+                        final ExecutorService executorService,
+                        final Path backupDirectoryPath) {
+        this(indexesDirectory, executorService, null, backupDirectoryPath);
+    }
+
 
     public IndexManager(final Path indexesDirectory,
                         final ExecutorService executorService) {
         this(indexesDirectory, executorService, null);
     }
 
-    public static Path checkIndexesDirectory(final Path dataDirectory) throws IOException {
-        final Path indexesDirectory = dataDirectory.resolve(INDEXES_DIRECTORY);
-        if (!Files.exists(indexesDirectory))
-            Files.createDirectory(indexesDirectory);
-        if (!Files.isDirectory(indexesDirectory))
-            throw new IOException("This name is not valid. No directory exists for this location: " + indexesDirectory);
-        return indexesDirectory;
+    public static Path checkSubDirectory(final Path dataDirectory, final String subDirectoryName) throws IOException {
+        final Path subDirectory = dataDirectory.resolve(subDirectoryName);
+        if (!Files.exists(subDirectory))
+            Files.createDirectory(subDirectory);
+        if (!Files.isDirectory(subDirectory))
+            throw new IOException("This name is not valid. No directory exists for this location: " + subDirectory);
+        return subDirectory;
     }
 
     public IndexManager registerSimilarityFactory(final String name, final SimilarityFactory factory) {
@@ -131,128 +139,232 @@ public class IndexManager extends ConstructorParametersImpl implements Closeable
     }
 
     final public <T> AnnotatedIndexService<T> getService(final Class<T> indexClass) throws URISyntaxException {
-        return getService(indexClass, null, null, null);
+        return getService(indexClass, null, null);
     }
 
     final public <T> AnnotatedIndexService<T> getService(final Class<T> indexClass,
-                                                         final String schemaName,
                                                          final String indexName,
                                                          final IndexSettingsDefinition settings)
         throws URISyntaxException {
-        return new AnnotatedIndexService<>(service, indexClass, schemaName, indexName, settings);
+        return new AnnotatedIndexService<>(service, indexClass, indexName, settings);
     }
 
     @Override
     public void close() {
-        shemaLock.lock();
-        try {
-            schemaMap.values().forEach(IOUtils::closeQuietly);
-        } finally {
-            shemaLock.unlock();
-        }
+        indexMap.values().forEach(IOUtils::closeQuietly);
     }
 
-    SchemaSettingsDefinition createUpdate(final String schemaName, final SchemaSettingsDefinition settings)
-        throws IOException {
-        shemaLock.lock();
-        try {
-            final SchemaInstance schemaInstance = schemaMap.computeIfAbsent(schemaName, sc -> ExceptionUtils.bypass(
-                () -> new SchemaInstance(this, similarityFactoryMap, analyzerFactoryMap, sortMap, service,
-                    new File(rootDirectory, schemaName), executorService)));
-            if (settings != null)
-                schemaInstance.setSettings(settings);
-            return schemaInstance.getSettings();
-        } finally {
-            shemaLock.unlock();
-        }
+    IndexInstance createUpdate(final String indexName, final IndexSettingsDefinition settings) {
+        Objects.requireNonNull(settings, "The settings cannot be null");
+        final IndexInstanceManager indexInstanceManager = indexMap.computeIfAbsent(indexName,
+            name -> new IndexInstanceManager(this, similarityFactoryMap, analyzerFactoryMap,
+                sortMap, readWriteSemaphores, executorService, service, indexesDirectory.resolve(name)));
+        buildIndexNameMap();
+        return indexInstanceManager.createUpdate(settings);
+    }
+
+    private IndexInstanceManager checkIndexExists(final String indexName,
+                                                  final IndexInstanceManager indexInstanceManager) {
+        if (indexInstanceManager == null)
+            throw new ServerException(Response.Status.NOT_FOUND, "Index not found: " + indexName);
+        return indexInstanceManager;
     }
 
     /**
-     * Returns the indexSchema. If the schema does not exist, an exception it
+     * Returns the indexInstance. If the index does not exists, an exception it
      * thrown. This method never returns a null value.
      *
-     * @param schemaName The name of the index
-     * @return the indexSchema
-     * @throws ServerException if any error occurs
+     * @param indexName The name of the index
+     * @return the indexInstance
      */
-    SchemaInstance get(final String schemaName) {
-        final SchemaInstance schemaInstance = schemaMap.get(schemaName);
-        if (schemaInstance == null)
-            throw new ServerException(Status.NOT_FOUND, "Schema not found: " + schemaName);
-        return schemaInstance;
-    }
-
-    void delete(final String schemaName) {
-        shemaLock.lock();
+    public IndexInstance get(final String indexName) {
+        final IndexInstanceManager indexInstanceManager = checkIndexExists(indexName, indexMap.get(indexName));
         try {
-            final SchemaInstance schemaInstance = get(schemaName);
-            schemaInstance.delete();
-            schemaMap.remove(schemaName);
-        } finally {
-            shemaLock.unlock();
+            final IndexInstance indexInstance = indexInstanceManager.getIndexInstance();
+            if (indexInstance != null)
+                return indexInstance;
+            return indexInstanceManager.open();
+        } catch (Exception e) {
+            throw ServerException.of(e);
         }
     }
 
-    Set<String> nameSet() {
-        shemaLock.lock();
-        try {
-            return new TreeSet<>(schemaMap.keySet());
-        } finally {
-            shemaLock.unlock();
-        }
+    void delete(final String indexName) throws ServerException {
+        indexMap.compute(indexName, (name, indexInstanceManager) -> {
+            checkIndexExists(indexName, indexInstanceManager).delete();
+            return null;
+        });
+        buildIndexNameMap();
     }
 
-    private void schemaIterator(final String schemaName,
-                                final BiConsumerEx<String, SchemaInstance, IOException> consumer) throws IOException {
-        shemaLock.lock();
+    private synchronized void buildIndexNameMap() {
+        final TreeMap<String, UUID> map = new TreeMap<>();
+        indexMap.forEach((name, index) -> map.put(name, index.getIndexUuid()));
+        indexSortedMap = Collections.unmodifiableSortedMap(map);
+    }
+
+    Map<String, UUID> getIndexMap() {
+        return indexSortedMap;
+    }
+
+    final private static Pattern backupNameMatcher = Pattern.compile("[^a-zA-Z0-9-_]");
+
+    private void checkBackupConfig() throws IOException {
+        if (backupRootDirectory == null)
+            throw new IOException("The backup root directory is not set");
+        if (Files.notExists(backupRootDirectory) || !Files.isDirectory(backupRootDirectory))
+            throw new IOException("The backup root directory does not exists: " + backupRootDirectory);
+    }
+
+    private Path getBackupDirectory(final String backupName, boolean createIfNotExists) throws IOException {
+        if (StringUtils.isEmpty(backupName))
+            throw new IOException("The backup name is empty");
+        if (backupNameMatcher.matcher(backupName).find())
+            throw new IOException(
+                "The backup name should only contains alphanumeric characters, dash, or underscore : " +
+                    backupName);
+        final Path backupDirectory = backupRootDirectory.resolve(backupName);
+        if (createIfNotExists && Files.notExists(backupDirectory))
+            Files.createDirectory(backupDirectory);
+        return backupDirectory;
+    }
+
+    private void indexIterator(final String indexName, final BiConsumer<String, IndexInstance> consumer) {
+        if ("*".equals(indexName)) {
+            indexMap.forEach((name, indexInstanceManager) -> {
+                try {
+                    consumer.accept(name, indexInstanceManager.open());
+                } catch (Exception e) {
+                    throw ServerException.of(e);
+                }
+            });
+        } else
+            consumer.accept(indexName, get(indexName));
+    }
+
+    SortedMap<String, BackupStatus> backups(final String indexName, final String backupName) throws IOException {
+        return backupLock.writeEx(() -> {
+            checkBackupConfig();
+            final Path backupDirectory = getBackupDirectory(backupName, true);
+            final SortedMap<String, BackupStatus> results = Collections.synchronizedSortedMap(new TreeMap<>());
+            indexIterator(indexName, (idxName, indexInstance) -> {
+                try {
+                    results.put(idxName, indexInstance.backup(backupDirectory.resolve(idxName)));
+                } catch (IOException e) {
+                    throw ServerException.of(e);
+                }
+            });
+            return results;
+        });
+    }
+
+    private void backupIterator(final String backupName, final Consumer<Path> consumer) {
+        if (Files.notExists(backupRootDirectory) || !Files.isDirectory(backupRootDirectory))
+            return;
         try {
-            if ("*".equals(schemaName)) {
-                for (Map.Entry<String, SchemaInstance> entry : schemaMap.entrySet())
-                    consumer.accept(entry.getKey(), entry.getValue());
+            if ("*".equals(backupName)) {
+                try (final Stream<Path> stream = Files.list(backupRootDirectory)) {
+                    stream.filter(path -> Files.isDirectory(path)).forEach(consumer);
+                }
             } else
-                consumer.accept(schemaName, get(schemaName));
-        } finally {
-            shemaLock.unlock();
+                consumer.accept(getBackupDirectory(backupName, false));
+        } catch (IOException e) {
+            throw ServerException.of(e);
         }
     }
 
-    SortedMap<String, SortedMap<String, BackupStatus>> backups(final String schemaName,
-                                                               final String indexName,
-                                                               final String backupName) throws IOException {
-        final SortedMap<String, SortedMap<String, BackupStatus>> results = new TreeMap<>();
-        schemaIterator(schemaName, (schName, schemaInstance) -> {
-            synchronized (results) {
-                if ("*".equals(schemaName) && StringUtils.isEmpty(schemaInstance.getSettings().backupDirectoryPath))
-                    return;
-                final SortedMap<String, BackupStatus> schemaResults = schemaInstance.backups(indexName, backupName);
-                if (schemaResults != null && !schemaResults.isEmpty())
-                    results.put(schName, schemaResults);
-            }
+    SortedMap<String, SortedMap<String, BackupStatus>> getBackups(final String indexName,
+                                                                  final String backupName,
+                                                                  final boolean extractVersion) {
+        return backupLock.read(() -> {
+            checkBackupConfig();
+            final SortedMap<String, SortedMap<String, BackupStatus>> results =
+                Collections.synchronizedSortedMap(new TreeMap<>());
+
+            backupIterator(backupName, backupDirectory -> {
+
+                final SortedMap<String, BackupStatus> backupResults =
+                    Collections.synchronizedSortedMap(new TreeMap<>());
+
+                indexIterator(indexName, (idxName, indexInstance) -> {
+                    try {
+                        final Path backupIndexDirectory = backupDirectory.resolve(idxName);
+                        if (Files.exists(backupIndexDirectory) && Files.isDirectory(backupIndexDirectory))
+                            backupResults.put(idxName, indexInstance.getBackup(backupIndexDirectory, extractVersion));
+                    } catch (IOException e) {
+                        throw ServerException.of(e);
+                    }
+                });
+                if (!backupResults.isEmpty())
+                    results.put(backupDirectory.toFile().getName(), backupResults);
+            });
+            return results;
         });
-        return results;
     }
 
-    SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String schemaName,
-                                                                                     final String indexName,
-                                                                                     final String backupName,
-                                                                                     final boolean extractVersion) throws IOException {
-        final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> results = new TreeMap<>();
-        schemaIterator(schemaName, (schName, schemaInstance) -> {
-            synchronized (results) {
-                final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults =
-                    schemaInstance.getBackups(indexName, backupName, extractVersion);
-                if (schemaResults != null && !schemaResults.isEmpty())
-                    results.put(schName, schemaResults);
+    private void backupIndexDirectoryIterator(final Path backupDirectory,
+                                              final String indexName,
+                                              final Consumer<Path> consumer) {
+        if (Files.notExists(backupRootDirectory) || !Files.isDirectory(backupRootDirectory))
+            return;
+        if ("*".equals(indexName)) {
+            try {
+                if (Files.exists(backupDirectory)) {
+                    try (final Stream<Path> stream = Files.list(backupDirectory)) {
+                        stream.filter(path -> Files.isDirectory(path)).forEach(consumer);
+                    }
+                }
+            } catch (IOException e) {
+                throw ServerException.of(e);
             }
+        } else {
+            final Path indexPath = backupDirectory.resolve(indexName);
+            if (Files.exists(indexPath))
+                consumer.accept(indexPath);
+        }
+    }
+
+    int deleteBackups(final String indexName, final String backupName) {
+        return backupLock.write(() -> {
+            checkBackupConfig();
+            final AtomicInteger counter = new AtomicInteger();
+
+            backupIterator(backupName, backupDirectory -> backupIndexDirectoryIterator(backupDirectory, indexName,
+                backupIndexDirectory -> {
+
+                    try {
+
+                        final IndexInstance indexInstance =
+                            get(backupIndexDirectory.getFileName().toString());
+                        if (indexInstance != null)
+                            indexInstance.deleteBackup(backupIndexDirectory);
+                        else
+                            FileUtils.deleteDirectory(backupIndexDirectory);
+
+                        counter.incrementAndGet();
+
+                        if (Files.exists(backupDirectory)) {
+                            try (final Stream<Path> stream = Files.list(backupDirectory)) {
+                                if (stream.count() == 0)
+                                    Files.deleteIfExists(backupDirectory);
+                            }
+                        }
+                    } catch (IOException e) {
+                        throw ServerException.of(e);
+                    }
+
+                }));
+            return counter.get();
         });
-        return results;
     }
 
-    int deleteBackups(final String schemaName, final String indexName, final String backupName) throws IOException {
-        final AtomicInteger counter = new AtomicInteger();
-        schemaIterator(schemaName,
-            (schName, schemaInstance) -> counter.addAndGet(schemaInstance.deleteBackups(indexName, backupName)));
-        return counter.get();
+    IndexCheckStatus checkIndex(final String indexName) throws Exception {
+        final IndexInstanceManager indexInstanceManager = indexMap.get(indexName);
+        return indexInstanceManager == null ? null : new IndexCheckStatus(indexInstanceManager.check());
     }
 
+    IndexStatus mergeIndex(final String indexName, final String mergedIndexName,
+                           final Map<String, String> commitUserData) throws IOException {
+        return get(indexName).merge(get(mergedIndexName), commitUserData);
+    }
 }

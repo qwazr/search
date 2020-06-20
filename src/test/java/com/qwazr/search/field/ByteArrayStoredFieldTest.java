@@ -1,3 +1,18 @@
+/*
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.qwazr.search.field;
 
 import com.qwazr.search.annotations.AnnotatedIndexService;
@@ -21,13 +36,13 @@ public class ByteArrayStoredFieldTest extends AbstractIndexTest.WithIndexRecord<
     }
 
     @Test
-    public void shouldLoadByteArray() throws URISyntaxException, IOException, InterruptedException {
+    public void shouldLoadByteArray() throws URISyntaxException, IOException {
         AnnotatedIndexService<ByteArrayRecord> indexService;
         indexService = initIndexService(ByteArrayRecord.class);
         indexService.postDocument(new ByteArrayRecord("1", new byte[]{109, 97, 114, 116, 105, 110, 101}));
         ResultDefinition.WithObject<ByteArrayRecord> result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
-                .returnedField("*")
-                .build());
+            .returnedField("*")
+            .build());
         checkResult(result, 1L);
         Byte[] loadedData = result.documents.get(0).record.data;
         Assert.assertEquals(loadedData[0].byteValue(), 109);
@@ -39,13 +54,18 @@ public class ByteArrayStoredFieldTest extends AbstractIndexTest.WithIndexRecord<
         Assert.assertEquals(loadedData[6].byteValue(), 101);
     }
 
-    @Index(schema = "TestQueries", name = "ByteArrayRecord", useCompoundFile = false)
+    @Index(name = "ByteArrayRecord", useCompoundFile = false)
     public static class ByteArrayRecord extends IndexRecord<ByteArrayRecord> {
 
         @IndexField(name = "data", template = FieldDefinition.Template.StoredField, stored = true)
         Byte[] data;
 
         public ByteArrayRecord() {
+        }
+
+        @Override
+        protected ByteArrayRecord me() {
+            return this;
         }
 
         public ByteArrayRecord(final String id, final byte[] data) {

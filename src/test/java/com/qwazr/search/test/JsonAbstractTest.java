@@ -31,30 +31,20 @@ import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ReplicationStatus;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentMap;
-import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.index.TermDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.QueryParser;
 import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.search.similarity.CustomSimilarity;
+import static com.qwazr.search.test.JavaAbstractTest.checkCollector;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.concurrent.RunnableEx;
-import org.apache.commons.io.output.NullOutputStream;
-import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -70,16 +60,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.qwazr.search.test.JavaAbstractTest.checkCollector;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import org.apache.commons.io.output.NullOutputStream;
+import org.junit.Assert;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class JsonAbstractTest {
 
-    public static final String SCHEMA_NAME = "schema-test-json";
-    public static final String SCHEMA_DUMMY_NAME = "schema-dummy";
     public static final String INDEX_DUMMY_NAME = "index-dummy";
-    public static final String SCHEMA_ERROR_NAME = "test_error_schema";
     public static final String INDEX_ERROR_NAME = "test_error_index";
     public static final String INDEX_MASTER_NAME = "index-test-master-json";
     public static final String INDEX_TEST_NAME = "index-test-json";
@@ -135,46 +127,11 @@ public abstract class JsonAbstractTest {
     @Test
     public void test020CheckErrorIndex() throws URISyntaxException {
         IndexServiceInterface client = getClient();
-        client.createUpdateSchema(SCHEMA_ERROR_NAME, null);
-        Assert.assertNotNull(client.getIndex(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME));
-        FieldDefinition fieldDef = client.getField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description");
+        Assert.assertNotNull(client.getIndex(INDEX_ERROR_NAME));
+        FieldDefinition fieldDef = client.getField(INDEX_ERROR_NAME, "description");
         Assert.assertNotNull(fieldDef);
-        checkErrorStatusCode(() -> client.setField(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME, "description", fieldDef), 406);
-        Assert.assertNotNull(client.getIndex(SCHEMA_ERROR_NAME, INDEX_ERROR_NAME));
-    }
-
-    @Test
-    public void test050CreateSchema() throws URISyntaxException, IOException {
-        IndexServiceInterface client = getClient();
-        final File schemaBackupDir = Files.createTempDirectory("backup_dir").toFile();
-        final SchemaSettingsDefinition settings1 =
-            SchemaSettingsDefinition.of().backupDirectoryPath(schemaBackupDir.getAbsolutePath()).build();
-        SchemaSettingsDefinition settings2 = client.createUpdateSchema(SCHEMA_NAME, settings1);
-        Assert.assertNotNull(settings2);
-        Assert.assertEquals(settings1, settings2);
-    }
-
-    @Test
-    public void test055GetDummySchema() throws URISyntaxException {
-        IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.getIndexes(SCHEMA_DUMMY_NAME), 404);
-        checkErrorStatusCode(() -> client.getSchema(SCHEMA_DUMMY_NAME), 404);
-    }
-
-    @Test
-    public void test060UpdateSchema() throws URISyntaxException {
-        IndexServiceInterface client = getClient();
-        SchemaSettingsDefinition settings = client.createUpdateSchema(SCHEMA_NAME, null);
-        Assert.assertNotNull(settings);
-    }
-
-    @Test
-    public void test070ListSchema() throws URISyntaxException {
-        IndexServiceInterface client = getClient();
-        Set<String> schemas = client.getSchemas();
-        Assert.assertNotNull(schemas);
-        Assert.assertTrue(schemas.size() >= 2);
-        Assert.assertTrue(schemas.contains(SCHEMA_NAME));
+        checkErrorStatusCode(() -> client.setField(INDEX_ERROR_NAME, "description", fieldDef), 406);
+        Assert.assertNotNull(client.getIndex(INDEX_ERROR_NAME));
     }
 
     public static void checkErrorStatusCode(RunnableEx<?> runnable, int expectedStatusCode) {
@@ -235,21 +192,21 @@ public abstract class JsonAbstractTest {
     @Test
     public void test100CreateIndexWithoutSettings() throws URISyntaxException, IOException {
         IndexServiceInterface client = getClient();
-        IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_MASTER_NAME, null);
+        IndexStatus indexStatus = client.createUpdateIndex(INDEX_MASTER_NAME, null);
         Assert.assertNotNull(indexStatus);
-        checkErrorStatusCode(() -> client.getIndex(SCHEMA_NAME, INDEX_DUMMY_NAME), 404);
-        indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
+        checkErrorStatusCode(() -> client.getIndex(INDEX_DUMMY_NAME), 404);
+        indexStatus = client.getIndex(INDEX_MASTER_NAME);
         Assert.assertNotNull(indexStatus);
         Assert.assertEquals(Long.valueOf(0), indexStatus.numDocs);
         checkAllSizes(client, 0);
-        checkErrorStatusCode(() -> client.deleteIndex(SCHEMA_NAME, INDEX_DUMMY_NAME), 404);
-        client.deleteIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
+        checkErrorStatusCode(() -> client.deleteIndex(INDEX_DUMMY_NAME), 404);
+        client.deleteIndex(INDEX_MASTER_NAME);
     }
 
     @Test
     public void test105CreateIndexWithSettings() throws URISyntaxException, IOException {
         IndexServiceInterface client = getClient();
-        IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_MASTER_SETTINGS);
+        IndexStatus indexStatus = client.createUpdateIndex(INDEX_MASTER_NAME, INDEX_MASTER_SETTINGS);
         Assert.assertNotNull(indexStatus);
         Assert.assertNotNull(indexStatus.settings);
         Assert.assertNotNull(indexStatus.settings.similarityClass);
@@ -261,7 +218,7 @@ public abstract class JsonAbstractTest {
     @Test
     public void test107CreateIndexWithOtherSettings() throws URISyntaxException, IOException {
         IndexServiceInterface client = getClient();
-        IndexStatus indexStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_TEST_NAME, INDEX_TEST_SETTINGS);
+        IndexStatus indexStatus = client.createUpdateIndex(INDEX_TEST_NAME, INDEX_TEST_SETTINGS);
         Assert.assertNotNull(indexStatus);
         Assert.assertNotNull(indexStatus.settings);
         Assert.assertNull(indexStatus.settings.similarityClass);
@@ -286,14 +243,14 @@ public abstract class JsonAbstractTest {
     @Test
     public void test110putResource() throws IOException, URISyntaxException {
         IndexServiceInterface client = getClient();
-        Map<String, IndexInstance.ResourceInfo> resources = client.getResources(SCHEMA_NAME, INDEX_MASTER_NAME);
+        Map<String, IndexInstance.ResourceInfo> resources = client.getResources(INDEX_MASTER_NAME);
         Assert.assertNotNull(resources);
         Assert.assertEquals(0, resources.size());
         try (final InputStream input = JsonAbstractTest.class.getResourceAsStream(SYNONYMS_TXT)) {
             Assert.assertTrue(
-                client.postResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS_TXT, SYNONYM_LAST_MODIFIED, input));
+                client.postResource(INDEX_MASTER_NAME, SYNONYMS_TXT, SYNONYM_LAST_MODIFIED, input));
         }
-        try (final InputStream input = client.getResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS_TXT)) {
+        try (final InputStream input = client.getResource(INDEX_MASTER_NAME, SYNONYMS_TXT)) {
             Assert.assertNotNull(input);
             IOUtils.copy(input, NullOutputStream.NULL_OUTPUT_STREAM);
         }
@@ -304,13 +261,13 @@ public abstract class JsonAbstractTest {
         IndexServiceInterface client = getClient();
         try (final InputStream input = JsonAbstractTest.class.getResourceAsStream(SYNONYMS_TXT)) {
             Assert.assertTrue(
-                client.postResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS2_TXT, SYNONYM_LAST_MODIFIED, input));
+                client.postResource(INDEX_MASTER_NAME, SYNONYMS2_TXT, SYNONYM_LAST_MODIFIED, input));
         }
-        Map<String, IndexInstance.ResourceInfo> resources = client.getResources(SCHEMA_NAME, INDEX_MASTER_NAME);
+        Map<String, IndexInstance.ResourceInfo> resources = client.getResources(INDEX_MASTER_NAME);
         Assert.assertNotNull(resources);
         Assert.assertEquals(2, resources.size());
-        Assert.assertTrue(client.deleteResource(SCHEMA_NAME, INDEX_MASTER_NAME, SYNONYMS2_TXT));
-        resources = client.getResources(SCHEMA_NAME, INDEX_MASTER_NAME);
+        Assert.assertTrue(client.deleteResource(INDEX_MASTER_NAME, SYNONYMS2_TXT));
+        resources = client.getResources(INDEX_MASTER_NAME);
         Assert.assertNotNull(resources);
         Assert.assertEquals(1, resources.size());
     }
@@ -318,11 +275,11 @@ public abstract class JsonAbstractTest {
     @Test
     public void test120SetAnalyzers() throws URISyntaxException, IOException {
         IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.setAnalyzers(SCHEMA_NAME, INDEX_DUMMY_NAME, ANALYZERS_JSON), 404);
+        checkErrorStatusCode(() -> client.setAnalyzers(INDEX_DUMMY_NAME, ANALYZERS_JSON), 404);
         Map<String, AnalyzerDefinition> analyzers =
-            client.setAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME, ANALYZERS_JSON);
+            client.setAnalyzers(INDEX_MASTER_NAME, ANALYZERS_JSON);
         Assert.assertEquals(analyzers.size(), ANALYZERS_JSON.size());
-        IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
+        IndexStatus indexStatus = client.getIndex(INDEX_MASTER_NAME);
         Assert.assertNotNull(indexStatus.analyzers);
         Assert.assertEquals(indexStatus.analyzers.size(), ANALYZERS_JSON.size());
         checkAllSizes(client, 0);
@@ -331,9 +288,9 @@ public abstract class JsonAbstractTest {
     @Test
     public void test122DeleteFrenchAnalyzer() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.deleteAnalyzer(SCHEMA_NAME, INDEX_DUMMY_NAME, "FrenchAnalyzer"), 404);
-        client.deleteAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, "FrenchAnalyzer");
-        final Map<String, AnalyzerDefinition> analyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
+        checkErrorStatusCode(() -> client.deleteAnalyzer(INDEX_DUMMY_NAME, "FrenchAnalyzer"), 404);
+        client.deleteAnalyzer(INDEX_MASTER_NAME, "FrenchAnalyzer");
+        final Map<String, AnalyzerDefinition> analyzers = client.getAnalyzers(INDEX_MASTER_NAME);
         Assert.assertNotNull(analyzers);
         Assert.assertNull(analyzers.get("FrenchAnalyzer"));
     }
@@ -341,9 +298,9 @@ public abstract class JsonAbstractTest {
     @Test
     public void test124SetFrenchAnalyzer() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        client.setAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, "FrenchAnalyzer", ANALYZER_FRENCH_JSON);
-        checkErrorStatusCode(() -> client.getAnalyzers(SCHEMA_NAME, INDEX_DUMMY_NAME), 404);
-        final Map<String, AnalyzerDefinition> analyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
+        client.setAnalyzer(INDEX_MASTER_NAME, "FrenchAnalyzer", ANALYZER_FRENCH_JSON);
+        checkErrorStatusCode(() -> client.getAnalyzers(INDEX_DUMMY_NAME), 404);
+        final Map<String, AnalyzerDefinition> analyzers = client.getAnalyzers(INDEX_MASTER_NAME);
         Assert.assertNotNull(analyzers);
         Assert.assertNotNull(analyzers.get("FrenchAnalyzer"));
     }
@@ -351,8 +308,8 @@ public abstract class JsonAbstractTest {
     @Test
     public void test125GetFrenchAnalyzer() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.getAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, DUMMY_ANALYZER_NAME), 404);
-        final AnalyzerDefinition analyzer = client.getAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, "FrenchAnalyzer");
+        checkErrorStatusCode(() -> client.getAnalyzer(INDEX_MASTER_NAME, DUMMY_ANALYZER_NAME), 404);
+        final AnalyzerDefinition analyzer = client.getAnalyzer(INDEX_MASTER_NAME, "FrenchAnalyzer");
         Assert.assertNotNull(analyzer);
         Assert.assertEquals(analyzer.getFilters().size(), ANALYZER_FRENCH_JSON.getFilters().size());
         Assert.assertEquals(analyzer.getTokenizer().size(), ANALYZER_FRENCH_JSON.getTokenizer().size());
@@ -362,9 +319,9 @@ public abstract class JsonAbstractTest {
     public void test126TestFrenchAnalyzer() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(
-            () -> client.testAnalyzer(SCHEMA_NAME, INDEX_DUMMY_NAME, "FrenchAnalyzer", "Bonjour le monde!"), 404);
+            () -> client.testAnalyzer(INDEX_DUMMY_NAME, "FrenchAnalyzer", "Bonjour le monde!"), 404);
         final List<TermDefinition> termDefinitions =
-            client.testAnalyzer(SCHEMA_NAME, INDEX_MASTER_NAME, "FrenchAnalyzer", "Bonjour le monde!");
+            client.testAnalyzer(INDEX_MASTER_NAME, "FrenchAnalyzer", "Bonjour le monde!");
         Assert.assertNotNull(termDefinitions);
         Assert.assertEquals(3, termDefinitions.size());
         Assert.assertEquals("bonjou", termDefinitions.get(0).char_term);
@@ -373,7 +330,7 @@ public abstract class JsonAbstractTest {
     @Test
     public void test128TestAnalyzerDot() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        final String dot = client.testAnalyzerDot(SCHEMA_NAME, INDEX_MASTER_NAME, "EnglishSynonymAnalyzer",
+        final String dot = client.testAnalyzerDot(INDEX_MASTER_NAME, "EnglishSynonymAnalyzer",
             "The United States is wealthy!");
         Assert.assertNotNull(dot);
         Assert.assertTrue(dot.contains("united"));
@@ -384,10 +341,10 @@ public abstract class JsonAbstractTest {
     @Test
     public void test130SetFields() throws URISyntaxException, IOException {
         final IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.setFields(SCHEMA_NAME, INDEX_DUMMY_NAME, null), 404);
-        final Map<String, FieldDefinition> fields = client.setFields(SCHEMA_NAME, INDEX_MASTER_NAME, FIELDS_JSON);
+        checkErrorStatusCode(() -> client.setFields(INDEX_DUMMY_NAME, null), 404);
+        final Map<String, FieldDefinition> fields = client.setFields(INDEX_MASTER_NAME, FIELDS_JSON);
         Assert.assertEquals(fields.size(), FIELDS_JSON.size());
-        final IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final IndexStatus indexStatus = client.getIndex(INDEX_MASTER_NAME);
         Assert.assertNotNull(indexStatus.fields);
         Assert.assertEquals(indexStatus.fields.size(), FIELDS_JSON.size());
         checkAllSizes(client, 0);
@@ -396,10 +353,10 @@ public abstract class JsonAbstractTest {
     @Test
     public void test131GetField() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.getField(SCHEMA_NAME, INDEX_MASTER_NAME, DUMMY_FIELD_NAME), 404);
+        checkErrorStatusCode(() -> client.getField(INDEX_MASTER_NAME, DUMMY_FIELD_NAME), 404);
         FIELDS_JSON.forEach((fieldName, fieldDefinition) -> {
             CustomFieldDefinition fieldDef =
-                (CustomFieldDefinition) client.getField(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName);
+                (CustomFieldDefinition) client.getField(INDEX_MASTER_NAME, fieldName);
             Assert.assertEquals(fieldDef.template, ((CustomFieldDefinition) fieldDefinition).template);
             Assert.assertEquals(fieldDef.getAnalyzer(), fieldDefinition.getAnalyzer());
         });
@@ -409,9 +366,9 @@ public abstract class JsonAbstractTest {
     @Test
     public void test132DeleteNameField() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.deleteField(SCHEMA_NAME, INDEX_DUMMY_NAME, "name"), 404);
-        client.deleteField(SCHEMA_NAME, INDEX_MASTER_NAME, "name");
-        final Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
+        checkErrorStatusCode(() -> client.deleteField(INDEX_DUMMY_NAME, "name"), 404);
+        client.deleteField(INDEX_MASTER_NAME, "name");
+        final Map<String, FieldDefinition> fields = client.getFields(INDEX_MASTER_NAME);
         Assert.assertNotNull(fields);
         Assert.assertNull(fields.get("name"));
     }
@@ -419,9 +376,9 @@ public abstract class JsonAbstractTest {
     @Test
     public void test134SetNameField() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.setField(SCHEMA_NAME, INDEX_DUMMY_NAME, null, null), 404);
-        client.setField(SCHEMA_NAME, INDEX_MASTER_NAME, "name", FIELD_NAME_JSON);
-        final Map<String, FieldDefinition> fields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
+        checkErrorStatusCode(() -> client.setField(INDEX_DUMMY_NAME, null, null), 404);
+        client.setField(INDEX_MASTER_NAME, "name", FIELD_NAME_JSON);
+        final Map<String, FieldDefinition> fields = client.getFields(INDEX_MASTER_NAME);
         Assert.assertNotNull(fields);
         Assert.assertNotNull(fields.get("name"));
     }
@@ -436,8 +393,8 @@ public abstract class JsonAbstractTest {
 
     private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, String index,
                                                      QueryDefinition queryDef, int expectedCount) {
-        checkErrorStatusCode(() -> client.searchQuery(SCHEMA_NAME, INDEX_DUMMY_NAME, queryDef, null), 404);
-        final ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, index, queryDef, null);
+        checkErrorStatusCode(() -> client.searchQuery(INDEX_DUMMY_NAME, queryDef, null), 404);
+        final ResultDefinition.WithMap result = client.searchQuery(index, queryDef, null);
         Assert.assertNotNull(result);
         Assert.assertNotNull(result.totalHits);
         Assert.assertEquals(expectedCount, result.totalHits);
@@ -455,8 +412,8 @@ public abstract class JsonAbstractTest {
     }
 
     private void checkIndexSize(IndexServiceInterface client, long expectedCount) {
-        checkErrorStatusCode(() -> client.getIndex(SCHEMA_NAME, INDEX_DUMMY_NAME), 404);
-        IndexStatus status = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
+        checkErrorStatusCode(() -> client.getIndex(INDEX_DUMMY_NAME), 404);
+        IndexStatus status = client.getIndex(INDEX_MASTER_NAME);
         Assert.assertNotNull(status);
         Assert.assertNotNull(status.numDocs);
         Assert.assertEquals(expectedCount, status.numDocs.longValue());
@@ -515,10 +472,10 @@ public abstract class JsonAbstractTest {
     public void test200UpdateDocs() throws URISyntaxException, IOException {
         final IndexServiceInterface client = getClient();
         for (int i = 0; i < 6; i++) { // Yes, six times: we said "testing" !
-            checkErrorStatusCode(() -> client.postMappedDocuments(SCHEMA_NAME, INDEX_DUMMY_NAME, UPDATE_DOCS), 404);
-            checkErrorStatusCode(() -> client.postMappedDocuments(SCHEMA_NAME, INDEX_DUMMY_NAME, null), 404);
-            Assert.assertEquals(Integer.valueOf(0), client.postMappedDocuments(SCHEMA_NAME, INDEX_MASTER_NAME, null));
-            final Integer result = client.postMappedDocuments(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOCS);
+            checkErrorStatusCode(() -> client.postMappedDocuments(INDEX_DUMMY_NAME, UPDATE_DOCS), 404);
+            checkErrorStatusCode(() -> client.postMappedDocuments(INDEX_DUMMY_NAME, null), 404);
+            Assert.assertEquals(Integer.valueOf(0), client.postMappedDocuments(INDEX_MASTER_NAME, null));
+            final Integer result = client.postMappedDocuments(INDEX_MASTER_NAME, UPDATE_DOCS);
             Assert.assertNotNull(result);
             Assert.assertEquals(Integer.valueOf(UPDATE_DOCS.documents.size()), result);
             checkAllSizes(client, 4);
@@ -526,13 +483,11 @@ public abstract class JsonAbstractTest {
     }
 
     private BackupStatus doBackup(IndexServiceInterface client, String backupName) {
-        checkErrorStatusCode(() -> client.doBackup(SCHEMA_NAME, INDEX_DUMMY_NAME, backupName), 404);
-        SortedMap<String, SortedMap<String, BackupStatus>> statusMap =
-            client.doBackup(SCHEMA_NAME, INDEX_MASTER_NAME, backupName);
+        checkErrorStatusCode(() -> client.doBackup(INDEX_DUMMY_NAME, backupName), 404);
+        SortedMap<String, BackupStatus> statusMap =
+            client.doBackup(INDEX_MASTER_NAME, backupName);
         Assert.assertNotNull(statusMap);
-        SortedMap<String, BackupStatus> indexMap = statusMap.get(SCHEMA_NAME);
-        Assert.assertNotNull(indexMap);
-        BackupStatus status = indexMap.get(INDEX_MASTER_NAME);
+        BackupStatus status = statusMap.get(INDEX_MASTER_NAME);
         Assert.assertNotNull(status);
         Assert.assertNotNull(status.date);
         Assert.assertNotNull(status.bytesSize);
@@ -542,29 +497,28 @@ public abstract class JsonAbstractTest {
         return status;
     }
 
-    private BackupStatus checkBackup(SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups,
-                                     String backupName) {
+    private BackupStatus checkBackup(final SortedMap<String, SortedMap<String, BackupStatus>> backups,
+                                     final String backupName) {
         Assert.assertNotNull(backups);
-        final SortedMap<String, SortedMap<String, BackupStatus>> schemaResults = backups.get(SCHEMA_NAME);
-        Assert.assertNotNull(schemaResults);
-        final SortedMap<String, BackupStatus> backupNameResult = schemaResults.get(backupName);
+        final SortedMap<String, BackupStatus> backupNameResult = backups.get(backupName);
         Assert.assertNotNull(backupNameResult);
         final BackupStatus status = backupNameResult.get(INDEX_MASTER_NAME);
         Assert.assertNotNull(status);
         return status;
     }
 
-    private BackupStatus getAndCheckBackup(IndexServiceInterface client, String backupName,
+    private BackupStatus getAndCheckBackup(final IndexServiceInterface client,
+                                           final String backupName,
                                            final boolean extractVersion) {
-        return checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, backupName, extractVersion), backupName);
+        return checkBackup(client.getBackups(INDEX_MASTER_NAME, backupName, extractVersion), backupName);
     }
 
     @Test
     public void test250FirstBackup() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        Assert.assertTrue(client.getBackups(SCHEMA_NAME, INDEX_DUMMY_NAME, INDEX_BACKUP_NAME1, true).isEmpty());
-        final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> results =
-            client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1, true);
+        Assert.assertTrue(client.getBackups(INDEX_DUMMY_NAME, INDEX_BACKUP_NAME1, true).isEmpty());
+        final SortedMap<String, SortedMap<String, BackupStatus>> results =
+            client.getBackups(INDEX_MASTER_NAME, INDEX_BACKUP_NAME1, true);
         Assert.assertNotNull(results);
         Assert.assertTrue(results.isEmpty());
         BackupStatus status1 = doBackup(client, INDEX_BACKUP_NAME1);
@@ -576,10 +530,10 @@ public abstract class JsonAbstractTest {
     public void test300UpdateDoc() throws URISyntaxException, IOException {
         final IndexServiceInterface client = getClient();
         for (int i = 0; i < 7; i++) { // Seven times: we said "testing" !
-            checkErrorStatusCode(() -> client.postMappedDocument(SCHEMA_NAME, INDEX_DUMMY_NAME, UPDATE_DOC), 404);
-            Assert.assertEquals(Integer.valueOf(0), client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, null));
+            checkErrorStatusCode(() -> client.postMappedDocument(INDEX_DUMMY_NAME, UPDATE_DOC), 404);
+            Assert.assertEquals(Integer.valueOf(0), client.postMappedDocument(INDEX_MASTER_NAME, null));
             Assert.assertEquals(Integer.valueOf(1),
-                client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC));
+                client.postMappedDocument(INDEX_MASTER_NAME, UPDATE_DOC));
             checkAllSizes(client, 5);
         }
     }
@@ -598,17 +552,17 @@ public abstract class JsonAbstractTest {
         }
 
         // Update one document value
-        checkErrorStatusCode(() -> client.updateMappedDocValues(SCHEMA_NAME, INDEX_DUMMY_NAME, UPDATE_DOC_VALUE), 404);
-        Assert.assertEquals(Integer.valueOf(0), client.updateMappedDocValues(SCHEMA_NAME, INDEX_MASTER_NAME, null));
+        checkErrorStatusCode(() -> client.updateMappedDocValues(INDEX_DUMMY_NAME, UPDATE_DOC_VALUE), 404);
+        Assert.assertEquals(Integer.valueOf(0), client.updateMappedDocValues(INDEX_MASTER_NAME, null));
         Assert.assertEquals(Integer.valueOf(1),
-            client.updateMappedDocValues(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_VALUE));
+            client.updateMappedDocValues(INDEX_MASTER_NAME, UPDATE_DOC_VALUE));
         checkAllSizes(client, 5);
 
         // Update a list of documents values
-        checkErrorStatusCode(() -> client.updateMappedDocsValues(SCHEMA_NAME, INDEX_DUMMY_NAME, UPDATE_DOCS_VALUES),
+        checkErrorStatusCode(() -> client.updateMappedDocsValues(INDEX_DUMMY_NAME, UPDATE_DOCS_VALUES),
             404);
-        Assert.assertEquals(Integer.valueOf(0), client.updateMappedDocsValues(SCHEMA_NAME, INDEX_MASTER_NAME, null));
-        final Integer count = client.updateMappedDocsValues(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOCS_VALUES);
+        Assert.assertEquals(Integer.valueOf(0), client.updateMappedDocsValues(INDEX_MASTER_NAME, null));
+        final Integer count = client.updateMappedDocsValues(INDEX_MASTER_NAME, UPDATE_DOCS_VALUES);
         Assert.assertNotNull(count);
         Assert.assertEquals(Integer.valueOf(UPDATE_DOCS_VALUES.documents.size()), count);
         checkAllSizes(client, 5);
@@ -658,17 +612,17 @@ public abstract class JsonAbstractTest {
     public void test410GetDocumentById() throws URISyntaxException, IOException {
         final String id = (String) UPDATE_DOC.document.get(FieldDefinition.ID_FIELD);
         IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.getDocument(SCHEMA_NAME, INDEX_DUMMY_NAME, id), 404);
-        checkErrorStatusCode(() -> client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, DUMMY_DOC_ID), 404);
-        final Map<String, ?> doc = client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, id);
+        checkErrorStatusCode(() -> client.getDocument(INDEX_DUMMY_NAME, id), 404);
+        checkErrorStatusCode(() -> client.getDocument(INDEX_MASTER_NAME, DUMMY_DOC_ID), 404);
+        final Map<String, ?> doc = client.getDocument(INDEX_MASTER_NAME, id);
         Assert.assertNotNull(doc);
     }
 
     @Test
     public void test412GetDocuments() throws URISyntaxException, IOException {
         final IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.getDocuments(SCHEMA_NAME, INDEX_DUMMY_NAME, 0, 10), 404);
-        final List<Map<String, Object>> docs = client.getDocuments(SCHEMA_NAME, INDEX_MASTER_NAME, 0, 10);
+        checkErrorStatusCode(() -> client.getDocuments(INDEX_DUMMY_NAME, 0, 10), 404);
+        final List<Map<String, Object>> docs = client.getDocuments(INDEX_MASTER_NAME, 0, 10);
         Assert.assertNotNull(docs);
         Assert.assertEquals(5L, docs.size());
     }
@@ -842,7 +796,7 @@ public abstract class JsonAbstractTest {
     @Test
     public void test453getQueryCacheStats() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        IndexStatus.QueryCacheStats cache = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME).queryCache;
+        IndexStatus.QueryCacheStats cache = client.getIndex(INDEX_MASTER_NAME).queryCache;
         Assert.assertNotNull(cache);
         Assert.assertNotNull(cache.cacheCount);
         Assert.assertNotNull(cache.cacheSize);
@@ -853,7 +807,7 @@ public abstract class JsonAbstractTest {
     @Test
     public void test455getDocument() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        final Map<String, ?> result = client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, "5");
+        final Map<String, ?> result = client.getDocument(INDEX_MASTER_NAME, "5");
         Assert.assertNotNull(result);
         Assert.assertTrue(result.containsKey("alpha_rank"));
         Assert.assertEquals("e", result.get("alpha_rank"));
@@ -901,11 +855,11 @@ public abstract class JsonAbstractTest {
         final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_GEO2D_BOX, 1);
         Assert.assertNotNull(result);
         int docId = result.getDocuments().get(0).getDoc();
-        final ExplainDefinition explain = client.explainQuery(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId);
+        final ExplainDefinition explain = client.explainQuery(INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId);
         Assert.assertNotNull(explain);
-        String explainText = client.explainQueryText(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId);
+        String explainText = client.explainQueryText(INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId);
         Assert.assertNotNull(explainText);
-        String explainDot = client.explainQueryDot(SCHEMA_NAME, INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId, 30);
+        String explainDot = client.explainQueryDot(INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId, 30);
         Assert.assertNotNull(explainDot);
     }
 
@@ -914,12 +868,12 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         BackupStatus status = doBackup(client, INDEX_BACKUP_NAME2);
         Assert.assertEquals(status,
-            checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME2, false),
+            checkBackup(client.getBackups(INDEX_MASTER_NAME, INDEX_BACKUP_NAME2, false),
                 INDEX_BACKUP_NAME2));
         // Same backup again
         status = doBackup(client, INDEX_BACKUP_NAME2);
         Assert.assertEquals(status,
-            checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME2, false),
+            checkBackup(client.getBackups(INDEX_MASTER_NAME, INDEX_BACKUP_NAME2, false),
                 INDEX_BACKUP_NAME2));
     }
 
@@ -936,35 +890,35 @@ public abstract class JsonAbstractTest {
         final String[] term_results = {"there", "are", "few", "parts", "of", "texts"};
         final IndexServiceInterface client = getClient();
         checkErrorStatusCode(
-            () -> client.doAnalyzeIndex(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", "There are few parts of texts"),
+            () -> client.doAnalyzeIndex(INDEX_DUMMY_NAME, "name", "There are few parts of texts"),
             404);
         checkAnalyzerResult(term_results,
-            client.doAnalyzeIndex(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "There are few parts of texts"));
+            client.doAnalyzeIndex(INDEX_MASTER_NAME, "name", "There are few parts of texts"));
 
         checkAnalyzerResult(term_results,
-            client.doAnalyzeQuery(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "There are few parts of texts"));
+            client.doAnalyzeQuery(INDEX_MASTER_NAME, "name", "There are few parts of texts"));
     }
 
     @Test
     public void test610TermsEnum() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.doExtractTerms(SCHEMA_NAME, INDEX_DUMMY_NAME, "name", null, null, null), 404);
-        Assert.assertNotNull(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, null));
+        checkErrorStatusCode(() -> client.doExtractTerms(INDEX_DUMMY_NAME, "name", null, null, null), 404);
+        Assert.assertNotNull(client.doExtractTerms(INDEX_MASTER_NAME, "name", null, null, null));
         final int firstSize = JavaAbstractTest.checkTermList(
-            client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, null, 10000)).size();
+            client.doExtractTerms(INDEX_MASTER_NAME, "name", null, null, 10000)).size();
         final int secondSize = JavaAbstractTest.checkTermList(
-            client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", null, 2, 10000)).size();
+            client.doExtractTerms(INDEX_MASTER_NAME, "name", null, 2, 10000)).size();
         Assert.assertEquals(firstSize, secondSize + 2);
-        JavaAbstractTest.checkTermList(client.doExtractTerms(SCHEMA_NAME, INDEX_MASTER_NAME, "name", "a", null, null));
+        JavaAbstractTest.checkTermList(client.doExtractTerms(INDEX_MASTER_NAME, "name", "a", null, null));
     }
 
     @Test
     public void test620getFieldStats() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME)
+        client.getFields(INDEX_MASTER_NAME)
             .keySet()
             .forEach(fieldName -> JavaAbstractTest.checkFieldStats(fieldName,
-                client.getFieldStats(SCHEMA_NAME, INDEX_MASTER_NAME, fieldName)));
+                client.getFieldStats(INDEX_MASTER_NAME, fieldName)));
     }
 
     @Test
@@ -972,7 +926,7 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*");
         builder.start(0).rows(0);
-        ResultDefinition.WithMap result = client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, builder.build(), false);
+        ResultDefinition.WithMap result = client.searchQuery(INDEX_MASTER_NAME, builder.build(), false);
         Assert.assertNotNull(result);
         Assert.assertNotNull(result.totalHits);
         Assert.assertTrue(result.totalHits > 0);
@@ -981,23 +935,23 @@ public abstract class JsonAbstractTest {
         for (int i = 0; i < result.totalHits; i++) {
             builder.start(i);
             ResultDefinition.WithMap result2 =
-                client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, builder.build(), false);
+                client.searchQuery(INDEX_MASTER_NAME, builder.build(), false);
             idSet.add(result2.getDocuments().get(0).getDoc());
         }
         Assert.assertEquals(result.totalHits, idSet.size());
     }
 
     @Test
-    public void test800ThirdBackup() throws URISyntaxException, ExecutionException, InterruptedException {
+    public void test800ThirdBackup() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
         final BackupStatus status = doBackup(client, INDEX_BACKUP_NAME3);
         Assert.assertEquals(status,
-            checkBackup(client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME3, false),
+            checkBackup(client.getBackups(INDEX_MASTER_NAME, INDEX_BACKUP_NAME3, false),
                 INDEX_BACKUP_NAME3));
-        client.doBackup("*", "*", INDEX_BACKUP_NAME3);
+        client.doBackup("*", INDEX_BACKUP_NAME3);
         Assert.assertEquals(status, getAndCheckBackup(client, INDEX_BACKUP_NAME3, false));
-        final SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> backups =
-            client.getBackups(SCHEMA_NAME, INDEX_MASTER_NAME, "*", true);
+        final SortedMap<String, SortedMap<String, BackupStatus>> backups =
+            client.getBackups(INDEX_MASTER_NAME, "*", true);
         Assert.assertNotNull(backups);
         checkBackup(backups, INDEX_BACKUP_NAME1);
         checkBackup(backups, INDEX_BACKUP_NAME2);
@@ -1008,33 +962,33 @@ public abstract class JsonAbstractTest {
     public void test810DeleteBackup() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
         Assert.assertEquals(Integer.valueOf(1),
-            client.deleteBackups(SCHEMA_NAME, INDEX_MASTER_NAME, INDEX_BACKUP_NAME1));
-        Assert.assertEquals(Integer.valueOf(3), client.deleteBackups(SCHEMA_NAME, "*", "*"));
+            client.deleteBackups(INDEX_MASTER_NAME, INDEX_BACKUP_NAME1));
+        Assert.assertEquals(Integer.valueOf(3), client.deleteBackups("*", "*"));
     }
 
     private void checkReplication(final IndexServiceInterface client) {
 
         // Get the status of the master
-        final IndexStatus masterStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final IndexStatus masterStatus = client.getIndex(INDEX_MASTER_NAME);
         Assert.assertNotNull(masterStatus);
         Assert.assertNotNull(masterStatus.version);
 
         // Get the fields and analyzers of the master
-        final Map<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
-        final Map<String, AnalyzerDefinition> masterAnalyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final Map<String, FieldDefinition> masterFields = client.getFields(INDEX_MASTER_NAME);
+        final Map<String, AnalyzerDefinition> masterAnalyzers = client.getAnalyzers(INDEX_MASTER_NAME);
         Assert.assertNotNull(masterFields);
         Assert.assertNotNull(masterAnalyzers);
 
         // Get the status of the slave
-        IndexStatus slaveStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);
+        IndexStatus slaveStatus = client.getIndex(INDEX_SLAVE_NAME);
         Assert.assertNotNull(slaveStatus);
         Assert.assertNotNull(slaveStatus.version);
         Assert.assertEquals(slaveStatus.version, masterStatus.version);
         Assert.assertEquals(slaveStatus.masterUuid, masterStatus.indexUuid);
 
         // Get the fields and analyzers of the slave
-        final Map<String, FieldDefinition> slaveFields = client.getFields(SCHEMA_NAME, INDEX_SLAVE_NAME);
-        final Map<String, AnalyzerDefinition> slaveAnalyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_SLAVE_NAME);
+        final Map<String, FieldDefinition> slaveFields = client.getFields(INDEX_SLAVE_NAME);
+        final Map<String, AnalyzerDefinition> slaveAnalyzers = client.getAnalyzers(INDEX_SLAVE_NAME);
         Assert.assertNotNull(slaveFields);
         Assert.assertNotNull(slaveAnalyzers);
 
@@ -1056,21 +1010,21 @@ public abstract class JsonAbstractTest {
     public void test850replicationCheck() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
 
-        final Map<String, FieldDefinition> masterFields = client.getFields(SCHEMA_NAME, INDEX_MASTER_NAME);
-        final Map<String, AnalyzerDefinition> masterAnalyzers = client.getAnalyzers(SCHEMA_NAME, INDEX_MASTER_NAME);
+        final Map<String, FieldDefinition> masterFields = client.getFields(INDEX_MASTER_NAME);
+        final Map<String, AnalyzerDefinition> masterAnalyzers = client.getAnalyzers(INDEX_MASTER_NAME);
         Assert.assertNotNull(masterFields);
         Assert.assertNotNull(masterAnalyzers);
 
-        IndexStatus slaveStatus = client.createUpdateIndex(SCHEMA_NAME, INDEX_SLAVE_NAME, INDEX_SLAVE_SETTINGS);
+        IndexStatus slaveStatus = client.createUpdateIndex(INDEX_SLAVE_NAME, INDEX_SLAVE_SETTINGS);
         Assert.assertNotNull(slaveStatus);
 
         // First replication
         // First replication has something to do
-        checkReplicationStatus(client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME));
+        checkReplicationStatus(client.replicationCheck(INDEX_SLAVE_NAME));
         checkReplication(client);
 
         // Second one should do nothing
-        checkReplicationStatus(client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME));
+        checkReplicationStatus(client.replicationCheck(INDEX_SLAVE_NAME));
         checkReplication(client);
     }
 
@@ -1093,8 +1047,8 @@ public abstract class JsonAbstractTest {
         @Override
         public void run() {
             while (counter.incrementAndGet() < 50) {
-                client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC);
-                client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
+                client.postMappedDocument(INDEX_MASTER_NAME, UPDATE_DOC);
+                client.replicationCheck(INDEX_SLAVE_NAME);
             }
         }
     }
@@ -1108,8 +1062,8 @@ public abstract class JsonAbstractTest {
         @Override
         public void run() {
             while (counter.incrementAndGet() < 50) {
-                client.updateMappedDocValues(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_VALUE);
-                client.replicationCheck(SCHEMA_NAME, INDEX_SLAVE_NAME);
+                client.updateMappedDocValues(INDEX_MASTER_NAME, UPDATE_DOC_VALUE);
+                client.replicationCheck(INDEX_SLAVE_NAME);
             }
         }
     }
@@ -1140,19 +1094,19 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
 
         // Change the field type
-        Assert.assertEquals(Integer.valueOf(1), client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC));
-        final FieldDefinition newDef = client.setField(SCHEMA_NAME, INDEX_MASTER_NAME, "alpha_rank", FIELD_UPDATE_JSON);
+        Assert.assertEquals(Integer.valueOf(1), client.postMappedDocument(INDEX_MASTER_NAME, UPDATE_DOC));
+        final FieldDefinition newDef = client.setField(INDEX_MASTER_NAME, "alpha_rank", FIELD_UPDATE_JSON);
         Assert.assertEquals(newDef, FIELD_UPDATE_JSON);
-        checkErrorStatusCode(() -> client.postMappedDocument(SCHEMA_NAME, INDEX_MASTER_NAME, UPDATE_DOC_ERROR), 500);
-        Assert.assertNotNull(client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME));
-        final Map<String, ?> result = client.getDocument(SCHEMA_NAME, INDEX_MASTER_NAME, "5");
+        checkErrorStatusCode(() -> client.postMappedDocument(INDEX_MASTER_NAME, UPDATE_DOC_ERROR), 500);
+        Assert.assertNotNull(client.getIndex(INDEX_MASTER_NAME));
+        final Map<String, ?> result = client.getDocument(INDEX_MASTER_NAME, "5");
         Assert.assertNotNull(result);
     }
 
     @Test
     public void test900DeleteDoc() throws URISyntaxException, IOException {
         final IndexServiceInterface client = getClient();
-        final ResultDefinition result = client.searchQuery(SCHEMA_NAME, INDEX_MASTER_NAME, DELETE_QUERY, true);
+        final ResultDefinition result = client.searchQuery(INDEX_MASTER_NAME, DELETE_QUERY, true);
         Assert.assertNotNull(result);
         Assert.assertEquals(3L, result.totalHits);
         checkAllSizes(client, 3);
@@ -1160,17 +1114,17 @@ public abstract class JsonAbstractTest {
 
     private void checkDelete(String indexName) throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.deleteIndex(SCHEMA_NAME, INDEX_DUMMY_NAME), 404);
-        Assert.assertTrue(client.deleteIndex(SCHEMA_NAME, indexName));
+        checkErrorStatusCode(() -> client.deleteIndex(INDEX_DUMMY_NAME), 404);
+        Assert.assertTrue(client.deleteIndex(indexName));
     }
 
     @Test
     public void test970checkUpdatableAnalyzers() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        IndexStatus indexStatus = client.getIndex(SCHEMA_NAME, INDEX_MASTER_NAME);
+        IndexStatus indexStatus = client.getIndex(INDEX_MASTER_NAME);
         Assert.assertEquals(1, indexStatus.activeQueryAnalyzers, 0);
         Assert.assertEquals(1, indexStatus.activeIndexAnalyzers, 0);
-        indexStatus = client.getIndex(SCHEMA_NAME, INDEX_SLAVE_NAME);
+        indexStatus = client.getIndex(INDEX_SLAVE_NAME);
         Assert.assertEquals(1, indexStatus.activeQueryAnalyzers, 0);
         Assert.assertEquals(1, indexStatus.activeIndexAnalyzers, 0);
     }
@@ -1180,20 +1134,10 @@ public abstract class JsonAbstractTest {
         checkDelete(INDEX_SLAVE_NAME);
         checkDelete(INDEX_MASTER_NAME);
         final IndexServiceInterface client = getClient();
-        Map<String, UUID> indexes = client.getIndexes(SCHEMA_NAME);
+        Map<String, UUID> indexes = client.getIndexes();
         Assert.assertNotNull(indexes);
         Assert.assertFalse(indexes.containsKey(INDEX_SLAVE_NAME));
         Assert.assertFalse(indexes.containsKey(INDEX_MASTER_NAME));
-    }
-
-    @Test
-    public void test990DeleteSchema() throws URISyntaxException {
-        final IndexServiceInterface client = getClient();
-        checkErrorStatusCode(() -> client.deleteSchema(SCHEMA_DUMMY_NAME), 404);
-        Assert.assertTrue(client.deleteSchema(SCHEMA_NAME));
-        Set<String> schemas = client.getSchemas();
-        Assert.assertNotNull(schemas);
-        Assert.assertFalse(schemas.contains(SCHEMA_NAME));
     }
 
 }

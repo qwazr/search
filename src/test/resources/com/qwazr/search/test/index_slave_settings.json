@@ -3,7 +3,6 @@
   "master": {
     "host": "localhost",
     "port": 9091,
-    "schema": "schema-test-json",
     "index": "index-test-master-json"
   },
   "enable_taxonomy_index": true

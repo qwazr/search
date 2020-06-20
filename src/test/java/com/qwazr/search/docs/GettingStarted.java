@@ -43,7 +43,7 @@ import java.util.concurrent.Executors;
 public class GettingStarted {
 
     // This class defines both an index, and a record for this index
-    @Index(schema = "my_schema", name = "my_index")
+    @Index(name = "my_index")
     public static class MyIndexRecord {
 
         @SmartField(name = FieldDefinition.ID_FIELD, index = true, stored = true)
@@ -90,7 +90,6 @@ public class GettingStarted {
 
         AnnotatedIndexService<MyIndexRecord> myIndexService =
             indexManager.getService(MyIndexRecord.class); // Get the service related to our index class (MyIndex)
-        myIndexService.createUpdateSchema(); // We create the schema (nothing is done if the schema already exists)
         myIndexService.createUpdateIndex(); // We create the index (nothing is done if the index already exists)
         myIndexService.createUpdateFields(); // We create the fields (nothing is done if the fields already exist)
 

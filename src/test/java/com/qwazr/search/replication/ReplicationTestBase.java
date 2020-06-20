@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,6 @@ public abstract class ReplicationTestBase<T> {
 
         // Create the master index
         master = getMaster();
-        master.createUpdateSchema();
         master.createUpdateIndex();
         master.createUpdateFields();
 
@@ -87,7 +86,7 @@ public abstract class ReplicationTestBase<T> {
      * @param replicationStatus
      */
     public ReplicationStatus checkReplicationStatus(ReplicationStatus replicationStatus,
-        ReplicationStatus.Strategy expectedStrategy, Integer expectedRatio) {
+                                                    ReplicationStatus.Strategy expectedStrategy, Integer expectedRatio) {
         Assert.assertNotNull(replicationStatus);
         Assert.assertNotNull(replicationStatus.start);
         Assert.assertNotNull(replicationStatus.end);

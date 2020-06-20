@@ -36,7 +36,6 @@ import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentMap;
 import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.search.index.ResultDocumentsInterface;
-import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.index.TermDefinition;
 import com.qwazr.search.index.TermEnumDefinition;
 import com.qwazr.search.query.QueryInterface;
@@ -67,8 +66,6 @@ public class AnnotatedIndexService<T> {
 
     protected final IndexServiceInterface indexService;
 
-    protected final String schemaName;
-
     protected final String indexName;
 
     protected final IndexSettingsDefinition settings;
@@ -86,14 +83,12 @@ public class AnnotatedIndexService<T> {
      *
      * @param indexService         the IndexServiceInterface to use
      * @param indexDefinitionClass the class with define the index
-     * @param schemaName           the name of the schema
      * @param indexName            the name of the index
      * @param settings             any additional settings
      * @throws URISyntaxException if the syntax of the remote URI is wrong
      */
     public AnnotatedIndexService(final IndexServiceInterface indexService,
                                  final Class<T> indexDefinitionClass,
-                                 final String schemaName,
                                  final String indexName,
                                  final IndexSettingsDefinition settings)
         throws URISyntaxException {
@@ -105,11 +100,8 @@ public class AnnotatedIndexService<T> {
         final Index index = indexDefinitionClass.getAnnotation(Index.class);
         Objects.requireNonNull(index, "This class does not declare any Index annotation: " + indexDefinitionClass);
 
-        this.schemaName = schemaName != null ? schemaName : index.schema();
         this.indexName = indexName != null ? indexName : index.name();
 
-        if (StringUtils.isEmpty(this.schemaName))
-            throw new RuntimeException("The schema name is empty");
         if (StringUtils.isEmpty(this.indexName))
             throw new RuntimeException("The index name is empty");
 
@@ -164,11 +156,7 @@ public class AnnotatedIndexService<T> {
 
     public AnnotatedIndexService(final IndexServiceInterface indexService, final Class<T> indexDefinitionClass)
         throws URISyntaxException {
-        this(indexService, indexDefinitionClass, null, null, null);
-    }
-
-    public String getSchemaName() {
-        return schemaName;
+        this(indexService, indexDefinitionClass, null, null);
     }
 
     public String getIndexName() {
@@ -176,33 +164,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public IndexSettingsDefinition getSettings() {
-        return indexService.getIndexSettings(schemaName, indexName);
-    }
-
-    /**
-     * Create a new schema or update an existing one
-     *
-     * @return the schema settings
-     */
-    public SchemaSettingsDefinition createUpdateSchema() {
-        return indexService.createUpdateSchema(schemaName);
-    }
-
-    /**
-     * Create a new schema or update an existing one
-     *
-     * @param settings the settings to set
-     * @return the schema settings
-     */
-    public SchemaSettingsDefinition createUpdateSchema(final SchemaSettingsDefinition settings) {
-        return indexService.createUpdateSchema(schemaName, settings);
-    }
-
-    /**
-     * Delete the schema
-     */
-    public void deleteSchema() {
-        indexService.deleteSchema(schemaName);
+        return indexService.getIndexSettings(indexName);
     }
 
     /**
@@ -211,7 +173,7 @@ public class AnnotatedIndexService<T> {
      * @return the index status
      */
     public IndexStatus createUpdateIndex() {
-        return indexService.createUpdateIndex(schemaName, indexName, settings);
+        return indexService.createUpdateIndex(indexName, settings);
     }
 
     /**
@@ -220,11 +182,11 @@ public class AnnotatedIndexService<T> {
      * @return the checked index status
      */
     public IndexCheckStatus checkIndex() {
-        return indexService.checkIndex(schemaName, indexName);
+        return indexService.checkIndex(indexName);
     }
 
     public void deleteIndex() {
-        indexService.deleteIndex(schemaName, indexName);
+        indexService.deleteIndex(indexName);
     }
 
     /**
@@ -233,21 +195,21 @@ public class AnnotatedIndexService<T> {
      * @return the field map
      */
     public Map<String, FieldDefinition> createUpdateFields() {
-        return indexService.setFields(schemaName, indexName, fieldDefinitions);
+        return indexService.setFields(indexName, fieldDefinitions);
     }
 
     /**
      * Reload the analyzers. Especially for resources reloading (synonyms map, stopwords, ...)
      */
     public void refreshAnalyzers() {
-        indexService.refreshAnalyzers(schemaName, indexName);
+        indexService.refreshAnalyzers(indexName);
     }
 
     /**
      * @return the list of available query types./
      */
     public Set<String> getQueryTypes() {
-        return indexService.getQueryTypes(schemaName, indexName);
+        return indexService.getQueryTypes(indexName);
     }
 
     /**
@@ -255,15 +217,15 @@ public class AnnotatedIndexService<T> {
      * @return a sample of query based on the type and the current index settings, field and analyzer.
      */
     public QueryInterface getQuerySample(final String queryType) {
-        return indexService.getQuerySample(schemaName, indexName, queryType);
+        return indexService.getQuerySample(indexName, queryType);
     }
 
     public Map<String, Object> getJsonSample() {
-        return indexService.getJsonSample(schemaName, indexName);
+        return indexService.getJsonSample(indexName);
     }
 
-    public List<Map<String, Object>> getJsonSamples(Integer count) {
-        return indexService.getJsonSamples(schemaName, indexName, count);
+    public List<Map<String, Object>> getJsonSamples(final Integer count) {
+        return indexService.getJsonSamples(indexName, count);
     }
 
     public enum FieldStatus {
@@ -276,7 +238,7 @@ public class AnnotatedIndexService<T> {
      * @return the changed fields
      */
     public Map<String, FieldStatus> getFieldChanges() {
-        final Map<String, FieldDefinition> indexFields = indexService.getFields(schemaName, indexName);
+        final Map<String, FieldDefinition> indexFields = indexService.getFields(indexName);
         final Map<String, FieldStatus> fieldChanges = new HashMap<>();
         fieldMap.forEach((name, propertyField) -> {
             final FieldDefinition annotatedField = fieldDefinitions.get(name);
@@ -296,7 +258,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public void postResource(final String resourceName, final InputStream input) {
-        indexService.postResource(schemaName, indexName, resourceName, System.currentTimeMillis(), input);
+        indexService.postResource(indexName, resourceName, System.currentTimeMillis(), input);
     }
 
     public void postTextResource(final String resourceName, final String text) throws IOException {
@@ -306,7 +268,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public InputStream getResource(final String resourceName) {
-        return indexService.getResource(schemaName, indexName, resourceName);
+        return indexService.getResource(indexName, resourceName);
     }
 
     public String getTextResource(final String resourceName) throws IOException {
@@ -316,7 +278,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public void deleteResource(final String resourceName) {
-        indexService.deleteResource(schemaName, indexName, resourceName);
+        indexService.deleteResource(indexName, resourceName);
     }
 
     /**
@@ -330,9 +292,9 @@ public class AnnotatedIndexService<T> {
         throws IOException {
         Objects.requireNonNull(row, "The document (row) cannot be null");
         if (annotatedService != null)
-            annotatedService.addDocument(schemaName, indexName, fieldMap, row, commitUserData);
+            annotatedService.addDocument(indexName, fieldMap, row, commitUserData);
         else
-            indexService.postMappedDocument(schemaName, indexName,
+            indexService.postMappedDocument(indexName,
                 PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData));
     }
 
@@ -357,9 +319,9 @@ public class AnnotatedIndexService<T> {
         throws IOException {
         Objects.requireNonNull(row, "The document (row) cannot be null");
         if (annotatedService != null)
-            annotatedService.addDocuments(schemaName, indexName, fieldMap, row, commitUserData);
+            annotatedService.addDocuments(indexName, fieldMap, row, commitUserData);
         else
-            indexService.postMappedDocuments(schemaName, indexName,
+            indexService.postMappedDocuments(indexName,
                 PostDefinition.of(schemaFieldMapWrapper.newMapCollection(row), commitUserData));
     }
 
@@ -378,9 +340,9 @@ public class AnnotatedIndexService<T> {
         throws IOException {
         Objects.requireNonNull(row, "The document (row) cannot be null");
         if (annotatedService != null)
-            annotatedService.postDocument(schemaName, indexName, fieldMap, row, commitUserData);
+            annotatedService.postDocument(indexName, fieldMap, row, commitUserData);
         else
-            indexService.postMappedDocument(schemaName, indexName,
+            indexService.postMappedDocument(indexName,
                 PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData));
     }
 
@@ -405,9 +367,9 @@ public class AnnotatedIndexService<T> {
         throws IOException {
         Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
         if (annotatedService != null)
-            annotatedService.postDocuments(schemaName, indexName, fieldMap, rows, commitUserData);
+            annotatedService.postDocuments(indexName, fieldMap, rows, commitUserData);
         else
-            indexService.postMappedDocuments(schemaName, indexName,
+            indexService.postMappedDocuments(indexName,
                 PostDefinition.of(schemaFieldMapWrapper.newMapCollection(rows), commitUserData));
     }
 
@@ -431,9 +393,9 @@ public class AnnotatedIndexService<T> {
     public void updateDocumentValues(final T row, final Map<String, String> commitUserData) throws IOException {
         Objects.requireNonNull(row, "The document (row) cannot be null");
         if (annotatedService != null)
-            annotatedService.updateDocValues(schemaName, indexName, fieldMap, row, commitUserData);
+            annotatedService.updateDocValues(indexName, fieldMap, row, commitUserData);
         else
-            indexService.updateMappedDocValues(schemaName, indexName,
+            indexService.updateMappedDocValues(indexName,
                 PostDefinition.of(schemaFieldMapWrapper.newMap(row), commitUserData));
     }
 
@@ -458,9 +420,9 @@ public class AnnotatedIndexService<T> {
                                       final Map<String, String> commitUserData) throws IOException {
         Objects.requireNonNull(rows, "The documents collection (rows) cannot be null");
         if (annotatedService != null)
-            annotatedService.updateDocsValues(schemaName, indexName, fieldMap, rows, commitUserData);
+            annotatedService.updateDocsValues(indexName, fieldMap, rows, commitUserData);
         else
-            indexService.updateMappedDocsValues(schemaName, indexName,
+            indexService.updateMappedDocsValues(indexName,
                 PostDefinition.of(schemaFieldMapWrapper.newMapCollection(rows), commitUserData));
     }
 
@@ -478,9 +440,9 @@ public class AnnotatedIndexService<T> {
         throws ReflectiveOperationException, IOException {
         Objects.requireNonNull(id, "The id cannot be empty");
         if (annotatedService != null)
-            return annotatedService.getDocument(schemaName, indexName, id, wrapper);
+            return annotatedService.getDocument(indexName, id, wrapper);
         else {
-            return wrapper.toRecord(indexService.getDocument(schemaName, indexName, id.toString()));
+            return wrapper.toRecord(indexService.getDocument(indexName, id.toString()));
         }
     }
 
@@ -510,9 +472,9 @@ public class AnnotatedIndexService<T> {
     private <C> List<C> getDocuments(final Integer start, final Integer rows, final FieldMapWrapper<C> wrapper)
         throws IOException, ReflectiveOperationException {
         if (annotatedService != null)
-            return annotatedService.getDocuments(schemaName, indexName, start, rows, wrapper);
+            return annotatedService.getDocuments(indexName, start, rows, wrapper);
         else
-            return wrapper.toRecords(indexService.getDocuments(schemaName, indexName, start, rows));
+            return wrapper.toRecords(indexService.getDocuments(indexName, start, rows));
     }
 
     public <C> List<C> getDocuments(final Integer start, final Integer rows, final Class<C> clazz)
@@ -529,80 +491,80 @@ public class AnnotatedIndexService<T> {
      * @return the status of the index
      */
     public IndexStatus getIndexStatus() {
-        return indexService.getIndex(schemaName, indexName);
+        return indexService.getIndex(indexName);
     }
 
     public Map<String, FieldDefinition> getFields() {
-        return indexService.getFields(schemaName, indexName);
+        return indexService.getFields(indexName);
     }
 
     public FieldDefinition getField(final String fieldName) {
-        return indexService.getField(schemaName, indexName, fieldName);
+        return indexService.getField(indexName, fieldName);
     }
 
     public FieldStats getFieldStats(final String fieldName) {
-        return indexService.getFieldStats(schemaName, indexName, fieldName);
+        return indexService.getFieldStats(indexName, fieldName);
     }
 
     public void setField(final String fieldName, final FieldDefinition fieldDefinition) {
-        indexService.setField(schemaName, indexName, fieldName, fieldDefinition);
+        indexService.setField(indexName, fieldName, fieldDefinition);
     }
 
     public void deleteField(final String fieldName) {
-        indexService.deleteField(schemaName, indexName, fieldName);
+        indexService.deleteField(indexName, fieldName);
     }
 
     public Map<String, AnalyzerDefinition> getAnalyzers() {
-        return indexService.getAnalyzers(schemaName, indexName);
+        return indexService.getAnalyzers(indexName);
     }
 
     public AnalyzerDefinition getAnalyzer(final String analyzerName) {
-        return indexService.getAnalyzer(schemaName, indexName, analyzerName);
+        return indexService.getAnalyzer(indexName, analyzerName);
     }
 
     public AnalyzerDefinition setAnalyzer(final String analyzerName, final AnalyzerDefinition analyzerDefinition) {
-        return indexService.setAnalyzer(schemaName, indexName, analyzerName, analyzerDefinition);
+        return indexService.setAnalyzer(indexName, analyzerName, analyzerDefinition);
     }
 
     public Map<String, AnalyzerDefinition> setAnalyzers(final LinkedHashMap<String, AnalyzerDefinition> analyzers) {
-        return indexService.setAnalyzers(schemaName, indexName, analyzers);
+        return indexService.setAnalyzers(indexName, analyzers);
     }
 
     public void deleteAnalyzer(final String analyzerName) {
-        indexService.deleteAnalyzer(schemaName, indexName, analyzerName);
+        indexService.deleteAnalyzer(indexName, analyzerName);
     }
 
     public List<TermDefinition> testAnalyzer(final String analyzerName, final String text) {
-        return indexService.testAnalyzer(schemaName, indexName, analyzerName, text);
+        return indexService.testAnalyzer(indexName, analyzerName, text);
     }
 
     public List<TermDefinition> doAnalyzeIndex(final String fieldName, final String text) {
-        return indexService.doAnalyzeIndex(schemaName, indexName, fieldName, text);
+        return indexService.doAnalyzeIndex(indexName, fieldName, text);
     }
 
     public List<TermDefinition> doAnalyzeQuery(final String fieldName, final String text) {
-        return indexService.doAnalyzeQuery(schemaName, indexName, fieldName, text);
+        return indexService.doAnalyzeQuery(indexName, fieldName, text);
     }
 
-    public SortedMap<String, SortedMap<String, SortedMap<String, BackupStatus>>> getBackups(final String backupName,
-                                                                                            final boolean extractVersion) {
-        return indexService.getBackups(schemaName, indexName, backupName, extractVersion);
+    public SortedMap<String, SortedMap<String, BackupStatus>> getBackups(final String backupName,
+                                                                         final boolean extractVersion) {
+        return indexService.getBackups(indexName, backupName, extractVersion);
     }
 
-    public SortedMap<String, SortedMap<String, BackupStatus>> doBackup(final String backupName) {
-        return indexService.doBackup(schemaName, indexName, backupName);
+    public SortedMap<String, BackupStatus> doBackup(final String backupName) {
+        return indexService.doBackup(indexName, backupName);
     }
 
     public Integer deleteBackups(final String backupName) {
-        return indexService.deleteBackups(schemaName, indexName, backupName);
+        return indexService.deleteBackups(indexName, backupName);
     }
 
     private <C> ResultDefinition.WithObject<C> searchQuery(final QueryDefinition query,
                                                            final FieldMapWrapper<C> wrapper) {
         if (annotatedService != null)
-            return annotatedService.searchQuery(schemaName, indexName, query, wrapper);
+            return annotatedService.searchQuery(indexName, query, wrapper);
         else
-            return toRecords(indexService.searchQuery(schemaName, indexName, query, false), wrapper);
+            return toRecords(indexService.searchQuery(indexName, query, false), wrapper);
     }
 
     public ResultDefinition.WithObject<T> searchQuery(final QueryDefinition query) {
@@ -643,7 +605,7 @@ public class AnnotatedIndexService<T> {
     public ResultDefinition.Empty searchQuery(final QueryDefinition query,
                                               final ResultDocumentsInterface resultDocuments) {
         if (annotatedService != null)
-            return annotatedService.searchQuery(schemaName, indexName, query, resultDocuments);
+            return annotatedService.searchQuery(indexName, query, resultDocuments);
         else
             throw new NotImplementedException("Method not available");
     }
@@ -656,7 +618,7 @@ public class AnnotatedIndexService<T> {
      * @return the score computation for document and query
      */
     public ExplainDefinition explainQuery(final QueryDefinition query, final int docId) {
-        return indexService.explainQuery(schemaName, indexName, query, docId);
+        return indexService.explainQuery(indexName, query, docId);
     }
 
     /**
@@ -667,7 +629,7 @@ public class AnnotatedIndexService<T> {
      * @return the score computation for document and query
      */
     public String explainQueryText(final QueryDefinition query, final int docId) {
-        return indexService.explainQueryText(schemaName, indexName, query, docId);
+        return indexService.explainQueryText(indexName, query, docId);
     }
 
     /**
@@ -679,20 +641,20 @@ public class AnnotatedIndexService<T> {
      * @return the score computation for document and query
      */
     public String explainQueryDot(final QueryDefinition query, final int docId, final Integer descriptionWrapSize) {
-        return indexService.explainQueryDot(schemaName, indexName, query, docId, descriptionWrapSize);
+        return indexService.explainQueryDot(indexName, query, docId, descriptionWrapSize);
     }
 
     public ResultDefinition.WithMap searchQueryWithMap(final QueryDefinition query) {
-        return indexService.searchQuery(schemaName, indexName, query, false);
+        return indexService.searchQuery(indexName, query, false);
     }
 
     public List<TermEnumDefinition> doExtractTerms(final String fieldName, final Integer start, final Integer rows) {
-        return indexService.doExtractTerms(schemaName, indexName, fieldName, start, rows);
+        return indexService.doExtractTerms(indexName, fieldName, start, rows);
     }
 
     public List<TermEnumDefinition> doExtractTerms(final String fieldName, final String prefix, final Integer start,
                                                    final Integer rows) {
-        return indexService.doExtractTerms(schemaName, indexName, fieldName, prefix, start, rows);
+        return indexService.doExtractTerms(indexName, fieldName, prefix, start, rows);
     }
 
     /**
@@ -702,7 +664,7 @@ public class AnnotatedIndexService<T> {
      * @return the results
      */
     public ResultDefinition<?> deleteByQuery(final QueryDefinition query) {
-        return indexService.searchQuery(schemaName, indexName, query, true);
+        return indexService.searchQuery(indexName, query, true);
     }
 
     public void registerClass(final Class<?> objectClass) throws NoSuchMethodException {
@@ -714,7 +676,7 @@ public class AnnotatedIndexService<T> {
     }
 
     public ReplicationStatus replicationCheck() {
-        return indexService.replicationCheck(schemaName, indexName);
+        return indexService.replicationCheck(indexName);
     }
 
     private <C> ResultDefinition.WithObject<C> toRecords(final ResultDefinition<?> result,
@@ -736,18 +698,18 @@ public class AnnotatedIndexService<T> {
     }
 
     public <R> R write(final IndexServiceInterface.WriteActions<R> actions) throws IOException {
-        return indexService.write(schemaName, indexName, actions);
+        return indexService.write(indexName, actions);
     }
 
     public <R> R query(final IndexServiceInterface.QueryActions<R> actions) throws IOException {
-        return indexService.query(schemaName, indexName, actions);
+        return indexService.query(indexName, actions);
     }
 
     public void deleteAll() {
-        indexService.deleteAll(schemaName, indexName);
+        indexService.deleteAll(indexName);
     }
 
     public IndexStatus mergeIndex(final String mergedIndex, final Map<String, String> commitUserData) {
-        return indexService.mergeIndex(schemaName, indexName, mergedIndex, commitUserData);
+        return indexService.mergeIndex(indexName, mergedIndex, commitUserData);
     }
 }

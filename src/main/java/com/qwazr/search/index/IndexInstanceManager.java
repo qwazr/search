@@ -21,11 +21,6 @@ import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.concurrent.ReadWriteLock;
 import com.qwazr.utils.concurrent.ReadWriteSemaphores;
-import com.qwazr.utils.reflection.ConstructorParametersImpl;
-import org.apache.lucene.index.CheckIndex;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.store.Directory;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,13 +29,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import org.apache.lucene.index.CheckIndex;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.store.Directory;
 
 class IndexInstanceManager implements Closeable {
 
     private final ReadWriteLock rwl;
 
-    private final IndexInstance.Provider indexProvider;
-    private final ConstructorParametersImpl instanceFactory;
+    private final IndexManager indexManager;
     private final ExecutorService executorService;
     private final IndexServiceInterface indexServiceInterface;
     private final IndexFileSet fileSet;
@@ -54,16 +51,17 @@ class IndexInstanceManager implements Closeable {
     private IndexSettingsDefinition settings;
     private IndexInstance indexInstance;
 
-    IndexInstanceManager(final IndexInstance.Provider indexProvider, final ConstructorParametersImpl instanceFactory,
+    IndexInstanceManager(final IndexManager indexManager,
                          final Map<String, SimilarityFactory> similarityFactoryMap,
-                         final Map<String, AnalyzerFactory> analyzerFactoryMap, final Map<String, Sort> sortMap,
-                         final ReadWriteSemaphores readWriteSemaphores, final ExecutorService executorService,
-                         final IndexServiceInterface indexServiceInterface, final Path indexDirectory) {
-
+                         final Map<String, AnalyzerFactory> analyzerFactoryMap,
+                         final Map<String, Sort> sortMap,
+                         final ReadWriteSemaphores readWriteSemaphores,
+                         final ExecutorService executorService,
+                         final IndexServiceInterface indexServiceInterface,
+                         final Path indexDirectory) {
         try {
             rwl = ReadWriteLock.stamped();
-            this.indexProvider = indexProvider;
-            this.instanceFactory = instanceFactory;
+            this.indexManager = indexManager;
             this.executorService = executorService;
             this.indexServiceInterface = indexServiceInterface;
             this.fileSet = new IndexFileSet(indexDirectory);
@@ -80,21 +78,21 @@ class IndexInstanceManager implements Closeable {
         }
     }
 
-    private IndexInstance ensureOpen() throws ReflectiveOperationException, IOException {
+    private IndexInstance ensureOpen() {
         if (indexInstance == null)
             indexInstance =
-                new IndexInstanceBuilder(indexProvider, instanceFactory, similarityFactoryMap, analyzerFactoryMap,
+                new IndexInstanceBuilder(indexManager, similarityFactoryMap, analyzerFactoryMap,
                     sortMap, readWriteSemaphores, executorService, indexServiceInterface, fileSet, settings,
                     indexUuid, indexName).build();
         return indexInstance;
     }
 
-    IndexInstance open() throws Exception {
-        return rwl.writeEx(this::ensureOpen);
+    IndexInstance open() {
+        return rwl.write(this::ensureOpen);
     }
 
-    IndexInstance createUpdate(final IndexSettingsDefinition newSettings) throws Exception {
-        return rwl.writeEx(() -> {
+    IndexInstance createUpdate(final IndexSettingsDefinition newSettings) {
+        return rwl.write(() -> {
             final boolean same = Objects.equals(newSettings, settings);
             if (same && indexInstance != null)
                 return indexInstance;

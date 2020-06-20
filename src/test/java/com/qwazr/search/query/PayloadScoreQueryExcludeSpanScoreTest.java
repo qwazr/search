@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PayloadScoreQueryExcludeSpanScoreTest
-        extends AbstractIndexTest.WithIndexRecord<PayloadScoreQueryExcludeSpanScoreTest.PayloadRecord> {
+    extends AbstractIndexTest.WithIndexRecord<PayloadScoreQueryExcludeSpanScoreTest.PayloadRecord> {
 
     private static AnnotatedIndexService<PayloadRecord> indexService;
 
@@ -63,50 +63,47 @@ public class PayloadScoreQueryExcludeSpanScoreTest
     public void test41() {
 
         ResultDefinition.WithObject<PayloadRecord> result = indexService.searchQuery(QueryDefinition.of(
-                new PayloadScoreQuery(
-                        new SpanTermQuery("payloads", "41"),
-                        new MinPayloadFunction(),
-                        IntegerPayloadDecoder.INSTANCE,
-                        false))
-                .queryDebug(true)
-                .returnedField("*")
-                .build());
+            new PayloadScoreQuery(
+                new SpanTermQuery("payloads", "41"),
+                new MinPayloadFunction(),
+                IntegerPayloadDecoder.INSTANCE,
+                false))
+            .queryDebug(true)
+            .returnedField("*")
+            .build());
 
         checkResult(result, 2L);
         checkRecord(result.getDocuments().get(0), "2", 2d);
         checkRecord(result.getDocuments().get(1), "1", 1d);
         Assert.assertEquals("PayloadScoreQuery(payloads:41, function: MinPayloadFunction, includeSpanScore: false)",
-                result.query);
+            result.query);
     }
 
     @Test
     public void test42() {
         ResultDefinition.WithObject<PayloadRecord> result = indexService.searchQuery(QueryDefinition.of(
-                new PayloadScoreQuery(
-                        new SpanTermQuery("payloads", "42"),
-                        new MinPayloadFunction(),
-                        IntegerPayloadDecoder.INSTANCE,
-                        false))
-                .queryDebug(true)
-                .returnedField("*")
-                .build());
+            new PayloadScoreQuery(
+                new SpanTermQuery("payloads", "42"),
+                new MinPayloadFunction(),
+                IntegerPayloadDecoder.INSTANCE,
+                false))
+            .queryDebug(true)
+            .returnedField("*")
+            .build());
         checkResult(result, 2L);
         checkRecord(result.getDocuments().get(0), "1", 2d);
         checkRecord(result.getDocuments().get(1), "2", 1d);
         Assert.assertEquals("PayloadScoreQuery(payloads:42, function: MinPayloadFunction, includeSpanScore: false)",
-                result.query);
+            result.query);
     }
 
-    @Index(name = "IndexRecord",
-            schema = "TestQueries",
-            enableTaxonomyIndex = false,
-            useCompoundFile = false)
+    @Index(name = "IndexRecord", enableTaxonomyIndex = false, useCompoundFile = false)
     public static class PayloadRecord extends IndexRecord<PayloadRecord> {
 
         @IndexField(template = FieldDefinition.Template.TextField,
-                analyzerClass = PayloadAnalyzer.class,
-                tokenized = true,
-                indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
+            analyzerClass = PayloadAnalyzer.class,
+            tokenized = true,
+            indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
         final public List<String> payloads = new ArrayList<>();
 
         public PayloadRecord() {
@@ -114,6 +111,11 @@ public class PayloadScoreQueryExcludeSpanScoreTest
 
         PayloadRecord(String id) {
             super(id);
+        }
+
+        @Override
+        protected PayloadRecord me() {
+            return this;
         }
 
         PayloadRecord payload(String payload) {

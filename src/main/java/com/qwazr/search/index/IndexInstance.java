@@ -89,7 +89,7 @@ final public class IndexInstance implements Closeable {
 
     @FunctionalInterface
     public interface Provider {
-        IndexInstance getIndex(String name);
+        IndexInstance get(String name);
     }
 
     private final IndexFileSet fileSet;

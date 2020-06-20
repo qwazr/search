@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,29 +44,33 @@ public abstract class AbstractIndexTest {
 
     static final Logger LOGGER = LoggerUtils.getLogger(AbstractIndexTest.class);
 
-    protected static IndexManager initIndexManager(boolean withExecutorService) {
+    protected static IndexManager initIndexManager(final boolean withExecutorService,
+                                                   final Path backupDirectoryPath) {
         try {
             if (executor != null || rootDirectory != null || indexManager != null)
                 throw new RuntimeException("IndexManager already setup");
             executor = withExecutorService ? Executors.newCachedThreadPool() : null;
             rootDirectory = Files.createTempDirectory("qwazr_index_test");
-            return indexManager = new IndexManager(rootDirectory, executor);
-        }
-        catch (Exception e) {
+            return indexManager = new IndexManager(rootDirectory, executor, backupDirectoryPath);
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected static IndexManager initIndexManager(final boolean withExecutorService) {
+        return initIndexManager(withExecutorService, null);
     }
 
     protected static IndexManager initIndexManager() {
         return initIndexManager(true);
     }
 
-    protected static <T> AnnotatedIndexService<T> initIndexService(boolean withExecutorService, Class<T> recordClass)
-            throws URISyntaxException {
+    protected static <T> AnnotatedIndexService<T> initIndexService(final boolean withExecutorService,
+                                                                   final Class<T> recordClass)
+        throws URISyntaxException {
         if (indexManager == null)
-            initIndexManager(withExecutorService);
+            initIndexManager(withExecutorService, null);
         final AnnotatedIndexService<T> indexService = indexManager.getService(recordClass);
-        indexService.createUpdateSchema();
         indexService.createUpdateIndex();
         indexService.createUpdateFields();
         return indexService;
@@ -126,7 +130,7 @@ public abstract class AbstractIndexTest {
         }
     }
 
-    public static class WithIndexRecord<T extends IndexRecord> extends AbstractIndexTest {
+    public static class WithIndexRecord<T extends IndexRecord<T>> extends AbstractIndexTest {
 
         private final Class<T> indexRecordClass;
 
@@ -140,8 +144,7 @@ public abstract class AbstractIndexTest {
             if (service == null) {
                 try {
                     service = indexManager.getService(indexRecordClass);
-                }
-                catch (URISyntaxException e) {
+                } catch (URISyntaxException e) {
                     throw new RuntimeException(e);
                 }
             }

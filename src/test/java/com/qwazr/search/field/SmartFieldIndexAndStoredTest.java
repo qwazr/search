@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -161,7 +161,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
     }
 
-    @Index(name = "SmartFieldString", schema = "TestQueries")
+    @Index(name = "SmartFieldString")
     static public class RecordString extends Record<String> {
 
         @SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.TEXT, index = true, stored = true)
@@ -198,7 +198,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         }
     }
 
-    @Index(name = "SmartFieldInteger", schema = "TestQueries")
+    @Index(name = "SmartFieldInteger")
     static public class RecordInteger extends Record<Integer> {
 
         @SmartField(name = FieldDefinition.ID_FIELD,
@@ -238,7 +238,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         }
     }
 
-    @Index(name = "SmartFieldPrimitiveInteger", schema = "TestQueries")
+    @Index(name = "SmartFieldPrimitiveInteger")
     static public class RecordPrimitiveInteger extends Record<Integer> {
 
         @SmartField(name = FieldDefinition.ID_FIELD,
@@ -278,7 +278,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         }
     }
 
-    @Index(name = "SmartFieldLong", schema = "TestQueries")
+    @Index(name = "SmartFieldLong")
     static public class RecordLong extends Record<Long> {
 
         @SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.LONG, index = true, stored = true)
@@ -315,7 +315,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         }
     }
 
-    @Index(name = "SmartFieldPrimitiveLong", schema = "TestQueries")
+    @Index(name = "SmartFieldPrimitiveLong")
     static public class RecordPrimitiveLong extends Record<Long> {
 
         @SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.LONG, index = true, stored = true)
@@ -352,7 +352,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         }
     }
 
-    @Index(name = "SmartFieldFloat", schema = "TestQueries")
+    @Index(name = "SmartFieldFloat")
     static public class RecordFloat extends Record<Float> {
 
         @SmartField(name = FieldDefinition.ID_FIELD,
@@ -392,7 +392,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         }
     }
 
-    @Index(name = "SmartFieldPrimitiveFloat", schema = "TestQueries")
+    @Index(name = "SmartFieldPrimitiveFloat")
     static public class RecordPrimitiveFloat extends Record<Float> {
 
         @SmartField(name = FieldDefinition.ID_FIELD,
@@ -432,7 +432,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         }
     }
 
-    @Index(name = "SmartFieldDouble", schema = "TestQueries")
+    @Index(name = "SmartFieldDouble")
     static public class RecordDouble extends Record<Double> {
 
         @SmartField(name = FieldDefinition.ID_FIELD,
@@ -472,7 +472,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
         }
     }
 
-    @Index(name = "SmartFieldPrimitiveDouble", schema = "TestQueries")
+    @Index(name = "SmartFieldPrimitiveDouble")
     static public class RecordPrimitiveDouble extends Record<Double> {
 
         @SmartField(name = FieldDefinition.ID_FIELD,

@@ -27,14 +27,14 @@ import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.server.RestApplication;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
-
-import javax.management.JMException;
-import javax.servlet.ServletException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.management.JMException;
+import javax.servlet.ServletException;
 
 public class SearchServer implements BaseServer {
 
@@ -58,7 +58,9 @@ public class SearchServer implements BaseServer {
         clusterManager = new ClusterManager(executorService, configuration).registerProtocolListener(builder, services);
         webServices.singletons(clusterManager.getService());
 
-        indexManager = new IndexManager(IndexManager.checkIndexesDirectory(configuration.dataDirectory), executorService);
+        final Path indexesDirectory = IndexManager.checkSubDirectory(configuration.dataDirectory, IndexManager.INDEXES_DIRECTORY);
+        final Path backupsDirectory = IndexManager.checkSubDirectory(configuration.dataDirectory, IndexManager.BACKUPS_DIRECTORY);
+        indexManager = new IndexManager(indexesDirectory, executorService, backupsDirectory);
         builder.shutdownListener(server -> indexManager.close());
         webServices.singletons(indexManager.getService());
 

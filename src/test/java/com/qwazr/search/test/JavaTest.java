@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,110 +19,108 @@ import com.qwazr.search.index.IndexManager;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.utils.IOUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ JavaTest.JavaLibraryTest.class, JavaTest.JavaLocalTest.class, JavaTest.JavaRemoteTest.class })
+@Suite.SuiteClasses({JavaTest.JavaLibraryTest.class, JavaTest.JavaLocalTest.class, JavaTest.JavaRemoteTest.class})
 public class JavaTest {
 
-	public static class JavaLibraryTest extends JavaAbstractTest {
+    public static class JavaLibraryTest extends JavaAbstractTest {
 
-		private static IndexManager indexManager = null;
+        private static IndexManager indexManager = null;
 
-		private static File indexDirectory = null;
+        private static Path indexDirectory = null;
 
-		public JavaLibraryTest() {
-			super(IndexSettingsDefinition.of()
-					.type(IndexSettingsDefinition.Type.FSDirectory)
-					.mergeScheduler(IndexSettingsDefinition.MergeScheduler.NO)
-					.master("testSchema", "testIndexMaster")
-					.ramBufferSize(32d)
-					.useCompoundFile(false)
-					.enableTaxonomyIndex(false)
-					.build());
-		}
+        public JavaLibraryTest() throws URISyntaxException {
+            super(IndexSettingsDefinition.of()
+                .type(IndexSettingsDefinition.Type.FSDirectory)
+                .mergeScheduler(IndexSettingsDefinition.MergeScheduler.NO)
+                .master("testIndexMaster")
+                .ramBufferSize(32d)
+                .useCompoundFile(false)
+                .enableTaxonomyIndex(false)
+                .build());
+        }
 
-		@BeforeClass
-		public static void beforeClass() throws IOException {
-			final Path rootDirectory = Files.createTempDirectory("qwazr_index_test");
-			indexDirectory = rootDirectory.toFile();
-			indexManager = new IndexManager(rootDirectory, Executors.newCachedThreadPool());
-			indexManager.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME,
-					resourceLoader -> new AnnotatedRecord.TestAnalyzer(new AtomicInteger()));
-		}
+        @BeforeClass
+        public static void beforeClass() throws IOException {
+            final Path rootDirectory = Files.createTempDirectory("qwazr_index_test");
+            indexDirectory = rootDirectory;
+            indexManager = new IndexManager(rootDirectory, Executors.newCachedThreadPool());
+            indexManager.registerAnalyzerFactory(AnnotatedRecord.INJECTED_ANALYZER_NAME,
+                resourceLoader -> new AnnotatedRecord.TestAnalyzer(new AtomicInteger()));
+        }
 
-		@Override
-		protected IndexServiceInterface getIndexService() {
-			return indexManager.getService();
-		}
+        @Override
+        protected IndexServiceInterface getIndexService() {
+            return indexManager.getService();
+        }
 
-		@Override
-		protected File getIndexDirectory() {
-			return indexDirectory;
-		}
+        @Override
+        protected Path getIndexDirectory() {
+            return indexDirectory;
+        }
 
-		@AfterClass
-		public static void afterClass() {
-			IOUtils.closeQuietly(indexManager);
-		}
-	}
+        @AfterClass
+        public static void afterClass() {
+            IOUtils.closeQuietly(indexManager);
+        }
+    }
 
-	final static IndexSettingsDefinition remoteSlaveSettings;
+    final static IndexSettingsDefinition remoteSlaveSettings;
 
-	static {
-		try {
-			remoteSlaveSettings = IndexSettingsDefinition.of()
-					.master(TestServer.BASE_URL + "/indexes/testSchema/testIndexMaster")
-					.enableTaxonomyIndex(false)
-					.build();
-		} catch (URISyntaxException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    static {
+        try {
+            remoteSlaveSettings = IndexSettingsDefinition.of()
+                .master(TestServer.BASE_URL + "/indexes/testIndexMaster")
+                .enableTaxonomyIndex(false)
+                .build();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	public static class JavaLocalTest extends JavaAbstractTest {
+    public static class JavaLocalTest extends JavaAbstractTest {
 
-		public JavaLocalTest() {
-			super(remoteSlaveSettings);
-		}
+        public JavaLocalTest() {
+            super(remoteSlaveSettings);
+        }
 
-		@Override
-		protected IndexServiceInterface getIndexService() throws URISyntaxException {
-			return TestServer.service;
-		}
+        @Override
+        protected IndexServiceInterface getIndexService() {
+            return TestServer.service;
+        }
 
-		@Override
-		protected File getIndexDirectory() {
-			return new File(TestServer.dataDir, "index");
-		}
-	}
+        @Override
+        protected Path getIndexDirectory() {
+            return TestServer.dataDir.resolve("indexes");
+        }
+    }
 
-	public static class JavaRemoteTest extends JavaAbstractTest {
+    public static class JavaRemoteTest extends JavaAbstractTest {
 
-		public JavaRemoteTest() {
-			super(remoteSlaveSettings);
-		}
+        public JavaRemoteTest() {
+            super(remoteSlaveSettings);
+        }
 
-		@Override
-		protected IndexServiceInterface getIndexService() throws URISyntaxException {
-			return TestServer.remote;
-		}
+        @Override
+        protected IndexServiceInterface getIndexService() {
+            return TestServer.remote;
+        }
 
-		@Override
-		protected File getIndexDirectory() {
-			return new File(TestServer.dataDir, "index");
-		}
-	}
+        @Override
+        protected Path getIndexDirectory() {
+            return TestServer.dataDir.resolve("indexes");
+        }
+    }
 
 }

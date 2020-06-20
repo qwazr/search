@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package com.qwazr.search.backups;
 
 import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.index.IndexServiceInterface;
-import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
 import com.qwazr.utils.LoggerUtils;
@@ -51,15 +50,13 @@ public class BackupConcurrentTests extends AbstractIndexTest {
     private final static Logger LOGGER = LoggerUtils.getLogger(BackupConcurrentTests.class);
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
-        initIndexManager();
-        service = indexManager.getService();
+    public static void setup() throws IOException, URISyntaxException {
         backupPath = Files.createTempDirectory("backup");
-        service.createUpdateSchema(SCHEMA_NAME,
-                SchemaSettingsDefinition.of().backupDirectoryPath(backupPath.toAbsolutePath().toString()).build());
+        initIndexManager(true, backupPath);
+        service = indexManager.getService();
 
-        AnnotatedIndexService<IndexRecord.NoTaxonomy> indexNoTaxo =
-                new AnnotatedIndexService<>(service, IndexRecord.NoTaxonomy.class, SCHEMA_NAME, "test1", null);
+        final AnnotatedIndexService<IndexRecord.NoTaxonomy> indexNoTaxo =
+            new AnnotatedIndexService<>(service, IndexRecord.NoTaxonomy.class, "test1", null);
         indexNoTaxo.createUpdateIndex();
         indexNoTaxo.createUpdateFields();
 
@@ -69,7 +66,7 @@ public class BackupConcurrentTests extends AbstractIndexTest {
         indexNoTaxo.postDocuments(indexNoTaxonomyRecords);
 
         AnnotatedIndexService<IndexRecord.WithTaxonomy> indexWithTaxo =
-                new AnnotatedIndexService<>(service, IndexRecord.WithTaxonomy.class, SCHEMA_NAME, "test1", null);
+            new AnnotatedIndexService<>(service, IndexRecord.WithTaxonomy.class, "test1", null);
         indexNoTaxo.createUpdateIndex();
         indexNoTaxo.createUpdateFields();
 
@@ -80,11 +77,11 @@ public class BackupConcurrentTests extends AbstractIndexTest {
     }
 
     private void doBackup() {
-        Assert.assertFalse(service.doBackup("*", "*", "backup1").isEmpty());
-        Assert.assertFalse(service.doBackup("*", "*", "backup2").isEmpty());
-        service.deleteBackups("*", "*", "backup2");
-        service.deleteBackups("*", "*", "backup1");
-        Assert.assertNotNull(service.getBackups("*", "*", "*", false));
+        Assert.assertFalse(service.doBackup("*", "backup1").isEmpty());
+        Assert.assertFalse(service.doBackup("*", "backup2").isEmpty());
+        service.deleteBackups("*", "backup2");
+        service.deleteBackups("*", "backup1");
+        Assert.assertNotNull(service.getBackups("*", "*", false));
     }
 
     @Test
@@ -92,7 +89,7 @@ public class BackupConcurrentTests extends AbstractIndexTest {
         final ExecutorService executors = Executors.newCachedThreadPool();
         final AtomicInteger counter = new AtomicInteger(100);
         final long endTime = System.currentTimeMillis() + 1000 * 10;
-        final Collection<Future> futures = new ArrayList<>();
+        final Collection<Future<?>> futures = new ArrayList<>();
         try {
             for (int i = 0; i < 4; i++) {
                 final int threadId = i;
@@ -106,7 +103,7 @@ public class BackupConcurrentTests extends AbstractIndexTest {
                     LOGGER.info("Done: " + threadId + " - " + count);
                 }));
             }
-            for (Future future : futures)
+            for (Future<?> future : futures)
                 future.get();
         } finally {
             executors.shutdown();

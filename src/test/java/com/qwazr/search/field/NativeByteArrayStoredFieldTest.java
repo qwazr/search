@@ -1,3 +1,18 @@
+/*
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.qwazr.search.field;
 
 import com.qwazr.search.annotations.AnnotatedIndexService;
@@ -26,8 +41,8 @@ public class NativeByteArrayStoredFieldTest extends AbstractIndexTest.WithIndexR
         indexService = initIndexService(NativeByteArrayRecord.class);
         indexService.postDocument(new NativeByteArrayRecord("1", new byte[]{109, 97, 114, 116, 105, 110, 101}));
         ResultDefinition.WithObject<NativeByteArrayRecord> result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
-                .returnedField("*")
-                .build());
+            .returnedField("*")
+            .build());
         checkResult(result, 1L);
         byte[] loadedData = result.documents.get(0).record.data;
         Assert.assertEquals(loadedData[0], 109);
@@ -39,13 +54,18 @@ public class NativeByteArrayStoredFieldTest extends AbstractIndexTest.WithIndexR
         Assert.assertEquals(loadedData[6], 101);
     }
 
-    @Index(schema = "TestQueries", name = "NativeByteArrayRecord", useCompoundFile = false)
+    @Index(name = "NativeByteArrayRecord", useCompoundFile = false)
     public static class NativeByteArrayRecord extends IndexRecord<NativeByteArrayRecord> {
 
         @IndexField(name = "data", template = FieldDefinition.Template.StoredField, stored = true)
         byte[] data;
 
         public NativeByteArrayRecord() {
+        }
+
+        @Override
+        protected NativeByteArrayRecord me() {
+            return this;
         }
 
         public NativeByteArrayRecord(final String id, final byte[] data) {

@@ -38,7 +38,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class JsonNodeTest extends AbstractIndexTest {
 
-    private final static String SCHEMA = "jsonSchema";
     private final static String INDEX = "jsonIndex";
 
     static IndexServiceInterface service;
@@ -56,7 +55,7 @@ public class JsonNodeTest extends AbstractIndexTest {
 
     @Test
     public void getJsonSampleTest() {
-        final Map<String, Object> sample = service.getJsonSample(SCHEMA, INDEX);
+        final Map<String, Object> sample = service.getJsonSample(INDEX);
         assertThat(sample, notNullValue());
         assertThat(sample.keySet(), hasSize(0));
     }
@@ -66,21 +65,20 @@ public class JsonNodeTest extends AbstractIndexTest {
         final JsonNode issueJson = getJson("issue.json");
 
         // Create the schema and the index
-        service.createUpdateSchema(SCHEMA);
-        service.createUpdateIndex(SCHEMA, INDEX,
+        service.createUpdateIndex(INDEX,
             IndexSettingsDefinition.of().recordField("record").primaryKey("id").build());
 
         // Index the json doc
-        service.postJson(SCHEMA, INDEX, issueJson);
+        service.postJson(INDEX, issueJson);
 
         // Get the document by its id
-        final Map<String, Object> doc1 = service.getDocument(SCHEMA, INDEX, "1");
+        final Map<String, Object> doc1 = service.getDocument(INDEX, "1");
         assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc1)),
             equalTo(issueJson));
 
         // Get the document by one root property
 
-        final ResultDefinition.WithMap result2 = service.searchQuery(SCHEMA, INDEX,
+        final ResultDefinition.WithMap result2 = service.searchQuery(INDEX,
             QueryDefinition.of(new DoubleExactQuery("number", 1347d))
                 .returnedField("*").queryDebug(true).build(), false);
         assertThat(result2.query, equalTo("pd€number:[1347.0 TO 1347.0]"));
@@ -89,7 +87,7 @@ public class JsonNodeTest extends AbstractIndexTest {
             equalTo(issueJson));
 
         // Get the document by one deep property
-        final ResultDefinition.WithMap result3 = service.searchQuery(SCHEMA, INDEX,
+        final ResultDefinition.WithMap result3 = service.searchQuery(INDEX,
             QueryDefinition.of(new TermQuery("user.login", "octocat"))
                 .returnedField("*").queryDebug(true).build(), false);
         final Map<String, Object> doc3 = result3.getDocuments().get(0).getFields();

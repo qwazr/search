@@ -25,61 +25,79 @@ import java.util.Map;
 
 public interface AnnotatedServiceInterface {
 
-    default <T> int postDocument(String schemaName, String indexName, Map<String, Field> fields, T document)
+    default <T> int postDocument(String indexName, Map<String, Field> fields, T document)
         throws IOException {
-        return postDocument(schemaName, indexName, fields, document, null);
+        return postDocument(indexName, fields, document, null);
     }
 
-    <T> int postDocument(String schemaName, String indexName, Map<String, Field> fields, T document,
+    <T> int postDocument(String indexName,
+                         Map<String, Field> fields, T document,
                          Map<String, String> commitUserData) throws IOException;
 
-    default <T> int postDocuments(String schemaName, String indexName, Map<String, Field> fields,
+    default <T> int postDocuments(String indexName, Map<String, Field> fields,
                                   Collection<T> documents) throws IOException {
-        return postDocuments(schemaName, indexName, fields, documents, null);
+        return postDocuments(indexName, fields, documents, null);
     }
 
-    <T> int postDocuments(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents,
+    <T> int postDocuments(String indexName,
+                          Map<String, Field> fields, Collection<T> documents,
                           Map<String, String> commitUserData) throws IOException;
 
-    default <T> int addDocument(String schemaName, String indexName, Map<String, Field> fields, T document)
+    default <T> int addDocument(String indexName,
+                                Map<String, Field> fields, T document)
         throws IOException {
-        return addDocument(schemaName, indexName, fields, document, null);
+        return addDocument(indexName, fields, document, null);
     }
 
-    <T> int addDocument(String schemaName, String indexName, Map<String, Field> fields, T document,
+    <T> int addDocument(String indexName,
+                        Map<String, Field> fields, T document,
                         Map<String, String> commitUserData) throws IOException;
 
-    default <T> int addDocuments(String schemaName, String indexName, Map<String, Field> fields,
+    default <T> int addDocuments(String indexName,
+                                 Map<String, Field> fields,
                                  Collection<T> documents) throws IOException {
-        return addDocuments(schemaName, indexName, fields, documents, null);
+        return addDocuments(indexName, fields, documents, null);
     }
 
-    <T> int addDocuments(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents,
+    <T> int addDocuments(String indexName,
+                         Map<String, Field> fields, Collection<T> documents,
                          Map<String, String> commitUserData) throws IOException;
 
-    default <T> int updateDocValues(String schemaName, String indexName, Map<String, Field> fields, T document)
+    default <T> int updateDocValues(String indexName,
+                                    Map<String, Field> fields, T document)
         throws IOException {
-        return updateDocValues(schemaName, indexName, fields, document, null);
+        return updateDocValues(indexName, fields, document, null);
     }
 
-    <T> int updateDocValues(String schemaName, String indexName, Map<String, Field> fields, T document,
+    <T> int updateDocValues(String indexName, Map<String, Field> fields,
+                            T document,
                             Map<String, String> commitUserData) throws IOException;
 
-    default <T> int updateDocsValues(String schemaName, String indexName, Map<String, Field> fields,
+    default <T> int updateDocsValues(String indexName,
+                                     Map<String, Field> fields,
                                      Collection<T> documents) throws IOException {
-        return updateDocsValues(schemaName, indexName, fields, documents, null);
+        return updateDocsValues(indexName, fields, documents, null);
     }
 
-    <T> int updateDocsValues(String schemaName, String indexName, Map<String, Field> fields, Collection<T> documents,
+    <T> int updateDocsValues(String indexName,
+                             Map<String, Field> fields,
+                             Collection<T> documents,
                              Map<String, String> commitUserData) throws IOException;
 
-    <T> T getDocument(String schemaName, String indexName, Object id, FieldMapWrapper<T> fieldMapWrapper);
+    <T> T getDocument(String indexName,
+                      Object id,
+                      FieldMapWrapper<T> fieldMapWrapper);
 
-    <T> List<T> getDocuments(String schemaName, String indexName, Integer start, Integer rows,
+    <T> List<T> getDocuments(String indexName,
+                             Integer start,
+                             Integer rows,
                              FieldMapWrapper<T> fieldMapWrapper);
 
-    <T> ResultDefinition.WithObject<T> searchQuery(String schemaName, String indexName, QueryDefinition query,
+    <T> ResultDefinition.WithObject<T> searchQuery(String indexName,
+                                                   QueryDefinition query,
                                                    FieldMapWrapper<T> fieldMapWrapper);
 
-    ResultDefinition.Empty searchQuery(String schemaName, String indexName, QueryDefinition query, ResultDocumentsInterface resultDocuments);
+    ResultDefinition.Empty searchQuery(String indexName,
+                                       QueryDefinition query,
+                                       ResultDocumentsInterface resultDocuments);
 }

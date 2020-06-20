@@ -27,7 +27,6 @@ import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.index.SchemaSettingsDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
@@ -107,10 +106,6 @@ public class AnnotatedIndexServiceTest {
         service = indexManager.getService(IndexRecord.class);
         Assert.assertNotNull(service);
 
-        // Create the schema
-        SchemaSettingsDefinition schema = service.createUpdateSchema();
-        Assert.assertNotNull(schema);
-
         // Create the index
         IndexStatus index = service.createUpdateIndex();
         Assert.assertNotNull(index);
@@ -141,10 +136,6 @@ public class AnnotatedIndexServiceTest {
         // Get the service
         AnnotatedIndexService<PartialRecord> partialService = indexManager.getService(PartialRecord.class);
         Assert.assertNotNull(partialService);
-
-        // Create the schema
-        SchemaSettingsDefinition schema = partialService.createUpdateSchema();
-        Assert.assertNotNull(schema);
 
         // Create the index
         IndexStatus index = partialService.createUpdateIndex();
@@ -253,7 +244,7 @@ public class AnnotatedIndexServiceTest {
         indexManager = null;
     }
 
-    @Index(schema = "schemaName", name = "indexName", similarityClass = SimilarityForTest.class)
+    @Index(name = "indexName", similarityClass = SimilarityForTest.class)
     public static class IndexRecord {
 
         @IndexField(template = FieldDefinition.Template.StringField, name = FieldDefinition.ID_FIELD)
@@ -282,7 +273,7 @@ public class AnnotatedIndexServiceTest {
         }
     }
 
-    @Index(schema = "schemaName", name = "partialName", similarity = CustomSimilarity.CUSTOM_SIMILARITY)
+    @Index(name = "partialName", similarity = CustomSimilarity.CUSTOM_SIMILARITY)
     public static class PartialRecord {
 
         @IndexField(template = FieldDefinition.Template.TextField, stored = true)
@@ -297,7 +288,7 @@ public class AnnotatedIndexServiceTest {
         }
     }
 
-    @Index(schema = "schemaName", name = "basicIndex", useSimpleTextCodec = true, indexReaderWarmer = false)
+    @Index(name = "basicIndex", useSimpleTextCodec = true, indexReaderWarmer = false)
     public static class BasicRecord {
 
         @IndexField(template = FieldDefinition.Template.TextField)

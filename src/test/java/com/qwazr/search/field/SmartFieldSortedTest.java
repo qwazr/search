@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,7 +108,7 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
             .build(), Record.class);
     }
 
-    @Index(name = "SmartFieldSorted", schema = "TestQueries")
+    @Index(name = "SmartFieldSorted")
     static public class Record {
 
         @SmartField(type = SmartFieldDefinition.Type.TEXT, name = FieldDefinition.ID_FIELD)
