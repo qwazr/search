@@ -233,7 +233,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
     }
 
     static Supplier<String> getAutoIdProvider() {
-        final HashUtils.B64 b64 = HashUtils.b64url();
-        return () -> b64.toBase64(HashUtils.newTimeBasedUUID());
+        final byte[] buffer = HashUtils.getBase58buffer(1);
+        return () -> HashUtils.base58encode(HashUtils.newTimeBasedUUID(), buffer);
     }
 }
