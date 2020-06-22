@@ -17,10 +17,6 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.test.units.AbstractIndexTest;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
@@ -28,12 +24,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import javax.ws.rs.WebApplicationException;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
@@ -95,7 +95,7 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
             final Map<String, Object> sample = samples.get(i);
             assertThat(sample.keySet(), hasSize(30));
             assertThat(sample.keySet(), hasItem("$id$"));
-            assertThat(sample.get("$id$"), equalTo("id" + i));
+            assertThat(sample.get("$id$").toString(), not(isEmptyOrNullString()));
         }
     }
 
