@@ -24,7 +24,10 @@ import com.qwazr.search.query.DoubleExactQuery;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.ObjectMappers;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -57,7 +60,9 @@ public class JsonNodeTest extends AbstractIndexTest {
     public void getJsonSampleTest() {
         final Map<String, Object> sample = service.getJsonSample(INDEX);
         assertThat(sample, notNullValue());
-        assertThat(sample.keySet(), hasSize(0));
+        assertThat(sample.keySet(), hasSize(1));
+        assertThat(sample.keySet(), hasItem("id"));
+        assertThat(sample.get("id").toString(), not(isEmptyOrNullString()));
     }
 
     @Test

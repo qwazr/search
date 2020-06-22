@@ -85,7 +85,7 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
         assertThat(sample, notNullValue());
         assertThat(sample.keySet(), hasSize(30));
         assertThat(sample.keySet(), hasItem("$id$"));
-        assertThat(sample.get("$id$"), equalTo("value"));
+        assertThat(sample.get("$id$").toString(), not(isEmptyOrNullString()));
     }
 
     private void jsonSamplesTest(List<Map<String, Object>> samples, int expected) {
