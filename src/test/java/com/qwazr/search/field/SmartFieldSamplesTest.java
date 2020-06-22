@@ -21,18 +21,15 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.SmartField;
 import com.qwazr.search.test.units.AbstractIndexTest;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class SmartFieldSamplesTest extends AbstractIndexTest {
 
@@ -59,7 +56,7 @@ public class SmartFieldSamplesTest extends AbstractIndexTest {
             final Map<String, Object> sample = samples.get(i);
             assertThat(sample.keySet(), hasSize(4));
             assertThat(sample.keySet(), hasItem("id"));
-            assertThat(sample.get("id"), equalTo("id" + i));
+            assertThat(sample.get("id"), notNullValue());
         }
     }
 

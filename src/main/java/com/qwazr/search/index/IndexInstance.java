@@ -60,6 +60,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -781,12 +782,13 @@ final public class IndexInstance implements Closeable {
         }
     }
 
-    private Map<String, Object> getJsonSample(final Object primaryKeyValue) {
+    Map<String, Object> getJsonSample() {
+        final Supplier<String> autoIdProvider = StringUtils.isBlank(settings.primaryKey) ? null : WriteContextImpl.getAutoIdProvider();
         final Map<String, Object> sample = new LinkedHashMap<>();
         getFields().forEach((name, def) -> {
             final Object value;
-            if (primaryKeyValue != null && name.equals(settings.primaryKey))
-                value = "id" + primaryKeyValue.toString();
+            if (autoIdProvider != null && name.equals(settings.primaryKey))
+                value = autoIdProvider.get();
             else {
                 final SmartFieldDefinition.Type type = def.getType();
                 if (type != null) {
@@ -815,18 +817,18 @@ final public class IndexInstance implements Closeable {
             }
             sample.put(name, value);
         });
+        if (autoIdProvider != null) {
+            if (!sample.containsKey(settings.primaryKey))
+                sample.put(settings.primaryKey, autoIdProvider.get());
+        }
         return sample;
     }
 
-    final List<Map<String, Object>> getJsonSamples(final int count) {
+    final List<Map<String, Object>> getJsonSamples(int count) {
         final List<Map<String, Object>> list = new ArrayList<>(count);
-        for (int i = 0; i < count; i++)
-            list.add(getJsonSample(i));
+        while (count-- > 0)
+            list.add(getJsonSample());
         return list;
-    }
-
-    final Map<String, Object> getJsonSample() {
-        return getJsonSample(null);
     }
 
     ReindexThread getReindexThread() {

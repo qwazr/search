@@ -55,10 +55,8 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         this.primaryKey = fieldMap.getPrimaryKey();
         if (StringUtils.isBlank(primaryKey))
             autoIdProvider = null;
-        else {
-            final HashUtils.B64 b64 = HashUtils.b64url();
-            autoIdProvider = () -> b64.toBase64(HashUtils.newTimeBasedUUID());
-        }
+        else
+            autoIdProvider = getAutoIdProvider();
     }
 
     @Override
@@ -232,5 +230,10 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         final RecordsPoster.MapDocument poster =
             RecordsPoster.MapDocument.forDocValueUpdate(fieldMap, indexWriter, taxonomyWriter);
         return postMappedDocs(poster, post);
+    }
+
+    static Supplier<String> getAutoIdProvider() {
+        final HashUtils.B64 b64 = HashUtils.b64url();
+        return () -> b64.toBase64(HashUtils.newTimeBasedUUID());
     }
 }
