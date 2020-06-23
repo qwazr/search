@@ -77,27 +77,43 @@ public class JsonNodeTest extends AbstractIndexTest {
         service.postJson(INDEX, issueJson);
 
         // Get the document by its id
-        final Map<String, Object> doc1 = service.getDocument(INDEX, "1");
-        assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc1)),
-            equalTo(issueJson));
-
-        // Get the document by one root property
-
-        final ResultDefinition.WithMap result2 = service.searchQuery(INDEX,
-            QueryDefinition.of(new DoubleExactQuery("number", 1347d))
-                .returnedField("*").queryDebug(true).build(), false);
-        assertThat(result2.query, equalTo("pd€number:[1347.0 TO 1347.0]"));
-        final Map<String, Object> doc2 = result2.getDocuments().get(0).getFields();
-        assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc2)),
-            equalTo(issueJson));
+        {
+            final Map<String, Object> doc = service.getDocument(INDEX, "1");
+            assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
+                equalTo(issueJson));
+        }
 
         // Get the document by one deep property
-        final ResultDefinition.WithMap result3 = service.searchQuery(INDEX,
-            QueryDefinition.of(new TermQuery("user.login", "octocat"))
-                .returnedField("*").queryDebug(true).build(), false);
-        final Map<String, Object> doc3 = result3.getDocuments().get(0).getFields();
-        assertThat(result3.query, equalTo("st€user.login:octocat"));
-        assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc3)),
-            equalTo(issueJson));
+        {
+            final ResultDefinition.WithMap result = service.searchQuery(INDEX,
+                QueryDefinition.of(new TermQuery("node_id", "MDU6SXNzdWUx"))
+                    .returnedField("*").queryDebug(true).build(), false);
+            final Map<String, Object> doc = result.getDocuments().get(0).getFields();
+            assertThat(result.query, equalTo("st€node_id:MDU6SXNzdWUx"));
+            assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
+                equalTo(issueJson));
+        }
+
+        // Get the document by one root property
+        {
+            final ResultDefinition.WithMap result = service.searchQuery(INDEX,
+                QueryDefinition.of(new DoubleExactQuery("number", 1347d))
+                    .returnedField("*").queryDebug(true).build(), false);
+            assertThat(result.query, equalTo("pd€number:[1347.0 TO 1347.0]"));
+            final Map<String, Object> doc = result.getDocuments().get(0).getFields();
+            assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
+                equalTo(issueJson));
+        }
+
+        // Get the document by one deep property
+        {
+            final ResultDefinition.WithMap result = service.searchQuery(INDEX,
+                QueryDefinition.of(new TermQuery("user.login", "octocat"))
+                    .returnedField("*").queryDebug(true).build(), false);
+            final Map<String, Object> doc = result.getDocuments().get(0).getFields();
+            assertThat(result.query, equalTo("st€user.login:octocat"));
+            assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
+                equalTo(issueJson));
+        }
     }
 }
