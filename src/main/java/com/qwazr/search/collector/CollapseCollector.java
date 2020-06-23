@@ -18,8 +18,6 @@ package com.qwazr.search.collector;
 
 import com.qwazr.search.query.lucene.FilteredQuery;
 import com.qwazr.utils.Equalizer;
-import com.qwazr.utils.HashUtils;
-import com.qwazr.utils.concurrent.ThreadUtils;
 import it.unimi.dsi.fastutil.floats.Float2ReferenceRBTreeMap;
 import it.unimi.dsi.fastutil.floats.Float2ReferenceSortedMap;
 import it.unimi.dsi.fastutil.ints.Int2FloatMap;
@@ -30,13 +28,13 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap;
-import java.util.Collections;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.IntConsumer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
@@ -47,14 +45,6 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.ScoreMode;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.RoaringDocIdSet;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.IntConsumer;
-import org.roaringbitmap.RoaringBitmap;
 
 public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.Query, CollapseCollector.Leaf, CollapseCollector> {
 
@@ -91,7 +81,9 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
         sortedInts.forEach((docBase, sortedInt) -> {
             final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(sortedInt.getKey());
             sortedInt.getValue().forEach((IntConsumer) builder::add);
-            docIdMaps.put(docBase, builder.build());
+            synchronized (docIdMaps) {
+                docIdMaps.put(docBase, builder.build());
+            }
         });
 
         // Add empty bitset for unassigned leaf
