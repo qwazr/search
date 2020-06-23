@@ -654,7 +654,7 @@ final public class IndexInstance implements Closeable {
     }
 
     final <T> ResultDefinition.WithObject<T> getDocument(final Object id,
-                                                         final FieldMapWrapper fieldMapWrapper) throws IOException {
+                                                         final FieldMapWrapper<T> fieldMapWrapper) throws IOException {
         return query(queryContext -> queryContext.searchObject(getDocumentQuery(id), fieldMapWrapper));
     }
 
@@ -662,11 +662,15 @@ final public class IndexInstance implements Closeable {
         return query(queryContext -> queryContext.searchMap(getDocumentQuery(id)));
     }
 
-    final Explanation explain(final QueryDefinition queryDefinition, final int docId) throws IOException {
+    final Explanation explain(final QueryDefinition queryDefinition, final String id) throws IOException {
         try (final AutoLockSemaphore.Lock lock = readSemaphore.acquire()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContextImpl context = buildQueryContext(indexSearcher, taxonomyReader)) {
-                    return new QueryExecution<>(context, queryDefinition).explain(docId);
+                    final ResultDocumentsInterface.ForScoreDoc resultDocs = new ResultDocumentsInterface.ForScoreDoc();
+                    final ResultDefinition.Empty result = context.searchInterface(getDocumentQuery(id), resultDocs);
+                    if (result == null || result.totalHits != 1)
+                        throw new NotFoundException("Document not found: " + id);
+                    return new QueryExecution<>(context, queryDefinition).explain(resultDocs.getDoc(0));
                 } catch (ReflectiveOperationException | ParseException | QueryNodeException e) {
                     throw ServerException.of(e);
                 }

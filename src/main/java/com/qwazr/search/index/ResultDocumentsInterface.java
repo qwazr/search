@@ -15,10 +15,11 @@
  **/
 package com.qwazr.search.index;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
-
-import java.io.IOException;
 
 public interface ResultDocumentsInterface {
 
@@ -41,4 +42,25 @@ public interface ResultDocumentsInterface {
 
     ResultDocumentsInterface NOPE = new ResultDocumentsInterface() {
     };
+
+    final class ForScoreDoc implements ResultDocumentsInterface {
+
+        private final List<ScoreDoc> scoredocs;
+
+        public ForScoreDoc() {
+            this.scoredocs = new ArrayList<>();
+        }
+
+        final public void doc(final IndexSearcher searcher, final int pos, final ScoreDoc scoreDoc) {
+            scoredocs.add(scoreDoc);
+        }
+
+        public float getScore(int pos) {
+            return scoredocs.get(pos).score;
+        }
+
+        int getDoc(int pos) {
+            return scoredocs.get(pos).doc;
+        }
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
 import com.qwazr.search.test.units.RealTimeSynonymsResourcesTest;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.apache.lucene.search.Query;
@@ -28,13 +29,10 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexManager();
         indexManager.registerConstructorParameter(SynonymMap.class,
             RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
@@ -52,8 +50,10 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoT
             .addBoost("textField", 1F)
             .addBoost("stringField", 1F)
             .setQueryString("Hello")
-            .build()).build();
-        checkQuery(queryDef);
+            .build())
+            .returnedField("$id$")
+            .build();
+        checkQuery(queryDef, r -> r.id);
     }
 
     @Test
@@ -64,9 +64,10 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoT
             .addBoost("stringField", 1F)
             .setAnalyzer(new StandardAnalyzer())
             .setQueryString("Hello World")
-            .build()).
-            build();
-        checkQuery(queryDef);
+            .build())
+            .returnedField("$id$")
+            .build();
+        checkQuery(queryDef, r -> r.id);
     }
 
     @Test
@@ -84,23 +85,23 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoT
     @Test
     @Ignore
     public void testWithSynonymsOr() {
-        AbstractQuery query = SimpleQueryParser.of()
+        AbstractQuery<?> query = SimpleQueryParser.of()
             .addField("textSynonymsField1", "textField", "stringField")
             .setDefaultOperator(QueryParserOperator.OR)
             .setQueryString("bonjour le monde")
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+        checkQuery(QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), r -> r.id);
     }
 
     @Test
     @Ignore
     public void testWithSynonymsAnd() {
-        AbstractQuery query = SimpleQueryParser.of()
+        AbstractQuery<?> query = SimpleQueryParser.of()
             .addField("textSynonymsField1", "textSynonymsField2")
             .setDefaultOperator(QueryParserOperator.AND)
             .setQueryString("bonjour le monde")
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+        checkQuery(QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), r -> r.id);
     }
 
 }

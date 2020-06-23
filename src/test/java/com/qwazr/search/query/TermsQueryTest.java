@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,16 @@ package com.qwazr.search.query;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.ExplainDefinition;
-import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import org.apache.lucene.search.Query;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
@@ -41,18 +39,18 @@ public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy
     }
 
     private void checkQuery(QueryDefinition queryDef, long totalHits) {
-        ResultDefinition.WithObject<? extends IndexRecord> result = indexService.searchQuery(queryDef);
+        ResultDefinition.WithObject<? extends IndexRecord<?>> result = indexService.searchQuery(queryDef);
         Assert.assertNotNull(result);
         Assert.assertEquals(totalHits, result.totalHits);
         Assert.assertNotNull(result.documents);
-        ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
+        ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).record.id);
         Assert.assertNotNull(explain);
     }
 
     @Test
     public void testArray() {
         QueryDefinition queryDef =
-            QueryDefinition.of(TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build()).build();
+            QueryDefinition.of(TermsQuery.of(FieldDefinition.ID_FIELD).add("1", "2").build()).returnedField("$id$").build();
         checkQuery(queryDef, 2L);
     }
 

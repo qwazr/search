@@ -385,7 +385,7 @@ public interface IndexServiceInterface extends ServiceInterface {
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
     ExplainDefinition explainQuery(@PathParam("index_name") String indexName,
                                    QueryDefinition query,
-                                   @PathParam("doc") int docId);
+                                   @PathParam("doc") String docId);
 
     @POST
     @Path("/{index_name}/search/explain/{doc}")
@@ -393,7 +393,7 @@ public interface IndexServiceInterface extends ServiceInterface {
     @Produces(MediaType.TEXT_PLAIN)
     String explainQueryText(@PathParam("index_name") String indexName,
                             QueryDefinition query,
-                            @PathParam("doc") int docId);
+                            @PathParam("doc") String docId);
 
     @POST
     @Path("/{index_name}/search/explain/{doc}")
@@ -401,7 +401,7 @@ public interface IndexServiceInterface extends ServiceInterface {
     @Produces(MEDIATYPE_TEXT_GRAPHVIZ)
     String explainQueryDot(@PathParam("index_name") String indexName,
                            QueryDefinition query,
-                           @PathParam("doc") int docId,
+                           @PathParam("doc") String docId,
                            @QueryParam("wrap") final Integer descriptionWrapSize);
 
     GenericType<Set<String>> setStringType = new GenericType<>() {

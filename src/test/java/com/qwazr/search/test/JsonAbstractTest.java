@@ -857,7 +857,7 @@ public abstract class JsonAbstractTest {
         final IndexServiceInterface client = getClient();
         final ResultDefinition<ResultDocumentMap> result = checkQueryIndex(client, QUERY_GEO2D_BOX, 1);
         Assert.assertNotNull(result);
-        int docId = result.getDocuments().get(0).getDoc();
+        final String docId = result.getDocuments().get(0).getFields().get(FieldDefinition.ID_FIELD).toString();
         final ExplainDefinition explain = client.explainQuery(INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId);
         Assert.assertNotNull(explain);
         String explainText = client.explainQueryText(INDEX_MASTER_NAME, QUERY_GEO2D_BOX, docId);
@@ -867,7 +867,7 @@ public abstract class JsonAbstractTest {
     }
 
     @Test
-    public void test500SecondBackup() throws URISyntaxException, ExecutionException, InterruptedException {
+    public void test500SecondBackup() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
         BackupStatus status = doBackup(client, INDEX_BACKUP_NAME2);
         Assert.assertEquals(status,
@@ -933,12 +933,12 @@ public abstract class JsonAbstractTest {
         Assert.assertNotNull(result);
         Assert.assertTrue(result.totalHits > 0);
         builder.rows(1);
-        Set<Integer> idSet = new HashSet<>();
+        Set<Object> idSet = new HashSet<>();
         for (int i = 0; i < result.totalHits; i++) {
             builder.start(i);
             ResultDefinition.WithMap result2 =
                 client.searchQuery(INDEX_MASTER_NAME, builder.build(), false);
-            idSet.add(result2.getDocuments().get(0).getDoc());
+            idSet.add(result2.getDocuments().get(0).getFields().get("$id$"));
         }
         Assert.assertEquals(result.totalHits, idSet.size());
     }
@@ -1036,7 +1036,7 @@ public abstract class JsonAbstractTest {
         checkFacetFiltersResult(checkQuerySlaveIndex(client, FACETS_DRILLDOWN_QUERY, 2), 5);
     }
 
-    private class UpdateDocThread implements Runnable {
+    private static class UpdateDocThread implements Runnable {
 
         final IndexServiceInterface client;
         final AtomicInteger counter;
@@ -1055,7 +1055,7 @@ public abstract class JsonAbstractTest {
         }
     }
 
-    private class UpdateDocValueThread extends UpdateDocThread {
+    private static class UpdateDocValueThread extends UpdateDocThread {
 
         UpdateDocValueThread(final IndexServiceInterface client, final AtomicInteger counter) {
             super(client, counter);

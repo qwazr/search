@@ -57,7 +57,8 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
     QueryExecution(final QueryContextImpl queryContext, final QueryDefinition queryDefinition)
         throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
 
-        this.timeTracker = new TimeTracker();
+        this.timeTracker = Boolean.TRUE.equals(queryDefinition.getQueryDebug())
+            ? TimeTracker.withDurations() : TimeTracker.noDurations();
 
         this.queryContext = queryContext;
         this.queryDef = queryDefinition;

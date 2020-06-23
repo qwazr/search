@@ -617,7 +617,7 @@ public class AnnotatedIndexService<T> {
      * @param docId the ID of the document
      * @return the score computation for document and query
      */
-    public ExplainDefinition explainQuery(final QueryDefinition query, final int docId) {
+    public ExplainDefinition explainQuery(final QueryDefinition query, final String docId) {
         return indexService.explainQuery(indexName, query, docId);
     }
 
@@ -628,7 +628,7 @@ public class AnnotatedIndexService<T> {
      * @param docId the ID of the document
      * @return the score computation for document and query
      */
-    public String explainQueryText(final QueryDefinition query, final int docId) {
+    public String explainQueryText(final QueryDefinition query, final String docId) {
         return indexService.explainQueryText(indexName, query, docId);
     }
 
@@ -640,7 +640,7 @@ public class AnnotatedIndexService<T> {
      * @param descriptionWrapSize the maximum number of character per line
      * @return the score computation for document and query
      */
-    public String explainQueryDot(final QueryDefinition query, final int docId, final Integer descriptionWrapSize) {
+    public String explainQueryDot(final QueryDefinition query, final String docId, final Integer descriptionWrapSize) {
         return indexService.explainQueryDot(indexName, query, docId, descriptionWrapSize);
     }
 

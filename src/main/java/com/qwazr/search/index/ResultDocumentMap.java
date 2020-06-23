@@ -36,11 +36,11 @@ public class ResultDocumentMap extends ResultDocumentAbstract {
     final public Map<String, Object> fields;
 
     @JsonCreator
-    public ResultDocumentMap(@JsonProperty("score") Float score, @JsonProperty("pos") Integer pos,
-                             @JsonProperty("doc") Integer doc, @JsonProperty("shard_index") Integer shardIndex,
+    public ResultDocumentMap(@JsonProperty("score") Float score,
+                             @JsonProperty("pos") Integer pos,
                              @JsonProperty("highlights") Map<String, String> highlights,
                              @JsonProperty("fields") Map<String, Object> fields) {
-        super(score, pos, doc, shardIndex, highlights);
+        super(score, pos, highlights);
         this.fields = fields;
     }
 

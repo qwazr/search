@@ -791,13 +791,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     @Override
     public ExplainDefinition explainQuery(final String indexName,
                                           final QueryDefinition query,
-                                          int docId) {
+                                          final String docId) {
         try {
             return indexTarget
                 .path(indexName)
                 .path("search")
                 .path("explain")
-                .path(Integer.toString(docId))
+                .path(docId)
                 .request(preferedSerializedMediaType)
                 .post(Entity.entity(query, preferedSerializedMediaType), ExplainDefinition.class);
         } catch (WebApplicationException e) {
@@ -808,13 +808,13 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     @Override
     public String explainQueryText(final String indexName,
                                    final QueryDefinition query,
-                                   final int docId) {
+                                   final String docId) {
         try {
             return indexTarget
                 .path(indexName)
                 .path("search")
                 .path("explain")
-                .path(Integer.toString(docId))
+                .path(docId)
                 .request(MediaType.TEXT_PLAIN)
                 .post(Entity.entity(query, preferedSerializedMediaType), String.class);
         } catch (WebApplicationException e) {
@@ -825,14 +825,14 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     @Override
     public String explainQueryDot(final String indexName,
                                   final QueryDefinition query,
-                                  final int docId,
+                                  final String docId,
                                   final Integer descriptionWrapSize) {
         try {
             WebTarget target = indexTarget
                 .path(indexName)
                 .path("search")
                 .path("explain")
-                .path(Integer.toString(docId));
+                .path(docId);
             if (descriptionWrapSize != null)
                 target = target.queryParam("wrap", descriptionWrapSize);
             return target.request(MEDIATYPE_TEXT_GRAPHVIZ)

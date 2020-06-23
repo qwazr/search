@@ -15,22 +15,19 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
 import com.qwazr.search.test.units.RealTimeSynonymsResourcesTest;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 public class QueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
@@ -49,8 +46,8 @@ public class QueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
     public void testWithDefaultAnalyzer() {
         QueryDefinition queryDef = QueryDefinition.of(
             QueryParser.of("textField").setDefaultOperator(QueryParserOperator.AND).setQueryString("Hello").build())
-            .build();
-        checkQuery(queryDef);
+            .returnedField("$id$").build();
+        checkQuery(queryDef, r -> r.id);
     }
 
     @Test
@@ -59,9 +56,10 @@ public class QueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
             .setDefaultOperator(QueryParserOperator.AND)
             .setQueryString("hello World")
             .setAnalyzer(new StandardAnalyzer())
-            .build()).
-            build();
-        checkQuery(queryDef);
+            .build())
+            .returnedField("$id$")
+            .build();
+        checkQuery(queryDef, r -> r.id);
     }
 
     @Test
@@ -81,7 +79,7 @@ public class QueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
             .setSplitOnWhitespace(false)
             .setQueryString("bonjour le monde")
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+        checkQuery(QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), r -> r.id);
     }
 
     @Test
@@ -91,7 +89,7 @@ public class QueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
             .setSplitOnWhitespace(false)
             .setQueryString("hello bonjour le monde")
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+        checkQuery(QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), r -> r.id);
     }
 
     @Test
@@ -101,7 +99,7 @@ public class QueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
             .setSplitOnWhitespace(false)
             .setQueryString("bonjour le monde")
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+        checkQuery(QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), r -> r.id);
     }
 
     @Test
@@ -111,7 +109,7 @@ public class QueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
             .setSplitOnWhitespace(false)
             .setQueryString("hello bonjour le monde")
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+        checkQuery(QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), r -> r.id);
     }
 
     @Test
@@ -121,7 +119,7 @@ public class QueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
             .setSplitOnWhitespace(false)
             .setQueryString("bonjour le monde hello")
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+        checkQuery(QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), r -> r.id);
     }
 
 }

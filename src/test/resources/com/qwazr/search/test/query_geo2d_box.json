@@ -10,6 +10,7 @@
   "start": 0,
   "rows": 5,
   "returned_fields": [
+    "$id$",
     "name"
   ]
 }

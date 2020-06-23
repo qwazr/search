@@ -38,8 +38,6 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
     final public String fieldname;
     final public float percent_terms_to_match;
 
-    final public Integer doc_num;
-
     final public Boolean is_boost;
     final public Float boost_factor;
     final public String[] fieldnames;
@@ -59,7 +57,6 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
         like_text = null;
         fieldname = null;
         percent_terms_to_match = 0;
-        doc_num = null;
         is_boost = null;
         boost_factor = null;
         fieldnames = null;
@@ -79,7 +76,6 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
         this.like_text = builder.likeText;
         this.fieldname = builder.fieldname;
         this.percent_terms_to_match = builder.percentTermsToMatch;
-        this.doc_num = builder.docNum;
         this.is_boost = builder.isBoost;
         this.boost_factor = builder.boostFactor;
         this.fieldnames = builder.fieldnames;
@@ -103,7 +99,7 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
     protected boolean isEqual(MoreLikeThisQuery q) {
         return Objects.equals(like_text, q.like_text) && Objects.equals(fieldname, q.fieldname) &&
             Objects.equals(percent_terms_to_match, q.percent_terms_to_match) &&
-            Objects.equals(doc_num, q.doc_num) && Objects.equals(is_boost, q.is_boost) &&
+            Objects.equals(is_boost, q.is_boost) &&
             Objects.equals(boost_factor, q.boost_factor) && Arrays.equals(fieldnames, q.fieldnames) &&
             Objects.equals(max_doc_freq, q.max_doc_freq) && Objects.equals(max_doc_freq_pct, q.max_doc_freq_pct) &&
             Objects.equals(max_num_tokens_parsed, q.max_num_tokens_parsed) &&
@@ -147,9 +143,7 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
         if (stop_words != null)
             mlt.setStopWords(stop_words);
         mlt.setAnalyzer(queryContext.getQueryAnalyzer());
-
-        if (doc_num != null)
-            return mlt.like(doc_num);
+        
         if (StringUtils.isEmpty(like_text) || StringUtils.isEmpty(fieldname))
             throw new ParseException("Either doc_num or like_text/fieldname are missing");
 
@@ -161,10 +155,6 @@ public class MoreLikeThisQuery extends AbstractQuery<MoreLikeThisQuery> {
         //make at least half the terms match
         newBq.setMinimumNumberShouldMatch((int) (bq.clauses().size() * percent_terms_to_match));
         return newBq.build();
-    }
-
-    public static Builder of(int docNum) {
-        return new Builder(docNum);
     }
 
     public static Builder of(String likeText, String fieldName) {

@@ -24,9 +24,6 @@ import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.concurrent.ExecutorUtils;
-import org.junit.AfterClass;
-import org.junit.Assert;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -34,7 +31,10 @@ import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.logging.Logger;
+import org.junit.AfterClass;
+import org.junit.Assert;
 
 public abstract class AbstractIndexTest {
 
@@ -80,16 +80,20 @@ public abstract class AbstractIndexTest {
         return initIndexService(true, recordClass);
     }
 
-    <T> ResultDefinition.WithObject<T> checkQuery(AnnotatedIndexService<T> indexService, QueryDefinition queryDef,
-                                                  Long hitsExpected, String queryDebug) {
+    protected <T> ResultDefinition.WithObject<T> checkQuery(final AnnotatedIndexService<T> indexService,
+                                                            final QueryDefinition queryDef,
+                                                            final Long hitsExpected,
+                                                            final String queryDebug,
+                                                            final Function<T, String> primaryKeyProvider) {
         final ResultDefinition.WithObject<T> result = indexService.searchQuery(queryDef);
         Assert.assertNotNull(result);
         if (result.query != null)
             LOGGER.info(result.query);
         if (hitsExpected != null) {
             Assert.assertEquals(hitsExpected.longValue(), result.totalHits);
-            if (hitsExpected > 0) {
-                ExplainDefinition explain = indexService.explainQuery(queryDef, result.documents.get(0).getDoc());
+            if (hitsExpected > 0 && primaryKeyProvider != null) {
+                final String docId = primaryKeyProvider.apply(result.documents.get(0).record);
+                final ExplainDefinition explain = indexService.explainQuery(queryDef, docId);
                 Assert.assertNotNull(explain);
             }
         }
@@ -99,7 +103,7 @@ public abstract class AbstractIndexTest {
     }
 
     <T> ResultDefinition.WithObject<T> checkQuery(AnnotatedIndexService<T> indexService, QueryDefinition queryDef) {
-        return checkQuery(indexService, queryDef, 1L, null);
+        return checkQuery(indexService, queryDef, 1L, null, null);
     }
 
     protected <T> void checkResult(final ResultDefinition.WithObject<T> result, long totalHits) {
@@ -151,13 +155,16 @@ public abstract class AbstractIndexTest {
             return service;
         }
 
-        public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef, Long hitsExpected,
-                                                         String queryDebug) {
-            return checkQuery(getIndexService(), queryDef, hitsExpected, queryDebug);
+        public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef,
+                                                         Long hitsExpected,
+                                                         String queryDebug,
+                                                         final Function<T, String> primaryKeyProvider) {
+            return checkQuery(getIndexService(), queryDef, hitsExpected, queryDebug, primaryKeyProvider);
         }
 
-        public ResultDefinition.WithObject<T> checkQuery(QueryDefinition queryDef) {
-            return checkQuery(queryDef, 1L, null);
+        public ResultDefinition.WithObject<T> checkQuery(final QueryDefinition queryDef,
+                                                         final Function<T, String> primaryKeyProvider) {
+            return checkQuery(queryDef, 1L, null, primaryKeyProvider);
         }
 
         public static class WithTaxonomy extends WithIndexRecord<IndexRecord.WithTaxonomy> {

@@ -226,10 +226,10 @@ public class AnnotatedIndexServiceTest {
             .fieldBoost("full", 0.5f)
             .fieldAndFilter("full")
             .build();
-        QueryDefinition query = QueryDefinition.of(mfq).build();
+        final QueryDefinition query = QueryDefinition.of(mfq).returnedField("$id$").build();
         ResultDefinition.WithObject<IndexRecord> results = service.searchQuery(query);
         Assert.assertNotNull(results);
-        int docId = results.getDocuments().get(0).getDoc();
+        final String docId = results.getDocuments().get(0).record.id;
         ExplainDefinition explain = service.explainQuery(query, docId);
         Assert.assertNotNull(explain);
         String explainText = service.explainQueryText(query, docId);
@@ -247,7 +247,7 @@ public class AnnotatedIndexServiceTest {
     @Index(name = "indexName", similarityClass = SimilarityForTest.class)
     public static class IndexRecord {
 
-        @IndexField(template = FieldDefinition.Template.StringField, name = FieldDefinition.ID_FIELD)
+        @IndexField(template = FieldDefinition.Template.StringField, name = FieldDefinition.ID_FIELD, stored = true)
         final public String id;
 
         @IndexField(template = FieldDefinition.Template.TextField, analyzerClass = MyAnalyzer.class, stored = true)
@@ -269,7 +269,10 @@ public class AnnotatedIndexServiceTest {
         }
 
         public IndexRecord() {
-            this(null, null);
+            this.id = null;
+            this.title = null;
+            this.content = null;
+            this.full = null;
         }
     }
 

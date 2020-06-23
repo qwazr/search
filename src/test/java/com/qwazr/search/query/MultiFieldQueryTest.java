@@ -15,23 +15,19 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
 import com.qwazr.search.test.units.RealTimeSynonymsResourcesTest;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.text.ParseException;
 
 public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
@@ -60,8 +56,11 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("textField", 1F)
             .fieldBoost("stringField", 1F)
             .enableFuzzyQuery(true)
-            .build()).queryDebug(true).build();
-        checkQuery(queryDef, 1L, "textField:hello stringField:Hello~2");
+            .build())
+            .returnedField("$id$")
+            .queryDebug(true)
+            .build();
+        checkQuery(queryDef, 1L, "textField:hello stringField:Hello~2", r -> r.id);
 
         queryDef = QueryDefinition.of(MultiFieldQuery.of()
             .defaultOperator(QueryParserOperator.AND)
@@ -70,8 +69,11 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("textField", 1F)
             .fieldBoost("stringField", 1F)
             .enableFuzzyQuery(true)
-            .build()).queryDebug(true).build();
-        checkQuery(queryDef, 1L, "textField:hello stringField:Hello~2");
+            .build())
+            .returnedField("$id$")
+            .queryDebug(true)
+            .build();
+        checkQuery(queryDef, 1L, "textField:hello stringField:Hello~2", r -> r.id);
 
         queryDef = QueryDefinition.of(MultiFieldQuery.of()
             .defaultOperator(QueryParserOperator.OR)
@@ -80,8 +82,11 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("textField", 2F)
             .fieldBoost("stringField", 1F)
             .enableFuzzyQuery(true)
-            .build()).queryDebug(true).build();
-        checkQuery(queryDef, 1L, "((textField:hello textField:world)~1)^2.0 stringField:Hello world~2");
+            .build())
+            .returnedField("$id$")
+            .queryDebug(true)
+            .build();
+        checkQuery(queryDef, 1L, "((textField:hello textField:world)~1)^2.0 stringField:Hello world~2", r -> r.id);
 
         queryDef = QueryDefinition.of(MultiFieldQuery.of()
             .defaultOperator(QueryParserOperator.AND)
@@ -90,8 +95,11 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("textField", 2F)
             .fieldBoost("stringField", 1F)
             .enableFuzzyQuery(true)
-            .build()).queryDebug(true).build();
-        checkQuery(queryDef, 1L, "((textField:hello textField:world)~1)^2.0 stringField:Hello world~2");
+            .build())
+            .returnedField("$id$")
+            .queryDebug(true)
+            .build();
+        checkQuery(queryDef, 1L, "((textField:hello textField:world)~1)^2.0 stringField:Hello world~2", r -> r.id);
     }
 
     @Test
@@ -103,9 +111,12 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("textField", 3F)
             .fieldBoost("stringField", 1F)
             .enableFuzzyQuery(true)
-            .build()).queryDebug(true).build();
+            .build())
+            .queryDebug(true)
+            .returnedField("$id$")
+            .build();
         checkQuery(queryDef, 1L,
-            "((textField:hello textField:world textField:aaaaaa)~2)^3.0 stringField:Hello world aaaaaa~2");
+            "((textField:hello textField:world textField:aaaaaa)~2)^3.0 stringField:Hello world aaaaaa~2", r -> r.id);
     }
 
     @Test
@@ -119,9 +130,13 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("stringField", 1F)
             .fieldBoost("textSynonymsField1", 2.F)
             .enableFuzzyQuery(true)
-            .build()).queryDebug(true).build();
+            .build())
+            .queryDebug(true)
+            .returnedField("$id$")
+            .build();
         checkQuery(queryDef, 1L,
-            "(stringField:Hello world~2 (((+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2) (+textSynonymsField1:hallo~2 +textSynonymsField1:welt~2) (+textSynonymsField1:Hello~2 +textSynonymsField1:world)))^2.0) +(+textField:hello +textField:world)^3.0");
+            "(stringField:Hello world~2 (((+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2) (+textSynonymsField1:hallo~2 +textSynonymsField1:welt~2) (+textSynonymsField1:Hello~2 +textSynonymsField1:world)))^2.0) +(+textField:hello +textField:world)^3.0",
+            r -> r.id);
     }
 
     @Test
@@ -137,9 +152,13 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("stringField", 1F)
             .fieldBoost("textSynonymsField1", 2.F)
             .enableFuzzyQuery(true)
-            .build()).queryDebug(true).build();
+            .build())
+            .returnedField("$id$")
+            .queryDebug(true)
+            .build();
         checkQuery(queryDef, 1L,
-            "(stringField:Hello world~2 (((+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2) (+textSynonymsField1:hallo~2 +textSynonymsField1:welt~2) (+textSynonymsField1:Hello~2 +textSynonymsField1:world)))^2.0) +((+textField:hello +textField:world)^3.0 (+Synonym(textComplexAnalyzer:hello textComplexAnalyzer:helloworld) +textComplexAnalyzer:world)^2.0)");
+            "(stringField:Hello world~2 (((+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2) (+textSynonymsField1:hallo~2 +textSynonymsField1:welt~2) (+textSynonymsField1:Hello~2 +textSynonymsField1:world)))^2.0) +((+textField:hello +textField:world)^3.0 (+Synonym(textComplexAnalyzer:hello textComplexAnalyzer:helloworld) +textComplexAnalyzer:world)^2.0)",
+            r -> r.id);
     }
 
     @Test
@@ -151,8 +170,10 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("textField", 3F)
             .fieldBoost("stringField", 1F)
             .enableFuzzyQuery(true)
-            .build()).queryDebug(true).build();
-        checkQuery(queryDef, 1L, "((+textField:hello +textField:world)^3.0 | stringField:Hello world~2)~0.1");
+            .build())
+            .returnedField("$id$")
+            .queryDebug(true).build();
+        checkQuery(queryDef, 1L, "((+textField:hello +textField:world)^3.0 | stringField:Hello world~2)~0.1", r -> r.id);
     }
 
     @Test
@@ -166,9 +187,13 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("stringField", 1F)
             .fieldBoost("textSynonymsField1", 2.F)
             .enableFuzzyQuery(true)
-            .build()).queryDebug(true).build();
+            .build())
+            .queryDebug(true)
+            .returnedField("$id$")
+            .build();
         checkQuery(queryDef, 1L,
-            "(stringField:Hello world~2 | (((+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2) (+textSynonymsField1:hallo~2 +textSynonymsField1:welt~2) (+textSynonymsField1:Hello~2 +textSynonymsField1:world)))^2.0)~0.1 +(+textField:hello +textField:world)^3.0");
+            "(stringField:Hello world~2 | (((+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2) (+textSynonymsField1:hallo~2 +textSynonymsField1:welt~2) (+textSynonymsField1:Hello~2 +textSynonymsField1:world)))^2.0)~0.1 +(+textField:hello +textField:world)^3.0",
+            r -> r.id);
     }
 
     @Test
@@ -183,8 +208,11 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .analyzer(analyzer)
             .fieldBoost("textField", 1F)
             .fieldBoost("stringField", 1F)
-            .build()).queryDebug(true).build();
-        checkQuery(queryDef, 1L, "textField:hello stringField:hello");
+            .build())
+            .queryDebug(true)
+            .returnedField("$id$")
+            .build();
+        checkQuery(queryDef, 1L, "textField:hello stringField:hello", r -> r.id);
 
         queryDef = QueryDefinition.of(MultiFieldQuery.of()
             .defaultOperator(QueryParserOperator.AND)
@@ -193,8 +221,11 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .analyzer(analyzer)
             .fieldBoost("textField", 1F)
             .fieldBoost("stringField", 1F)
-            .build()).queryDebug(true).build();
-        checkQuery(queryDef, 1L, "textField:hello stringField:hello");
+            .build())
+            .queryDebug(true)
+            .returnedField("$id$")
+            .build();
+        checkQuery(queryDef, 1L, "textField:hello stringField:hello", r -> r.id);
 
         queryDef = QueryDefinition.of(MultiFieldQuery.of()
             .defaultOperator(QueryParserOperator.AND)
@@ -204,8 +235,12 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("textField", 1F)
             .fieldBoost("stringField", 1F)
             .enableFuzzyQuery(true)
-            .build()).queryDebug(true).build();
-        checkQuery(queryDef, 1L, "((textField:hello textField:zzzzz~2)~1) ((stringField:hello stringField:zzzzz~2)~1)");
+            .build())
+            .queryDebug(true)
+            .returnedField("$id$")
+            .build();
+        checkQuery(queryDef, 1L, "((textField:hello textField:zzzzz~2)~1) ((stringField:hello stringField:zzzzz~2)~1)",
+            r -> r.id);
     }
 
     @Test
@@ -234,7 +269,10 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("textField", 2.0F)
             .fieldBoost("stringField", 3.0F)
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+        checkQuery(
+            QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(),
+            r -> r.id
+        );
     }
 
     @Test
@@ -246,7 +284,9 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("textField", 2.0F)
             .fieldBoost("stringField", 3.0F)
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+        checkQuery(
+            QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), r -> r.id
+        );
     }
 
     @Test
@@ -259,8 +299,10 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("stringField", 3.0F)
             .enableFuzzyQuery(true)
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 1L,
-            "(+((+textSynonymsField1:hello +textSynonymsField1:world) (+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2))) (+textField:bonjour~2 +textField:le~2 +textField:monde~2)^2.0 (stringField:bonjour le monde~2)^3.0");
+        checkQuery(
+            QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), 1L,
+            "(+((+textSynonymsField1:hello +textSynonymsField1:world) (+textSynonymsField1:bonjour~2 +textSynonymsField1:le~2 +textSynonymsField1:monde~2))) (+textField:bonjour~2 +textField:le~2 +textField:monde~2)^2.0 (stringField:bonjour le monde~2)^3.0"
+            , r -> r.id);
     }
 
     @Test
@@ -273,8 +315,10 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("textComplexAnalyzer", 2.0F)
             .enableFuzzyQuery(true)
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 1L,
-            "((textSynonymsField1:Hello~2 textSynonymsField1:Worlds~2)~1) ((((+textComplexAnalyzer:hello +textComplexAnalyzer:world)~1) textComplexAnalyzer:helloworld~2))^2.0");
+        checkQuery(
+            QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), 1L,
+            "((textSynonymsField1:Hello~2 textSynonymsField1:Worlds~2)~1) ((((+textComplexAnalyzer:hello +textComplexAnalyzer:world)~1) textComplexAnalyzer:helloworld~2))^2.0",
+            r -> r.id);
     }
 
     @Test
@@ -284,8 +328,11 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .setSplitOnWhitespace(false)
             .setQueryString("hello bonjour le monde")
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 1L,
-            "+textSynonymsField1:hello +((+textSynonymsField1:hello +textSynonymsField1:world) (+textSynonymsField1:bonjour +textSynonymsField1:le +textSynonymsField1:monde))");
+        checkQuery(
+            QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), 1L,
+            "+textSynonymsField1:hello +((+textSynonymsField1:hello +textSynonymsField1:world) (+textSynonymsField1:bonjour +textSynonymsField1:le +textSynonymsField1:monde))",
+            r -> r.id
+        );
     }
 
     @Test
@@ -295,8 +342,11 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .setSplitOnWhitespace(false)
             .setQueryString("bonjour le monde hello")
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 1L,
-            "+((+textSynonymsField1:hello +textSynonymsField1:world) (+textSynonymsField1:bonjour +textSynonymsField1:le +textSynonymsField1:monde)) +textSynonymsField1:hello");
+        checkQuery(
+            QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), 1L,
+            "+((+textSynonymsField1:hello +textSynonymsField1:world) (+textSynonymsField1:bonjour +textSynonymsField1:le +textSynonymsField1:monde)) +textSynonymsField1:hello",
+            r -> r.id
+        );
     }
 
     @Test
@@ -309,7 +359,9 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("stringField", 2.0F)
             .enableFuzzyQuery(true)
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 0L, "(stringField: & ~2)^2.0");
+        checkQuery(
+            QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(),
+            0L, "(stringField: & ~2)^2.0", r -> r.id);
     }
 
     @Test
@@ -321,7 +373,10 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .fieldBoost("textField", 1.0F)
             .fieldBoost("textComplexAnalyzer", 2.0F)
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build(), 0L, "");
+        checkQuery(
+            QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), 0L, "",
+            r -> r.id
+        );
     }
 
 }

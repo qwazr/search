@@ -860,7 +860,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     @Override
     public ExplainDefinition explainQuery(final String indexName,
                                           final QueryDefinition query,
-                                          int docId) {
+                                          final String docId) {
         try {
             checkRight();
             final IndexInstance index = indexManager.get(indexName);
@@ -873,7 +873,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     @Override
     public String explainQueryText(final String indexName,
                                    final QueryDefinition query,
-                                   final int docId) {
+                                   final String docId) {
         try {
             checkRight();
             final IndexInstance index = indexManager.get(indexName);
@@ -886,7 +886,7 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     @Override
     public String explainQueryDot(final String indexName,
                                   final QueryDefinition query,
-                                  final int docId,
+                                  final String docId,
                                   final Integer descriptionWrapSize) {
         try {
             return ExplainDefinition.toDot(explainQuery(indexName, query, docId),

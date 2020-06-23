@@ -15,28 +15,25 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
 import com.qwazr.search.test.units.RealTimeSynonymsResourcesTest;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException, java.text.ParseException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexManager();
         indexManager.registerConstructorParameter(SynonymMap.class,
             RealTimeSynonymsResourcesTest.getSynonymMap(RealTimeSynonymsResourcesTest.WHITESPACE_ANALYZER,
@@ -55,8 +52,10 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
             .addBoost("textField", 1F)
             .addBoost("stringField", 1F)
             .setQueryString("Hello")
-            .build()).build();
-        checkQuery(queryDef);
+            .build())
+            .returnedField("$id$")
+            .build();
+        checkQuery(queryDef, r -> r.id);
     }
 
     @Test
@@ -68,18 +67,18 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
             .addBoost("stringField", 1F)
             .setQueryString("Hello World")
             .setAnalyzer(new StandardAnalyzer())
-            .build()).
-            build();
-        checkQuery(queryDef);
+            .build())
+            .returnedField("$id$")
+            .build();
+        checkQuery(queryDef, r -> r.id);
     }
 
     @Test
-    public void luceneQuery() throws IOException, ReflectiveOperationException, ParseException, QueryNodeException {
+    public void luceneQuery() throws ParseException {
         Query luceneQuery = MultiFieldQueryParser.of()
             .addField("textField", "stringField")
             .setDefaultOperator(QueryParserOperator.AND)
-            .
-                addBoost("textField", 1F)
+            .addBoost("textField", 1F)
             .addBoost("stringField", 1F)
             .setQueryString("Hello World")
             .build()
@@ -88,28 +87,26 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
     }
 
     @Test
-    public void testWithSynonymsOr()
-        throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-        AbstractQuery query = MultiFieldQueryParser.of()
+    public void testWithSynonymsOr() {
+        AbstractQuery<?> query = MultiFieldQueryParser.of()
             .addField("textSynonymsField1", "textField", "stringField")
             .setDefaultOperator(QueryParserOperator.OR)
             .setSplitOnWhitespace(false)
             .setQueryString("bonjour le monde")
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+        checkQuery(QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), r -> r.id);
     }
 
     @Test
     @Ignore
-    public void testWithSynonymsAnd()
-        throws QueryNodeException, ReflectiveOperationException, ParseException, IOException {
-        AbstractQuery query = MultiFieldQueryParser.of()
+    public void testWithSynonymsAnd() {
+        AbstractQuery<?> query = MultiFieldQueryParser.of()
             .addField("textSynonymsField1", "textSynonymsField2")
             .setDefaultOperator(QueryParserOperator.AND)
             .setSplitOnWhitespace(false)
             .setQueryString("bonjour le monde")
             .build();
-        checkQuery(QueryDefinition.of(query).queryDebug(true).build());
+        checkQuery(QueryDefinition.of(query).returnedField("$id$").queryDebug(true).build(), r -> r.id);
     }
 
 }

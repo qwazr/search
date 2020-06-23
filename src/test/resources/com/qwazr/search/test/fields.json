@@ -1,6 +1,7 @@
 {
   "$id$": {
-    "template": "StringField"
+    "template": "StringField",
+    "stored": true
   },
   "name": {
     "template": "TextField"

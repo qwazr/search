@@ -26,56 +26,36 @@ public abstract class ResultDocumentAbstract {
 
     final public float score;
     final public int pos;
-    final public int doc;
-    @JsonProperty("shard_index")
-    final public int shardIndex;
     final public Map<String, String> highlights;
 
     @JsonCreator
-    ResultDocumentAbstract(@JsonProperty("score") Float score, @JsonProperty("pos") Integer pos,
-                           @JsonProperty("doc") Integer doc, @JsonProperty("shard_index") Integer shardIndex,
+    ResultDocumentAbstract(@JsonProperty("score") Float score,
+                           @JsonProperty("pos") Integer pos,
                            @JsonProperty("highlights") Map<String, String> highlights) {
         this.score = score == null ? 1.0F : score;
         this.pos = pos == null ? -1 : pos;
         this.highlights = highlights;
-        this.doc = doc == null ? -1 : doc;
-        this.shardIndex = shardIndex == null ? -1 : shardIndex;
     }
 
     protected ResultDocumentAbstract(final ResultDocumentBuilder<?> builder) {
         final ScoreDoc scoreDoc = builder.scoreDoc();
         this.score = scoreDoc.score;
         this.pos = builder.pos();
-        this.doc = scoreDoc.doc;
-        this.shardIndex = scoreDoc.shardIndex;
         this.highlights = builder.highlights();
     }
 
     protected ResultDocumentAbstract(final ResultDocumentAbstract src) {
-        this(src.score, src.pos, src.doc, src.shardIndex, src.highlights);
+        this(src.score, src.pos, src.highlights);
     }
 
     final public float getScore() {
         return score;
     }
 
-    final public int getDoc() {
-        return doc;
-    }
-
     final public int getPos() {
         return pos;
     }
-
-    final public int getShard_index() {
-        return shardIndex;
-    }
-
-    @JsonIgnore
-    final public int getShardIndex() {
-        return shardIndex;
-    }
-
+    
     final public Map<String, String> getHighlights() {
         return highlights;
     }
