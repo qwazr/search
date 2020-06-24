@@ -27,27 +27,25 @@ import java.util.Map;
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.search.Query;
 
-public class DoubleExactQuery extends AbstractExactQuery<Double, DoubleExactQuery> {
-
-    final static Double ZERO = 0d;
-
+public class EqualsDouble extends AbstractExactQuery<Double, EqualsDouble> {
+    
     @JsonCreator
-    public DoubleExactQuery(@JsonProperty("generic_field") final String genericField,
-                            @JsonProperty("field") final String field,
-                            @JsonProperty("value") final Double value) {
-        super(DoubleExactQuery.class, genericField, field, value == null ? ZERO : value);
+    public EqualsDouble(@JsonProperty("generic_field") final String genericField,
+                        @JsonProperty("field") final String field,
+                        @JsonProperty("value") final Double value) {
+        super(EqualsDouble.class, genericField, field, value);
     }
 
-    public DoubleExactQuery(final String field, final Double value) {
+    public EqualsDouble(final String field, final Double value) {
         this(null, field, value);
     }
 
     private final static URI DOC = URI.create("core/org/apache/lucene/document/DoublePoint.html#newExactQuery-java.lang.String-double-s");
 
-    public DoubleExactQuery(final IndexSettingsDefinition settings,
-                            final Map<String, AnalyzerDefinition> analyzers,
-                            final Map<String, FieldDefinition> fields) {
-        super(DoubleExactQuery.class, DOC, null, getDoubleField(fields, () -> "doubleField"), 3.14d);
+    public EqualsDouble(final IndexSettingsDefinition settings,
+                        final Map<String, AnalyzerDefinition> analyzers,
+                        final Map<String, FieldDefinition> fields) {
+        super(EqualsDouble.class, DOC, getDoubleField(fields, () -> "double_field"), 3.14d);
     }
 
     @Override

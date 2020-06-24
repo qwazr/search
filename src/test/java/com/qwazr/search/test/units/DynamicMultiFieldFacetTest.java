@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import com.qwazr.search.index.FacetDefinition;
 import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.utils.RandomUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -32,23 +32,23 @@ import java.util.Map;
 public class DynamicMultiFieldFacetTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
     @BeforeClass
-    public static void setup() throws  URISyntaxException {
+    public static void setup() throws URISyntaxException {
         initIndexService();
     }
 
     @Test
-    public void randomTest() throws IOException, InterruptedException {
+    public void randomTest() throws IOException {
         final IndexRecord.WithTaxonomy record = getNewRecord(RandomUtils.alphanumeric(10));
         for (int i = 0; i < RandomUtils.nextInt(1, 10); i++)
             record.dynamicFacets("dynamic_facets_" + RandomUtils.nextInt(0, 2), RandomUtils.alphanumeric(10));
         indexService.postDocument(record);
-        QueryBuilder queryBuilder = QueryDefinition.of(new MatchAllDocsQuery());
+        QueryBuilder queryBuilder = QueryDefinition.of(MatchAllDocs.INSTANCE);
         record.dynamicFacets.keySet()
-                .forEach(f -> queryBuilder.facet(f,
-                        FacetDefinition.of(10).genericFieldName("dynamic_facets_*").build()));
+            .forEach(f -> queryBuilder.facet(f,
+                FacetDefinition.of(10).genericFieldName("dynamic_facets_*").build()));
 
-        final ResultDefinition.WithObject<? extends IndexRecord> result =
-                indexService.searchQuery(queryBuilder.build());
+        final ResultDefinition.WithObject<? extends IndexRecord<?>> result =
+            indexService.searchQuery(queryBuilder.build());
 
         Assert.assertNotNull(result);
         Assert.assertEquals(1, result.totalHits, 0);

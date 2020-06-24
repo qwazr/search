@@ -40,11 +40,10 @@ public abstract class AbstractRangeQuery<V, T extends AbstractRangeQuery<V, T>> 
 
     protected AbstractRangeQuery(final Class<T> queryClass,
                                  final URI docUri,
-                                 final String genericField,
                                  final String field,
                                  final V lowerValue,
                                  final V upperValue) {
-        super(queryClass, docUri, genericField, field);
+        super(queryClass, docUri, field);
         this.lowerValue = lowerValue;
         this.upperValue = upperValue;
     }

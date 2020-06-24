@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,35 +61,35 @@ public class BooleanQueryTest {
 
     @Test
     public void someClauses() {
-        checkClauses(builder -> builder.addClause(BooleanQuery.Occur.must, new MatchAllDocsQuery()));
+        checkClauses(builder -> builder.addClause(BooleanQuery.Occur.must, MatchAllDocs.INSTANCE));
     }
 
     @Test
     public void mustClauses() {
-        checkClauses(builder -> builder.must(new MatchAllDocsQuery()));
+        checkClauses(builder -> builder.must(MatchAllDocs.INSTANCE));
     }
 
     @Test
     public void shouldClauses() {
-        checkClauses(builder -> builder.should(new MatchAllDocsQuery()));
+        checkClauses(builder -> builder.should(MatchAllDocs.INSTANCE));
     }
 
     @Test
     public void mustNotClauses() {
-        checkClauses(builder -> builder.mustNot(new MatchAllDocsQuery()));
+        checkClauses(builder -> builder.mustNot(MatchAllDocs.INSTANCE));
     }
 
     @Test
     public void filterClauses() {
-        checkClauses(builder -> builder.filter(new MatchAllDocsQuery()));
+        checkClauses(builder -> builder.filter(MatchAllDocs.INSTANCE));
     }
 
     @Test
     public void setClauses() {
         final BooleanQuery.BooleanClause clause1 =
-                new BooleanQuery.BooleanClause(BooleanQuery.Occur.filter, new MatchAllDocsQuery());
+            new BooleanQuery.BooleanClause(BooleanQuery.Occur.filter, MatchAllDocs.INSTANCE);
         final BooleanQuery.BooleanClause clause2 =
-                new BooleanQuery.BooleanClause(BooleanQuery.Occur.must, new MatchNoDocsQuery());
+            new BooleanQuery.BooleanClause(BooleanQuery.Occur.must, MatchNoDocs.INSTANCE);
         BooleanQuery booleanQuery = BooleanQuery.of().setClauses(clause1, clause2).build();
         Assert.assertNotNull(booleanQuery.clauses);
         Assert.assertEquals(2, booleanQuery.clauses.size());
@@ -100,7 +100,7 @@ public class BooleanQueryTest {
     @Test
     public void setClause() {
         final BooleanQuery.BooleanClause clause1 =
-                new BooleanQuery.BooleanClause(BooleanQuery.Occur.filter, new MatchAllDocsQuery());
+            new BooleanQuery.BooleanClause(BooleanQuery.Occur.filter, MatchAllDocs.INSTANCE);
         BooleanQuery booleanQuery = BooleanQuery.of().setClause(clause1).build();
         Assert.assertNotNull(booleanQuery.clauses);
         Assert.assertEquals(1, booleanQuery.clauses.size());
@@ -110,7 +110,7 @@ public class BooleanQueryTest {
     @Test
     public void jsonEquality() throws IOException {
         final BooleanQuery booleanQuery =
-                checkClauses(builder -> builder.addClause(BooleanQuery.Occur.must, new MatchAllDocsQuery()));
+            checkClauses(builder -> builder.addClause(BooleanQuery.Occur.must, MatchAllDocs.INSTANCE));
         JsonHelpers.serializeDeserializeAndCheckEquals(booleanQuery, BooleanQuery.class);
     }
 }

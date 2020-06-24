@@ -1,6 +1,6 @@
 {
   "query": {
-    "MatchAllDocsQuery": {}
+    "MatchAllDocs": {}
   },
   "returned_fields": [
     "name",
@@ -14,7 +14,7 @@
     "FacetQueries": {
       "queries": {
         "AllDocs": {
-          "MatchAllDocsQuery": {
+          "MatchAllDocs": {
           }
         },
         "2016,January": {

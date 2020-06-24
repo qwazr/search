@@ -28,6 +28,10 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
 
+@Deprecated
+/**
+ * @see EqualsString
+ */
 public class TermQuery extends AbstractFieldQuery<TermQuery> {
 
     final public Object term;
@@ -49,8 +53,7 @@ public class TermQuery extends AbstractFieldQuery<TermQuery> {
     public TermQuery(final IndexSettingsDefinition settings,
                      final Map<String, AnalyzerDefinition> analyzers,
                      final Map<String, FieldDefinition> fields) {
-        super(TermQuery.class, DOC,
-            null, getFullTextField(fields, () -> getTextField(fields, () -> "text")));
+        super(TermQuery.class, DOC, getFullTextField(fields, () -> getTextField(fields, () -> "text")));
         this.term = "Hello";
     }
 
@@ -60,15 +63,18 @@ public class TermQuery extends AbstractFieldQuery<TermQuery> {
         return super.isEqual(q) && Objects.equals(term, q.term);
     }
 
+
     @Override
+    @JsonIgnore
+    protected int computeHashCode() {
+        return Objects.hash(field, term);
+    }
+
+    @Override
+    @JsonIgnore
     final public Query getQuery(final QueryContext queryContext) {
         return new org.apache.lucene.search.TermQuery(
             resolveIndexTextTerm(queryContext.getFieldMap(), term)
         );
-    }
-
-    @Override
-    protected int computeHashCode() {
-        return Objects.hashCode(term);
     }
 }

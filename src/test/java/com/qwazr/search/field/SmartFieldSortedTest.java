@@ -20,7 +20,7 @@ import com.qwazr.search.annotations.AnnotatedIndexService;
 import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.SmartField;
 import com.qwazr.search.index.QueryDefinition;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.RandomUtils;
@@ -62,7 +62,7 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
 
     @Test
     public void testString() {
-        checkSort(indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery())
+        checkSort(indexService.searchIterator(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .sort("stringSort", QueryDefinition.SortEnum.ascending)
             .returnedField("*")
             .build(), Record.class), (r1, r2) -> Assert.assertTrue(r1.stringSort.compareTo(r2.stringSort) <= 0));
@@ -70,7 +70,7 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
 
     @Test
     public void testLong() {
-        checkSort(indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery())
+        checkSort(indexService.searchIterator(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .sort("longSort", QueryDefinition.SortEnum.ascending)
             .returnedField("*")
             .build(), Record.class), (r1, r2) -> Assert.assertTrue(r1.longSort.compareTo(r2.longSort) <= 0));
@@ -78,7 +78,7 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
 
     @Test
     public void testInteger() {
-        checkSort(indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery())
+        checkSort(indexService.searchIterator(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .sort("intSort", QueryDefinition.SortEnum.ascending)
             .returnedField("*")
             .build(), Record.class), (r1, r2) -> Assert.assertTrue(r1.intSort.compareTo(r2.intSort) <= 0));
@@ -86,7 +86,7 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
 
     @Test
     public void testFloat() {
-        checkSort(indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery())
+        checkSort(indexService.searchIterator(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .sort("floatSort", QueryDefinition.SortEnum.ascending)
             .returnedField("*")
             .build(), Record.class), (r1, r2) -> Assert.assertTrue(r1.floatSort.compareTo(r2.floatSort) <= 0));
@@ -94,7 +94,7 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
 
     @Test
     public void testDouble() {
-        checkSort(indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery())
+        checkSort(indexService.searchIterator(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .sort("doubleSort", QueryDefinition.SortEnum.ascending)
             .returnedField("*")
             .build(), Record.class), (r1, r2) -> Assert.assertTrue(r1.doubleSort.compareTo(r2.doubleSort) <= 0));
@@ -102,7 +102,7 @@ public class SmartFieldSortedTest extends AbstractIndexTest {
 
     @Test(expected = WebApplicationException.class)
     public void testNonSortable() {
-        indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery())
+        indexService.searchIterator(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .sort("nonSortable", QueryDefinition.SortEnum.ascending)
             .returnedField("*")
             .build(), Record.class);

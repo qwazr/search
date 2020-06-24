@@ -26,7 +26,7 @@ import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.query.DrillDownQuery;
 import com.qwazr.search.query.FacetPathQuery;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.LoggerUtils;
 import org.junit.Assert;
@@ -50,7 +50,7 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
         indexService.postDocument(new Record(2, new String[]{"tag2", "tag1and2"}));
     }
 
-    ResultDefinition.WithObject<Record> checkResult(AbstractQuery query, String queryExplain, long... expectedIds) {
+    ResultDefinition.WithObject<Record> checkResult(AbstractQuery<?> query, String queryExplain, long... expectedIds) {
         final ResultDefinition.WithObject<Record> result = indexService.searchQuery(QueryDefinition.of(query)
             .returnedField("*")
             .queryDebug(true)
@@ -69,16 +69,16 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
 
     @Test
     public void drillDownQueryTest() {
-        checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).filter("tags", "tag1"),
+        checkResult(new DrillDownQuery(MatchAllDocs.INSTANCE, false).filter("tags", "tag1"),
             "+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
         checkResult(new DrillDownQuery(null, false).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
-        checkResult(new DrillDownQuery(new MatchAllDocsQuery(), false).filter("tags", "tag1and2"),
+        checkResult(new DrillDownQuery(MatchAllDocs.INSTANCE, false).filter("tags", "tag1and2"),
             "+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
 
-        checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).filter("tags", "tag1"),
+        checkResult(new DrillDownQuery(MatchAllDocs.INSTANCE, true).filter("tags", "tag1"),
             "+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
         checkResult(new DrillDownQuery(null, true).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
-        checkResult(new DrillDownQuery(new MatchAllDocsQuery(), true).filter("tags", "tag1and2"),
+        checkResult(new DrillDownQuery(MatchAllDocs.INSTANCE, true).filter("tags", "tag1and2"),
             "+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
     }
 
@@ -90,7 +90,7 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
 
     @Test
     public void computeFacetsTest() {
-        checkResult(new MatchAllDocsQuery(), "*:*", 1, 2);
+        checkResult(MatchAllDocs.INSTANCE, "*:*", 1, 2);
     }
 
     @Index(name = "SmartFieldSorted")

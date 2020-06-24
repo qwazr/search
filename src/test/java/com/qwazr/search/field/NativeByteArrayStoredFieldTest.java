@@ -20,7 +20,7 @@ import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
 import org.junit.Test;
@@ -36,13 +36,14 @@ public class NativeByteArrayStoredFieldTest extends AbstractIndexTest.WithIndexR
     }
 
     @Test
-    public void shouldLoadNativeByteArray() throws URISyntaxException, IOException, InterruptedException {
+    public void shouldLoadNativeByteArray() throws URISyntaxException, IOException {
         AnnotatedIndexService<NativeByteArrayRecord> indexService;
         indexService = initIndexService(NativeByteArrayRecord.class);
         indexService.postDocument(new NativeByteArrayRecord("1", new byte[]{109, 97, 114, 116, 105, 110, 101}));
-        ResultDefinition.WithObject<NativeByteArrayRecord> result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
-            .returnedField("*")
-            .build());
+        ResultDefinition.WithObject<NativeByteArrayRecord> result = indexService.searchQuery(
+            QueryDefinition.of(MatchAllDocs.INSTANCE)
+                .returnedField("*")
+                .build());
         checkResult(result, 1L);
         byte[] loadedData = result.documents.get(0).record.data;
         Assert.assertEquals(loadedData[0], 109);

@@ -31,7 +31,7 @@ import org.junit.Test;
 public class TermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexService();
         indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World").stringField("Hello World"));
         indexService.postDocument(

@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
@@ -25,29 +26,26 @@ import java.net.URI;
 import java.util.Map;
 import org.apache.lucene.search.Query;
 
-public class DocValuesFieldExistsQuery extends AbstractFieldQuery<DocValuesFieldExistsQuery> {
+public class EqualsString extends AbstractExactQuery<String, EqualsString> {
 
     @JsonCreator
-    public DocValuesFieldExistsQuery(@JsonProperty("generic_field") final String genericField,
-                                     @JsonProperty("field") final String field) {
-        super(DocValuesFieldExistsQuery.class, genericField, field);
+    public EqualsString(@JsonProperty("field") final String field,
+                        @JsonProperty("value") final String value) {
+        super(EqualsString.class, field, value);
     }
 
-    public DocValuesFieldExistsQuery(final String field) {
-        this(null, field);
-    }
+    private final static URI DOC = URI.create("core/org/apache/lucene/search/TermQuery.html");
 
-    private final static URI DOC = URI.create("core/org/apache/lucene/search/DocValuesFieldExistsQuery.html");
-
-    public DocValuesFieldExistsQuery(final IndexSettingsDefinition settings,
-                                     final Map<String, AnalyzerDefinition> analyzers,
-                                     final Map<String, FieldDefinition> fields) {
-        super(DocValuesFieldExistsQuery.class, DOC, getTextField(fields, () -> "anyField"));
+    public EqualsString(final IndexSettingsDefinition settings,
+                        final Map<String, AnalyzerDefinition> analyzers,
+                        final Map<String, FieldDefinition> fields) {
+        super(EqualsString.class, DOC, getFullTextField(fields, () -> getTextField(fields, () -> "text")), "Hello");
     }
 
     @Override
+    @JsonIgnore
     final public Query getQuery(final QueryContext queryContext) {
-        return new org.apache.lucene.search.DocValuesFieldExistsQuery(
-            resolveDocValueField(queryContext.getFieldMap(), null, null));
+        return new org.apache.lucene.search.TermQuery(resolveIndexTextTerm(queryContext.getFieldMap(), value));
     }
+
 }

@@ -28,9 +28,7 @@ public class SortedLongDocValuesExactQuery extends AbstractExactQuery<Long, Sort
     public SortedLongDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
                                          @JsonProperty("field") final String field,
                                          @JsonProperty("value") final Long value) {
-        super(SortedLongDocValuesExactQuery.class, genericField, field,
-            value == null ? LongDocValuesExactQuery.ZERO : value);
-        this.value = value;
+        super(SortedLongDocValuesExactQuery.class, genericField, field, value);
     }
 
     public SortedLongDocValuesExactQuery(final String field, final Long value) {
@@ -40,7 +38,6 @@ public class SortedLongDocValuesExactQuery extends AbstractExactQuery<Long, Sort
     @Override
     public Query getQuery(final QueryContext queryContext) {
         return SortedNumericDocValuesField.newSlowExactQuery(
-            resolveDocValueField(queryContext.getFieldMap(), 0L, FieldTypeInterface.ValueType.longType),
-            value);
+            resolveDocValueField(queryContext.getFieldMap(), 0L, FieldTypeInterface.ValueType.longType), value);
     }
 }

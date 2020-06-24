@@ -21,7 +21,7 @@ import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ReplicationStatus;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.FileUtils;
 import org.junit.Assert;
@@ -109,7 +109,7 @@ public abstract class ReplicationTestBase<T> {
      */
     public void compareMasterAndSlaveRecords(BiConsumer<T, T> recordsChecker) {
 
-        final QueryDefinition queryIterator = QueryDefinition.of(new MatchAllDocsQuery())
+        final QueryDefinition queryIterator = QueryDefinition.of(MatchAllDocs.INSTANCE)
             .returnedField("*")
             .sort("sortId", QueryDefinition.SortEnum.ascending)
             .build();

@@ -21,7 +21,7 @@ import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.BooleanQuery;
 import com.qwazr.search.query.FacetPathQuery;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.utils.RandomUtils;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -76,7 +76,7 @@ public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
 
     @Test
     public void allFacets() {
-        ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
+        ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .facet("sortedSetDocValuesFacetField", FacetDefinition.EMPTY)
             .build());
         final Map<String, Number> facet = checkResult(result);
@@ -92,7 +92,7 @@ public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
 
     @Test
     public void limitFacet() {
-        ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
+        ResultDefinition result = indexService.searchQuery(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .facet("sortedSetDocValuesFacetField", FacetDefinition.of(2).build())
             .build());
         checkResult(result);
@@ -108,7 +108,7 @@ public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
     @Test
     public void prefixFacet() {
         final String facetPrefix = getRandomFacetValue().substring(0, 1);
-        ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
+        ResultDefinition result = indexService.searchQuery(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .facet("sortedSetDocValuesFacetField", FacetDefinition.of().prefix(facetPrefix).build())
             .build());
         final Map<String, Number> facet = checkResult(result);
@@ -120,7 +120,7 @@ public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
     @Test
     public void specificValues() {
         final String facetValue = getRandomFacetValue();
-        ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
+        ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .facet("sortedSetDocValuesFacetField", FacetDefinition.of().specificValues(facetValue).build())
             .build());
         Map<String, Number> facets = checkFacets(checkResult(result));
@@ -130,7 +130,7 @@ public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
 
     private void checkSort(FacetDefinitionBuilder builder, final BiFunction<String, String, Boolean> labelChecker,
                            final BiFunction<Number, Number, Boolean> countChecker) {
-        ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
+        ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .facet("sortedSetDocValuesFacetField", builder.build())
             .build());
         final Map<String, Number> facet = checkResult(result);
@@ -185,7 +185,7 @@ public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
         int expected = facetTerm1.equals(facetTerm2) ?
             facetTerms.get(facetTerm1).get() :
             facetTerms.get(facetTerm1).get() + facetTerms.get(facetTerm2).get();
-        ResultDefinition result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
+        final ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .facet("sortedSetDocValuesFacetField", FacetDefinition.of()
                 .query(facetName, BooleanQuery.of()
                     .addClause(BooleanQuery.Occur.should,

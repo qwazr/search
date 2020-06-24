@@ -20,7 +20,7 @@ import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
 import org.junit.Assert;
@@ -40,9 +40,10 @@ public class ByteArrayStoredFieldTest extends AbstractIndexTest.WithIndexRecord<
         AnnotatedIndexService<ByteArrayRecord> indexService;
         indexService = initIndexService(ByteArrayRecord.class);
         indexService.postDocument(new ByteArrayRecord("1", new byte[]{109, 97, 114, 116, 105, 110, 101}));
-        ResultDefinition.WithObject<ByteArrayRecord> result = indexService.searchQuery(QueryDefinition.of(new MatchAllDocsQuery())
-            .returnedField("*")
-            .build());
+        ResultDefinition.WithObject<ByteArrayRecord> result = indexService.searchQuery(
+            QueryDefinition.of(MatchAllDocs.INSTANCE)
+                .returnedField("*")
+                .build());
         checkResult(result, 1L);
         Byte[] loadedData = result.documents.get(0).record.data;
         Assert.assertEquals(loadedData[0].byteValue(), 109);

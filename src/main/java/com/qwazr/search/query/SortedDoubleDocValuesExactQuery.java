@@ -28,8 +28,7 @@ public class SortedDoubleDocValuesExactQuery extends AbstractExactQuery<Double, 
     @JsonCreator
     public SortedDoubleDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
                                            @JsonProperty("field") final String field, @JsonProperty("value") final Double value) {
-        super(SortedDoubleDocValuesExactQuery.class, genericField, field,
-            value == null ? DoubleExactQuery.ZERO : value);
+        super(SortedDoubleDocValuesExactQuery.class, genericField, field, value);
     }
 
     public SortedDoubleDocValuesExactQuery(final String field, final Double value) {

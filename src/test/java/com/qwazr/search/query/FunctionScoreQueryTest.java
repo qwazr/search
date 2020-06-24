@@ -55,7 +55,7 @@ public class FunctionScoreQueryTest extends AbstractIndexTest.WithIndexRecord.No
     @Test
     public void testFloat() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(QueryDefinition.of(
-                new FunctionScoreQuery(new MatchAllDocsQuery(),
+                new FunctionScoreQuery(MatchAllDocs.INSTANCE,
                         new DoubleValuesSource.FloatField("floatDocValue")))
                 .build());
         checkFieldSourceResult(result, 3.0F, 2.0F);
@@ -64,7 +64,7 @@ public class FunctionScoreQueryTest extends AbstractIndexTest.WithIndexRecord.No
     @Test
     public void testDouble() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(QueryDefinition.of(
-                new FunctionScoreQuery(new MatchAllDocsQuery(),
+                new FunctionScoreQuery(MatchAllDocs.INSTANCE,
                         new DoubleValuesSource.DoubleField("doubleDocValue")))
                 .build());
         checkFieldSourceResult(result, 3.0F, 2.0F);
@@ -73,7 +73,7 @@ public class FunctionScoreQueryTest extends AbstractIndexTest.WithIndexRecord.No
     @Test
     public void testLong() {
         ResultDefinition.WithObject<? extends IndexRecord.NoTaxonomy> result = indexService.searchQuery(QueryDefinition.of(
-                new FunctionScoreQuery(new MatchAllDocsQuery(),
+                new FunctionScoreQuery(MatchAllDocs.INSTANCE,
                         new DoubleValuesSource.LongField("longDocValue")))
                 .build());
         checkFieldSourceResult(result, 3.0F, 2.0F);
@@ -82,7 +82,7 @@ public class FunctionScoreQueryTest extends AbstractIndexTest.WithIndexRecord.No
     @Test
     public void testInt() {
         ResultDefinition.WithObject<? extends IndexRecord.NoTaxonomy> result = indexService.searchQuery(QueryDefinition.of(
-                new FunctionScoreQuery(new MatchAllDocsQuery(),
+                new FunctionScoreQuery(MatchAllDocs.INSTANCE,
                         new DoubleValuesSource.IntField("intDocValue")))
                 .build());
         checkFieldSourceResult(result, 3.0F, 2.0F);

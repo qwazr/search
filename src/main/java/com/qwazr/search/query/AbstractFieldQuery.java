@@ -32,6 +32,11 @@ public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extend
     final public String field;
 
     protected AbstractFieldQuery(final Class<T> queryClass,
+                                 final String field) {
+        this(queryClass, (String) null, field);
+    }
+
+    protected AbstractFieldQuery(final Class<T> queryClass,
                                  final String genericField,
                                  final String field) {
         super(queryClass);
@@ -41,10 +46,9 @@ public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extend
 
     protected AbstractFieldQuery(final Class<T> queryClass,
                                  final URI docUri,
-                                 final String genericField,
                                  final String field) {
         super(queryClass, docUri);
-        this.genericField = genericField;
+        this.genericField = null;
         this.field = Objects.requireNonNull(field, "The field is null");
     }
 

@@ -16,7 +16,7 @@
 
 package com.qwazr.search.function;
 
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.query.QueryContextTest;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.RandomUtils;
@@ -68,7 +68,7 @@ public class ValueSourceTest {
         checkValueSource(new PowFloatFunction(new ConstValueSource(2f), new ConstValueSource(4f)));
         checkValueSource(
             new ProductFloatFunction(new ConstValueSource(2f), new ConstValueSource(4f), new ConstValueSource(6f)));
-        checkValueSource(new QueryValueSource(new MatchAllDocsQuery(), 3f));
+        checkValueSource(new QueryValueSource(MatchAllDocs.INSTANCE, 3f));
         checkValueSource(new SortedSetFieldSource("test"));
         checkValueSource(
             new SumFloatFunction(new ConstValueSource(2f), new ConstValueSource(4f), new ConstValueSource(6f)));

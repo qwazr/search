@@ -17,24 +17,22 @@ package com.qwazr.search.collector;
 
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.TimeLimitingCollector;
-import static org.hamcrest.MatcherAssert.assertThat;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-
+import org.apache.lucene.search.TimeLimitingCollector;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
@@ -54,11 +52,11 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
 
     @Test
     public void mixingClassicAndLuceneCollectorTest() {
-        QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
+        QueryDefinition queryDef = QueryDefinition.of(MatchAllDocs.INSTANCE)
             .collector("timeLimiter", TimeLimiterCollector.Lucene.class, 1000L)
             .collector("slowDown", SlowDownCollector.Classic.class, 100)
             .build();
-        ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
+        ResultDefinition.WithObject<? extends IndexRecord<?>> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
         assertThat(results.totalHits, lessThan(20L));
         assertThat(results.getCollector("timeLimiter"), nullValue());
@@ -67,11 +65,11 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
 
     @Test
     public void concurrentCollectorTest() {
-        QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
+        QueryDefinition queryDef = QueryDefinition.of(MatchAllDocs.INSTANCE)
             .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
             .collector("slowDown", SlowDownCollector.Concurrent.class, 100)
             .build();
-        ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
+        ResultDefinition.WithObject<? extends IndexRecord<?>> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
         assertThat(results.totalHits, lessThan(20L));
         assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
@@ -80,11 +78,11 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
 
     @Test
     public void mixingParallelAndLuceneCollectorTest() {
-        QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
+        QueryDefinition queryDef = QueryDefinition.of(MatchAllDocs.INSTANCE)
             .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
             .collector("slowDown", SlowDownCollector.Lucene.class, 100)
             .build();
-        ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
+        ResultDefinition.WithObject<? extends IndexRecord<?>> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
         assertThat(results.totalHits, lessThan(20L));
         assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));
@@ -93,11 +91,11 @@ public class TimeLimitingCollectorTest extends AbstractIndexTest.WithIndexRecord
 
     @Test
     public void mixingClassicAndParallelCollectorTest() {
-        QueryDefinition queryDef = QueryDefinition.of(new MatchAllDocsQuery())
+        QueryDefinition queryDef = QueryDefinition.of(MatchAllDocs.INSTANCE)
             .collector("timeLimiter", TimeLimiterCollector.class, 1000L)
             .collector("slowDown", SlowDownCollector.Classic.class, 100)
             .build();
-        ResultDefinition.WithObject<? extends IndexRecord> results = indexService.searchQuery(queryDef);
+        ResultDefinition.WithObject<? extends IndexRecord<?>> results = indexService.searchQuery(queryDef);
         Assert.assertNotNull(results);
         assertThat(results.totalHits, lessThan(20L));
         assertThat(results.getCollector("timeLimiter"), equalTo(Boolean.FALSE));

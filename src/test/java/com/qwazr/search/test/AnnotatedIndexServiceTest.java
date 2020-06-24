@@ -27,7 +27,7 @@ import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.search.similarity.SimilarityForTest;
@@ -209,7 +209,7 @@ public class AnnotatedIndexServiceTest {
     public void test501query() throws IOException {
         Long result = service.query(context -> {
             ResultDefinition.WithObject<IndexRecord> res =
-                context.searchObject(QueryDefinition.of(new MatchAllDocsQuery()).build(),
+                context.searchObject(QueryDefinition.of(MatchAllDocs.INSTANCE).build(),
                     service.getWrapper(IndexRecord.class));
             return res.totalHits + context.getIndexReader().numDocs();
         });

@@ -23,22 +23,27 @@ import java.util.Objects;
 
 public abstract class AbstractExactQuery<V, T extends AbstractExactQuery<V, T>> extends AbstractFieldQuery<T> {
 
-    public V value;
+    final public V value;
+
+    protected AbstractExactQuery(final Class<T> queryClass,
+                                 @JsonProperty("field") final String field,
+                                 @JsonProperty("value") final V value) {
+        this(queryClass, (String) null, field, value);
+    }
 
     protected AbstractExactQuery(final Class<T> queryClass,
                                  final String genericField,
                                  @JsonProperty("field") final String field,
                                  @JsonProperty("value") final V value) {
         super(queryClass, genericField, field);
-        this.value = value;
+        this.value = Objects.requireNonNull(value, "The value is missing");
     }
 
     protected AbstractExactQuery(final Class<T> queryClass,
                                  final URI docUri,
-                                 final String genericField,
                                  @JsonProperty("field") final String field,
                                  @JsonProperty("value") final V value) {
-        super(queryClass, docUri, genericField, field);
+        super(queryClass, docUri, field);
         this.value = value;
     }
 
@@ -49,8 +54,8 @@ public abstract class AbstractExactQuery<V, T extends AbstractExactQuery<V, T>> 
     }
 
     @Override
-    protected int computeHashCode() {
-        return Objects.hashCode(value);
+    final protected int computeHashCode() {
+        return Objects.hash(field, value);
     }
 }
 

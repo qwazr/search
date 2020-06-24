@@ -21,7 +21,7 @@ import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ReplicationStatus;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.test.AnnotatedRecord;
 import com.qwazr.search.test.TestServer;
 import com.qwazr.utils.CollectionsUtils;
@@ -152,7 +152,7 @@ public class ReplicationContentParanoidTest extends ReplicationTestBase<Annotate
 
             // Compare content
 
-            final QueryDefinition queryIterator = QueryDefinition.of(new MatchAllDocsQuery())
+            final QueryDefinition queryIterator = QueryDefinition.of(MatchAllDocs.INSTANCE)
                 .returnedField(FieldDefinition.ID_FIELD, "title")
                 .build();
 

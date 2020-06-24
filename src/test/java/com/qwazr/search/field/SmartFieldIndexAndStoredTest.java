@@ -20,21 +20,20 @@ import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.SmartField;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.query.AbstractQuery;
-import com.qwazr.search.query.DoubleExactQuery;
+import com.qwazr.search.query.EqualsDouble;
+import com.qwazr.search.query.EqualsLong;
 import com.qwazr.search.query.FloatExactQuery;
 import com.qwazr.search.query.IntExactQuery;
-import com.qwazr.search.query.LongExactQuery;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.RandomUtils;
+import java.util.Map;
+import java.util.Objects;
+import javax.ws.rs.WebApplicationException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import javax.ws.rs.WebApplicationException;
-import java.util.Map;
-import java.util.Objects;
 
 public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
@@ -311,7 +310,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new LongExactQuery("id2", id);
+            return new EqualsLong("id2", id);
         }
     }
 
@@ -348,7 +347,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new LongExactQuery("id2", id);
+            return new EqualsLong("id2", id);
         }
     }
 
@@ -468,7 +467,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new DoubleExactQuery("id2", id);
+            return new EqualsDouble("id2", id);
         }
     }
 
@@ -508,7 +507,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new DoubleExactQuery("id2", id);
+            return new EqualsDouble("id2", id);
         }
     }
 }

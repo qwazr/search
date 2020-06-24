@@ -42,7 +42,7 @@ public class DrillDownQueryTest extends AbstractIndexTest.WithIndexRecord.WithTa
     @Test
     public void luceneQuery() throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
         final Query luceneQuery =
-            new DrillDownQuery(new MatchAllDocsQuery(), true)
+            new DrillDownQuery(MatchAllDocs.INSTANCE, true)
                 .filter("dim", "value")
                 .getQuery(QueryContextTest.of(Map.of("dim", SmartFieldDefinition.of().facet(true).build())));
         Assert.assertNotNull(luceneQuery);

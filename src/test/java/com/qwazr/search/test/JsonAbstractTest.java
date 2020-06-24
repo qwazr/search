@@ -32,7 +32,7 @@ import com.qwazr.search.index.ReplicationStatus;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentMap;
 import com.qwazr.search.index.TermDefinition;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.query.QueryParser;
 import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.search.similarity.CustomSimilarity;
@@ -927,7 +927,7 @@ public abstract class JsonAbstractTest {
     @Test
     public void test700paging() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
-        QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*");
+        QueryBuilder builder = QueryDefinition.of(MatchAllDocs.INSTANCE).returnedField("*");
         builder.start(0).rows(0);
         ResultDefinition.WithMap result = client.searchQuery(INDEX_MASTER_NAME, builder.build(), false);
         Assert.assertNotNull(result);

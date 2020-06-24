@@ -37,11 +37,11 @@ import com.qwazr.search.index.TermDefinition;
 import com.qwazr.search.index.TermEnumDefinition;
 import com.qwazr.search.query.DrillDownQuery;
 import com.qwazr.search.query.JoinQuery;
-import com.qwazr.search.query.LongExactQuery;
+import com.qwazr.search.query.EqualsLong;
 import com.qwazr.search.query.LongMultiRangeQuery;
 import com.qwazr.search.query.LongRangeQuery;
 import com.qwazr.search.query.LongSetQuery;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.search.query.TermQuery;
@@ -288,7 +288,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test320PointExactQuery() throws URISyntaxException, IOException {
-        QueryBuilder builder = QueryDefinition.of(new LongExactQuery(AnnotatedRecord.QUANTITY_FIELD, 10));
+        QueryBuilder builder = QueryDefinition.of(new EqualsLong(AnnotatedRecord.QUANTITY_FIELD, 10));
         ResultDefinition.WithObject<AnnotatedRecord> result = checkQueryResult(builder, 1L);
         Assert.assertEquals("1", result.documents.get(0).record.id);
     }
@@ -400,7 +400,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test500sortByTitleDescAndScore() throws URISyntaxException, IOException {
-        final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
+        final QueryBuilder builder = QueryDefinition.of(MatchAllDocs.INSTANCE);
         builder.sort("titleSort", QueryDefinition.SortEnum.descending_missing_first)
             .sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
             .returnedField("title")
@@ -411,7 +411,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test500sortByTitleAscAndScore() throws URISyntaxException, IOException {
-        final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery())
+        final QueryBuilder builder = QueryDefinition.of(MatchAllDocs.INSTANCE)
             .sort("titleSort", QueryDefinition.SortEnum.ascending_missing_last)
             .sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
             .returnedField("title")
@@ -422,7 +422,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test500sortByLongAsc() throws URISyntaxException, IOException {
-        final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery())
+        final QueryBuilder builder = QueryDefinition.of(MatchAllDocs.INSTANCE)
             .sort("dvQty", QueryDefinition.SortEnum.ascending_missing_last)
             .sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
             .returnedField("dvQty")
@@ -433,7 +433,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test500sortByLongDesc() throws URISyntaxException, IOException {
-        final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery())
+        final QueryBuilder builder = QueryDefinition.of(MatchAllDocs.INSTANCE)
             .sort("dvQty", QueryDefinition.SortEnum.descending_missing_last)
             .sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
             .returnedField("dvQty")
@@ -444,7 +444,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test500sortByDoubleAsc() throws URISyntaxException, IOException {
-        final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery())
+        final QueryBuilder builder = QueryDefinition.of(MatchAllDocs.INSTANCE)
             .sort("price", QueryDefinition.SortEnum.ascending_missing_last)
             .sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.ascending)
             .returnedField("price")
@@ -455,7 +455,7 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test500sortByDoubleDesc() throws URISyntaxException, IOException {
-        final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery())
+        final QueryBuilder builder = QueryDefinition.of(MatchAllDocs.INSTANCE)
             .sort("price", QueryDefinition.SortEnum.descending_missing_last)
             .sort(FieldDefinition.SCORE_FIELD, QueryDefinition.SortEnum.descending)
             .returnedField("price")
@@ -648,7 +648,7 @@ public abstract class JavaAbstractTest {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final QueryBuilder builder = QueryDefinition.of(
             new JoinQuery(AnnotatedRecord.INDEX_NAME_SLAVE, "docValuesCategory", "storedCategory", true,
-                ScoreMode.Max, new MatchAllDocsQuery()));
+                ScoreMode.Max, MatchAllDocs.INSTANCE));
         final ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
         Assert.assertNotNull(result);
         Assert.assertEquals(2, result.totalHits);
@@ -675,7 +675,7 @@ public abstract class JavaAbstractTest {
     @Test
     public void test910collector() throws URISyntaxException, IOException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
-        final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
+        final QueryBuilder builder = QueryDefinition.of(MatchAllDocs.INSTANCE);
         builder.collector("minPrice", MinNumericCollector.MinDouble.class, "price");
         builder.collector("maxPrice", MaxNumericCollector.MaxDouble.class, "price");
         builder.collector("minQuantity", MinNumericCollector.MinLong.class, AnnotatedRecord.DV_QUANTITY_FIELD);
@@ -690,7 +690,7 @@ public abstract class JavaAbstractTest {
     @Test
     public void test920ClassicCollector() throws URISyntaxException, IOException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
-        final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
+        final QueryBuilder builder = QueryDefinition.of(MatchAllDocs.INSTANCE);
         builder.collector("maxQuantity", ClassicMaxCollector.class);
         ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
         checkCollector(result, "maxQuantity", 20L, 20);
@@ -707,7 +707,7 @@ public abstract class JavaAbstractTest {
     public void test930ClassicCollectorWithDrillSideways() throws URISyntaxException, IOException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final QueryBuilder builder = QueryDefinition.of(
-            new DrillDownQuery(new MatchAllDocsQuery(), true).dynamicFilter("dynamic_multi_facet_*",
+            new DrillDownQuery(MatchAllDocs.INSTANCE, true).dynamicFilter("dynamic_multi_facet_*",
                 "dynamic_multi_facet_cat", "news"));
         builder.collector("maxQuantity", ClassicMaxCollector.class);
         builder.facet("dynamic_multi_facet_cat", FacetDefinition.create(10));
@@ -719,7 +719,7 @@ public abstract class JavaAbstractTest {
     @Test
     public void test935ClassicCollectorWithFacets() throws URISyntaxException, IOException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
-        final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery());
+        final QueryBuilder builder = QueryDefinition.of(MatchAllDocs.INSTANCE);
         builder.collector("maxQuantity", ClassicMaxCollector.class);
         builder.facet("dynamic_multi_facet_cat", FacetDefinition.create(10));
         ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
@@ -730,7 +730,7 @@ public abstract class JavaAbstractTest {
     @Test
     public void test930queryError() throws IOException, URISyntaxException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
-        final QueryBuilder builder = QueryDefinition.of(new MatchAllDocsQuery()).returnedField("sdflsjdfslkdfjlkj");
+        final QueryBuilder builder = QueryDefinition.of(MatchAllDocs.INSTANCE).returnedField("sdflsjdfslkdfjlkj");
         try {
             master.searchQuery(builder.build());
             Assert.fail("Exception not thrown");

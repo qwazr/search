@@ -15,29 +15,34 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
-import java.util.Objects;
-import org.apache.lucene.search.Query;
-
 import java.net.URI;
 import java.util.Map;
+import org.apache.lucene.search.Query;
 
-public class MatchNoDocsQuery extends AbstractQuery<MatchNoDocsQuery> {
+public class MatchNoDocs extends AbstractQuery<MatchNoDocs> {
 
-    public MatchNoDocsQuery() {
-        super(MatchNoDocsQuery.class);
+    public final static MatchNoDocs INSTANCE = new MatchNoDocs();
+
+    @JsonCreator
+    static MatchNoDocs create() {
+        return INSTANCE;
+    }
+
+    private MatchNoDocs() {
+        super(MatchNoDocs.class);
     }
 
     private final static URI DOC = URI.create("core/org/apache/lucene/search/MatchNoDocsQuery.html");
 
-
-    public MatchNoDocsQuery(final IndexSettingsDefinition settings,
-                            final Map<String, AnalyzerDefinition> analyzers,
-                            final Map<String, FieldDefinition> fields) {
-        super(MatchNoDocsQuery.class, DOC);
+    public MatchNoDocs(final IndexSettingsDefinition settings,
+                       final Map<String, AnalyzerDefinition> analyzers,
+                       final Map<String, FieldDefinition> fields) {
+        super(MatchNoDocs.class, DOC);
     }
 
     @Override
@@ -46,8 +51,8 @@ public class MatchNoDocsQuery extends AbstractQuery<MatchNoDocsQuery> {
     }
 
     @Override
-    protected boolean isEqual(final MatchNoDocsQuery query) {
-        return true;
+    protected boolean isEqual(final MatchNoDocs query) {
+        return query != null;
     }
 
     @Override

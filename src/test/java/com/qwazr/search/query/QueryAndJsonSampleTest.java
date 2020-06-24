@@ -46,7 +46,7 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
     @Test
     public void getTypesTest() throws IOException {
         assertThat(AbstractQuery.TYPES, notNullValue());
-        assertThat(AbstractQuery.TYPES.size(), equalTo(81));
+        assertThat(AbstractQuery.TYPES.size(), equalTo(82));
 
         final Set<String> types = indexService.getQueryTypes();
         final List<String> typesWithSample = new ArrayList<>();
@@ -73,9 +73,11 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
             "DocValuesFieldExistsQuery",
             "DoubleDocValuesExactQuery",
             "DoubleDocValuesRangeQuery",
-            "DoubleExactQuery",
-            "MatchAllDocsQuery",
-            "MatchNoDocsQuery",
+            "EqualsDouble",
+            "EqualsLong",
+            "EqualsString",
+            "MatchAllDocs",
+            "MatchNoDocs",
             "TermQuery")));
     }
 

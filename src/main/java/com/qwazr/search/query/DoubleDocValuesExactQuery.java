@@ -32,8 +32,9 @@ public class DoubleDocValuesExactQuery extends AbstractExactQuery<Double, Double
 
     @JsonCreator
     public DoubleDocValuesExactQuery(@JsonProperty("generic_field") final String genericField,
-                                     @JsonProperty("field") final String field, @JsonProperty("value") final Double value) {
-        super(DoubleDocValuesExactQuery.class, genericField, field, value == null ? DoubleExactQuery.ZERO : value);
+                                     @JsonProperty("field") final String field,
+                                     @JsonProperty("value") final Double value) {
+        super(DoubleDocValuesExactQuery.class, genericField, field, value);
     }
 
     public DoubleDocValuesExactQuery(final String field, final Double value) {
@@ -45,8 +46,7 @@ public class DoubleDocValuesExactQuery extends AbstractExactQuery<Double, Double
     public DoubleDocValuesExactQuery(final IndexSettingsDefinition settings,
                                      final Map<String, AnalyzerDefinition> analyzers,
                                      final Map<String, FieldDefinition> fields) {
-        super(DoubleDocValuesExactQuery.class, DOC, null,
-            getDoubleField(fields, () -> "doubleField"), 3.14d);
+        super(DoubleDocValuesExactQuery.class, DOC, getDoubleField(fields, () -> "doubleField"), 3.14d);
     }
 
     @Override

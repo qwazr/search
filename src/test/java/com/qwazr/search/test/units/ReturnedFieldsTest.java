@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package com.qwazr.search.test.units;
 import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class ReturnedFieldsTest extends AbstractIndexTest.WithIndexRecord.NoTaxo
     final private static Integer[][] MULTI_INTEGER_STORED_FIELDS = {{11, 12, 13}, {21, 22, 23}, {31, 32, 33}};
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexService();
         for (int i = 0; i < ID_FIELDS.length; i++)
             indexService.postDocument(new IndexRecord.NoTaxonomy(ID_FIELDS[i]).storedField(STORED_FIELDS[i])
@@ -48,11 +48,11 @@ public class ReturnedFieldsTest extends AbstractIndexTest.WithIndexRecord.NoTaxo
     }
 
     private QueryBuilder builder() {
-        return QueryDefinition.of(new MatchAllDocsQuery()).start(0).rows(ID_FIELDS.length);
+        return QueryDefinition.of(MatchAllDocs.INSTANCE).start(0).rows(ID_FIELDS.length);
     }
 
-    private ResultDefinition.WithObject<? extends IndexRecord> withRecord(QueryBuilder queryBuilder) {
-        final ResultDefinition.WithObject<? extends IndexRecord> result =
+    private ResultDefinition.WithObject<? extends IndexRecord<?>> withRecord(QueryBuilder queryBuilder) {
+        final ResultDefinition.WithObject<? extends IndexRecord<?>> result =
             indexService.searchQuery(queryBuilder.build());
         Assert.assertEquals(ID_FIELDS.length, result.totalHits, 0);
         return result;

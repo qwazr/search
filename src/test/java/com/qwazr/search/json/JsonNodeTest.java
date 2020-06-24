@@ -20,10 +20,15 @@ import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.DoubleExactQuery;
+import com.qwazr.search.query.EqualsDouble;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.ObjectMappers;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
@@ -31,13 +36,6 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 public class JsonNodeTest extends AbstractIndexTest {
 
@@ -97,7 +95,7 @@ public class JsonNodeTest extends AbstractIndexTest {
         // Get the document by one root property
         {
             final ResultDefinition.WithMap result = service.searchQuery(INDEX,
-                QueryDefinition.of(new DoubleExactQuery("number", 1347d))
+                QueryDefinition.of(new EqualsDouble("number", 1347d))
                     .returnedField("*").queryDebug(true).build(), false);
             assertThat(result.query, equalTo("pd€number:[1347.0 TO 1347.0]"));
             final Map<String, Object> doc = result.getDocuments().get(0).getFields();

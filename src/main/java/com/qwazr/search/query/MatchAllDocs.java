@@ -25,19 +25,25 @@ import org.apache.lucene.search.Query;
 import java.net.URI;
 import java.util.Map;
 
-public class MatchAllDocsQuery extends AbstractQuery<MatchAllDocsQuery> {
+public class MatchAllDocs extends AbstractQuery<MatchAllDocs> {
+
+    public final static MatchAllDocs INSTANCE = new MatchAllDocs();
 
     @JsonCreator
-    public MatchAllDocsQuery() {
-        super(MatchAllDocsQuery.class);
+    static MatchAllDocs create() {
+        return INSTANCE;
+    }
+
+    private MatchAllDocs() {
+        super(MatchAllDocs.class);
     }
 
     private final static URI DOC = URI.create("core/org/apache/lucene/search/MatchAllDocsQuery.html");
 
-    public MatchAllDocsQuery(final IndexSettingsDefinition settings,
-                             final Map<String, AnalyzerDefinition> analyzers,
-                             final Map<String, FieldDefinition> fields) {
-        super(MatchAllDocsQuery.class, DOC);
+    public MatchAllDocs(final IndexSettingsDefinition settings,
+                        final Map<String, AnalyzerDefinition> analyzers,
+                        final Map<String, FieldDefinition> fields) {
+        super(MatchAllDocs.class, DOC);
     }
 
     @Override
@@ -46,12 +52,12 @@ public class MatchAllDocsQuery extends AbstractQuery<MatchAllDocsQuery> {
     }
 
     @Override
-    protected boolean isEqual(MatchAllDocsQuery query) {
+    protected boolean isEqual(final MatchAllDocs query) {
         return query != null;
     }
 
     @Override
-    public int computeHashCode() {
-        return MatchAllDocsQuery.class.hashCode();
+    protected int computeHashCode() {
+        return MatchAllDocs.class.hashCode();
     }
 }

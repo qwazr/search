@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,8 @@ package com.qwazr.search.test.units;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.query.IntExactQuery;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.query.TermQuery;
-import org.apache.commons.lang3.RandomUtils;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -33,6 +28,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import org.apache.commons.lang3.RandomUtils;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
@@ -73,7 +72,7 @@ public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord.NoTaxo
     @Test
     public void iterateAll() {
         final Iterator<? extends IndexRecord<?>> iterator =
-            indexService.searchIterator(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*").build(),
+            indexService.searchIterator(QueryDefinition.of(MatchAllDocs.INSTANCE).returnedField("*").build(),
                 IndexRecord.NoTaxonomy.class);
         Assert.assertNotNull(iterator);
 

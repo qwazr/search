@@ -22,7 +22,7 @@ import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentMap;
 import com.qwazr.search.index.ResultDocumentObject;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.utils.RandomUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -107,19 +107,19 @@ public class PagingTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
     @Test
     public void pagingWithoutSort() {
-        checkPaging(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*"));
+        checkPaging(QueryDefinition.of(MatchAllDocs.INSTANCE).returnedField("*"));
     }
 
     @Test
     public void pagingSort() {
-        checkPaging(QueryDefinition.of(new MatchAllDocsQuery())
+        checkPaging(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .returnedField("*")
             .sort("sortedDocValue", QueryDefinition.SortEnum.ascending));
     }
 
     @Test
     public void pagingFacetSort() {
-        checkPaging(QueryDefinition.of(new MatchAllDocsQuery())
+        checkPaging(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .returnedField("*")
             .facet("facetField", FacetDefinition.create(10))
             .sort("sortedDocValue", QueryDefinition.SortEnum.ascending));
@@ -127,6 +127,6 @@ public class PagingTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
     @Test
     public void pagingFacetWithoutSort() {
-        checkPaging(QueryDefinition.of(new MatchAllDocsQuery()).returnedField("*"));
+        checkPaging(QueryDefinition.of(MatchAllDocs.INSTANCE).returnedField("*"));
     }
 }

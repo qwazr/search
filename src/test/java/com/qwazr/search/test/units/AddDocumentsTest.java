@@ -18,7 +18,7 @@ package com.qwazr.search.test.units;
 import com.qwazr.search.index.QueryBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.MatchAllDocsQuery;
+import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.utils.RandomUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -95,7 +95,7 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
     }
 
     private QueryBuilder builder() {
-        return QueryDefinition.of(new MatchAllDocsQuery()).start(0).rows(ID_FIELDS.length * 2);
+        return QueryDefinition.of(MatchAllDocs.INSTANCE).start(0).rows(ID_FIELDS.length * 2);
     }
 
     private void checkResult(int expectedSize) {
@@ -122,13 +122,13 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
     }
 
     @Test
-    public void addDocument() throws IOException, InterruptedException {
+    public void addDocument() throws IOException {
         indexService.addDocument(getSingleDoc(0));
         checkResult(1);
     }
 
     @Test
-    public void addDocumentWithCommit() throws IOException, InterruptedException {
+    public void addDocumentWithCommit() throws IOException {
         final Map<String, String> commitData = getCommitData();
         indexService.addDocument(getSingleDoc(0), commitData);
         checkResult(1);
@@ -136,13 +136,13 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
     }
 
     @Test
-    public void addDocuments() throws IOException, InterruptedException {
+    public void addDocuments() throws IOException {
         indexService.addDocuments(getDocCollection());
         checkResult(3);
     }
 
     @Test
-    public void addDocumentsWithCommit() throws IOException, InterruptedException {
+    public void addDocumentsWithCommit() throws IOException {
         final Map<String, String> commitData = getCommitData();
         indexService.addDocuments(getDocCollection(), commitData);
         checkResult(3);
@@ -187,7 +187,7 @@ public class AddDocumentsTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
             }));
         }
 
-        for (Future future : futures)
+        for (Future<?> future : futures)
             future.get();
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.HOURS);
