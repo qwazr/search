@@ -1,24 +1,26 @@
 {
   "query": {
-    "type": "DrillDownQuery",
-    "baseQuery": {
-      "type": "QueryParser",
-      "default_field": "name",
-      "query_string": "name"
-    },
-    "useDrillSideways": true,
-    "dimPath": [
-      {
-        "dynamic_simple_facet_type": [
-          "dyn_type4"
-        ]
+    "DrillDownQuery": {
+      "baseQuery": {
+        "QueryParser": {
+          "default_field": "name",
+          "query_string": "name"
+        }
       },
-      {
-        "dynamic_simple_facet_type": [
-          "dyn_type5"
-        ]
-      }
-    ]
+      "useDrillSideways": true,
+      "dimPath": [
+        {
+          "dynamic_simple_facet_type": [
+            "dyn_type4"
+          ]
+        },
+        {
+          "dynamic_simple_facet_type": [
+            "dyn_type5"
+          ]
+        }
+      ]
+    }
   },
   "returned_fields": [
     "name",

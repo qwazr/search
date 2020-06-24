@@ -2,42 +2,46 @@
   "start": 0,
   "rows": 10,
   "query": {
-    "type": "BooleanQuery",
-    "clauses": [
-      {
-        "occur": "must",
-        "query": {
-          "type": "MultiFieldQueryParser",
-          "fields": [
-            "name",
-            "description"
-          ],
-          "query_string": "Article",
-          "boosts": {
-            "name": 10,
-            "description": 1
-          }
-        }
-      },
-      {
-        "occur": "filter",
-        "query": {
-          "type": "BooleanQuery",
-          "clauses": [
-            {
-              "occur": "must",
-              "query": {
-                "type": "FacetPathQuery",
-                "dimension": "category",
-                "path": [
-                  "news"
-                ]
+    "BooleanQuery": {
+      "clauses": [
+        {
+          "occur": "must",
+          "query": {
+            "MultiFieldQueryParser": {
+              "fields": [
+                "name",
+                "description"
+              ],
+              "query_string": "Article",
+              "boosts": {
+                "name": 10,
+                "description": 1
               }
             }
-          ]
+          }
+        },
+        {
+          "occur": "filter",
+          "query": {
+            "BooleanQuery": {
+              "clauses": [
+                {
+                  "occur": "must",
+                  "query": {
+                    "FacetPathQuery": {
+                      "dimension": "category",
+                      "path": [
+                        "news"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
         }
-      }
-    ]
+      ]
+    }
   },
   "facets": {
     "category": {

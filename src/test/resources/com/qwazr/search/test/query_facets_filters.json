@@ -1,54 +1,60 @@
 {
   "query": {
-    "type": "BooleanQuery",
-    "clauses": [
-      {
-        "occur": "must",
-        "query": {
-          "type": "QueryParser",
-          "default_field": "name",
-          "query_string": "name"
-        }
-      },
-      {
-        "occur": "filter",
-        "query": {
-          "type": "BooleanQuery",
-          "clauses": [
-            {
-              "occur": "should",
-              "query": {
-                "type": "FacetPathQuery",
-                "dimension": "category",
-                "path": [
-                  "cat3"
-                ]
-              }
-            },
-            {
-              "occur": "should",
-              "query": {
-                "type": "FacetPathQuery",
-                "dimension": "category",
-                "path": [
-                  "cat5"
-                ]
-              }
-            },
-            {
-              "occur": "must",
-              "query": {
-                "type": "FacetPathQuery",
-                "dimension": "dynamic_multi_facet_cat",
-                "path": [
-                  "dyn_cat4"
-                ]
-              }
+    "BooleanQuery": {
+      "clauses": [
+        {
+          "occur": "must",
+          "query": {
+            "QueryParser": {
+              "default_field": "name",
+              "query_string": "name"
             }
-          ]
+          }
+        },
+        {
+          "occur": "filter",
+          "query": {
+            "BooleanQuery": {
+              "clauses": [
+                {
+                  "occur": "should",
+                  "query": {
+                    "FacetPathQuery": {
+                      "dimension": "category",
+                      "path": [
+                        "cat3"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "occur": "should",
+                  "query": {
+                    "FacetPathQuery": {
+                      "dimension": "category",
+                      "path": [
+                        "cat5"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "occur": "must",
+                  "query": {
+                    "FacetPathQuery": {
+                      "dimension": "dynamic_multi_facet_cat",
+                      "path": [
+                        "dyn_cat4"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
         }
-      }
-    ]
+      ]
+    }
   },
   "returned_fields": [
     "name",

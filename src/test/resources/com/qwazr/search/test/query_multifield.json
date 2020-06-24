@@ -1,11 +1,12 @@
 {
   "query": {
-    "type": "MultiFieldQuery",
-    "query_string": "fifth search",
-    "fields_boosts": {
-      "name": 10,
-      "description": 1,
-      "fulltext": 0.5
+    "MultiFieldQuery": {
+      "query_string": "fifth search",
+      "fields_boosts": {
+        "name": 10,
+        "description": 1,
+        "fulltext": 0.5
+      }
     }
   },
   "query_debug": true,

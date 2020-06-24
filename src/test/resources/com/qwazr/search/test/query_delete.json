@@ -1,9 +1,10 @@
 {
   "query": {
-    "type": "FacetPathQuery",
-    "dimension": "category",
-    "path": [
-      "cat4"
-    ]
+    "FacetPathQuery": {
+      "dimension": "category",
+      "path": [
+        "cat4"
+      ]
+    }
   }
 }

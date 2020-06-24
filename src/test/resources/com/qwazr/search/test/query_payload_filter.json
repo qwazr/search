@@ -1,14 +1,17 @@
 {
   "query": {
-    "type": "PayloadScoreQuery",
-    "payload_function": "AveragePayloadFunction",
-    "payload_decoder": "IntegerPayloadDecoder",
-    "wrapped_query": {
-      "type": "SpanQueryWrapper",
+    "PayloadScoreQuery": {
+      "payload_function": "AveragePayloadFunction",
+      "payload_decoder": "IntegerPayloadDecoder",
       "wrapped_query": {
-        "type": "TermQuery",
-        "field": "integer_payload",
-        "term": "3"
+        "SpanQueryWrapper": {
+          "wrapped_query": {
+            "TermQuery": {
+              "field": "integer_payload",
+              "term": "3"
+            }
+          }
+        }
       }
     }
   },

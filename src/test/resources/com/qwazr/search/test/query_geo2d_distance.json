@@ -1,10 +1,11 @@
 {
   "query": {
-    "type": "LatLonPointDistanceQuery",
-    "field": "geo2d",
-    "center_latitude": 48.8568,
-    "center_longitude": 2.3509,
-    "radius_meters": 1000
+    "LatLonPointDistanceQuery": {
+      "field": "geo2d",
+      "center_latitude": 48.8568,
+      "center_longitude": 2.3509,
+      "radius_meters": 1000
+    }
   },
   "start": 0,
   "rows": 5,

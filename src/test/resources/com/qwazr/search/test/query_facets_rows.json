@@ -1,6 +1,6 @@
 {
   "query": {
-    "type": "MatchAllDocsQuery"
+    "MatchAllDocsQuery": {}
   },
   "returned_fields": [
     "name",
@@ -14,15 +14,17 @@
     "FacetQueries": {
       "queries": {
         "AllDocs": {
-          "type": "MatchAllDocsQuery"
+          "MatchAllDocsQuery": {
+          }
         },
         "2016,January": {
-          "type": "TermRangeQuery",
-          "field": "single_date",
-          "lower_term": "201601",
-          "upper_term": "201602",
-          "include_lower": true,
-          "include_upper": false
+          "TermRangeQuery": {
+            "field": "single_date",
+            "lower_term": "201601",
+            "upper_term": "201602",
+            "include_lower": true,
+            "include_upper": false
+          }
         }
       }
     }

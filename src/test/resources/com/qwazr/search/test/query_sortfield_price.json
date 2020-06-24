@@ -1,8 +1,9 @@
 {
   "query": {
-    "type": "QueryParser",
-    "default_field": "name",
-    "query_string": "name"
+    "QueryParser": {
+      "default_field": "name",
+      "query_string": "name"
+    }
   },
   "returned_fields": [
     "name",

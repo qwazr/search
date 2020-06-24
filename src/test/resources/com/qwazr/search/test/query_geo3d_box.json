@@ -1,12 +1,13 @@
 {
   "query": {
-    "type": "Geo3DBoxQuery",
-    "field": "geo3d",
-    "planet_model": "WGS84",
-    "min_latitude": 36.783333,
-    "max_latitude": 38.783333,
-    "min_longitude": -123.416667,
-    "max_longitude": -121.416667
+    "Geo3DBoxQuery": {
+      "field": "geo3d",
+      "planet_model": "WGS84",
+      "min_latitude": 36.783333,
+      "max_latitude": 38.783333,
+      "min_longitude": -123.416667,
+      "max_longitude": -121.416667
+    }
   },
   "start": 0,
   "rows": 5,

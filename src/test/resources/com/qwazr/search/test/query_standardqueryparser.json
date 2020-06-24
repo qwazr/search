@@ -1,8 +1,9 @@
 {
   "query": {
-    "type": "QueryParser",
-    "default_field": "fulltext",
-    "query_string": "search engine"
+    "QueryParser": {
+      "default_field": "fulltext",
+      "query_string": "search engine"
+    }
   },
   "start": 0,
   "rows": 5,
