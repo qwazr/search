@@ -45,6 +45,7 @@ import com.qwazr.utils.StringUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -55,7 +56,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.SortedMap;
 import javax.ws.rs.NotAcceptableException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -208,7 +208,7 @@ public class AnnotatedIndexService<T> {
     /**
      * @return the list of available query types./
      */
-    public Set<String> getQueryTypes() {
+    public Map<String, URI> getQueryTypes() {
         return indexService.getQueryTypes(indexName);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package com.qwazr.search.test.units;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.SynonymMapBuilder;
 import com.qwazr.search.query.MultiFieldQueryParser;
-import com.qwazr.search.query.PhraseQuery;
+import com.qwazr.search.query.Phrase;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
@@ -34,8 +34,8 @@ import java.net.URISyntaxException;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RealTimeSynonymsResourcesTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
-    public final static String[] EN_FR_SYNONYMS = new String[] { "hello world", "bonjour le monde" };
-    public final static String[] EN_FR_DE_SYNONYMS = new String[] { "hello world", "bonjour le monde", "hallo welt" };
+    public final static String[] EN_FR_SYNONYMS = new String[]{"hello world", "bonjour le monde"};
+    public final static String[] EN_FR_DE_SYNONYMS = new String[]{"hello world", "bonjour le monde", "hallo welt"};
 
     public final static Analyzer WHITESPACE_ANALYZER = new WhitespaceAnalyzer();
 
@@ -57,34 +57,34 @@ public class RealTimeSynonymsResourcesTest extends AbstractIndexTest.WithIndexRe
     @Test
     public void test001_check_en_fr() {
         final MultiFieldQueryParser.Builder builder =
-                MultiFieldQueryParser.of().addField("textSynonymsField1").setSplitOnWhitespace(false);
+            MultiFieldQueryParser.of().addField("textSynonymsField1").setSplitOnWhitespace(false);
 
         Assert.assertEquals(1, indexService.searchQuery(
-                QueryDefinition.of(builder.setQueryString("hello world").build()).build()).totalHits);
+            QueryDefinition.of(builder.setQueryString("hello world").build()).build()).totalHits);
         Assert.assertEquals(1, indexService.searchQuery(
-                QueryDefinition.of(builder.setQueryString("bonjour le monde").build()).build()).totalHits);
+            QueryDefinition.of(builder.setQueryString("bonjour le monde").build()).build()).totalHits);
         Assert.assertEquals(0, indexService.searchQuery(
-                QueryDefinition.of(new PhraseQuery("textSynonymsField1", 1, "hallo", "welt")).build()).totalHits);
+            QueryDefinition.of(new Phrase("textSynonymsField1", 1, "hallo", "welt")).build()).totalHits);
     }
 
     @Test
     public void test002_updateSynonymMap() throws IOException {
         indexManager.registerConstructorParameter(SynonymMap.class,
-                getSynonymMap(WHITESPACE_ANALYZER, EN_FR_DE_SYNONYMS));
+            getSynonymMap(WHITESPACE_ANALYZER, EN_FR_DE_SYNONYMS));
         indexService.refreshAnalyzers();
     }
 
     @Test
     public void test003_check_en_fr_de() {
         final MultiFieldQueryParser.Builder builder =
-                MultiFieldQueryParser.of().addField("textSynonymsField1").setSplitOnWhitespace(false);
+            MultiFieldQueryParser.of().addField("textSynonymsField1").setSplitOnWhitespace(false);
 
         Assert.assertEquals(1, indexService.searchQuery(
-                QueryDefinition.of(builder.setQueryString("hello world").build()).build()).totalHits);
+            QueryDefinition.of(builder.setQueryString("hello world").build()).build()).totalHits);
         Assert.assertEquals(1, indexService.searchQuery(
-                QueryDefinition.of(builder.setQueryString("bonjour le monde").build()).build()).totalHits);
+            QueryDefinition.of(builder.setQueryString("bonjour le monde").build()).build()).totalHits);
         Assert.assertEquals(1, indexService.searchQuery(
-                QueryDefinition.of(builder.setQueryString("hallo welt").build()).build()).totalHits);
+            QueryDefinition.of(builder.setQueryString("hallo welt").build()).build()).totalHits);
     }
 
 }

@@ -18,7 +18,7 @@
           }
         },
         "2016,January": {
-          "TermRangeQuery": {
+          "TermRange": {
             "field": "single_date",
             "lower_term": "201601",
             "upper_term": "201602",

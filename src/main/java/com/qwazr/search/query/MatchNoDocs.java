@@ -17,10 +17,10 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.annotations.QuerySampleCreator;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
-import java.net.URI;
 import java.util.Map;
 import org.apache.lucene.search.Query;
 
@@ -37,12 +37,11 @@ public class MatchNoDocs extends AbstractQuery<MatchNoDocs> {
         super(MatchNoDocs.class);
     }
 
-    private final static URI DOC = URI.create("core/org/apache/lucene/search/MatchNoDocsQuery.html");
-
-    public MatchNoDocs(final IndexSettingsDefinition settings,
-                       final Map<String, AnalyzerDefinition> analyzers,
-                       final Map<String, FieldDefinition> fields) {
-        super(MatchNoDocs.class, DOC);
+    @QuerySampleCreator(docUri = CORE_BASE_DOC_URI + "core/org/apache/lucene/search/MatchNoDocsQuery.html")
+    public static MatchNoDocs create(final IndexSettingsDefinition settings,
+                                     final Map<String, AnalyzerDefinition> analyzers,
+                                     final Map<String, FieldDefinition> fields) {
+        return INSTANCE;
     }
 
     @Override

@@ -33,27 +33,27 @@ public class FunctionScoreQueryScoreTest extends AbstractIndexTest.WithIndexReco
     public static void setup() throws IOException, InterruptedException, URISyntaxException {
         initIndexService();
         indexService.postDocument(
-                new IndexRecord.NoTaxonomy("1")
-                        .textField("Sampson: No, sir, I do not bite my thumb at you sir; but I bite my thumb, sir.")
-                        .floatDocValue(1000.0F));
+            new IndexRecord.NoTaxonomy("1")
+                .textField("Sampson: No, sir, I do not bite my thumb at you sir; but I bite my thumb, sir.")
+                .floatDocValue(1000.0F));
         indexService.postDocument(
-                new IndexRecord.NoTaxonomy("2")
-                        .textField("Gregory: Do you quarrel, sir?")
-                        .floatDocValue(1.0F));
+            new IndexRecord.NoTaxonomy("2")
+                .textField("Gregory: Do you quarrel, sir?")
+                .floatDocValue(1.0F));
         indexService.postDocument(
-                new IndexRecord.NoTaxonomy("3")
-                        .textField("Abraham: Quarrel, sir? No, sir.")
-                        .floatDocValue(100.0F));
+            new IndexRecord.NoTaxonomy("3")
+                .textField("Abraham: Quarrel, sir? No, sir.")
+                .floatDocValue(100.0F));
     }
 
     @Test
     public void testWithout() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy>
-                result =
-                indexService.searchQuery(QueryDefinition.of(
-                        new TermQuery("textField", "sir"))
-                        .returnedField("*")
-                        .build());
+            result =
+            indexService.searchQuery(QueryDefinition.of(
+                new TermQuery("textField", "sir"))
+                .returnedField("*")
+                .build());
         checkResult(result, 3L);
 
         checkRecord(result.getDocuments().get(0), "3", 0.09599176);
@@ -64,13 +64,13 @@ public class FunctionScoreQueryScoreTest extends AbstractIndexTest.WithIndexReco
     @Test
     public void testWith() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy>
-                result =
-                indexService.searchQuery(QueryDefinition.of(
-                        new FunctionScoreQuery(
-                                new TermQuery("textField", "sir"),
-                                new DoubleValuesSource.FloatField("floatDocValue")))
-                        .returnedField("*")
-                        .build());
+            result =
+            indexService.searchQuery(QueryDefinition.of(
+                new FunctionScore(
+                    new HasTerm("textField", "sir"),
+                    new DoubleValuesSource.FloatField("floatDocValue")))
+                .returnedField("*")
+                .build());
         checkResult(result, 3L);
 
         checkRecord(result.getDocuments().get(0), "1", 79.55061);

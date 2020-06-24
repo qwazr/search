@@ -19,8 +19,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.search.query.QueryInterface;
+import com.qwazr.search.query.QuerySampler;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.AbstractServiceImpl;
@@ -31,12 +31,12 @@ import com.qwazr.utils.concurrent.FunctionEx;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -913,8 +913,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    public Set<String> getQueryTypes(final String indexName) {
-        return AbstractQuery.TYPES.keySet();
+    public Map<String, URI> getQueryTypes(final String indexName) {
+        return QuerySampler.TYPES_URI_DOC;
     }
 
     @Override

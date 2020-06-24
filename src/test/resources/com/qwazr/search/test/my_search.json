@@ -2,7 +2,7 @@
   "start": 0,
   "rows": 10,
   "query": {
-    "BooleanQuery": {
+    "Bool": {
       "clauses": [
         {
           "occur": "must",
@@ -23,12 +23,12 @@
         {
           "occur": "filter",
           "query": {
-            "BooleanQuery": {
+            "Bool": {
               "clauses": [
                 {
                   "occur": "must",
                   "query": {
-                    "FacetPathQuery": {
+                    "FacetPath": {
                       "dimension": "category",
                       "path": [
                         "news"

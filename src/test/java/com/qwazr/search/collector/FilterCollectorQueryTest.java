@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,16 @@ package com.qwazr.search.collector;
 
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.IntExactQuery;
+import com.qwazr.search.query.ExactInteger;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class FilterCollectorQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
@@ -47,9 +46,9 @@ public class FilterCollectorQueryTest extends AbstractIndexTest.WithIndexRecord.
     @Test
     public void test() {
         final QueryDefinition queryDef1 =
-                QueryDefinition.of(new IntExactQuery("intPoint", 0)).collector("filter", FilterCollector.class).build();
+            QueryDefinition.of(new ExactInteger("intPoint", 0)).collector("filter", FilterCollector.class).build();
         final FilterCollector.Query filterQuery =
-                indexService.searchQuery(queryDef1).getCollector("filter", FilterCollector.Query.class);
+            indexService.searchQuery(queryDef1).getCollector("filter", FilterCollector.Query.class);
         Assert.assertNotNull(filterQuery);
 
         final QueryDefinition queryDef2 = QueryDefinition.of(filterQuery).queryDebug(true).build();

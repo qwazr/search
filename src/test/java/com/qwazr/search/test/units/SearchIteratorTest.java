@@ -17,7 +17,7 @@ package com.qwazr.search.test.units;
 
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.QueryDefinition;
-import com.qwazr.search.query.IntExactQuery;
+import com.qwazr.search.query.ExactInteger;
 import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.query.TermQuery;
 import java.io.IOException;
@@ -87,7 +87,7 @@ public class SearchIteratorTest extends AbstractIndexTest.WithIndexRecord.NoTaxo
     public void iterateSubSet() {
 
         final Iterator<? extends IndexRecord<?>> iterator = indexService.searchIterator(
-            QueryDefinition.of(new IntExactQuery("intPoint", 0)).returnedField("*").build(),
+            QueryDefinition.of(new ExactInteger("intPoint", 0)).returnedField("*").build(),
             IndexRecord.NoTaxonomy.class);
         Assert.assertNotNull(iterator);
 

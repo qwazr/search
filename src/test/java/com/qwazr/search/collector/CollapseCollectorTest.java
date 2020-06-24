@@ -17,7 +17,7 @@ package com.qwazr.search.collector;
 
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.BooleanQuery;
+import com.qwazr.search.query.Bool;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
@@ -59,13 +59,13 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
 
     @Test
     public void test() {
-        final QueryDefinition queryDef1 = QueryDefinition.of(BooleanQuery.of()
-            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text1"))
-            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text2"))
-            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text3"))
-            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text4"))
-            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text5"))
-            .addClause(BooleanQuery.Occur.should, new TermQuery("textField", "text6"))
+        final QueryDefinition queryDef1 = QueryDefinition.of(Bool.of()
+            .addClause(Bool.Occur.should, new TermQuery("textField", "text1"))
+            .addClause(Bool.Occur.should, new TermQuery("textField", "text2"))
+            .addClause(Bool.Occur.should, new TermQuery("textField", "text3"))
+            .addClause(Bool.Occur.should, new TermQuery("textField", "text4"))
+            .addClause(Bool.Occur.should, new TermQuery("textField", "text5"))
+            .addClause(Bool.Occur.should, new TermQuery("textField", "text6"))
             .build())
             .collector("collapse", CollapseCollector.class, "sortedDocValue", 5)
             .build();

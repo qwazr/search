@@ -17,8 +17,6 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.net.URI;
 import java.util.Objects;
 
 public abstract class AbstractRangeQuery<V, T extends AbstractRangeQuery<V, T>> extends AbstractFieldQuery<T> {
@@ -37,17 +35,6 @@ public abstract class AbstractRangeQuery<V, T extends AbstractRangeQuery<V, T>> 
         this.lowerValue = lowerValue;
         this.upperValue = upperValue;
     }
-
-    protected AbstractRangeQuery(final Class<T> queryClass,
-                                 final URI docUri,
-                                 final String field,
-                                 final V lowerValue,
-                                 final V upperValue) {
-        super(queryClass, docUri, field);
-        this.lowerValue = lowerValue;
-        this.upperValue = upperValue;
-    }
-
 
     @JsonIgnore
     @Override

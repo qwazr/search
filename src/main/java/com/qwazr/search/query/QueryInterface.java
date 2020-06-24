@@ -18,79 +18,71 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.qwazr.search.analysis.AnalyzerDefinition;
-import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.util.Map;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.Query;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = BlendedTermQuery.class),
-    @JsonSubTypes.Type(value = BooleanQuery.class),
-    @JsonSubTypes.Type(value = BoostQuery.class),
-    @JsonSubTypes.Type(value = CommonTermsQuery.class),
-    @JsonSubTypes.Type(value = ConstantScoreQuery.class),
-    @JsonSubTypes.Type(value = DisjunctionMaxQuery.class),
+    @JsonSubTypes.Type(value = BlendedTerm.class),
+    @JsonSubTypes.Type(value = Bool.class),
+    @JsonSubTypes.Type(value = Boost.class),
+    @JsonSubTypes.Type(value = CommonTerms.class),
+    @JsonSubTypes.Type(value = ConstantScore.class),
+    @JsonSubTypes.Type(value = DisjunctionMax.class),
     @JsonSubTypes.Type(value = DocValuesFieldExistsQuery.class),
     @JsonSubTypes.Type(value = DoubleDocValuesExactQuery.class),
     @JsonSubTypes.Type(value = DoubleDocValuesRangeQuery.class),
-    @JsonSubTypes.Type(value = DoubleMultiRangeQuery.class),
-    @JsonSubTypes.Type(value = DoubleRangeQuery.class),
-    @JsonSubTypes.Type(value = DoubleSetQuery.class),
-    @JsonSubTypes.Type(value = DrillDownQuery.class),
-    @JsonSubTypes.Type(value = EqualsDouble.class),
-    @JsonSubTypes.Type(value = EqualsLong.class),
-    @JsonSubTypes.Type(value = EqualsString.class),
-    @JsonSubTypes.Type(value = FacetPathQuery.class),
+    @JsonSubTypes.Type(value = DoubleMultiRange.class),
+    @JsonSubTypes.Type(value = DoubleRange.class),
+    @JsonSubTypes.Type(value = DoubleSet.class),
+    @JsonSubTypes.Type(value = DrillDown.class),
+    @JsonSubTypes.Type(value = ExactDouble.class),
+    @JsonSubTypes.Type(value = ExactFloat.class),
+    @JsonSubTypes.Type(value = ExactInteger.class),
+    @JsonSubTypes.Type(value = ExactLong.class),
+    @JsonSubTypes.Type(value = FacetPath.class),
     @JsonSubTypes.Type(value = FloatDocValuesExactQuery.class),
     @JsonSubTypes.Type(value = FloatDocValuesRangeQuery.class),
-    @JsonSubTypes.Type(value = FloatExactQuery.class),
-    @JsonSubTypes.Type(value = FloatMultiRangeQuery.class),
-    @JsonSubTypes.Type(value = FloatRangeQuery.class),
-    @JsonSubTypes.Type(value = FloatSetQuery.class),
-    @JsonSubTypes.Type(value = FunctionQuery.class),
-    @JsonSubTypes.Type(value = FunctionScoreQuery.class),
-    @JsonSubTypes.Type(value = FuzzyQuery.class),
+    @JsonSubTypes.Type(value = FloatMultiRange.class),
+    @JsonSubTypes.Type(value = FloatRange.class),
+    @JsonSubTypes.Type(value = FloatSet.class),
+    @JsonSubTypes.Type(value = Function.class),
+    @JsonSubTypes.Type(value = FunctionScore.class),
+    @JsonSubTypes.Type(value = Fuzzy.class),
     @JsonSubTypes.Type(value = Geo3DDistanceQuery.class),
     @JsonSubTypes.Type(value = Geo3DBoxQuery.class),
+    @JsonSubTypes.Type(value = HasTerm.class),
     @JsonSubTypes.Type(value = IntDocValuesExactQuery.class),
     @JsonSubTypes.Type(value = IntDocValuesRangeQuery.class),
-    @JsonSubTypes.Type(value = IntExactQuery.class),
-    @JsonSubTypes.Type(value = IntMultiRangeQuery.class),
-    @JsonSubTypes.Type(value = IntRangeQuery.class),
-    @JsonSubTypes.Type(value = IntSetQuery.class),
-    @JsonSubTypes.Type(value = JoinQuery.class),
+    @JsonSubTypes.Type(value = IntegerMultiRange.class),
+    @JsonSubTypes.Type(value = IntegerRange.class),
+    @JsonSubTypes.Type(value = IntegerSet.class),
+    @JsonSubTypes.Type(value = Join.class),
     @JsonSubTypes.Type(value = LatLonPointBBoxQuery.class),
     @JsonSubTypes.Type(value = LatLonPointDistanceQuery.class),
     @JsonSubTypes.Type(value = LatLonPointPolygonQuery.class),
     @JsonSubTypes.Type(value = LongDocValuesExactQuery.class),
     @JsonSubTypes.Type(value = LongDocValuesRangeQuery.class),
-    @JsonSubTypes.Type(value = LongMultiRangeQuery.class),
-    @JsonSubTypes.Type(value = LongRangeQuery.class),
-    @JsonSubTypes.Type(value = LongSetQuery.class),
+    @JsonSubTypes.Type(value = LongMultiRange.class),
+    @JsonSubTypes.Type(value = LongRange.class),
+    @JsonSubTypes.Type(value = LongSet.class),
     @JsonSubTypes.Type(value = MatchAllDocs.class),
     @JsonSubTypes.Type(value = MatchNoDocs.class),
-    @JsonSubTypes.Type(value = MultiPhraseQuery.class),
-    @JsonSubTypes.Type(value = MoreLikeThisQuery.class),
+    @JsonSubTypes.Type(value = MultiPhrase.class),
+    @JsonSubTypes.Type(value = MoreLikeThis.class),
     @JsonSubTypes.Type(value = MultiFieldQuery.class),
     @JsonSubTypes.Type(value = MultiFieldQueryParser.class),
-    @JsonSubTypes.Type(value = NGramPhraseQuery.class),
+    @JsonSubTypes.Type(value = NGramPhrase.class),
     @JsonSubTypes.Type(value = PayloadScoreQuery.class),
-    @JsonSubTypes.Type(value = PhraseQuery.class),
-    @JsonSubTypes.Type(value = PrefixQuery.class),
+    @JsonSubTypes.Type(value = Phrase.class),
+    @JsonSubTypes.Type(value = Prefix.class),
     @JsonSubTypes.Type(value = QueryParser.class),
-    @JsonSubTypes.Type(value = RegexpQuery.class),
+    @JsonSubTypes.Type(value = Regexp.class),
     @JsonSubTypes.Type(value = SimpleQueryParser.class),
     @JsonSubTypes.Type(value = SortedDocValuesExactQuery.class),
     @JsonSubTypes.Type(value = SortedDocValuesRangeQuery.class),
@@ -115,9 +107,9 @@ import org.apache.lucene.search.Query;
     @JsonSubTypes.Type(value = SpanWithinQuery.class),
     @JsonSubTypes.Type(value = SynonymQuery.class),
     @JsonSubTypes.Type(value = TermQuery.class),
-    @JsonSubTypes.Type(value = TermRangeQuery.class),
+    @JsonSubTypes.Type(value = TermRange.class),
     @JsonSubTypes.Type(value = TermsQuery.class),
-    @JsonSubTypes.Type(value = WildcardQuery.class)})
+    @JsonSubTypes.Type(value = Wildcard.class)})
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     isGetterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -125,38 +117,11 @@ import org.apache.lucene.search.Query;
     fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public interface QueryInterface {
 
-    @JsonProperty("doc")
-    URI getDocUri();
-
     @JsonIgnore
     Query getQuery(final QueryContext queryContext)
         throws IOException, ParseException, QueryNodeException, ReflectiveOperationException;
 
-    /**
-     * Build a query instance with a sample of values. The Query has to implement a constructor with the following parameters:
-     *
-     * <ul>
-     *     <li>IndexSettingsDefinition</li>
-     *     <li>Map<String, AnalyzerDefinition></li>
-     *     <li>Map<String, FieldDefinition></li>
-     * </ul>
-     *
-     * @param queryClass
-     * @param settings
-     * @param analyzers
-     * @param fields
-     * @return a query instance
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
-     * @throws InstantiationException
-     * @throws NoSuchMethodException
-     */
-    static QueryInterface getSample(final Class<QueryInterface> queryClass,
-                                    final IndexSettingsDefinition settings,
-                                    final Map<String, AnalyzerDefinition> analyzers,
-                                    final Map<String, FieldDefinition> fields) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
-        final Constructor<QueryInterface> samplerConstructor = queryClass.getConstructor(IndexSettingsDefinition.class, Map.class, Map.class);
-        return samplerConstructor.newInstance(settings, analyzers, fields);
-    }
+    String CORE_BASE_DOC_URI = "https://lucene.apache.org/core/8_5_2/";
+
 }
 

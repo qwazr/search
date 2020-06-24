@@ -17,12 +17,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.analysis.AnalyzerDefinition;
-import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
-import java.net.URI;
-import java.util.Map;
 import org.apache.lucene.search.Query;
 
 public class DocValuesFieldExistsQuery extends AbstractFieldQuery<DocValuesFieldExistsQuery> {
@@ -35,14 +30,6 @@ public class DocValuesFieldExistsQuery extends AbstractFieldQuery<DocValuesField
 
     public DocValuesFieldExistsQuery(final String field) {
         this(null, field);
-    }
-
-    private final static URI DOC = URI.create("core/org/apache/lucene/search/DocValuesFieldExistsQuery.html");
-
-    public DocValuesFieldExistsQuery(final IndexSettingsDefinition settings,
-                                     final Map<String, AnalyzerDefinition> analyzers,
-                                     final Map<String, FieldDefinition> fields) {
-        super(DocValuesFieldExistsQuery.class, DOC, getTextField(fields, () -> "anyField"));
     }
 
     @Override

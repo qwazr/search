@@ -15,12 +15,10 @@
  */
 package com.qwazr.search.query;
 
-import com.qwazr.search.annotations.SmartField;
-import com.qwazr.search.field.CustomFieldDefinition;
-import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.SmartFieldDefinition;
-import com.qwazr.search.index.QueryContext;
 import com.qwazr.search.test.units.AbstractIndexTest;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Map;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -28,9 +26,6 @@ import org.apache.lucene.search.Query;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 public class DrillDownQueryTest extends AbstractIndexTest.WithIndexRecord.WithTaxonomy {
 
@@ -42,7 +37,7 @@ public class DrillDownQueryTest extends AbstractIndexTest.WithIndexRecord.WithTa
     @Test
     public void luceneQuery() throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
         final Query luceneQuery =
-            new DrillDownQuery(MatchAllDocs.INSTANCE, true)
+            new DrillDown(MatchAllDocs.INSTANCE, true)
                 .filter("dim", "value")
                 .getQuery(QueryContextTest.of(Map.of("dim", SmartFieldDefinition.of().facet(true).build())));
         Assert.assertNotNull(luceneQuery);

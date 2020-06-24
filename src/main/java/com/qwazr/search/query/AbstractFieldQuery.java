@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.index.FieldMap;
-import java.net.URI;
 import java.util.Objects;
 import org.apache.lucene.index.Term;
 
@@ -33,7 +32,7 @@ public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extend
 
     protected AbstractFieldQuery(final Class<T> queryClass,
                                  final String field) {
-        this(queryClass, (String) null, field);
+        this(queryClass, null, field);
     }
 
     protected AbstractFieldQuery(final Class<T> queryClass,
@@ -41,14 +40,6 @@ public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extend
                                  final String field) {
         super(queryClass);
         this.genericField = genericField;
-        this.field = Objects.requireNonNull(field, "The field is null");
-    }
-
-    protected AbstractFieldQuery(final Class<T> queryClass,
-                                 final URI docUri,
-                                 final String field) {
-        super(queryClass, docUri);
-        this.genericField = null;
         this.field = Objects.requireNonNull(field, "The field is null");
     }
 

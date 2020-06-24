@@ -31,8 +31,12 @@ public class QueryParser extends AbstractClassicQueryParser<QueryParser> {
     public final String defaulField;
 
     @JsonCreator
-    private QueryParser(@JsonProperty("default_field") String defaulField) {
-        super(QueryParser.class);
+    private QueryParser(@JsonProperty("default_field") String defaulField,
+                        @JsonProperty("enable_position_increments") final Boolean enablePositionIncrements,
+                        @JsonProperty("auto_generate_multi_term_synonyms_phrase_query") final Boolean autoGenerateMultiTermSynonymsPhraseQuery,
+                        @JsonProperty("enable_graph_queries") final Boolean enableGraphQueries,
+                        @JsonProperty("query_string") final String queryString) {
+        super(QueryParser.class, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString);
         this.defaulField = defaulField;
     }
 

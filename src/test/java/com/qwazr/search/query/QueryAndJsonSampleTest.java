@@ -17,14 +17,13 @@
 package com.qwazr.search.query;
 
 import com.qwazr.search.test.units.AbstractIndexTest;
-import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import javax.ws.rs.WebApplicationException;
+import java.util.TreeSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
@@ -32,6 +31,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -44,41 +44,68 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
     }
 
     @Test
-    public void getTypesTest() throws IOException {
-        assertThat(AbstractQuery.TYPES, notNullValue());
-        assertThat(AbstractQuery.TYPES.size(), equalTo(82));
+    public void getTypesTest() {
+        assertThat(QuerySampler.TYPES_FACTORY, notNullValue());
+        assertThat(QuerySampler.TYPES_URI_DOC, notNullValue());
+        assertThat(QuerySampler.TYPES_FACTORY.size(), equalTo(39));
+        assertThat(QuerySampler.TYPES_URI_DOC.size(), equalTo(QuerySampler.TYPES_FACTORY.size()));
+        assertThat(QuerySampler.TYPES_FACTORY.keySet(), equalTo(QuerySampler.TYPES_URI_DOC.keySet()));
 
-        final Set<String> types = indexService.getQueryTypes();
-        final List<String> typesWithSample = new ArrayList<>();
-        for (final String type : types) {
+        final Map<String, URI> types = indexService.getQueryTypes();
+        types.forEach((type, docUri) -> {
             try {
                 final QueryInterface sampleQuery = indexService.getQuerySample(type);
-                assertThat(sampleQuery.getDocUri(), notNullValue());
-                assertThat(sampleQuery.getDocUri().toString(),
-                    ((HttpURLConnection) sampleQuery.getDocUri().toURL().openConnection()).getResponseCode(),
+                assertThat(sampleQuery, notNullValue());
+                assertThat(docUri.toString(),
+                    ((HttpURLConnection) docUri.toURL().openConnection()).getResponseCode(),
                     equalTo(200));
-                typesWithSample.add(type);
-            } catch (WebApplicationException e) {
-                assertThat(e.getResponse().getStatus(), equalTo(404));
-                assertThat(e.getMessage(), equalTo("This query has no sample: " + type));
+            } catch (Exception e) {
+                Assert.fail(e.getMessage());
             }
-        }
-        assertThat(typesWithSample, equalTo(List.of(
-            "BlendedTermQuery",
-            "BooleanQuery",
-            "BoostQuery",
-            "CommonTermsQuery",
-            "ConstantScoreQuery",
-            "DisjunctionMaxQuery",
-            "DocValuesFieldExistsQuery",
-            "DoubleDocValuesExactQuery",
-            "DoubleDocValuesRangeQuery",
-            "EqualsDouble",
-            "EqualsLong",
-            "EqualsString",
-            "MatchAllDocs",
-            "MatchNoDocs",
-            "TermQuery")));
+        });
+
+        assertThat(types.keySet(), equalTo(
+            new TreeSet<>(Arrays.asList(
+                "BlendedTerm",
+                "Bool",
+                "Boost",
+                "CommonTerms",
+                "ConstantScore",
+                "DisjunctionMax",
+                "DoubleMultiRange",
+                "DoubleRange",
+                "DoubleSet",
+                "DrillDown",
+                "ExactDouble",
+                "ExactFloat",
+                "ExactInteger",
+                "ExactLong",
+                "FacetPath",
+                "FloatMultiRange",
+                "FloatRange",
+                "FloatSet",
+                "Function",
+                "FunctionScore",
+                "Fuzzy",
+                "HasTerm",
+                "IntegerMultiRange",
+                "IntegerRange",
+                "IntegerSet",
+                "Join",
+                "LongMultiRange",
+                "LongRange",
+                "LongSet",
+                "MatchAllDocs",
+                "MatchNoDocs",
+                "MultiPhrase",
+                "NGramPhrase",
+                "Phrase",
+                "Prefix",
+                "Regexp",
+                "SimpleQueryParser",
+                "TermRange",
+                "Wildcard"))
+        ));
     }
 
     @Test

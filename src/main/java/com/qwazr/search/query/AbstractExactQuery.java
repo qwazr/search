@@ -17,8 +17,6 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.net.URI;
 import java.util.Objects;
 
 public abstract class AbstractExactQuery<V, T extends AbstractExactQuery<V, T>> extends AbstractFieldQuery<T> {
@@ -37,14 +35,6 @@ public abstract class AbstractExactQuery<V, T extends AbstractExactQuery<V, T>> 
                                  @JsonProperty("value") final V value) {
         super(queryClass, genericField, field);
         this.value = Objects.requireNonNull(value, "The value is missing");
-    }
-
-    protected AbstractExactQuery(final Class<T> queryClass,
-                                 final URI docUri,
-                                 @JsonProperty("field") final String field,
-                                 @JsonProperty("value") final V value) {
-        super(queryClass, docUri, field);
-        this.value = value;
     }
 
     @Override

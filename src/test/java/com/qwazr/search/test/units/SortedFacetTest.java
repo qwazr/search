@@ -19,8 +19,8 @@ import com.qwazr.search.index.FacetDefinition;
 import com.qwazr.search.index.FacetDefinitionBuilder;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.BooleanQuery;
-import com.qwazr.search.query.FacetPathQuery;
+import com.qwazr.search.query.Bool;
+import com.qwazr.search.query.FacetPath;
 import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.utils.RandomUtils;
 import java.io.IOException;
@@ -187,11 +187,11 @@ public class SortedFacetTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
             facetTerms.get(facetTerm1).get() + facetTerms.get(facetTerm2).get();
         final ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(MatchAllDocs.INSTANCE)
             .facet("sortedSetDocValuesFacetField", FacetDefinition.of()
-                .query(facetName, BooleanQuery.of()
-                    .addClause(BooleanQuery.Occur.should,
-                        FacetPathQuery.of("sortedSetDocValuesFacetField").path(facetTerm1).build())
-                    .addClause(BooleanQuery.Occur.should,
-                        FacetPathQuery.of("sortedSetDocValuesFacetField").path(facetTerm2).build())
+                .query(facetName, Bool.of()
+                    .addClause(Bool.Occur.should,
+                        FacetPath.of("sortedSetDocValuesFacetField").path(facetTerm1).build())
+                    .addClause(Bool.Occur.should,
+                        FacetPath.of("sortedSetDocValuesFacetField").path(facetTerm2).build())
                     .build())
                 .build())
             .build());

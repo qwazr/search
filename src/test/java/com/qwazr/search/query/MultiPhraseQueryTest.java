@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import java.net.URISyntaxException;
 public class MultiPhraseQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexService();
         indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World"));
         indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?"));
@@ -37,16 +37,16 @@ public class MultiPhraseQueryTest extends AbstractIndexTest.WithIndexRecord.NoTa
 
     @Test
     public void withoutPositions() {
-        ResultDefinition result = indexService.searchQuery(
-                QueryDefinition.of(new MultiPhraseQuery("textField", 1).add("hello", "world")).build());
+        ResultDefinition<?> result = indexService.searchQuery(
+            QueryDefinition.of(MultiPhrase.of("textField").setSlop(1).addTerm("hello", "world").build()).build());
         Assert.assertNotNull(result);
         Assert.assertEquals(1, result.totalHits);
     }
 
     @Test
     public void withPositions() {
-        ResultDefinition result = indexService.searchQuery(
-                QueryDefinition.of(new MultiPhraseQuery("textField", 1).add(1, "how", "are")).build());
+        ResultDefinition<?> result = indexService.searchQuery(
+            QueryDefinition.of(MultiPhrase.of("textField").setSlop(1).addTermPosition(1, "how", "are").build()).build());
         Assert.assertNotNull(result);
         Assert.assertEquals(1, result.totalHits);
     }

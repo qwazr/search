@@ -26,7 +26,7 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 
 import java.io.IOException;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "source")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT, property = "source")
 @JsonSubTypes({@JsonSubTypes.Type(value = ConstValueSource.class),
     @JsonSubTypes.Type(value = DefFunction.class),
     @JsonSubTypes.Type(value = DivFloatFunction.class),
@@ -58,5 +58,5 @@ public abstract class AbstractValueSource<T extends AbstractValueSource<T>> exte
     @JsonIgnore
     abstract public ValueSource getValueSource(final QueryContext queryContext)
         throws QueryNodeException, ReflectiveOperationException, ParseException, IOException;
-    
+
 }

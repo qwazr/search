@@ -16,7 +16,7 @@
 
 package com.qwazr.search.index;
 
-import com.qwazr.search.query.DrillDownQuery;
+import com.qwazr.search.query.DrillDown;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.search.TopDocs;
@@ -43,7 +43,7 @@ abstract class QueryCollectors {
 
     abstract Map<String, Object> getExternalResults();
 
-    static List<Pair<String, String[]>> getDimPathPairs(final DrillDownQuery drillDownQuery) {
+    static List<Pair<String, String[]>> getDimPathPairs(final DrillDown drillDownQuery) {
         final List<Pair<String, String[]>> dimPaths = new ArrayList<>();
         drillDownQuery.dimPath.forEach(map -> map.forEach((dim, paths) -> {
             dimPaths.add(Pair.of(dim, paths));

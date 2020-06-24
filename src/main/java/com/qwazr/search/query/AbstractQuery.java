@@ -16,7 +16,6 @@
 
 package com.qwazr.search.query;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.field.SmartFieldDefinition;
@@ -24,12 +23,8 @@ import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.StringUtils;
-import java.net.URI;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.ws.rs.NotAcceptableException;
@@ -37,35 +32,9 @@ import org.apache.lucene.index.Term;
 
 public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalizer.Immutable<T> implements QueryInterface {
 
-    protected final static URI CORE_BASE_DOC_URI = URI.create("https://lucene.apache.org/core/8_5_2/");
-
-    private final URI docUri;
 
     protected AbstractQuery(final Class<T> queryClass) {
         super(queryClass);
-        docUri = null;
-    }
-
-    protected AbstractQuery(final Class<T> queryClass, final URI docUri) {
-        super(queryClass);
-        this.docUri = CORE_BASE_DOC_URI.resolve(docUri);
-    }
-
-    @Override
-    final public URI getDocUri() {
-        return docUri;
-    }
-
-    static public final SortedMap<String, Class<QueryInterface>> TYPES;
-
-    static {
-        final JsonSubTypes types = QueryInterface.class.getAnnotation(JsonSubTypes.class);
-        final SortedMap<String, Class<QueryInterface>> typeMap = new TreeMap<>();
-        for (final JsonSubTypes.Type type : types.value()) {
-            final Class<QueryInterface> typeClass = (Class<QueryInterface>) type.value();
-            typeMap.put(type.value().getSimpleName(), typeClass);
-        }
-        TYPES = Collections.unmodifiableSortedMap(typeMap);
     }
 
     static private boolean fieldCheck(final FieldDefinition field,
@@ -220,5 +189,6 @@ public abstract class AbstractQuery<T extends AbstractQuery<T>> extends Equalize
         final String fieldName = resolveFullTextField(fieldMap, genericFieldName, concreteFieldName, value);
         return new Term(fieldName, BytesRefUtils.fromAny(value));
     }
+
 }
 

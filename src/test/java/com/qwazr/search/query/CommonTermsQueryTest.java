@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,25 +36,25 @@ public class CommonTermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTa
         indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?"));
     }
 
-    private CommonTermsQuery getCommonTermsQuery() {
-        return CommonTermsQuery.of()
-                .highFreqOccur(BooleanQuery.Occur.must)
-                .lowFreqOccur(BooleanQuery.Occur.should)
-                .term("textComplexAnalyzer", "How")
-                .maxTermFrequency(10)
-                .term("textComplexAnalyzer", "is")
-                .build();
+    private CommonTerms getCommonTermsQuery() {
+        return CommonTerms.of()
+            .highFreqOccur(Bool.Occur.must)
+            .lowFreqOccur(Bool.Occur.should)
+            .term("textComplexAnalyzer", "How")
+            .maxTermFrequency(10)
+            .term("textComplexAnalyzer", "is")
+            .build();
     }
 
     @Test
     public void test() {
-        ResultDefinition result = indexService.searchQuery(QueryDefinition.of(getCommonTermsQuery()).build());
+        ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(getCommonTermsQuery()).build());
         Assert.assertNotNull(result);
         Assert.assertEquals(1, result.totalHits);
     }
 
     @Test
     public void jsonEquality() throws IOException {
-        JsonHelpers.serializeDeserializeAndCheckEquals(getCommonTermsQuery(), CommonTermsQuery.class);
+        JsonHelpers.serializeDeserializeAndCheckEquals(getCommonTermsQuery(), CommonTerms.class);
     }
 }

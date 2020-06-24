@@ -39,7 +39,9 @@ public class BlendedTermQueryTest extends AbstractIndexTest.WithIndexRecord.NoTa
     @Test
     public void test() {
         ResultDefinition<?> result = indexService.searchQuery(QueryDefinition.of(
-            new BlendedTermQuery(new ArrayList<>()).term("textField", "hello", 2.0F).term("textField", "world"))
+            new BlendedTerm(new ArrayList<>())
+                .term("textField", "hello", 2.0F)
+                .term("textField", "world"))
             .build());
         Assert.assertNotNull(result);
         Assert.assertEquals(1, result.totalHits);

@@ -20,10 +20,10 @@ import com.qwazr.search.annotations.Index;
 import com.qwazr.search.annotations.SmartField;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.query.AbstractQuery;
-import com.qwazr.search.query.EqualsDouble;
-import com.qwazr.search.query.EqualsLong;
-import com.qwazr.search.query.FloatExactQuery;
-import com.qwazr.search.query.IntExactQuery;
+import com.qwazr.search.query.ExactDouble;
+import com.qwazr.search.query.ExactFloat;
+import com.qwazr.search.query.ExactInteger;
+import com.qwazr.search.query.ExactLong;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.RandomUtils;
@@ -233,7 +233,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new IntExactQuery("id2", id);
+            return new ExactInteger("id2", id);
         }
     }
 
@@ -273,7 +273,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new IntExactQuery("id2", id);
+            return new ExactInteger("id2", id);
         }
     }
 
@@ -310,7 +310,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new EqualsLong("id2", id);
+            return new ExactLong("id2", id);
         }
     }
 
@@ -347,7 +347,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new EqualsLong("id2", id);
+            return new ExactLong("id2", id);
         }
     }
 
@@ -387,7 +387,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new FloatExactQuery("id2", id);
+            return new ExactFloat("id2", id);
         }
     }
 
@@ -427,7 +427,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new FloatExactQuery("id2", id);
+            return new ExactFloat("id2", id);
         }
     }
 
@@ -467,7 +467,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new EqualsDouble("id2", id);
+            return new ExactDouble("id2", id);
         }
     }
 
@@ -507,7 +507,7 @@ public class SmartFieldIndexAndStoredTest extends AbstractIndexTest {
 
         @Override
         AbstractQuery<?> getId2Query() {
-            return new EqualsDouble("id2", id);
+            return new ExactDouble("id2", id);
         }
     }
 }

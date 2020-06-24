@@ -40,7 +40,7 @@ public class MoreLikeThisQueryTest extends AbstractIndexTest.WithIndexRecord.NoT
     public void mltTest() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result;
         result = indexService.searchQuery(
-            QueryDefinition.of(MoreLikeThisQuery.of("hello again", "mlt").minDocFreq(1).minTermFreq(1).build())
+            QueryDefinition.of(MoreLikeThis.of("hello again", "mlt").minDocFreq(1).minTermFreq(1).build())
                 .build());
         Assert.assertNotNull(result);
         Assert.assertEquals(2, result.totalHits);

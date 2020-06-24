@@ -20,25 +20,25 @@ import com.fasterxml.jackson.jaxrs.smile.SmileMediaTypes;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.AbstractQuery;
+import com.qwazr.search.query.QueryInterface;
 import com.qwazr.search.replication.ReplicationSession;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServerException;
 import com.qwazr.server.client.JsonClient;
-import org.apache.commons.io.input.AutoCloseInputStream;
-import org.apache.commons.lang3.StringUtils;
-
+import java.io.InputStream;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
+import org.apache.commons.io.input.AutoCloseInputStream;
+import org.apache.commons.lang3.StringUtils;
 
 public class IndexSingleClient extends JsonClient implements IndexServiceInterface {
 
@@ -843,21 +843,21 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
-    public Set<String> getQueryTypes(final String indexName) {
+    public Map<String, URI> getQueryTypes(final String indexName) {
         try {
             final WebTarget target = indexTarget
                 .path(indexName)
                 .path("queries")
                 .path("types");
-            return target.request(preferedSerializedMediaType).get(setStringType);
+            return target.request(preferedSerializedMediaType).get(mapStringUriType);
         } catch (WebApplicationException e) {
             throw ServerException.from(e);
         }
     }
 
     @Override
-    public AbstractQuery<?> getQuerySample(final String indexName,
-                                           final String queryType) {
+    public QueryInterface getQuerySample(final String indexName,
+                                         final String queryType) {
         try {
             final WebTarget target = indexTarget
                 .path(indexName)

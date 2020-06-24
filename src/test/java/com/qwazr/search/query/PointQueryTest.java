@@ -41,112 +41,112 @@ public class PointQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy
     @Test
     public void intExact() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new IntExactQuery("intPoint", 1)).returnedField("*").build());
+            QueryDefinition.of(new ExactInteger("intPoint", 1)).returnedField("*").build());
         Assert.assertEquals("i1", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void intRange() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new IntRangeQuery("intPoint", 0, 2)).returnedField("*").build());
+            QueryDefinition.of(new IntegerRange("intPoint", 0, 2)).returnedField("*").build());
         Assert.assertEquals("i1", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void intMultiRange() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new IntMultiRangeQuery("intPoint", 0, 2)).returnedField("*").build());
+            QueryDefinition.of(new IntegerMultiRange("intPoint", 0, 2)).returnedField("*").build());
         Assert.assertEquals("i1", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void intSet() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result =
-            indexService.searchQuery(QueryDefinition.of(new IntSetQuery("intPoint", 1)).returnedField("*").build());
+            indexService.searchQuery(QueryDefinition.of(new IntegerSet("intPoint", 1)).returnedField("*").build());
         Assert.assertEquals("i1", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void longExact() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new EqualsLong("longPoint", 2)).returnedField("*").build());
+            QueryDefinition.of(new ExactLong("longPoint", 2)).returnedField("*").build());
         Assert.assertEquals("l2", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void longSet() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new LongSetQuery("longPoint", 2)).returnedField("*").build());
+            QueryDefinition.of(new LongSet("longPoint", 2)).returnedField("*").build());
         Assert.assertEquals("l2", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void longRange() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new LongRangeQuery("longPoint", 1L, 3L)).returnedField("*").build());
+            QueryDefinition.of(new LongRange("longPoint", 1L, 3L)).returnedField("*").build());
         Assert.assertEquals("l2", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void longMultiRange() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new LongMultiRangeQuery("longPoint", 1, 3)).returnedField("*").build());
+            QueryDefinition.of(new LongMultiRange("longPoint", 1, 3)).returnedField("*").build());
         Assert.assertEquals("l2", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void floatExact() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new FloatExactQuery("floatPoint", 3F)).returnedField("*").build());
+            QueryDefinition.of(new ExactFloat("floatPoint", 3F)).returnedField("*").build());
         Assert.assertEquals("f3", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void floatSet() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new FloatSetQuery("floatPoint", 3)).returnedField("*").build());
+            QueryDefinition.of(new FloatSet("floatPoint", 3)).returnedField("*").build());
         Assert.assertEquals("f3", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void floatRange() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new FloatRangeQuery("floatPoint", 2F, 4F)).returnedField("*").build());
+            QueryDefinition.of(new FloatRange("floatPoint", 2F, 4F)).returnedField("*").build());
         Assert.assertEquals("f3", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void floatMultiRange() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new FloatMultiRangeQuery("floatPoint", 2F, 4F)).returnedField("*").build());
+            QueryDefinition.of(new FloatMultiRange("floatPoint", 2F, 4F)).returnedField("*").build());
         Assert.assertEquals("f3", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void doubleExact() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new EqualsDouble("doublePoint", 4D)).returnedField("*").build());
+            QueryDefinition.of(new ExactDouble("doublePoint", 4D)).returnedField("*").build());
         Assert.assertEquals("d4", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void doubleSet() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new DoubleSetQuery("doublePoint", 4)).returnedField("*").build());
+            QueryDefinition.of(new DoubleSet("doublePoint", 4)).returnedField("*").build());
         Assert.assertEquals("d4", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void doubleRange() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new DoubleRangeQuery("doublePoint", 3D, 5D)).returnedField("*").build());
+            QueryDefinition.of(new DoubleRange("doublePoint", 3D, 5D)).returnedField("*").build());
         Assert.assertEquals("d4", result.getDocuments().get(0).record.id);
     }
 
     @Test
     public void doubleMultiRange() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(
-            QueryDefinition.of(new DoubleMultiRangeQuery("doublePoint", 3D, 5D)).returnedField("*").build());
+            QueryDefinition.of(new DoubleMultiRange("doublePoint", 3D, 5D)).returnedField("*").build());
         Assert.assertEquals("d4", result.getDocuments().get(0).record.id);
     }
 }

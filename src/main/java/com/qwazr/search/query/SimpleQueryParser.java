@@ -18,12 +18,19 @@ package com.qwazr.search.query;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.annotations.QuerySampleCreator;
+import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.FieldMap;
+import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.StringUtils;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.apache.lucene.search.BooleanClause;
@@ -31,88 +38,81 @@ import org.apache.lucene.search.Query;
 
 public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
 
+    @JsonProperty("weights")
     final public LinkedHashMap<String, Float> weights;
-
     @JsonProperty("default_operator")
     final public QueryParserOperator defaultOperator;
+    @JsonProperty("enabled_operators")
+    final public List<Operator> enabledOperators;
 
-    final public Boolean and_operator;
-    final public Boolean escape_operator;
-    final public Boolean fuzzy_operator;
-    final public Boolean near_operator;
-    final public Boolean not_operator;
-    final public Boolean or_operator;
-    final public Boolean phrase_operator;
-    final public Boolean precedence_operators;
-    final public Boolean prefix_operator;
-    final public Boolean whitespace_operator;
+    enum Operator {
+        and(org.apache.lucene.queryparser.simple.SimpleQueryParser.AND_OPERATOR),
+        escape(org.apache.lucene.queryparser.simple.SimpleQueryParser.ESCAPE_OPERATOR),
+        fuzzy(org.apache.lucene.queryparser.simple.SimpleQueryParser.FUZZY_OPERATOR),
+        near(org.apache.lucene.queryparser.simple.SimpleQueryParser.NEAR_OPERATOR),
+        not(org.apache.lucene.queryparser.simple.SimpleQueryParser.NOT_OPERATOR),
+        or(org.apache.lucene.queryparser.simple.SimpleQueryParser.OR_OPERATOR),
+        phrase(org.apache.lucene.queryparser.simple.SimpleQueryParser.PHRASE_OPERATOR),
+        precedence(org.apache.lucene.queryparser.simple.SimpleQueryParser.PRECEDENCE_OPERATORS),
+        prefix(org.apache.lucene.queryparser.simple.SimpleQueryParser.PREFIX_OPERATOR),
+        whitespace(org.apache.lucene.queryparser.simple.SimpleQueryParser.WHITESPACE_OPERATOR);
 
-    @JsonIgnore
-    private final int flags;
+        final private int value;
 
-    @JsonCreator
-    private SimpleQueryParser() {
-        super(SimpleQueryParser.class);
-        weights = null;
-        defaultOperator = null;
-        and_operator = null;
-        escape_operator = null;
-        fuzzy_operator = null;
-        near_operator = null;
-        not_operator = null;
-        or_operator = null;
-        phrase_operator = null;
-        precedence_operators = null;
-        prefix_operator = null;
-        whitespace_operator = null;
+        Operator(final int value) {
+            this.value = value;
+        }
 
-        flags = -2;
     }
 
-    private SimpleQueryParser(Builder builder) {
+    @JsonIgnore
+    private final int effectiveFlags;
+
+    @JsonCreator
+    private SimpleQueryParser(@JsonProperty("enable_position_increments") final Boolean enablePositionIncrements,
+                              @JsonProperty("auto_generate_multi_term_synonyms_phrase_query") final Boolean autoGenerateMultiTermSynonymsPhraseQuery,
+                              @JsonProperty("enable_graph_queries") final Boolean enableGraphQueries,
+                              @JsonProperty("query_string") final String queryString,
+                              @JsonProperty("weights") final LinkedHashMap<String, Float> weights,
+                              @JsonProperty("default_operator") final QueryParserOperator defaultOperator,
+                              @JsonProperty("enabled_operators") final List<Operator> enabledOperators) {
+        super(SimpleQueryParser.class, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString);
+        this.weights = weights;
+        this.defaultOperator = defaultOperator;
+        this.enabledOperators = enabledOperators;
+        this.effectiveFlags = computeFlag(enabledOperators);
+    }
+
+    static int computeFlag(List<Operator> operators) {
+        if (operators == null)
+            return -1;
+        int flags = 0;
+        for (Operator operator : operators)
+            flags = flags | operator.value;
+        return flags;
+    }
+
+    @QuerySampleCreator(docUri = CORE_BASE_DOC_URI + "queryparser/org/apache/lucene/queryparser/simple/SimpleQueryParser.html")
+    public static SimpleQueryParser create(final IndexSettingsDefinition settings,
+                                           final Map<String, AnalyzerDefinition> analyzers,
+                                           final Map<String, FieldDefinition> fields) {
+        final String field = getFullTextField(fields, () -> getTextField(fields, () -> "text"));
+        return of()
+            .addField(field)
+            .addBoost(field, 2.0f)
+            .setDefaultOperator(QueryParserOperator.AND)
+            .setEnablePositionIncrements(true)
+            .setQueryString("Hello World")
+            .addOperator(Operator.values())
+            .build();
+    }
+
+    private SimpleQueryParser(final Builder builder) {
         super(SimpleQueryParser.class, builder);
         this.weights = builder.weights;
         this.defaultOperator = builder.defaultOperator;
-        this.flags = builder.flags;
-
-        and_operator = (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.AND_OPERATOR) != 0;
-        escape_operator = (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.ESCAPE_OPERATOR) != 0;
-        fuzzy_operator = (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.FUZZY_OPERATOR) != 0;
-        near_operator = (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.NEAR_OPERATOR) != 0;
-        not_operator = (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.NOT_OPERATOR) != 0;
-        or_operator = (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.OR_OPERATOR) != 0;
-        phrase_operator = (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.PHRASE_OPERATOR) != 0;
-        precedence_operators =
-            (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.PRECEDENCE_OPERATORS) != 0;
-        prefix_operator = (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.PREFIX_OPERATOR) != 0;
-        whitespace_operator = (flags & org.apache.lucene.queryparser.simple.SimpleQueryParser.WHITESPACE_OPERATOR) != 0;
-    }
-
-    private int computeTag() {
-        if (flags != -2)
-            return flags;
-        int flags = 0;
-        if (and_operator == null || and_operator)
-            flags = flags | org.apache.lucene.queryparser.simple.SimpleQueryParser.AND_OPERATOR;
-        if (escape_operator == null || escape_operator)
-            flags = flags | org.apache.lucene.queryparser.simple.SimpleQueryParser.ESCAPE_OPERATOR;
-        if (fuzzy_operator == null || fuzzy_operator)
-            flags = flags | org.apache.lucene.queryparser.simple.SimpleQueryParser.FUZZY_OPERATOR;
-        if (near_operator == null || near_operator)
-            flags = flags | org.apache.lucene.queryparser.simple.SimpleQueryParser.NEAR_OPERATOR;
-        if (not_operator == null || not_operator)
-            flags = flags | org.apache.lucene.queryparser.simple.SimpleQueryParser.NOT_OPERATOR;
-        if (or_operator == null || or_operator)
-            flags = flags | org.apache.lucene.queryparser.simple.SimpleQueryParser.OR_OPERATOR;
-        if (phrase_operator == null || phrase_operator)
-            flags = flags | org.apache.lucene.queryparser.simple.SimpleQueryParser.PHRASE_OPERATOR;
-        if (precedence_operators == null || precedence_operators)
-            flags = flags | org.apache.lucene.queryparser.simple.SimpleQueryParser.PRECEDENCE_OPERATORS;
-        if (prefix_operator == null || prefix_operator)
-            flags = flags | org.apache.lucene.queryparser.simple.SimpleQueryParser.PREFIX_OPERATOR;
-        if (whitespace_operator == null || whitespace_operator)
-            flags = flags | org.apache.lucene.queryparser.simple.SimpleQueryParser.WHITESPACE_OPERATOR;
-        return flags;
+        this.enabledOperators = builder.enabledOperators;
+        this.effectiveFlags = computeFlag(enabledOperators);
     }
 
     @Override
@@ -124,11 +124,9 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
             : FieldMap.resolveFieldNames(weights, new HashMap<>(),
             f -> resolveFullTextField(fieldMap, f, f, StringUtils.EMPTY));
 
-        final int fl = flags == -2 ? computeTag() : flags;
-
         final org.apache.lucene.queryparser.simple.SimpleQueryParser parser =
             new org.apache.lucene.queryparser.simple.SimpleQueryParser(
-                analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, resolvedBoosts, fl);
+                analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, resolvedBoosts, effectiveFlags);
 
         setQueryBuilderParameters(parser);
 
@@ -142,19 +140,21 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
     @Override
     @JsonIgnore
     protected boolean isEqual(SimpleQueryParser q) {
-        return super.isEqual(q) && CollectionsUtils.equals(weights, q.weights) &&
-            Objects.equals(defaultOperator, q.defaultOperator) && computeTag() == q.computeTag();
+        return super.isEqual(q)
+            && CollectionsUtils.equals(weights, q.weights)
+            && Objects.equals(defaultOperator, q.defaultOperator)
+            && effectiveFlags == q.effectiveFlags;
     }
 
     public static Builder of() {
-        return new Builder().setFlags(-1);
+        return new Builder();
     }
 
     public static class Builder extends AbstractBuilder<Builder, SimpleQueryParser> {
 
         private LinkedHashMap<String, Float> weights;
         private QueryParserOperator defaultOperator;
-        private int flags;
+        private List<Operator> enabledOperators;
 
         protected Builder() {
             super(Builder.class);
@@ -178,8 +178,10 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
             return this;
         }
 
-        public Builder setFlags(int flags) {
-            this.flags = flags;
+        public Builder addOperator(Operator... operators) {
+            if (enabledOperators == null)
+                enabledOperators = new ArrayList<>(operators.length);
+            Collections.addAll(enabledOperators, operators);
             return this;
         }
 

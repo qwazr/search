@@ -40,16 +40,21 @@ public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> exte
     @JsonIgnore
     final protected Analyzer analyzer;
 
-    protected AbstractQueryParser(Class<T> queryClass) {
+    protected AbstractQueryParser(final Class<T> queryClass,
+                                  final Boolean enablePositionIncrements,
+                                  final Boolean autoGenerateMultiTermSynonymsPhraseQuery,
+                                  final Boolean enableGraphQueries,
+                                  final String queryString) {
         super(queryClass);
-        analyzer = null;
-        enablePositionIncrements = null;
-        autoGenerateMultiTermSynonymsPhraseQuery = null;
-        enableGraphQueries = null;
-        queryString = null;
+        this.analyzer = null;
+        this.enablePositionIncrements = enablePositionIncrements;
+        this.autoGenerateMultiTermSynonymsPhraseQuery = autoGenerateMultiTermSynonymsPhraseQuery;
+        this.enableGraphQueries = enableGraphQueries;
+        this.queryString = queryString;
+
     }
 
-    protected AbstractQueryParser(Class<T> queryClass, AbstractBuilder builder) {
+    protected AbstractQueryParser(Class<T> queryClass, AbstractBuilder<?, ?> builder) {
         super(queryClass);
         this.analyzer = builder.analyzer;
         this.enablePositionIncrements = builder.enablePositionIncrements;
@@ -83,7 +88,7 @@ public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> exte
         return Objects.hash(enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, autoGenerateMultiTermSynonymsPhraseQuery, queryString);
     }
 
-    public static abstract class AbstractBuilder<B extends AbstractBuilder<B, T>, T extends AbstractQueryParser> {
+    public static abstract class AbstractBuilder<B extends AbstractBuilder<B, T>, T extends AbstractQueryParser<T>> {
 
         private final Class<B> builderClass;
 

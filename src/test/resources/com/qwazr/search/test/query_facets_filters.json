@@ -1,6 +1,6 @@
 {
   "query": {
-    "BooleanQuery": {
+    "Bool": {
       "clauses": [
         {
           "occur": "must",
@@ -14,12 +14,12 @@
         {
           "occur": "filter",
           "query": {
-            "BooleanQuery": {
+            "Bool": {
               "clauses": [
                 {
                   "occur": "should",
                   "query": {
-                    "FacetPathQuery": {
+                    "FacetPath": {
                       "dimension": "category",
                       "path": [
                         "cat3"
@@ -30,7 +30,7 @@
                 {
                   "occur": "should",
                   "query": {
-                    "FacetPathQuery": {
+                    "FacetPath": {
                       "dimension": "category",
                       "path": [
                         "cat5"
@@ -41,7 +41,7 @@
                 {
                   "occur": "must",
                   "query": {
-                    "FacetPathQuery": {
+                    "FacetPath": {
                       "dimension": "dynamic_multi_facet_cat",
                       "path": [
                         "dyn_cat4"

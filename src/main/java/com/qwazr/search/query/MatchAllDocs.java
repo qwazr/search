@@ -17,13 +17,12 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.qwazr.search.analysis.AnalyzerDefinition;
+import com.qwazr.search.annotations.QuerySampleCreator;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryContext;
-import org.apache.lucene.search.Query;
-
-import java.net.URI;
 import java.util.Map;
+import org.apache.lucene.search.Query;
 
 public class MatchAllDocs extends AbstractQuery<MatchAllDocs> {
 
@@ -38,12 +37,11 @@ public class MatchAllDocs extends AbstractQuery<MatchAllDocs> {
         super(MatchAllDocs.class);
     }
 
-    private final static URI DOC = URI.create("core/org/apache/lucene/search/MatchAllDocsQuery.html");
-
-    public MatchAllDocs(final IndexSettingsDefinition settings,
-                        final Map<String, AnalyzerDefinition> analyzers,
-                        final Map<String, FieldDefinition> fields) {
-        super(MatchAllDocs.class, DOC);
+    @QuerySampleCreator(docUri = CORE_BASE_DOC_URI + "core/org/apache/lucene/search/MatchAllDocsQuery.html")
+    public static MatchAllDocs create(final IndexSettingsDefinition settings,
+                                      final Map<String, AnalyzerDefinition> analyzers,
+                                      final Map<String, FieldDefinition> fields) {
+        return INSTANCE;
     }
 
     @Override

@@ -35,18 +35,18 @@ import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.index.ResultDocumentObject;
 import com.qwazr.search.index.TermDefinition;
 import com.qwazr.search.index.TermEnumDefinition;
-import com.qwazr.search.query.DrillDownQuery;
-import com.qwazr.search.query.JoinQuery;
-import com.qwazr.search.query.EqualsLong;
-import com.qwazr.search.query.LongMultiRangeQuery;
-import com.qwazr.search.query.LongRangeQuery;
-import com.qwazr.search.query.LongSetQuery;
+import com.qwazr.search.query.DrillDown;
+import com.qwazr.search.query.ExactLong;
+import com.qwazr.search.query.Join;
+import com.qwazr.search.query.LongMultiRange;
+import com.qwazr.search.query.LongRange;
+import com.qwazr.search.query.LongSet;
 import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.query.MultiFieldQuery;
 import com.qwazr.search.query.QueryParserOperator;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.query.TermsQuery;
-import com.qwazr.search.query.WildcardQuery;
+import com.qwazr.search.query.Wildcard;
 import static com.qwazr.search.test.JsonAbstractTest.checkErrorStatusCode;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -280,36 +280,36 @@ public abstract class JavaAbstractTest {
 
     @Test
     public void test302WildcardQuery() throws URISyntaxException, IOException {
-        QueryBuilder builder = QueryDefinition.of(new WildcardQuery("title", "art*"));
+        QueryBuilder builder = QueryDefinition.of(new Wildcard("title", "art*"));
         checkQueryResult(builder, 2L);
-        builder = QueryDefinition.of(new WildcardQuery("title", "*econ?"));
+        builder = QueryDefinition.of(new Wildcard("title", "*econ?"));
         checkQueryResult(builder, 1L);
     }
 
     @Test
     public void test320PointExactQuery() throws URISyntaxException, IOException {
-        QueryBuilder builder = QueryDefinition.of(new EqualsLong(AnnotatedRecord.QUANTITY_FIELD, 10));
+        QueryBuilder builder = QueryDefinition.of(new ExactLong(AnnotatedRecord.QUANTITY_FIELD, 10));
         ResultDefinition.WithObject<AnnotatedRecord> result = checkQueryResult(builder, 1L);
         Assert.assertEquals("1", result.documents.get(0).record.id);
     }
 
     @Test
     public void test320PointSetQuery() throws URISyntaxException, IOException {
-        QueryBuilder builder = QueryDefinition.of(new LongSetQuery(AnnotatedRecord.QUANTITY_FIELD, 20, 25));
+        QueryBuilder builder = QueryDefinition.of(new LongSet(AnnotatedRecord.QUANTITY_FIELD, 20, 25));
         ResultDefinition.WithObject<AnnotatedRecord> result = checkQueryResult(builder, 1L);
         Assert.assertEquals("2", result.documents.get(0).record.id);
     }
 
     @Test
     public void test320PointRangeQuery() throws URISyntaxException, IOException {
-        QueryBuilder builder = QueryDefinition.of(new LongRangeQuery(AnnotatedRecord.QUANTITY_FIELD, 15L, 25L));
+        QueryBuilder builder = QueryDefinition.of(new LongRange(AnnotatedRecord.QUANTITY_FIELD, 15L, 25L));
         ResultDefinition.WithObject<AnnotatedRecord> result = checkQueryResult(builder, 1L);
         Assert.assertEquals("2", result.documents.get(0).record.id);
     }
 
     @Test
     public void test320PointMultiRangeQuery() throws URISyntaxException, IOException {
-        LongMultiRangeQuery.Builder qBuilder = new LongMultiRangeQuery.Builder(null, AnnotatedRecord.QUANTITY_FIELD);
+        LongMultiRange.Builder qBuilder = new LongMultiRange.Builder(null, AnnotatedRecord.QUANTITY_FIELD);
         qBuilder.addRange(15L, 25L);
         QueryBuilder builder = QueryDefinition.of(qBuilder.build());
         checkQueryResult(builder, 1L);
@@ -647,7 +647,7 @@ public abstract class JavaAbstractTest {
     public void test900join() throws URISyntaxException, IOException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final QueryBuilder builder = QueryDefinition.of(
-            new JoinQuery(AnnotatedRecord.INDEX_NAME_SLAVE, "docValuesCategory", "storedCategory", true,
+            new Join(AnnotatedRecord.INDEX_NAME_SLAVE, "docValuesCategory", "storedCategory", true,
                 ScoreMode.Max, MatchAllDocs.INSTANCE));
         final ResultDefinition.WithObject<AnnotatedRecord> result = master.searchQuery(builder.build());
         Assert.assertNotNull(result);
@@ -707,7 +707,7 @@ public abstract class JavaAbstractTest {
     public void test930ClassicCollectorWithDrillSideways() throws URISyntaxException, IOException {
         final AnnotatedIndexService<AnnotatedRecord> master = getMaster();
         final QueryBuilder builder = QueryDefinition.of(
-            new DrillDownQuery(MatchAllDocs.INSTANCE, true).dynamicFilter("dynamic_multi_facet_*",
+            new DrillDown(MatchAllDocs.INSTANCE, true).dynamicFilter("dynamic_multi_facet_*",
                 "dynamic_multi_facet_cat", "news"));
         builder.collector("maxQuantity", ClassicMaxCollector.class);
         builder.facet("dynamic_multi_facet_cat", FacetDefinition.create(10));

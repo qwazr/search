@@ -49,8 +49,12 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
     @JsonProperty("split_on_whitespace")
     final public Boolean splitOnWhitespace;
 
-    protected AbstractClassicQueryParser(Class<T> queryClass) {
-        super(queryClass);
+    protected AbstractClassicQueryParser(final Class<T> queryClass,
+                                         final Boolean enablePositionIncrements,
+                                         final Boolean autoGenerateMultiTermSynonymsPhraseQuery,
+                                         final Boolean enableGraphQueries,
+                                         final String queryString) {
+        super(queryClass, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString);
         fields = null;
         boosts = null;
         allow_leading_wildcard = null;

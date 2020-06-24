@@ -33,15 +33,15 @@ public class FunctionScoreQueryTest extends AbstractIndexTest.WithIndexRecord.No
     public static void setup() throws IOException, InterruptedException, URISyntaxException {
         initIndexService();
         indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World")
-                .floatDocValue(2.0F)
-                .intDocValue(2)
-                .doubleDocValue(2.0d)
-                .longDocValue(2));
+            .floatDocValue(2.0F)
+            .intDocValue(2)
+            .doubleDocValue(2.0d)
+            .longDocValue(2));
         indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?")
-                .floatDocValue(3.0F)
-                .intDocValue(3)
-                .doubleDocValue(3.0d)
-                .longDocValue(3));
+            .floatDocValue(3.0F)
+            .intDocValue(3)
+            .doubleDocValue(3.0d)
+            .longDocValue(3));
     }
 
     private void checkFieldSourceResult(ResultDefinition.WithObject<? extends IndexRecord<?>> result, float... values) {
@@ -55,36 +55,36 @@ public class FunctionScoreQueryTest extends AbstractIndexTest.WithIndexRecord.No
     @Test
     public void testFloat() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(QueryDefinition.of(
-                new FunctionScoreQuery(MatchAllDocs.INSTANCE,
-                        new DoubleValuesSource.FloatField("floatDocValue")))
-                .build());
+            new FunctionScore(MatchAllDocs.INSTANCE,
+                new DoubleValuesSource.FloatField("floatDocValue")))
+            .build());
         checkFieldSourceResult(result, 3.0F, 2.0F);
     }
 
     @Test
     public void testDouble() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result = indexService.searchQuery(QueryDefinition.of(
-                new FunctionScoreQuery(MatchAllDocs.INSTANCE,
-                        new DoubleValuesSource.DoubleField("doubleDocValue")))
-                .build());
+            new FunctionScore(MatchAllDocs.INSTANCE,
+                new DoubleValuesSource.DoubleField("doubleDocValue")))
+            .build());
         checkFieldSourceResult(result, 3.0F, 2.0F);
     }
 
     @Test
     public void testLong() {
         ResultDefinition.WithObject<? extends IndexRecord.NoTaxonomy> result = indexService.searchQuery(QueryDefinition.of(
-                new FunctionScoreQuery(MatchAllDocs.INSTANCE,
-                        new DoubleValuesSource.LongField("longDocValue")))
-                .build());
+            new FunctionScore(MatchAllDocs.INSTANCE,
+                new DoubleValuesSource.LongField("longDocValue")))
+            .build());
         checkFieldSourceResult(result, 3.0F, 2.0F);
     }
 
     @Test
     public void testInt() {
         ResultDefinition.WithObject<? extends IndexRecord.NoTaxonomy> result = indexService.searchQuery(QueryDefinition.of(
-                new FunctionScoreQuery(MatchAllDocs.INSTANCE,
-                        new DoubleValuesSource.IntField("intDocValue")))
-                .build());
+            new FunctionScore(MatchAllDocs.INSTANCE,
+                new DoubleValuesSource.IntField("intDocValue")))
+            .build());
         checkFieldSourceResult(result, 3.0F, 2.0F);
     }
 

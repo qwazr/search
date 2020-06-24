@@ -24,8 +24,8 @@ import com.qwazr.search.index.FacetDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.AbstractQuery;
-import com.qwazr.search.query.DrillDownQuery;
-import com.qwazr.search.query.FacetPathQuery;
+import com.qwazr.search.query.DrillDown;
+import com.qwazr.search.query.FacetPath;
 import com.qwazr.search.query.MatchAllDocs;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.LoggerUtils;
@@ -69,23 +69,23 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
 
     @Test
     public void drillDownQueryTest() {
-        checkResult(new DrillDownQuery(MatchAllDocs.INSTANCE, false).filter("tags", "tag1"),
+        checkResult(new DrillDown(MatchAllDocs.INSTANCE, false).filter("tags", "tag1"),
             "+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
-        checkResult(new DrillDownQuery(null, false).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
-        checkResult(new DrillDownQuery(MatchAllDocs.INSTANCE, false).filter("tags", "tag1and2"),
+        checkResult(new DrillDown(null, false).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
+        checkResult(new DrillDown(MatchAllDocs.INSTANCE, false).filter("tags", "tag1and2"),
             "+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
 
-        checkResult(new DrillDownQuery(MatchAllDocs.INSTANCE, true).filter("tags", "tag1"),
+        checkResult(new DrillDown(MatchAllDocs.INSTANCE, true).filter("tags", "tag1"),
             "+*:* #($facets$sdv:ft€tags\u001Ftag1)", 1);
-        checkResult(new DrillDownQuery(null, true).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
-        checkResult(new DrillDownQuery(MatchAllDocs.INSTANCE, true).filter("tags", "tag1and2"),
+        checkResult(new DrillDown(null, true).filter("tags", "tag2"), "#($facets$sdv:ft€tags\u001Ftag2)", 2);
+        checkResult(new DrillDown(MatchAllDocs.INSTANCE, true).filter("tags", "tag1and2"),
             "+*:* #($facets$sdv:ft€tags\u001Ftag1and2)", 1, 2);
     }
 
     @Test
     public void facetPathQueryTest() {
-        checkResult(FacetPathQuery.of("tags").path("tag1").build(), "$facets$sdv:ft€tags\u001Ftag1", 1);
-        checkResult(FacetPathQuery.of("tags").path("tag1and2").build(), "$facets$sdv:ft€tags\u001Ftag1and2", 1, 2);
+        checkResult(FacetPath.of("tags").path("tag1").build(), "$facets$sdv:ft€tags\u001Ftag1", 1);
+        checkResult(FacetPath.of("tags").path("tag1and2").build(), "$facets$sdv:ft€tags\u001Ftag1and2", 1, 2);
     }
 
     @Test

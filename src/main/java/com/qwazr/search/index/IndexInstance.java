@@ -25,9 +25,9 @@ import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
 import com.qwazr.search.field.SmartFieldDefinition;
-import com.qwazr.search.query.AbstractQuery;
-import com.qwazr.search.query.JoinQuery;
+import com.qwazr.search.query.Join;
 import com.qwazr.search.query.QueryInterface;
+import com.qwazr.search.query.QuerySampler;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.replication.ReplicationProcess;
 import com.qwazr.search.replication.ReplicationSession;
@@ -64,7 +64,6 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
@@ -339,7 +338,7 @@ final public class IndexInstance implements Closeable {
         return useAnalyzer(indexAnalyzers, field, analyzerFunction);
     }
 
-    public Query createJoinQuery(final JoinQuery joinQuery) throws IOException {
+    public Query createJoinQuery(final Join joinQuery) throws IOException {
         try (final AutoLockSemaphore.Lock lock = readSemaphore.acquire()) {
             return writerAndSearcher.search((indexSearcher, taxonomyReader) -> {
                 try (final QueryContext queryContext = buildQueryContext(indexSearcher, taxonomyReader)) {
@@ -774,16 +773,10 @@ final public class IndexInstance implements Closeable {
     }
 
     final QueryInterface getQuerySample(final String queryType) {
-        final Class<QueryInterface> queryClass = AbstractQuery.TYPES.get(queryType);
-        if (queryClass == null)
+        final QuerySampler.Factory queryFactory = QuerySampler.TYPES_FACTORY.get(queryType);
+        if (queryFactory == null)
             throw new NotFoundException("The type does not exist: " + queryType);
-        try {
-            return QueryInterface.getSample(queryClass, settings, getAnalyzers(), getFields());
-        } catch (NoSuchMethodException e) {
-            throw new NotFoundException("This query has no sample: " + queryType);
-        } catch (ReflectiveOperationException e) {
-            throw new InternalServerErrorException(e);
-        }
+        return queryFactory.create(settings, getAnalyzers(), getFields());
     }
 
     Map<String, Object> getJsonSample() {

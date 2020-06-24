@@ -71,10 +71,14 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
 
         // The DocID must be sorted and grouped by segment
         final Map<Integer, Pair<Integer, IntSortedSet>> sortedInts = new HashMap<>();
-        for (final GroupLeader groupLeader : groupQueue.groupLeaders.values()) {
-            sortedInts.computeIfAbsent(groupLeader.docBase,
-                leaf -> Pair.of(groupLeader.maxDoc, new IntAVLTreeSet())).getValue().add(groupLeader.doc);
-            collapsedMap.addTo(groupLeader.docBase + groupLeader.doc, groupLeader.collapsedCount);
+        synchronized (groupQueue) {
+            for (final GroupLeader groupLeader : groupQueue.groupLeaders.values()) {
+                sortedInts.computeIfAbsent(groupLeader.docBase,
+                    leaf -> Pair.of(groupLeader.maxDoc, new IntAVLTreeSet())).getValue().add(groupLeader.doc);
+                synchronized (collapsedMap) {
+                    collapsedMap.addTo(groupLeader.docBase + groupLeader.doc, groupLeader.collapsedCount);
+                }
+            }
         }
 
         // Now we can build the bitsets

@@ -26,6 +26,7 @@ import com.qwazr.server.ServiceInterface;
 import com.qwazr.utils.concurrent.FunctionEx;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -407,6 +408,9 @@ public interface IndexServiceInterface extends ServiceInterface {
     GenericType<Set<String>> setStringType = new GenericType<>() {
     };
 
+    GenericType<Map<String, URI>> mapStringUriType = new GenericType<>() {
+    };
+
     GenericType<Map<String, UUID>> mapStringUuidType = new GenericType<>() {
     };
 
@@ -465,7 +469,7 @@ public interface IndexServiceInterface extends ServiceInterface {
     @GET
     @Path("/{index_name}/search/queries/types")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Set<String> getQueryTypes(@PathParam("index_name") String indexName);
+    Map<String, URI> getQueryTypes(@PathParam("index_name") String indexName);
 
     @GET
     @Path("/{index_name}/search/queries/types/{query_type}")

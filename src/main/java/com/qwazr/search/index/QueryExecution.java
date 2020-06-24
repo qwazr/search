@@ -18,7 +18,7 @@ package com.qwazr.search.index;
 import com.qwazr.search.collector.ClassicCollector;
 import com.qwazr.search.collector.ParallelCollector;
 import com.qwazr.search.field.SortUtils;
-import com.qwazr.search.query.DrillDownQuery;
+import com.qwazr.search.query.DrillDown;
 import com.qwazr.search.query.QueryInterface;
 import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.TimeTracker;
@@ -79,7 +79,7 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
         this.rows = queryDef.getRowsValue();
         this.end = Math.min(start + rows, queryContext.indexReader.numDocs());
 
-        this.useDrillSideways = query instanceof DrillDownQuery && ((DrillDownQuery) query).useDrillSideways && facets != null;
+        this.useDrillSideways = query instanceof DrillDown && ((DrillDown) query).useDrillSideways && facets != null;
         final LinkedHashMap<String, QueryDefinition.CollectorDefinition> collectors = queryDef.getCollectors();
         if (collectors != null && !collectors.isEmpty()) {
             collectorConstructors = new LinkedHashMap<>();

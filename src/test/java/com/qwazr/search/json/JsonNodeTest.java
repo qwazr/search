@@ -20,7 +20,8 @@ import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import com.qwazr.search.query.EqualsDouble;
+import com.qwazr.search.query.ExactDouble;
+import com.qwazr.search.query.HasTerm;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.ObjectMappers;
@@ -95,7 +96,7 @@ public class JsonNodeTest extends AbstractIndexTest {
         // Get the document by one root property
         {
             final ResultDefinition.WithMap result = service.searchQuery(INDEX,
-                QueryDefinition.of(new EqualsDouble("number", 1347d))
+                QueryDefinition.of(new ExactDouble("number", 1347d))
                     .returnedField("*").queryDebug(true).build(), false);
             assertThat(result.query, equalTo("pd€number:[1347.0 TO 1347.0]"));
             final Map<String, Object> doc = result.getDocuments().get(0).getFields();
@@ -106,7 +107,7 @@ public class JsonNodeTest extends AbstractIndexTest {
         // Get the document by one deep property
         {
             final ResultDefinition.WithMap result = service.searchQuery(INDEX,
-                QueryDefinition.of(new TermQuery("user.login", "octocat"))
+                QueryDefinition.of(new HasTerm("user.login", "octocat"))
                     .returnedField("*").queryDebug(true).build(), false);
             final Map<String, Object> doc = result.getDocuments().get(0).getFields();
             assertThat(result.query, equalTo("st€user.login:octocat"));

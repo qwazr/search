@@ -16,6 +16,7 @@
 package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -26,8 +27,11 @@ import java.util.Objects;
 public class MultiFieldQueryParser extends AbstractClassicQueryParser<MultiFieldQueryParser> {
 
     @JsonCreator
-    private MultiFieldQueryParser() {
-        super(MultiFieldQueryParser.class);
+    private MultiFieldQueryParser(@JsonProperty("enable_position_increments") final Boolean enablePositionIncrements,
+                                  @JsonProperty("auto_generate_multi_term_synonyms_phrase_query") final Boolean autoGenerateMultiTermSynonymsPhraseQuery,
+                                  @JsonProperty("enable_graph_queries") final Boolean enableGraphQueries,
+                                  @JsonProperty("query_string") final String queryString) {
+        super(MultiFieldQueryParser.class, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString);
     }
 
     public MultiFieldQueryParser(Builder builder) {
