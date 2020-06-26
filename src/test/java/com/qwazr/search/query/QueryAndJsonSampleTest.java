@@ -21,7 +21,6 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,13 +48,12 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
     public void getTypesTest() {
         assertThat(QuerySampler.TYPES_FACTORY, notNullValue());
         assertThat(QuerySampler.TYPES_URI_DOC, notNullValue());
-        assertThat(QuerySampler.TYPES_LOWERCASE, notNullValue());
+        assertThat(QuerySampler.TYPES_CAMEL_KEYWORDS, notNullValue());
         assertThat(QuerySampler.TYPES_FACTORY.size(), equalTo(39));
         assertThat(QuerySampler.TYPES_URI_DOC.size(), equalTo(QuerySampler.TYPES_FACTORY.size()));
-        assertThat(QuerySampler.TYPES_URI_DOC.size(), equalTo(QuerySampler.TYPES_LOWERCASE.size()));
+        assertThat(QuerySampler.TYPES_URI_DOC.size(), equalTo(QuerySampler.TYPES_CAMEL_KEYWORDS.size()));
         assertThat(QuerySampler.TYPES_FACTORY.keySet(), equalTo(QuerySampler.TYPES_URI_DOC.keySet()));
-        assertThat(QuerySampler.TYPES_FACTORY.keySet(), equalTo(new HashSet<>(QuerySampler.TYPES_LOWERCASE.values())));
-        QuerySampler.TYPES_LOWERCASE.forEach((typeLower, typeKey) -> assertThat(typeLower, equalTo(typeKey.toLowerCase())));
+        assertThat(QuerySampler.TYPES_FACTORY.keySet(), equalTo(QuerySampler.TYPES_CAMEL_KEYWORDS.keySet()));
 
         final Map<String, URI> types = indexService.getQueryTypes(null);
         types.forEach((type, docUri) -> {
@@ -129,18 +127,19 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
     }
 
     @Test
-    public void getFuzzyQueryTypesTest() {
+    public void getQueryTypeLookupTest() {
         checkFuzzyStartsWith("matchall", "MatchAllDocs", "MatchNoDocs", "MultiPhrase");
-        checkFuzzyStartsWith("Match", "MatchNoDocs", "MatchAllDocs", "FacetPath");
-        checkFuzzyStartsWith("docs", "MatchNoDocs", "MatchAllDocs", "DoubleSet");
+        checkFuzzyStartsWith("Match", "MatchAllDocs", "MatchNoDocs", "FacetPath");
+        checkFuzzyStartsWith("docs", "MatchAllDocs", "MatchNoDocs", "DoubleSet");
         checkFuzzyStartsWith("all", "MatchAllDocs", "ExactFloat", "ExactLong");
         checkFuzzyStartsWith("nodoc", "MatchNoDocs", "MatchAllDocs", "FunctionScore");
-        checkFuzzyStartsWith("term", "TermRange", "HasTerm", "BlendedTerm");
-        checkFuzzyStartsWith("int", "IntegerSet", "IntegerRange", "ExactInteger");
-        checkFuzzyStartsWith("intrange", "IntegerRange", "IntegerMultiRange", "LongMultiRange");
-        checkFuzzyStartsWith("floatexact", "FloatSet", "FloatRange", "FloatMultiRange", "ExactFloat");
-        checkFuzzyStartsWith("DoubleExact", "DoubleSet", "DoubleRange", "DoubleMultiRange", "ExactDouble");
-        checkFuzzyStartsWith("Max", "DisjunctionMax", "TermRange", "NGramPhrase");
+        checkFuzzyStartsWith("term", "HasTerm", "TermRange", "BlendedTerm");
+        checkFuzzyStartsWith("int", "IntegerRange", "IntegerSet", "ExactInteger");
+        checkFuzzyStartsWith("intrange", "IntegerRange", "TermRange", "FloatRange");
+        checkFuzzyStartsWith("setint", "IntegerSet", "LongSet", "FloatSet");
+        checkFuzzyStartsWith("floatexact", "ExactFloat", "FloatSet", "FloatRange", "ExactLong");
+        checkFuzzyStartsWith("DoubleExact", "ExactDouble", "DoubleSet", "DoubleRange", "ExactFloat");
+        checkFuzzyStartsWith("Max", "DisjunctionMax", "TermRange", "MatchAllDocs");
     }
 
     @Test

@@ -35,12 +35,10 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
@@ -48,8 +46,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import org.apache.commons.io.input.AutoCloseInputStream;
-import org.apache.commons.text.similarity.JaccardDistance;
-import org.apache.commons.text.similarity.LongestCommonSubsequence;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.MatchAllDocsQuery;
 
@@ -922,37 +918,9 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
                                           final String lookup) {
         if (StringUtils.isBlank(lookup))
             return QuerySampler.TYPES_URI_DOC;
-        final LongestCommonSubsequence longestCommonSubsequence = new LongestCommonSubsequence();
-        final JaccardDistance jacardDistance = new JaccardDistance();
-        final Map<Integer, Map<Double, List<String>>> ordered = new TreeMap<>(Comparator.reverseOrder());
-        final String lowerCaseLookup = lookup.toLowerCase();
-        QuerySampler.TYPES_LOWERCASE.forEach((lowercaseType, typeKey) -> {
-            final int commonScore;
-            {
-                final Integer lowerCaseCommonDist = longestCommonSubsequence.apply(lowercaseType, lowerCaseLookup);
-                final Integer caseSensitiveCommonDist = longestCommonSubsequence.apply(typeKey, lookup);
-                commonScore = Math.max(lowerCaseCommonDist, caseSensitiveCommonDist);
-            }
-            final double jacardScore;
-            {
-                final Double lowerCaseJacardDist = jacardDistance.apply(lowerCaseLookup, lowercaseType);
-                final Double caseSensitiveJacardDist = jacardDistance.apply(lookup, typeKey);
-                jacardScore = Math.min(lowerCaseJacardDist, caseSensitiveJacardDist);
-            }
-            if (jacardScore == 1D)
-                return;
-            ordered.computeIfAbsent(commonScore,
-                cs -> new TreeMap<>()).computeIfAbsent(jacardScore,
-                js -> new ArrayList<>()).add(typeKey);
-        });
         final Map<String, URI> result = new LinkedHashMap<>();
-        ordered.forEach(
-            (commonScore, jacardScores) -> jacardScores.forEach(
-                (js, typeList) -> typeList.forEach(
-                    type -> result.put(type, QuerySampler.TYPES_URI_DOC.get(type))
-                )
-            )
-        );
+        IndexUtils.codeLookup(lookup, QuerySampler.TYPES_CAMEL_KEYWORDS,
+            type -> result.put(type, QuerySampler.TYPES_URI_DOC.get(type)));
         return result;
     }
 

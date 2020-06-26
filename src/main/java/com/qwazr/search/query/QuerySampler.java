@@ -20,11 +20,14 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.annotations.QuerySampleCreator;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexSettingsDefinition;
+import com.qwazr.utils.StringUtils;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -40,13 +43,13 @@ public class QuerySampler {
                               Map<String, FieldDefinition> fields);
     }
 
-    public final static Map<String, String> TYPES_LOWERCASE;
+    public final static Map<String, String[]> TYPES_CAMEL_KEYWORDS;
     public final static SortedMap<String, URI> TYPES_URI_DOC;
     public final static Map<String, Factory> TYPES_FACTORY;
 
     static {
         final JsonSubTypes types = QueryInterface.class.getAnnotation(JsonSubTypes.class);
-        final Map<String, String> lowercaseTypeMap = new HashMap<>();
+        final Map<String, String[]> typeCamelKeywordsMap = new HashMap<>();
         final Map<String, Factory> typeFactoryMap = new HashMap<>();
         final SortedMap<String, URI> typeUriDocMap = new TreeMap<>();
         for (
@@ -62,12 +65,20 @@ public class QuerySampler {
                 || findSampleFactory(typeQueryClass,
                 u -> typeUriDocMap.put(typeName, u),
                 f -> typeFactoryMap.put(typeName, f))) {
-                lowercaseTypeMap.put(typeName.toLowerCase(), typeName);
+                typeCamelKeywordsMap.put(typeName, lowerCaseCamelCaseArray(typeName));
             }
         }
         TYPES_URI_DOC = Collections.unmodifiableSortedMap(typeUriDocMap);
         TYPES_FACTORY = Collections.unmodifiableMap(typeFactoryMap);
-        TYPES_LOWERCASE = Collections.unmodifiableMap(lowercaseTypeMap);
+        TYPES_CAMEL_KEYWORDS = Collections.unmodifiableMap(typeCamelKeywordsMap);
+    }
+
+    static private String[] lowerCaseCamelCaseArray(final String text) {
+        final String[] camelCaseKeywords = StringUtils.splitByCharacterTypeCamelCase(text);
+        final List<String> keywords = new ArrayList<>();
+        for (String camelCaseKeyword : camelCaseKeywords)
+            keywords.add(camelCaseKeyword.toLowerCase());
+        return keywords.toArray(new String[0]);
     }
 
     static private boolean findSampleConstructor(final Class<QueryInterface> typeClass,
