@@ -843,12 +843,14 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
-    public Map<String, URI> getQueryTypes(final String indexName) {
+    public Map<String, URI> getQueryTypes(final String indexName,
+                                          final String lookup) {
         try {
             final WebTarget target = indexTarget
                 .path(indexName)
                 .path("queries")
-                .path("types");
+                .path("types")
+                .queryParam("lookup", lookup);
             return target.request(preferedSerializedMediaType).get(mapStringUriType);
         } catch (WebApplicationException e) {
             throw ServerException.from(e);

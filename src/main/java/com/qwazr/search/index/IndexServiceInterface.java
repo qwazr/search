@@ -469,7 +469,8 @@ public interface IndexServiceInterface extends ServiceInterface {
     @GET
     @Path("/{index_name}/search/queries/types")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Map<String, URI> getQueryTypes(@PathParam("index_name") String indexName);
+    Map<String, URI> getQueryTypes(@PathParam("index_name") String indexName,
+                                   @QueryParam("lookup") String lookup);
 
     @GET
     @Path("/{index_name}/search/queries/types/{query_type}")

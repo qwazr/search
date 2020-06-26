@@ -208,8 +208,8 @@ public class AnnotatedIndexService<T> {
     /**
      * @return the list of available query types./
      */
-    public Map<String, URI> getQueryTypes() {
-        return indexService.getQueryTypes(indexName);
+    public Map<String, URI> getQueryTypes(final String lookup) {
+        return indexService.getQueryTypes(indexName, lookup);
     }
 
     /**

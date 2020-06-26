@@ -21,8 +21,10 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -47,11 +49,15 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
     public void getTypesTest() {
         assertThat(QuerySampler.TYPES_FACTORY, notNullValue());
         assertThat(QuerySampler.TYPES_URI_DOC, notNullValue());
+        assertThat(QuerySampler.TYPES_LOWERCASE, notNullValue());
         assertThat(QuerySampler.TYPES_FACTORY.size(), equalTo(39));
         assertThat(QuerySampler.TYPES_URI_DOC.size(), equalTo(QuerySampler.TYPES_FACTORY.size()));
+        assertThat(QuerySampler.TYPES_URI_DOC.size(), equalTo(QuerySampler.TYPES_LOWERCASE.size()));
         assertThat(QuerySampler.TYPES_FACTORY.keySet(), equalTo(QuerySampler.TYPES_URI_DOC.keySet()));
+        assertThat(QuerySampler.TYPES_FACTORY.keySet(), equalTo(new HashSet<>(QuerySampler.TYPES_LOWERCASE.values())));
+        QuerySampler.TYPES_LOWERCASE.forEach((typeLower, typeKey) -> assertThat(typeLower, equalTo(typeKey.toLowerCase())));
 
-        final Map<String, URI> types = indexService.getQueryTypes();
+        final Map<String, URI> types = indexService.getQueryTypes(null);
         types.forEach((type, docUri) -> {
             try {
                 final QueryInterface sampleQuery = indexService.getQuerySample(type);
@@ -106,6 +112,35 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
                 "TermRange",
                 "Wildcard"))
         ));
+    }
+
+    private void checkFuzzyStartsWith(final String lookup, String... types) {
+        final Set<String> founds = indexService.getQueryTypes(lookup).keySet();
+        if (founds.size() < types.length)
+            assertThat(founds, equalTo(types));
+        final String[] foundArray = new String[types.length];
+        int i = 0;
+        for (final String found : founds) {
+            if (i == types.length)
+                break;
+            foundArray[i++] = found;
+        }
+        assertThat(lookup + " -> " + founds.toString(), foundArray, equalTo(types));
+    }
+
+    @Test
+    public void getFuzzyQueryTypesTest() {
+        checkFuzzyStartsWith("matchall", "MatchAllDocs", "MatchNoDocs", "MultiPhrase");
+        checkFuzzyStartsWith("Match", "MatchNoDocs", "MatchAllDocs", "FacetPath");
+        checkFuzzyStartsWith("docs", "MatchNoDocs", "MatchAllDocs", "DoubleSet");
+        checkFuzzyStartsWith("all", "MatchAllDocs", "ExactFloat", "ExactLong");
+        checkFuzzyStartsWith("nodoc", "MatchNoDocs", "MatchAllDocs", "FunctionScore");
+        checkFuzzyStartsWith("term", "TermRange", "HasTerm", "BlendedTerm");
+        checkFuzzyStartsWith("int", "IntegerSet", "IntegerRange", "ExactInteger");
+        checkFuzzyStartsWith("intrange", "IntegerRange", "IntegerMultiRange", "LongMultiRange");
+        checkFuzzyStartsWith("floatexact", "FloatSet", "FloatRange", "FloatMultiRange", "ExactFloat");
+        checkFuzzyStartsWith("DoubleExact", "DoubleSet", "DoubleRange", "DoubleMultiRange", "ExactDouble");
+        checkFuzzyStartsWith("Max", "DisjunctionMax", "TermRange", "NGramPhrase");
     }
 
     @Test

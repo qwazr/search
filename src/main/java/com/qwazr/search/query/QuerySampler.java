@@ -24,6 +24,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -39,13 +40,14 @@ public class QuerySampler {
                               Map<String, FieldDefinition> fields);
     }
 
-
+    public final static Map<String, String> TYPES_LOWERCASE;
     public final static SortedMap<String, URI> TYPES_URI_DOC;
-    public final static SortedMap<String, Factory> TYPES_FACTORY;
+    public final static Map<String, Factory> TYPES_FACTORY;
 
     static {
         final JsonSubTypes types = QueryInterface.class.getAnnotation(JsonSubTypes.class);
-        final SortedMap<String, Factory> typeFactoryMap = new TreeMap<>();
+        final Map<String, String> lowercaseTypeMap = new HashMap<>();
+        final Map<String, Factory> typeFactoryMap = new HashMap<>();
         final SortedMap<String, URI> typeUriDocMap = new TreeMap<>();
         for (
             final JsonSubTypes.Type type : types.value()) {
@@ -54,21 +56,28 @@ public class QuerySampler {
             if (!QueryInterface.class.isAssignableFrom(typeClass))
                 continue;
             final Class<QueryInterface> typeQueryClass = (Class<QueryInterface>) typeClass;
-            findSampleConstructor(typeQueryClass, u -> typeUriDocMap.put(typeName, u), f -> typeFactoryMap.put(typeName, f));
-            findSampleFactory(typeQueryClass, u -> typeUriDocMap.put(typeName, u), f -> typeFactoryMap.put(typeName, f));
+            if (findSampleConstructor(typeQueryClass,
+                u -> typeUriDocMap.put(typeName, u),
+                f -> typeFactoryMap.put(typeName, f))
+                || findSampleFactory(typeQueryClass,
+                u -> typeUriDocMap.put(typeName, u),
+                f -> typeFactoryMap.put(typeName, f))) {
+                lowercaseTypeMap.put(typeName.toLowerCase(), typeName);
+            }
         }
         TYPES_URI_DOC = Collections.unmodifiableSortedMap(typeUriDocMap);
-        TYPES_FACTORY = Collections.unmodifiableSortedMap(typeFactoryMap);
+        TYPES_FACTORY = Collections.unmodifiableMap(typeFactoryMap);
+        TYPES_LOWERCASE = Collections.unmodifiableMap(lowercaseTypeMap);
     }
 
-    static private void findSampleConstructor(final Class<QueryInterface> typeClass,
-                                              final Consumer<URI> uriDoc,
-                                              final Consumer<Factory> factoryConsumer) {
+    static private boolean findSampleConstructor(final Class<QueryInterface> typeClass,
+                                                 final Consumer<URI> uriDoc,
+                                                 final Consumer<Factory> factoryConsumer) {
         try {
             final Constructor<QueryInterface> constructor = typeClass.getConstructor(IndexSettingsDefinition.class, Map.class, Map.class);
             final QuerySampleCreator querySampleCreator = constructor.getAnnotation(QuerySampleCreator.class);
             if (querySampleCreator == null)
-                return;
+                return false;
             uriDoc.accept(URI.create(querySampleCreator.docUri()));
             factoryConsumer.accept(((settings, analyzers, fields) -> {
                 try {
@@ -77,14 +86,16 @@ public class QuerySampler {
                     throw new InternalServerErrorException("Cannot create a sample of the query " + typeClass.getSimpleName(), e);
                 }
             }));
+            return true;
         } catch (NoSuchMethodException e) {
             //TODO ok
+            return false;
         }
     }
 
-    static private void findSampleFactory(final Class<QueryInterface> typeClass,
-                                          final Consumer<URI> uriDoc,
-                                          final Consumer<Factory> factoryConsumer) {
+    static private boolean findSampleFactory(final Class<QueryInterface> typeClass,
+                                             final Consumer<URI> uriDoc,
+                                             final Consumer<Factory> factoryConsumer) {
         for (final Method method : typeClass.getMethods()) {
             final QuerySampleCreator querySampleCreator = method.getAnnotation(QuerySampleCreator.class);
             if (querySampleCreator == null)
@@ -97,6 +108,8 @@ public class QuerySampler {
                     throw new InternalServerErrorException("Cannot create a sample of the query " + typeClass.getSimpleName(), e);
                 }
             }));
+            return true;
         }
+        return false;
     }
 }
