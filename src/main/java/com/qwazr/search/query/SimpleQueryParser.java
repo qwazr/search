@@ -45,7 +45,7 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
     @JsonProperty("enabled_operators")
     final public List<Operator> enabledOperators;
 
-    enum Operator {
+    public enum Operator {
         and(org.apache.lucene.queryparser.simple.SimpleQueryParser.AND_OPERATOR),
         escape(org.apache.lucene.queryparser.simple.SimpleQueryParser.ESCAPE_OPERATOR),
         fuzzy(org.apache.lucene.queryparser.simple.SimpleQueryParser.FUZZY_OPERATOR),
