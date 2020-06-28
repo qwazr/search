@@ -18,6 +18,7 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.qwazr.search.index.QueryContext;
@@ -110,6 +111,7 @@ import org.apache.lucene.search.Query;
     @JsonSubTypes.Type(value = TermRange.class),
     @JsonSubTypes.Type(value = TermsQuery.class),
     @JsonSubTypes.Type(value = Wildcard.class)})
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     isGetterVisibility = JsonAutoDetect.Visibility.NONE,
