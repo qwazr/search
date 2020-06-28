@@ -99,7 +99,7 @@ public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefiniti
 
     @Override
     protected boolean isEqual(final SmartFieldDefinition f) {
-        return equals(f)
+        return super.isEqual(f)
             && Objects.equals(facet, f.facet)
             && Objects.equals(index, f.index)
             && Objects.equals(sort, f.sort)
