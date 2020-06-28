@@ -15,7 +15,9 @@
  */
 package com.qwazr.search.query;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.annotations.QuerySampleCreator;
@@ -35,6 +37,12 @@ import org.apache.lucene.search.Query;
 
 public class BlendedTerm extends AbstractQuery<BlendedTerm> {
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
     public static class Term extends Equalizer.Immutable<Term> {
 
         @JsonProperty("generic_field")
