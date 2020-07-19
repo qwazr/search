@@ -43,10 +43,10 @@ abstract class AbstractMultiRangeQuery<T extends AbstractMultiRangeQuery<T>> ext
             return me();
         }
 
-        protected abstract AbstractMultiRangeQuery build(String field, Collection<T> lowerValues,
-                                                         Collection<T> upperValues);
+        protected abstract AbstractMultiRangeQuery<?> build(String field, Collection<T> lowerValues,
+                                                            Collection<T> upperValues);
 
-        public AbstractMultiRangeQuery build() {
+        public AbstractMultiRangeQuery<?> build() {
             return build(field, lowerValues, upperValues);
         }
 

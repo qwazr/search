@@ -16,6 +16,15 @@
 package com.qwazr.search.analysis;
 
 import com.qwazr.utils.ClassLoaderUtils;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
@@ -25,15 +34,6 @@ import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.analysis.util.ResourceLoaderAware;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 import org.apache.lucene.analysis.util.TokenizerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
 
 final public class CustomAnalyzer extends Analyzer {
 
@@ -102,8 +102,9 @@ final public class CustomAnalyzer extends Analyzer {
         final Class<T> factoryClass = clazz == null ? defaultClass : getFactoryClass(clazz);
         if (factoryClass == null)
             throw new ClassNotFoundException("No class found for: " + clazz);
-        final T factory =
-            factoryClass.getConstructor(Map.class).newInstance(args == null ? Collections.emptyMap() : args);
+        final Constructor<T> constructor = factoryClass.getConstructor(Map.class);
+        final T factory = args == null ? constructor.newInstance(Collections.emptyMap()) :
+            factoryClass.getConstructor(Map.class).newInstance(args);
         if (factory instanceof ResourceLoaderAware)
             ((ResourceLoaderAware) factory).inform(resourceLoader);
         return factory;

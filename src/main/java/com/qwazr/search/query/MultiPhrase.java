@@ -127,7 +127,7 @@ public class MultiPhrase extends AbstractFieldQuery<MultiPhrase> {
 
         private final String field;
         private final List<String[]> terms;
-        private List<Integer> positions;
+        private final List<Integer> positions;
         private Integer slop;
 
         private Builder(String field) {

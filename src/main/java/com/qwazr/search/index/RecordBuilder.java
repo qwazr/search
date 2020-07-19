@@ -16,19 +16,11 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.field.FieldTypeInterface;
-import com.qwazr.server.ServerException;
-import com.qwazr.utils.HashUtils;
-import com.qwazr.utils.StringUtils;
-import java.util.function.Supplier;
+import java.lang.reflect.Field;
 import javax.ws.rs.BadRequestException;
-import javax.ws.rs.core.Response;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.Term;
-
-import java.lang.reflect.Field;
-import org.apache.lucene.util.BytesRef;
 
 abstract class RecordBuilder {
 

@@ -16,7 +16,6 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.List;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 

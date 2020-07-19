@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,10 +32,10 @@ class MixedDrillSideways extends DrillSideways {
 
     private final String stateIndexField;
 
-    MixedDrillSideways(QueryExecution queryExecution) {
+    MixedDrillSideways(QueryExecution<?> queryExecution) {
         super(queryExecution.queryContext.indexSearcher, queryExecution.facetsConfig,
-                queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState,
-                queryExecution.queryContext.executorService);
+            queryExecution.queryContext.taxonomyReader, queryExecution.queryContext.docValueReaderState,
+            queryExecution.queryContext.executorService);
         this.stateIndexField = state == null ? null : state.getField();
     }
 
@@ -45,10 +45,10 @@ class MixedDrillSideways extends DrillSideways {
         final Map<String, Facets> drillSidewaysFacets = new HashMap<>();
 
         final FastTaxonomyFacetCounts fastTaxonomyFacets = taxoReader == null ? null : new FastTaxonomyFacetCounts(
-                taxoReader, config, drillDowns);
+            taxoReader, config, drillDowns);
 
         final SortedSetDocValuesFacetCounts docValuesFacets = state == null ? null : new SortedSetDocValuesFacetCounts(
-                state, drillDowns);
+            state, drillDowns);
 
         if (drillSideways != null) {
             for (int i = 0; i < drillSideways.length; i++) {

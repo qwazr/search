@@ -44,10 +44,8 @@ final class IntPointType extends CustomFieldTypeAbstract {
                 documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, intValue));
             };
         else
-            return (fieldName, value, documentBuilder) -> {
-                documentBuilder.accept(genericFieldName, fieldName,
-                    new IntPoint(fieldName, FieldUtils.getIntValue(value)));
-            };
+            return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
+                new IntPoint(fieldName, FieldUtils.getIntValue(value)));
     }
 
 }

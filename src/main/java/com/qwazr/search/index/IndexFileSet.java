@@ -80,7 +80,8 @@ class IndexFileSet {
     /**
      * Manage the index UUID
      *
-     * @return
+     * @return the UUID of the index
+     * @throws IOException if any I/O error occured
      */
     UUID checkUuid() throws IOException {
         final UUID indexUuid;

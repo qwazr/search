@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");

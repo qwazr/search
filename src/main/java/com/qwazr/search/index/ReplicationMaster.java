@@ -38,7 +38,7 @@ interface ReplicationMaster extends Closeable {
     ReplicationSession newReplicationSession() throws IOException;
 
     InputStream getItem(final String sessionId, final ReplicationProcess.Source source, final String itemName)
-            throws FileNotFoundException;
+        throws FileNotFoundException;
 
     void releaseSession(String sessionId) throws IOException;
 
@@ -124,17 +124,17 @@ interface ReplicationMaster extends Closeable {
 
         WithIndex(final String masterUuid, final IndexFileSet indexFileSet, final IndexWriter indexWriter) {
             super(new MasterNode.WithIndex(masterUuid, indexFileSet.resourcesDirectoryPath, indexFileSet.dataDirectory,
-                    indexWriter, indexFileSet.mainDirectory, IndexFileSet.ANALYZERS_FILE, IndexFileSet.FIELDS_FILE));
+                indexWriter, indexFileSet.mainDirectory, IndexFileSet.ANALYZERS_FILE, IndexFileSet.FIELDS_FILE));
         }
     }
 
     final class WithIndexAndTaxo extends Base {
 
         WithIndexAndTaxo(final String masterUuid, final IndexFileSet indexFileSet, final IndexWriter indexWriter,
-                         final SnapshotDirectoryTaxonomyWriter taxonomyWriter) throws IOException {
+                         final SnapshotDirectoryTaxonomyWriter taxonomyWriter) {
             super(new MasterNode.WithIndexAndTaxo(masterUuid, indexFileSet.resourcesDirectoryPath,
-                    indexFileSet.dataDirectory, indexWriter, indexFileSet.taxonomyDirectory, taxonomyWriter,
-                    indexFileSet.mainDirectory, IndexFileSet.ANALYZERS_FILE, IndexFileSet.FIELDS_FILE));
+                indexFileSet.dataDirectory, indexWriter, indexFileSet.taxonomyDirectory, taxonomyWriter,
+                indexFileSet.mainDirectory, IndexFileSet.ANALYZERS_FILE, IndexFileSet.FIELDS_FILE));
         }
     }
 

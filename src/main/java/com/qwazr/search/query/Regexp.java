@@ -51,7 +51,7 @@ public class Regexp extends AbstractFieldQuery<Regexp> {
         all(RegExp.ALL),
         none(RegExp.NONE);
 
-        private int value;
+        private final int value;
 
         Flag(int value) {
             this.value = value;

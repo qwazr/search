@@ -45,10 +45,8 @@ final class DoublePointType extends CustomFieldTypeAbstract {
                 documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, doubleValue));
             };
         else
-            return (fieldName, value, documentBuilder) -> {
-                documentBuilder.accept(genericFieldName, fieldName,
-                    new DoublePoint(fieldName, FieldUtils.getDoubleValue(value)));
-            };
+            return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
+                new DoublePoint(fieldName, FieldUtils.getDoubleValue(value)));
     }
 
 }

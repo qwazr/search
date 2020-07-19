@@ -19,14 +19,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.index.QueryContext;
+import java.io.IOException;
+import java.util.Objects;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.search.MultiTermQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.spans.SpanMultiTermQueryWrapper;
 import org.apache.lucene.search.spans.SpanQuery;
-
-import java.io.IOException;
-import java.util.Objects;
 
 public class SpanQueryWrapper extends AbstractSpanQuery<SpanQueryWrapper> {
 
@@ -47,7 +47,7 @@ public class SpanQueryWrapper extends AbstractSpanQuery<SpanQueryWrapper> {
         if (subQuery instanceof SpanQuery)
             return (SpanQuery) subQuery;
         else if (subQuery instanceof MultiTermQuery)
-            return new org.apache.lucene.search.spans.SpanMultiTermQueryWrapper((MultiTermQuery) subQuery);
+            return new SpanMultiTermQueryWrapper<>((MultiTermQuery) subQuery);
         else if (subQuery instanceof org.apache.lucene.search.TermQuery)
             return new org.apache.lucene.search.spans.SpanTermQuery(
                 ((org.apache.lucene.search.TermQuery) subQuery).getTerm());

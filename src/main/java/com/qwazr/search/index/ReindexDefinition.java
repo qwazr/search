@@ -33,7 +33,7 @@ import java.util.Objects;
 public class ReindexDefinition extends Equalizer.Immutable<ReindexDefinition> {
 
     public enum Status {
-        initialized, running, aborting, done, aborted, error;
+        initialized, running, aborting, done, aborted, error
     }
 
     public final Date start;

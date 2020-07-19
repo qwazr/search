@@ -70,10 +70,8 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             if (StringUtils.isNotEmpty(definition.indexAnalyzer)
                 && !Objects.equals(definition.indexAnalyzer, keywordName))
                 return true;
-            if (StringUtils.isNotEmpty(definition.analyzer)
-                && !Objects.equals(definition.analyzer, keywordName))
-                return true;
-            return false;
+            return StringUtils.isNotEmpty(definition.analyzer)
+                && !Objects.equals(definition.analyzer, keywordName);
         }
 
         private ValueType getValueType() {

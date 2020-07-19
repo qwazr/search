@@ -44,11 +44,8 @@ final class FloatPointType extends CustomFieldTypeAbstract {
                 documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, floatValue));
             };
         else
-            return (fieldName, value, documentBuilder) -> {
-                documentBuilder.accept(genericFieldName, fieldName,
-                    new FloatPoint(fieldName, FieldUtils.getFloatValue(value)));
-
-            };
+            return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
+                new FloatPoint(fieldName, FieldUtils.getFloatValue(value)));
     }
 
 }

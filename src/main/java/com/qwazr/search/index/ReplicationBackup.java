@@ -47,7 +47,7 @@ class ReplicationBackup extends ReplicationClient {
 	 * Execute the entire backup process
 	 *
 	 * @return the final status of the backup
-	 * @throws IOException
+	 * @throws IOException if any I/O error occured
 	 */
 	BackupStatus backup() throws IOException {
 		final ReplicationSession session = indexInstance.replicationUpdate(null);

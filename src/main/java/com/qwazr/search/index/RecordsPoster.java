@@ -15,29 +15,19 @@
  */
 package com.qwazr.search.index;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeCreator;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.qwazr.search.field.FieldDefinition;
-import com.qwazr.server.ServerException;
-import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.SerializationUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.RunnableEx;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
-
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Map;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
+import org.apache.lucene.index.IndexWriter;
 
 interface RecordsPoster {
 

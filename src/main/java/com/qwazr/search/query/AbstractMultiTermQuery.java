@@ -34,7 +34,7 @@ public abstract class AbstractMultiTermQuery<T extends AbstractMultiTermQuery<T>
         this.rewriteMethod = rewriteMethod;
     }
 
-    protected AbstractMultiTermQuery(final Class<T> queryClass, final MultiTermBuilder builder) {
+    protected AbstractMultiTermQuery(final Class<T> queryClass, final MultiTermBuilder<?,?> builder) {
         super(queryClass, builder);
         this.rewriteMethod = builder.rewriteMethod;
     }

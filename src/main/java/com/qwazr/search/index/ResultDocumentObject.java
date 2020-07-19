@@ -66,7 +66,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 
         @Override
         public final ResultDocumentObject<T> build() {
-            return new ResultDocumentObject<T>(this, record);
+            return new ResultDocumentObject<>(this, record);
         }
 
         @Override

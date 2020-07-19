@@ -24,15 +24,15 @@ public abstract class AbstractExactQuery<V, T extends AbstractExactQuery<V, T>> 
     final public V value;
 
     protected AbstractExactQuery(final Class<T> queryClass,
-                                 @JsonProperty("field") final String field,
-                                 @JsonProperty("value") final V value) {
-        this(queryClass, (String) null, field, value);
+                                 final @JsonProperty("field") String field,
+                                 final @JsonProperty("value") V value) {
+        this(queryClass, null, field, value);
     }
 
     protected AbstractExactQuery(final Class<T> queryClass,
                                  final String genericField,
-                                 @JsonProperty("field") final String field,
-                                 @JsonProperty("value") final V value) {
+                                 final @JsonProperty("field") String field,
+                                 final @JsonProperty("value") V value) {
         super(queryClass, genericField, field);
         this.value = Objects.requireNonNull(value, "The value is missing");
     }

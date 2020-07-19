@@ -26,15 +26,15 @@ import java.io.IOException;
 
 public class MaxFloatFunction extends AbstractValueSources<MaxFloatFunction> {
 
-	@JsonCreator
-	public MaxFloatFunction(@JsonProperty("sources") AbstractValueSource... sources) {
-		super(MaxFloatFunction.class, sources);
-	}
+    @JsonCreator
+    public MaxFloatFunction(@JsonProperty("sources") AbstractValueSource<?>... sources) {
+        super(MaxFloatFunction.class, sources);
+    }
 
-	@Override
-	public ValueSource getValueSource(QueryContext queryContext)
-			throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
-		return new org.apache.lucene.queries.function.valuesource.MaxFloatFunction(getValueSourceArray(queryContext));
-	}
+    @Override
+    public ValueSource getValueSource(QueryContext queryContext)
+        throws ReflectiveOperationException, QueryNodeException, ParseException, IOException {
+        return new org.apache.lucene.queries.function.valuesource.MaxFloatFunction(getValueSourceArray(queryContext));
+    }
 
 }

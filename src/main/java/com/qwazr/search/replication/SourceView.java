@@ -49,7 +49,7 @@ class SourceView {
      *
      * @param refName the name of the item to check
      * @param refItem the details of the item
-     * @return
+     * @return if any I/O error occured
      */
     private boolean isUpToDate(final String refName, final ReplicationSession.Item refItem) {
         final ReplicationSession.Item item = items.get(refName);

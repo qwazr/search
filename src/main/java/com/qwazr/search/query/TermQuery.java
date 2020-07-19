@@ -23,7 +23,7 @@ import java.util.Objects;
 import org.apache.lucene.search.Query;
 
 @Deprecated
-/**
+/*
  * @see HasTerm
  */
 public class TermQuery extends AbstractFieldQuery<TermQuery> {

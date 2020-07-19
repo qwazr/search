@@ -44,10 +44,8 @@ final class LongPointType extends CustomFieldTypeAbstract {
                 documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, longValue));
             };
         else
-            return (fieldName, value, documentBuilder) -> {
-                documentBuilder.accept(genericFieldName, fieldName,
-                    new LongPoint(fieldName, FieldUtils.getLongValue(value)));
-            };
+            return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
+                new LongPoint(fieldName, FieldUtils.getLongValue(value)));
     }
 
 }

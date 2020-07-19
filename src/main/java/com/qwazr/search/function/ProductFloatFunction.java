@@ -27,7 +27,7 @@ import java.io.IOException;
 public class ProductFloatFunction extends AbstractValueSources<ProductFloatFunction> {
 
 	@JsonCreator
-	public ProductFloatFunction(@JsonProperty("sources") AbstractValueSource... sources) {
+	public ProductFloatFunction(@JsonProperty("sources") AbstractValueSource<?>... sources) {
 		super(ProductFloatFunction.class, sources);
 	}
 
