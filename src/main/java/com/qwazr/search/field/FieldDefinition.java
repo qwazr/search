@@ -58,6 +58,8 @@ public interface FieldDefinition {
 
     /**
      * This property is present for polymorphism
+     *
+     * @return the type of the field
      */
     @JsonProperty("type")
     SmartFieldDefinition.Type getType();

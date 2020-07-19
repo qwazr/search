@@ -113,7 +113,6 @@
       <id>shade</id>
       <build>
         <plugins>
-
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-shade-plugin</artifactId>
@@ -163,51 +162,6 @@
             </executions>
           </plugin>
 
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>javadoc</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.2.0</version>
-            <configuration>
-              <additionalOptions>
-                --allow-script-in-comments
-              </additionalOptions>
-              <useStandardDocletOptions>true</useStandardDocletOptions>
-              <show>public</show>
-              <reportOutputDirectory>${project.basedir}/docs</reportOutputDirectory>
-              <header>
-                <![CDATA[
-                                <a href="http://www.qwazr.com/search" target="_top">QWAZR Search</a>
-                                 ]]>
-              </header>
-              <footer>
-                <![CDATA[
-                                <script type="text/javascript">
-                                (function (i, s, o, g, r, a, m) {
-                                i['GoogleAnalyticsObject'] = r;
-                                i[r] = i[r] || function () {
-                                (i[r].q = i[r].q || []).push(arguments)
-                                }, i[r].l = 1 * new Date();
-                                a = s.createElement(o),
-                                m = s.getElementsByTagName(o)[0];
-                                a.async = 1;
-                                a.src = g;
-                                m.parentNode.insertBefore(a, m)
-                                })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
-                                ga('create', '{{ site.google_analytics }}', 'auto');
-                                ga('send', 'pageview');
-                                </script>
-                                ]]>
-              </footer>
-            </configuration>
-          </plugin>
         </plugins>
       </build>
     </profile>

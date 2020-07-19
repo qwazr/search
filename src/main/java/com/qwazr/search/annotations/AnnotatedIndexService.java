@@ -206,6 +206,7 @@ public class AnnotatedIndexService<T> {
     }
 
     /**
+     * @param lookup any keyword to submit to the query list
      * @return the list of available query types./
      */
     public Map<String, URI> getQueryTypes(final String lookup) {
