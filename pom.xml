@@ -22,7 +22,7 @@
   </scm>
 
   <properties>
-    <lucene.version>8.5.2</lucene.version>
+    <lucene.version>8.6.0</lucene.version>
   </properties>
 
   <dependencies>
