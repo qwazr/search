@@ -416,10 +416,12 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
     }
 
     @Override
-    public Integer postJson(final String indexName, final JsonNode jsonNode) {
+    public IndexJsonResult postJson(final String indexName,
+                                    final Boolean fieldTypes,
+                                    final JsonNode jsonNode) {
         try {
             checkRight();
-            return indexManager.get(indexName).postJsonNode(jsonNode);
+            return indexManager.get(indexName).postJsonNode(jsonNode, Boolean.TRUE.equals(fieldTypes));
         } catch (Exception e) {
             throw ServerException.getJsonException(LOGGER, e);
         }

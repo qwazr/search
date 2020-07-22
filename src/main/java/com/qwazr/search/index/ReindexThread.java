@@ -145,7 +145,7 @@ class ReindexThread {
             if (buffer.isEmpty())
                 return;
             try {
-                completedRecords.addAndGet(indexInstance.postJsonNodes(buffer));
+                completedRecords.addAndGet(indexInstance.postJsonNodes(buffer).count);
                 buffer.clear();
             } catch (IOException e) {
                 throw new InternalServerErrorException("Error while reindexing: " + e.getMessage(), e);

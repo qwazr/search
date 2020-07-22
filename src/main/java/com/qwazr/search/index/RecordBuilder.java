@@ -16,8 +16,12 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.qwazr.search.field.FieldTypeInterface;
 import java.lang.reflect.Field;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import javax.ws.rs.BadRequestException;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.Term;
@@ -65,7 +69,7 @@ abstract class RecordBuilder {
             super(fieldMap, documentBuilder);
         }
 
-        final public void accept(final String fieldName, final Object fieldValue) {
+        final void accept(final String fieldName, final Object fieldValue) {
             addFieldValue(fieldName, fieldValue);
         }
 
@@ -90,38 +94,68 @@ abstract class RecordBuilder {
 
     }
 
-    final static class ForJson extends RecordBuilder {
+    static class ForJson extends RecordBuilder {
 
-        ForJson(final FieldMap fieldMap,
-                final DocumentBuilder documentBuilder) {
+        private ForJson(final FieldMap fieldMap,
+                        final DocumentBuilder documentBuilder) {
             super(fieldMap, documentBuilder);
         }
 
-        final public void accept(final String fieldName, final JsonNode jsonValue) {
+        boolean accept(final String fieldName, final JsonNode jsonValue) {
             switch (jsonValue.getNodeType()) {
                 case STRING:
                     addFieldValue(fieldName, jsonValue.textValue());
-                    break;
+                    return true;
                 case NUMBER:
                     addFieldValue(fieldName, jsonValue.numberValue());
-                    break;
+                    return true;
                 case BOOLEAN:
                     addFieldValue(fieldName, jsonValue.booleanValue());
-                    break;
+                    return true;
                 case ARRAY:
                     for (final JsonNode element : jsonValue)
                         accept(fieldName, element);
+                    return false;
                 case OBJECT:
                     jsonValue.fields().forEachRemaining(
                         entry -> accept(fieldName + '.' + entry.getKey(), entry.getValue()));
-                    break;
+                    return false;
                 default:
                     // Ignored
-                    break;
+                    return false;
             }
-
         }
 
+    }
+
+    static ForJson forJsonOf(final FieldMap fieldMap,
+                             final DocumentBuilder documentBuilder,
+                             final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes) {
+        if (fieldTypes == null)
+            return new ForJson(fieldMap, documentBuilder);
+        else
+            return new ForJsonWithFieldTypes(fieldMap, documentBuilder, fieldTypes);
+    }
+
+    final static class ForJsonWithFieldTypes extends ForJson {
+
+        private final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes;
+
+        private ForJsonWithFieldTypes(final FieldMap fieldMap,
+                                      final DocumentBuilder documentBuilder,
+                                      final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes) {
+            super(fieldMap, documentBuilder);
+            this.fieldTypes = fieldTypes;
+        }
+
+
+        final boolean accept(final String fieldName, final JsonNode jsonValue) {
+            if (!super.accept(fieldName, jsonValue))
+                return false;
+            fieldTypes.computeIfAbsent(fieldName, f -> new TreeSet<>())
+                .add(jsonValue.getNodeType());
+            return true;
+        }
     }
 
 }

@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.SerializationUtils;
@@ -24,6 +25,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
@@ -239,13 +242,14 @@ interface RecordsPoster {
         void accept(final ObjectNode objectNode) throws IOException;
 
         static JsonNodeDocument of(final FieldMap fieldMap,
+                                   final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes,
                                    final IndexWriter indexWriter,
                                    final TaxonomyWriter taxonomyWriter) {
             final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
             if (!StringUtils.isEmpty(fieldMap.fieldsContext.recordField))
-                return new IndexJsonNodeObjectWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
+                return new IndexJsonNodeObjectWithSource(documentBuilder, fieldMap, fieldTypes, indexWriter, taxonomyWriter);
             else
-                return new IndexJsonNodeObject(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
+                return new IndexJsonNodeObject(documentBuilder, fieldMap, fieldTypes, indexWriter, taxonomyWriter);
         }
 
     }
@@ -254,9 +258,10 @@ interface RecordsPoster {
 
         private IndexJsonNodeObject(final DocumentBuilder.ForLuceneDocument documentBuilder,
                                     final FieldMap fieldMap,
+                                    final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes,
                                     final IndexWriter indexWriter,
                                     final TaxonomyWriter taxonomyWriter) {
-            super(documentBuilder, new RecordBuilder.ForJson(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
+            super(documentBuilder, RecordBuilder.forJsonOf(fieldMap, documentBuilder, fieldTypes), fieldMap, indexWriter, taxonomyWriter);
         }
 
         @Override
@@ -268,8 +273,12 @@ interface RecordsPoster {
 
     final class IndexJsonNodeObjectWithSource extends IndexJsonNodeObject {
 
-        private IndexJsonNodeObjectWithSource(DocumentBuilder.ForLuceneDocument documentBuilder, FieldMap fieldMap, IndexWriter indexWriter, TaxonomyWriter taxonomyWriter) {
-            super(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
+        private IndexJsonNodeObjectWithSource(final DocumentBuilder.ForLuceneDocument documentBuilder,
+                                              final FieldMap fieldMap,
+                                              final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes,
+                                              final IndexWriter indexWriter,
+                                              final TaxonomyWriter taxonomyWriter) {
+            super(documentBuilder, fieldMap, fieldTypes, indexWriter, taxonomyWriter);
         }
 
         @Override

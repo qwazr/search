@@ -16,11 +16,14 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.qwazr.search.analysis.UpdatableAnalyzers;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.StringUtils;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.ws.rs.NotAcceptableException;
 import org.apache.lucene.analysis.util.ResourceLoader;
@@ -165,11 +168,12 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
     }
 
     @Override
-    public int postJsonNode(final JsonNode jsonNode) throws IOException {
+    public int postJsonNode(final JsonNode jsonNode,
+                            final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes) throws IOException {
         if (jsonNode == null)
             return 0;
         final RecordsPoster.JsonNodeDocument poster =
-            RecordsPoster.JsonNodeDocument.of(fieldMap, indexWriter, taxonomyWriter);
+            RecordsPoster.JsonNodeDocument.of(fieldMap, fieldTypes, indexWriter, taxonomyWriter);
         if (jsonNode.isArray()) {
             for (final JsonNode element : jsonNode) {
                 postJsonNode(poster, element);
@@ -182,11 +186,12 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
     }
 
     @Override
-    public int postJsonNodes(final Collection<JsonNode> jsonNodes) throws IOException {
+    public int postJsonNodes(final Collection<JsonNode> jsonNodes,
+                             final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes) throws IOException {
         if (jsonNodes == null)
             return 0;
         final RecordsPoster.JsonNodeDocument poster =
-            RecordsPoster.JsonNodeDocument.of(fieldMap, indexWriter, taxonomyWriter);
+            RecordsPoster.JsonNodeDocument.of(fieldMap, fieldTypes, indexWriter, taxonomyWriter);
         for (final JsonNode jsonNode : jsonNodes)
             postJsonNode(poster, jsonNode);
         return poster.getCount();

@@ -249,8 +249,10 @@ public interface IndexServiceInterface extends ServiceInterface {
     @POST
     @Path("/{index_name}/json")
     @Consumes({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
-    Integer postJson(@PathParam("index_name") String indexName,
-                     JsonNode jsonNode);
+    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, SmileMediaTypes.APPLICATION_JACKSON_SMILE})
+    IndexJsonResult postJson(@PathParam("index_name") String indexName,
+                             @QueryParam("fieldTypes") Boolean fieldTypes,
+                             JsonNode jsonNode);
 
     @GET
     @Path("/{index_name}/json/samples")

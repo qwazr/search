@@ -16,6 +16,8 @@
 package com.qwazr.search.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.qwazr.search.index.IndexJsonResult;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
 import com.qwazr.search.index.QueryDefinition;
@@ -28,13 +30,17 @@ import com.qwazr.utils.ObjectMappers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Set;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.collection.IsMapContaining.hasEntry;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -61,7 +67,7 @@ public class JsonNodeTest extends AbstractIndexTest {
         assertThat(sample, notNullValue());
         assertThat(sample.keySet(), hasSize(1));
         assertThat(sample.keySet(), hasItem("id"));
-        assertThat(sample.get("id").toString(), not(isEmptyOrNullString()));
+        assertThat(sample.get("id").toString(), not(emptyOrNullString()));
     }
 
     @Test
@@ -69,11 +75,24 @@ public class JsonNodeTest extends AbstractIndexTest {
         final JsonNode issueJson = getJson("issue.json");
 
         // Create the schema and the index
-        service.createUpdateIndex(INDEX,
-            IndexSettingsDefinition.of().recordField("record").primaryKey("id").build());
+        {
+            service.createUpdateIndex(INDEX,
+                IndexSettingsDefinition.of().recordField("record").primaryKey("id").build());
+        }
 
         // Index the json doc
-        service.postJson(INDEX, issueJson);
+        {
+            final IndexJsonResult result = service.postJson(INDEX, true, issueJson);
+            Assert.assertNotNull(result);
+            Assert.assertEquals(result.count, Integer.valueOf(1));
+            Assert.assertNotNull(result.fieldTypes);
+            Assert.assertEquals(result.fieldTypes.size(), 213);
+            assertThat(result.fieldTypes, allOf(
+                hasEntry("assignee.html_url", Set.of(JsonNodeType.STRING)),
+                hasEntry("assignee.site_admin", Set.of(JsonNodeType.BOOLEAN)),
+                hasEntry("comments", Set.of(JsonNodeType.NUMBER))
+            ));
+        }
 
         // Get the document by its id
         {

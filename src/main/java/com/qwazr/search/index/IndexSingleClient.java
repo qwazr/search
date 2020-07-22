@@ -644,14 +644,16 @@ public class IndexSingleClient extends JsonClient implements IndexServiceInterfa
     }
 
     @Override
-    public Integer postJson(final String indexName,
-                            final JsonNode jsonNode) {
+    public IndexJsonResult postJson(final String indexName,
+                                    final Boolean fieldTypes,
+                                    final JsonNode jsonNode) {
         try {
             return indexTarget
                 .path(indexName)
                 .path("json")
+                .queryParam("fieldTypes", fieldTypes)
                 .request()
-                .post(Entity.entity(jsonNode, preferedSerializedMediaType), Integer.class);
+                .post(Entity.entity(jsonNode, preferedSerializedMediaType), IndexJsonResult.class);
         } catch (WebApplicationException e) {
             throw ServerException.from(e);
         }

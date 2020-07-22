@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 package com.qwazr.search.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.search.index.IndexJsonResult;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.PostDefinition;
@@ -28,6 +30,7 @@ import static com.qwazr.search.test.JsonAbstractTest.getJsonNode;
 import static com.qwazr.search.test.JsonAbstractTest.getQuery;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -66,17 +69,23 @@ public class GettingStartedTest {
     @Test
     public void test200UpdateOneRecord() {
         IndexServiceInterface client = TestServer.remote;
-        final Integer result = client.postJson(MY_INDEX, MY_RECORD_JSON);
+        final IndexJsonResult result = client.postJson(MY_INDEX, null, MY_RECORD_JSON);
         Assert.assertNotNull(result);
-        Assert.assertEquals(Integer.valueOf(1), result);
+        Assert.assertEquals(Integer.valueOf(1), result.count);
+        Assert.assertNull(result.fieldTypes);
     }
 
     @Test
     public void test210UpdateRecords() {
         IndexServiceInterface client = TestServer.remote;
-        final Integer result = client.postJson(MY_INDEX, MY_RECORDS_JSON);
+        final IndexJsonResult result = client.postJson(MY_INDEX, true, MY_RECORDS_JSON);
         Assert.assertNotNull(result);
-        Assert.assertEquals(Integer.valueOf(MY_RECORDS_JSON.size()), result);
+        Assert.assertEquals(Integer.valueOf(MY_RECORDS_JSON.size()), result.count);
+        Assert.assertEquals(result.fieldTypes, Map.of(
+            "$id$", Set.of(JsonNodeType.STRING),
+            "category", Set.of(JsonNodeType.STRING),
+            "description", Set.of(JsonNodeType.STRING),
+            "name", Set.of(JsonNodeType.STRING)));
     }
 
     @Test

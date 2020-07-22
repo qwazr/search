@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.qwazr.binder.FieldMapWrapper;
 import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.analysis.AnalyzerDefinition;
@@ -56,6 +57,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -550,14 +554,18 @@ final public class IndexInstance implements Closeable {
         return write(context -> checkCommit(context.postMappedDocuments(post), post));
     }
 
-    final int postJsonNodes(final Collection<JsonNode> jsonNodes) throws IOException {
+    final IndexJsonResult postJsonNodes(final Collection<JsonNode> jsonNodes) throws IOException {
         checkIsMaster();
-        return write(context -> checkCommit(context.postJsonNodes(jsonNodes)));
+        final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes = new TreeMap<>();
+        final Integer count = write(context -> checkCommit(context.postJsonNodes(jsonNodes, fieldTypes)));
+        return new IndexJsonResult(count, fieldTypes);
     }
 
-    final int postJsonNode(final JsonNode jsonNode) throws IOException {
+    final IndexJsonResult postJsonNode(final JsonNode jsonNode, final boolean withFieldTypes) throws IOException {
         checkIsMaster();
-        return write(context -> checkCommit(context.postJsonNode(jsonNode)));
+        final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes = withFieldTypes ? new TreeMap<>() : null;
+        final Integer count = write(context -> checkCommit(context.postJsonNode(jsonNode, fieldTypes)));
+        return new IndexJsonResult(count, fieldTypes);
     }
 
     final <T> int updateDocValues(final Map<String, Field> fields, final T document,

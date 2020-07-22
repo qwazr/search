@@ -57,7 +57,7 @@ public abstract class AbstractReindexTest extends AbstractIndexTest {
                 .build()
         );
         for (int i = 0; i < 20; i++) {
-            service.postJson(INDEX, ObjectMappers.JSON.readTree(
+            service.postJson(INDEX, false, ObjectMappers.JSON.readTree(
                 ObjectMappers.JSON.writeValueAsString(
                     getRandomDocs(50, docSupplier))));
         }
