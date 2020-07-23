@@ -23,8 +23,6 @@ import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.StringUtils;
-import org.apache.lucene.analysis.Analyzer;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,8 +51,9 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
                                          final Boolean enablePositionIncrements,
                                          final Boolean autoGenerateMultiTermSynonymsPhraseQuery,
                                          final Boolean enableGraphQueries,
-                                         final String queryString) {
-        super(queryClass, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString);
+                                         final String queryString,
+                                         final String analyzer) {
+        super(queryClass, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString, analyzer);
         fields = null;
         boosts = null;
         allow_leading_wildcard = null;
@@ -84,14 +83,17 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
     @JsonIgnore
     @Override
     protected boolean isEqual(T q) {
-        return super.isEqual(q) && Arrays.equals(fields, q.fields) && CollectionsUtils.equals(boosts, q.boosts) &&
-            Objects.equals(allow_leading_wildcard, q.allow_leading_wildcard) &&
-            Objects.equals(default_operator, q.default_operator) && Objects.equals(phrase_slop, q.phrase_slop) &&
-            Objects.equals(auto_generate_phrase_query, q.auto_generate_phrase_query) &&
-            Objects.equals(fuzzy_min_sim, q.fuzzy_min_sim) &&
-            Objects.equals(fuzzy_prefix_length, q.fuzzy_prefix_length) &&
-            Objects.equals(max_determinized_states, q.max_determinized_states) &&
-            Objects.equals(splitOnWhitespace, q.splitOnWhitespace);
+        return super.isEqual(q)
+            && Arrays.equals(fields, q.fields)
+            && CollectionsUtils.equals(boosts, q.boosts)
+            && Objects.equals(allow_leading_wildcard, q.allow_leading_wildcard)
+            && Objects.equals(default_operator, q.default_operator)
+            && Objects.equals(phrase_slop, q.phrase_slop)
+            && Objects.equals(auto_generate_phrase_query, q.auto_generate_phrase_query)
+            && Objects.equals(fuzzy_min_sim, q.fuzzy_min_sim)
+            && Objects.equals(fuzzy_prefix_length, q.fuzzy_prefix_length)
+            && Objects.equals(max_determinized_states, q.max_determinized_states)
+            && Objects.equals(splitOnWhitespace, q.splitOnWhitespace);
     }
 
     @Override
@@ -99,8 +101,9 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
         return Objects.hash(fields, boosts, default_operator);
     }
 
-    protected void setParserParameters(final org.apache.lucene.queryparser.classic.QueryParser parser) {
-        setQueryBuilderParameters(parser);
+    protected void setParserParameters(final QueryContext queryContext,
+                                       final org.apache.lucene.queryparser.classic.QueryParser parser) {
+        setQueryBuilderParameters(queryContext, parser);
         if (default_operator != null)
             parser.setDefaultOperator(default_operator.queryParseroperator);
         if (allow_leading_wildcard != null)
@@ -131,10 +134,6 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
             FieldMap.resolveFieldNames(fields,
                 f -> fieldMap.getFieldType(f, f, StringUtils.EMPTY).resolveFieldName(f, null, null)) :
             fields;
-    }
-
-    protected Analyzer resolveAnalyzer(final QueryContext queryContext) {
-        return analyzer == null ? queryContext.getQueryAnalyzer() : analyzer;
     }
 
     public static abstract class AbstractParserBuilder<B extends AbstractParserBuilder<B, T>, T extends AbstractClassicQueryParser<T>>

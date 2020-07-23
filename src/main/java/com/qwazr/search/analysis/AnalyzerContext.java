@@ -23,161 +23,241 @@ import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.concurrent.ReferenceCounter;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
+import java.io.Closeable;
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.NotAcceptableException;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.util.ResourceLoader;
 
-public class AnalyzerContext extends Equalizer.Immutable<AnalyzerContext> {
+final public class AnalyzerContext extends Equalizer.Immutable<AnalyzerContext> implements Closeable {
+
+    public static KeywordAnalyzer defaultKeywordAnalyzer = new KeywordAnalyzer();
 
     private final static Logger LOGGER = LoggerUtils.getLogger(AnalyzerContext.class);
 
-    public final Map<String, Analyzer> indexAnalyzers;
-    public final Map<String, Analyzer> queryAnalyzers;
+    private final ConstructorParametersImpl instanceFactory;
+    private final ReferenceCounter refCounter;
 
-    public AnalyzerContext(final ConstructorParametersImpl instanceFactory,
+    private final Set<Analyzer> disposableAnalyzers;
+    private final Object onTheFlyLock;
+
+    private final Set<AnalyzerContext> activeAnalyzerContext;
+    private final Map<String, Analyzer> perNameAnalyzers;
+    private final Map<Class<? extends Analyzer>, Analyzer> perClassAnalyzers;
+    private final Map<String, Analyzer> smartSetIndexAnalyzer;
+    private final Map<String, Analyzer> smartSetQueryAnalyzer;
+    private final Map<String, Analyzer> perFieldIndexAnalyzers;
+    private final Analyzer perFieldQueryAnalyzers;
+
+    public AnalyzerContext(final Set<AnalyzerContext> activeAnalyzerContext,
+                           final ConstructorParametersImpl instanceFactory,
                            final ResourceLoader resourceLoader,
                            @NotNull final FieldMap fieldMap,
-                           final boolean failOnException,
                            final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap,
-                           final Map<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap) throws ServerException {
+                           final Map<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap,
+                           @NotNull final Collection<String> errors) throws ServerException {
         super(AnalyzerContext.class);
-        if (fieldMap.isEmpty()) {
-            this.indexAnalyzers = Collections.emptyMap();
-            this.queryAnalyzers = Collections.emptyMap();
-            return;
-        }
+        this.instanceFactory = instanceFactory;
+        refCounter = new ReferenceCounter.Impl().acquire();
 
-        final Map<String, Analyzer> indexAnalyzerMap = new HashMap<>();
-        final Map<String, Analyzer> queryAnalyzerMap = new HashMap<>();
+        disposableAnalyzers = new HashSet<>();
 
-        final AnalyzerMapBuilder builder =
-            new AnalyzerMapBuilder(instanceFactory, resourceLoader, globalAnalyzerFactoryMap,
-                localAnalyzerFactoryMap);
+        onTheFlyLock = new Object();
 
-        fieldMap.forEach((fieldName, fieldType) -> {
-            try {
-                final String resolvedFieldName = fieldType.resolveFieldName(fieldName, FieldTypeInterface.FieldType.textField, FieldTypeInterface.ValueType.textType);
-                if (resolvedFieldName == null)
-                    return;
-                final FieldDefinition fieldDefinition = fieldType.getDefinition();
+        perClassAnalyzers = new HashMap<>();
+        perNameAnalyzers = new HashMap<>();
 
-                // Load the index analyzer if any specific
-                final String indexAnalyzer = fieldDefinition.resolvedIndexAnalyzer();
-                if (indexAnalyzer != null) {
-                    final Analyzer analyzer = builder.findAnalyzer(indexAnalyzer, SmartAnalyzerSet::forIndex);
-                    if (analyzer != null)
-                        indexAnalyzerMap.put(resolvedFieldName, analyzer);
-                }
-
-                // Load the query analyzer if any specific
-                final String queryAnalyzer = fieldDefinition.resolvedQueryAnalyzer();
-                if (queryAnalyzer != null) {
-                    final Analyzer analyzer = builder.findAnalyzer(queryAnalyzer, SmartAnalyzerSet::forQuery);
-                    if (analyzer != null)
-                        queryAnalyzerMap.put(resolvedFieldName, analyzer);
-                }
-
-            } catch (ReflectiveOperationException | IOException e) {
-                final String msg = "Analyzer class not known for the field " + fieldName;
-                if (failOnException)
-                    throw new ServerException(Response.Status.NOT_ACCEPTABLE, msg, e);
-                LOGGER.log(Level.WARNING, msg, e);
-            }
+        // Build named analyzers
+        localAnalyzerFactoryMap.forEach(
+            (name, factory) -> createFromFactory(name, resourceLoader, factory, errors,
+                analyzer -> perNameAnalyzers.put(name, analyzer)));
+        globalAnalyzerFactoryMap.forEach((name, factory) -> {
+            if (!perNameAnalyzers.containsKey(name))
+                createFromFactory(name, resourceLoader, factory, errors,
+                    analyzer -> perNameAnalyzers.put(name, analyzer));
         });
 
-        this.indexAnalyzers = indexAnalyzerMap;
-        this.queryAnalyzers = queryAnalyzerMap;
+        this.activeAnalyzerContext = activeAnalyzerContext;
+        activeAnalyzerContext.add(this);
+
+        // Build smart sets
+        smartSetIndexAnalyzer = new HashMap<>();
+        smartSetQueryAnalyzer = new HashMap<>();
+        for (final SmartAnalyzerSet smartAnalyzer : SmartAnalyzerSet.values()) {
+            createFromClass(smartAnalyzer.forIndex(), errors,
+                analyzer -> smartSetIndexAnalyzer.put(smartAnalyzer.name(), analyzer));
+            createFromClass(smartAnalyzer.forQuery(), errors,
+                analyzer -> smartSetQueryAnalyzer.put(smartAnalyzer.name(), analyzer));
+        }
+        Map<String, Analyzer> perFieldIndexAnalyzers = new HashMap<>();
+        final Map<String, Analyzer> perFieldQueryAnalyzers = new HashMap<>();
+
+        fieldMap.forEach((fieldName, fieldType) -> {
+
+            final String resolvedFieldName = fieldType.resolveFieldName(fieldName,
+                FieldTypeInterface.FieldType.textField, FieldTypeInterface.ValueType.textType);
+            if (resolvedFieldName == null)
+                return;
+            final FieldDefinition fieldDefinition = fieldType.getDefinition();
+
+            // Load the index analyzer if any specific
+            final String indexAnalyzer = fieldDefinition.resolvedIndexAnalyzer();
+            if (indexAnalyzer != null)
+                resolveAnalyzer(indexAnalyzer, List.of(perNameAnalyzers, smartSetIndexAnalyzer), errors,
+                    analyzer -> perFieldIndexAnalyzers.put(resolvedFieldName, analyzer));
+
+            // Load the query analyzer if any specific
+            final String queryAnalyzer = fieldDefinition.resolvedQueryAnalyzer();
+            if (queryAnalyzer != null)
+                resolveAnalyzer(queryAnalyzer, List.of(perNameAnalyzers, smartSetQueryAnalyzer), errors,
+                    analyzer -> perFieldQueryAnalyzers.put(resolvedFieldName, analyzer));
+        });
+
+        this.perFieldIndexAnalyzers = Map.copyOf(perFieldIndexAnalyzers);
+        this.perFieldQueryAnalyzers = new PerFieldAnalyzerWrapper(defaultKeywordAnalyzer, perFieldQueryAnalyzers);
+    }
+
+    public AnalyzerContext acquire() {
+        refCounter.acquire();
+        return this;
+    }
+
+    final public Map<String, Analyzer> getIndexAnalyzers() {
+        return perFieldIndexAnalyzers;
+    }
+
+    public Analyzer resolveQueryAnalyzer(final String analyzerName) {
+        if (analyzerName == null || analyzerName.isEmpty())
+            return perFieldQueryAnalyzers;
+        Analyzer analyzer;
+
+        analyzer = perNameAnalyzers.get(analyzerName);
+        if (analyzer != null)
+            return analyzer;
+        analyzer = smartSetIndexAnalyzer.get(analyzerName);
+        if (analyzer != null)
+            return analyzer;
+
+        synchronized (onTheFlyLock) {
+            return fromClassName(analyzerName);
+        }
     }
 
     @Override
     protected int computeHashCode() {
-        return Objects.hash(indexAnalyzers, queryAnalyzers);
+        return Objects.hash(perFieldIndexAnalyzers, perFieldQueryAnalyzers, perNameAnalyzers, smartSetIndexAnalyzer, smartSetQueryAnalyzer);
     }
 
     @Override
-    protected boolean isEqual(final AnalyzerContext analyzerContext) {
-        return Objects.equals(indexAnalyzers, queryAnalyzers);
-    }
-
-    @FunctionalInterface
-    public interface Builder {
-
-        void add(String fieldName, String analyzerName);
+    protected boolean isEqual(final AnalyzerContext o) {
+        return Objects.equals(perFieldIndexAnalyzers, o.perFieldIndexAnalyzers)
+            && Objects.equals(perFieldQueryAnalyzers, o.perFieldQueryAnalyzers)
+            && Objects.equals(perNameAnalyzers, o.perNameAnalyzers)
+            && Objects.equals(smartSetIndexAnalyzer, o.smartSetIndexAnalyzer)
+            && Objects.equals(smartSetQueryAnalyzer, o.smartSetQueryAnalyzer);
     }
 
     private final static String[] analyzerClassPrefixes = {StringUtils.EMPTY, "org.apache.lucene.analysis."};
 
-    final static class AnalyzerMapBuilder {
-
-        private final ConstructorParametersImpl instanceFactory;
-        private final ResourceLoader resourceLoader;
-        private final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap;
-        private final Map<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap;
-        private final Map<String, Analyzer> analyzerSingletonMap;
-
-        AnalyzerMapBuilder(final ConstructorParametersImpl instanceFactory, final ResourceLoader resourceLoader,
-                           final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap,
-                           final Map<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap) {
-            this.instanceFactory = instanceFactory;
-            this.resourceLoader = resourceLoader;
-            this.globalAnalyzerFactoryMap = globalAnalyzerFactoryMap;
-            this.localAnalyzerFactoryMap = localAnalyzerFactoryMap;
-            this.analyzerSingletonMap = new HashMap<>();
-        }
-
-        public Analyzer findAnalyzer(final String analyzerName,
-                                     final Function<SmartAnalyzerSet, Class<? extends Analyzer>> smartProvider) throws ReflectiveOperationException, IOException {
-            // Get from existing definition
-            Analyzer analyzer = analyzerSingletonMap.get(analyzerName);
-            if (analyzer != null)
-                return analyzer;
-            // Get from user
-            analyzer = getFromFactory(analyzerName);
-            // Get from class
-            if (analyzer == null) {
-                final SmartAnalyzerSet smartAnalyzerSet = SmartAnalyzerSet.of(analyzerName);
-                final Class<? extends Analyzer> analyzerClass;
-                if (smartAnalyzerSet != null)
-                    analyzerClass = smartProvider.apply(smartAnalyzerSet);
-                else
-                    analyzerClass = ClassLoaderUtils.findClass(analyzerName, analyzerClassPrefixes);
-                analyzer = instanceFactory.findBestMatchingConstructor(analyzerClass).newInstance();
-            }
-            analyzerSingletonMap.put(analyzerName, analyzer);
+    @NotNull
+    private Analyzer fromClass(final Class<? extends Analyzer> analyzerClass) {
+        Analyzer analyzer = perClassAnalyzers.get(analyzerClass);
+        if (analyzer != null)
             return analyzer;
+        try {
+            analyzer = instanceFactory.findBestMatchingConstructor(analyzerClass).newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new NotAcceptableException("Cannot create an analyzer instance for : " + analyzerClass + " : " + e.getMessage(), e);
         }
+        disposableAnalyzers.add(analyzer);
+        perClassAnalyzers.put(analyzerClass, analyzer);
+        return analyzer;
+    }
 
-        private Analyzer getFromFactory(final String analyzerName,
-                                        final Map<String, ? extends AnalyzerFactory> analyzerFactoryMap)
-            throws IOException, ReflectiveOperationException {
-            if (analyzerFactoryMap == null)
-                return null;
-            final AnalyzerFactory factory = analyzerFactoryMap.get(analyzerName);
-            return factory == null ? null : factory.createAnalyzer(resourceLoader);
+    @NotNull
+    private Analyzer fromClassName(final String analyzerName) {
+        final Class<? extends Analyzer> analyzerClass;
+        try {
+            analyzerClass = ClassLoaderUtils.findClass(analyzerName, analyzerClassPrefixes);
+        } catch (ClassNotFoundException e) {
+            throw new NotAcceptableException("Cannot build the analyzer for: " + analyzerName + " : " + e.getMessage(), e);
         }
+        return fromClass(analyzerClass);
+    }
 
-        Analyzer getFromFactory(final String analyzerName) throws IOException, ReflectiveOperationException {
-            if (localAnalyzerFactoryMap != null) {
-                final Analyzer analyzer = getFromFactory(analyzerName, localAnalyzerFactoryMap);
-                if (analyzer != null)
-                    return analyzer;
-            }
-            if (globalAnalyzerFactoryMap != null) {
-                final Analyzer analyzer = getFromFactory(analyzerName, globalAnalyzerFactoryMap);
-                if (analyzer != null)
-                    return analyzer;
-            }
-            return null;
+    private void createFromClass(final Class<? extends Analyzer> analyzerClass,
+                                 final Collection<String> errors,
+                                 final Consumer<Analyzer> consumer) {
+        try {
+            consumer.accept(fromClass(analyzerClass));
+        } catch (final Exception e) {
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
+            errors.add(e.getMessage());
         }
     }
+
+    private void resolveAnalyzer(final String analyzerName,
+                                 final List<Map<String, Analyzer>> analyzerMaps,
+                                 final Collection<String> errors,
+                                 final Consumer<Analyzer> consumer) {
+        for (final Map<String, Analyzer> analyzerMap : analyzerMaps) {
+            final Analyzer analyzer = analyzerMap.get(analyzerName);
+            if (analyzer != null) {
+                consumer.accept(analyzer);
+                return;
+            }
+        }
+        // Last chance, resolve class
+        try {
+            consumer.accept(fromClassName(analyzerName));
+        } catch (final Exception e) {
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
+            errors.add(e.getMessage());
+        }
+    }
+
+    private void createFromFactory(final String name,
+                                   final ResourceLoader resourceLoader,
+                                   final AnalyzerFactory analyzerFactory,
+                                   final Collection<String> errors,
+                                   final Consumer<Analyzer> consumer) {
+        try {
+            final Analyzer analyzer = analyzerFactory.createAnalyzer(resourceLoader);
+            disposableAnalyzers.add(analyzer);
+            consumer.accept(analyzer);
+        } catch (IOException | ReflectiveOperationException e) {
+            final String msg = "Error on analyzer " + name + ": " + e.getMessage();
+            LOGGER.log(Level.WARNING, msg, e);
+            errors.add(msg);
+        }
+    }
+
+    @Override
+    public void close() {
+        if (refCounter.release() > 0)
+            return;
+        disposableAnalyzers.forEach(Analyzer::close);
+        disposableAnalyzers.clear();
+        perFieldQueryAnalyzers.close();
+        smartSetIndexAnalyzer.clear();
+        smartSetQueryAnalyzer.clear();
+        perNameAnalyzers.clear();
+        activeAnalyzerContext.remove(this);
+    }
+
 }

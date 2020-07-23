@@ -35,8 +35,9 @@ public class QueryParser extends AbstractClassicQueryParser<QueryParser> {
                         @JsonProperty("enable_position_increments") final Boolean enablePositionIncrements,
                         @JsonProperty("auto_generate_multi_term_synonyms_phrase_query") final Boolean autoGenerateMultiTermSynonymsPhraseQuery,
                         @JsonProperty("enable_graph_queries") final Boolean enableGraphQueries,
-                        @JsonProperty("query_string") final String queryString) {
-        super(QueryParser.class, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString);
+                        @JsonProperty("query_string") final String queryString,
+                        @JsonProperty("analyzer") final String analyzer) {
+        super(QueryParser.class, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString, analyzer);
         this.defaulField = defaulField;
     }
 
@@ -56,9 +57,8 @@ public class QueryParser extends AbstractClassicQueryParser<QueryParser> {
         final FieldMap fieldMap = queryContext.getFieldMap();
         final org.apache.lucene.queryparser.classic.QueryParser parser =
             new org.apache.lucene.queryparser.classic.QueryParser(
-                resolveFullTextField(fieldMap, defaulField, defaulField, StringUtils.EMPTY),
-                resolveAnalyzer(queryContext));
-        setParserParameters(parser);
+                resolveFullTextField(fieldMap, defaulField, defaulField, StringUtils.EMPTY), null);
+        setParserParameters(queryContext, parser);
         return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
     }
 

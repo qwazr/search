@@ -39,9 +39,10 @@ final class HighlighterImpl extends UnifiedHighlighter {
 
     private final String[] storedFields;
 
-    HighlighterImpl(final String highlightName, final HighlighterDefinition definition,
+    HighlighterImpl(final String highlightName,
+                    final HighlighterDefinition definition,
                     final QueryContextImpl queryContext) {
-        super(queryContext.indexSearcher, queryContext.queryAnalyzers);
+        super(queryContext.indexSearcher, queryContext.resolveQueryAnalyzer(null));
         if (definition.maxLength != null)
             setMaxLength(definition.maxLength);
         if (definition.highlightPhrasesStrictly != null)

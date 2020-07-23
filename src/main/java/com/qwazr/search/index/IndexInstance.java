@@ -57,6 +57,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -118,7 +119,6 @@ final public class IndexInstance implements Closeable {
 
     private volatile AnalyzerContext analyzerContext;
     private final UpdatableAnalyzers indexAnalyzers;
-    private final UpdatableAnalyzers queryAnalyzers;
 
     private final ReentrantLock fieldMapLock;
     private volatile FieldMap fieldMap;
@@ -130,6 +130,7 @@ final public class IndexInstance implements Closeable {
     private final ReplicationMaster replicationMaster;
     private final ReplicationSlave replicationSlave;
 
+    private final Set<AnalyzerContext> activeAnalyzerContexts;
     private final ReindexThread reindexThread;
 
     IndexInstance(final IndexInstanceBuilder builder) {
@@ -149,7 +150,6 @@ final public class IndexInstance implements Closeable {
         this.writerAndSearcher = builder.writerAndSearcher;
         this.analyzerContext = builder.analyzerContext;
         this.indexAnalyzers = builder.indexAnalyzers;
-        this.queryAnalyzers = builder.queryAnalyzers;
         this.settings = builder.settings;
         this.executorService = builder.executorService;
         this.instanceFactory = builder.instanceFactory;
@@ -159,6 +159,7 @@ final public class IndexInstance implements Closeable {
         this.backupLock = new ReentrantLock(true);
         this.replicationMaster = builder.replicationMaster;
         this.replicationSlave = builder.replicationSlave;
+        this.activeAnalyzerContexts = builder.activeAnalyzerContexts;
         this.reindexThread =
             builder.replicationMaster != null && !StringUtils.isBlank(settings.recordField)
                 ? new ReindexThread(executorService, this) : null;
@@ -170,7 +171,7 @@ final public class IndexInstance implements Closeable {
 
     @Override
     public void close() {
-        IOUtils.closeQuietly(writerAndSearcher, replicationMaster, indexAnalyzers, queryAnalyzers);
+        IOUtils.closeQuietly(writerAndSearcher, replicationMaster, analyzerContext);
 
         if (taxonomyDirectory != null)
             IOUtils.closeQuietly(taxonomyDirectory);
@@ -183,8 +184,7 @@ final public class IndexInstance implements Closeable {
         return writerAndSearcher.search((indexSearcher, taxonomyReader) -> new IndexStatus(indexUuid,
             replicationSlave == null ? null : replicationSlave.getClientMasterUuid(), dataDirectory, indexSearcher,
             writerAndSearcher.getIndexWriter(), settings, localAnalyzerFactoryMap.keySet(),
-            fieldMap.getFields().keySet(), indexAnalyzers.getActiveAnalyzers(),
-            queryAnalyzers.getActiveAnalyzers()));
+            fieldMap.getFields().keySet(), activeAnalyzerContexts.size()));
     }
 
     Map<String, FieldDefinition> getFields() {
@@ -206,32 +206,37 @@ final public class IndexInstance implements Closeable {
         }
     }
 
-    private void reloadAnalyzersAndFields() throws IOException {
+    private Collection<String> reloadAnalyzersAndFields() throws IOException {
         fieldMapLock.lock();
         try {
             synchronized (localAnalyzerFactoryMap) {
                 setAnalyzers(CustomAnalyzer.createDefinitionMap(fileSet.loadAnalyzerDefinitionMap()));
                 setFields(fileSet.loadFieldMap());
-                refreshFieldsAnalyzers();
+                return refreshFieldsAnalyzers();
             }
         } finally {
             fieldMapLock.unlock();
         }
     }
 
-    private void refreshFieldsAnalyzers() {
+    private Collection<String> refreshFieldsAnalyzers() {
+        final Collection<String> errors = new ArrayList<>();
+        final AnalyzerContext oldAnalyzerContext = analyzerContext;
         analyzerContext = new AnalyzerContext(
+            activeAnalyzerContexts,
             instanceFactory,
             fileResourceLoader,
             fieldMap,
-            true,
             globalAnalyzerFactoryMap,
-            localAnalyzerFactoryMap);
-        indexAnalyzers.update(analyzerContext.indexAnalyzers);
-        queryAnalyzers.update(analyzerContext.queryAnalyzers);
+            localAnalyzerFactoryMap,
+            errors);
+        indexAnalyzers.update(analyzerContext.getIndexAnalyzers());
+        oldAnalyzerContext.close();
+        return errors;
     }
 
-    void setFields(final Map<String, FieldDefinition> fields) throws ServerException, IOException {
+    Collection<String> setFields(final Map<String, FieldDefinition> fields) throws ServerException, IOException {
+        final Collection<String> errors;
         final boolean fieldChanged;
         fieldMapLock.lock();
         try {
@@ -240,12 +245,13 @@ final public class IndexInstance implements Closeable {
             fieldChanged = !Objects.equals(newFieldsContext, fieldMap.fieldsContext);
             if (fieldChanged)
                 fieldMap = new FieldMap(newFieldsContext);
-            refreshFieldsAnalyzers();
+            errors = refreshFieldsAnalyzers();
         } finally {
             fieldMapLock.unlock();
         }
         if (fieldChanged)
             reindex();
+        return errors;
     }
 
     void setField(final String field_name, final FieldDefinition field) throws IOException, ServerException {
@@ -315,7 +321,7 @@ final public class IndexInstance implements Closeable {
         synchronized (localAnalyzerFactoryMap) {
             factory = localAnalyzerFactoryMap.get(analyzerName);
         }
-        if (factory == null && globalAnalyzerFactoryMap != null)
+        if (factory == null)
             factory = globalAnalyzerFactoryMap.get(analyzerName);
         if (factory == null)
             throw new ServerException(Response.Status.NOT_FOUND,
@@ -325,21 +331,12 @@ final public class IndexInstance implements Closeable {
         }
     }
 
-    private <T> T useAnalyzer(final UpdatableAnalyzers updatableAnalyzers, final String field,
-                              final FunctionEx<Analyzer, T, IOException> analyzerConsumer) throws ServerException, IOException {
-        try (final UpdatableAnalyzers.Analyzers analyzers = updatableAnalyzers.getAnalyzers()) {
-            return analyzerConsumer.apply(analyzers.getWrappedAnalyzer(field));
-        }
+    <T> T useQueryAnalyzer(final FunctionEx<Analyzer, T, IOException> analyzerFunction) throws IOException {
+        return analyzerFunction.apply(analyzerContext.resolveQueryAnalyzer(null));
     }
 
-    <T> T useQueryAnalyzer(final String field, final FunctionEx<Analyzer, T, IOException> analyzerFunction)
-        throws IOException {
-        return useAnalyzer(queryAnalyzers, field, analyzerFunction);
-    }
-
-    <T> T useIndexAnalyzer(final String field, final FunctionEx<Analyzer, T, IOException> analyzerFunction)
-        throws IOException {
-        return useAnalyzer(indexAnalyzers, field, analyzerFunction);
+    <T> T useIndexAnalyzer(final FunctionEx<Analyzer, T, IOException> analyzerFunction) throws IOException {
+        return analyzerFunction.apply(indexAnalyzers);
     }
 
     public Query createJoinQuery(final Join joinQuery) throws IOException {
@@ -500,7 +497,7 @@ final public class IndexInstance implements Closeable {
     }
 
     private WriteContextImpl buildWriteContext(final IndexWriter indexWriter, final TaxonomyWriter taxonomyWriter) {
-        return new WriteContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzers, queryAnalyzers,
+        return new WriteContextImpl(indexProvider, fileResourceLoader, executorService, analyzerContext,
             fieldMap, indexWriter, taxonomyWriter);
     }
 
@@ -632,8 +629,8 @@ final public class IndexInstance implements Closeable {
 
     private QueryContextImpl buildQueryContext(final IndexSearcher indexSearcher,
                                                final TaxonomyReader taxonomyReader) {
-        return new QueryContextImpl(indexProvider, fileResourceLoader, executorService, indexAnalyzers, queryAnalyzers,
-            fieldMap, indexSearcher, taxonomyReader);
+        return new QueryContextImpl(indexProvider, fileResourceLoader, executorService, analyzerContext, fieldMap,
+            indexSearcher, taxonomyReader);
     }
 
     final <T> T query(final IndexServiceInterface.QueryActions<T> queryActions) throws IOException {

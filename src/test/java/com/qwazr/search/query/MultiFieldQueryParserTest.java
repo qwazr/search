@@ -66,7 +66,7 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
             .addBoost("textField", 1F)
             .addBoost("stringField", 1F)
             .setQueryString("Hello World")
-            .setAnalyzer(new StandardAnalyzer())
+            .setAnalyzer(StandardAnalyzer.class.getName())
             .build())
             .returnedField("$id$")
             .build();

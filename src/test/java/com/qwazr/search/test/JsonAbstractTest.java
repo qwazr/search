@@ -1124,11 +1124,9 @@ public abstract class JsonAbstractTest {
     public void test970checkUpdatableAnalyzers() throws URISyntaxException {
         final IndexServiceInterface client = getClient();
         IndexStatus indexStatus = client.getIndex(INDEX_MASTER_NAME);
-        Assert.assertEquals(1, indexStatus.activeQueryAnalyzers, 0);
-        Assert.assertEquals(1, indexStatus.activeIndexAnalyzers, 0);
+        Assert.assertEquals(1, indexStatus.activeAnalyzers, 0);
         indexStatus = client.getIndex(INDEX_SLAVE_NAME);
-        Assert.assertEquals(1, indexStatus.activeQueryAnalyzers, 0);
-        Assert.assertEquals(1, indexStatus.activeIndexAnalyzers, 0);
+        Assert.assertEquals(1, indexStatus.activeAnalyzers, 0);
     }
 
     @Test

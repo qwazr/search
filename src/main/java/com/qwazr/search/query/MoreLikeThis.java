@@ -141,7 +141,7 @@ public class MoreLikeThis extends AbstractQuery<MoreLikeThis> {
             mlt.setMinWordLen(min_word_len);
         if (stop_words != null)
             mlt.setStopWords(stop_words);
-        mlt.setAnalyzer(queryContext.getQueryAnalyzer());
+        mlt.setAnalyzer(queryContext.resolveQueryAnalyzer(null));
 
         if (StringUtils.isEmpty(like_text) || StringUtils.isEmpty(fieldname))
             throw new ParseException("Either doc_num or like_text/fieldname are missing");

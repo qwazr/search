@@ -16,7 +16,9 @@
 package com.qwazr.search.index;
 
 import com.qwazr.binder.FieldMapWrapper;
+import com.qwazr.search.analysis.AnalyzerContext;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 
@@ -28,6 +30,10 @@ public interface QueryContext extends IndexContext {
 
     default IndexSearcher getIndexSearcher() {
         return null;
+    }
+
+    default Analyzer resolveQueryAnalyzer(final String analyzer) {
+        return AnalyzerContext.defaultKeywordAnalyzer;
     }
 
     default FieldMap getFieldMap() {

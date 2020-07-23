@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,37 +15,24 @@
  */
 package com.qwazr.search.index;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.facet.FacetsConfig;
-
 import java.io.Closeable;
 import java.util.Map;
+import org.apache.lucene.facet.FacetsConfig;
 
 public interface IndexContext extends Closeable {
 
-	default IndexInstance getIndex(String indexName) {
-		return null;
-	}
+    default IndexInstance getIndex(String indexName) {
+        return null;
+    }
 
-	Analyzer DEFAULT_ANALYZER = new StandardAnalyzer();
+    FacetsConfig DEFAULT_FACETS_CONFIG = new FacetsConfig();
 
-	default Analyzer getIndexAnalyzer() {
-		return DEFAULT_ANALYZER;
-	}
+    default FacetsConfig getFacetsConfig(String genericFieldName, String concreteFieldName) {
+        return DEFAULT_FACETS_CONFIG;
+    }
 
-	default Analyzer getQueryAnalyzer() {
-		return DEFAULT_ANALYZER;
-	}
-
-	FacetsConfig DEFAULT_FACETS_CONFIG = new FacetsConfig();
-
-	default FacetsConfig getFacetsConfig(String genericFieldName, String concreteFieldName) {
-		return DEFAULT_FACETS_CONFIG;
-	}
-
-	default FacetsConfig getFacetsConfig(Map<String, String> fieldNames) {
-		return DEFAULT_FACETS_CONFIG;
-	}
+    default FacetsConfig getFacetsConfig(Map<String, String> fieldNames) {
+        return DEFAULT_FACETS_CONFIG;
+    }
 
 }

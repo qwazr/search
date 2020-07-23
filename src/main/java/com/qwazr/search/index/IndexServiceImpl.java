@@ -172,8 +172,8 @@ final class IndexServiceImpl extends AbstractServiceImpl implements IndexService
             return TermDefinition.buildTermList(analyzer, fieldName, text);
         };
         return index ?
-            indexInstance.useIndexAnalyzer(fieldName, analyzerFunction) :
-            indexInstance.useQueryAnalyzer(fieldName, analyzerFunction);
+            indexInstance.useIndexAnalyzer(analyzerFunction) :
+            indexInstance.useQueryAnalyzer(analyzerFunction);
 
     }
 

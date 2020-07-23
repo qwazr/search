@@ -68,7 +68,10 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
     @JsonProperty("enable_fuzzy_query")
     final public Boolean enableFuzzyQuery;
 
-    final private Analyzer analyzer;
+    @JsonProperty("analyzer")
+    final public String analyzer;
+
+    final private Analyzer analyzerClass;
 
     MultiFieldQuery(Builder builder) {
         this(builder.fieldsBoosts, builder.fieldsDisabledGraph, builder.fieldsAndFilter, builder.defaultOperator,
@@ -79,7 +82,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
     MultiFieldQuery(final Map<String, Float> fieldsBoosts, final Set<String> fieldsDisabledGraph,
                     final Set<String> fieldsAndFilter, final QueryParserOperator defaultOperator, final String queryString,
                     final Integer minNumberShouldMatch, final Float tieBreakerMultiplier, final Boolean enableFuzzyQuery,
-                    final Analyzer analyzer) {
+                    final Analyzer analyzerClass) {
         super(MultiFieldQuery.class);
         this.fieldsBoosts = fieldsBoosts;
         this.fieldsDisabledGraph = fieldsDisabledGraph;
@@ -89,7 +92,8 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
         this.minNumberShouldMatch = minNumberShouldMatch;
         this.tieBreakerMultiplier = tieBreakerMultiplier;
         this.enableFuzzyQuery = enableFuzzyQuery;
-        this.analyzer = analyzer;
+        this.analyzerClass = analyzerClass;
+        this.analyzer = analyzerClass == null ? null : analyzerClass.getClass().getName();
     }
 
     @JsonCreator
@@ -100,9 +104,19 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
                            @JsonProperty("query_string") final String queryString,
                            @JsonProperty("min_number_should_match") final Integer minNumberShouldMatch,
                            @JsonProperty("tie_breaker_multiplier") final Float tieBreakerMultiplier,
-                           @JsonProperty("enable_fuzzy_query") final Boolean enableFuzzyQuery) {
-        this(fieldsBoosts, fieldsDisabledGraph, fieldsAndFilter, defaultOperator, queryString, minNumberShouldMatch,
-            tieBreakerMultiplier, enableFuzzyQuery, null);
+                           @JsonProperty("enable_fuzzy_query") final Boolean enableFuzzyQuery,
+                           @JsonProperty("analyzer") final String analyzer) {
+        super(MultiFieldQuery.class);
+        this.fieldsBoosts = fieldsBoosts;
+        this.fieldsDisabledGraph = fieldsDisabledGraph;
+        this.fieldsAndFilter = fieldsAndFilter;
+        this.defaultOperator = defaultOperator;
+        this.queryString = queryString;
+        this.minNumberShouldMatch = minNumberShouldMatch;
+        this.tieBreakerMultiplier = tieBreakerMultiplier;
+        this.enableFuzzyQuery = enableFuzzyQuery;
+        this.analyzerClass = null;
+        this.analyzer = analyzer;
     }
 
     @Override
@@ -111,7 +125,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
     }
 
     @Override
-    protected boolean isEqual(MultiFieldQuery q) {
+    protected boolean isEqual(final MultiFieldQuery q) {
         return CollectionsUtils.equals(fieldsBoosts, q.fieldsBoosts) &&
             CollectionsUtils.equals(fieldsDisabledGraph, q.fieldsDisabledGraph) &&
             CollectionsUtils.equals(fieldsAndFilter, q.fieldsAndFilter) &&
@@ -129,7 +143,7 @@ public class MultiFieldQuery extends AbstractQuery<MultiFieldQuery> {
             return new org.apache.lucene.search.MatchNoDocsQuery();
 
         // Select the right analyzer
-        final Analyzer alzr = analyzer != null ? analyzer : queryContext.getQueryAnalyzer();
+        final Analyzer alzr = analyzerClass != null ? analyzerClass : queryContext.resolveQueryAnalyzer(analyzer);
 
         // We look for terms frequency globally
         final Map<String, Integer> termsFreq = new HashMap<>();

@@ -27,11 +27,12 @@ import java.util.Objects;
 public class MultiFieldQueryParser extends AbstractClassicQueryParser<MultiFieldQueryParser> {
 
     @JsonCreator
-    private MultiFieldQueryParser(@JsonProperty("enable_position_increments") final Boolean enablePositionIncrements,
-                                  @JsonProperty("auto_generate_multi_term_synonyms_phrase_query") final Boolean autoGenerateMultiTermSynonymsPhraseQuery,
-                                  @JsonProperty("enable_graph_queries") final Boolean enableGraphQueries,
-                                  @JsonProperty("query_string") final String queryString) {
-        super(MultiFieldQueryParser.class, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString);
+    private MultiFieldQueryParser(final @JsonProperty("enable_position_increments") Boolean enablePositionIncrements,
+                                  final @JsonProperty("auto_generate_multi_term_synonyms_phrase_query") Boolean autoGenerateMultiTermSynonymsPhraseQuery,
+                                  final @JsonProperty("enable_graph_queries") Boolean enableGraphQueries,
+                                  final @JsonProperty("query_string") String queryString,
+                                  final @JsonProperty("analyzer") String analyzer) {
+        super(MultiFieldQueryParser.class, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString, analyzer);
     }
 
     public MultiFieldQueryParser(Builder builder) {
@@ -43,8 +44,8 @@ public class MultiFieldQueryParser extends AbstractClassicQueryParser<MultiField
         final FieldMap fieldMap = queryContext.getFieldMap();
         final org.apache.lucene.queryparser.classic.MultiFieldQueryParser parser =
             new org.apache.lucene.queryparser.classic.MultiFieldQueryParser(resolveFields(fieldMap),
-                resolveAnalyzer(queryContext), resolvedBoosts(fieldMap));
-        setParserParameters(parser);
+                null, resolvedBoosts(fieldMap));
+        setParserParameters(queryContext, parser);
         return parser.parse(Objects.requireNonNull(queryString, "The query string is missing"));
     }
 

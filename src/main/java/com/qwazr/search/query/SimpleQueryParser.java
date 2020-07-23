@@ -73,10 +73,11 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
                               @JsonProperty("auto_generate_multi_term_synonyms_phrase_query") final Boolean autoGenerateMultiTermSynonymsPhraseQuery,
                               @JsonProperty("enable_graph_queries") final Boolean enableGraphQueries,
                               @JsonProperty("query_string") final String queryString,
+                              @JsonProperty("analyzer") final String analyzer,
                               @JsonProperty("weights") final LinkedHashMap<String, Float> weights,
                               @JsonProperty("default_operator") final QueryParserOperator defaultOperator,
                               @JsonProperty("enabled_operators") final List<Operator> enabledOperators) {
-        super(SimpleQueryParser.class, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString);
+        super(SimpleQueryParser.class, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString, analyzer);
         this.weights = weights;
         this.defaultOperator = defaultOperator;
         this.enabledOperators = enabledOperators;
@@ -125,10 +126,9 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
             f -> resolveFullTextField(fieldMap, f, f, StringUtils.EMPTY));
 
         final org.apache.lucene.queryparser.simple.SimpleQueryParser parser =
-            new org.apache.lucene.queryparser.simple.SimpleQueryParser(
-                analyzer == null ? queryContext.getQueryAnalyzer() : analyzer, resolvedBoosts, effectiveFlags);
+            new org.apache.lucene.queryparser.simple.SimpleQueryParser(null, resolvedBoosts, effectiveFlags);
 
-        setQueryBuilderParameters(parser);
+        setQueryBuilderParameters(queryContext, parser);
 
         if (defaultOperator != null)
             parser.setDefaultOperator(

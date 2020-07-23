@@ -18,41 +18,39 @@ package com.qwazr.search.index;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.qwazr.search.analysis.UpdatableAnalyzers;
+import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.StringUtils;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 import javax.ws.rs.NotAcceptableException;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-
 final class WriteContextImpl extends IndexContextImpl implements WriteContext {
 
-    final IndexWriter indexWriter;
-    final TaxonomyWriter taxonomyWriter;
+    private final IndexWriter indexWriter;
+    private final TaxonomyWriter taxonomyWriter;
     private final String primaryKey;
     private final Supplier<String> autoIdProvider;
 
     WriteContextImpl(final IndexInstance.Provider indexProvider,
                      final ResourceLoader resourceLoader,
                      final ExecutorService executorService,
-                     final UpdatableAnalyzers indexAnalyzers,
-                     final UpdatableAnalyzers queryAnalyzers,
+                     final AnalyzerContext analyzerContext,
                      final FieldMap fieldMap,
                      final IndexWriter indexWriter,
                      final TaxonomyWriter taxonomyWriter) {
-        super(indexProvider, resourceLoader, executorService, indexAnalyzers, queryAnalyzers, fieldMap);
+        super(indexProvider, resourceLoader, executorService, analyzerContext, fieldMap);
         this.indexWriter = indexWriter;
         this.taxonomyWriter = taxonomyWriter;
         this.primaryKey = fieldMap.getPrimaryKey();

@@ -25,6 +25,15 @@ import com.qwazr.utils.ClassLoaderUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.concurrent.AutoLockSemaphore;
 import com.qwazr.utils.reflection.ConstructorParametersImpl;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.codecs.simpletext.SimpleTextCodec;
 import org.apache.lucene.facet.taxonomy.SearcherTaxonomyManager;
@@ -46,13 +55,6 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.NRTCachingDirectory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.InfoStream;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
 
 class IndexInstanceBuilder {
 
@@ -87,9 +89,10 @@ class IndexInstanceBuilder {
 
     FieldMap fieldMap = null;
 
+    final Set<AnalyzerContext> activeAnalyzerContexts;
+
     AnalyzerContext analyzerContext;
     UpdatableAnalyzers indexAnalyzers;
-    UpdatableAnalyzers queryAnalyzers;
 
     ReplicationMaster replicationMaster;
     ReplicationSlave replicationSlave;
@@ -121,6 +124,7 @@ class IndexInstanceBuilder {
         this.fileResourceLoader = new FileResourceLoader(null, fileSet.resourcesDirectoryPath);
         this.indexUuid = indexUuid;
         this.indexName = indexName;
+        this.activeAnalyzerContexts = ConcurrentHashMap.newKeySet();
         this.writeSemaphore = AutoLockSemaphore.of(settings == null ? -1 : settings.maxConcurrentWrite == null ? -1 : settings.maxConcurrentWrite);
         this.readSemaphore = AutoLockSemaphore.of(settings == null ? -1 : settings.maxConcurrentRead == null ? -1 : settings.maxConcurrentRead);
     }
@@ -139,10 +143,9 @@ class IndexInstanceBuilder {
 
         fieldMap = new FieldMap(new FieldsContext(settings, fieldMapDefinition));
 
-        analyzerContext = new AnalyzerContext(instanceFactory, fileResourceLoader, fieldMap,
-            false, globalAnalyzerFactoryMap, localAnalyzerFactoryMap);
-        indexAnalyzers = new UpdatableAnalyzers(analyzerContext.indexAnalyzers);
-        queryAnalyzers = new UpdatableAnalyzers(analyzerContext.queryAnalyzers);
+        analyzerContext = new AnalyzerContext(activeAnalyzerContexts, instanceFactory, fileResourceLoader, fieldMap,
+            globalAnalyzerFactoryMap, localAnalyzerFactoryMap, new ArrayList<>());
+        indexAnalyzers = new UpdatableAnalyzers(analyzerContext.getIndexAnalyzers());
 
         // Open and lock the index directories
         dataDirectory = getDirectory(settings, fileSet.dataDirectory);
@@ -315,7 +318,7 @@ class IndexInstanceBuilder {
     }
 
     private void abort() {
-        IOUtils.closeQuietly(writerAndSearcher, replicationMaster, indexAnalyzers, queryAnalyzers);
+        IOUtils.closeQuietly(writerAndSearcher, replicationMaster, analyzerContext);
 
         if (taxonomyWriter != null) {
             IOUtils.closeQuietly(taxonomyWriter);

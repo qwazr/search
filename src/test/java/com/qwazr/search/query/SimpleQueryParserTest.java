@@ -62,7 +62,7 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoT
             .setDefaultOperator(QueryParserOperator.AND)
             .addBoost("textField", 1F)
             .addBoost("stringField", 1F)
-            .setAnalyzer(new StandardAnalyzer())
+            .setAnalyzer(StandardAnalyzer.class.getName())
             .setQueryString("Hello World")
             .build())
             .returnedField("$id$")

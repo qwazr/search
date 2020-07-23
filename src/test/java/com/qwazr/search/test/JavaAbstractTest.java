@@ -767,11 +767,9 @@ public abstract class JavaAbstractTest {
     @Test
     public void test970checkUpdatableAnalyzers() throws IOException, URISyntaxException {
         IndexStatus indexStatus = getMaster().getIndexStatus();
-        Assert.assertEquals(1, indexStatus.activeQueryAnalyzers, 0);
-        Assert.assertEquals(1, indexStatus.activeIndexAnalyzers, 0);
+        Assert.assertEquals(1, indexStatus.activeAnalyzers, 0);
         indexStatus = getSlave().getIndexStatus();
-        Assert.assertEquals(1, indexStatus.activeQueryAnalyzers, 0);
-        Assert.assertEquals(1, indexStatus.activeIndexAnalyzers, 0);
+        Assert.assertEquals(1, indexStatus.activeAnalyzers, 0);
     }
 
     @Test

@@ -256,7 +256,7 @@ public class MultiFieldQueryTest extends AbstractIndexTest.WithIndexRecord.NoTax
             .getQuery(QueryContextTest.DEFAULT);
         Assert.assertNotNull(luceneQuery);
         Assert.assertEquals(
-            "((tt€textField:hello~2 tt€textField:world~2)~1)^2.0 ((tt€stringField:hello~2 tt€stringField:world~2)~1)",
+            "(tt€textField:Hello World~2)^2.0 tt€stringField:Hello World~2",
             luceneQuery.toString());
     }
 

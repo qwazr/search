@@ -73,10 +73,8 @@ public abstract class ReplicationTestBase<T> {
             final IndexStatus slaveStatus = slave.getIndexStatus();
             Assert.assertTrue(CollectionsUtils.equals(masterStatus.commitUserData, slaveStatus.commitUserData));
             Assert.assertEquals(masterStatus.numDocs, slaveStatus.numDocs);
-            Assert.assertEquals(1, slaveStatus.activeQueryAnalyzers, 0);
-            Assert.assertEquals(1, slaveStatus.activeIndexAnalyzers, 0);
-            Assert.assertEquals(1, masterStatus.activeQueryAnalyzers, 0);
-            Assert.assertEquals(1, masterStatus.activeIndexAnalyzers, 0);
+            Assert.assertEquals(1, slaveStatus.activeAnalyzers, 0);
+            Assert.assertEquals(1, masterStatus.activeAnalyzers, 0);
         }
     }
 

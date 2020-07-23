@@ -16,39 +16,40 @@
 package com.qwazr.search.index;
 
 import com.qwazr.binder.FieldMapWrapper;
-import com.qwazr.search.analysis.UpdatableAnalyzers;
+import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.server.ServerException;
+import java.io.Closeable;
+import java.util.concurrent.ExecutorService;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 
-import java.io.Closeable;
-import java.util.concurrent.ExecutorService;
-
 final class QueryContextImpl extends IndexContextImpl implements QueryContext, Closeable {
 
     final IndexSearcher indexSearcher;
     final IndexReader indexReader;
     final TaxonomyReader taxonomyReader;
+    final AnalyzerContext analyzerContext;
     final SortedSetDocValuesReaderState docValueReaderState;
     final FieldMap fieldMap;
 
     QueryContextImpl(final IndexInstance.Provider indexProvider,
                      final ResourceLoader resourceLoader,
                      final ExecutorService executorService,
-                     final UpdatableAnalyzers indexAnalyzers,
-                     final UpdatableAnalyzers queryAnalyzers,
+                     final AnalyzerContext analyzerContext,
                      final FieldMap fieldMap,
                      final IndexSearcher indexSearcher,
                      final TaxonomyReader taxonomyReader) {
-        super(indexProvider, resourceLoader, executorService, indexAnalyzers, queryAnalyzers, fieldMap);
+        super(indexProvider, resourceLoader, executorService, analyzerContext, fieldMap);
         this.docValueReaderState = ((MultiThreadSearcherFactory.StateIndexSearcher) indexSearcher).state;
         this.fieldMap = fieldMap;
         this.indexSearcher = indexSearcher;
         this.indexReader = indexSearcher.getIndexReader();
         this.taxonomyReader = taxonomyReader;
+        this.analyzerContext = analyzerContext;
     }
 
     @Override
@@ -95,6 +96,10 @@ final class QueryContextImpl extends IndexContextImpl implements QueryContext, C
                                                   final ResultDocumentsInterface resultDocuments) {
         final ResultDocumentsEmpty resultDocumentEmpty = new ResultDocumentsEmpty(resultDocuments);
         return (ResultDefinition.Empty) search(queryDefinition, resultDocumentEmpty);
+    }
+
+    public Analyzer resolveQueryAnalyzer(final String analyzer) {
+        return analyzerContext.resolveQueryAnalyzer(analyzer);
     }
 
 }

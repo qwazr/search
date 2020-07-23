@@ -18,10 +18,9 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.util.QueryBuilder;
-
+import com.qwazr.search.index.QueryContext;
 import java.util.Objects;
+import org.apache.lucene.util.QueryBuilder;
 
 public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> extends AbstractQuery<T> {
 
@@ -37,16 +36,17 @@ public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> exte
     @JsonProperty("query_string")
     final public String queryString;
 
-    @JsonIgnore
-    final protected Analyzer analyzer;
+    @JsonProperty("analyzer")
+    final public String analyzer;
 
     protected AbstractQueryParser(final Class<T> queryClass,
                                   final Boolean enablePositionIncrements,
                                   final Boolean autoGenerateMultiTermSynonymsPhraseQuery,
                                   final Boolean enableGraphQueries,
-                                  final String queryString) {
+                                  final String queryString,
+                                  final String analyzer) {
         super(queryClass);
-        this.analyzer = null;
+        this.analyzer = analyzer;
         this.enablePositionIncrements = enablePositionIncrements;
         this.autoGenerateMultiTermSynonymsPhraseQuery = autoGenerateMultiTermSynonymsPhraseQuery;
         this.enableGraphQueries = enableGraphQueries;
@@ -54,7 +54,7 @@ public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> exte
 
     }
 
-    protected AbstractQueryParser(Class<T> queryClass, AbstractBuilder<?, ?> builder) {
+    protected AbstractQueryParser(final Class<T> queryClass, AbstractBuilder<?, ?> builder) {
         super(queryClass);
         this.analyzer = builder.analyzer;
         this.enablePositionIncrements = builder.enablePositionIncrements;
@@ -63,9 +63,9 @@ public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> exte
         this.queryString = builder.queryString;
     }
 
-    protected void setQueryBuilderParameters(final QueryBuilder queryBuilder) {
-        if (analyzer != null)
-            queryBuilder.setAnalyzer(analyzer);
+    protected void setQueryBuilderParameters(final QueryContext queryContext,
+                                             final QueryBuilder queryBuilder) {
+        queryBuilder.setAnalyzer(queryContext.resolveQueryAnalyzer(analyzer));
         if (enablePositionIncrements != null)
             queryBuilder.setEnablePositionIncrements(enablePositionIncrements);
         if (autoGenerateMultiTermSynonymsPhraseQuery != null)
@@ -77,10 +77,11 @@ public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> exte
     @Override
     @JsonIgnore
     protected boolean isEqual(T q) {
-        return Objects.equals(enablePositionIncrements, q.enablePositionIncrements) &&
-            Objects.equals(autoGenerateMultiTermSynonymsPhraseQuery, q.autoGenerateMultiTermSynonymsPhraseQuery) &&
-            Objects.equals(enableGraphQueries, q.enableGraphQueries) &&
-            Objects.equals(queryString, q.queryString) && Objects.equals(analyzer, q.analyzer);
+        return Objects.equals(enablePositionIncrements, q.enablePositionIncrements)
+            && Objects.equals(autoGenerateMultiTermSynonymsPhraseQuery, q.autoGenerateMultiTermSynonymsPhraseQuery)
+            && Objects.equals(enableGraphQueries, q.enableGraphQueries)
+            && Objects.equals(queryString, q.queryString)
+            && Objects.equals(analyzer, q.analyzer);
     }
 
     @Override
@@ -92,13 +93,13 @@ public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> exte
 
         private final Class<B> builderClass;
 
-        private Analyzer analyzer;
+        private String analyzer;
         private Boolean enablePositionIncrements;
         private Boolean autoGenerateMultiTermSynonymsPhraseQuery;
         private Boolean enableGraphQueries;
         private String queryString;
 
-        protected AbstractBuilder(Class<B> builderClass) {
+        protected AbstractBuilder(final Class<B> builderClass) {
             this.builderClass = builderClass;
         }
 
@@ -108,7 +109,7 @@ public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> exte
 
         public abstract T build();
 
-        final public B setAnalyzer(Analyzer analyzer) {
+        final public B setAnalyzer(final String analyzer) {
             this.analyzer = analyzer;
             return me();
         }

@@ -55,7 +55,7 @@ public class QueryParserTest extends AbstractIndexTest.WithIndexRecord.NoTaxonom
         QueryDefinition queryDef = QueryDefinition.of(QueryParser.of("textField")
             .setDefaultOperator(QueryParserOperator.AND)
             .setQueryString("hello World")
-            .setAnalyzer(new StandardAnalyzer())
+            .setAnalyzer(StandardAnalyzer.class.getName())
             .build())
             .returnedField("$id$")
             .build();

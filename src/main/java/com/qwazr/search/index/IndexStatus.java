@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,10 +56,10 @@ import java.util.logging.Logger;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        creatorVisibility = JsonAutoDetect.Visibility.NONE,
-        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    creatorVisibility = JsonAutoDetect.Visibility.NONE,
+    fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public class IndexStatus {
 
     private final static Logger LOGGER = LoggerUtils.getLogger(IndexStatus.class);
@@ -132,11 +132,8 @@ public class IndexStatus {
     @JsonProperty("directory_cached_ram_used")
     final public String directoryCachedRamUsed;
 
-    @JsonProperty("active_index_analyzers")
-    final public Integer activeIndexAnalyzers;
-
-    @JsonProperty("active_query_analyzers")
-    final public Integer activeQueryAnalyzers;
+    @JsonProperty("active_analyzers")
+    final public Integer activeAnalyzers;
 
     @JsonProperty("index_sort_fields")
     final public Set<String> indexSortFields;
@@ -162,8 +159,7 @@ public class IndexStatus {
                 @JsonProperty("directory_class") String directoryClass,
                 @JsonProperty("directory_cached_files") String[] directoryCachedFiles,
                 @JsonProperty("directory_cached_ram_used") String directoryCachedRamUsed,
-                @JsonProperty("active_index_analyzers") Integer activeIndexAnalyzers,
-                @JsonProperty("active_query_analyzers") Integer activeQueryAnalyzers,
+                @JsonProperty("active_analyzers") Integer activeAnalyzers,
                 @JsonProperty("index_sort_fields") Set<String> indexSortFields) {
         this.numDocs = numDocs;
         this.numDeletedDocs = numDeletedDocs;
@@ -189,15 +185,14 @@ public class IndexStatus {
         this.directoryClass = directoryClass;
         this.directoryCachedFiles = directoryCachedFiles;
         this.directoryCachedRamUsed = directoryCachedRamUsed;
-        this.activeIndexAnalyzers = activeIndexAnalyzers;
-        this.activeQueryAnalyzers = activeQueryAnalyzers;
+        this.activeAnalyzers = activeAnalyzers;
         this.indexSortFields = indexSortFields;
     }
 
     public IndexStatus(final UUID indexUuid, final UUID masterUuid, final Directory directory,
                        final IndexSearcher indexSearcher, final IndexWriter indexWriter, final IndexSettingsDefinition settings,
-                       final Set<String> analyzers, final Set<String> fields, final int activeIndexAnalyzers,
-                       final int activeQueryAnalyzers) throws IOException {
+                       final Set<String> analyzers, final Set<String> fields,
+                       final int activeAnalyzers) throws IOException {
         final IndexReader indexReader = indexSearcher.getIndexReader();
         this.numDocs = (long) indexReader.numDocs();
         this.numDeletedDocs = (long) indexReader.numDeletedDocs();
@@ -224,7 +219,7 @@ public class IndexStatus {
         }
 
         final DirectoryReader directoryReader =
-                indexReader instanceof DirectoryReader ? (DirectoryReader) indexReader : null;
+            indexReader instanceof DirectoryReader ? (DirectoryReader) indexReader : null;
 
         final IndexCommit indexCommit;
         if (directoryReader != null) {
@@ -245,8 +240,7 @@ public class IndexStatus {
                 for (String filename : this.commitFilenames) {
                     try {
                         size += directory.fileLength(filename);
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         LOGGER.log(Level.FINE, e, e::getMessage);
                     }
                 }
@@ -269,8 +263,7 @@ public class IndexStatus {
         this.masterUuid = masterUuid == null ? null : masterUuid.toString();
         this.settings = settings;
         this.analyzers = analyzers;
-        this.activeIndexAnalyzers = activeIndexAnalyzers;
-        this.activeQueryAnalyzers = activeQueryAnalyzers;
+        this.activeAnalyzers = activeAnalyzers;
         this.fields = fields;
 
         final QueryCache queryCache = indexSearcher.getQueryCache();
@@ -304,7 +297,7 @@ public class IndexStatus {
                 return;
             fieldInfos.forEach(fieldInfo -> {
                 final Set<FieldInfoStatus> set =
-                        field_infos.computeIfAbsent(fieldInfo.name, s -> new LinkedHashSet<>());
+                    field_infos.computeIfAbsent(fieldInfo.name, s -> new LinkedHashSet<>());
                 set.add(new FieldInfoStatus(fieldInfo));
             });
         });
@@ -336,9 +329,7 @@ public class IndexStatus {
             return false;
         if (!Objects.deepEquals(fields, s.fields))
             return false;
-        if (!Objects.equals(activeIndexAnalyzers, s.activeIndexAnalyzers))
-            return false;
-        if (!Objects.equals(activeQueryAnalyzers, s.activeQueryAnalyzers))
+        if (!Objects.equals(activeAnalyzers, s.activeAnalyzers))
             return false;
         if (!Objects.equals(indexSortFields, s.indexSortFields))
             return false;
@@ -347,10 +338,10 @@ public class IndexStatus {
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            creatorVisibility = JsonAutoDetect.Visibility.NONE,
-            fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
     public static class MergePolicyStatus {
 
         final public String type;
@@ -406,10 +397,10 @@ public class IndexStatus {
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            creatorVisibility = JsonAutoDetect.Visibility.NONE,
-            fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
     public static class FieldInfoStatus {
 
         public final Integer number;
@@ -472,13 +463,13 @@ public class IndexStatus {
 
         private FieldInfoStatus(final FieldInfo info) {
             this(info.number, info.omitsNorms(), info.hasNorms(), info.hasPayloads(), info.hasVectors(),
-                    info.getDocValuesGen(), info.getDocValuesType(), info.getIndexOptions(),
-                    info.getPointDimensionCount(), info.getPointIndexDimensionCount(), info.getPointNumBytes());
+                info.getDocValuesGen(), info.getDocValuesType(), info.getIndexOptions(),
+                info.getPointDimensionCount(), info.getPointIndexDimensionCount(), info.getPointNumBytes());
         }
 
         private int buildHashCode() {
             return Objects.hash(number, omitNorms, hasNorms, hasPayloads, hasVectors, docValuesGen, docValuesType,
-                    indexOptions, pointDimensionCount, pointIndexDimensionCount, pointNumBytes);
+                indexOptions, pointDimensionCount, pointIndexDimensionCount, pointNumBytes);
         }
 
         @Override
@@ -519,10 +510,10 @@ public class IndexStatus {
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
-            getterVisibility = JsonAutoDetect.Visibility.NONE,
-            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-            creatorVisibility = JsonAutoDetect.Visibility.NONE,
-            fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
     public static class QueryCacheStats {
 
         @JsonProperty("cache_count")
@@ -565,14 +556,14 @@ public class IndexStatus {
             this.hitRate = hitRate;
             this.missRate = missRate;
             this.hashCode = Objects.hash(cacheCount, cacheSize, evictionCount, hitCount, missCount, totalCount, hitRate,
-                    missRate);
+                missRate);
         }
 
         private QueryCacheStats(final LRUQueryCache queryCache) {
             this(queryCache.getCacheCount(), queryCache.getCacheSize(), queryCache.getEvictionCount(),
-                    queryCache.getHitCount(), queryCache.getMissCount(), queryCache.getTotalCount(),
-                    (float) (queryCache.getHitCount() * 100) / queryCache.getTotalCount(),
-                    (float) (queryCache.getMissCount() * 100) / queryCache.getTotalCount());
+                queryCache.getHitCount(), queryCache.getMissCount(), queryCache.getTotalCount(),
+                (float) (queryCache.getHitCount() * 100) / queryCache.getTotalCount(),
+                (float) (queryCache.getMissCount() * 100) / queryCache.getTotalCount());
         }
 
         @Override

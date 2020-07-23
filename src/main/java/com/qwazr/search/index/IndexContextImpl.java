@@ -15,49 +15,36 @@
  */
 package com.qwazr.search.index;
 
-import com.qwazr.search.analysis.UpdatableAnalyzers;
-import com.qwazr.utils.IOUtils;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.util.ResourceLoader;
-import org.apache.lucene.facet.FacetsConfig;
-
+import com.qwazr.search.analysis.AnalyzerContext;
 import java.io.Closeable;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import org.apache.lucene.analysis.util.ResourceLoader;
+import org.apache.lucene.facet.FacetsConfig;
 
 class IndexContextImpl implements IndexContext, Closeable {
 
     final ExecutorService executorService;
-    final Analyzer queryAnalyzers;
-    final Analyzer indexAnalyzers;
+    final AnalyzerContext analyzerContext;
     final FieldMap fieldMap;
     final ResourceLoader resourceLoader;
     final IndexInstance.Provider indexProvider;
 
-    IndexContextImpl(final IndexInstance.Provider indexProvider, final ResourceLoader resourceLoader,
-                     final ExecutorService executorService, final UpdatableAnalyzers indexAnalyzers,
-                     final UpdatableAnalyzers queryAnalyzers, final FieldMap fieldMap) {
+    IndexContextImpl(final IndexInstance.Provider indexProvider,
+                     final ResourceLoader resourceLoader,
+                     final ExecutorService executorService,
+                     final AnalyzerContext analyzerContext,
+                     final FieldMap fieldMap) {
         this.indexProvider = indexProvider == null ? i -> null : indexProvider;
         this.resourceLoader = resourceLoader;
         this.executorService = executorService;
-        this.queryAnalyzers = queryAnalyzers == null ? null : queryAnalyzers.getAnalyzers();
-        this.indexAnalyzers = indexAnalyzers == null ? null : indexAnalyzers.getAnalyzers();
+        this.analyzerContext = analyzerContext.acquire();
         this.fieldMap = fieldMap;
     }
 
     @Override
     final public IndexInstance getIndex(final String indexName) {
         return indexProvider.get(indexName);
-    }
-
-    @Override
-    final public Analyzer getQueryAnalyzer() {
-        return queryAnalyzers;
-    }
-
-    @Override
-    final public Analyzer getIndexAnalyzer() {
-        return indexAnalyzers;
     }
 
     @Override
@@ -72,6 +59,6 @@ class IndexContextImpl implements IndexContext, Closeable {
 
     @Override
     public void close() {
-        IOUtils.closeQuietly(queryAnalyzers, indexAnalyzers);
+        analyzerContext.close();
     }
 }

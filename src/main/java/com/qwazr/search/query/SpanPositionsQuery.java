@@ -63,7 +63,7 @@ public class SpanPositionsQuery extends AbstractFieldQuery<SpanPositionsQuery> {
 
         final BooleanQuery.Builder builder = new BooleanQuery.Builder();
         final String resolvedField = resolveIndexTextField(queryContext.getFieldMap(), StringUtils.EMPTY);
-        try (final TokenStream tokenStream = queryContext.getQueryAnalyzer().tokenStream(resolvedField, query_string)) {
+        try (final TokenStream tokenStream = queryContext.resolveQueryAnalyzer(null).tokenStream(resolvedField, query_string)) {
             final CharTermAttribute charTermAttribute = tokenStream.getAttribute(CharTermAttribute.class);
             final PositionIncrementAttribute pocincrAttribute =
                 tokenStream.getAttribute(PositionIncrementAttribute.class);

@@ -122,7 +122,7 @@ public class AnnotatedIndexServiceTest {
 
         // Check analyzer creation
         service.testAnalyzer(AnnotatedRecord.INJECTED_ANALYZER_NAME, "Test");
-        Assert.assertEquals(1, factoryCallCount.get());
+        Assert.assertEquals(3, factoryCallCount.get());
         Assert.assertEquals(1, analyzerCallCount.get());
     }
 

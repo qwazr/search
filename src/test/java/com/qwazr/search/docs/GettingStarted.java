@@ -77,7 +77,7 @@ public class GettingStarted {
     }
 
     @Test
-    public void test() throws IOException, URISyntaxException, InterruptedException {
+    public void test() throws IOException, URISyntaxException {
 
         /* INDEX MANAGER SETUP */
 
