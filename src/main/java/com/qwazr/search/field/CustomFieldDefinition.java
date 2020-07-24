@@ -106,7 +106,7 @@ public class CustomFieldDefinition extends BaseFieldDefinition<CustomFieldDefini
         this.attributes = attributes;
     }
 
-    private CustomFieldDefinition(CustomBuilder builder) {
+    private CustomFieldDefinition(final CustomBuilder builder) {
         super(CustomFieldDefinition.class, builder);
         this.template = builder.template;
         this.tokenized = builder.tokenized;
