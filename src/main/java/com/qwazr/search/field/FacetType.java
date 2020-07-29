@@ -28,50 +28,59 @@ final class FacetType extends CustomFieldTypeAbstract {
 
     private final boolean store;
 
-    FacetType(final String genericFieldName,
-              final WildcardMatcher wildcardMatcher,
-              final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.STRING,
-            buildFieldSupplier(genericFieldName, definition),
-            null,
-            null,
-            definition,
-            ValueType.textType,
-            getFieldTypes(definition));
-        store = isStored(definition);
+    private FacetType(final Builder<CustomFieldDefinition> builder, boolean store) {
+        super(builder);
+        this.store = store;
     }
 
-    private static Collection<FieldType> getFieldTypes(final CustomFieldDefinition definition) {
-        if (isStored(definition))
+    static FacetType of(final String genericFieldName,
+                        final WildcardMatcher wildcardMatcher,
+                        final CustomFieldDefinition definition) {
+        final boolean isStored = isStored(definition);
+        final FacetsConfigSupplier facetsConfigSupplier = buildFacetsConfigSupplier(definition);
+        return new FacetType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.STRING)
+            .fieldSupplier(buildFieldSupplier(isStored, facetsConfigSupplier))
+            .facetsConfigSupplier(facetsConfigSupplier)
+            .valueType(ValueType.textType)
+            .fieldTypes(getFieldTypes(isStored)), isStored);
+    }
+
+    private static Collection<FieldType> getFieldTypes(final boolean isStored) {
+        if (isStored)
             return Arrays.asList(FieldType.facetField, FieldType.storedField);
         else
             return Collections.singletonList(FieldType.facetField);
     }
 
     @Override
-    final protected void fillArray(final String fieldName, final String[] values, final DocumentBuilder documentBuilder) {
-        documentBuilder.accept(genericFieldName, fieldName, new FacetField(fieldName, values));
+    final protected void fillArray(final String fieldName, final String[] values, final DocumentBuilder<?> documentBuilder) {
+        documentBuilder.acceptFacetField(new FacetField(fieldName, values), fieldName, facetsConfigSupplier);
         if (store)
-            documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, Arrays.toString(values)));
+            documentBuilder.acceptField(new StoredField(fieldName, Arrays.toString(values)));
     }
 
-    private static FieldSupplier buildFieldSupplier(final String genericFieldName,
-                                                    final CustomFieldDefinition definition) {
-        if (isStored(definition))
+    private static FieldSupplier buildFieldSupplier(final boolean isStored,
+                                                    final FacetsConfigSupplier facetsConfigSupplier) {
+        if (isStored)
             return (fieldName, value, documentBuilder) -> {
                 final String stringValue = FieldUtils.getStringValue(value);
                 if (stringValue == null)
                     return;
-                documentBuilder.accept(genericFieldName, fieldName, new FacetField(fieldName, stringValue));
-                documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, stringValue));
+                documentBuilder.acceptFacetField(new FacetField(fieldName, stringValue), fieldName, facetsConfigSupplier);
+                documentBuilder.acceptField(new StoredField(fieldName, stringValue));
             };
         else
             return (fieldName, value, documentBuilder) -> {
                 final String stringValue = FieldUtils.getStringValue(value);
                 if (stringValue != null)
-                    documentBuilder.accept(genericFieldName, fieldName, new FacetField(fieldName, stringValue));
+                    documentBuilder.acceptFacetField(new FacetField(fieldName, stringValue), fieldName, facetsConfigSupplier);
             };
     }
 
+    private static FacetsConfigSupplier buildFacetsConfigSupplier(final CustomFieldDefinition definition) {
+        return CustomFieldTypeAbstract.buildFacetsConfigSuppliers(definition,
+            (dimensionName, context, config) -> config.setIndexFieldName(dimensionName, FieldDefinition.TAXONOMY_FACET_FIELD));
+    }
 }

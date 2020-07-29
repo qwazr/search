@@ -31,17 +31,22 @@ import org.apache.lucene.search.SortField;
 
 final class CustomFieldType extends CustomFieldTypeAbstract {
 
-    CustomFieldType(final String genericFieldName,
-                    final WildcardMatcher wildcardMatcher,
-                    final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            getConverter(definition),
-            buildFieldSupplier(genericFieldName, definition),
-            buildSortFieldSupplier(definition),
-            FieldUtils::newStringTerm,
-            definition,
-            ValueType.textType,
-            getFieldTypes(definition));
+    private CustomFieldType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
+    }
+
+    static CustomFieldType of(final String genericFieldName,
+                              final WildcardMatcher wildcardMatcher,
+                              final CustomFieldDefinition definition) {
+        return new CustomFieldType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(getConverter(definition))
+            .fieldSupplier(buildFieldSupplier(definition))
+            .facetsConfigSupplier(buildFacetsConfigSuppliers(definition))
+            .sortFieldSupplier(buildSortFieldSupplier(definition))
+            .primaryTermSupplier(FieldUtils::newStringTerm)
+            .valueType(ValueType.textType)
+            .fieldTypes(getFieldTypes(definition)));
     }
 
     private static List<Consumer<org.apache.lucene.document.FieldType>> buildTypeSetters(final CustomFieldDefinition definition) {
@@ -90,13 +95,12 @@ final class CustomFieldType extends CustomFieldTypeAbstract {
         return fieldTypes;
     }
 
-    private static FieldSupplier buildFieldSupplier(final String genericFieldName,
-                                                    final CustomFieldDefinition definition) {
+    private static FieldSupplier buildFieldSupplier(final CustomFieldDefinition definition) {
         final List<Consumer<org.apache.lucene.document.FieldType>> typeSetters = buildTypeSetters(definition);
         final org.apache.lucene.document.FieldType type = new org.apache.lucene.document.FieldType();
         for (final Consumer<org.apache.lucene.document.FieldType> ts : typeSetters)
             ts.accept(type);
-        return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
+        return (fieldName, value, documentBuilder) -> documentBuilder.acceptField(
             new CustomField(fieldName, type, value));
     }
 
@@ -139,13 +143,13 @@ final class CustomFieldType extends CustomFieldTypeAbstract {
 
     private static BytesRefUtils.Converter<?> getConverter(final FieldDefinition definition) {
         if (!(definition instanceof CustomFieldDefinition))
-            return null;
+            return BytesRefUtils.Converter.NOPE;
         final CustomFieldDefinition customDef = (CustomFieldDefinition) definition;
         if (customDef.docValuesType == null)
             return BytesRefUtils.Converter.STRING;
         switch (customDef.docValuesType) {
             case NONE:
-                return null;
+                return BytesRefUtils.Converter.NOPE;
             case NUMERIC:
             case SORTED_NUMERIC:
                 return BytesRefUtils.Converter.LONG;

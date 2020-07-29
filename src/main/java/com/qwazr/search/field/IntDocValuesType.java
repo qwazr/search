@@ -25,28 +25,30 @@ import org.apache.lucene.document.NumericDocValuesField;
 
 final class IntDocValuesType extends CustomFieldTypeAbstract {
 
-    IntDocValuesType(final String genericFieldName,
-                     final WildcardMatcher wildcardMatcher,
-                     final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.INT,
-            buildFieldSupplier(genericFieldName),
-            SortUtils::integerSortField,
-            null,
-            definition,
-            ValueType.integerType,
-            FieldType.docValues);
+    private IntDocValuesType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
+    static IntDocValuesType of(final String genericFieldName,
+                                 final WildcardMatcher wildcardMatcher,
+                                 final CustomFieldDefinition definition) {
+        return new IntDocValuesType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.INT)
+            .fieldSupplier(buildFieldSupplier())
+            .sortFieldSupplier(SortUtils::integerSortField)
+            .valueType(ValueType.integerType)
+            .fieldType(FieldType.docValues));
+    }
 
-    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier() {
         return (fieldName, value, documentBuilder) -> {
             final Field field;
             if (value instanceof Number)
                 field = new NumericDocValuesField(fieldName, ((Number) value).intValue());
             else
                 field = new NumericDocValuesField(fieldName, Integer.parseInt(value.toString()));
-            documentBuilder.accept(genericFieldName, fieldName, field);
+            documentBuilder.acceptField(field);
         };
     }
 

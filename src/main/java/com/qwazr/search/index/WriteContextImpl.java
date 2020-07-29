@@ -53,7 +53,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         super(indexProvider, resourceLoader, executorService, analyzerContext, fieldMap);
         this.indexWriter = indexWriter;
         this.taxonomyWriter = taxonomyWriter;
-        this.primaryKey = fieldMap.getPrimaryKey();
+        this.primaryKey = fieldMap.fieldsContext.primaryKey;
         if (StringUtils.isBlank(primaryKey))
             autoIdProvider = null;
         else

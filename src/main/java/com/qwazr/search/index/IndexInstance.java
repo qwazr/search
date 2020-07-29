@@ -644,7 +644,7 @@ final public class IndexInstance implements Closeable {
     }
 
     private String checkPrimaryKey() {
-        final String primaryKey = fieldMap.getPrimaryKey();
+        final String primaryKey = fieldMap.fieldsContext.primaryKey;
         if (StringUtils.isEmpty(primaryKey))
             throw new NotAcceptableException("There is no primary key for this index.");
         return primaryKey;

@@ -19,7 +19,7 @@ import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.BytesRefUtils;
 import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.FieldMap;
+import com.qwazr.search.index.FieldsContext;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ArrayUtils;
@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.NotAcceptableException;
@@ -51,13 +52,11 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     @NotNull
     final private FieldSupplier fieldSupplier;
     @NotNull
-    final private FacetSupplier facetSupplier;
+    final protected FacetsConfigSupplier facetsConfigSupplier;
     @NotNull
     final private SortFieldSupplier sortFieldSupplier;
     @NotNull
     final private TermSupplier primaryTermSupplier;
-    @NotNull
-    final private TermSupplier indexTermSupplier;
     @NotNull
     final private FieldNameResolver fieldNameResolver;
     @NotNull
@@ -71,15 +70,12 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         this.genericFieldName = builder.genericFieldName;
         this.wildcardMatcher = builder.wildcardMatcher;
         this.definition = builder.definition;
-        this.bytesRefConverter = builder.bytesRefConverter == null ? BytesRefUtils.Converter.NOPE : builder.bytesRefConverter;
-        this.fieldSupplier = builder.fieldSupplier == null ? (fieldName, value, documentBuilder) -> {
-        } : builder.fieldSupplier;
-        this.facetSupplier = builder.facetSupplier == null ? (fieldName, fieldMap, facetsConfig) -> {
-        } : builder.facetSupplier;
-        this.sortFieldSupplier = builder.sortFieldSupplier == null ? (fieldName, sortEnum) -> null : builder.sortFieldSupplier;
-        this.primaryTermSupplier = builder.primaryTermSupplier == null ? (fieldName, value) -> null : builder.primaryTermSupplier;
-        this.indexTermSupplier = builder.indexTermSupplier == null ? (fieldName, value) -> null : builder.indexTermSupplier;
-        this.fieldNameResolver = builder.fieldNameResolver == null ? (name, field, value) -> null : builder.fieldNameResolver;
+        this.bytesRefConverter = Objects.requireNonNull(builder.bytesRefConverter);
+        this.fieldSupplier = builder.fieldSupplier;
+        this.facetsConfigSupplier = builder.facetsConfigSupplier;
+        this.sortFieldSupplier = builder.sortFieldSupplier;
+        this.primaryTermSupplier = builder.primaryTermSupplier;
+        this.fieldNameResolver = builder.fieldNameResolver;
         this.copyToFields = new LinkedHashMap<>();
         this.fieldTypes = builder.fieldTypes == null ? Collections.emptySet() : Collections.unmodifiableSet(builder.fieldTypes);
         this.valueType = builder.valueType;
@@ -106,9 +102,9 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 
     @Override
     public final void applyFacetsConfig(final String fieldName,
-                                        final FieldMap fieldMap,
+                                        final FieldsContext fieldsContext,
                                         final FacetsConfig facetsConfig) {
-        facetSupplier.setConfig(fieldName, fieldMap, facetsConfig);
+        facetsConfigSupplier.setConfig(fieldName, fieldsContext, facetsConfig);
     }
 
     @Override
@@ -147,39 +143,39 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
         return null;
     }
 
-    protected void fillArray(final String fieldName, final int[] values, final DocumentBuilder documentBuilder) {
+    protected void fillArray(final String fieldName, final int[] values, final DocumentBuilder<?> documentBuilder) {
         for (int value : values)
             fill(fieldName, value, documentBuilder);
     }
 
-    protected void fillArray(final String fieldName, final long[] values, final DocumentBuilder documentBuilder) {
+    protected void fillArray(final String fieldName, final long[] values, final DocumentBuilder<?> documentBuilder) {
         for (long value : values)
             fill(fieldName, value, documentBuilder);
     }
 
-    protected void fillArray(final String fieldName, final double[] values, final DocumentBuilder documentBuilder) {
+    protected void fillArray(final String fieldName, final double[] values, final DocumentBuilder<?> documentBuilder) {
         for (double value : values)
             fill(fieldName, value, documentBuilder);
     }
 
-    protected void fillArray(final String fieldName, final float[] values, final DocumentBuilder documentBuilder) {
+    protected void fillArray(final String fieldName, final float[] values, final DocumentBuilder<?> documentBuilder) {
         for (float value : values)
             fill(fieldName, value, documentBuilder);
     }
 
-    protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder documentBuilder) {
+    protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder<?> documentBuilder) {
         for (Object value : values)
             fill(fieldName, value, documentBuilder);
     }
 
-    protected void fillArray(final String fieldName, final String[] values, final DocumentBuilder documentBuilder) {
+    protected void fillArray(final String fieldName, final String[] values, final DocumentBuilder<?> documentBuilder) {
         for (String value : values)
             fill(fieldName, value, documentBuilder);
     }
 
     protected void fillCollection(final String fieldName,
                                   final Collection<Object> values,
-                                  final DocumentBuilder documentBuilder) {
+                                  final DocumentBuilder<?> documentBuilder) {
         values.forEach(value -> {
             if (value != null)
                 fill(fieldName, value, documentBuilder);
@@ -188,13 +184,13 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 
     protected void fillMap(final String fieldName,
                            final Map<Object, Object> values,
-                           final DocumentBuilder documentBuilder) {
+                           final DocumentBuilder<?> documentBuilder) {
         throw new ServerException(Response.Status.NOT_ACCEPTABLE,
             "Map is not a supported type for the field: " + fieldName);
     }
 
     protected void fillWildcardMatcher(final String wildcardName, final Object value,
-                                       final DocumentBuilder documentBuilder) {
+                                       final DocumentBuilder<?> documentBuilder) {
         if (value instanceof Map) {
             ((Map<String, Object>) value).forEach((fieldName, valueObject) -> {
                 if (!wildcardMatcher.match(fieldName))
@@ -208,7 +204,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 
     protected void fill(final String fieldName,
                         final Object value,
-                        final DocumentBuilder documentBuilder) {
+                        final DocumentBuilder<?> documentBuilder) {
         if (value == null)
             return;
         if (value instanceof String[])
@@ -236,7 +232,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     @Override
     final public void dispatch(final String fieldName,
                                final Object value,
-                               final DocumentBuilder documentBuilder) {
+                               final DocumentBuilder<?> documentBuilder) {
         if (value == null)
             return;
         if (wildcardMatcher != null)
@@ -264,20 +260,13 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     }
 
     @Override
-    final public Term newIndexTerm(final String fieldName, final Object value) {
-        final Term term = indexTermSupplier.newTerm(fieldName, value);
-        if (term == null)
-            throw new NotAcceptableException(
-                "This field cannot is not indexed: " + (genericFieldName == null ? fieldName : genericFieldName));
-        return term;
-    }
-
-    @Override
     final public Object toTerm(final BytesRef bytesRef) {
         return bytesRef == null ? null : bytesRefConverter.to(bytesRef);
     }
 
-    static <T extends FieldDefinition> Builder<T> of(final String genericFieldName, final WildcardMatcher wildcardMatcher, final T definition) {
+    static <T extends FieldDefinition> Builder<T> of(final String genericFieldName,
+                                                     final WildcardMatcher wildcardMatcher,
+                                                     final T definition) {
         return new Builder<>(genericFieldName, wildcardMatcher, definition);
     }
 
@@ -290,10 +279,9 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 
         private BytesRefUtils.Converter<?> bytesRefConverter;
         private FieldSupplier fieldSupplier;
-        private FacetSupplier facetSupplier;
+        private FacetsConfigSupplier facetsConfigSupplier;
         private SortFieldSupplier sortFieldSupplier;
         private TermSupplier primaryTermSupplier;
-        private TermSupplier indexTermSupplier;
         private FieldNameResolver fieldNameResolver;
         private Set<FieldType> fieldTypes;
         private ValueType valueType;
@@ -302,6 +290,14 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
             this.genericFieldName = genericFieldName;
             this.wildcardMatcher = wildcardMatcher;
             this.definition = definition;
+            this.bytesRefConverter = BytesRefUtils.Converter.NOPE;
+            this.fieldSupplier = (fieldName, value, documentBuilder) -> {
+            };
+            this.facetsConfigSupplier = (fieldName, fieldsContext, facetsConfig) -> {
+            };
+            this.sortFieldSupplier = (fieldName, sortEnum) -> null;
+            this.primaryTermSupplier = (fieldName, value) -> null;
+            this.fieldNameResolver = (name, field, value) -> name;
         }
 
         public Builder<T> bytesRefConverter(BytesRefUtils.Converter<?> bytesRefConverter) {
@@ -314,8 +310,8 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
             return this;
         }
 
-        public Builder<T> facetSupplier(FacetSupplier facetSupplier) {
-            this.facetSupplier = facetSupplier;
+        public Builder<T> facetsConfigSupplier(FacetsConfigSupplier facetsConfigSupplier) {
+            this.facetsConfigSupplier = facetsConfigSupplier;
             return this;
         }
 
@@ -326,11 +322,6 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
 
         public Builder<T> primaryTermSupplier(TermSupplier primaryTermSupplier) {
             this.primaryTermSupplier = primaryTermSupplier;
-            return this;
-        }
-
-        public Builder<T> indexTermSupplier(TermSupplier indexTermSupplier) {
-            this.indexTermSupplier = indexTermSupplier;
             return this;
         }
 

@@ -26,27 +26,29 @@ import org.apache.lucene.util.BytesRef;
 
 final class SortedSetDocValuesType extends CustomFieldTypeAbstract {
 
-    SortedSetDocValuesType(final String genericFieldName,
-                           final WildcardMatcher wildcardMatcher,
-                           final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.STRING,
-            buildFieldSupplier(genericFieldName),
-            null,
-            null,
-            definition,
-            ValueType.textType,
-            FieldType.docValues);
+    private SortedSetDocValuesType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+    static SortedSetDocValuesType of(final String genericFieldName,
+                                     final WildcardMatcher wildcardMatcher,
+                                     final CustomFieldDefinition definition) {
+        return new SortedSetDocValuesType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.STRING)
+            .fieldSupplier(buildFieldSupplier())
+            .valueType(ValueType.textType)
+            .fieldType(FieldType.docValues));
+    }
+
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier() {
         return (fieldName, value, documentBuilder) -> {
             final Field field;
             if (value instanceof BytesRef)
                 field = new SortedSetDocValuesField(fieldName, (BytesRef) value);
             else
                 field = new SortedSetDocValuesField(fieldName, new BytesRef(value.toString()));
-            documentBuilder.accept(genericFieldName, fieldName, field);
+            documentBuilder.acceptField(field);
         };
     }
 

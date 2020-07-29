@@ -25,17 +25,21 @@ import org.apache.lucene.document.StringField;
 
 final class StringFieldType extends CustomFieldTypeAbstract {
 
-    StringFieldType(final String genericFieldName,
-                    final WildcardMatcher wildcardMatcher,
-                    final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.STRING,
-            buildFieldSupplier(genericFieldName, definition),
-            SortUtils::stringSortField,
-            FieldUtils::newStringTerm,
-            definition,
-            ValueType.textType,
-            getFieldTypes(definition));
+    private StringFieldType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
+    }
+
+    static StringFieldType of(final String genericFieldName,
+                              final WildcardMatcher wildcardMatcher,
+                              final CustomFieldDefinition definition) {
+        return new StringFieldType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.STRING)
+            .fieldSupplier(buildFieldSupplier(definition))
+            .sortFieldSupplier(SortUtils::stringSortField)
+            .primaryTermSupplier(FieldUtils::newStringTerm)
+            .valueType(ValueType.textType)
+            .fieldTypes(getFieldTypes(definition)));
     }
 
     private static Collection<FieldType> getFieldTypes(final CustomFieldDefinition definition) {
@@ -45,11 +49,10 @@ final class StringFieldType extends CustomFieldTypeAbstract {
             return Collections.singletonList(FieldType.stringField);
     }
 
-    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName,
-                                                                       final CustomFieldDefinition definition) {
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final CustomFieldDefinition definition) {
         final Field.Store fieldStore = isStored(definition) ? Field.Store.YES : Field.Store.NO;
-        return (fieldName, value, documentBuilder) -> documentBuilder.accept(
-            genericFieldName, fieldName, new StringField(fieldName, value.toString(), fieldStore));
+        return (fieldName, value, documentBuilder) -> documentBuilder.acceptField(
+            new StringField(fieldName, value.toString(), fieldStore));
     }
 
 }

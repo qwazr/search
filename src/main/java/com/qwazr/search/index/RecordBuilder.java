@@ -23,32 +23,29 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import javax.ws.rs.BadRequestException;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.Term;
 
-abstract class RecordBuilder {
+abstract class RecordBuilder<DOC> {
 
-    private final String primaryKey;
-    private final DocumentBuilder documentBuilder;
     private final FieldMap fieldMap;
+    private final DocumentBuilder<DOC> documentBuilder;
     private Term termId;
 
-    RecordBuilder(final FieldMap fieldMap, final DocumentBuilder documentBuilder) {
-        this.primaryKey = fieldMap.getPrimaryKey();
+    RecordBuilder(final FieldMap fieldMap, final DocumentBuilder<DOC> documentBuilder) {
         this.fieldMap = fieldMap;
         this.documentBuilder = documentBuilder;
     }
 
     final Term getTermId() {
         if (termId == null)
-            throw new BadRequestException("The primary key \"" + primaryKey + "\" is missing.");
+            throw new BadRequestException("The primary key \"" + fieldMap.fieldsContext.primaryKey + "\" is missing.");
         return termId;
     }
 
     final void addRecord(final byte[] sourceBytes) {
-        documentBuilder.accept(
-            null, fieldMap.fieldsContext.recordField,
-            new StoredField(fieldMap.fieldsContext.recordField, sourceBytes));
+        documentBuilder.acceptField(new StoredField(fieldMap.fieldsContext.recordField, sourceBytes));
     }
 
     // TODO type aware ?
@@ -59,13 +56,13 @@ abstract class RecordBuilder {
         final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName, fieldValue);
         fieldType.dispatch(fieldName, fieldValue, documentBuilder);
 
-        if (fieldName.equals(primaryKey))
+        if (fieldName.equals(fieldMap.fieldsContext.primaryKey))
             termId = fieldType.newPrimaryTerm(fieldName, fieldValue);
     }
 
-    final static class ForMap extends RecordBuilder {
+    final static class ForMap<DOC> extends RecordBuilder<DOC> {
 
-        ForMap(final FieldMap fieldMap, final DocumentBuilder documentBuilder) {
+        ForMap(final FieldMap fieldMap, final DocumentBuilder<DOC> documentBuilder) {
             super(fieldMap, documentBuilder);
         }
 
@@ -75,10 +72,10 @@ abstract class RecordBuilder {
 
     }
 
-    final static class ForObject extends RecordBuilder {
+    final static class ForObject<DOC> extends RecordBuilder<DOC> {
 
         ForObject(final FieldMap fieldMap,
-                  final DocumentBuilder documentBuilder) {
+                  final DocumentBuilder<DOC> documentBuilder) {
             super(fieldMap, documentBuilder);
         }
 
@@ -94,10 +91,10 @@ abstract class RecordBuilder {
 
     }
 
-    static class ForJson extends RecordBuilder {
+    static class ForJson extends RecordBuilder<Document> {
 
         private ForJson(final FieldMap fieldMap,
-                        final DocumentBuilder documentBuilder) {
+                        final DocumentBuilder<Document> documentBuilder) {
             super(fieldMap, documentBuilder);
         }
 
@@ -129,7 +126,7 @@ abstract class RecordBuilder {
     }
 
     static ForJson forJsonOf(final FieldMap fieldMap,
-                             final DocumentBuilder documentBuilder,
+                             final DocumentBuilder<Document> documentBuilder,
                              final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes) {
         if (fieldTypes == null)
             return new ForJson(fieldMap, documentBuilder);
@@ -142,7 +139,7 @@ abstract class RecordBuilder {
         private final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes;
 
         private ForJsonWithFieldTypes(final FieldMap fieldMap,
-                                      final DocumentBuilder documentBuilder,
+                                      final DocumentBuilder<Document> documentBuilder,
                                       final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes) {
             super(fieldMap, documentBuilder);
             this.fieldTypes = fieldTypes;

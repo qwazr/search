@@ -22,29 +22,30 @@ import org.apache.lucene.document.StoredField;
 
 final class IntPointType extends CustomFieldTypeAbstract {
 
-    IntPointType(final String genericFieldName,
-                 final WildcardMatcher wildcardMatcher,
-                 final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.INT_POINT,
-            buildFieldSupplier(genericFieldName, definition),
-            null,
-            null,
-            definition,
-            ValueType.integerType,
-            FieldType.pointField);
+    private IntPointType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldSupplier buildFieldSupplier(final String genericFieldName,
-                                                    final CustomFieldDefinition definition) {
+    static IntPointType of(final String genericFieldName,
+                           final WildcardMatcher wildcardMatcher,
+                           final CustomFieldDefinition definition) {
+        return new IntPointType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.INT_POINT)
+            .fieldSupplier(buildFieldSupplier(definition))
+            .valueType(ValueType.integerType)
+            .fieldType(FieldType.pointField));
+    }
+
+    private static FieldSupplier buildFieldSupplier(final CustomFieldDefinition definition) {
         if (isStored(definition))
             return (fieldName, value, documentBuilder) -> {
                 final int intValue = FieldUtils.getIntValue(value);
-                documentBuilder.accept(genericFieldName, fieldName, new IntPoint(fieldName, intValue));
-                documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, intValue));
+                documentBuilder.acceptField(new IntPoint(fieldName, intValue));
+                documentBuilder.acceptField(new StoredField(fieldName, intValue));
             };
         else
-            return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
+            return (fieldName, value, documentBuilder) -> documentBuilder.acceptField(
                 new IntPoint(fieldName, FieldUtils.getIntValue(value)));
     }
 

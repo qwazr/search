@@ -22,29 +22,30 @@ import org.apache.lucene.document.StoredField;
 
 final class FloatPointType extends CustomFieldTypeAbstract {
 
-    FloatPointType(final String genericFieldName,
-                   final WildcardMatcher wildcardMatcher,
-                   final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.FLOAT_POINT,
-            buildFieldSupplier(genericFieldName, definition),
-            null,
-            null,
-            definition,
-            ValueType.floatType,
-            FieldType.pointField);
+    private FloatPointType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName,
-                                                                       final CustomFieldDefinition definition) {
+    static FloatPointType of(final String genericFieldName,
+                             final WildcardMatcher wildcardMatcher,
+                             final CustomFieldDefinition definition) {
+        return new FloatPointType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.FLOAT_POINT)
+            .fieldSupplier(buildFieldSupplier(definition))
+            .valueType(ValueType.floatType)
+            .fieldType(FieldType.pointField));
+    }
+
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final CustomFieldDefinition definition) {
         if (isStored(definition))
             return (fieldName, value, documentBuilder) -> {
                 final float floatValue = FieldUtils.getFloatValue(value);
-                documentBuilder.accept(genericFieldName, fieldName, new FloatPoint(fieldName, floatValue));
-                documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, floatValue));
+                documentBuilder.acceptField(new FloatPoint(fieldName, floatValue));
+                documentBuilder.acceptField(new StoredField(fieldName, floatValue));
             };
         else
-            return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
+            return (fieldName, value, documentBuilder) -> documentBuilder.acceptField(
                 new FloatPoint(fieldName, FieldUtils.getFloatValue(value)));
     }
 

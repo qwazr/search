@@ -58,7 +58,7 @@ abstract class FacetsBuilder {
                           final TimeTracker timeTracker) {
         this.facetsDef = facetsDef;
         this.queryContext = queryContext;
-        this.sortedSetFacetField = queryContext.fieldMap.getSortedSetFacetField();
+        this.sortedSetFacetField = queryContext.fieldMap.fieldsContext.sortedSetFacetField;
         this.resolvedDimensions = new HashMap<>();
         getFields(facetsDef).forEach((concrete, generic) -> resolvedDimensions.put(concrete,
             queryContext.fieldMap.getFieldType(generic, concrete)

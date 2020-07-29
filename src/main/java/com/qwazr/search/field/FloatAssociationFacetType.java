@@ -25,25 +25,37 @@ import org.apache.lucene.facet.taxonomy.FloatAssociationFacetField;
 
 final class FloatAssociationFacetType extends CustomFieldTypeAbstract {
 
-    FloatAssociationFacetType(final String genericFieldName,
-                              final WildcardMatcher wildcardMatcher,
-                              final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.FLOAT_FACET,
-            null, null, null,
-            definition,
-            ValueType.textType,
-            FieldType.facetField);
+    private FloatAssociationFacetType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
+    }
+
+    static FloatAssociationFacetType of(final String genericFieldName,
+                                        final WildcardMatcher wildcardMatcher,
+                                        final CustomFieldDefinition definition) {
+        return new FloatAssociationFacetType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.FLOAT_FACET)
+            .facetsConfigSupplier(buildFacetsConfigSupplier(definition))
+            .valueType(ValueType.textType)
+            .fieldType(FieldType.facetField));
     }
 
     @Override
-    protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder documentBuilder) {
+    protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder<?> documentBuilder) {
         Objects.requireNonNull(values, "The value array is empty");
         if (values.length < 2)
             throw new ServerException(Response.Status.NOT_ACCEPTABLE,
                 "Expected at least 2 values - Field: " + fieldName);
         final float assoc = TypeUtils.getFloatNumber(fieldName, values[0]);
         final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
-        documentBuilder.accept(genericFieldName, fieldName, new FloatAssociationFacetField(assoc, fieldName, path));
+        documentBuilder.acceptFacetField(
+            new FloatAssociationFacetField(assoc, fieldName, path),
+            fieldName, facetsConfigSupplier);
+    }
+
+    private static FacetsConfigSupplier buildFacetsConfigSupplier(final CustomFieldDefinition definition) {
+        return CustomFieldTypeAbstract.buildFacetsConfigSuppliers(definition,
+            (dimensionName, context, config)
+                -> config.setIndexFieldName(dimensionName, FieldDefinition.TAXONOMY_FLOAT_ASSOC_FACET_FIELD));
     }
 }

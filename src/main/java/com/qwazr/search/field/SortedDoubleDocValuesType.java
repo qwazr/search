@@ -26,20 +26,23 @@ import org.apache.lucene.util.NumericUtils;
 
 final class SortedDoubleDocValuesType extends CustomFieldTypeAbstract {
 
-    SortedDoubleDocValuesType(final String genericFieldName,
-                              final WildcardMatcher wildcardMatcher,
-                              final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.DOUBLE,
-            buildFieldSupplier(genericFieldName),
-            SortUtils::doubleSortField,
-            null,
-            definition,
-            ValueType.doubleType,
-            FieldType.docValues);
+    private SortedDoubleDocValuesType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+    static SortedDoubleDocValuesType of(final String genericFieldName,
+                                        final WildcardMatcher wildcardMatcher,
+                                        final CustomFieldDefinition definition) {
+        return new SortedDoubleDocValuesType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.DOUBLE)
+            .fieldSupplier(buildFieldSupplier())
+            .sortFieldSupplier(SortUtils::doubleSortField)
+            .valueType(ValueType.doubleType)
+            .fieldType(FieldType.docValues));
+    }
+
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier() {
         return (fieldName, value, documentBuilder) -> {
             final Field field;
             if (value instanceof Number)
@@ -48,7 +51,7 @@ final class SortedDoubleDocValuesType extends CustomFieldTypeAbstract {
             else
                 field = new SortedNumericDocValuesField(fieldName,
                     NumericUtils.doubleToSortableLong(Double.parseDouble(value.toString())));
-            documentBuilder.accept(genericFieldName, fieldName, field);
+            documentBuilder.acceptField(field);
         };
     }
 

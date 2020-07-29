@@ -115,14 +115,15 @@ final public class AnalyzerContext extends Equalizer.Immutable<AnalyzerContext> 
                 return;
             final FieldDefinition fieldDefinition = fieldType.getDefinition();
 
+
             // Load the index analyzer if any specific
-            final String indexAnalyzer = fieldDefinition.resolvedIndexAnalyzer();
+            final String indexAnalyzer = fieldDefinition == null ? null : fieldDefinition.resolvedIndexAnalyzer();
             if (indexAnalyzer != null)
                 resolveAnalyzer(indexAnalyzer, List.of(perNameAnalyzers, smartSetIndexAnalyzer), errors,
                     analyzer -> perFieldIndexAnalyzers.put(resolvedFieldName, analyzer));
 
             // Load the query analyzer if any specific
-            final String queryAnalyzer = fieldDefinition.resolvedQueryAnalyzer();
+            final String queryAnalyzer = fieldDefinition == null ? null : fieldDefinition.resolvedQueryAnalyzer();
             if (queryAnalyzer != null)
                 resolveAnalyzer(queryAnalyzer, List.of(perNameAnalyzers, smartSetQueryAnalyzer), errors,
                     analyzer -> perFieldQueryAnalyzers.put(resolvedFieldName, analyzer));

@@ -23,51 +23,51 @@ import java.util.Map;
 
 final class Geo3DPointType extends CustomFieldTypeAbstract {
 
-    Geo3DPointType(final String genericFieldName,
-                   final WildcardMatcher wildcardMatcher,
-                   final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            null, null, null, null,
-            definition,
-            ValueType.doubleType,
-            FieldType.pointField);
+    private Geo3DPointType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
+    }
+
+    static Geo3DPointType of(final String genericFieldName,
+                             final WildcardMatcher wildcardMatcher,
+                             final CustomFieldDefinition definition) {
+        return new Geo3DPointType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .valueType(ValueType.doubleType)
+            .fieldType(FieldType.pointField));
     }
 
     @Override
-    protected void fillArray(final String fieldName, final double[] values, final DocumentBuilder documentBuilder) {
+    protected void fillArray(final String fieldName, final double[] values, final DocumentBuilder<?> documentBuilder) {
         if ((values.length & 1) != 0)
             throw new RuntimeException("Expect even double values, but got: " + values.length);
         for (int i = 0; i < values.length; )
-            documentBuilder.accept(genericFieldName, fieldName,
-                new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
+            documentBuilder.acceptField(new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
     }
 
     @Override
-    protected void fillArray(final String fieldName, final float[] values, final DocumentBuilder documentBuilder) {
+    protected void fillArray(final String fieldName, final float[] values, final DocumentBuilder<?> documentBuilder) {
         if ((values.length & 1) != 0)
             throw new RuntimeException("Expect even float values, but got: " + values.length);
         for (int i = 0; i < values.length; )
-            documentBuilder.accept(genericFieldName, fieldName,
-                new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
+            documentBuilder.acceptField(new Geo3DPoint(fieldName, values[i++], values[i++], values[i++]));
     }
 
     @Override
-    protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder documentBuilder) {
+    protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder<?> documentBuilder) {
         if ((values.length & 1) != 0)
             throw new RuntimeException("Expect even number values, but got: " + values.length);
         for (int i = 0; i < values.length; )
-            documentBuilder.accept(genericFieldName, fieldName, new Geo3DPoint(fieldName, ((Number) values[i++]).doubleValue(),
+            documentBuilder.acceptField(new Geo3DPoint(fieldName, ((Number) values[i++]).doubleValue(),
                 ((Number) values[i++]).doubleValue(), ((Number) values[i++]).doubleValue()));
     }
 
     @Override
-    protected void fillMap(final String fieldName, final Map<Object, Object> values, final DocumentBuilder documentBuilder) {
+    protected void fillMap(final String fieldName, final Map<Object, Object> values, final DocumentBuilder<?> documentBuilder) {
         final Number lat = (Number) values.get("lat");
         if (lat != null) {
             final Number lon = (Number) values.get("lon");
             TypeUtils.notNull(lon, fieldName, "The longitude (lon) parameter is missing");
-            documentBuilder.accept(genericFieldName, fieldName,
-                new Geo3DPoint(fieldName, lat.doubleValue(), lon.doubleValue()));
+            documentBuilder.acceptField(new Geo3DPoint(fieldName, lat.doubleValue(), lon.doubleValue()));
             return;
         }
         final Number x = (Number) values.get("x");
@@ -76,8 +76,7 @@ final class Geo3DPointType extends CustomFieldTypeAbstract {
         TypeUtils.notNull(y, fieldName, "The y parameter is missing");
         final Number z = (Number) values.get("z");
         TypeUtils.notNull(z, fieldName, "The z parameter is missing");
-        documentBuilder.accept(genericFieldName, fieldName,
-            new Geo3DPoint(fieldName, x.doubleValue(), y.doubleValue(), z.doubleValue()));
+        documentBuilder.acceptField(new Geo3DPoint(fieldName, x.doubleValue(), y.doubleValue(), z.doubleValue()));
     }
 
 }

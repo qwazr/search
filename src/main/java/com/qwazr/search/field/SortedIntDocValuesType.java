@@ -25,26 +25,30 @@ import org.apache.lucene.document.SortedNumericDocValuesField;
 
 final class SortedIntDocValuesType extends CustomFieldTypeAbstract {
 
-    SortedIntDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                           final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.INT,
-            buildFieldSupplier(genericFieldName),
-            SortUtils::integerSortField,
-            null,
-            definition,
-            ValueType.integerType,
-            FieldType.docValues);
+    private SortedIntDocValuesType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+    static SortedIntDocValuesType of(final String genericFieldName,
+                                       final WildcardMatcher wildcardMatcher,
+                                       final CustomFieldDefinition definition) {
+        return new SortedIntDocValuesType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.INT)
+            .fieldSupplier(buildFieldSupplier())
+            .sortFieldSupplier(SortUtils::integerSortField)
+            .valueType(ValueType.integerType)
+            .fieldType(FieldType.docValues));
+    }
+
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier() {
         return (fieldName, value, documentBuilder) -> {
             final Field field;
             if (value instanceof Number)
                 field = new SortedNumericDocValuesField(fieldName, ((Number) value).intValue());
             else
                 field = new SortedNumericDocValuesField(fieldName, Integer.parseInt(value.toString()));
-            documentBuilder.accept(genericFieldName, fieldName, field);
+            documentBuilder.acceptField(field);
         };
     }
 

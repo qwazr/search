@@ -24,20 +24,21 @@ import org.apache.lucene.document.StoredField;
 
 final class StoredFieldType extends CustomFieldTypeAbstract {
 
-    StoredFieldType(final String genericFieldName,
-                    final WildcardMatcher wildcardMatcher,
-                    final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.STRING,
-            buildFieldSupplier(genericFieldName),
-            null,
-            null,
-            definition,
-            null,
-            FieldType.storedField);
+    private StoredFieldType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+    static StoredFieldType of(final String genericFieldName,
+                              final WildcardMatcher wildcardMatcher,
+                              final CustomFieldDefinition definition) {
+        return new StoredFieldType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.STRING)
+            .fieldSupplier(buildFieldSupplier())
+            .fieldType(FieldType.storedField));
+    }
+
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier() {
         return (fieldName, value, documentBuilder) -> {
             final Field field;
             final byte[] bytes;
@@ -57,7 +58,7 @@ final class StoredFieldType extends CustomFieldTypeAbstract {
                 field = new StoredField(fieldName, TypeUtils.toBytes(fieldName, (Serializable) value));
             else // Last change, convert to string
                 field = new StoredField(fieldName, value.toString());
-            documentBuilder.accept(genericFieldName, fieldName, field);
+            documentBuilder.acceptField(field);
         };
     }
 

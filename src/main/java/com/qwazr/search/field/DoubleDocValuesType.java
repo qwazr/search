@@ -25,27 +25,30 @@ import org.apache.lucene.document.Field;
 
 final class DoubleDocValuesType extends CustomFieldTypeAbstract {
 
-    DoubleDocValuesType(final String genericFieldName,
-                        final WildcardMatcher wildcardMatcher,
-                        final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.DOUBLE,
-            buildFieldSupplier(genericFieldName),
-            SortUtils::doubleSortField,
-            null,
-            definition,
-            ValueType.doubleType,
-            FieldType.docValues);
+    private DoubleDocValuesType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldSupplier buildFieldSupplier(final String genericFieldName) {
+    static DoubleDocValuesType of(final String genericFieldName,
+                                  final WildcardMatcher wildcardMatcher,
+                                  final CustomFieldDefinition definition) {
+        return new DoubleDocValuesType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.DOUBLE)
+            .fieldSupplier(buildFieldSupplier())
+            .sortFieldSupplier(SortUtils::doubleSortField)
+            .valueType(ValueType.doubleType)
+            .fieldType(FieldType.docValues));
+    }
+
+    private static FieldSupplier buildFieldSupplier() {
         return (fieldName, value, documentBuilder) -> {
             final Field field;
             if (value instanceof Number)
                 field = new DoubleDocValuesField(fieldName, ((Number) value).doubleValue());
             else
                 field = new DoubleDocValuesField(fieldName, Double.parseDouble(value.toString()));
-            documentBuilder.accept(genericFieldName, fieldName, field);
+            documentBuilder.acceptField(field);
         };
     }
 

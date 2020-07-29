@@ -24,25 +24,29 @@ import org.apache.lucene.document.SortedNumericDocValuesField;
 
 final class SortedLongDocValuesType extends CustomFieldTypeAbstract {
 
-    SortedLongDocValuesType(final String genericFieldName, final WildcardMatcher wildcardMatcher,
-                            final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.LONG,
-            buildFieldSupplier(genericFieldName),
-            SortUtils::longSortField,
-            null,
-            definition,
-            ValueType.longType,
-            FieldType.docValues);
+    private SortedLongDocValuesType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+    static SortedLongDocValuesType of(final String genericFieldName,
+                                     final WildcardMatcher wildcardMatcher,
+                                     final CustomFieldDefinition definition) {
+        return new SortedLongDocValuesType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.LONG)
+            .fieldSupplier(buildFieldSupplier())
+            .sortFieldSupplier(SortUtils::longSortField)
+            .valueType(ValueType.longType)
+            .fieldType(FieldType.docValues));
+    }
+
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier() {
         return (fieldName, value, documentBuilder) -> {
             if (value instanceof Number)
-                documentBuilder.accept(genericFieldName, fieldName,
+                documentBuilder.acceptField(
                     new SortedNumericDocValuesField(fieldName, ((Number) value).longValue()));
             else
-                documentBuilder.accept(genericFieldName, fieldName,
+                documentBuilder.acceptField(
                     new SortedNumericDocValuesField(fieldName, Long.parseLong(value.toString())));
         };
     }

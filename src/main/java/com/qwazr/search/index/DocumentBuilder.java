@@ -15,49 +15,93 @@
  */
 package com.qwazr.search.index;
 
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-
+import com.qwazr.search.field.FieldTypeInterface;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
+import javax.ws.rs.NotAcceptableException;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 
-public interface DocumentBuilder {
+public interface DocumentBuilder<RESULT> {
 
     void reset();
 
-    void accept(final String genericFieldName, final String concreteFieldName, final Field field);
+    void acceptField(final Field field);
 
-    final class ForLuceneDocument implements DocumentBuilder {
+    void acceptFacetField(final Field field,
+                          final String dimensionName,
+                          final FieldTypeInterface.FacetsConfigSupplier facetsConfigSupplier);
 
-        final Map<String, String> dimensions;
-        final Document document;
+    RESULT build() throws IOException;
 
-        public ForLuceneDocument() {
-            dimensions = new HashMap<>();
-            document = new Document();
+    static DocumentBuilder.ForLuceneDocument of(final FieldMap fieldMap, final TaxonomyWriter taxonomyWriter) {
+        return taxonomyWriter == null
+            ? new DocumentBuilder.ForLuceneDocument(fieldMap.fieldsContext)
+            : new DocumentBuilder.ForLuceneDocumentWithTaxonomy(fieldMap.fieldsContext, taxonomyWriter);
+    }
+
+    class ForLuceneDocument implements DocumentBuilder<Document> {
+
+        private final FieldsContext fieldsContext;
+        protected final FacetsConfig facetsConfig;
+        private final Map<String, FacetsConfig.DimConfig> dimConfigs;
+        protected final Document document;
+
+        private ForLuceneDocument(final FieldsContext fieldsContext) {
+            this.fieldsContext = fieldsContext;
+            this.facetsConfig = new FacetsConfig();
+            this.dimConfigs = facetsConfig.getDimConfigs();
+            this.document = new Document();
         }
 
         @Override
         final public void reset() {
-            dimensions.clear();
             document.clear();
         }
 
         @Override
-        final public void accept(final String genericFieldName, final String concreteFieldName, final Field field) {
+        final public void acceptField(final Field field) {
             document.add(field);
-            dimensions.put(concreteFieldName == null ? genericFieldName : concreteFieldName,
-                genericFieldName == null ? concreteFieldName : genericFieldName);
+        }
+
+        @Override
+        final public void acceptFacetField(final Field field,
+                                           final String dimensionName,
+                                           final FieldTypeInterface.FacetsConfigSupplier facetsConfigSupplier) {
+            document.add(field);
+            if (!dimConfigs.containsKey(dimensionName))
+                facetsConfigSupplier.setConfig(dimensionName, fieldsContext, facetsConfig);
+        }
+
+        public Document build() throws IOException {
+            return facetsConfig.build(document);
         }
     }
 
-    final class ForLuceneDocValues implements DocumentBuilder {
+    final class ForLuceneDocumentWithTaxonomy extends ForLuceneDocument {
+
+        private final TaxonomyWriter taxonomyWriter;
+
+        private ForLuceneDocumentWithTaxonomy(final FieldsContext fieldsContext,
+                                              final TaxonomyWriter taxonomyWriter) {
+            super(fieldsContext);
+            this.taxonomyWriter = taxonomyWriter;
+        }
+
+        final public Document build() throws IOException {
+            return facetsConfig.build(taxonomyWriter, document);
+        }
+    }
+
+    final class ForLuceneDocValues implements DocumentBuilder<Field[]> {
 
         private final String primaryKey;
 
-        final List<Field> fieldList;
+        private final List<Field> fieldList;
 
         public ForLuceneDocValues(String primaryKey) {
             fieldList = new ArrayList<>();
@@ -70,12 +114,25 @@ public interface DocumentBuilder {
         }
 
         @Override
-        final public void accept(final String genericFieldName, final String concreteFieldName, final Field field) {
+        final public void acceptField(final Field field) {
             // We will not update the internal ID of the document
             if (primaryKey.equals(field.name()))
                 return;
             fieldList.add(field);
         }
 
+        @Override
+        final public void acceptFacetField(final Field field,
+                                           final String dimensionName,
+                                           final FieldTypeInterface.FacetsConfigSupplier facetsConfigSupplier) {
+            throw new NotAcceptableException("Facet field can't be used for a DocValues update: " + field.name());
+        }
+
+        private final static Field[] EMPTY_FIELDS = new Field[0];
+
+        @Override
+        public Field[] build() {
+            return fieldList.toArray(EMPTY_FIELDS);
+        }
     }
 }

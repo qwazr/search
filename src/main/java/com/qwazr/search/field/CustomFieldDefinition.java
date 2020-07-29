@@ -186,7 +186,7 @@ public class CustomFieldDefinition extends BaseFieldDefinition<CustomFieldDefini
                                            final WildcardMatcher wildcardMatcher,
                                            final String primaryKey) {
         return template == null ?
-            new CustomFieldType(genericFieldName, wildcardMatcher, this) :
+            CustomFieldType.of(genericFieldName, wildcardMatcher, this) :
             template.newFieldType(genericFieldName, wildcardMatcher, this);
     }
 

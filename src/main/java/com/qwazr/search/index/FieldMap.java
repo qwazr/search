@@ -38,8 +38,10 @@ public class FieldMap {
     private final SmartDynamicTypes smartDynamicTypes;
     private final Map<String, FieldTypeInterface> nameDefMap;
     private final Collection<Pair<WildcardMatcher, FieldTypeInterface>> wildcardMap;
-    private final FacetsConfig facetsConfig;
     public final FieldsContext fieldsContext;
+    private final Object facetsConfigLock;
+    private final FacetsConfig facetsConfig;
+    private final Map<String, FacetsConfig.DimConfig> facetsDimConfig;
 
     public FieldMap(@NotNull final FieldsContext fieldsContext) {
 
@@ -75,8 +77,9 @@ public class FieldMap {
             }
         });
         nameDefMap.putAll(newFields);
-
         facetsConfig = new FacetsConfig();
+        facetsDimConfig = facetsConfig.getDimConfigs();
+        facetsConfigLock = new Object();
     }
 
     public final boolean isEmpty() {
@@ -151,17 +154,14 @@ public class FieldMap {
         return fieldsContext.fields;
     }
 
-    final String getPrimaryKey() {
-        return fieldsContext.primaryKey;
-    }
-
-    private void checkFacetConfig(final String genericFieldName, final String concreteFieldName) {
-        if (facetsConfig.getDimConfigs().containsKey(concreteFieldName))
+    private void checkFacetConfig(final String fieldNamePattern,
+                                  final String concreteFieldName) {
+        if (facetsDimConfig.containsKey(concreteFieldName))
             return;
-        final FieldTypeInterface fieldType = findFieldType(genericFieldName, concreteFieldName);
+        final FieldTypeInterface fieldType = findFieldType(fieldNamePattern, concreteFieldName);
         if (fieldType == null)
             return;
-        fieldType.applyFacetsConfig(concreteFieldName, this, facetsConfig);
+        fieldType.applyFacetsConfig(concreteFieldName, fieldsContext, facetsConfig);
         final FieldDefinition definition = fieldType.getDefinition();
         if (definition == null)
             return;
@@ -217,18 +217,19 @@ public class FieldMap {
      * @return a
      */
     final public FacetsConfig getFacetsConfig(final Map<String, String> fieldNames) {
-        fieldNames.forEach(
-            (concreteFieldName, genericFieldName) -> checkFacetConfig(genericFieldName, concreteFieldName));
+        synchronized (facetsConfigLock) {
+            fieldNames.forEach(
+                (concreteFieldName, genericFieldName) -> checkFacetConfig(genericFieldName, concreteFieldName));
+        }
         return facetsConfig;
+
     }
 
     final public FacetsConfig getFacetsConfig(final String genericFieldName, final String concreteFieldName) {
-        checkFacetConfig(genericFieldName, concreteFieldName);
+        synchronized (facetsConfigLock) {
+            checkFacetConfig(genericFieldName, concreteFieldName);
+        }
         return facetsConfig;
-    }
-
-    final String getSortedSetFacetField() {
-        return fieldsContext.sortedSetFacetField;
     }
 
     final Set<String> getStaticFieldSet() {

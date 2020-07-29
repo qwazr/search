@@ -26,26 +26,37 @@ import java.util.Objects;
 
 final class IntAssociationFacetType extends CustomFieldTypeAbstract {
 
-    IntAssociationFacetType(final String genericFieldName,
-                            final WildcardMatcher wildcardMatcher,
-                            final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.INT_FACET,
-            null, null, null,
-            definition,
-            ValueType.textType,
-            FieldType.facetField);
+    private IntAssociationFacetType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
+    }
+
+    static IntAssociationFacetType of(final String genericFieldName,
+                                      final WildcardMatcher wildcardMatcher,
+                                      final CustomFieldDefinition definition) {
+        return new IntAssociationFacetType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.INT_FACET)
+            .facetsConfigSupplier(buildFacetsConfigSupplier(definition))
+            .valueType(ValueType.textType)
+            .fieldType(FieldType.facetField));
     }
 
     @Override
-    protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder consumer) {
+    protected void fillArray(final String fieldName, final Object[] values, final DocumentBuilder<?> consumer) {
         Objects.requireNonNull(values, "The value array is empty");
         if (values.length < 2)
             throw new ServerException(Response.Status.NOT_ACCEPTABLE,
                 "Expected at least 2 values - Field: " + fieldName);
         final int assoc = TypeUtils.getIntNumber(fieldName, values[0]);
         final String[] path = TypeUtils.getStringArray(fieldName, values, 1);
-        consumer.accept(genericFieldName, fieldName, new IntAssociationFacetField(assoc, fieldName, path));
+        consumer.acceptFacetField(
+            new IntAssociationFacetField(assoc, fieldName, path),
+            fieldName, facetsConfigSupplier);
     }
 
+    private static FacetsConfigSupplier buildFacetsConfigSupplier(final CustomFieldDefinition definition) {
+        return CustomFieldTypeAbstract.buildFacetsConfigSuppliers(definition,
+            (dimensionName, context, config)
+                -> config.setIndexFieldName(dimensionName, FieldDefinition.TAXONOMY_INT_ASSOC_FACET_FIELD));
+    }
 }

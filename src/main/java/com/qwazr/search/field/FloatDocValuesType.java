@@ -24,27 +24,30 @@ import org.apache.lucene.document.FloatDocValuesField;
 
 final class FloatDocValuesType extends CustomFieldTypeAbstract {
 
-    FloatDocValuesType(final String genericFieldName,
-                       final WildcardMatcher wildcardMatcher,
-                       final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.FLOAT,
-            buildFieldSupplier(genericFieldName),
-            SortUtils::floatSortField,
-            null,
-            definition,
-            ValueType.floatType,
-            FieldType.docValues);
+    private FloatDocValuesType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldSupplier buildFieldSupplier(final String genericFieldName) {
+    static FloatDocValuesType of(final String genericFieldName,
+                                 final WildcardMatcher wildcardMatcher,
+                                 final CustomFieldDefinition definition) {
+        return new FloatDocValuesType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.FLOAT)
+            .fieldSupplier(buildFieldSupplier())
+            .sortFieldSupplier(SortUtils::floatSortField)
+            .valueType(ValueType.floatType)
+            .fieldType(FieldType.docValues));
+    }
+
+    private static FieldSupplier buildFieldSupplier() {
         return (fieldName, value, documentBuilder) -> {
             final FloatDocValuesField field;
             if (value instanceof Number)
                 field = new FloatDocValuesField(fieldName, ((Number) value).floatValue());
             else
                 field = new FloatDocValuesField(fieldName, Float.parseFloat(value.toString()));
-            documentBuilder.accept(genericFieldName, fieldName, field);
+            documentBuilder.acceptField(field);
         };
     }
 

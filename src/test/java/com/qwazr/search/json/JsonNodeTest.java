@@ -24,7 +24,7 @@ import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.ExactDouble;
 import com.qwazr.search.query.HasTerm;
-import com.qwazr.search.query.TermQuery;
+import com.qwazr.search.query.SimpleQueryParser;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.utils.ObjectMappers;
 import java.io.IOException;
@@ -50,15 +50,36 @@ public class JsonNodeTest extends AbstractIndexTest {
 
     static IndexServiceInterface service;
 
-    private static JsonNode getJson(final String resourceName) throws IOException {
+    static final JsonNode issueJson = getJson("issue.json");
+
+    private static JsonNode getJson(final String resourceName) {
         try (final InputStream is = JsonNodeTest.class.getResourceAsStream(resourceName)) {
             return ObjectMappers.JSON.readTree(is);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
     @BeforeClass
     public static void setup() {
         service = initIndexManager(true).getService();
+
+        // Create the schema and the index
+
+        service.createUpdateIndex(INDEX,
+            IndexSettingsDefinition.of().recordField("record").primaryKey("id").build());
+
+        // Index the json doc
+        final IndexJsonResult result = service.postJson(INDEX, true, issueJson);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result.count, Integer.valueOf(1));
+        Assert.assertNotNull(result.fieldTypes);
+        Assert.assertEquals(result.fieldTypes.size(), 213);
+        assertThat(result.fieldTypes, allOf(
+            hasEntry("assignee.html_url", Set.of(JsonNodeType.STRING)),
+            hasEntry("assignee.site_admin", Set.of(JsonNodeType.BOOLEAN)),
+            hasEntry("comments", Set.of(JsonNodeType.NUMBER))
+        ));
     }
 
     @Test
@@ -71,67 +92,59 @@ public class JsonNodeTest extends AbstractIndexTest {
     }
 
     @Test
-    public void indexAndGetIssue() throws IOException {
-        final JsonNode issueJson = getJson("issue.json");
-
-        // Create the schema and the index
-        {
-            service.createUpdateIndex(INDEX,
-                IndexSettingsDefinition.of().recordField("record").primaryKey("id").build());
-        }
-
-        // Index the json doc
-        {
-            final IndexJsonResult result = service.postJson(INDEX, true, issueJson);
-            Assert.assertNotNull(result);
-            Assert.assertEquals(result.count, Integer.valueOf(1));
-            Assert.assertNotNull(result.fieldTypes);
-            Assert.assertEquals(result.fieldTypes.size(), 213);
-            assertThat(result.fieldTypes, allOf(
-                hasEntry("assignee.html_url", Set.of(JsonNodeType.STRING)),
-                hasEntry("assignee.site_admin", Set.of(JsonNodeType.BOOLEAN)),
-                hasEntry("comments", Set.of(JsonNodeType.NUMBER))
-            ));
-        }
-
+    public void getDocumentTest() throws IOException {
         // Get the document by its id
-        {
-            final Map<String, Object> doc = service.getDocument(INDEX, "1");
-            assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
-                equalTo(issueJson));
-        }
+        final Map<String, Object> doc = service.getDocument(INDEX, "1");
+        assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
+            equalTo(issueJson));
+    }
 
+
+    @Test
+    public void termQueryTest() throws IOException {
         // Get the document by one deep property
-        {
-            final ResultDefinition.WithMap result = service.searchQuery(INDEX,
-                QueryDefinition.of(new TermQuery("node_id", "MDU6SXNzdWUx"))
-                    .returnedField("*").queryDebug(true).build(), false);
-            final Map<String, Object> doc = result.getDocuments().get(0).getFields();
-            assertThat(result.query, equalTo("st€node_id:MDU6SXNzdWUx"));
-            assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
-                equalTo(issueJson));
-        }
+        final ResultDefinition.WithMap result = service.searchQuery(INDEX,
+            QueryDefinition.of(new HasTerm("node_id", "MDU6SXNzdWUx"))
+                .returnedField("*").queryDebug(true).build(), false);
+        final Map<String, Object> doc = result.getDocuments().get(0).getFields();
+        assertThat(result.query, equalTo("st€node_id:MDU6SXNzdWUx"));
+        assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
+            equalTo(issueJson));
+    }
 
+    @Test
+    public void exactDoubleTest() throws IOException {
         // Get the document by one root property
-        {
-            final ResultDefinition.WithMap result = service.searchQuery(INDEX,
-                QueryDefinition.of(new ExactDouble("number", 1347d))
-                    .returnedField("*").queryDebug(true).build(), false);
-            assertThat(result.query, equalTo("pd€number:[1347.0 TO 1347.0]"));
-            final Map<String, Object> doc = result.getDocuments().get(0).getFields();
-            assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
-                equalTo(issueJson));
-        }
+        final ResultDefinition.WithMap result = service.searchQuery(INDEX,
+            QueryDefinition.of(new ExactDouble("number", 1347d))
+                .returnedField("*").queryDebug(true).build(), false);
+        assertThat(result.query, equalTo("pd€number:[1347.0 TO 1347.0]"));
+        final Map<String, Object> doc = result.getDocuments().get(0).getFields();
+        assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
+            equalTo(issueJson));
+    }
 
+    @Test
+    public void deepPropertyTest() throws IOException {
         // Get the document by one deep property
-        {
-            final ResultDefinition.WithMap result = service.searchQuery(INDEX,
-                QueryDefinition.of(new HasTerm("user.login", "octocat"))
-                    .returnedField("*").queryDebug(true).build(), false);
-            final Map<String, Object> doc = result.getDocuments().get(0).getFields();
-            assertThat(result.query, equalTo("st€user.login:octocat"));
-            assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
-                equalTo(issueJson));
-        }
+        final ResultDefinition.WithMap result = service.searchQuery(INDEX,
+            QueryDefinition.of(new HasTerm("user.login", "octocat"))
+                .returnedField("*").queryDebug(true).build(), false);
+        final Map<String, Object> doc = result.getDocuments().get(0).getFields();
+        assertThat(result.query, equalTo("st€user.login:octocat"));
+        assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
+            equalTo(issueJson));
+    }
+
+    @Test
+    public void fullTextSearchTest() throws IOException {
+        // Get the document by one full text search
+        final ResultDefinition.WithMap result = service.searchQuery(INDEX,
+            QueryDefinition.of(SimpleQueryParser.of().addField("title").setQueryString("found").build())
+                .returnedField("*").queryDebug(true).build(), false);
+        final Map<String, Object> doc = result.getDocuments().get(0).getFields();
+        assertThat(result.query, equalTo("st€user.login:octocat"));
+        assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
+            equalTo(issueJson));
     }
 }

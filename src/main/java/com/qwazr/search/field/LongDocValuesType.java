@@ -25,27 +25,30 @@ import org.apache.lucene.document.NumericDocValuesField;
 
 final class LongDocValuesType extends CustomFieldTypeAbstract {
 
-    LongDocValuesType(final String genericFieldName,
-                      final WildcardMatcher wildcardMatcher,
-                      final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.LONG,
-            buildFieldSupplier(genericFieldName),
-            SortUtils::longSortField,
-            null,
-            definition,
-            ValueType.longType,
-            FieldType.docValues);
+    private LongDocValuesType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName) {
+    static LongDocValuesType of(final String genericFieldName,
+                                final WildcardMatcher wildcardMatcher,
+                                final CustomFieldDefinition definition) {
+        return new LongDocValuesType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.LONG)
+            .fieldSupplier(buildFieldSupplier())
+            .sortFieldSupplier(SortUtils::longSortField)
+            .valueType(ValueType.longType)
+            .fieldType(FieldType.docValues));
+    }
+
+    private static FieldTypeInterface.FieldSupplier buildFieldSupplier() {
         return (fieldName, value, documentBuilder) -> {
             final Field field;
             if (value instanceof Number)
                 field = new NumericDocValuesField(fieldName, ((Number) value).longValue());
             else
                 field = new NumericDocValuesField(fieldName, Long.parseLong(value.toString()));
-            documentBuilder.accept(genericFieldName, fieldName, field);
+            documentBuilder.acceptField(field);
         };
     }
 

@@ -24,20 +24,23 @@ import org.apache.lucene.util.BytesRef;
 
 final class BinaryDocValuesType extends CustomFieldTypeAbstract {
 
-    BinaryDocValuesType(final String genericFieldName,
-                        final WildcardMatcher wildcardMatcher,
-                        final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher, null,
-            buildFieldSupplier(genericFieldName),
-            null,
-            null,
-            definition,
-            ValueType.textType,
-            FieldType.docValues);
+    private BinaryDocValuesType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldSupplier buildFieldSupplier(final String genericFieldName) {
-        return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
+    static BinaryDocValuesType of(final String genericFieldName,
+                                  final WildcardMatcher wildcardMatcher,
+                                  final CustomFieldDefinition definition) {
+        return new BinaryDocValuesType(
+            CustomFieldTypeAbstract
+                .of(genericFieldName, wildcardMatcher, definition)
+                .fieldSupplier(buildFieldSupplier())
+                .valueType(ValueType.textType)
+                .fieldType(FieldType.docValues));
+    }
+
+    private static FieldSupplier buildFieldSupplier() {
+        return (fieldName, value, documentBuilder) -> documentBuilder.acceptField(
             new BinaryDocValuesField(fieldName, new BytesRef(value.toString())));
     }
 

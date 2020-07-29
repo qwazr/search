@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 
@@ -36,7 +35,7 @@ interface RecordsPoster {
 
     int getCount();
 
-    abstract class CommonPoster<RECORDBUILDER extends RecordBuilder, DOCUMENTBUILDER extends DocumentBuilder>
+    abstract class CommonPoster<DOC, RECORDBUILDER extends RecordBuilder<DOC>, DOCUMENTBUILDER extends DocumentBuilder<DOC>>
         implements RecordsPoster {
 
         protected final DOCUMENTBUILDER documentBuilder;
@@ -66,8 +65,8 @@ interface RecordsPoster {
 
     }
 
-    abstract class Documents<RECORDBUILDER extends RecordBuilder>
-        extends CommonPoster<RECORDBUILDER, DocumentBuilder.ForLuceneDocument> {
+    abstract class Documents<RECORDBUILDER extends RecordBuilder<Document>>
+        extends CommonPoster<Document, RECORDBUILDER, DocumentBuilder.ForLuceneDocument> {
 
         protected final RunnableEx<IOException> index;
 
@@ -77,33 +76,28 @@ interface RecordsPoster {
                           final IndexWriter indexWriter,
                           final TaxonomyWriter taxonomyWriter) {
             super(documentBuilder, recordBuilder, fieldMap, indexWriter, taxonomyWriter);
-            if (StringUtils.isBlank(fieldMap.getPrimaryKey()))
+            if (StringUtils.isBlank(fieldMap.fieldsContext.primaryKey))
                 index = this::addDocument;
             else
                 index = this::updateDocument;
         }
 
-        private Document getFacetedDoc() throws IOException {
-            final FacetsConfig facetsConfig = fieldMap.getFacetsConfig(documentBuilder.dimensions);
-            return facetsConfig.build(taxonomyWriter, documentBuilder.document);
-        }
-
         final void addDocument() throws IOException {
-            indexWriter.addDocument(getFacetedDoc());
+            indexWriter.addDocument(documentBuilder.build());
             count++;
             documentBuilder.reset();
         }
 
         final void updateDocument() throws IOException {
-            indexWriter.updateDocument(recordBuilder.getTermId(), getFacetedDoc());
+            indexWriter.updateDocument(recordBuilder.getTermId(), documentBuilder.build());
             count++;
             documentBuilder.reset();
         }
 
     }
 
-    abstract class DocValues<RECORDBUILDER extends RecordBuilder>
-        extends CommonPoster<RECORDBUILDER, DocumentBuilder.ForLuceneDocValues> {
+    abstract class DocValues<RECORDBUILDER extends RecordBuilder<org.apache.lucene.document.Field[]>>
+        extends CommonPoster<org.apache.lucene.document.Field[], RECORDBUILDER, DocumentBuilder.ForLuceneDocValues> {
 
         protected DocValues(final DocumentBuilder.ForLuceneDocValues documentBuilder,
                             final RECORDBUILDER recordBuilder,
@@ -114,8 +108,7 @@ interface RecordsPoster {
         }
 
         final protected void updateDocValues() throws IOException {
-            indexWriter.updateDocValues(recordBuilder.getTermId(), documentBuilder.fieldList.toArray(
-                new org.apache.lucene.document.Field[0]));
+            indexWriter.updateDocValues(recordBuilder.getTermId(), documentBuilder.build());
             count++;
             documentBuilder.reset();
         }
@@ -128,7 +121,7 @@ interface RecordsPoster {
         static MapDocument of(final FieldMap fieldMap,
                               final IndexWriter indexWriter,
                               final TaxonomyWriter taxonomyWriter) {
-            final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
+            final DocumentBuilder.ForLuceneDocument documentBuilder = DocumentBuilder.of(fieldMap, taxonomyWriter);
             if (!StringUtils.isEmpty(fieldMap.fieldsContext.recordField))
                 return new IndexMapDocumentWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
             else
@@ -138,18 +131,18 @@ interface RecordsPoster {
         static MapDocument forDocValueUpdate(final FieldMap fieldMap,
                                              final IndexWriter indexWriter,
                                              final TaxonomyWriter taxonomyWriter) {
-            final DocumentBuilder.ForLuceneDocValues documentBuilder = new DocumentBuilder.ForLuceneDocValues(fieldMap.getPrimaryKey());
+            final DocumentBuilder.ForLuceneDocValues documentBuilder = new DocumentBuilder.ForLuceneDocValues(fieldMap.fieldsContext.primaryKey);
             return new UpdateMapDocValues(documentBuilder, fieldMap, indexWriter, taxonomyWriter);
         }
     }
 
-    class IndexMapDocument extends Documents<RecordBuilder.ForMap> implements MapDocument {
+    class IndexMapDocument extends Documents<RecordBuilder.ForMap<Document>> implements MapDocument {
 
         private IndexMapDocument(final DocumentBuilder.ForLuceneDocument documentBuilder,
                                  final FieldMap fieldMap,
                                  final IndexWriter indexWriter,
                                  final TaxonomyWriter taxonomyWriter) {
-            super(documentBuilder, new RecordBuilder.ForMap(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
+            super(documentBuilder, new RecordBuilder.ForMap<>(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
         }
 
         @Override
@@ -182,7 +175,7 @@ interface RecordsPoster {
                                  final FieldMap fieldMap,
                                  final IndexWriter indexWriter,
                                  final TaxonomyWriter taxonomyWriter) {
-            final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
+            final DocumentBuilder.ForLuceneDocument documentBuilder = DocumentBuilder.of(fieldMap, taxonomyWriter);
             if (!StringUtils.isEmpty(fieldMap.fieldsContext.recordField))
                 return new IndexObjectDocumentWithSource(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
             else
@@ -193,12 +186,12 @@ interface RecordsPoster {
                                                 final FieldMap fieldMap,
                                                 final IndexWriter indexWriter,
                                                 final TaxonomyWriter taxonomyWriter) {
-            final DocumentBuilder.ForLuceneDocValues documentBuilder = new DocumentBuilder.ForLuceneDocValues(fieldMap.getPrimaryKey());
+            final DocumentBuilder.ForLuceneDocValues documentBuilder = new DocumentBuilder.ForLuceneDocValues(fieldMap.fieldsContext.primaryKey);
             return new UpdateObjectDocValues(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
         }
     }
 
-    class IndexObjectDocument extends Documents<RecordBuilder.ForObject> implements ObjectDocument {
+    class IndexObjectDocument extends Documents<RecordBuilder.ForObject<Document>> implements ObjectDocument {
 
         private final Map<String, Field> fields;
 
@@ -207,7 +200,7 @@ interface RecordsPoster {
                                     final IndexWriter indexWriter,
                                     final TaxonomyWriter taxonomyWriter,
                                     final Map<String, Field> fields) {
-            super(documentBuilder, new RecordBuilder.ForObject(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
+            super(documentBuilder, new RecordBuilder.ForObject<>(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
             this.fields = fields;
         }
 
@@ -220,7 +213,11 @@ interface RecordsPoster {
 
     final class IndexObjectDocumentWithSource extends IndexObjectDocument {
 
-        private IndexObjectDocumentWithSource(DocumentBuilder.ForLuceneDocument documentBuilder, FieldMap fieldMap, IndexWriter indexWriter, TaxonomyWriter taxonomyWriter, Map<String, Field> fields) {
+        private IndexObjectDocumentWithSource(final DocumentBuilder.ForLuceneDocument documentBuilder,
+                                              final FieldMap fieldMap,
+                                              final IndexWriter indexWriter,
+                                              final TaxonomyWriter taxonomyWriter,
+                                              final Map<String, Field> fields) {
             super(documentBuilder, fieldMap, indexWriter, taxonomyWriter, fields);
         }
 
@@ -245,7 +242,7 @@ interface RecordsPoster {
                                    final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes,
                                    final IndexWriter indexWriter,
                                    final TaxonomyWriter taxonomyWriter) {
-            final DocumentBuilder.ForLuceneDocument documentBuilder = new DocumentBuilder.ForLuceneDocument();
+            final DocumentBuilder.ForLuceneDocument documentBuilder = DocumentBuilder.of(fieldMap, taxonomyWriter);
             if (!StringUtils.isEmpty(fieldMap.fieldsContext.recordField))
                 return new IndexJsonNodeObjectWithSource(documentBuilder, fieldMap, fieldTypes, indexWriter, taxonomyWriter);
             else
@@ -288,13 +285,13 @@ interface RecordsPoster {
         }
     }
 
-    final class UpdateMapDocValues extends DocValues<RecordBuilder.ForMap> implements MapDocument {
+    final class UpdateMapDocValues extends DocValues<RecordBuilder.ForMap<org.apache.lucene.document.Field[]>> implements MapDocument {
 
         private UpdateMapDocValues(final DocumentBuilder.ForLuceneDocValues documentBuilder,
                                    final FieldMap fieldMap,
                                    final IndexWriter indexWriter,
                                    final TaxonomyWriter taxonomyWriter) {
-            super(documentBuilder, new RecordBuilder.ForMap(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
+            super(documentBuilder, new RecordBuilder.ForMap<>(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
         }
 
         @Override
@@ -304,7 +301,7 @@ interface RecordsPoster {
         }
     }
 
-    final class UpdateObjectDocValues extends DocValues<RecordBuilder.ForObject> implements ObjectDocument {
+    final class UpdateObjectDocValues extends DocValues<RecordBuilder.ForObject<org.apache.lucene.document.Field[]>> implements ObjectDocument {
 
         private final Map<String, Field> fields;
 
@@ -313,7 +310,7 @@ interface RecordsPoster {
                                       final IndexWriter indexWriter,
                                       final TaxonomyWriter taxonomyWriter,
                                       final Map<String, Field> fields) {
-            super(documentBuilder, new RecordBuilder.ForObject(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
+            super(documentBuilder, new RecordBuilder.ForObject<>(fieldMap, documentBuilder), fieldMap, indexWriter, taxonomyWriter);
             this.fields = fields;
         }
 

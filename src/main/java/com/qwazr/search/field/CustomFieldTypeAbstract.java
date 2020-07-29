@@ -15,80 +15,47 @@
  */
 package com.qwazr.search.field;
 
-import com.qwazr.search.index.BytesRefUtils;
-import com.qwazr.utils.WildcardMatcher;
-import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 abstract class CustomFieldTypeAbstract extends FieldTypeAbstract<CustomFieldDefinition> {
 
-    protected CustomFieldTypeAbstract(final String genericFieldName,
-                                      final WildcardMatcher wildcardMatcher,
-                                      final BytesRefUtils.Converter<?> bytesRefConverter,
-                                      final FieldSupplier fieldSupplier,
-                                      final SortFieldSupplier sortFieldSupplier,
-                                      final TermSupplier primaryTermSupplier,
-                                      final CustomFieldDefinition definition,
-                                      final ValueType valueType,
-                                      final Collection<FieldType> fieldTypes) {
-        super(of(genericFieldName, wildcardMatcher, definition)
-            .bytesRefConverter(bytesRefConverter)
-            .fieldSupplier(fieldSupplier)
-            .facetSupplier(buildFacetConfig(definition))
-            .sortFieldSupplier(sortFieldSupplier)
-            .primaryTermSupplier(primaryTermSupplier)
-            .fieldNameResolver((fn, ft, vt) -> fn)
-            .valueType(valueType)
-            .fieldTypes(fieldTypes)
-        );
-    }
-
-    protected CustomFieldTypeAbstract(final String genericFieldName,
-                                      final WildcardMatcher wildcardMatcher,
-                                      final BytesRefUtils.Converter<?> bytesRefConverter,
-                                      final FieldSupplier fieldSupplier,
-                                      final SortFieldSupplier sortFieldSupplier,
-                                      final TermSupplier primaryTermSupplier,
-                                      final CustomFieldDefinition definition,
-                                      final ValueType valueType,
-                                      final FieldType fieldType) {
-        super(of(genericFieldName, wildcardMatcher, definition)
-            .bytesRefConverter(bytesRefConverter)
-            .fieldSupplier(fieldSupplier)
-            .facetSupplier(buildFacetConfig(definition))
-            .sortFieldSupplier(sortFieldSupplier)
-            .primaryTermSupplier(primaryTermSupplier)
-            .fieldNameResolver((fn, ft, vt) -> fn)
-            .valueType(valueType)
-            .fieldType(fieldType)
-        );
+    protected CustomFieldTypeAbstract(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
     protected static boolean isStored(final CustomFieldDefinition definition) {
         return definition.stored != null && definition.stored;
     }
 
-    private static FacetSupplier buildFacetConfig(final CustomFieldDefinition definition) {
-        final Collection<FacetSupplier> facetSuppliers = new LinkedHashSet<>();
+    protected static FacetsConfigSupplier buildFacetsConfigSuppliers(final CustomFieldDefinition definition,
+                                                                     final FacetsConfigSupplier... facetSupplierArray) {
+        final List<FacetsConfigSupplier> facetSuppliers = new ArrayList<>();
         if (definition.facetMultivalued != null)
             facetSuppliers.add(
-                (fieldName, fieldMap, facetsConfig)
+                (fieldName, fieldsContext, facetsConfig)
                     -> facetsConfig.setMultiValued(fieldName, definition.facetMultivalued));
         if (definition.facetHierarchical != null)
             facetSuppliers.add(
-                (fieldName, fieldMap, facetsConfig)
+                (fieldName, fieldsContext, facetsConfig)
                     -> facetsConfig.setHierarchical(fieldName, definition.facetHierarchical));
         if (definition.facetRequireDimCount != null)
-            facetSuppliers.add((fieldName, fieldMap, facetsConfig)
+            facetSuppliers.add((fieldName, fieldsContext, facetsConfig)
                 -> facetsConfig.setRequireDimCount(fieldName, definition.facetRequireDimCount));
-        if (facetSuppliers.isEmpty())
+        Collections.addAll(facetSuppliers, facetSupplierArray);
+        return reduceFacetsConfigSuppliers(facetSuppliers);
+    }
+
+    protected static FacetsConfigSupplier reduceFacetsConfigSuppliers(final List<FacetsConfigSupplier> facetSuppliers) {
+        if (facetSuppliers == null || facetSuppliers.isEmpty())
             return null;
         if (facetSuppliers.size() == 1)
-            return facetSuppliers.iterator().next();
-        final FacetSupplier[] facetSupplierArray = facetSuppliers.toArray(new FacetSupplier[0]);
-        return (fieldName, fieldMap, facetsConfig) -> {
-            for (final FacetSupplier facetSupplier : facetSupplierArray)
-                facetSupplier.setConfig(fieldName, fieldMap, facetsConfig);
+            return facetSuppliers.get(0);
+        final FacetsConfigSupplier[] facetsConfigSupplierArray = facetSuppliers.toArray(new FacetsConfigSupplier[0]);
+        return (fieldName, fieldsContext, facetsConfig) -> {
+            for (final FacetsConfigSupplier facetsConfigSupplier : facetsConfigSupplierArray)
+                facetsConfigSupplier.setConfig(fieldName, fieldsContext, facetsConfig);
         };
     }
 

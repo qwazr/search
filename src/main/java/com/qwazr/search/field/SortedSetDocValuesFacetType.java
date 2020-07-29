@@ -22,40 +22,49 @@ import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
 
 final class SortedSetDocValuesFacetType extends CustomFieldTypeAbstract {
 
-    SortedSetDocValuesFacetType(final String genericFieldName,
-                                final WildcardMatcher wildcardMatcher,
-                                final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.STRING,
-            buildFieldSupplier(genericFieldName, definition),
-            null,
-            null,
-            definition,
-            ValueType.textType,
-            FieldType.facetField);
+    private SortedSetDocValuesFacetType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldTypeInterface.FieldSupplier buildFieldSupplier(final String genericFieldName,
-                                                                       final CustomFieldDefinition definition) {
+    static SortedSetDocValuesFacetType of(final String genericFieldName,
+                                          final WildcardMatcher wildcardMatcher,
+                                          final CustomFieldDefinition definition) {
+        final FacetsConfigSupplier facetsConfigSupplier = buildFacetsConfigSupplier(definition);
+        final FieldSupplier fieldSupplier = buildFieldSupplier(facetsConfigSupplier, definition);
+        return new SortedSetDocValuesFacetType(CustomFieldTypeAbstract.of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.STRING)
+            .fieldSupplier(fieldSupplier)
+            .facetsConfigSupplier(facetsConfigSupplier)
+            .valueType(ValueType.textType)
+            .fieldType(FieldType.facetField));
+
+    }
+
+    private static FieldSupplier buildFieldSupplier(final FacetsConfigSupplier facetsConfigSupplier,
+                                                    final CustomFieldDefinition definition) {
         if (isStored(definition)) {
             return (fieldName, value, documentBuilder) -> {
                 final String stringValue = FieldUtils.getStringValue(value);
                 if (stringValue == null)
                     return;
-                documentBuilder.accept(genericFieldName, fieldName,
-                    new SortedSetDocValuesFacetField(fieldName, stringValue));
-                documentBuilder.accept(genericFieldName, fieldName,
+                documentBuilder.acceptFacetField(new SortedSetDocValuesFacetField(fieldName, stringValue), fieldName, facetsConfigSupplier);
+                documentBuilder.acceptField(
                     new StoredField(fieldName, stringValue));
             };
         } else {
             return (fieldName, value, documentBuilder) -> {
                 final String stringValue = FieldUtils.getStringValue(value);
                 if (stringValue != null)
-                    documentBuilder.accept(genericFieldName, fieldName,
-                        new SortedSetDocValuesFacetField(fieldName, stringValue));
+                    documentBuilder.acceptFacetField(new SortedSetDocValuesFacetField(fieldName, stringValue), fieldName, facetsConfigSupplier);
 
             };
         }
     }
+
+    private static FacetsConfigSupplier buildFacetsConfigSupplier(final CustomFieldDefinition definition) {
+        return CustomFieldTypeAbstract.buildFacetsConfigSuppliers(definition,
+            (dimensionName, context, config) -> config.setIndexFieldName(dimensionName, context.sortedSetFacetField));
+    }
+
 
 }

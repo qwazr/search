@@ -22,30 +22,30 @@ import org.apache.lucene.document.StoredField;
 
 final class DoublePointType extends CustomFieldTypeAbstract {
 
-    DoublePointType(final String genericFieldName,
-                    final WildcardMatcher wildcardMatcher,
-                    final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.DOUBLE_POINT,
-            buildFieldSupplier(genericFieldName, definition),
-            null,
-            null,
-            definition,
-            ValueType.doubleType,
-            FieldType.pointField
-        );
+    private DoublePointType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
     }
 
-    private static FieldSupplier buildFieldSupplier(final String genericFieldName,
-                                                    final CustomFieldDefinition definition) {
+    static DoublePointType of(final String genericFieldName,
+                              final WildcardMatcher wildcardMatcher,
+                              final CustomFieldDefinition definition) {
+        return new DoublePointType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.DOUBLE_POINT)
+            .fieldSupplier(buildFieldSupplier(definition))
+            .valueType(ValueType.doubleType)
+            .fieldType(FieldType.pointField));
+    }
+
+    private static FieldSupplier buildFieldSupplier(final CustomFieldDefinition definition) {
         if (isStored(definition))
             return (fieldName, value, documentBuilder) -> {
                 final double doubleValue = FieldUtils.getDoubleValue(value);
-                documentBuilder.accept(genericFieldName, fieldName, new DoublePoint(fieldName, doubleValue));
-                documentBuilder.accept(genericFieldName, fieldName, new StoredField(fieldName, doubleValue));
+                documentBuilder.acceptField(new DoublePoint(fieldName, doubleValue));
+                documentBuilder.acceptField(new StoredField(fieldName, doubleValue));
             };
         else
-            return (fieldName, value, documentBuilder) -> documentBuilder.accept(genericFieldName, fieldName,
+            return (fieldName, value, documentBuilder) -> documentBuilder.acceptField(
                 new DoublePoint(fieldName, FieldUtils.getDoubleValue(value)));
     }
 

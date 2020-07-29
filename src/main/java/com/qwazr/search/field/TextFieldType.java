@@ -25,17 +25,20 @@ import org.apache.lucene.document.TextField;
 
 final class TextFieldType extends CustomFieldTypeAbstract {
 
-    TextFieldType(final String genericFieldName,
-                  final WildcardMatcher wildcardMatcher,
-                  final CustomFieldDefinition definition) {
-        super(genericFieldName, wildcardMatcher,
-            BytesRefUtils.Converter.STRING,
-            buildFieldSupplier(genericFieldName, definition),
-            null,
-            FieldUtils::newStringTerm,
-            definition,
-            ValueType.textType,
-            getFieldTypes(definition));
+    private TextFieldType(final Builder<CustomFieldDefinition> builder) {
+        super(builder);
+    }
+
+    static TextFieldType of(final String genericFieldName,
+                            final WildcardMatcher wildcardMatcher,
+                            final CustomFieldDefinition definition) {
+        return new TextFieldType(CustomFieldTypeAbstract
+            .of(genericFieldName, wildcardMatcher, definition)
+            .bytesRefConverter(BytesRefUtils.Converter.STRING)
+            .fieldSupplier(buildFieldSupplier(definition))
+            .primaryTermSupplier(FieldUtils::newStringTerm)
+            .valueType(ValueType.textType)
+            .fieldTypes(getFieldTypes(definition)));
     }
 
     private static Collection<FieldType> getFieldTypes(final CustomFieldDefinition definition) {
@@ -45,12 +48,10 @@ final class TextFieldType extends CustomFieldTypeAbstract {
             return Collections.singletonList(FieldType.textField);
     }
 
-    private static FieldSupplier buildFieldSupplier(final String genericFieldName,
-                                                    final CustomFieldDefinition definition) {
+    private static FieldSupplier buildFieldSupplier(final CustomFieldDefinition definition) {
         final Field.Store fieldStore = isStored(definition) ? Field.Store.YES : Field.Store.NO;
         return (fieldName, value, documentBuilder) ->
-            documentBuilder.accept(genericFieldName, fieldName,
-                new TextField(fieldName, value.toString(), fieldStore));
+            documentBuilder.acceptField(new TextField(fieldName, value.toString(), fieldStore));
     }
 
 }

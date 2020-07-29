@@ -18,7 +18,7 @@ package com.qwazr.search.field;
 import com.qwazr.search.field.converters.MultiReader;
 import com.qwazr.search.field.converters.ValueConverter;
 import com.qwazr.search.index.DocumentBuilder;
-import com.qwazr.search.index.FieldMap;
+import com.qwazr.search.index.FieldsContext;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.utils.WildcardMatcher;
 import javax.annotation.Nullable;
@@ -29,7 +29,7 @@ import org.apache.lucene.util.BytesRef;
 
 public interface FieldTypeInterface {
 
-    void dispatch(final String fieldName, final Object value, final DocumentBuilder luceneDocumentBuilder);
+    void dispatch(final String fieldName, final Object value, final DocumentBuilder<?> luceneDocumentBuilder);
 
     SortField getSortField(final String fieldName, final QueryDefinition.SortEnum sortEnum);
 
@@ -41,8 +41,6 @@ public interface FieldTypeInterface {
 
     Term newPrimaryTerm(final String fieldName, final Object value);
 
-    Term newIndexTerm(final String fieldName, final Object value);
-
     ValueType getValueType();
 
     FieldType findFirstOf(final FieldType... expectedTypes);
@@ -51,7 +49,9 @@ public interface FieldTypeInterface {
 
     void copyTo(final String fieldName, final FieldTypeInterface fieldType);
 
-    void applyFacetsConfig(final String fieldName, final FieldMap fieldMap, final FacetsConfig facetsConfig);
+    void applyFacetsConfig(final String dimensionName,
+                           final FieldsContext fieldsContext,
+                           final FacetsConfig facetsConfig);
 
     @FunctionalInterface
     interface Supplier<T extends FieldDefinition> {
@@ -61,9 +61,9 @@ public interface FieldTypeInterface {
     }
 
     @FunctionalInterface
-    interface FacetSupplier {
-        void setConfig(final String fieldName,
-                       final FieldMap fieldMap,
+    interface FacetsConfigSupplier {
+        void setConfig(final String dimensionName,
+                       final FieldsContext fieldsContext,
                        final FacetsConfig facetsConfig);
     }
 
@@ -71,7 +71,7 @@ public interface FieldTypeInterface {
     interface FieldSupplier {
         void addFields(final String fieldName,
                        final Object value,
-                       final DocumentBuilder documentBuilder);
+                       final DocumentBuilder<?> documentBuilder);
     }
 
     @FunctionalInterface

@@ -59,7 +59,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             isFullText = isFullTextIndexAnalyzer(definition);
             valueType(getValueType());
             fieldSupplier(buildFieldSupplier());
-            facetSupplier(buildFacetSupplier());
+            facetsConfigSupplier(buildFacetsConfigSupplier());
             sortFieldSupplier(buildSortFieldSupplier());
             primaryTermSupplier(buildPrimaryTermSupplier());
             fieldNameResolver(buildFieldNameResolver());
@@ -91,15 +91,15 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             }
         }
 
-        private FacetSupplier buildFacetSupplier() {
+        private FacetsConfigSupplier buildFacetsConfigSupplier() {
             if (!isFacet)
                 return null;
             final SmartFieldProvider.SmartFieldNameResolver fieldNameSupplier = SmartFieldProvider
                 .facetFieldNameSupplier(genericFieldName, wildcardMatcher);
-            return (fieldName, fieldMap, facetsConfig) -> {
+            return (fieldName, fieldsContext, facetsConfig) -> {
                 final String resolvedFieldName = fieldNameSupplier.resolve(fieldName);
                 facetsConfig.setMultiValued(resolvedFieldName, true);
-                facetsConfig.setIndexFieldName(resolvedFieldName, fieldMap.fieldsContext.sortedSetFacetField);
+                facetsConfig.setIndexFieldName(resolvedFieldName, fieldsContext.sortedSetFacetField);
             };
         }
 
@@ -164,23 +164,6 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
         private TermSupplier buildPrimaryTermSupplier() {
             if (!isPrimaryKey)
                 return null;
-            switch (type) {
-                case TEXT:
-                    return SmartFieldProvider.stringTermText(genericFieldName, wildcardMatcher, maxKeywordLength);
-                case LONG:
-                    return SmartFieldProvider.stringTermLong(genericFieldName, wildcardMatcher);
-                case DOUBLE:
-                    return SmartFieldProvider.stringTermDouble(genericFieldName, wildcardMatcher);
-                case INTEGER:
-                    return SmartFieldProvider.stringTermInteger(genericFieldName, wildcardMatcher);
-                case FLOAT:
-                    return SmartFieldProvider.stringTermFloat(genericFieldName, wildcardMatcher);
-                default:
-                    return null;
-            }
-        }
-
-        private TermSupplier buildIndexTermSupplier() {
             switch (type) {
                 case TEXT:
                     return SmartFieldProvider.stringTermText(genericFieldName, wildcardMatcher, maxKeywordLength);
