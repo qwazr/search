@@ -101,7 +101,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         if (document == null)
             return 0;
         final RecordsPoster.ObjectDocument poster = RecordsPoster.ObjectDocument.of(
-            fields, fieldMap, indexWriter, taxonomyWriter);
+            fields, fieldMap, analyzerContext, indexWriter, taxonomyWriter);
         return postObjectDoc(poster, document, commitUserData);
     }
 
@@ -112,7 +112,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         if (documents == null || documents.isEmpty())
             return 0;
         final RecordsPoster.ObjectDocument poster =
-            RecordsPoster.ObjectDocument.of(fields, fieldMap, indexWriter, taxonomyWriter);
+            RecordsPoster.ObjectDocument.of(fields, fieldMap, analyzerContext, indexWriter, taxonomyWriter);
         return postObjectDocs(poster, documents, commitUserData);
     }
 
@@ -140,7 +140,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         if (post == null || post.document == null || post.document.isEmpty())
             return 0;
         final RecordsPoster.MapDocument poster =
-            RecordsPoster.MapDocument.of(fieldMap, indexWriter, taxonomyWriter);
+            RecordsPoster.MapDocument.of(fieldMap, analyzerContext, indexWriter, taxonomyWriter);
         return postMappedDoc(poster, post);
     }
 
@@ -149,7 +149,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         if (post == null || post.documents == null || post.documents.isEmpty())
             return 0;
         final RecordsPoster.MapDocument poster =
-            RecordsPoster.MapDocument.of(fieldMap, indexWriter, taxonomyWriter);
+            RecordsPoster.MapDocument.of(fieldMap, analyzerContext, indexWriter, taxonomyWriter);
         return postMappedDocs(poster, post);
     }
 
@@ -171,7 +171,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         if (jsonNode == null)
             return 0;
         final RecordsPoster.JsonNodeDocument poster =
-            RecordsPoster.JsonNodeDocument.of(fieldMap, fieldTypes, indexWriter, taxonomyWriter);
+            RecordsPoster.JsonNodeDocument.of(fieldMap, analyzerContext, fieldTypes, indexWriter, taxonomyWriter);
         if (jsonNode.isArray()) {
             for (final JsonNode element : jsonNode) {
                 postJsonNode(poster, element);
@@ -189,7 +189,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         if (jsonNodes == null)
             return 0;
         final RecordsPoster.JsonNodeDocument poster =
-            RecordsPoster.JsonNodeDocument.of(fieldMap, fieldTypes, indexWriter, taxonomyWriter);
+            RecordsPoster.JsonNodeDocument.of(fieldMap, analyzerContext, fieldTypes, indexWriter, taxonomyWriter);
         for (final JsonNode jsonNode : jsonNodes)
             postJsonNode(poster, jsonNode);
         return poster.getCount();
@@ -202,7 +202,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         if (document == null)
             return 0;
         final RecordsPoster.ObjectDocument poster =
-            RecordsPoster.ObjectDocument.forDocValueUpdate(fields, fieldMap, indexWriter, taxonomyWriter);
+            RecordsPoster.ObjectDocument.forDocValueUpdate(fields, fieldMap, analyzerContext, indexWriter, taxonomyWriter);
         return postObjectDoc(poster, document, commitUserData);
     }
 
@@ -213,7 +213,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         if (documents == null || documents.isEmpty())
             return 0;
         final RecordsPoster.ObjectDocument poster =
-            RecordsPoster.ObjectDocument.forDocValueUpdate(fields, fieldMap, indexWriter, taxonomyWriter);
+            RecordsPoster.ObjectDocument.forDocValueUpdate(fields, fieldMap, analyzerContext, indexWriter, taxonomyWriter);
         return postObjectDocs(poster, documents, commitUserData);
     }
 
@@ -222,7 +222,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         if (post == null || post.document == null || post.document.isEmpty())
             return 0;
         final RecordsPoster.MapDocument poster =
-            RecordsPoster.MapDocument.forDocValueUpdate(fieldMap, indexWriter, taxonomyWriter);
+            RecordsPoster.MapDocument.forDocValueUpdate(fieldMap, analyzerContext, indexWriter, taxonomyWriter);
         return postMappedDoc(poster, post);
     }
 
@@ -231,7 +231,7 @@ final class WriteContextImpl extends IndexContextImpl implements WriteContext {
         if (post == null || post.documents == null || post.documents.isEmpty())
             return 0;
         final RecordsPoster.MapDocument poster =
-            RecordsPoster.MapDocument.forDocValueUpdate(fieldMap, indexWriter, taxonomyWriter);
+            RecordsPoster.MapDocument.forDocValueUpdate(fieldMap, analyzerContext, indexWriter, taxonomyWriter);
         return postMappedDocs(poster, post);
     }
 

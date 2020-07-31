@@ -106,8 +106,9 @@ public class JsonNodeTest extends AbstractIndexTest {
         final ResultDefinition.WithMap result = service.searchQuery(INDEX,
             QueryDefinition.of(new HasTerm("node_id", "MDU6SXNzdWUx"))
                 .returnedField("*").queryDebug(true).build(), false);
-        final Map<String, Object> doc = result.getDocuments().get(0).getFields();
         assertThat(result.query, equalTo("st€node_id:MDU6SXNzdWUx"));
+        assertThat(result.getTotalHits(), equalTo(1L));
+        final Map<String, Object> doc = result.getDocuments().get(0).getFields();
         assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
             equalTo(issueJson));
     }
@@ -119,6 +120,7 @@ public class JsonNodeTest extends AbstractIndexTest {
             QueryDefinition.of(new ExactDouble("number", 1347d))
                 .returnedField("*").queryDebug(true).build(), false);
         assertThat(result.query, equalTo("pd€number:[1347.0 TO 1347.0]"));
+        assertThat(result.getTotalHits(), equalTo(1L));
         final Map<String, Object> doc = result.getDocuments().get(0).getFields();
         assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
             equalTo(issueJson));
@@ -130,8 +132,9 @@ public class JsonNodeTest extends AbstractIndexTest {
         final ResultDefinition.WithMap result = service.searchQuery(INDEX,
             QueryDefinition.of(new HasTerm("user.login", "octocat"))
                 .returnedField("*").queryDebug(true).build(), false);
-        final Map<String, Object> doc = result.getDocuments().get(0).getFields();
         assertThat(result.query, equalTo("st€user.login:octocat"));
+        assertThat(result.getTotalHits(), equalTo(1L));
+        final Map<String, Object> doc = result.getDocuments().get(0).getFields();
         assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
             equalTo(issueJson));
     }
@@ -140,10 +143,11 @@ public class JsonNodeTest extends AbstractIndexTest {
     public void fullTextSearchTest() throws IOException {
         // Get the document by one full text search
         final ResultDefinition.WithMap result = service.searchQuery(INDEX,
-            QueryDefinition.of(SimpleQueryParser.of().addField("title").setQueryString("found").build())
+            QueryDefinition.of(SimpleQueryParser.of().setAnalyzer("ascii").addField("title").setQueryString("found").build())
                 .returnedField("*").queryDebug(true).build(), false);
+        assertThat(result.query, equalTo("tt€title:found"));
+        assertThat(result.getTotalHits(), equalTo(1L));
         final Map<String, Object> doc = result.getDocuments().get(0).getFields();
-        assertThat(result.query, equalTo("st€user.login:octocat"));
         assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
             equalTo(issueJson));
     }

@@ -91,8 +91,8 @@ class IndexInstanceBuilder {
 
     final Set<AnalyzerContext> activeAnalyzerContexts;
 
+    final UpdatableAnalyzers updatableIndexAnalyzers;
     AnalyzerContext analyzerContext;
-    UpdatableAnalyzers indexAnalyzers;
 
     ReplicationMaster replicationMaster;
     ReplicationSlave replicationSlave;
@@ -125,6 +125,7 @@ class IndexInstanceBuilder {
         this.indexUuid = indexUuid;
         this.indexName = indexName;
         this.activeAnalyzerContexts = ConcurrentHashMap.newKeySet();
+        this.updatableIndexAnalyzers = new UpdatableAnalyzers();
         this.writeSemaphore = AutoLockSemaphore.of(settings == null ? -1 : settings.maxConcurrentWrite == null ? -1 : settings.maxConcurrentWrite);
         this.readSemaphore = AutoLockSemaphore.of(settings == null ? -1 : settings.maxConcurrentRead == null ? -1 : settings.maxConcurrentRead);
     }
@@ -143,9 +144,8 @@ class IndexInstanceBuilder {
 
         fieldMap = new FieldMap(new FieldsContext(settings, fieldMapDefinition));
 
-        analyzerContext = new AnalyzerContext(activeAnalyzerContexts, instanceFactory, fileResourceLoader, fieldMap,
-            globalAnalyzerFactoryMap, localAnalyzerFactoryMap, new ArrayList<>());
-        indexAnalyzers = new UpdatableAnalyzers(analyzerContext.getIndexAnalyzers());
+        analyzerContext = new AnalyzerContext(activeAnalyzerContexts, instanceFactory, fileResourceLoader,
+            updatableIndexAnalyzers, fieldMap, globalAnalyzerFactoryMap, localAnalyzerFactoryMap, new ArrayList<>());
 
         // Open and lock the index directories
         dataDirectory = getDirectory(settings, fileSet.dataDirectory);
@@ -209,7 +209,7 @@ class IndexInstanceBuilder {
 
     private void openOrCreateDataIndex(boolean closeAfter) throws IOException {
 
-        final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(indexAnalyzers);
+        final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(updatableIndexAnalyzers);
         indexWriterConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
         if (settings != null) {
             if (similarity != null)

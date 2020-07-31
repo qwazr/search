@@ -24,9 +24,8 @@ final public class UpdatableAnalyzers extends AnalyzerWrapper {
 
     private volatile Map<String, Analyzer> perFieldAnalyzers;
 
-    public UpdatableAnalyzers(final Map<String, Analyzer> perFieldAnalyzers) throws ServerException {
+    public UpdatableAnalyzers() throws ServerException {
         super(PER_FIELD_REUSE_STRATEGY);
-        update(perFieldAnalyzers);
     }
 
     final public synchronized void update(final Map<String, Analyzer> perFieldAnalyzers) throws ServerException {

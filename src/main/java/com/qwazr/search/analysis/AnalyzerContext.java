@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,10 +64,13 @@ final public class AnalyzerContext extends Equalizer.Immutable<AnalyzerContext> 
     private final Map<String, Analyzer> smartSetQueryAnalyzer;
     private final Map<String, Analyzer> perFieldIndexAnalyzers;
     private final Analyzer perFieldQueryAnalyzers;
+    private final UpdatableAnalyzers updatableIndexAnalyzers;
+    private final Map<String, Analyzer> indexAnalyzers;
 
     public AnalyzerContext(final Set<AnalyzerContext> activeAnalyzerContext,
                            final ConstructorParametersImpl instanceFactory,
                            final ResourceLoader resourceLoader,
+                           final UpdatableAnalyzers updatableIndexAnalyzers,
                            @NotNull final FieldMap fieldMap,
                            final Map<String, AnalyzerFactory> globalAnalyzerFactoryMap,
                            final Map<String, CustomAnalyzer.Factory> localAnalyzerFactoryMap,
@@ -104,7 +108,7 @@ final public class AnalyzerContext extends Equalizer.Immutable<AnalyzerContext> 
             createFromClass(smartAnalyzer.forQuery(), errors,
                 analyzer -> smartSetQueryAnalyzer.put(smartAnalyzer.name(), analyzer));
         }
-        Map<String, Analyzer> perFieldIndexAnalyzers = new HashMap<>();
+        final Map<String, Analyzer> perFieldIndexAnalyzers = new HashMap<>();
         final Map<String, Analyzer> perFieldQueryAnalyzers = new HashMap<>();
 
         fieldMap.forEach((fieldName, fieldType) -> {
@@ -131,6 +135,9 @@ final public class AnalyzerContext extends Equalizer.Immutable<AnalyzerContext> 
 
         this.perFieldIndexAnalyzers = Map.copyOf(perFieldIndexAnalyzers);
         this.perFieldQueryAnalyzers = new PerFieldAnalyzerWrapper(defaultKeywordAnalyzer, perFieldQueryAnalyzers);
+        this.indexAnalyzers = new ConcurrentHashMap<>(perFieldIndexAnalyzers);
+        this.updatableIndexAnalyzers = updatableIndexAnalyzers;
+        this.updatableIndexAnalyzers.update(Map.copyOf(indexAnalyzers));
     }
 
     public AnalyzerContext acquire() {
@@ -138,25 +145,38 @@ final public class AnalyzerContext extends Equalizer.Immutable<AnalyzerContext> 
         return this;
     }
 
-    final public Map<String, Analyzer> getIndexAnalyzers() {
-        return perFieldIndexAnalyzers;
-    }
-
     public Analyzer resolveQueryAnalyzer(final String analyzerName) {
         if (analyzerName == null || analyzerName.isEmpty())
             return perFieldQueryAnalyzers;
-        Analyzer analyzer;
-
-        analyzer = perNameAnalyzers.get(analyzerName);
+        Analyzer analyzer = perNameAnalyzers.get(analyzerName);
         if (analyzer != null)
             return analyzer;
-        analyzer = smartSetIndexAnalyzer.get(analyzerName);
+        analyzer = smartSetQueryAnalyzer.get(analyzerName);
         if (analyzer != null)
             return analyzer;
-
         synchronized (onTheFlyLock) {
             return fromClassName(analyzerName);
         }
+    }
+    
+    public void resolveIndexQueryAnalyzer(final String fieldName,
+                                          final String analyzerName) {
+        if (fieldName == null || analyzerName == null || fieldName.isEmpty() || analyzerName.isEmpty())
+            return;
+        if (indexAnalyzers.containsKey(fieldName))
+            return;
+        indexAnalyzers.computeIfAbsent(fieldName, f -> {
+            Analyzer analyzer = perNameAnalyzers.get(analyzerName);
+            if (analyzer != null)
+                return analyzer;
+            analyzer = smartSetQueryAnalyzer.get(analyzerName);
+            if (analyzer != null)
+                return analyzer;
+            synchronized (onTheFlyLock) {
+                return fromClassName(analyzerName);
+            }
+        });
+        updatableIndexAnalyzers.update(Map.copyOf(indexAnalyzers));
     }
 
     @Override

@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.FieldTypeInterface;
 import java.lang.reflect.Field;
 import java.util.SortedMap;
@@ -30,11 +31,15 @@ import org.apache.lucene.index.Term;
 abstract class RecordBuilder<DOC> {
 
     private final FieldMap fieldMap;
+    private final AnalyzerContext analyzerContext;
     private final DocumentBuilder<DOC> documentBuilder;
     private Term termId;
 
-    RecordBuilder(final FieldMap fieldMap, final DocumentBuilder<DOC> documentBuilder) {
+    RecordBuilder(final FieldMap fieldMap,
+                  final AnalyzerContext analyzerContext,
+                  final DocumentBuilder<DOC> documentBuilder) {
         this.fieldMap = fieldMap;
+        this.analyzerContext = analyzerContext;
         this.documentBuilder = documentBuilder;
     }
 
@@ -53,7 +58,7 @@ abstract class RecordBuilder<DOC> {
         if (fieldValue == null)
             return;
 
-        final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName, fieldValue);
+        final FieldTypeInterface fieldType = fieldMap.getFieldType(null, fieldName, fieldValue, analyzerContext);
         fieldType.dispatch(fieldName, fieldValue, documentBuilder);
 
         if (fieldName.equals(fieldMap.fieldsContext.primaryKey))
@@ -62,8 +67,10 @@ abstract class RecordBuilder<DOC> {
 
     final static class ForMap<DOC> extends RecordBuilder<DOC> {
 
-        ForMap(final FieldMap fieldMap, final DocumentBuilder<DOC> documentBuilder) {
-            super(fieldMap, documentBuilder);
+        ForMap(final FieldMap fieldMap,
+               final AnalyzerContext analyzerContext,
+               final DocumentBuilder<DOC> documentBuilder) {
+            super(fieldMap, analyzerContext, documentBuilder);
         }
 
         final void accept(final String fieldName, final Object fieldValue) {
@@ -75,8 +82,9 @@ abstract class RecordBuilder<DOC> {
     final static class ForObject<DOC> extends RecordBuilder<DOC> {
 
         ForObject(final FieldMap fieldMap,
+                  final AnalyzerContext analyzerContext,
                   final DocumentBuilder<DOC> documentBuilder) {
-            super(fieldMap, documentBuilder);
+            super(fieldMap, analyzerContext, documentBuilder);
         }
 
         final public void accept(final String fieldName,
@@ -94,8 +102,9 @@ abstract class RecordBuilder<DOC> {
     static class ForJson extends RecordBuilder<Document> {
 
         private ForJson(final FieldMap fieldMap,
+                        final AnalyzerContext analyzerContext,
                         final DocumentBuilder<Document> documentBuilder) {
-            super(fieldMap, documentBuilder);
+            super(fieldMap, analyzerContext, documentBuilder);
         }
 
         boolean accept(final String fieldName, final JsonNode jsonValue) {
@@ -126,12 +135,13 @@ abstract class RecordBuilder<DOC> {
     }
 
     static ForJson forJsonOf(final FieldMap fieldMap,
+                             final AnalyzerContext analyzerContext,
                              final DocumentBuilder<Document> documentBuilder,
                              final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes) {
         if (fieldTypes == null)
-            return new ForJson(fieldMap, documentBuilder);
+            return new ForJson(fieldMap, analyzerContext, documentBuilder);
         else
-            return new ForJsonWithFieldTypes(fieldMap, documentBuilder, fieldTypes);
+            return new ForJsonWithFieldTypes(fieldMap, analyzerContext, documentBuilder, fieldTypes);
     }
 
     final static class ForJsonWithFieldTypes extends ForJson {
@@ -139,9 +149,10 @@ abstract class RecordBuilder<DOC> {
         private final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes;
 
         private ForJsonWithFieldTypes(final FieldMap fieldMap,
+                                      final AnalyzerContext analyzerContext,
                                       final DocumentBuilder<Document> documentBuilder,
                                       final SortedMap<String, SortedSet<JsonNodeType>> fieldTypes) {
-            super(fieldMap, documentBuilder);
+            super(fieldMap, analyzerContext, documentBuilder);
             this.fieldTypes = fieldTypes;
         }
 

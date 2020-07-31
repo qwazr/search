@@ -117,8 +117,8 @@ final public class IndexInstance implements Closeable {
     private final ReentrantLock commitLock;
     private final ReentrantLock backupLock;
 
+    private final UpdatableAnalyzers updatableIndexAnalyzers;
     private volatile AnalyzerContext analyzerContext;
-    private final UpdatableAnalyzers indexAnalyzers;
 
     private final ReentrantLock fieldMapLock;
     private volatile FieldMap fieldMap;
@@ -149,7 +149,6 @@ final public class IndexInstance implements Closeable {
         this.fieldMap = builder.fieldMap;
         this.writerAndSearcher = builder.writerAndSearcher;
         this.analyzerContext = builder.analyzerContext;
-        this.indexAnalyzers = builder.indexAnalyzers;
         this.settings = builder.settings;
         this.executorService = builder.executorService;
         this.instanceFactory = builder.instanceFactory;
@@ -160,6 +159,7 @@ final public class IndexInstance implements Closeable {
         this.replicationMaster = builder.replicationMaster;
         this.replicationSlave = builder.replicationSlave;
         this.activeAnalyzerContexts = builder.activeAnalyzerContexts;
+        this.updatableIndexAnalyzers = builder.updatableIndexAnalyzers;
         this.reindexThread =
             builder.replicationMaster != null && !StringUtils.isBlank(settings.recordField)
                 ? new ReindexThread(executorService, this) : null;
@@ -226,11 +226,11 @@ final public class IndexInstance implements Closeable {
             activeAnalyzerContexts,
             instanceFactory,
             fileResourceLoader,
+            updatableIndexAnalyzers,
             fieldMap,
             globalAnalyzerFactoryMap,
             localAnalyzerFactoryMap,
             errors);
-        indexAnalyzers.update(analyzerContext.getIndexAnalyzers());
         oldAnalyzerContext.close();
         return errors;
     }
@@ -336,7 +336,7 @@ final public class IndexInstance implements Closeable {
     }
 
     <T> T useIndexAnalyzer(final FunctionEx<Analyzer, T, IOException> analyzerFunction) throws IOException {
-        return analyzerFunction.apply(indexAnalyzers);
+        return analyzerFunction.apply(updatableIndexAnalyzers);
     }
 
     public Query createJoinQuery(final Join joinQuery) throws IOException {

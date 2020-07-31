@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.index;
 
+import com.qwazr.search.analysis.AnalyzerContext;
 import com.qwazr.search.field.CopyToFieldType;
 import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
@@ -126,6 +127,14 @@ public class FieldMap {
     final public FieldTypeInterface getFieldType(final String genericFieldName,
                                                  final String concreteFieldName,
                                                  final Object contentValue) {
+        return getFieldType(genericFieldName, concreteFieldName, contentValue, null);
+    }
+
+    @NotNull
+    final public FieldTypeInterface getFieldType(final String genericFieldName,
+                                                 final String concreteFieldName,
+                                                 final Object contentValue,
+                                                 final AnalyzerContext analyzerContext) {
 
         final FieldTypeInterface fieldType = findFieldType(genericFieldName, concreteFieldName);
         if (fieldType != null)
@@ -133,8 +142,13 @@ public class FieldMap {
 
         // Guess field type from value
         final FieldTypeInterface smartFieldType = smartDynamicTypes.getTypeFromValue(fieldsContext.primaryKey, concreteFieldName, contentValue);
-        if (smartFieldType != null)
+        if (smartFieldType != null) {
+            if (analyzerContext != null && smartFieldType.findFirstOf(FieldTypeInterface.FieldType.textField) != null) {
+                final String resolvedField = smartFieldType.resolveFieldName(concreteFieldName, FieldTypeInterface.FieldType.textField, FieldTypeInterface.ValueType.textType);
+                analyzerContext.resolveIndexQueryAnalyzer(resolvedField, smartFieldType.getDefinition().resolvedIndexAnalyzer());
+            }
             return smartFieldType;
+        }
 
         throw new IllegalArgumentException(
             "The field has not been found: " + (genericFieldName == null ? concreteFieldName : genericFieldName));
