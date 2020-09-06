@@ -2,7 +2,7 @@ FROM adoptopenjdk:11-jre-hotspot
 
 MAINTAINER Emmanuel Keller
 
-ADD target/qwazr-search-*-exec.jar /usr/share/qwazr/qwazr-search.jar
+ADD target/qwazr-search-*-app.jar /usr/share/qwazr/qwazr-search.jar
 
 VOLUME /var/lib/qwazr
 
