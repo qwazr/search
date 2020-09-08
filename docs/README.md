@@ -1,14 +1,14 @@
 QWAZR Search
 ============
 
-[![Build Status](https://travis-ci.org/qwazr/search.svg?branch=master)](https://travis-ci.org/qwazr/search)
+[![Build Status](https://jenkins.opensearchserver.com/job/qwazr/job/search/badge/icon)](https://jenkins.opensearchserver.com/job/qwazr/job/search/)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr-search/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr-search)
 [![Coverage Status](https://coveralls.io/repos/github/qwazr/search/badge.svg?branch=master)](https://coveralls.io/github/qwazr/search?branch=master)
 [![Join the chat at https://gitter.im/qwazr/QWAZR](https://badges.gitter.im/qwazr/QWAZR.svg)](https://gitter.im/qwazr/QWAZR)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A **Search server** and an embeddable JAVA library
-based on [Apache Lucene](http://lucene.apache.org/core).
+based on [Apache Lucene](https://lucene.apache.org/core).
 
 It is a **production ready** software.
 Already used with **heavy load** environment by several companies.
