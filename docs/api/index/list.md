@@ -2,15 +2,11 @@
 
 This API returns a JSON object with all existing indexes and their UUID:
 
-* **URL pattern**: http://{server_name}:9091/indexes/{schema_name}
+* **URL pattern**: http://{server_name}:9091/indexes/
 * **HTTP method**: GET
 
-Parameters:
-
-* **schema_name**: the name of the schema
-
 ```shell
-curl -XGET "http://localhost:9091/indexes/my_schema"
+curl -XGET "http://localhost:9091/indexes"
 ```
 
 ## Response

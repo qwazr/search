@@ -4,7 +4,7 @@ Installation on Linux
 Prerequisites
 -------------
 
-QWAZR Search requires a JAVA 8 SDK.
+QWAZR Search requires a JAVA 11 SDK.
 
 On a yum based Linux distribution (Centos, Fedora, Redhat):
 
@@ -32,7 +32,7 @@ Start the daemon
 ----------------
 
 ```bash
-java -jar qwazr-search-1.4.0-SNAPSHOT-exec.jar
+java -jar qwazr-search-1.5.0-SNAPSHOT-exec.jar
 ```
 
 Two directories are created:
@@ -71,7 +71,7 @@ mkdir /var/lib/qwazr/search
 
 ```bash
 cd /var/lib/qwazr/search
-curl -O "http://download.opensearchserver.com/qwazr-search/qwazr-search-1.4.0-SNAPSHOT-exec.jar"
+curl -O "http://download.opensearchserver.com/qwazr-search/qwazr-search-1.5.0-SNAPSHOT-exec.jar"
 ```
 
 ### Systemd init script
@@ -88,7 +88,7 @@ Description=QWAZR Search
 User=qwazr
 Group=daemon
 WorkingDirectory=/var/lib/qwazr/search
-ExecStart=/usr/bin/java -XX:+UseG1GC -Djava.net.preferIPv4Stack=true qwazr-search-1.4.0-SNAPSHOT-exec.jar
+ExecStart=/usr/bin/java -XX:+UseG1GC -Djava.net.preferIPv4Stack=true qwazr-search-1.5.0-SNAPSHOT-exec.jar
 Environment=LISTEN_ADDR=127.0.0.1
 SuccessExitStatus=143
 TimeoutStopSec=10

@@ -2,17 +2,16 @@
 
 This API create a set of fields and replace any previous one:
 
-* **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}/fields
+* **URL pattern**: http://{server_name}:9091/indexes/{index_name}/fields
 * **HTTP method**: POST
 
 Parameters:
 
-* **schema_name**: the name of the schema
 * **index_name**: the name of the index
 
 ```shell
 curl -XPOST -H 'Content-Type: application/json'  -d @my_payload \
-    "http://localhost:9091/indexes/my_schema/my_index/fields"
+    "http://localhost:9091/indexes/my_index/fields"
 ```
 
 Where the payload file (my_payload) contains the analyzer definitions:

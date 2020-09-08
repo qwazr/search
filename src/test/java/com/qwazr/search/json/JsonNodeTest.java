@@ -52,7 +52,7 @@ public class JsonNodeTest extends AbstractIndexTest {
 
     static final JsonNode issueJson = getJson("issue.json");
 
-    private static JsonNode getJson(final String resourceName) {
+    static JsonNode getJson(final String resourceName) {
         try (final InputStream is = JsonNodeTest.class.getResourceAsStream(resourceName)) {
             return ObjectMappers.JSON.readTree(is);
         } catch (IOException e) {

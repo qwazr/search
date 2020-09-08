@@ -2,18 +2,17 @@
 
 This API create a new index:
 
-* **URL pattern**: http://{server_name}:9091/indexes/{schema_name}/{index_name}
+* **URL pattern**: http://{server_name}:9091/indexes/{index_name}
 * **HTTP method**: POST
 
 If the index already exists, nothing is changed.
 
 Parameters:
 
-* **schema_name**: the name of the schema
 * **index_name**: the name of the index
 
 ```
-curl -XPOST "http://localhost:9091/indexes/my_schema/my_index"
+curl -XPOST "http://localhost:9091/indexes/my_index"
 ```
 
 ### Response
@@ -32,7 +31,7 @@ It is also possible to set the following settings:
 
 ```shell
 curl -POST -H 'Content-Type: application/json' -d @my_payload \
-    "http://localhost:9091/indexes/my_schema/my_index"
+    "http://localhost:9091/indexes/my_index"
 ```
 
 Where the payload file (my_payload) may contains those settings:

@@ -1,7 +1,7 @@
 JAVA library integration
 ========================
 
-QWAZR Search is a JAVA 8 library.
+QWAZR Search is a JAVA 11 library.
 It acts as an [Object Relational Mapper](https://en.wikipedia.org/wiki/Object-relational_mapping) over Lucene.
 
 This page contains everything you need to start using it. You will be able to create an index, index records, and make a faceted full-text search.

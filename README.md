@@ -5,7 +5,7 @@ A Search Engine microservice and JAVA library with indexing and search features 
 [Apache Lucene](https://lucene.apache.org/core/)
 
 [![Documentation](https://img.shields.io/badge/Documentation-orange.svg)](http://www.qwazr.com/search)
-[![Build Status](https://travis-ci.org/qwazr/search.svg?branch=master)](https://travis-ci.org/qwazr/search)
+[![Build Status](https://jenkins.opensearchserver.com/job/qwazr/job/search/badge/icon)](https://jenkins.opensearchserver.com/job/qwazr/job/search/)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr-search/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr-search)
 [![Coverage Status](https://coveralls.io/repos/github/qwazr/search/badge.svg?branch=master)](https://coveralls.io/github/qwazr/search?branch=master)
 [![Join the chat at https://gitter.im/qwazr/QWAZR](https://badges.gitter.im/qwazr/QWAZR.svg)](https://gitter.im/qwazr/QWAZR)

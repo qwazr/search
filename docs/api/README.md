@@ -3,13 +3,6 @@ Search APIs
 
 These pages describe the API of the Search module.
 
-Schema
-------
-- [Create/update a schema](schema/create.md)
-- [Test if a schema exists](schema/exists.md)
-- [List all schemas](schema/list.md)
-- [Delete a schema](schema/delete.md)
-
 Index
 -----
 - [List all indexes](index/list.md)

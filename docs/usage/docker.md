@@ -5,6 +5,10 @@ A simple way to start QWAZR Search as a microservice is to use the provided Dock
 Check first that you have Docker installed :
 [Docker installation](https://docs.docker.com/engine/installation/)
 
+Get the image from Docker Hub:
+
+     docker pull qwazr/search
+     
 Start the service
 -----------------
 
@@ -16,7 +20,7 @@ QWAZR components use by default the port 9091. You may use any other port by mod
 
 You can check that the server is running by requesting the JSON Web service:
 
-   curl http://localhost:9091
+    curl http://localhost:9091
 
 You will get this invite:
 
@@ -95,5 +99,5 @@ See the Docker documentation for more information on how to manage
 
 Going further
 -------------
-Now that the Search microservice is running,
+Now the Search microservice is running,
 let's learn how to use the [JSON Web service](webservice.md)
