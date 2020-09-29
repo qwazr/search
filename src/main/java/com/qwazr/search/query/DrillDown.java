@@ -88,7 +88,7 @@ public class DrillDown extends AbstractQuery<DrillDown> {
         final Map<String, String> resolvedDimensions = new HashMap<>();
         dimPath.forEach(map -> map.keySet().forEach(concreteField -> {
             final String genericField = genericFieldNames.getOrDefault(concreteField, concreteField);
-            final String facetField = resolveFacetField(fieldMap, genericField, concreteField);
+            final String facetField = FieldResolver.resolveFacetField(fieldMap, genericField, concreteField);
             resolvedDimensions.put(concreteField, facetField);
         }));
 

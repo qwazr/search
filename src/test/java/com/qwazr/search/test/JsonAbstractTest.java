@@ -15,7 +15,7 @@
  */
 package com.qwazr.search.test;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.qwazr.search.JsonHelpers;
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.CustomFieldDefinition;
 import com.qwazr.search.field.FieldDefinition;
@@ -39,12 +39,10 @@ import com.qwazr.search.similarity.CustomSimilarity;
 import static com.qwazr.search.test.JavaAbstractTest.checkCollector;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.concurrent.RunnableEx;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -64,62 +62,59 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import org.apache.commons.io.output.NullOutputStream;
 import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import org.junit.FixMethodOrder;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class JsonAbstractTest {
+public abstract class JsonAbstractTest implements JsonHelpers {
 
-    @Rule
-    public ExpectedException exceptionRule = ExpectedException.none();
-
-    public static final String INDEX_DUMMY_NAME = "index-dummy";
-    public static final String INDEX_ERROR_NAME = "test_error_index";
-    public static final String INDEX_MASTER_NAME = "index-test-master-json";
-    public static final String INDEX_TEST_NAME = "index-test-json";
-    public static final String INDEX_BACKUP_NAME1 = "my_backup-1";
-    public static final String INDEX_BACKUP_NAME2 = "my_backup-2";
-    public static final String INDEX_BACKUP_NAME3 = "my_backup-3";
-    public static final String INDEX_SLAVE_NAME = "index-test-slave-json";
-    public static final String DUMMY_DOC_ID = "sflkjsdlksjdlkj";
-    public static final String DUMMY_FIELD_NAME = "sflkjsdlksjdlkj";
-    public static final String DUMMY_ANALYZER_NAME = "sflkjsdlksjdlkj";
-    public static final String SYNONYMS_TXT = "synonyms.txt";
-    public static final String SYNONYMS2_TXT = "synonyms2.txt";
-    public static final long SYNONYM_LAST_MODIFIED = System.currentTimeMillis();
-    public static final Map<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
-    public static final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
-    public static final FieldDefinition FIELD_UPDATE_JSON = getField("field_update.json");
-    public static final Map<String, AnalyzerDefinition> ANALYZERS_JSON = getAnalyzerMap("analyzers.json");
-    public static final AnalyzerDefinition ANALYZER_FRENCH_JSON = getAnalyzer("analyzer_french.json");
-    public static final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
-    public static final IndexSettingsDefinition INDEX_MASTER_SETTINGS = getIndexSettings("index_master_settings.json");
-    public static final IndexSettingsDefinition INDEX_SLAVE_SETTINGS = getIndexSettings("index_slave_settings.json");
-    public static final IndexSettingsDefinition INDEX_TEST_SETTINGS = getIndexSettings("index_test_settings.json");
-    public static final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
-    public static final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
-    public static final QueryDefinition FACETS_DRILLDOWN_QUERY = getQuery("query_facets_drilldown.json");
-    public static final QueryDefinition QUERY_SORTFIELD_PRICE = getQuery("query_sortfield_price.json");
-    public static final QueryDefinition QUERY_SORTFIELDS = getQuery("query_sortfields.json");
-    public static final QueryDefinition QUERY_HIGHLIGHT = getQuery("query_highlight.json");
-    public static final QueryDefinition QUERY_PAYLOAD_FILTER = getQuery("query_payload_filter.json");
-    public static final QueryDefinition QUERY_CHECK_RETURNED = getQuery("query_check_returned.json");
-    public static final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
-    public static final QueryDefinition QUERY_MULTIFIELD = getQuery("query_multifield.json");
-    public static final QueryDefinition QUERY_STANDARDQUERYPARSER = getQuery("query_standardqueryparser.json");
-    public static final QueryDefinition QUERY_GEO2D_BOX = getQuery("query_geo2d_box.json");
-    public static final QueryDefinition QUERY_GEO3D_BOX = getQuery("query_geo3d_box.json");
-    public static final QueryDefinition QUERY_GEO2D_DISTANCE = getQuery("query_geo2d_distance.json");
-    public static final QueryDefinition QUERY_GEO3D_DISTANCE = getQuery("query_geo3d_distance.json");
-    public static final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
-    public static final PostDefinition.Document UPDATE_DOC = getDoc("update_doc.json");
-    public static final PostDefinition.Document UPDATE_DOC_ERROR = getDoc("update_doc_error.json");
-    public static final PostDefinition.Documents UPDATE_DOCS = getDocs("update_docs.json");
-    public static final PostDefinition.Document UPDATE_DOC_VALUE = getDoc("update_doc_value.json");
-    public static final PostDefinition.Documents UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
+    public final String INDEX_DUMMY_NAME = "index-dummy";
+    public final String INDEX_ERROR_NAME = "test_error_index";
+    public final String INDEX_MASTER_NAME = "index-test-master-json";
+    public final String INDEX_TEST_NAME = "index-test-json";
+    public final String INDEX_BACKUP_NAME1 = "my_backup-1";
+    public final String INDEX_BACKUP_NAME2 = "my_backup-2";
+    public final String INDEX_BACKUP_NAME3 = "my_backup-3";
+    public final String INDEX_SLAVE_NAME = "index-test-slave-json";
+    public final String DUMMY_DOC_ID = "sflkjsdlksjdlkj";
+    public final String DUMMY_FIELD_NAME = "sflkjsdlksjdlkj";
+    public final String DUMMY_ANALYZER_NAME = "sflkjsdlksjdlkj";
+    public final String SYNONYMS_TXT = "synonyms.txt";
+    public final String SYNONYMS2_TXT = "synonyms2.txt";
+    public final long SYNONYM_LAST_MODIFIED = System.currentTimeMillis();
+    public final Map<String, FieldDefinition> FIELDS_JSON = getFieldMap("fields.json");
+    public final FieldDefinition FIELD_NAME_JSON = getField("field_name.json");
+    public final FieldDefinition FIELD_UPDATE_JSON = getField("field_update.json");
+    public final Map<String, AnalyzerDefinition> ANALYZERS_JSON = getAnalyzerMap("analyzers.json");
+    public final AnalyzerDefinition ANALYZER_FRENCH_JSON = getAnalyzer("analyzer_french.json");
+    public final QueryDefinition MATCH_ALL_QUERY = getQuery("query_match_all.json");
+    public final IndexSettingsDefinition INDEX_MASTER_SETTINGS = getIndexSettings("index_master_settings.json");
+    public final IndexSettingsDefinition INDEX_SLAVE_SETTINGS = getIndexSettings("index_slave_settings.json");
+    public final IndexSettingsDefinition INDEX_TEST_SETTINGS = getIndexSettings("index_test_settings.json");
+    public final QueryDefinition FACETS_ROWS_QUERY = getQuery("query_facets_rows.json");
+    public final QueryDefinition FACETS_FILTERS_QUERY = getQuery("query_facets_filters.json");
+    public final QueryDefinition FACETS_DRILLDOWN_QUERY = getQuery("query_facets_drilldown.json");
+    public final QueryDefinition QUERY_SORTFIELD_PRICE = getQuery("query_sortfield_price.json");
+    public final QueryDefinition QUERY_SORTFIELDS = getQuery("query_sortfields.json");
+    public final QueryDefinition QUERY_HIGHLIGHT = getQuery("query_highlight.json");
+    public final QueryDefinition QUERY_PAYLOAD_FILTER = getQuery("query_payload_filter.json");
+    public final QueryDefinition QUERY_CHECK_RETURNED = getQuery("query_check_returned.json");
+    public final QueryDefinition QUERY_CHECK_FUNCTIONS = getQuery("query_check_functions.json");
+    public final QueryDefinition QUERY_MULTIFIELD = getQuery("query_multifield.json");
+    public final QueryDefinition QUERY_STANDARDQUERYPARSER = getQuery("query_standardqueryparser.json");
+    public final QueryDefinition QUERY_GEO2D_BOX = getQuery("query_geo2d_box.json");
+    public final QueryDefinition QUERY_GEO3D_BOX = getQuery("query_geo3d_box.json");
+    public final QueryDefinition QUERY_GEO2D_DISTANCE = getQuery("query_geo2d_distance.json");
+    public final QueryDefinition QUERY_GEO3D_DISTANCE = getQuery("query_geo3d_distance.json");
+    public final QueryDefinition DELETE_QUERY = getQuery("query_delete.json");
+    public final PostDefinition.Document UPDATE_DOC = getDoc("update_doc.json");
+    public final PostDefinition.Document UPDATE_DOC_ERROR = getDoc("update_doc_error.json");
+    public final PostDefinition.Documents UPDATE_DOCS = getDocs("update_docs.json");
+    public final PostDefinition.Document UPDATE_DOC_VALUE = getDoc("update_doc_value.json");
+    public final PostDefinition.Documents UPDATE_DOCS_VALUES = getDocs("update_docs_values.json");
 
     protected abstract IndexServiceInterface getClient() throws URISyntaxException;
 
@@ -132,9 +127,8 @@ public abstract class JsonAbstractTest {
     @Test
     public void test020CheckErrorIndex() throws URISyntaxException {
         IndexServiceInterface client = getClient();
-        exceptionRule.expect(WebApplicationException.class);
-        exceptionRule.expectMessage("Index not found: " + INDEX_ERROR_NAME);
-        Assert.assertNotNull(client.getIndex(INDEX_ERROR_NAME));
+        final WebApplicationException exception = assertThrows(WebApplicationException.class, () -> client.getIndex(INDEX_ERROR_NAME));
+        assertEquals(exception.getMessage(), "Index not found: " + INDEX_ERROR_NAME);
     }
 
     public static void checkErrorStatusCode(RunnableEx<?> runnable, int expectedStatusCode) {
@@ -148,46 +142,6 @@ public abstract class JsonAbstractTest {
         } catch (IllegalArgumentException e) {
             // Thats ok
         } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static Map<String, FieldDefinition> getFieldMap(String res) {
-        try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-            return FieldDefinition.newFieldMap(IOUtils.toString(is, StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static FieldDefinition getField(String res) {
-        try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-            return FieldDefinition.newField(IOUtils.toString(is, StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static Map<String, AnalyzerDefinition> getAnalyzerMap(String res) {
-        try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-            return AnalyzerDefinition.newAnalyzerMap(IOUtils.toString(is, StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static AnalyzerDefinition getAnalyzer(String res) {
-        try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-            return AnalyzerDefinition.newAnalyzer(IOUtils.toString(is, StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static IndexSettingsDefinition getIndexSettings(String res) {
-        try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-            return ObjectMappers.JSON.readValue(is, IndexSettingsDefinition.class);
-        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -386,14 +340,6 @@ public abstract class JsonAbstractTest {
         Assert.assertNotNull(fields.get("name"));
     }
 
-    public static QueryDefinition getQuery(String res) {
-        try (final InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-            return QueryDefinition.newQuery(IOUtils.toString(is, StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private ResultDefinition.WithMap checkQueryIndex(IndexServiceInterface client, String index,
                                                      QueryDefinition queryDef, int expectedCount) {
         checkErrorStatusCode(() -> client.searchQuery(INDEX_DUMMY_NAME, queryDef, null), 404);
@@ -425,30 +371,6 @@ public abstract class JsonAbstractTest {
     private void checkAllSizes(IndexServiceInterface client, int expectedSize) throws IOException {
         checkQueryIndex(client, MATCH_ALL_QUERY, expectedSize);
         checkIndexSize(client, expectedSize);
-    }
-
-    public static JsonNode getJsonNode(String res) {
-        try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-            return ObjectMappers.JSON.readTree(is);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static PostDefinition.Documents getDocs(String res) {
-        try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-            return ObjectMappers.JSON.readValue(is, PostDefinition.Documents.class);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static PostDefinition.Document getDoc(String res) {
-        try (InputStream is = JsonAbstractTest.class.getResourceAsStream(res)) {
-            return ObjectMappers.JSON.readValue(is, PostDefinition.Document.class);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private Map<String, Number> checkFacetSize(ResultDefinition.WithMap result, String dimName, int size) {
@@ -1036,7 +958,7 @@ public abstract class JsonAbstractTest {
         checkFacetFiltersResult(checkQuerySlaveIndex(client, FACETS_DRILLDOWN_QUERY, 2), 5);
     }
 
-    private static class UpdateDocThread implements Runnable {
+    private class UpdateDocThread implements Runnable {
 
         final IndexServiceInterface client;
         final AtomicInteger counter;
@@ -1055,7 +977,7 @@ public abstract class JsonAbstractTest {
         }
     }
 
-    private static class UpdateDocValueThread extends UpdateDocThread {
+    private class UpdateDocValueThread extends UpdateDocThread {
 
         UpdateDocValueThread(final IndexServiceInterface client, final AtomicInteger counter) {
             super(client, counter);

@@ -1,20 +1,3 @@
-# How to build a search request
-
-Here is the most complex search request.
-
-It includes:
-
-* Full text query
-* Filtered query
-* Boolean query
-* Facet query and facet count
-* Snippet and highlighting
-* Sorting
-* Collector Functions
-* Paging
-* Returned fields
-
-```json
 {
   "query": {
     "Bool": {
@@ -102,15 +85,3 @@ It includes:
     }
   }
 }
-
-```
-
-If you already build an index while following the examples on this documentation,
-you can test this request using this curl command:
-
-(Where the payload file (my_payload) contains the search request).
-
-```bash
-curl -XPOST -H 'Content-Type: application/json' -d @my_payload \
-    "http://localhost:9091/indexes/my_index/search"
-```

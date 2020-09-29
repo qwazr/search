@@ -123,7 +123,7 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
 
         final Map<String, Float> resolvedBoosts = fieldMap == null || weights == null ? weights
             : FieldMap.resolveFieldNames(weights, new HashMap<>(),
-            f -> resolveFullTextField(fieldMap, f, f, StringUtils.EMPTY));
+            f -> FieldResolver.resolveFullTextField(fieldMap, f, f, StringUtils.EMPTY));
 
         final org.apache.lucene.queryparser.simple.SimpleQueryParser parser =
             new org.apache.lucene.queryparser.simple.SimpleQueryParser(null, resolvedBoosts, effectiveFlags);

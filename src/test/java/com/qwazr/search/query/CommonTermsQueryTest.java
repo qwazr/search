@@ -27,10 +27,10 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class CommonTermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
+public class CommonTermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy implements JsonHelpers {
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexService();
         indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("How is he going ?"));
         indexService.postDocument(new IndexRecord.NoTaxonomy("2").textField("How are you ?"));
@@ -55,6 +55,6 @@ public class CommonTermsQueryTest extends AbstractIndexTest.WithIndexRecord.NoTa
 
     @Test
     public void jsonEquality() throws IOException {
-        JsonHelpers.serializeDeserializeAndCheckEquals(getCommonTermsQuery(), CommonTerms.class);
+        serializeDeserializeAndCheckEquals(getCommonTermsQuery(), CommonTerms.class);
     }
 }

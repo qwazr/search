@@ -176,12 +176,10 @@ final class QueryExecution<T extends ResultDocumentAbstract> {
         final TopDocs topDocs = queryCollectors.getTopDocs();
         final Integer totalHits = queryCollectors.getTotalHits();
 
-        final Map<String, HighlighterImpl> highlighters;
-        final Map<String, HighlighterDefinition> queryHighlighters = queryDef.getHighlighters();
-        if (queryHighlighters != null && topDocs != null) {
-            highlighters = new LinkedHashMap<>();
-            queryHighlighters.forEach((name, highlighterDefinition) -> highlighters.put(name,
-                new HighlighterImpl(name, highlighterDefinition, queryContext)));
+        final Highlighters highlighters;
+        final LinkedHashMap<String, HighlighterDefinition> queryHighlighters = queryDef.getHighlighters();
+        if (queryHighlighters != null && !queryHighlighters.isEmpty() && topDocs != null) {
+            highlighters = Highlighters.of(queryHighlighters, queryContext);
         } else
             highlighters = null;
 

@@ -65,6 +65,9 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
     @JsonProperty("escape")
     final public Boolean escape;
 
+    @JsonProperty("default_analyzer")
+    final public String defaultAnalyzer;
+
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonAutoDetect(
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
@@ -118,7 +121,8 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
                           @JsonProperty("post_tag") final String postTag,
                           @JsonProperty("ellipsis") final String ellipsis,
                           @JsonProperty("escape") final Boolean escape,
-                          @JsonProperty("break_iterator") final BreakIteratorDefinition breakIterator) {
+                          @JsonProperty("break_iterator") final BreakIteratorDefinition breakIterator,
+                          @JsonProperty("default_analyzer") final String defaultAnalyzer) {
         super(HighlighterDefinition.class);
         this.field = field;
         this.storedField = storedField;
@@ -132,6 +136,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
         this.ellipsis = ellipsis;
         this.escape = escape;
         this.breakIterator = breakIterator;
+        this.defaultAnalyzer = defaultAnalyzer;
     }
 
     @Override
@@ -148,7 +153,8 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
             Objects.equals(maxPassages, h.maxPassages) &&
             Objects.equals(multivaluedSeparator, h.multivaluedSeparator) && Objects.equals(preTag, h.preTag) &&
             Objects.equals(postTag, h.postTag) && Objects.equals(ellipsis, h.ellipsis) &&
-            Objects.equals(escape, h.escape) && Objects.equals(breakIterator, h.breakIterator);
+            Objects.equals(escape, h.escape) && Objects.equals(breakIterator, h.breakIterator) &&
+            Objects.equals(defaultAnalyzer, h.defaultAnalyzer);
     }
 
     private HighlighterDefinition(final Builder builder) {
@@ -165,6 +171,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
         this.ellipsis = builder.ellipsis;
         this.escape = builder.escape;
         this.breakIterator = builder.breakIterator;
+        this.defaultAnalyzer = builder.defaultAnalyzer;
     }
 
     public static Builder of() {
@@ -172,7 +179,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
     }
 
     public static Builder of(String field) {
-        return of().setField(field);
+        return of().withField(field);
     }
 
     public static class Builder {
@@ -201,6 +208,8 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
 
         private BreakIteratorDefinition breakIterator = null;
 
+        private String defaultAnalyzer;
+
         public HighlighterDefinition build() {
             return new HighlighterDefinition(this);
         }
@@ -209,7 +218,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
          * @param field field name to highlight. Must have a stored string value and also be indexed with offsets
          * @return the current builder
          */
-        public Builder setField(String field) {
+        public Builder withField(String field) {
             this.field = field;
             return this;
         }
@@ -218,7 +227,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
          * @param storedField storedField
          * @return the current builder
          */
-        public Builder setStoredField(String storedField) {
+        public Builder withStoredField(String storedField) {
             this.storedField = storedField;
             return this;
         }
@@ -227,7 +236,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
          * @param maxPassages The maximum number of top-N ranked passages used to form the highlighted snippets
          * @return the current builder
          */
-        public Builder setMaxPassages(int maxPassages) {
+        public Builder withMaxPassages(int maxPassages) {
             this.maxPassages = maxPassages;
             return this;
         }
@@ -236,17 +245,17 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
          * @param maxLength maximum content size to process
          * @return the current builder
          */
-        public Builder setMaxLength(int maxLength) {
+        public Builder withMaxLength(int maxLength) {
             this.maxLength = maxLength;
             return this;
         }
 
-        public Builder setHighlightPhrasesStrictly(boolean highlightPhrasesStrictly) {
+        public Builder withHighlightPhrasesStrictly(boolean highlightPhrasesStrictly) {
             this.highlightPhrasesStrictly = highlightPhrasesStrictly;
             return this;
         }
 
-        public Builder setMaxNoHighlightPassages(int maxNoHighlightPassages) {
+        public Builder withMaxNoHighlightPassages(int maxNoHighlightPassages) {
             this.maxNoHighlightPassages = maxNoHighlightPassages;
             return this;
         }
@@ -255,7 +264,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
          * @param multivaluedSeparator the logical separator between values for multi-valued fields
          * @return the current builder
          */
-        public Builder setMultivaluedSeparator(char multivaluedSeparator) {
+        public Builder withMultivaluedSeparator(char multivaluedSeparator) {
             this.multivaluedSeparator = multivaluedSeparator;
             return this;
         }
@@ -264,7 +273,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
          * @param preTag text that will appear before highlighted terms
          * @return the current builder
          */
-        public Builder setPreTag(String preTag) {
+        public Builder withPreTag(String preTag) {
             this.preTag = preTag;
             return this;
         }
@@ -273,7 +282,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
          * @param postTag text that will appear after highlighted terms
          * @return the current builder
          */
-        public Builder setPostTag(String postTag) {
+        public Builder withPostTag(String postTag) {
             this.postTag = postTag;
             return this;
         }
@@ -282,7 +291,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
          * @param ellipsis text that will appear between two unconnected passages
          * @return the current builder
          */
-        public Builder setEllipsis(String ellipsis) {
+        public Builder withEllipsis(String ellipsis) {
             this.ellipsis = ellipsis;
             return this;
         }
@@ -291,7 +300,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
          * @param escape true if we should escape for html
          * @return the current builder
          */
-        public Builder setEscape(boolean escape) {
+        public Builder withEscape(boolean escape) {
             this.escape = escape;
             return this;
         }
@@ -300,7 +309,7 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
          * @param breakIterator the break iterator parameters
          * @return the current builder
          */
-        public Builder setBreak(BreakIteratorDefinition breakIterator) {
+        public Builder withBreak(BreakIteratorDefinition breakIterator) {
             this.breakIterator = breakIterator;
             return this;
         }
@@ -310,8 +319,17 @@ public class HighlighterDefinition extends Equalizer.Immutable<HighlighterDefini
          * @param language the language tag of the text to break
          * @return the current builder
          */
-        public Builder setBreak(BreakIteratorDefinition.Type type, String language) {
+        public Builder withBreak(BreakIteratorDefinition.Type type, String language) {
             this.breakIterator = new BreakIteratorDefinition(type, language);
+            return this;
+        }
+
+        /**
+         * @param defaultAnalyzer the default analyzer identifier
+         * @return the current builder
+         */
+        public Builder withDefaultAnalyzer(String defaultAnalyzer) {
+            this.defaultAnalyzer = defaultAnalyzer;
             return this;
         }
     }

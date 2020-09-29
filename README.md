@@ -46,7 +46,7 @@ For instance, we will use a JSON file called "my_search" to store the search que
   "rows": 10,
   "query": {
     "SimpleQueryParser": {
-	"analyzer": "ascii",
+    "analyzer": "ascii",
     "query_string": "Article",
     "weights": {
        "title": 1

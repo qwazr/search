@@ -17,6 +17,7 @@ package com.qwazr.search.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.qwazr.search.index.HighlighterDefinition;
 import com.qwazr.search.index.IndexJsonResult;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.search.index.IndexSettingsDefinition;
@@ -143,12 +144,48 @@ public class JsonNodeTest extends AbstractIndexTest {
     public void fullTextSearchTest() throws IOException {
         // Get the document by one full text search
         final ResultDefinition.WithMap result = service.searchQuery(INDEX,
-            QueryDefinition.of(SimpleQueryParser.of().setAnalyzer("ascii").addField("title").setQueryString("found").build())
+            QueryDefinition.of(
+                SimpleQueryParser.of()
+                    .setAnalyzer("ascii")
+                    .addField("title")
+                    .setQueryString("found")
+                    .build())
                 .returnedField("*").queryDebug(true).build(), false);
         assertThat(result.query, equalTo("tt€title:found"));
         assertThat(result.getTotalHits(), equalTo(1L));
         final Map<String, Object> doc = result.getDocuments().get(0).getFields();
         assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
             equalTo(issueJson));
+    }
+
+    @Test
+    public void fullTextSearchHighlightingTest() throws IOException {
+        // Get the document by one full text search
+        final ResultDefinition.WithMap result = service.searchQuery(INDEX,
+            QueryDefinition.of(
+                SimpleQueryParser.of()
+                    .setAnalyzer("english")
+                    .addField("title")
+                    .setQueryString("found")
+                    .build())
+                .returnedField("*")
+                .queryDebug(true)
+                .highlighter("highlight_title",
+                    HighlighterDefinition.of()
+                        .withField("title")
+                        .withMaxPassages(5)
+                        .withMaxNoHighlightPassages(5)
+                        .withDefaultAnalyzer("english")
+                        .withBreak(HighlighterDefinition.BreakIteratorDefinition.Type.sentence, "en")
+                        .build())
+                .build(), false);
+        assertThat(result.query, equalTo("tt€title:found"));
+        assertThat(result.getTotalHits(), equalTo(1L));
+        final Map<String, Object> doc = result.getDocuments().get(0).getFields();
+        assertThat(ObjectMappers.JSON.readTree(ObjectMappers.JSON.writeValueAsString(doc)),
+            equalTo(issueJson));
+        final String highlightTitle = result.getDocuments().get(0).getHighlights().get("highlight_title");
+        Assert.assertNotNull(highlightTitle);
+        Assert.assertEquals(highlightTitle, "<b>Found</b> a bug");
     }
 }

@@ -20,6 +20,8 @@ import com.qwazr.utils.StringUtils;
 
 public class SmartDynamicTypes {
 
+    public final static String DEFAULT_ANALYZER_NAME = SmartAnalyzerSet.ascii.name();
+
     final static SmartFieldType doNothingType = new SmartFieldType(StringUtils.EMPTY, null, null,
         SmartFieldDefinition.of().build());
 
@@ -34,7 +36,7 @@ public class SmartDynamicTypes {
         SmartFieldDefinition.of()
             .type(SmartFieldDefinition.Type.TEXT)
             .index(true)
-            .analyzer(SmartAnalyzerSet.ascii.name())
+            .analyzer(DEFAULT_ANALYZER_NAME)
             .build();
 
     final static SmartFieldDefinition defaultBooleanDefinition =

@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.search.test;
+package com.qwazr.search.docs;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.qwazr.search.JsonHelpers;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.IndexJsonResult;
 import com.qwazr.search.index.IndexServiceInterface;
@@ -24,10 +25,7 @@ import com.qwazr.search.index.IndexStatus;
 import com.qwazr.search.index.PostDefinition;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
-import static com.qwazr.search.test.JsonAbstractTest.getDocs;
-import static com.qwazr.search.test.JsonAbstractTest.getFieldMap;
-import static com.qwazr.search.test.JsonAbstractTest.getJsonNode;
-import static com.qwazr.search.test.JsonAbstractTest.getQuery;
+import com.qwazr.search.test.TestServer;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
@@ -37,14 +35,15 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class GettingStartedTest {
+public class GettingStartedJson implements JsonHelpers {
 
-    private final static String MY_INDEX = "my_index";
-    public static final Map<String, FieldDefinition> MY_FIELDS_JSON = getFieldMap("my_fields.json");
-    public static final JsonNode MY_RECORD_JSON = getJsonNode("my_record.json");
-    public static final JsonNode MY_RECORDS_JSON = getJsonNode("my_records.json");
-    public static final PostDefinition.Documents MY_DOCS_JSON = getDocs("my_docs.json");
-    public static final QueryDefinition MY_SEARCH_JSON = getQuery("my_search.json");
+    private final String MY_INDEX = "my_index";
+    private final Map<String, FieldDefinition> MY_FIELDS_JSON = getFieldMap("my_fields.json");
+    private final JsonNode MY_RECORD_JSON = getJsonNode("my_record.json");
+    private final JsonNode MY_RECORDS_JSON = getJsonNode("my_records.json");
+    private final PostDefinition.Documents MY_DOCS_JSON = getDocs("my_docs.json");
+    private final QueryDefinition MY_SEARCH_JSON = getQuery("my_search.json");
+    private final QueryDefinition BUILD_SEARCH_REQUEST_JSON = getQuery("build_search_request.json");
 
     @Test
     public void test000startServer() throws Exception {
@@ -107,6 +106,14 @@ public class GettingStartedTest {
         final ResultDefinition.WithMap result = client.searchQuery(MY_INDEX, MY_SEARCH_JSON, null);
         Assert.assertNotNull(result);
         Assert.assertEquals(2, result.totalHits);
+    }
+
+    @Test
+    public void test350BuildSearchRequestQuery() {
+        IndexServiceInterface client = TestServer.remote;
+        final ResultDefinition.WithMap result = client.searchQuery(MY_INDEX, BUILD_SEARCH_REQUEST_JSON, false);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(1, result.totalHits);
     }
 
     @Test

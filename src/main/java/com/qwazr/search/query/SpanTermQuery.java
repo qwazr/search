@@ -48,7 +48,7 @@ public class SpanTermQuery extends AbstractFieldSpanQuery<SpanTermQuery> {
     @Override
     final public SpanQuery getQuery(final QueryContext queryContext) {
         return new org.apache.lucene.search.spans.SpanTermQuery(
-            resolveFullTextTerm(queryContext.getFieldMap(), genericField, field, value));
+            FieldResolver.resolveFullTextTerm(queryContext.getFieldMap(), genericField, field, value));
     }
 
     @Override

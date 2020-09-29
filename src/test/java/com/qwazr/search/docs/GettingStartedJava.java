@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.qwazr.search.docs;
 
 import com.qwazr.search.analysis.SmartAnalyzerSet;
@@ -40,7 +39,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class GettingStarted {
+public class GettingStartedJava {
 
     // This class defines both an index, and a record for this index
     @Index(name = "my_index")

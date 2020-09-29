@@ -23,7 +23,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-public class BoolQueryTest {
+public class BoolQueryTest implements JsonHelpers {
 
     private Bool check(Integer mmsm, int size, Bool.Builder builder) {
         builder.setMinimumNumberShouldMatch(mmsm);
@@ -111,6 +111,6 @@ public class BoolQueryTest {
     public void jsonEquality() throws IOException {
         final Bool booleanQuery =
             checkClauses(builder -> builder.addClause(Bool.Occur.must, MatchAllDocs.INSTANCE));
-        JsonHelpers.serializeDeserializeAndCheckEquals(booleanQuery, Bool.class);
+        serializeDeserializeAndCheckEquals(booleanQuery, Bool.class);
     }
 }

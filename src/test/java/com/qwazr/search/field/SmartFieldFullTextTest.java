@@ -142,6 +142,11 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
                 .queryDebug(true)
                 .build(), Record.class);
         Assert.assertNotNull(result);
+        Assert.assertEquals(result.totalHits, 1L);
+        Assert.assertNotNull(result.getDocuments().get(0).highlights);
+        Assert.assertTrue(result.getDocuments().get(0).highlights.containsKey("title"));
+        Assert.assertEquals(result.getDocuments().get(0).highlights.get("title"), "Second <b>article</b>");
+
     }
 
     @Index(name = "SmartFieldSorted")

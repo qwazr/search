@@ -147,7 +147,7 @@ public class MoreLikeThis extends AbstractQuery<MoreLikeThis> {
             throw new ParseException("Either doc_num or like_text/fieldname are missing");
 
         final org.apache.lucene.search.BooleanQuery bq = (org.apache.lucene.search.BooleanQuery) mlt.like(
-            resolveFullTextField(fieldMap, fieldname, fieldname, StringUtils.EMPTY), new StringReader(like_text));
+            FieldResolver.resolveFullTextField(fieldMap, fieldname, fieldname, StringUtils.EMPTY), new StringReader(like_text));
         final org.apache.lucene.search.BooleanQuery.Builder newBq = new org.apache.lucene.search.BooleanQuery.Builder();
         for (BooleanClause clause : bq)
             newBq.add(clause);

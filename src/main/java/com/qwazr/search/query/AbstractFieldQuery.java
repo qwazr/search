@@ -51,40 +51,40 @@ public abstract class AbstractFieldQuery<T extends AbstractFieldQuery<T>> extend
                                             final Object value,
                                             final FieldTypeInterface.ValueType valueType,
                                             final FieldTypeInterface.FieldType... fieldTypes) {
-        return resolveFieldName(fieldMap, genericField, field, value, valueType, fieldTypes);
+        return FieldResolver.resolveFieldName(fieldMap, genericField, field, value, valueType, fieldTypes);
     }
 
     final protected String resolveDocValueField(final FieldMap fieldMap,
                                                 final Object value,
                                                 FieldTypeInterface.ValueType valueType) {
-        return resolveDocValueField(fieldMap, genericField, field, value, valueType);
+        return FieldResolver.resolveDocValueField(fieldMap, genericField, field, value, valueType);
     }
 
     final protected String resolvePointField(final FieldMap fieldMap,
                                              final Object value,
                                              FieldTypeInterface.ValueType valueType) {
-        return resolvePointField(fieldMap, genericField, field, value, valueType);
+        return FieldResolver.resolvePointField(fieldMap, genericField, field, value, valueType);
     }
 
 
     final protected String resolveIndexTextField(final FieldMap fieldMap,
                                                  final Object value) {
-        return resolveIndexTextField(fieldMap, genericField, field, value);
+        return FieldResolver.resolveIndexTextField(fieldMap, genericField, field, value);
     }
 
     final protected String resolveFullTextField(final FieldMap fieldMap,
                                                 final Object value) {
-        return resolveFullTextField(fieldMap, genericField, field, value);
+        return FieldResolver.resolveFullTextField(fieldMap, genericField, field, value);
     }
 
     final protected Term resolveIndexTextTerm(final FieldMap fieldMap,
                                               final Object value) {
-        return resolveIndexTextTerm(fieldMap, genericField, field, value);
+        return FieldResolver.resolveIndexTextTerm(fieldMap, genericField, field, value);
     }
 
     final protected Term resolveFullTextTerm(final FieldMap fieldMap,
                                              final Object value) {
-        return resolveFullTextTerm(fieldMap, genericField, field, value);
+        return FieldResolver.resolveFullTextTerm(fieldMap, genericField, field, value);
     }
 
     @Override

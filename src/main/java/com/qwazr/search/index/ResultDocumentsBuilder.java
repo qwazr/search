@@ -39,7 +39,7 @@ class ResultDocumentsBuilder {
                            final TopDocs topDocs,
                            final IndexSearcher indexSearcher,
                            final Query luceneQuery,
-                           final Map<String, HighlighterImpl> highlighters,
+                           final Highlighters highlighters,
                            final Map<String, Object> externalCollectorsResults,
                            final TimeTracker timeTracker,
                            final FacetsBuilder facetsBuilder,
@@ -58,16 +58,11 @@ class ResultDocumentsBuilder {
                 timeTracker.next("documents");
 
             if (highlighters != null && topDocs.scoreDocs.length > 0) {
-
-                highlighters.forEach((name, highlighter) -> {
-                    try {
-                        final String[] snippetsByDoc = highlighter.highlights(luceneQuery, topDocs);
-                        int pos2 = 0;
-                        for (String snippet : snippetsByDoc)
-                            resultDocuments.highlight(pos2++, name, snippet);
-                    } catch (IOException e) {
-                        throw new RuntimeException("Highlighting failure: " + name, e);
-                    }
+                final LinkedHashMap<String, String[]> snippetsMap = highlighters.highlights(luceneQuery, topDocs);
+                snippetsMap.forEach((name, snippetsByDoc) -> {
+                    int pos2 = 0;
+                    for (String snippet : snippetsByDoc)
+                        resultDocuments.highlight(pos2++, name, snippet);
                 });
                 if (timeTracker != null)
                     timeTracker.next("highlighting");
