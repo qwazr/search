@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
+import org.apache.lucene.search.FieldDoc;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -26,6 +27,9 @@ import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+
+import static com.qwazr.search.field.FieldDefinition.SCORE_FIELD;
 
 class ResultDocumentsBuilder {
 
@@ -51,8 +55,12 @@ class ResultDocumentsBuilder {
         if (topDocs != null && topDocs.scoreDocs != null) {
 
             int pos = 0;
-            for (final ScoreDoc scoreDoc : topDocs.scoreDocs)
+            for (final ScoreDoc scoreDoc : topDocs.scoreDocs) {
+                if (scoreDoc instanceof FieldDoc && queryDefinition.getSorts().containsKey(SCORE_FIELD)) {
+                    scoreDoc.score = extractScoreValue((FieldDoc) scoreDoc, queryDefinition.getSorts().keySet());
+                }
                 resultDocuments.doc(indexSearcher, pos++, scoreDoc);
+            }
 
             if (timeTracker != null)
                 timeTracker.next("documents");
@@ -77,6 +85,12 @@ class ResultDocumentsBuilder {
             null;
 
         this.timeTrackerStatus = timeTracker == null ? null : timeTracker.getStatus();
+    }
+
+    private float extractScoreValue(final FieldDoc scoreDoc, final Set<String> sortFields) {
+        final int scoreFieldIndex = (int) sortFields.stream()
+            .takeWhile(field -> !SCORE_FIELD.equals(field)).count();
+        return (float) scoreDoc.fields[scoreFieldIndex];
     }
 
 }
