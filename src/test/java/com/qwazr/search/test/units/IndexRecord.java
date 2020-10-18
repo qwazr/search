@@ -33,10 +33,13 @@ import java.util.Set;
 
 public abstract class IndexRecord<T> {
 
+    public static final String TEXT_FIELD_NAME = "textField";
+    public static final String SORTED_DOC_VALUE_FIELD_NAME = "sortedDocValue";
+
     @IndexField(name = FieldDefinition.ID_FIELD, template = FieldDefinition.Template.StringField, stored = true)
     final public String id;
 
-    @IndexField(template = FieldDefinition.Template.TextField, analyzerClass = StandardAnalyzer.class)
+    @IndexField(name= TEXT_FIELD_NAME, template = FieldDefinition.Template.TextField, analyzerClass = StandardAnalyzer.class)
     @Copy(to = {@Copy.To(order = 1, field = "textComplexAnalyzer")})
     public String textField;
 
@@ -63,7 +66,7 @@ public abstract class IndexRecord<T> {
     @IndexField(template = FieldDefinition.Template.StringField)
     public String stringField;
 
-    @IndexField(template = FieldDefinition.Template.SortedDocValuesField)
+    @IndexField(name= SORTED_DOC_VALUE_FIELD_NAME, template = FieldDefinition.Template.SortedDocValuesField)
     public String sortedDocValue;
 
     @IndexField(template = FieldDefinition.Template.SortedSetDocValuesField)
