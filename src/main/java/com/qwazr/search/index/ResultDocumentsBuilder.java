@@ -15,21 +15,18 @@
  */
 package com.qwazr.search.index;
 
+import static com.qwazr.search.field.FieldDefinition.SCORE_FIELD;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 import org.apache.lucene.search.FieldDoc;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
-
-import javax.validation.constraints.NotNull;
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-
-import static com.qwazr.search.field.FieldDefinition.SCORE_FIELD;
 
 class ResultDocumentsBuilder {
 
@@ -55,12 +52,11 @@ class ResultDocumentsBuilder {
         if (topDocs != null && topDocs.scoreDocs != null) {
 
             int pos = 0;
-            for (final ScoreDoc scoreDoc : topDocs.scoreDocs) {
-                if (scoreDoc instanceof FieldDoc && queryDefinition.getSorts().containsKey(SCORE_FIELD)) {
-                    scoreDoc.score = extractScoreValue((FieldDoc) scoreDoc, queryDefinition.getSorts().keySet());
-                }
+
+            checkSortField(queryDefinition.getSorts(), topDocs.scoreDocs);
+
+            for (final ScoreDoc scoreDoc : topDocs.scoreDocs)
                 resultDocuments.doc(indexSearcher, pos++, scoreDoc);
-            }
 
             if (timeTracker != null)
                 timeTracker.next("documents");
@@ -87,10 +83,18 @@ class ResultDocumentsBuilder {
         this.timeTrackerStatus = timeTracker == null ? null : timeTracker.getStatus();
     }
 
-    private float extractScoreValue(final FieldDoc scoreDoc, final Set<String> sortFields) {
-        final int scoreFieldIndex = (int) sortFields.stream()
-            .takeWhile(field -> !SCORE_FIELD.equals(field)).count();
-        return (float) scoreDoc.fields[scoreFieldIndex];
+    private void checkSortField(LinkedHashMap<String, QueryDefinition.SortEnum> sortFields, final ScoreDoc[] scoreDocs) {
+        if (sortFields == null || !sortFields.containsKey(SCORE_FIELD))
+            return;
+        final int scoreFieldIndex = (int) sortFields.keySet().stream().takeWhile(field -> !SCORE_FIELD.equals(field)).count();
+        if (scoreFieldIndex == 0)
+            return;
+        for (final ScoreDoc scoreDoc : scoreDocs) {
+            final FieldDoc fieldDoc = (FieldDoc) scoreDoc;
+            scoreDoc.score = ((Number) fieldDoc.fields[scoreFieldIndex]).floatValue();
+        }
+
     }
+
 
 }

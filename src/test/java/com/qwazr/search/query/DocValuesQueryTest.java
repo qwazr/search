@@ -35,7 +35,7 @@ import java.util.function.Consumer;
 public class DocValuesQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexService();
         indexService.postDocument(new IndexRecord.NoTaxonomy("i1").intDocValue(1));
         indexService.postDocument(new IndexRecord.NoTaxonomy("si1").sortedIntDocValue(1));
@@ -49,11 +49,11 @@ public class DocValuesQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxo
         indexService.postDocument(new IndexRecord.NoTaxonomy("ssdv").sortedSetDocValue("c").sortedSetDocValue("d"));
     }
 
-    private void test(AbstractQuery query, String expectedId, Consumer<IndexRecord> recordCheck) {
+    private void test(AbstractQuery<?> query, String expectedId, Consumer<IndexRecord<?>> recordCheck) {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result =
                 indexService.searchQuery(QueryDefinition.of(query).returnedField("*").build());
         Assert.assertEquals(1, result.totalHits);
-        final IndexRecord record = result.getDocuments().get(0).record;
+        final IndexRecord<?> record = result.getDocuments().get(0).record;
         Assert.assertEquals(expectedId, record.id);
         recordCheck.accept(record);
     }
