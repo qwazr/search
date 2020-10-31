@@ -30,7 +30,7 @@ import java.net.URISyntaxException;
 public class FunctionScoreQueryTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
 
     @BeforeClass
-    public static void setup() throws IOException, InterruptedException, URISyntaxException {
+    public static void setup() throws IOException, URISyntaxException {
         initIndexService();
         indexService.postDocument(new IndexRecord.NoTaxonomy("1").textField("Hello World")
             .floatDocValue(2.0F)

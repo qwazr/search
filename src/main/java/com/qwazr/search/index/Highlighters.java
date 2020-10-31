@@ -55,14 +55,12 @@ interface Highlighters {
     abstract class Base implements Highlighters {
 
         private final LinkedHashMap<String, PerFieldBase> perFieldHighlighterMap;
-        private final ConcurrentHashMap<String, List<CharSequence[]>> fieldCache;
         protected final QueryContextImpl queryContext;
 
 
         private Base(final LinkedHashMap<String, HighlighterDefinition> definitions,
                      final QueryContextImpl queryContext) {
             this.queryContext = queryContext;
-            this.fieldCache = new ConcurrentHashMap<>();
             this.perFieldHighlighterMap = new LinkedHashMap<>();
             definitions.forEach((name, definition) -> perFieldHighlighterMap.put(name, newPerField(name, definition)));
         }
@@ -152,21 +150,7 @@ interface Highlighters {
             final protected List<CharSequence[]> loadFieldValues(final String[] fields,
                                                                  final DocIdSetIterator docIter,
                                                                  final int cacheCharsThreshold) throws IOException {
-                try {
-                    return fieldCache.computeIfAbsent(storedField, field -> {
-                        try {
-                            return loadFieldValues(docIter, cacheCharsThreshold);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                } catch (RuntimeException e) {
-                    final Throwable cause = e.getCause();
-                    if (cause instanceof IOException)
-                        throw ((IOException) cause);
-                    else
-                        throw e;
-                }
+                return loadFieldValues(docIter, cacheCharsThreshold);
             }
 
             final protected List<CharSequence[]> superLoadFieldValues(final String[] fields,
