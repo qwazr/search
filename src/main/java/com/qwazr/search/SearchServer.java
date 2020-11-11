@@ -94,7 +94,11 @@ public class SearchServer implements BaseServer {
 
     public static synchronized void main(final String... args) throws IOException, ServletException, JMException {
         shutdown();
-        INSTANCE = new SearchServer(new ServerConfiguration(args));
+        INSTANCE = new SearchServer(ServerConfiguration.of()
+            .applyEnvironmentVariables()
+            .applySystemProperties()
+            .applyCommandLineArgs(args)
+            .build());
         INSTANCE.start();
     }
 

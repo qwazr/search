@@ -24,7 +24,7 @@ The API returns the settings.
     "class" : "standard.StandardTokenizer"
   },
   "filters" : [ {
-    "class" : "en.FrenchMinimalStemFilter"
+    "class" : "fr.FrenchMinimalStemFilter"
   }, {
     "class" : "core.LowerCaseFilter"
   }, {

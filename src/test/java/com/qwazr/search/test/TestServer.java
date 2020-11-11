@@ -64,6 +64,9 @@ public class TestServer {
         dataDir = null;
         service = null;
         remote = null;
+        System.clearProperty("QWAZR_DATA");
+        System.clearProperty("PUBLIC_ADDR");
+        System.clearProperty("LISTEN_ADDR");
     }
 
 }

@@ -51,7 +51,7 @@
     },
     "filters": [
       {
-        "class": "en.FrenchMinimalStemFilter"
+        "class": "fr.FrenchMinimalStemFilter"
       },
       {
         "class": "core.LowerCaseFilter"
