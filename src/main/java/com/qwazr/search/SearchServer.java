@@ -22,6 +22,7 @@ import com.qwazr.search.index.IndexServiceBuilder;
 import com.qwazr.search.index.IndexServiceInterface;
 import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.BaseServer;
+import com.qwazr.server.CorsFilter;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.server.RestApplication;
@@ -52,8 +53,9 @@ public class SearchServer implements BaseServer {
         services.add(ClusterServiceInterface.SERVICE_NAME);
         services.add(IndexServiceInterface.SERVICE_NAME);
 
-        final ApplicationBuilder webServices = ApplicationBuilder.of("/*").classes(RestApplication.JSON_CLASSES).
-            singletons(new WelcomeShutdownService());
+        final ApplicationBuilder webServices = ApplicationBuilder.of("/*")
+            .classes(RestApplication.JSON_CLASSES)
+            .singletons(new WelcomeShutdownService(), new CorsFilter());
 
         clusterManager = new ClusterManager(executorService, configuration).registerProtocolListener(builder, services);
         webServices.singletons(clusterManager.getService());

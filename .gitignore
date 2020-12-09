@@ -8,3 +8,4 @@ qwazr-search.iml
 build/
 bin/
 out/
+indexes/
