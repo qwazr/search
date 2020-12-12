@@ -17,7 +17,7 @@
 import * as React from 'react';
 import {createContext, Dispatch, useReducer} from "react";
 
-const defaultQuery = {
+export const defaultQuery = {
   "query": {
     "MatchAllDocs": {},
   },
@@ -37,7 +37,8 @@ enum Actions {
   SELECT_INDEX = "SELECT_INDEX",
   SELECT_VIEW = "SELECT_VIEW",
   SELECT_FIELD = "SELECT_FIELD",
-  SET_INDEX_JSON = "SET_INDEX_JSON"
+  SET_INDEX_JSON = "SET_INDEX_JSON",
+  SET_QUERY_JSON = "SET_QUERY_JSON"
 }
 
 interface SelectIndexAction {
@@ -61,7 +62,12 @@ interface SetIndexJson {
   indexJson: string
 }
 
-type StateActions = SelectIndexAction | SelectViewAction | SelectField | SetIndexJson;
+interface SetQueryJson {
+  type: typeof Actions.SET_QUERY_JSON,
+  queryJson: string
+}
+
+type StateActions = SelectIndexAction | SelectViewAction | SelectField | SetIndexJson | SetQueryJson;
 
 // Definition of the state
 type StateType = {
@@ -71,7 +77,6 @@ type StateType = {
   selectedField: string | undefined,
   indexJson: string,
   queryJson: string,
-  defaultQuery: object,
   endPoint: string,
   error: string,
 }
@@ -83,8 +88,7 @@ const defaultState: StateType = {
   selectedIndexStatus: {},
   selectedField: undefined,
   indexJson: '',
-  queryJson: '',
-  defaultQuery: defaultQuery,
+  queryJson: JSON.stringify(defaultQuery, undefined, 2),
   endPoint: defaultEndPoint,
   error: '',
 }
@@ -105,6 +109,9 @@ const initialState = () => {
   const indexJson = localStorage.getItem(Actions.SET_INDEX_JSON);
   if (indexJson != null)
     state = {...state, indexJson: indexJson};
+  const queryJson = localStorage.getItem(Actions.SET_QUERY_JSON);
+  if (queryJson != null)
+    state = {...state, queryJson: queryJson};
   return state;
 }
 
@@ -135,6 +142,12 @@ const reducer = (state: StateType, action: StateActions): StateType => {
         ...state,
         indexJson: action.indexJson
       };
+      break;
+    case Actions.SET_QUERY_JSON:
+      newState = {
+        ...state,
+        queryJson: action.queryJson
+      }
       break;
     default:
       return state;
@@ -172,10 +185,15 @@ class Dispatcher {
     localStorage.setItem(Actions.SET_INDEX_JSON, indexJson);
     return this.dispatch({type: Actions.SET_INDEX_JSON, indexJson});
   }
+
+  setQueryJson(queryJson: string) {
+    localStorage.setItem(Actions.SET_QUERY_JSON, queryJson);
+    return this.dispatch({type: Actions.SET_QUERY_JSON, queryJson});
+  }
 }
 
 export const AppContext = createContext<[StateType, Dispatcher]>([defaultState,
-  new Dispatcher((value) => {
+  new Dispatcher(() => {
   })]);
 
 const AppContextProvider = (props: any) => {

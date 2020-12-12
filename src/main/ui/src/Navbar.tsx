@@ -22,13 +22,15 @@ const Navbar = () => {
 
   return (
     <nav className="navbar navbar-light navbar-expand bg-light">
-      <span className="navbar-brand text-secondary"><small>Qwazr Search</small></span>
+      <a className="navbar-brand" href="/">
+        <img src="logo-qwazr-50.png" height="32" alt="" loading="lazy"/>
+      </a>
       <div className="collapse navbar-collapse">
         <div className="navbar-nav mr-auto">
           <MenuItem enabled={true} label="Indices" view={Views.INDICES}/>
-          <MenuItem enabled={state.selectedIndex != undefined} label="Fields" view={Views.FIELDS}/>
-          <MenuItem enabled={state.selectedIndex != undefined} label="Ingest" view={Views.INGEST}/>
-          <MenuItem enabled={state.selectedIndex != undefined} label="Query" view={Views.QUERY}/>
+          <MenuItem enabled={state.selectedIndex !== undefined} label="Fields" view={Views.FIELDS}/>
+          <MenuItem enabled={state.selectedIndex !== undefined} label="Ingest" view={Views.INGEST}/>
+          <MenuItem enabled={state.selectedIndex !== undefined} label="Query" view={Views.QUERY}/>
         </div>
         <SelectedIndex/>
       </div>

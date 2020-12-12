@@ -15,7 +15,7 @@
  */
 
 import * as React from 'react';
-import {useContext, useState, useEffect} from 'react';
+import {useContext, useState, useEffect, useCallback} from 'react';
 import Status from "./Status";
 import FieldCreateEditDelete, {FieldProperties} from "./FieldCreateEditDelete";
 import {fetchJson} from "./fetchUtils";
@@ -32,29 +32,28 @@ const FieldsTable = () => {
   const [fields, setFields] = useState({});
   const [editFieldName, setEditFieldName] = useState('');
 
-  const doFetchFields = () => {
+  const doFetchFields = useCallback(() => {
 
     if (!state.selectedIndex) {
       return;
     }
-    startTask();
+    startTask("Loading fields")
     fetchJson(state.endPoint + '/' + state.selectedIndex + '/fields', undefined,
       json => {
-        endTask();
         setFields(json);
+        endTask('');
       },
-      error => endTask(undefined, error));
-  }
+      error => endTask('', error));
+  }, [state.endPoint, state.selectedIndex]);
 
   useEffect(() => {
     doFetchFields();
-  }, [state.selectedIndex])
+  }, [state.selectedIndex, doFetchFields])
 
 
   if (!state.selectedIndex)
     return null;
 
-  doFetchFields();
 
   return (
     <div className="border p-0 mt-1 ml-1 bg-light rounded">

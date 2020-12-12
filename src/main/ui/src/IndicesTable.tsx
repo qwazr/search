@@ -15,7 +15,7 @@
  */
 
 import * as React from 'react';
-import {useContext, useState, useEffect} from 'react';
+import {useContext, useState, useEffect, useCallback} from 'react';
 import Status from "./Status";
 import IndexCreateEditDelete from "./IndexCreateEditDelete";
 import {IndexList} from "./IndexList";
@@ -24,7 +24,7 @@ import {AppContext} from "./AppContext"
 
 const IndicesTable = () => {
 
-  const [state, dispatcher] = useContext(AppContext);
+  const [state] = useContext(AppContext);
 
   const [task, setTask] = useState('');
   const [error, setError] = useState('');
@@ -33,10 +33,19 @@ const IndicesTable = () => {
   const [indexName, setIndexName] = useState('');
   const [primaryKey, setPrimaryKey] = useState('id');
 
+  const doFetchIndices = useCallback(() => {
+    startTask('Loading indices');
+    fetchJson(state.endPoint + '/', undefined,
+      json => {
+        setIndices(json);
+        endTask('');
+      },
+      error => endTask('', error));
+  }, [state.endPoint]);
 
   useEffect(() => {
     doFetchIndices();
-  }, [])
+  }, [state.selectedIndex, doFetchIndices]);
 
   return (
     <div className="border bg-light rounded">
@@ -89,16 +98,6 @@ const IndicesTable = () => {
         state.selectedField = '';
         endTask('Index deleted');
         doFetchIndices();
-      },
-      error => endTask(undefined, error));
-  }
-
-  function doFetchIndices() {
-    startTask();
-    fetchJson(state.endPoint + '/', undefined,
-      json => {
-        endTask();
-        setIndices(json);
       },
       error => endTask(undefined, error));
   }

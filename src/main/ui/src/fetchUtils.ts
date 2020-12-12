@@ -47,7 +47,7 @@ export function fetchJson(request: RequestInfo,
 
 export function parseJson(notParsed: string) {
   if (notParsed === null || notParsed === '') {
-    throw 'Nothing to index';
+    throw new Error('Empty json');
   }
   return JSON.parse(notParsed);
 }

@@ -20,11 +20,11 @@ import Status from './Status';
 import JsonEditor from './JsonEditor';
 import {fetchJson, parseJson} from "./fetchUtils"
 import QueryHelper from "./QueryHelper";
-import {AppContext} from "./AppContext"
+import {AppContext, defaultQuery} from "./AppContext"
 
 const QueryView = () => {
 
-  const [state] = useContext(AppContext);
+  const [state, dispatch] = useContext(AppContext);
 
   const [error, setError] = useState('');
   const [task, setTask] = useState('');
@@ -32,7 +32,10 @@ const QueryView = () => {
   const [resultJson, setResultJson] = useState('');
 
   useEffect(() => {
-  }, [state.selectedIndex])
+  }, [state.selectedIndex, state.queryJson])
+
+  const qs: string = (state.queryJson) ? state.queryJson : JSON.stringify(defaultQuery, undefined, 2);
+  console.log(qs);
 
   return (
     <div className="tri-view">
@@ -42,10 +45,10 @@ const QueryView = () => {
       <div className="central border bg-light">
         <div className="left-column border bg-light">
           <div className="query-json">
-            <JsonEditor value={state.queryJson}
+            <JsonEditor value={qs}
                         readOnly={false}
                         setValue={value => {
-                          state.queryJson = value
+                          dispatch.setQueryJson(value);
                         }}
             />
           </div>

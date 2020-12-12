@@ -54,6 +54,7 @@ const QueryHelper = () => {
         onClick={e => doFetchQueryTypes(queryType)}>
       <a href={prop<any, string>(queryTypes, queryType)}
          target={"_blank"}
+         rel={"noreferrer"}
          className="float-right">
         <QuestionCircleFill/>
       </a>
@@ -106,7 +107,7 @@ interface HelpProps {
 
 const HelpItem = (props: HelpProps) => {
 
-  if (props.pos == 0) {
+  if (props.pos === 0) {
     return (
       <pre className="small">
         <code>
