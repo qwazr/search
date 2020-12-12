@@ -153,7 +153,7 @@ class Dispatcher {
   }
 
   selectIndex(index: string | undefined, status: object) {
-    if (index != undefined)
+    if (index !== undefined)
       localStorage.setItem(Actions.SELECT_INDEX, index);
     else
       localStorage.removeItem(Actions.SELECT_INDEX);
@@ -161,7 +161,7 @@ class Dispatcher {
   }
 
   selectField(field: string | undefined) {
-    if (field != undefined)
+    if (field !== undefined)
       localStorage.setItem(Actions.SELECT_FIELD, field);
     else
       localStorage.removeItem(Actions.SELECT_FIELD);

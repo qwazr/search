@@ -32,6 +32,20 @@ const FieldsTable = () => {
   const [fields, setFields] = useState({});
   const [editFieldName, setEditFieldName] = useState('');
 
+  const doFetchFields = () => {
+
+    if (!state.selectedIndex) {
+      return;
+    }
+    startTask();
+    fetchJson(state.endPoint + '/' + state.selectedIndex + '/fields', undefined,
+      json => {
+        endTask();
+        setFields(json);
+      },
+      error => endTask(undefined, error));
+  }
+
   useEffect(() => {
     doFetchFields();
   }, [state.selectedIndex])
@@ -39,6 +53,8 @@ const FieldsTable = () => {
 
   if (!state.selectedIndex)
     return null;
+
+  doFetchFields();
 
   return (
     <div className="border p-0 mt-1 ml-1 bg-light rounded">
@@ -55,20 +71,6 @@ const FieldsTable = () => {
                   doSelectField={value => dispatcher.selectField(value)}/>
     </div>
   );
-
-  function doFetchFields() {
-
-    if (!state.selectedIndex) {
-      return;
-    }
-    startTask();
-    fetchJson(state.endPoint + '/' + state.selectedIndex + '/fields', undefined,
-      json => {
-        endTask();
-        setFields(json);
-      },
-      error => endTask(undefined, error));
-  }
 
   function doCreateField(field: string, properties: FieldProperties) {
     startTask('Creating field ' + field);
