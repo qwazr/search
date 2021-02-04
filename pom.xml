@@ -20,7 +20,7 @@
   </scm>
 
   <properties>
-    <lucene.version>8.7.0</lucene.version>
+    <lucene.version>8.8.0</lucene.version>
   </properties>
 
   <dependencies>
@@ -102,7 +102,7 @@
     <dependency>
       <groupId>it.unimi.dsi</groupId>
       <artifactId>fastutil</artifactId>
-      <version>8.4.4</version>
+      <version>8.5.2</version>
     </dependency>
   </dependencies>
 
