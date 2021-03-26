@@ -97,6 +97,7 @@ import org.apache.lucene.search.Query;
     @JsonSubTypes.Type(value = SortedLongDocValuesRangeQuery.class),
     @JsonSubTypes.Type(value = SortedSetDocValuesExactQuery.class),
     @JsonSubTypes.Type(value = SortedSetDocValuesRangeQuery.class),
+    @JsonSubTypes.Type(value = SpanBoost.class),
     @JsonSubTypes.Type(value = SpanContainingQuery.class),
     @JsonSubTypes.Type(value = SpanFirstQuery.class),
     @JsonSubTypes.Type(value = SpanNearQuery.class),

@@ -107,4 +107,57 @@ public class PayloadScoreQueryTest
         }
     }
 
+
+    @Test
+    public void testWithBoost() {
+        final SpanTermQuery spanTermQuery = new SpanTermQuery("full", "hello");
+        final PayloadScoreQuery payloadScoreQuery = new PayloadScoreQuery(
+            spanTermQuery,
+            PayloadScoreQuery.FunctionType.MAX.payloadFunction,
+            new FloatArrayPayloadDecoder(10, 100, 1000),
+            true);
+        final ResultDefinition.WithObject<WithPayloadBoostRecord> result = indexService.searchQuery(
+            QueryDefinition.of(payloadScoreQuery).queryDebug(true).build());
+
+        final double expectedScore = 3.4314215183258057;
+        Assert.assertEquals(expectedScore, result.getDocuments().get(0).getScore(), 0.00001);
+
+        final double expectedScoreWithBoost = 3 * expectedScore;
+
+        // Test using Boost query
+        {
+            final Boost boost = new Boost(payloadScoreQuery, 3.0f);
+            final ResultDefinition.WithObject<WithPayloadBoostRecord> resultWithBoost = indexService.searchQuery(
+                QueryDefinition.of(boost).queryDebug(true).build());
+
+            Assert.assertEquals("(PayloadScoreQuery(full:hello, function: MaxPayloadFunction, includeSpanScore: true))^3.0",
+                resultWithBoost.query);
+
+            Assert.assertNotNull(resultWithBoost);
+            Assert.assertEquals(1L, resultWithBoost.getTotalHits(), 0);
+            Assert.assertEquals(expectedScoreWithBoost, resultWithBoost.getDocuments().get(0).getScore(), 0.00001);
+        }
+
+        // Test using SpanBoost query
+        {
+            final SpanBoost spanBoost = new SpanBoost(spanTermQuery, 3f);
+            final PayloadScoreQuery payloadScoreQuery2 = new PayloadScoreQuery(
+                spanBoost,
+                PayloadScoreQuery.FunctionType.MAX.payloadFunction,
+                new FloatArrayPayloadDecoder(10, 100, 1000),
+                true);
+            final ResultDefinition.WithObject<WithPayloadBoostRecord> resultWithSpanBoost = indexService.searchQuery(
+                QueryDefinition.of(payloadScoreQuery2)
+                    .queryDebug(true)
+                    .build());
+
+            Assert.assertEquals("PayloadScoreQuery((full:hello)^3.0, function: MaxPayloadFunction, includeSpanScore: true)",
+                resultWithSpanBoost.query);
+
+            Assert.assertNotNull(resultWithSpanBoost);
+            Assert.assertEquals(1L, resultWithSpanBoost.getTotalHits(), 0);
+            Assert.assertEquals(expectedScoreWithBoost, resultWithSpanBoost.getDocuments().get(0).getScore(), 0.00001);
+        }
+    }
+
 }

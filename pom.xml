@@ -20,7 +20,7 @@
   </scm>
 
   <properties>
-    <lucene.version>8.8.0</lucene.version>
+    <lucene.version>8.8.1</lucene.version>
   </properties>
 
   <dependencies>

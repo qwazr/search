@@ -49,7 +49,7 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
         assertThat(QuerySampler.TYPES_FACTORY, notNullValue());
         assertThat(QuerySampler.TYPES_URI_DOC, notNullValue());
         assertThat(QuerySampler.TYPES_CAMEL_KEYWORDS, notNullValue());
-        assertThat(QuerySampler.TYPES_FACTORY.size(), equalTo(39));
+        assertThat(QuerySampler.TYPES_FACTORY.size(), equalTo(40));
         assertThat(QuerySampler.TYPES_URI_DOC.size(), equalTo(QuerySampler.TYPES_FACTORY.size()));
         assertThat(QuerySampler.TYPES_URI_DOC.size(), equalTo(QuerySampler.TYPES_CAMEL_KEYWORDS.size()));
         assertThat(QuerySampler.TYPES_FACTORY.keySet(), equalTo(QuerySampler.TYPES_URI_DOC.keySet()));
@@ -107,6 +107,7 @@ public class QueryAndJsonSampleTest extends AbstractIndexTest.WithIndexRecord.No
                 "Prefix",
                 "Regexp",
                 "SimpleQueryParser",
+                "SpanBoost",
                 "TermRange",
                 "Wildcard"))
         ));
