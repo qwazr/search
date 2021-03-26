@@ -15,67 +15,78 @@
  */
 package com.qwazr.search.collector;
 
+import java.io.IOException;
 import org.apache.lucene.index.BinaryDocValues;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.index.SortedSetDocValues;
+import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.LeafCollector;
 import org.apache.lucene.search.Scorable;
 
-public abstract class DocValuesLeafCollector implements LeafCollector {
+public abstract class DocValuesLeafCollector<DocValuesType extends DocIdSetIterator> implements LeafCollector {
 
     protected long count = 0;
+
+    protected final DocValuesType docValues;
+
+    private int lastDocId = -1;
+
+    protected DocValuesLeafCollector(DocValuesType docValues) {
+        this.docValues = docValues;
+    }
+
+    protected boolean advance(int doc) throws IOException {
+        if (doc <= lastDocId)
+            return false;
+        if (docValues.advance(doc) != doc)
+            return false;
+        lastDocId = doc;
+        return true;
+    }
+
 
     @Override
     public void setScorer(Scorable scorable) {
     }
 
-    public static abstract class Numeric<CollectorResult extends Comparable<CollectorResult>> extends DocValuesLeafCollector {
-
-        protected final NumericDocValues docValues;
+    public static abstract class Numeric<CollectorResult extends Comparable<CollectorResult>>
+        extends DocValuesLeafCollector<NumericDocValues> {
 
         protected Numeric(NumericDocValues docValues) {
-            this.docValues = docValues;
+            super(docValues);
         }
 
         protected abstract CollectorResult getResult();
 
     }
 
-    public static abstract class SortedNumeric extends DocValuesLeafCollector {
-
-        protected final SortedNumericDocValues docValues;
+    public static abstract class SortedNumeric extends DocValuesLeafCollector<SortedNumericDocValues> {
 
         protected SortedNumeric(SortedNumericDocValues docValues) {
-            this.docValues = docValues;
+            super(docValues);
         }
     }
 
-    public static abstract class Binary extends DocValuesLeafCollector {
-
-        protected final BinaryDocValues docValues;
+    public static abstract class Binary extends DocValuesLeafCollector<BinaryDocValues> {
 
         protected Binary(BinaryDocValues docValues) {
-            this.docValues = docValues;
+            super(docValues);
         }
     }
 
-    public static abstract class Sorted extends DocValuesLeafCollector {
-
-        protected final SortedDocValues docValues;
+    public static abstract class Sorted extends DocValuesLeafCollector<SortedDocValues> {
 
         protected Sorted(SortedDocValues docValues) {
-            this.docValues = docValues;
+            super(docValues);
         }
     }
 
-    public static abstract class SortedSet extends DocValuesLeafCollector {
-
-        protected final SortedSetDocValues docValues;
+    public static abstract class SortedSet extends DocValuesLeafCollector<SortedSetDocValues> {
 
         protected SortedSet(SortedSetDocValues docValues) {
-            this.docValues = docValues;
+            super(docValues);
         }
     }
 }

@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntConsumer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.index.LeafReader;
@@ -75,9 +74,7 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
             for (final GroupLeader groupLeader : groupQueue.groupLeaders.values()) {
                 sortedInts.computeIfAbsent(groupLeader.docBase,
                     leaf -> Pair.of(groupLeader.maxDoc, new IntAVLTreeSet())).getValue().add(groupLeader.doc);
-                synchronized (collapsedMap) {
-                    collapsedMap.addTo(groupLeader.docBase + groupLeader.doc, groupLeader.collapsedCount);
-                }
+                collapsedMap.addTo(groupLeader.docBase + groupLeader.doc, groupLeader.collapsedCount);
             }
         }
 
@@ -85,9 +82,7 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
         sortedInts.forEach((docBase, sortedInt) -> {
             final RoaringDocIdSet.Builder builder = new RoaringDocIdSet.Builder(sortedInt.getKey());
             sortedInt.getValue().forEach((IntConsumer) builder::add);
-            synchronized (docIdMaps) {
-                docIdMaps.put(docBase, builder.build());
-            }
+            docIdMaps.put(docBase, builder.build());
         });
 
         // Add empty bitset for unassigned leaf
@@ -97,8 +92,8 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
     }
 
     @Override
-    final public Query reduce(final List<CollapseCollector> leafCollectors) {
-        final Map<Integer, RoaringDocIdSet> docIdMaps = new ConcurrentHashMap<>();
+    final public synchronized Query reduce(final List<CollapseCollector> leafCollectors) {
+        final Map<Integer, RoaringDocIdSet> docIdMaps = new HashMap<>();
         final GroupQueue groupQueue = new GroupQueue(maxRows);
         // Stores for each doc the number of collapsed documents
         final Int2IntLinkedOpenHashMap collapsedMap = new Int2IntLinkedOpenHashMap(groupQueue.groupLeaders.size());
@@ -109,7 +104,9 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
         for (final GroupLeader groupLeader : groupQueue.groupLeaders.values())
             collapsedCount += groupLeader.collapsedCount;
 
-        return new Query(new FilteredQuery(docIdMaps), collapsedMap, collapsedCount);
+        synchronized (docIdMaps) {
+            return new Query(new FilteredQuery(docIdMaps), collapsedMap, collapsedCount);
+        }
     }
 
     final static class Leaf extends Equalizer.Immutable<Leaf> implements LeafCollector {
@@ -152,20 +149,24 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
             this.scorer = scorer;
         }
 
-        void reduce(final GroupQueue groupQueue) {
-            docIds.keySet().forEach((IntConsumer) ord -> {
-                try {
-                    groupQueue.offer(sdv.lookupOrd(ord), scores.get(ord), count.get(ord),
-                        (bytesRef, score, collapsedCount) -> new GroupLeader(docBase, maxDoc, bytesRef, docIds.get(ord) + docBase,
-                            score, collapsedCount));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+        synchronized void reduce(final GroupQueue groupQueue) {
+            synchronized (docIds) {
+                docIds.keySet().forEach((IntConsumer) ord -> {
+                    try {
+                        groupQueue.offer(sdv.lookupOrd(ord), scores.get(ord), count.get(ord),
+                            (bytesRef, score, collapsedCount) -> new GroupLeader(docBase, maxDoc, bytesRef, docIds.get(ord) + docBase,
+                                score, collapsedCount));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
         }
 
         @Override
         final public void collect(final int doc) throws IOException {
+            if (doc < sdv.docID())
+                return;
             if (sdv.advance(doc) != doc)
                 return;
             final int ord = sdv.ordValue();
@@ -210,13 +211,22 @@ public class CollapseCollector extends BaseCollector.Parallel<CollapseCollector.
     final static class GroupQueue {
 
         private final int maxSize;
-        final Map<BytesRef, GroupLeader> groupLeaders;
+        private final Map<BytesRef, GroupLeader> groupLeaders;
         private final Float2ReferenceSortedMap<Object2BooleanLinkedOpenHashMap<BytesRef>> scoreGroups;
 
         GroupQueue(final int maxSize) {
             this.maxSize = maxSize;
             groupLeaders = new HashMap<>();
             scoreGroups = new Float2ReferenceRBTreeMap<>();
+        }
+
+        /**
+         * Exposed for test
+         *
+         * @return
+         */
+        Map<BytesRef, GroupLeader> getGroupLeaders() {
+            return groupLeaders;
         }
 
         synchronized void offer(final BytesRef bytesRef,

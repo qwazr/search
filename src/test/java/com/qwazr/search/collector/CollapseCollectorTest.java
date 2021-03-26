@@ -18,7 +18,7 @@ package com.qwazr.search.collector;
 import com.qwazr.search.index.QueryDefinition;
 import com.qwazr.search.index.ResultDefinition;
 import com.qwazr.search.query.Bool;
-import com.qwazr.search.query.TermQuery;
+import com.qwazr.search.query.HasTerm;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import com.qwazr.search.test.units.IndexRecord;
 import com.qwazr.utils.RandomUtils;
@@ -29,7 +29,6 @@ import java.util.Collection;
 import org.apache.lucene.util.BytesRef;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoTaxonomy {
@@ -59,16 +58,14 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
     }
 
     @Test
-    @Ignore
-    //TODO EK Fix this !
     public void test() {
         final QueryDefinition queryDef1 = QueryDefinition.of(Bool.of()
-            .addClause(Bool.Occur.should, new TermQuery("textField", "text1"))
-            .addClause(Bool.Occur.should, new TermQuery("textField", "text2"))
-            .addClause(Bool.Occur.should, new TermQuery("textField", "text3"))
-            .addClause(Bool.Occur.should, new TermQuery("textField", "text4"))
-            .addClause(Bool.Occur.should, new TermQuery("textField", "text5"))
-            .addClause(Bool.Occur.should, new TermQuery("textField", "text6"))
+            .addClause(Bool.Occur.should, new HasTerm("textField", "text1"))
+            .addClause(Bool.Occur.should, new HasTerm("textField", "text2"))
+            .addClause(Bool.Occur.should, new HasTerm("textField", "text3"))
+            .addClause(Bool.Occur.should, new HasTerm("textField", "text4"))
+            .addClause(Bool.Occur.should, new HasTerm("textField", "text5"))
+            .addClause(Bool.Occur.should, new HasTerm("textField", "text6"))
             .build())
             .collector("collapse", CollapseCollector.class, "sortedDocValue", 5)
             .build();
@@ -93,7 +90,7 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
 
     private void checkGroupLeader(final CollapseCollector.GroupQueue queue, String value, int doc, float score,
                                   int collapsedCount) {
-        final CollapseCollector.GroupLeader leader = queue.groupLeaders.get(new BytesRef(value));
+        final CollapseCollector.GroupLeader leader = queue.getGroupLeaders().get(new BytesRef(value));
         Assert.assertNotNull(leader);
         Assert.assertEquals(doc, leader.doc);
         Assert.assertEquals(score, leader.score, 0);
@@ -109,7 +106,7 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
                 (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(0, 0, bytesRef, doc, score,
                     collapsed));
         }
-        Assert.assertEquals(3, queue.groupLeaders.size());
+        Assert.assertEquals(3, queue.getGroupLeaders().size());
         checkGroupLeader(queue, "test7", 7, 7f, 69);
         checkGroupLeader(queue, "test8", 8, 8f, 79);
         checkGroupLeader(queue, "test9", 9, 9f, 89);
@@ -124,7 +121,7 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
                 (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(0, 0, bytesRef, doc, score,
                     collapsed));
         }
-        Assert.assertEquals(1, queue.groupLeaders.size());
+        Assert.assertEquals(1, queue.getGroupLeaders().size());
         checkGroupLeader(queue, "test", 9, 9f, 449);
     }
 
@@ -137,7 +134,7 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
                 (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(0, 0, bytesRef, doc, score,
                     collapsed));
         }
-        Assert.assertEquals(2, queue.groupLeaders.size());
+        Assert.assertEquals(2, queue.getGroupLeaders().size());
         checkGroupLeader(queue, "test0", 8, 8f, 199);
         checkGroupLeader(queue, "test1", 9, 9f, 249);
     }
@@ -151,7 +148,7 @@ public class CollapseCollectorTest extends AbstractIndexTest.WithIndexRecord.NoT
                 (bytesRef, score, collapsed) -> new CollapseCollector.GroupLeader(0, 0, bytesRef, doc, score,
                     collapsed));
         }
-        Assert.assertEquals(2, queue.groupLeaders.size());
+        Assert.assertEquals(2, queue.getGroupLeaders().size());
         checkGroupLeader(queue, "test0", 8, 8f, 199);
         checkGroupLeader(queue, "test1", 9, 9f, 249);
     }

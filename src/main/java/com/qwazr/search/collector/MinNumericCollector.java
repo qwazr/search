@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.List;
 
 public abstract class MinNumericCollector<CollectorResult extends Comparable<CollectorResult>, LeafCollector extends DocValuesLeafCollector.Numeric<CollectorResult>>
-        extends DocValuesCollector.Numeric<CollectorResult, LeafCollector> {
+    extends DocValuesCollector.Numeric<CollectorResult, LeafCollector> {
 
     public MinNumericCollector(final String fieldName) {
         super(fieldName);
@@ -69,9 +69,9 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
 
             @Override
             final public void collect(final int doc) throws IOException {
-                count++;
-                if (docValues.advance(doc) != doc)
+                if (!advance(doc))
                     return;
+                count++;
                 final long value = docValues.longValue();
                 if (value < result)
                     result = value;
@@ -106,9 +106,9 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
 
             @Override
             final public void collect(final int doc) throws IOException {
-                count++;
-                if (docValues.advance(doc) != doc)
+                if (!advance(doc))
                     return;
+                count++;
                 final int value = (int) docValues.longValue();
                 if (value < result)
                     result = value;
@@ -144,9 +144,9 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
 
             @Override
             final public void collect(final int doc) throws IOException {
-                count++;
-                if (docValues.advance(doc) != doc)
+                if (!advance(doc))
                     return;
+                count++;
                 final double value = NumericUtils.sortableLongToDouble(docValues.longValue());
                 if (value < result)
                     result = value;
@@ -181,9 +181,9 @@ public abstract class MinNumericCollector<CollectorResult extends Comparable<Col
 
             @Override
             final public void collect(final int doc) throws IOException {
-                count++;
-                if (docValues.advance(doc) != doc)
+                if (!advance(doc))
                     return;
+                count++;
                 final float value = NumericUtils.sortableIntToFloat((int) docValues.longValue());
                 if (value < result)
                     result = value;
