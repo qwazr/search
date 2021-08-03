@@ -205,7 +205,7 @@ abstract class FieldTypeAbstract<T extends FieldDefinition> implements FieldType
     protected void fill(final String fieldName,
                         final Object value,
                         final DocumentBuilder<?> documentBuilder) {
-        if (value == null)
+        if (value == null || fieldSupplier == null)
             return;
         if (value instanceof String[])
             fillArray(fieldName, (String[]) value, documentBuilder);
