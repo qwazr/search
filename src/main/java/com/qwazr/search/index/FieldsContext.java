@@ -35,7 +35,7 @@ public class FieldsContext extends Equalizer.Immutable<FieldsContext> {
     public FieldsContext(@NotNull final IndexSettingsDefinition indexSettings,
                          final Map<String, FieldDefinition> fields) {
         super(FieldsContext.class);
-        this.primaryKey = indexSettings.primaryKey == null || indexSettings.primaryKey.isBlank()
+        this.primaryKey = indexSettings.primaryKey == null
             ? FieldDefinition.ID_FIELD : indexSettings.primaryKey;
         this.sortedSetFacetField = indexSettings.sortedSetFacetField == null
             ? FieldDefinition.DEFAULT_SORTEDSET_FACET_FIELD : indexSettings.sortedSetFacetField;
