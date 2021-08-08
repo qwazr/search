@@ -18,24 +18,11 @@ package com.qwazr.search.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.search.index.FieldMap;
 import com.qwazr.search.index.QueryContext;
-import com.qwazr.utils.ArrayUtils;
-import com.qwazr.utils.CollectionsUtils;
-import com.qwazr.utils.StringUtils;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryParser<T>> extends AbstractQueryParser<T> {
 
-    final public String[] fields;
-    final public LinkedHashMap<String, Float> boosts;
     final public Boolean allow_leading_wildcard;
     final public QueryParserOperator default_operator;
     final public Integer phrase_slop;
@@ -54,8 +41,6 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
                                          final String queryString,
                                          final String analyzer) {
         super(queryClass, enablePositionIncrements, autoGenerateMultiTermSynonymsPhraseQuery, enableGraphQueries, queryString, analyzer);
-        fields = null;
-        boosts = null;
         allow_leading_wildcard = null;
         default_operator = null;
         phrase_slop = null;
@@ -68,8 +53,6 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
 
     protected AbstractClassicQueryParser(Class<T> queryClass, AbstractParserBuilder<?, ?> builder) {
         super(queryClass, builder);
-        this.fields = builder.fields == null ? null : ArrayUtils.toArray(builder.fields);
-        this.boosts = builder.boosts;
         this.allow_leading_wildcard = builder.allow_leading_wildcard;
         this.default_operator = builder.default_operator;
         this.phrase_slop = builder.phrase_slop;
@@ -84,8 +67,6 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
     @Override
     protected boolean isEqual(T q) {
         return super.isEqual(q)
-            && Arrays.equals(fields, q.fields)
-            && CollectionsUtils.equals(boosts, q.boosts)
             && Objects.equals(allow_leading_wildcard, q.allow_leading_wildcard)
             && Objects.equals(default_operator, q.default_operator)
             && Objects.equals(phrase_slop, q.phrase_slop)
@@ -98,7 +79,7 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
 
     @Override
     protected int computeHashCode() {
-        return Objects.hash(fields, boosts, default_operator);
+        return Objects.hash(super.computeHashCode(), default_operator);
     }
 
     protected void setParserParameters(final QueryContext queryContext,
@@ -122,25 +103,9 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
             parser.setSplitOnWhitespace(splitOnWhitespace);
     }
 
-    protected Map<String, Float> resolvedBoosts(final FieldMap fieldMap) {
-        return boosts != null && fieldMap != null ?
-            FieldMap.resolveFieldNames(boosts, new HashMap<>(),
-                f -> fieldMap.getFieldType(f, f, StringUtils.EMPTY).resolveFieldName(f, null, null)) :
-            boosts;
-    }
-
-    protected String[] resolveFields(final FieldMap fieldMap) {
-        return fields != null && fieldMap != null ?
-            FieldMap.resolveFieldNames(fields,
-                f -> fieldMap.getFieldType(f, f, StringUtils.EMPTY).resolveFieldName(f, null, null)) :
-            fields;
-    }
-
     public static abstract class AbstractParserBuilder<B extends AbstractParserBuilder<B, T>, T extends AbstractClassicQueryParser<T>>
         extends AbstractBuilder<B, T> {
 
-        private Set<String> fields;
-        private LinkedHashMap<String, Float> boosts;
         private Boolean allow_leading_wildcard;
         private QueryParserOperator default_operator;
         private Integer phrase_slop;
@@ -155,20 +120,6 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
         }
 
         public abstract T build();
-
-        public B addField(String... fieldSet) {
-            if (fields == null)
-                fields = new LinkedHashSet<>();
-            Collections.addAll(fields, fieldSet);
-            return me();
-        }
-
-        public B addBoost(String field, Float boost) {
-            if (boosts == null)
-                boosts = new LinkedHashMap<>();
-            boosts.put(field, boost);
-            return me();
-        }
 
         public B setAllowLeadingWildcard(Boolean allow_leading_wildcard) {
             this.allow_leading_wildcard = allow_leading_wildcard;
