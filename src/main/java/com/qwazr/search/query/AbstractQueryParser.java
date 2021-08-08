@@ -91,21 +91,13 @@ public abstract class AbstractQueryParser<T extends AbstractQueryParser<T>> exte
 
     public static abstract class AbstractBuilder<B extends AbstractBuilder<B, T>, T extends AbstractQueryParser<T>> {
 
-        private final Class<B> builderClass;
-
         private String analyzer;
         private Boolean enablePositionIncrements;
         private Boolean autoGenerateMultiTermSynonymsPhraseQuery;
         private Boolean enableGraphQueries;
         private String queryString;
 
-        protected AbstractBuilder(final Class<B> builderClass) {
-            this.builderClass = builderClass;
-        }
-
-        protected B me() {
-            return builderClass.cast(this);
-        }
+        protected abstract B me();
 
         public abstract T build();
 

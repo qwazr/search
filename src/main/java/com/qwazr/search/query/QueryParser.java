@@ -70,8 +70,9 @@ public class QueryParser extends AbstractClassicQueryParser<QueryParser> {
 
         private String defaulField;
 
-        protected Builder() {
-            super(Builder.class);
+        @Override
+        protected Builder me() {
+            return this;
         }
 
         @Override

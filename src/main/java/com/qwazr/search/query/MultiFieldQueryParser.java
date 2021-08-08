@@ -81,7 +81,7 @@ public class MultiFieldQueryParser extends AbstractClassicQueryParser<MultiField
                 f -> fieldMap.getFieldType(f, f, StringUtils.EMPTY).resolveFieldName(f, null, null)) :
             fields;
     }
-    
+
     @Override
     final public Query getQuery(final QueryContext queryContext) throws ParseException {
         final FieldMap fieldMap = queryContext.getFieldMap();
@@ -101,10 +101,6 @@ public class MultiFieldQueryParser extends AbstractClassicQueryParser<MultiField
         private LinkedHashSet<String> fields;
         private LinkedHashMap<String, Float> boosts;
 
-        protected Builder() {
-            super(Builder.class);
-        }
-
         public Builder addField(String... fieldSet) {
             if (fields == null)
                 fields = new LinkedHashSet<>();
@@ -117,6 +113,11 @@ public class MultiFieldQueryParser extends AbstractClassicQueryParser<MultiField
                 boosts = new LinkedHashMap<>();
             boosts.put(field, boost);
             return me();
+        }
+
+        @Override
+        protected Builder me() {
+            return this;
         }
 
         @Override

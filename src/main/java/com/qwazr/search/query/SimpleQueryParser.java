@@ -156,10 +156,6 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
         private QueryParserOperator defaultOperator;
         private List<Operator> enabledOperators;
 
-        protected Builder() {
-            super(Builder.class);
-        }
-
         public Builder addField(String... fieldSet) {
             for (String field : fieldSet)
                 addBoost(field, 1.0f);
@@ -182,6 +178,11 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
             if (enabledOperators == null)
                 enabledOperators = new ArrayList<>(operators.length);
             Collections.addAll(enabledOperators, operators);
+            return this;
+        }
+
+        @Override
+        protected Builder me() {
             return this;
         }
 

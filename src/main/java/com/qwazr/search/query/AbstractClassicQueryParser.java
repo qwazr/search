@@ -114,11 +114,7 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
         private Integer fuzzy_prefix_length;
         private Integer max_determinized_states;
         private Boolean splitOnWhitespace;
-
-        protected AbstractParserBuilder(Class<B> builderClass) {
-            super(builderClass);
-        }
-
+        
         public abstract T build();
 
         public B setAllowLeadingWildcard(Boolean allow_leading_wildcard) {
