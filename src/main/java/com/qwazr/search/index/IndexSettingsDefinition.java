@@ -56,6 +56,7 @@ public class IndexSettingsDefinition extends Equalizer.Immutable<IndexSettingsDe
     public static final double DEFAULT_NRT_CACHING_DIRECTORY_MAX_CACHED_MB = 60;
 
     @JsonProperty("primary_key")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     final public String primaryKey;
 
     @JsonProperty("similarity")
