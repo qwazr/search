@@ -50,7 +50,7 @@ public class FieldDefinitionTest {
     }
 
     void checkFieldDef(SmartFieldDefinition.SmartBuilder builder, SmartFieldDefinition.Type type,
-                       Boolean facet, Boolean index, Boolean sort, Boolean stored,
+                       Boolean facet, Boolean index, Boolean sort, Boolean stored, Boolean multivalued,
                        final String analyzer, final String indexAnalyzer, final String queryAnalyzer,
                        final String[] copyFrom) {
         final SmartFieldDefinition fieldDef = builder.build();
@@ -60,6 +60,7 @@ public class FieldDefinitionTest {
         Assert.assertEquals(index, fieldDef.index);
         Assert.assertEquals(sort, fieldDef.sort);
         Assert.assertEquals(stored, fieldDef.stored);
+        Assert.assertEquals(multivalued, fieldDef.multivalued);
         Assert.assertEquals(analyzer, fieldDef.analyzer);
         Assert.assertEquals(indexAnalyzer, fieldDef.indexAnalyzer);
         Assert.assertEquals(queryAnalyzer, fieldDef.queryAnalyzer);
@@ -70,34 +71,37 @@ public class FieldDefinitionTest {
     public void smartFieldBuilderTest() {
         final SmartFieldDefinition.SmartBuilder builder = SmartFieldDefinition.of();
 
-        checkFieldDef(builder, null, null, null, null, null, null, null, null, null);
+        checkFieldDef(builder, null, null, null, null, null, null, null, null, null, null);
 
         builder.type(SmartFieldDefinition.Type.DOUBLE);
-        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, null, null, null, null, null, null, null, null);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, null, null, null, null, null, null, null, null, null);
 
         builder.facet(true);
-        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, null, null, null, null, null, null, null);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, null, null, null, null, null, null, null, null);
 
         builder.index(true);
-        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, null, null, null, null, null, null);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, null, null, null, null, null, null, null);
 
         builder.sort(true);
-        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, null, null, null, null, null);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, null, null, null, null, null, null);
 
         builder.stored(true);
-        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, null, null, null, null);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, null,null, null, null, null);
+
+        builder.multivalued(true);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, true,null, null, null, null);
 
         builder.analyzer("analyzer");
-        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", null, null, null);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, true,"analyzer", null, null, null);
 
         builder.indexAnalyzer("indexAnalyzer");
-        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "indexAnalyzer", null, null);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, true,"analyzer", "indexAnalyzer", null, null);
 
         builder.queryAnalyzer("queryAnalyzer");
-        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "indexAnalyzer", "queryAnalyzer", null);
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, true,"analyzer", "indexAnalyzer", "queryAnalyzer", null);
 
         builder.copyFrom("field");
-        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, "analyzer", "indexAnalyzer", "queryAnalyzer", new String[]{"field"});
+        checkFieldDef(builder, SmartFieldDefinition.Type.DOUBLE, true, true, true, true, true,"analyzer", "indexAnalyzer", "queryAnalyzer", new String[]{"field"});
 
     }
 }

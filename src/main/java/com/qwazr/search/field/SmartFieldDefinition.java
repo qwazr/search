@@ -110,6 +110,7 @@ public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefiniti
             && Objects.equals(index, f.index)
             && Objects.equals(sort, f.sort)
             && Objects.equals(stored, f.stored)
+            && Objects.equals(multivalued, f.multivalued)
             && Objects.equals(maxKeywordLength, f.maxKeywordLength);
     }
 
@@ -155,7 +156,7 @@ public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefiniti
         }
 
         public SmartBuilder multivalued(Boolean multivalued) {
-            this.stored = multivalued;
+            this.multivalued = multivalued;
             return this;
         }
 

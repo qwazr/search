@@ -18,7 +18,8 @@
   "category": {
     "type": "TEXT",
     "facet": true,
-    "index": true
+    "index": true,
+    "multivalued": true
   },
   "price": {
     "type": "DOUBLE",
