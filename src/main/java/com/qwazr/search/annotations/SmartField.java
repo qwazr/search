@@ -55,4 +55,6 @@ public @interface SmartField {
 
     boolean stored() default false;
 
+    boolean multivalued() default false;
+
 }

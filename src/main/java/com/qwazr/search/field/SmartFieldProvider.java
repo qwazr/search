@@ -388,7 +388,8 @@ interface SmartFieldProvider {
     }
 
     static FieldTypeInterface.FieldSupplier facetField(final String fieldNamePattern,
-                                                       final WildcardMatcher wildcardMatcher) {
+                                                       final WildcardMatcher wildcardMatcher,
+                                                       final boolean multivalued) {
         final SmartFieldNameResolver fieldNameSupplier = facetFieldNameSupplier(fieldNamePattern, wildcardMatcher);
         return (fieldName, value, builder) -> {
             final String dimensionName = fieldNameSupplier.resolve(fieldName);
@@ -397,7 +398,7 @@ interface SmartFieldProvider {
                 dimensionName,
                 (dim, context, config) -> {
                     config.setIndexFieldName(dim, context.sortedSetFacetField);
-                    config.setMultiValued(dim, true);
+                    config.setMultiValued(dim, multivalued);
                 });
         };
     }

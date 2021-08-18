@@ -60,7 +60,7 @@ public class GettingStartedJava {
             queryAnalyzerClass = SmartAnalyzerSet.EnglishQuery.class)
         String content;
 
-        @SmartField(index = true, facet = true)
+        @SmartField(index = true, facet = true, multivalued = true)
         String[] tags;
 
         // Public no argument constructor is mandatory

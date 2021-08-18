@@ -96,6 +96,7 @@ public interface FieldTypeInterface {
         storedField('r', "Stored field"),
         stringField('s', "String indexed field"),
         facetField('f', "Faceted field"),
+        multivaluedFacetField('m', "Multivalued Facet Field"),
         docValues('d', "Sorted field"),
         textField('t', " Full text indexed field"),
         pointField('p', "Numeric indexed field");

@@ -99,7 +99,7 @@ public class SmartFieldFacetTest extends AbstractIndexTest {
         @SmartField(name = FieldDefinition.ID_FIELD, type = SmartFieldDefinition.Type.LONG, index = true, stored = true)
         final public long id;
 
-        @SmartField(type = SmartFieldDefinition.Type.TEXT, facet = true)
+        @SmartField(type = SmartFieldDefinition.Type.TEXT, facet = true, multivalued = true)
         @Copy(to = {@Copy.To(order = 3, field = "full")})
         final public String[] tags;
 

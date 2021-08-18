@@ -41,6 +41,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
         private final boolean isFacet;
         private final boolean isStored;
         private final boolean isSort;
+        private final boolean isMultivalued;
         private final boolean isFullText;
 
         private SmartBuilder(final String genericFieldName,
@@ -56,6 +57,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
             isFacet = definition.facet != null && definition.facet;
             isStored = definition.stored != null && definition.stored;
             isSort = definition.sort != null && definition.sort;
+            isMultivalued = definition.multivalued != null && definition.multivalued;
             isFullText = isFullTextIndexAnalyzer(definition);
             valueType(getValueType());
             fieldSupplier(buildFieldSupplier());
@@ -98,7 +100,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
                 .facetFieldNameSupplier(genericFieldName, wildcardMatcher);
             return (fieldName, fieldsContext, facetsConfig) -> {
                 final String resolvedFieldName = fieldNameSupplier.resolve(fieldName);
-                facetsConfig.setMultiValued(resolvedFieldName, true);
+                facetsConfig.setMultiValued(resolvedFieldName, isMultivalued);
                 facetsConfig.setIndexFieldName(resolvedFieldName, fieldsContext.sortedSetFacetField);
             };
         }
@@ -213,7 +215,7 @@ final class SmartFieldType extends FieldTypeAbstract<SmartFieldDefinition> {
                 }
             }
             if (isFacet)
-                if (addIfNotNull(SmartFieldProvider.facetField(genericFieldName, wildcardMatcher), fieldSupplierList))
+                if (addIfNotNull(SmartFieldProvider.facetField(genericFieldName, wildcardMatcher, isMultivalued), fieldSupplierList))
                     fieldType(FieldType.facetField);
             if (isSort)
                 if (addIfNotNull(getSortedDocValuesFieldSupplier(), fieldSupplierList))

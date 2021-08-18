@@ -41,6 +41,8 @@ public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefiniti
     final public Boolean sort;
     @JsonProperty("stored")
     final public Boolean stored;
+    @JsonProperty("multivalued")
+    final public Boolean multivalued;
     @JsonProperty("maxKeywordLength")
     final public Integer maxKeywordLength;
 
@@ -58,6 +60,7 @@ public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefiniti
                          @JsonProperty("query_analyzer") final String queryAnalyzer,
                          @JsonProperty("sort") final Boolean sort,
                          @JsonProperty("stored") final Boolean stored,
+                         @JsonProperty("multivalued") final Boolean multivalued,
                          @JsonProperty("copy_from") final String[] copyFrom) {
         super(SmartFieldDefinition.class,
             type,
@@ -69,6 +72,7 @@ public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefiniti
         this.index = index;
         this.sort = sort;
         this.stored = stored;
+        this.multivalued = multivalued;
         this.maxKeywordLength = maxKeywordLength;
     }
 
@@ -78,6 +82,7 @@ public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefiniti
         index = builder.index;
         sort = builder.sort;
         stored = builder.stored;
+        multivalued = builder.multivalued;
         maxKeywordLength = builder.maxKeywordLength;
     }
 
@@ -94,6 +99,7 @@ public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefiniti
         this.index = smartField.index();
         this.sort = smartField.sort();
         this.stored = smartField.stored();
+        this.multivalued = smartField.multivalued();
         this.maxKeywordLength = smartField.maxKeywordLength();
     }
 
@@ -125,6 +131,7 @@ public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefiniti
         public Boolean index;
         public Boolean sort;
         public Boolean stored;
+        public Boolean multivalued;
         public Integer maxKeywordLength;
 
         public SmartBuilder facet(Boolean facet) {
@@ -144,6 +151,11 @@ public class SmartFieldDefinition extends BaseFieldDefinition<SmartFieldDefiniti
 
         public SmartBuilder stored(Boolean stored) {
             this.stored = stored;
+            return this;
+        }
+
+        public SmartBuilder multivalued(Boolean multivalued) {
+            this.stored = multivalued;
             return this;
         }
 
