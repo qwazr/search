@@ -15,8 +15,6 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-          cache: 'maven'
-          check-latest: true
       -
         name: Check Out Repo
         uses: actions/checkout@v2
