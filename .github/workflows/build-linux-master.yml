@@ -41,6 +41,9 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
+      - name: Build Uber JAR
+        run: mvn -P shade -DskipTests package
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 

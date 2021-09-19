@@ -4,9 +4,9 @@ QWAZR SEARCH
 A Search Engine microservice and JAVA library with indexing and search features based on
 [Apache Lucene](https://lucene.apache.org/core/)
 
-![Build](https://github.com/qwazr/search/actions/workflows/build-linux/badge.svg)
+[![Build](https://github.com/qwazr/search/actions/workflows/build-linux-master.yml/badge.svg)](https://github.com/qwazr/search/actions/workflows/build-linux-master.yml)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr-search/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr-search)
-![Coverage Status](https://coveralls.io/repos/github/qwazr/search/badge.svg?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/qwazr/search/badge.svg?branch=master)](https://coveralls.io/repos/github/qwazr/search)
 [![Join the chat at https://gitter.im/qwazr/QWAZR](https://badges.gitter.im/qwazr/QWAZR.svg)](https://gitter.im/qwazr/QWAZR)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
