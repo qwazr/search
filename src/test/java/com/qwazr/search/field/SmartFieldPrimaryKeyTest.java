@@ -21,6 +21,7 @@ import com.qwazr.search.index.PostDefinition;
 import com.qwazr.search.test.units.AbstractIndexTest;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -53,6 +54,14 @@ public class SmartFieldPrimaryKeyTest extends AbstractIndexTest {
             equalTo(1));
     }
 
+    private void postDocuments(String id1, String title1, String id2, String title2) {
+        assertThat(indexService.postMappedDocuments(indexName,
+                PostDefinition.Documents.of(List.of(
+                    Map.of("id", id1, "title", title1),
+                    Map.of("id", id2, "title", title2)), null)),
+            equalTo(2));
+    }
+
     @Test
     public void postDocumentTwiceShouldReplace() throws IOException {
         SmartFieldRecord sample = SmartFieldRecord.random();
@@ -60,7 +69,7 @@ public class SmartFieldPrimaryKeyTest extends AbstractIndexTest {
         assertThat(indexService.getIndex(indexName).numDocs, equalTo(1L));
         postDocument("doc1", "title1b");
         assertThat(indexService.getIndex(indexName).numDocs, equalTo(1L));
-        postDocument("doc2", "title2");
+        postDocuments("doc1", "title1c", "doc2", "title2");
         assertThat(indexService.getIndex(indexName).numDocs, equalTo(2L));
         postDocument("doc2", "title2b");
         assertThat(indexService.getIndex(indexName).numDocs, equalTo(2L));
