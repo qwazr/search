@@ -38,8 +38,8 @@ public class Regexp extends AbstractFieldQuery<Regexp> {
     final public String text;
     @JsonProperty("flags")
     final public List<Flag> flags;
-    @JsonProperty("max_determinized_states")
-    final public Integer maxDeterminizedStates;
+    @JsonProperty("determinize_work_limit")
+    final public Integer determinizeWorkLimit;
 
     enum Flag {
         intersection(RegExp.INTERSECTION),
@@ -61,17 +61,17 @@ public class Regexp extends AbstractFieldQuery<Regexp> {
     @JsonIgnore
     private final int effectiveFlag;
     @JsonIgnore
-    private final int effectiveMaxDeterminizedStates;
+    private final int effectiveDeterminizeWorkLimit;
 
     @JsonCreator
     public Regexp(@JsonProperty("generic_field") final String genericField,
                   @JsonProperty("field") final String field,
                   @JsonProperty("text") final String text,
-                  @JsonProperty("max_determinized_states") final Integer maxDeterminizedStates,
+                  @JsonProperty("determinize_work_limit") final Integer determinizeWorkLimit,
                   @JsonProperty("flags") final List<Flag> flags) {
         super(Regexp.class, genericField, field);
         this.text = text;
-        this.maxDeterminizedStates = maxDeterminizedStates;
+        this.determinizeWorkLimit = determinizeWorkLimit;
         this.flags = flags;
         if (flags == null || flags.isEmpty())
             effectiveFlag = RegExp.ALL;
@@ -81,7 +81,7 @@ public class Regexp extends AbstractFieldQuery<Regexp> {
                 flag = flag | f.value;
             effectiveFlag = flag;
         }
-        effectiveMaxDeterminizedStates = maxDeterminizedStates == null ? Operations.DEFAULT_MAX_DETERMINIZED_STATES : maxDeterminizedStates;
+        effectiveDeterminizeWorkLimit = determinizeWorkLimit == null ? Operations.DEFAULT_DETERMINIZE_WORK_LIMIT : determinizeWorkLimit;
     }
 
     public Regexp(final String field, final String text, final Integer maxDeterminizedStates, final List<Flag> flags) {
@@ -102,12 +102,12 @@ public class Regexp extends AbstractFieldQuery<Regexp> {
                   final Map<String, FieldDefinition> fields) {
         this(getFullTextField(fields, () -> getTextField(fields, () -> "text")),
             "Hel.*o",
-            Operations.DEFAULT_MAX_DETERMINIZED_STATES, Flag.all);
+            Operations.DEFAULT_DETERMINIZE_WORK_LIMIT, Flag.all);
     }
 
     @Override
     final public Query getQuery(final QueryContext queryContext) {
-        return new RegexpQuery(resolveIndexTextTerm(queryContext.getFieldMap(), text), effectiveFlag, effectiveMaxDeterminizedStates);
+        return new RegexpQuery(resolveIndexTextTerm(queryContext.getFieldMap(), text), effectiveFlag, effectiveDeterminizeWorkLimit);
     }
 
     @Override
@@ -116,6 +116,6 @@ public class Regexp extends AbstractFieldQuery<Regexp> {
         return super.isEqual(q)
             && Objects.equals(text, q.text)
             && Objects.equals(flags, q.flags)
-            && Objects.equals(maxDeterminizedStates, q.maxDeterminizedStates);
+            && Objects.equals(determinizeWorkLimit, q.determinizeWorkLimit);
     }
 }

@@ -29,7 +29,7 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
     final public Boolean auto_generate_phrase_query;
     final public Float fuzzy_min_sim;
     final public Integer fuzzy_prefix_length;
-    final public Integer max_determinized_states;
+    final public Integer determinize_work_limit;
 
     @JsonProperty("split_on_whitespace")
     final public Boolean splitOnWhitespace;
@@ -47,7 +47,7 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
         auto_generate_phrase_query = null;
         fuzzy_min_sim = null;
         fuzzy_prefix_length = null;
-        max_determinized_states = null;
+        determinize_work_limit = null;
         splitOnWhitespace = null;
     }
 
@@ -59,7 +59,7 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
         this.auto_generate_phrase_query = builder.auto_generate_phrase_query;
         this.fuzzy_min_sim = builder.fuzzy_min_sim;
         this.fuzzy_prefix_length = builder.fuzzy_prefix_length;
-        this.max_determinized_states = builder.max_determinized_states;
+        this.determinize_work_limit = builder.determinize_work_limit;
         this.splitOnWhitespace = builder.splitOnWhitespace;
     }
 
@@ -73,7 +73,7 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
             && Objects.equals(auto_generate_phrase_query, q.auto_generate_phrase_query)
             && Objects.equals(fuzzy_min_sim, q.fuzzy_min_sim)
             && Objects.equals(fuzzy_prefix_length, q.fuzzy_prefix_length)
-            && Objects.equals(max_determinized_states, q.max_determinized_states)
+            && Objects.equals(determinize_work_limit, q.determinize_work_limit)
             && Objects.equals(splitOnWhitespace, q.splitOnWhitespace);
     }
 
@@ -97,8 +97,8 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
             parser.setFuzzyMinSim(fuzzy_min_sim);
         if (fuzzy_prefix_length != null)
             parser.setFuzzyPrefixLength(fuzzy_prefix_length);
-        if (max_determinized_states != null)
-            parser.setMaxDeterminizedStates(max_determinized_states);
+        if (determinize_work_limit != null)
+            parser.setDeterminizeWorkLimit(determinize_work_limit);
         if (splitOnWhitespace != null)
             parser.setSplitOnWhitespace(splitOnWhitespace);
     }
@@ -112,9 +112,9 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
         private Boolean auto_generate_phrase_query;
         private Float fuzzy_min_sim;
         private Integer fuzzy_prefix_length;
-        private Integer max_determinized_states;
+        private Integer determinize_work_limit;
         private Boolean splitOnWhitespace;
-        
+
         public abstract T build();
 
         public B setAllowLeadingWildcard(Boolean allow_leading_wildcard) {
@@ -147,8 +147,8 @@ public abstract class AbstractClassicQueryParser<T extends AbstractClassicQueryP
             return me();
         }
 
-        public B setMaxDeterminizedStates(Integer max_determinized_states) {
-            this.max_determinized_states = max_determinized_states;
+        public B setDeterminizeWorkLimit(Integer determinize_work_limit) {
+            this.determinize_work_limit = determinize_work_limit;
             return me();
         }
 
