@@ -21,6 +21,7 @@ import com.qwazr.search.test.units.IndexRecord;
 import com.qwazr.search.test.units.RealTimeSynonymsResourcesTest;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -47,12 +48,12 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
     @Test
     public void testWithDefaultAnalyzer() {
         QueryDefinition queryDef = QueryDefinition.of(MultiFieldQueryParser.of()
-            .addField("textField", "stringField")
-            .setDefaultOperator(QueryParserOperator.AND)
-            .addBoost("textField", 1F)
-            .addBoost("stringField", 1F)
-            .setQueryString("Hello")
-            .build())
+                .addField("textField", "stringField")
+                .setDefaultOperator(QueryParserOperator.AND)
+                .addBoost("textField", 1F)
+                .addBoost("stringField", 1F)
+                .setQueryString("Hello")
+                .build())
             .returnedField("$id$")
             .build();
         checkQuery(queryDef, r -> r.id);
@@ -61,13 +62,13 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
     @Test
     public void testWithCustomAnalyzer() {
         QueryDefinition queryDef = QueryDefinition.of(MultiFieldQueryParser.of()
-            .addField("textField", "stringField")
-            .setDefaultOperator(QueryParserOperator.AND)
-            .addBoost("textField", 1F)
-            .addBoost("stringField", 1F)
-            .setQueryString("Hello World")
-            .setAnalyzer(StandardAnalyzer.class.getName())
-            .build())
+                .addField("textField", "stringField")
+                .setDefaultOperator(QueryParserOperator.AND)
+                .addBoost("textField", 1F)
+                .addBoost("stringField", 1F)
+                .setQueryString("Hello World")
+                .setAnalyzer(StandardAnalyzer.class.getName())
+                .build())
             .returnedField("$id$")
             .build();
         checkQuery(queryDef, r -> r.id);
@@ -89,7 +90,7 @@ public class MultiFieldQueryParserTest extends AbstractIndexTest.WithIndexRecord
     @Test
     public void testWithSynonymsOr() {
         AbstractQuery<?> query = MultiFieldQueryParser.of()
-            .addField("textSynonymsField1", "textField", "stringField")
+            .addField(List.of("textSynonymsField1", "textField", "stringField"))
             .setDefaultOperator(QueryParserOperator.OR)
             .setSplitOnWhitespace(false)
             .setQueryString("bonjour le monde")

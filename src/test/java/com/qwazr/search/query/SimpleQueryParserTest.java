@@ -21,6 +21,7 @@ import com.qwazr.search.test.units.IndexRecord;
 import com.qwazr.search.test.units.RealTimeSynonymsResourcesTest;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.apache.lucene.search.Query;
@@ -86,7 +87,7 @@ public class SimpleQueryParserTest extends AbstractIndexTest.WithIndexRecord.NoT
     @Ignore
     public void testWithSynonymsOr() {
         AbstractQuery<?> query = SimpleQueryParser.of()
-            .addField("textSynonymsField1", "textField", "stringField")
+            .addField(List.of("textSynonymsField1", "textField", "stringField"))
             .setDefaultOperator(QueryParserOperator.OR)
             .setQueryString("bonjour le monde")
             .build();

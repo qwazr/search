@@ -27,6 +27,7 @@ import com.qwazr.search.index.QueryContext;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.StringUtils;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -155,6 +156,12 @@ public class SimpleQueryParser extends AbstractQueryParser<SimpleQueryParser> {
         private LinkedHashMap<String, Float> weights;
         private QueryParserOperator defaultOperator;
         private List<Operator> enabledOperators;
+
+        public Builder addField(Collection<String> fieldSet) {
+            for (String field : fieldSet)
+                addBoost(field, 1.0f);
+            return this;
+        }
 
         public Builder addField(String... fieldSet) {
             for (String field : fieldSet)

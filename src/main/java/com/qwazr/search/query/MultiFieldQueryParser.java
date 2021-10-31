@@ -24,6 +24,7 @@ import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.StringUtils;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -100,6 +101,15 @@ public class MultiFieldQueryParser extends AbstractClassicQueryParser<MultiField
 
         private LinkedHashSet<String> fields;
         private LinkedHashMap<String, Float> boosts;
+
+        public Builder addField(Collection<String> fieldSet) {
+            if (fieldSet != null) {
+                if (fields == null)
+                    fields = new LinkedHashSet<>();
+                this.fields.addAll(fieldSet);
+            }
+            return me();
+        }
 
         public Builder addField(String... fieldSet) {
             if (fields == null)
