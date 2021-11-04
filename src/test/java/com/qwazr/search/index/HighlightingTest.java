@@ -33,7 +33,7 @@ public class HighlightingTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
         "OpenSearchServer is an open-source application server allowing development of index-based applications such as search engines. Available since April 2009 on SourceForge for download, OpenSearchServer was developed under the GPL v3 license and offers a series of full text lexical analyzers. It can be installed on different platforms (Windows, Linux, Macintosh).\n" +
             "While it started as an in-house project by a private media group, OpenSearchServer is now supported by Jaeksoft, a commercial company launched in February 2010. Jaeksoft provides services and roadmap guidance for OpenSearchServer.";
     private final static String text2 =
-            "The main features of OpenSearchServer are : An integrated crawler for databases, web pages and rich documents; a user-friendly GUI allowing development of most applications through a web page interface built in Zkoss; snippets; faceting; an HTML renderer for integrating search results in a page; and monitoring and administration features.\n" +
+        "The main features of OpenSearchServer are : An integrated crawler for databases, web pages and rich documents; a user-friendly GUI allowing development of most applications through a web page interface built in Zkoss; snippets; faceting; an HTML renderer for integrating search results in a page; and monitoring and administration features.\n" +
             "OpenSearchServer is written in Java and it can be integrated into almost any kind of application without the need to produce Java code. REST/XML APIs make OpenSearchServer connectable to other programming languages. The \"advanced plugins\" capability allows sophisticated customizations.";
 
     @BeforeClass
@@ -48,7 +48,7 @@ public class HighlightingTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
     public void highlightingTest1Doc() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result;
         result = indexService.searchQuery(QueryDefinition.of(
-            SimpleQueryParser.of().addField("textField").setQueryString("integrated crawler").build())
+                SimpleQueryParser.of().addField("textField").setQueryString("integrated crawler").build())
             .highlighter("textField", HighlighterDefinition.of()
                 .withStoredField("storedField")
                 .withMaxPassages(5)
@@ -69,7 +69,7 @@ public class HighlightingTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
     public void highlightingTest2Docs() {
         ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result;
         result = indexService.searchQuery(QueryDefinition.of(
-            SimpleQueryParser.of().addField("textField").setQueryString("opensearchserver").build())
+                SimpleQueryParser.of().addField("textField").setQueryString("opensearchserver").build())
             .highlighter("textField", HighlighterDefinition.of()
                 .withStoredField("storedField")
                 .withMaxPassages(5)
@@ -94,5 +94,33 @@ public class HighlightingTest extends AbstractIndexTest.WithIndexRecord.NoTaxono
             Assert.assertEquals(3, StringUtils.countMatches(textField, "<b>OpenSearchServer</b>"));
         }
     }
+
+    @Test
+    public void highlightingTest3Docs() {
+        ResultDefinition.WithObject<IndexRecord.NoTaxonomy> result;
+        result = indexService.searchQuery(QueryDefinition.of(
+                SimpleQueryParser.of().addField("textField").setQueryString("opensearchserver").build())
+            .highlighter("textField", HighlighterDefinition.of()
+                .withDefaultAnalyzer("standard")
+                .withField("textField")
+                .withStoredField("storedField")
+                .build()).build());
+
+        Assert.assertNotNull(result);
+        Assert.assertEquals(2, result.totalHits);
+
+        {
+            final String textField = result.getDocuments().get(0).getHighlights().get("textField");
+            Assert.assertNotNull(textField);
+            Assert.assertEquals(4, StringUtils.countMatches(textField, "<b>OpenSearchServer</b>"));
+        }
+
+        {
+            final String textField = result.getDocuments().get(1).getHighlights().get("textField");
+            Assert.assertNotNull(textField);
+            Assert.assertEquals(3, StringUtils.countMatches(textField, "<b>OpenSearchServer</b>"));
+        }
+    }
+
 
 }

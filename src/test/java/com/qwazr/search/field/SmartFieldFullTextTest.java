@@ -88,10 +88,10 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
     @Test
     public void searchTitleTest() {
         multiSearch("first news",
-            "+(tt€title:first tt€content:first tt€tags:first) +(tt€title:news tt€content:news tt€tags:news)", 1);
+            "+(tt€title:first tt€content:first tt€tags:first) +(tt€title:new tt€content:news tt€tags:news)", 1);
         fullSearch("first news", "+tt€full:first +tt€full:news", 1);
         multiSearch("second article",
-            "+(tt€title:second tt€content:second tt€tags:second) +(tt€title:article tt€content:article tt€tags:article)",
+            "+(tt€title:second tt€content:second tt€tags:second) +(tt€title:articl tt€content:article tt€tags:article)",
             2);
         fullSearch("second article", "+tt€full:second +tt€full:article", 2);
     }
@@ -99,29 +99,29 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
     @Test
     public void searchContentTest() {
         multiSearch("first sentence",
-            "+(tt€title:first tt€content:first tt€tags:first) +(tt€title:sentence tt€content:sentence tt€tags:sentence)",
+            "+(tt€title:first tt€content:first tt€tags:first) +(tt€title:sentenc tt€content:sentence tt€tags:sentence)",
             1);
         fullSearch("first sentence", "+tt€full:first +tt€full:sentence", 1);
         multiSearch("third sentence",
-            "+(tt€title:third tt€content:third tt€tags:third) +(tt€title:sentence tt€content:sentence tt€tags:sentence)",
+            "+(tt€title:third tt€content:third tt€tags:third) +(tt€title:sentenc tt€content:sentence tt€tags:sentence)",
             2);
         fullSearch("third sentence", "+tt€full:third +tt€full:sentence", 2);
     }
 
     @Test
     public void searchManyTest() {
-        multiSearch("sentence", "tt€title:sentence tt€content:sentence tt€tags:sentence", 1, 2);
+        multiSearch("sentence", "tt€title:sentenc tt€content:sentence tt€tags:sentence", 1, 2);
         fullSearch("sentence", "tt€full:sentence", 1, 2);
     }
 
     @Test
     public void searchCrossFields() {
         multiSearch("news sentence",
-            "+(tt€title:news tt€content:news tt€tags:news) +(tt€title:sentence tt€content:sentence tt€tags:sentence)",
+            "+(tt€title:new tt€content:news tt€tags:news) +(tt€title:sentenc tt€content:sentence tt€tags:sentence)",
             1);
         fullSearch("news sentence", "+tt€full:news +tt€full:sentence", 1);
         multiSearch("article sentence",
-            "+(tt€title:article tt€content:article tt€tags:article) +(tt€title:sentence tt€content:sentence tt€tags:sentence)",
+            "+(tt€title:articl tt€content:article tt€tags:article) +(tt€title:sentenc tt€content:sentence tt€tags:sentence)",
             2);
         fullSearch("article sentence", "+tt€full:article +tt€full:sentence", 2);
     }
@@ -157,7 +157,7 @@ public class SmartFieldFullTextTest extends AbstractIndexTest {
 
         @SmartField(type = SmartFieldDefinition.Type.TEXT,
             index = true,
-            analyzer = SmartAnalyzerSet.standard,
+            analyzer = SmartAnalyzerSet.english,
             stored = true)
         @Copy(to = {@Copy.To(order = 1, field = "full"), @Copy.To(order = 1, field = "autocomplete")})
         final public String title;

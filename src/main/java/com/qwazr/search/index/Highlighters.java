@@ -16,7 +16,6 @@
 package com.qwazr.search.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.qwazr.search.field.SmartDynamicTypes;
 import com.qwazr.search.query.FieldResolver;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
@@ -91,15 +90,12 @@ interface Highlighters {
 
             private final BreakIterator breakIterator;
 
-            private final String storedField;
-
             private final String highlightName;
 
             private PerFieldBase(final String highlightName,
                                  final HighlighterDefinition definition,
                                  final String storedField) {
-                super(queryContext.indexSearcher, queryContext.resolveQueryAnalyzer(definition.defaultAnalyzer == null ?
-                    SmartDynamicTypes.DEFAULT_ANALYZER_NAME : definition.defaultAnalyzer));
+                super(queryContext.indexSearcher, queryContext.resolveQueryAnalyzer(definition.defaultAnalyzer));
                 if (definition.maxLength != null)
                     setMaxLength(definition.maxLength);
                 if (definition.highlightPhrasesStrictly != null)
@@ -110,7 +106,6 @@ interface Highlighters {
                 this.definition = definition;
                 this.field = definition.field == null ? highlightName : definition.field;
                 this.indexField = FieldResolver.resolveFullTextField(queryContext.fieldMap, field, field, StringUtils.EMPTY);
-                this.storedField = storedField;
                 this.maxPassages = definition.maxPassages != null ? definition.maxPassages : 1;
                 this.passageFormatter = new DefaultPassageFormatter(definition.preTag == null ? "<b>" : definition.preTag,
                     definition.postTag == null ? "</b>" : definition.postTag,
