@@ -7,7 +7,6 @@
   <name>QWAZR Cluster</name>
   <description>Clustering module for QWAZR</description>
   <packaging>jar</packaging>
-  <version>${parent.version}</version>
 
   <parent>
     <groupId>com.qwazr</groupId>

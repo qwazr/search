@@ -6,7 +6,6 @@
   <artifactId>qwazr-bom</artifactId>
   <packaging>pom</packaging>
   <name>QWAZR Bill Of Materials</name>
-  <version>${parent.version}</version>
 
   <description>Reactive Framework for Web Applications And MicroServices</description>
 

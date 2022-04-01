@@ -6,7 +6,6 @@
   <name>QWAZR Search</name>
   <description>A Search Engine microservice with indexing and search features based on Apache Lucene</description>
   <packaging>jar</packaging>
-  <version>${parent.version}</version>
 
   <parent>
     <groupId>com.qwazr</groupId>

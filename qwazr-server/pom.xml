@@ -5,7 +5,6 @@
   <artifactId>qwazr-server</artifactId>
   <name>QWAZR Server</name>
   <packaging>jar</packaging>
-  <version>${parent.version}</version>
 
   <parent>
     <groupId>com.qwazr</groupId>

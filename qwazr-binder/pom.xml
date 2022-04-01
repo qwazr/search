@@ -5,7 +5,6 @@
   <artifactId>qwazr-binder</artifactId>
   <name>QWAZR Binder</name>
   <packaging>jar</packaging>
-  <version>${parent.version}</version>
 
   <parent>
     <groupId>com.qwazr</groupId>
