@@ -25,7 +25,7 @@
     <dependency>
       <groupId>com.qwazr</groupId>
       <artifactId>qwazr-server</artifactId>
-      <version>1.5.2-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 

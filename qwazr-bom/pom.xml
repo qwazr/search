@@ -5,7 +5,6 @@
   <groupId>com.qwazr</groupId>
   <artifactId>qwazr-bom</artifactId>
   <packaging>pom</packaging>
-  <version>1.5.2-SNAPSHOT</version>
   <name>QWAZR Bill Of Materials</name>
 
   <description>Reactive Framework for Web Applications And MicroServices</description>
