@@ -28,17 +28,17 @@
     <dependency>
       <groupId>com.qwazr</groupId>
       <artifactId>qwazr-cluster</artifactId>
-      <version>${parent.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.qwazr</groupId>
       <artifactId>qwazr-server</artifactId>
-      <version>${parent.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.qwazr</groupId>
       <artifactId>qwazr-binder</artifactId>
-      <version>${parent.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
