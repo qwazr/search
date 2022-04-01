@@ -177,21 +177,21 @@ public class ReadWriteLockTest {
 
     @Test
     public void benchmarkNoSleep() throws InterruptedException, ExecutionException {
-        benchmarkSuite(Duration.ofSeconds(1), 0, 0);
+        benchmarkSuite(Duration.ofMillis(250), 0, 0);
     }
 
     @Test
     public void benchmarkWithSleepBestRead() throws InterruptedException, ExecutionException {
-        benchmarkSuite(Duration.ofSeconds(1), 0, 20);
+        benchmarkSuite(Duration.ofMillis(250), 0, 20);
     }
 
     @Test
     public void benchmarkWithSleepBestWrite() throws InterruptedException, ExecutionException {
-        benchmarkSuite(Duration.ofSeconds(1), 20, 0);
+        benchmarkSuite(Duration.ofMillis(250), 20, 0);
     }
 
     @Test
     public void benchmarkWithRealSleep() throws InterruptedException, ExecutionException {
-        benchmarkSuite(Duration.ofSeconds(1), 5, 20);
+        benchmarkSuite(Duration.ofMillis(250), 5, 20);
     }
 }
