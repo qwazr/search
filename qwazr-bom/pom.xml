@@ -6,11 +6,9 @@
   <artifactId>qwazr-bom</artifactId>
   <packaging>pom</packaging>
   <name>QWAZR Bill Of Materials</name>
-
   <description>Reactive Framework for Web Applications And MicroServices</description>
-
-  <url>https://github.com/qwazr/bom</url>
-
+  <version>1.5.2-SNAPSHOT</version>
+  
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
