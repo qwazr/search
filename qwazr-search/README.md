@@ -35,7 +35,7 @@ We set the primary key to the property "id", and the json record will be stored 
 
 ### Search:
 
-For instance, we will use a JSON file called "my_search" to store the search query:
+For instance, we will use a JSON file called `my_search.json` to store the search query:
 
 ```json
 {
