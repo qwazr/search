@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.qwazr</groupId>
@@ -7,7 +6,7 @@
   <packaging>pom</packaging>
   <name>QWAZR Bill Of Materials</name>
   <description>Reactive Framework for Web Applications And MicroServices</description>
-  <version>1.5.2-SNAPSHOT</version>
+  <version>1.5.2</version>
   <url>https://www.qwazr.com/search</url>
 
   <licenses>
@@ -36,7 +35,7 @@
     <connection>scm:git:git@github.com:qwazr/search.git</connection>
     <developerConnection>scm:git:git@github.com:qwazr/search.git</developerConnection>
     <url>git@github.com:qwazr/search.git</url>
-    <tag>HEAD</tag>
+    <tag>v1.5.2</tag>
   </scm>
 
   <issueManagement>
