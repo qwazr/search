@@ -1,0 +1,46 @@
+[plantuml,multicast-cluster, svg]
+....
+
+folder "node 1" {
+    [java code 1] -left-> [cluster manager 1]: request
+}
+
+folder "node 2" {
+    [java code 2] -left-> [cluster manager 2]: request
+}
+
+folder "node 3" {
+    [java code 3] -left-> [cluster manager 3]: request
+}
+
+folder "node 4" {
+    [java code 4] -left-> [cluster manager 4]: request
+}
+
+multicast <-down-> [cluster manager 4]
+multicast <-down-> [cluster manager 3]
+multicast <-up-> [cluster manager 2]
+multicast <-up-> [cluster manager 1]
+
+note bottom of [cluster manager 2]
+  Each node sends its information
+  to the cluster using multicast.
+end note
+
+note bottom of [cluster manager 3]
+Every node receives information sent by other nodes. 
+Each node maintains its own in-memory database.
+end note
+
+note left of [multicast]
+Information about endpoints, groups and services 
+is sent to a multicast address that broadcasts it 
+to all nodes.
+end note
+
+note bottom of [java code 4]
+The local java code can get information
+about nodes, groups and services
+by requesting the local cluster manager.
+end note
+....

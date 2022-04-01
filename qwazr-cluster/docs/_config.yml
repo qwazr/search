@@ -1,0 +1,26 @@
+google_analytics: UA-66371454-1
+markdown: kramdown
+kramdown:
+  parse_block_html: true
+highlighter: rouge
+defaults:
+- scope:
+    path: "fr"
+  values:
+    layout: "default"
+    lang: "fr"
+    weight: 10
+- scope:
+    path: ""
+  values:
+    layout: "default"
+    lang: "en"
+    weight: 10
+- scope:
+    path: "README.md"
+  values:
+    weight: 0
+- scope:
+    path: "fr/README.md"
+  values:
+    weight: 0

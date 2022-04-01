@@ -1,0 +1,18 @@
+[plantuml,multicast-sequence, svg]
+....
+== Node joins the cluster ==
+Node->multicast : join(Node)
+multicast->NodeX : join(Node)
+NodeX->NodeX : register(Node)
+NodeX->multicast : forward(NodeX)
+multicast->Node: forward(NodeX)
+Node->Node: register(NodeX)
+== Node says he's alive ==
+Node->multicast: forward(Node)
+multicast->NodeX : forward(Node)
+NodeX->NodeX : updateExpiration(Node)
+== Node leaves the cluster ==
+Node->multicast : leaves(Node)
+multicast->NodeX: leaves(Node)
+NodeX->NodeX : unregister(Node)
+....

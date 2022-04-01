@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang }}">
+<head>
+  {% seo %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css"
+        integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
+  <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <a class="navbar-brand" href="/">QWAZR</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link text-capitalize" href="/{{site.github.repository_name}}">
+          {{ site.title | default: site.github.repository_name }}
+          <span class="sr-only">(current)</span></a>
+      </li>
+      {% if site.github.is_project_page %}
+      <li class="nav-item">
+        <a class="nav-link" href="{{ site.github.repository_url }}">View on GitHub</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/{{site.github.repository_name}}">EN</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/{{site.github.repository_name}}/fr">FR</a>
+      </li>
+      {% endif %}
+    </ul>
+    <span class="navbar-text">
+      {{ site.description | default: site.github.project_tagline }}
+        </span>
+  </div>
+</nav>
+<br/>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-3">
+      {% include pages.html %}
+    </div>
+    <div class="col-md-9">
+      {{ content }}
+    </div>
+  </div>
+</div>
+<br/>
+<nav class="navbar navbar-dark bg-dark">
+  <ul class="navbar-nav mr-auto">
+    <li class="nav-item">
+      <a href="{{ site.github.repository_url }}/edit/master/docs/{{ page.path }}"
+         class="nav-link">Edit on GitHub</a>
+    </li>
+  </ul>
+</nav>
+
+{% if site.google_analytics %}
+<script type="text/javascript">
+  (function (i, s, o, g, r, a, m) {
+    i['GoogleAnalyticsObject'] = r;
+    i[r] = i[r] || function () {
+      (i[r].q = i[r].q || []).push(arguments)
+    }, i[r].l = 1 * new Date();
+    a = s.createElement(o),
+      m = s.getElementsByTagName(o)[0];
+    a.async = 1;
+    a.src = g;
+    m.parentNode.insertBefore(a, m)
+  })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+  ga('create', '{{ site.google_analytics }}', 'auto');
+  ga('send', 'pageview');
+</script>
+{% endif %}
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js"
+        integrity="sha384-o+RDsa0aLu++PJvFqy8fFScvbHFLtbvScb8AjopnFD+iEQ7wo/CG0xlczd+2O/em"
+        crossorigin="anonymous"></script>
+</body>
+</html>

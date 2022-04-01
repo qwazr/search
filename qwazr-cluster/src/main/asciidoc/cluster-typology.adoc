@@ -1,0 +1,44 @@
+[plantuml,cluster-typology, svg]
+....
+
+folder "Cluster nodes" {
+   node "Cluster 1"
+   node "Cluster 2"
+  [Cluster 1] <-> [Cluster 2]
+}
+
+folder "Service nodes A" {
+  [Service 2] -down-> [Cluster 1]
+  [Service 2] -down-> [Cluster 2]
+  [Service 1] -down-> [Cluster 1]
+  [Service 1] -down-> [Cluster 2]
+}
+
+folder "Service nodes B" {
+  [Service 4] -down-> [Cluster 1]
+  [Service 4] -down-> [Cluster 2]
+  [Service 3] -down-> [Cluster 1]
+  [Service 3] -down-> [Cluster 2]
+}
+
+folder "Clients" {
+  [Cluster 1] <-- [Client x]
+  [Client y] --> [Cluster 2]
+}
+
+note top of [Service 4]
+  Services nodes register, ping and unregister
+  themselves on all known cluster master nodes.
+end note
+
+note right of [Client y]
+  Clients request a cluster
+  node to get a service list by
+  name, group, etc.
+end note
+
+note right of [Cluster 2]
+  The cluster master server stores and shares
+  information about registered services and groups.
+end note
+....

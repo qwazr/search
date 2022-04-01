@@ -1,0 +1,23 @@
+[plantuml,masters-sequence, svg]
+....
+== Node joins the cluster ==
+Node->Master : join(Node)
+Master->Node: reply(Master)
+Node->Node: register(Master)
+Master->NodeX: notify(Node)
+NodeX->NodeX: pre-register(Node)
+NodeX->Node : forward(NodeX)
+Node->Node : register(NodeX)
+Node->NodeX : reply(Node)
+NodeX->NodeX : register(Node)
+== Node says he's alive ==
+Node->Master: alive(Node)
+Master->Master : updateExpiration(Node)
+Node->NodeX: alive(Node)
+NodeX->NodeX : updateExpiration(Node)
+== Node leaves the cluster ==
+Node->Master : leave(Node)
+Master->Master : unregister(Node1)
+Node->NodeX : leave(Node)
+NodeX->NodeX : unregister(Node1)
+....

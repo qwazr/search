@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+</head>
+<body bgcolor="white">
+
+	<h2>The JAVA package which reconciles JDBC and POJO</h2>
+
+	<p>Start working with POJO without rewriting all your JDBC
+		application. Without any configuration file, without any annotation,
+		use your native SQL request with JDBC and get POJO(s).</p>
+
+	<h2>Sample code</h2>
+	<p>Firstable, you have to create a ConnectionManager. A
+		ConnectionManager is not a connection pool. Taking a JDBC URL or a
+		datasource, the ConnectionManager just provide new connection.</p>
+	<pre>
+ JDBCConnection connectionManager = new JDBCConnection();
+ connectionManager.setDriver(&quot;com.mysql.jdbc.Driver&quot;);
+ connectionManager
+ 		.setUrl(&quot;jdbc:mysql://localhost:3306/dbName?autoReconnect=true&quot;);
+ connectionManager.setUsername("user");
+ connectionManager.setPassword("pass");
+ </pre>
+	<p>Now we can start working with our database. Pojodbc take care of
+		the database connection. The following code shows how to obtain a list
+		of Pojo.</p>
+	<pre>
+ Transaction transaction = null;
+ try {
+    // Obtain a new transaction from the ConnectionManager
+    transaction = connectionManager.getNewTransaction(false,
+                              java.sql.Connection.TRANSACTION_READ_COMMITTED);
+    // Start a new Query
+    Query query = transaction.prepare(&quot;SELECT * FROM MyTable WHERE status=?&quot;);
+    query.getStatement().setString(1, &quot;open&quot;);
+    query.setFirstResult(0);
+    query.setMaxResults(10);
+    
+    // Get the result
+    List&lt;MyPojo&gt; myPojoList = query.getResultList(MyPojo.class));
+    
+    // do everything you need
+    
+  } finally {
+    // Release the transaction
+    if (transaction != null)
+      transaction.close();
+}
+</pre>
+	<p>The only thing you have to do is to release the transaction. The
+		best way to do that is to close the transaction in a finally clause.
+		Pojodbc will release all Statement, ResultSet and Connection.</p>
+	<p>You dont have to maintain the transaction open to use your Pojo
+		list.</p>
+</body>
+</html>
