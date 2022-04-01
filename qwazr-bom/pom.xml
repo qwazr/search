@@ -6,6 +6,7 @@
   <artifactId>qwazr-bom</artifactId>
   <packaging>pom</packaging>
   <name>QWAZR Bill Of Materials</name>
+  <version>${parent.version}</version>
 
   <description>Reactive Framework for Web Applications And MicroServices</description>
 
@@ -32,13 +33,6 @@
       <organizationUrl>http://www.qwazr.com</organizationUrl>
     </developer>
   </developers>
-
-  <scm>
-    <connection>scm:git:git@github.com:qwazr/bom.git</connection>
-    <developerConnection>scm:git:git@github.com:qwazr/bom.git</developerConnection>
-    <url>git@github.com:qwazr/bom.git</url>
-    <tag>HEAD</tag>
-  </scm>
 
   <issueManagement>
     <url>https://github.com/qwazr/issues</url>
