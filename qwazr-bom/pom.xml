@@ -46,7 +46,7 @@
     <jackson.version>2.13.2</jackson.version>
     <jersey.version>2.35</jersey.version>
     <hk2.version>2.6.1</hk2.version>
-    <undertow.version>2.2.16.Final</undertow.version>
+    <undertow.version>2.2.19.Final</undertow.version>
   </properties>
 
   <distributionManagement>
