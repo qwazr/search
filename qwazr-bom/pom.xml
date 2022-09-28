@@ -43,10 +43,10 @@
   </issueManagement>
 
   <properties>
-    <jackson.version>2.13.2</jackson.version>
-    <jersey.version>2.35</jersey.version>
+    <jackson.version>2.13.4</jackson.version>
+    <jersey.version>2.37</jersey.version>
     <hk2.version>2.6.1</hk2.version>
-    <undertow.version>2.2.16.Final</undertow.version>
+    <undertow.version>2.2.19.Final</undertow.version>
   </properties>
 
   <distributionManagement>
@@ -177,7 +177,7 @@
       <dependency>
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>
-        <version>3.28.0-GA</version>
+        <version>3.29.2-GA</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
@@ -197,7 +197,7 @@
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>okhttp</artifactId>
-        <version>4.9.2</version>
+        <version>4.9.3</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okio</groupId>
@@ -222,7 +222,7 @@
       <dependency>
         <groupId>org.roaringbitmap</groupId>
         <artifactId>RoaringBitmap</artifactId>
-        <version>0.9.25</version>
+        <version>0.9.32</version>
       </dependency>
       <dependency>
         <groupId>org.apache.xmlbeans</groupId>
@@ -232,24 +232,24 @@
       <dependency>
         <groupId>com.ibm.icu</groupId>
         <artifactId>icu4j</artifactId>
-        <version>70.1</version>
+        <version>71.1</version>
       </dependency>
 
       <!-- Undertow & xnio -->
       <dependency>
         <groupId>org.jboss.xnio</groupId>
         <artifactId>xnio-nio</artifactId>
-        <version>3.8.6.Final</version>
+        <version>3.8.8.Final</version>
       </dependency>
       <dependency>
         <groupId>org.jboss.xnio</groupId>
         <artifactId>xnio-api</artifactId>
-        <version>3.8.6.Final</version>
+        <version>3.8.8.Final</version>
       </dependency>
       <dependency>
         <groupId>org.jboss.threads</groupId>
         <artifactId>jboss-threads</artifactId>
-        <version>3.4.2.Final</version>
+        <version>3.4.3.Final</version>
       </dependency>
       <dependency>
         <groupId>org.jboss.logging</groupId>
@@ -266,7 +266,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>${jackson.version}.1</version>
+        <version>${jackson.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
