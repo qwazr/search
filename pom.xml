@@ -120,16 +120,6 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>bintray</id>
-      <url>https://jcenter.bintray.com</url>
-    </repository>
   </repositories>
 
   <build>

@@ -62,7 +62,7 @@ public class StaticResourceServlet extends HttpServlet {
             final String type = mimeTypeMap.getContentType(resourcePath);
             StaticFileServlet.head(resourcePath, null, type, lastModified, expirationTimeSec, response);
         } catch (FileNotFoundException e) {
-            response.sendError(404, e.getMessage());
+            response.sendError(404, "The location has not been found.");
         }
     }
 
@@ -75,7 +75,7 @@ public class StaticResourceServlet extends HttpServlet {
             StaticFileServlet.head(resourcePath, null, type, lastModified, expirationTimeSec, response);
             IOUtils.copy(input, response.getOutputStream());
         } catch (FileNotFoundException e) {
-            response.sendError(404, e.getMessage());
+            response.sendError(404, "The location has not been found.");
         }
     }
 }

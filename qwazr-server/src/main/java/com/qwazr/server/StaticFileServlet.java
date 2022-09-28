@@ -57,7 +57,8 @@ public class StaticFileServlet extends HttpServlet {
             staticFile = staticPath;
             fullPath = contextPath + servletPath;
         } else {
-            staticFile = staticPath.resolve(pathInfo.startsWith("/") ? pathInfo.substring(1) : pathInfo);
+            final String securePathInfo = pathInfo.replace(".", "");
+            staticFile = staticPath.resolve(securePathInfo.startsWith("/") ? securePathInfo.substring(1) : securePathInfo);
             fullPath = contextPath + servletPath + pathInfo;
         }
         if (Files.isDirectory(staticFile)) {
