@@ -27,6 +27,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import nonapi.io.github.classgraph.utils.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 public class StaticFileServlet extends HttpServlet {
@@ -57,7 +58,7 @@ public class StaticFileServlet extends HttpServlet {
             staticFile = staticPath;
             fullPath = contextPath + servletPath;
         } else {
-            final String securePathInfo = pathInfo.replace(".", "");
+            final String securePathInfo = FileUtils.sanitizeEntryPath(pathInfo, false, false);
             staticFile = staticPath.resolve(securePathInfo.startsWith("/") ? securePathInfo.substring(1) : securePathInfo);
             fullPath = contextPath + servletPath + pathInfo;
         }
