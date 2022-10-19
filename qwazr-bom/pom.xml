@@ -43,7 +43,7 @@
   </issueManagement>
 
   <properties>
-    <jackson.version>2.13.4</jackson.version>
+    <jackson.version>2.13.4.1</jackson.version>
     <jersey.version>2.37</jersey.version>
     <hk2.version>2.6.1</hk2.version>
     <undertow.version>2.2.19.Final</undertow.version>
